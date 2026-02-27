@@ -85,8 +85,8 @@ class SupabaseAuthService {
       email: email,
       password: password,
     );
-    // Tag user in Crashlytics so we know who crashed
-    if (response.user != null) {
+    // Tag user in Crashlytics so we know who crashed (mobile only)
+    if (response.user != null && !kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
     }
     return response;
@@ -127,10 +127,12 @@ class SupabaseAuthService {
       }
 
       await ensureHouseholdExists();
-      // Tag user in Crashlytics
-      final user = _client.auth.currentUser;
-      if (user != null) {
-        await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+      // Tag user in Crashlytics (mobile only)
+      if (!kIsWeb) {
+        final user = _client.auth.currentUser;
+        if (user != null) {
+          await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+        }
       }
       return true;
     } catch (e) {
@@ -166,8 +168,10 @@ class SupabaseAuthService {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {}
-    // Clear user identity from Crashlytics for privacy
-    await FirebaseCrashlytics.instance.setUserIdentifier('');
+    // Clear user identity from Crashlytics for privacy (mobile only)
+    if (!kIsWeb) {
+      await FirebaseCrashlytics.instance.setUserIdentifier('');
+    }
     await _client.auth.signOut();
   }
 

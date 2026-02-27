@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,8 +38,10 @@ void main() async {
   // 1. Initialize Firebase
   try {
     await Firebase.initializeApp();
-    // Pass ALL uncaught Flutter errors to Crashlytics
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
+    if (!kIsWeb) {
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    }
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
@@ -49,12 +52,14 @@ void main() async {
   final rpc = SupabaseRpcService();
   await rpc.initialize();
 
-  // Dual error pipeline: Crashlytics (crash grouping) + Supabase (admin logs)
+  // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    // 1. Send to Crashlytics for crash tracking & grouping in Firebase Console
-    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-    // 2. Send to Supabase for the admin panel logs page
+    // 1. Only send to Crashlytics on mobile (not supported on web)
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    }
+    // 2. Send to Supabase for the admin panel logs page (all platforms)
     rpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
@@ -64,9 +69,11 @@ void main() async {
 
   // Catch async errors outside of Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    // 1. Crashlytics — marks as fatal
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    // 2. Supabase admin logs
+    // 1. Crashlytics — marks as fatal (mobile only)
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
+    // 2. Supabase admin logs (all platforms)
     rpc.logApplicationError(
       message: error.toString(),
       stackTrace: stack.toString(),
