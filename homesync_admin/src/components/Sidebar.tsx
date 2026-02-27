@@ -7,7 +7,8 @@ import {
   Users, 
   BarChart3, 
   Home,
-  Settings
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -50,6 +51,7 @@ export const Sidebar = () => {
       <nav className="flex-1 space-y-2">
         <SidebarItem to="/" icon={LayoutDashboard}>Overview</SidebarItem>
         <SidebarItem to="/logs" icon={Terminal}>Logs & Errors</SidebarItem>
+        <SidebarItem to="/crashes" icon={ShieldAlert}>Crash Reports</SidebarItem>
         <SidebarItem to="/templates" icon={ClipboardList}>Task Templates</SidebarItem>
         <SidebarItem to="/users" icon={Users}>User Management</SidebarItem>
         <SidebarItem to="/economy" icon={BarChart3}>Economic Balance</SidebarItem>
