@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #7f0df2;
+  --color-secondary: #0decf2;
+  --color-dark: #0f172a;
+}
+
+@layer base {
+  body {
+    @apply bg-[#0f172a] text-white font-sans antialiased;
+  }
+}
+
+.glass {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+.glass-dark {
+  @apply bg-black/20 backdrop-blur-lg border border-white/10;
+}
+
+.glow-violet {
+  box-shadow: 0 0 20px rgba(127, 13, 242, 0.3);
+}
+
+.glow-teal {
+  box-shadow: 0 0 20px rgba(13, 236, 242, 0.3);
+}

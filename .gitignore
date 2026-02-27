@@ -1,0 +1,51 @@
+# ─── Node / Admin Panel ──────────────────────────────────────────────────────
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+
+# ─── Flutter ──────────────────────────────────────────────────────────────────
+flutter_client/build/
+flutter_client/.dart_tool/
+flutter_client/.flutter-plugins-dependencies
+flutter_client/.pub-cache/
+flutter_client/.pub/
+flutter_client/coverage/
+flutter_client/android/app/debug/
+flutter_client/android/app/profile/
+flutter_client/android/app/release/
+
+# ─── SIGNING SECRETS — NEVER COMMIT ─────────────────────────────────────────
+*.keystore
+*.jks
+*.old
+flutter_client/android/key.properties
+
+# ─── Logs & temp files ───────────────────────────────────────────────────────
+*.log
+analyze.log
+analysis_output*.txt
+build_error.log
+tmp/
+nul
+
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Supabase local ──────────────────────────────────────────────────────────
+supabase/.temp/
+
+# ─── bg_removal (toy script, heavy deps) ─────────────────────────────────────
+bg_removal/node_modules/
+
+# ─── Agent brain (local AI context, not needed in repo) ──────────────────────
+.agents/

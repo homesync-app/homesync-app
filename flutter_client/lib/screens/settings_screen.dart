@@ -1,0 +1,1316 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../providers/core_providers.dart';
+import '../providers/theme_provider.dart';
+import '../services/supabase_auth_service.dart';
+import '../services/supabase_rpc_service.dart';
+import '../theme/app_colors.dart';
+import '../widgets/avatar_picker_sheet.dart';
+import '../widgets/user_avatar.dart';
+import '../widgets/mercadopago_settings_card.dart';
+
+class SettingsScreen extends ConsumerStatefulWidget {
+  final SupabaseAuthService auth;
+  final SupabaseRpcService rpc;
+  final VoidCallback onLogout;
+
+  const SettingsScreen({
+    super.key,
+    required this.auth,
+    required this.rpc,
+    required this.onLogout,
+  });
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _isLoading = true;
+  String? _householdId;
+  String? _invitationCode;
+  List<Map<String, dynamic>> _members = [];
+  String? _householdName;
+  String? _householdType;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final householdMember = await Supabase.instance.client
+          .from('household_members')
+          .select('household_id, role')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (householdMember == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final hId = householdMember['household_id'];
+      if (hId == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      _householdId = hId;
+
+      final household = await Supabase.instance.client
+          .from('households')
+          .select('name, household_type')
+          .eq('id', hId)
+          .maybeSingle();
+
+      final invitation = await Supabase.instance.client
+          .from('household_invitations')
+          .select('code')
+          .eq('household_id', hId)
+          .isFilter('used_at', null)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      final members = await widget.rpc.getHouseholdMembers();
+
+      setState(() {
+        _householdName = household?['name'];
+        _householdType = household?['household_type'];
+        _invitationCode = invitation?['code'];
+        _members = members;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading settings: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _generateNewCode() async {
+    try {
+      final code = await widget.rpc.generateInvitationCode();
+      if (mounted) setState(() => _invitationCode = code);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Código generado'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  void _copyCode() {
+    final code = _invitationCode;
+    if (code == null) return;
+    Clipboard.setData(ClipboardData(text: code));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('📋 Código copiado al portapapeles'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+  }
+
+  void _showJoinDialog() {
+    final codeController = TextEditingController();
+    String? errorText;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) {
+          bool isLoading = false;
+
+          Future<void> doJoin() async {
+            final code = codeController.text.trim().toUpperCase();
+            if (code.length != 6) {
+              setDialogState(() => errorText = 'El código debe tener 6 caracteres');
+              return;
+            }
+
+            setDialogState(() {
+              isLoading = true;
+              errorText = null;
+            });
+
+            try {
+              await widget.rpc.joinHousehold(code);
+              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🎉 ¡Te uniste al hogar exitosamente!'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+                _loadData();
+              }
+            } catch (e) {
+              setDialogState(() {
+                isLoading = false;
+                errorText = e.toString().replaceFirst('Exception: ', '');
+              });
+            }
+          }
+
+          return AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.login_rounded, color: AppColors.primary, size: 22),
+                SizedBox(width: 10),
+                Text('Unirse a un hogar'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ingresá el código de invitación que te compartió tu pareja:',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: codeController,
+                  textAlign: TextAlign.center,
+                  enabled: !isLoading,
+                  style: const TextStyle(
+                      fontSize: 28,
+                      letterSpacing: 10,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary),
+                  maxLength: 6,
+                  onChanged: (_) => setDialogState(() => errorText = null),
+                  onSubmitted: (_) => doJoin(),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: 'ABC123',
+                    hintStyle: const TextStyle(
+                        letterSpacing: 4, color: AppColors.textMuted, fontSize: 22),
+                    filled: true,
+                    fillColor: AppColors.primary.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide:
+                          const BorderSide(color: AppColors.primary, width: 2),
+                    ),
+                    errorText: errorText,
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(dialogCtx),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: isLoading ? null : doJoin,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('Unirme',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: _isLoading 
+        ? const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 3,
+            ),
+          )
+        : CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 140,
+                floating: false,
+                pinned: true,
+                elevation: 0,
+                stretch: true,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
+                  title: Text(
+                    'Configuración',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.headlineMedium?.color,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 26,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.05),
+                          Theme.of(context).scaffoldBackgroundColor,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildProfileCard(),
+                      const SizedBox(height: 24),
+
+                      if (_householdId != null) ...[
+                        _buildCombinedHouseholdCard(),
+                      ] else ...[
+                        _buildNoHouseholdCard(),
+                      ],
+
+                      const SizedBox(height: 24),
+                      const MercadoPagoSettingsCard(),
+                      const SizedBox(height: 24),
+                      _buildAppearanceCard(),
+                      const SizedBox(height: 48),
+                      _buildLogoutButton(),
+                      const SizedBox(height: 32),
+                      
+                      Opacity(
+                        opacity: 0.4,
+                        child: Column(
+                          children: [
+                            const Text(
+                              'HOMESYNC',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Versión 1.0.0 (Building with ❤️)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context).textTheme.bodySmall?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // ── Profile Card ──────────────────────────────────────────────────────────
+
+  Widget _buildProfileCard() {
+    final profileAsync = ref.watch(userProfileProvider);
+    final profile = profileAsync.whenOrNull(data: (p) => p);
+    final name = (profile?['full_name'] as String?) ?? 'Usuario';
+    final email = (profile?['email'] as String?) ?? '';
+    final avatar = profile?['avatar_url'] as String?;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04), 
+              blurRadius: 24, 
+              offset: const Offset(0, 12)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Avatar (tappable → picker)
+              GestureDetector(
+                onTap: () => AvatarPickerSheet.show(context),
+                child: Hero(
+                  tag: 'user-profile-avatar',
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (avatar?.startsWith('premium://') == true)
+                        // Premium avatar: show without circular clip
+                        CustomUserAvatar(
+                          name: name,
+                          avatarUrl: avatar,
+                          radius: 36,
+                          isAnimated: true,
+                          isPriority: true,
+                        )
+                      else
+                        // Normal emoji/initial avatar with ring border
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: CustomUserAvatar(name: name, avatarUrl: avatar, radius: 36),
+                        ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Theme.of(context).cardColor,
+                                width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded,
+                              size: 12, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      style: TextStyle(
+                          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7), 
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Quick actions row
+          Row(
+            children: [
+              Expanded(
+                child: _profileActionBtn(
+                  icon: Icons.pets_rounded,
+                  label: 'Avatar',
+                  onTap: () => AvatarPickerSheet.show(context),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _profileActionBtn(
+                  icon: Icons.badge_rounded,
+                  label: 'Nombre',
+                  onTap: () => _showRenameDialog(name),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _profileActionBtn({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCombinedHouseholdCard() {
+    final typeLabels = {
+      'couple': '💑 Pareja',
+      'family': '👨‍👩‍👧‍👦 Familia',
+      'roommates': '🏠 Compañeros',
+      'solo': '👤 Solo',
+    };
+    final memberCount = _members.length;
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Part
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.08),
+                  AppColors.primary.withValues(alpha: 0.00)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(28),
+                topRight: Radius.circular(28),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.home_rounded,
+                      color: AppColors.primary, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _householdName ?? 'Mi hogar',
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          (typeLabels[_householdType] ?? 'Hogar').toUpperCase(),
+                          style: const TextStyle(
+                              color: AppColors.primary, 
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showEditHouseholdMenu(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(Icons.edit_note_rounded,
+                          color: AppColors.primary, size: 28),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // Members Part
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'MIEMBROS',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textMuted,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Text(
+                      '$memberCount ${memberCount == 1 ? "miembro" : "miembros"}',
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 11),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ..._members.where((m) => m != null).map((member) {
+                  final userData = (member['users'] is Map) 
+                      ? member['users'] as Map 
+                      : {};
+                  final rawName = (userData['full_name'] as String?) ??
+                      (userData['email'] as String?)?.split('@').first ??
+                      'Miembro';
+                  final avatarUrl = userData['avatar_url'] as String?;
+                  final role = member['role'] ?? 'member';
+                  final isCurrentUser = member['user_id'] == currentUserId;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        CustomUserAvatar(
+                          name: rawName,
+                          avatarUrl: avatarUrl,
+                          radius: 18,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    rawName,
+                                    style: TextStyle(
+                                      fontWeight: isCurrentUser
+                                          ? FontWeight.w700
+                                          : FontWeight.w600,
+                                      fontSize: 14,
+                                      color: isCurrentUser
+                                          ? AppColors.primary
+                                          : null,
+                                    ),
+                                  ),
+                                  if (isCurrentUser) ...[
+                                    const SizedBox(width: 6),
+                                    const Text(' (Tú)',
+                                        style: TextStyle(
+                                            color: AppColors.textMuted,
+                                            fontSize: 12)),
+                                  ],
+                                ],
+                              ),
+                              Text(
+                                role == 'owner' ? 'Propietario' : 'Miembro',
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (role == 'owner')
+                          const Icon(Icons.star_rounded,
+                              size: 14, color: Colors.amber),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRenameHouseholdDialog() async {
+    final ctrl = TextEditingController(text: _householdName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Nombre del hogar',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: 'Tu nombre',
+            filled: true,
+            fillColor: AppColors.primary.withValues(alpha: 0.05),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName == null || newName.isEmpty || newName == _householdName) return;
+
+    try {
+      final hId = _householdId;
+      if (hId == null) return;
+      
+      await Supabase.instance.client
+          .from('households')
+          .update({'name': newName})
+          .eq('id', hId);
+      
+      if (mounted) {
+        setState(() => _householdName = newName);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('✅ Hogar renombrado'),
+              backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  void _showEditHouseholdMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _householdName ?? 'Mi hogar',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.edit_rounded, color: AppColors.primary),
+                ),
+                title: const Text('Editar nombre'),
+                subtitle: const Text('Cambia el nombre de tu hogar'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showRenameHouseholdDialog();
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.share_rounded, color: AppColors.accentBlue),
+                ),
+                title: const Text('Código de invitación'),
+                subtitle: Text(
+                  _invitationCode != null 
+                      ? 'Compartir o generar nuevo código'
+                      : 'Generar código para invitar',
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showInvitationCodeSheet();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showInvitationCodeSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Row(
+                  children: [
+                    Icon(Icons.share_rounded, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text(
+                      'Código de invitación',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Compartí este código para que otros se unan a tu hogar',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_invitationCode != null)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: Text(
+                              _invitationCode ?? '---',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 4,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        IconButton(
+                          onPressed: () {
+                            _copyCode();
+                          },
+                          icon: const Icon(Icons.copy_rounded, color: AppColors.primary),
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            padding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Sin código activo',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      setSheetState(() {});
+                      await _generateNewCode();
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(_invitationCode == null
+                        ? 'Generar código'
+                        : 'Generar nuevo código'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showRenameDialog(String currentName) async {
+    final ctrl = TextEditingController(text: currentName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Cambiar nombre', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'Nombre',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName == null || newName.isEmpty || newName == currentName) return;
+
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+      
+      await Supabase.instance.client
+          .from('users')
+          .update({'full_name': newName})
+          .eq('id', user.id);
+      
+      // Invalidate profile cache so header updates
+      ref.invalidate(userProfileProvider);
+
+      if (mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        await _loadData();
+        if (mounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('✅ Nombre actualizado'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
+  Widget _buildNoHouseholdCard() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04), 
+              blurRadius: 24, 
+              offset: const Offset(0, 12)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.group_add_rounded,
+                size: 40, color: AppColors.primary),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            '¡Comienza tu equipo!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Unite a un equipo existente con un código de invitación para empezar a compartir tareas y gastos.',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+              fontSize: 15,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: _showJoinDialog,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.login_rounded, size: 20),
+                const SizedBox(width: 12),
+                Text('Unirse con código', style: TextStyle(fontWeight: FontWeight.w800)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppearanceCard() {
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03), 
+              blurRadius: 20, 
+              offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Apariencia',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Elige el tema visual de la app',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              _themeBtn(ThemeMode.light, '☀️ Claro', Icons.light_mode_rounded,
+                  themeMode),
+              const SizedBox(width: 8),
+              _themeBtn(ThemeMode.dark, '🌙 Oscuro', Icons.dark_mode_rounded,
+                  themeMode),
+              const SizedBox(width: 8),
+              _themeBtn(ThemeMode.system, '⚙️ Sistema',
+                  Icons.settings_suggest_rounded, themeMode),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _themeBtn(
+      ThemeMode mode, String label, IconData icon, ThemeMode current) {
+    final isSelected = current == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          ref.read(themeModeProvider.notifier).setMode(mode);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon,
+                  color: isSelected ? AppColors.primary : AppColors.textMuted,
+                  size: 22),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color:
+                      isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Container(
+      width: double.infinity,
+      height: 62,
+      child: OutlinedButton(
+        onPressed: () async {
+          HapticFeedback.mediumImpact();
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
+              title: const Text('¿Cerrar sesión?', 
+                style: TextStyle(fontWeight: FontWeight.w900)),
+              content: const Text('Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    child: const Text('Cerrar sesión',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (confirm == true) {
+            await widget.auth.signOut();
+            widget.onLogout();
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: AppColors.error.withValues(alpha: 0.2), width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          foregroundColor: AppColors.error,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, size: 22),
+            SizedBox(width: 12),
+            Text(
+              'Cerrar Sesión',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

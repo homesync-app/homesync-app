@@ -1,0 +1,212 @@
+class Task {
+  final String id;
+  final String title;
+  final String? description;
+  final String? category;
+  final String? assignedTo;
+  final String status;
+  final int xpReward;
+  final int coinReward;
+  final String? recurrenceType;
+  final int recurrenceInterval;
+  final DateTime? dueAt;
+  final DateTime? recurrenceEndAt;
+  final String householdId;
+  final DateTime createdAt;
+  final DateTime? completedAt;
+  final String? completedBy;
+  final String? verifiedBy;
+  final DateTime? verifiedAt;
+  final String? lastCompletedAt;
+  final String? lastVerifiedBy;
+  final String priority;
+  final String type;
+  final String difficulty;
+
+  const Task({
+    required this.id,
+    required this.title,
+    this.description,
+    this.category,
+    this.assignedTo,
+    required this.status,
+    required this.xpReward,
+    required this.coinReward,
+    this.recurrenceType,
+    this.recurrenceInterval = 1,
+    this.dueAt,
+    this.recurrenceEndAt,
+    required this.householdId,
+    required this.createdAt,
+    this.completedAt,
+    this.completedBy,
+    this.verifiedBy,
+    this.verifiedAt,
+    this.lastCompletedAt,
+    this.lastVerifiedBy,
+    this.priority = 'medium',
+    this.type = 'one_time',
+    this.difficulty = 'medium',
+  });
+
+  factory Task.fromMap(Map<String, dynamic> map) {
+    return Task(
+      id: map['id'] as String? ?? '',
+      title: map['title'] as String? ?? 'Sin título',
+      description: map['description'] as String?,
+      category: map['category'] as String?,
+      assignedTo: map['assigned_to'] as String?,
+      status: map['status'] as String? ?? 'active',
+      xpReward: _toInt(map['xp_reward']),
+      coinReward: _toInt(map['coin_reward']),
+      recurrenceType: map['recurrence_type'] as String?,
+      recurrenceInterval: _toInt(map['recurrence_interval'], defaultValue: 1),
+      dueAt: _parseDate(map['due_at']),
+      recurrenceEndAt: _parseDate(map['recurrence_end_at']),
+      householdId: map['household_id'] as String? ?? '',
+      createdAt: _parseDate(map['created_at']) ?? DateTime.now(),
+      completedAt: _parseDate(map['completed_at']),
+      completedBy: map['completed_by'] as String?,
+      verifiedBy: map['verified_by'] as String?,
+      verifiedAt: _parseDate(map['verified_at']),
+      lastCompletedAt: map['last_completed_at'] as String?,
+      lastVerifiedBy: map['last_verified_by'] as String?,
+      priority: map['priority'] as String? ?? 'medium',
+      type: map['type'] as String? ?? 'one_time',
+      difficulty: map['difficulty'] as String? ?? 'medium',
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'description': description,
+        'category': category,
+        'assigned_to': assignedTo,
+        'status': status,
+        'xp_reward': xpReward,
+        'coin_reward': coinReward,
+        'recurrence_type': recurrenceType,
+        'recurrence_interval': recurrenceInterval,
+        'due_at': dueAt?.toIso8601String(),
+        'recurrence_end_at': recurrenceEndAt?.toIso8601String(),
+        'household_id': householdId,
+        'created_at': createdAt.toIso8601String(),
+        'completed_at': completedAt?.toIso8601String(),
+        'completed_by': completedBy,
+        'verified_by': verifiedBy,
+        'verified_at': verifiedAt?.toIso8601String(),
+        'last_completed_at': lastCompletedAt,
+        'last_verified_by': lastVerifiedBy,
+        'priority': priority,
+        'type': type,
+        'difficulty': difficulty,
+      };
+
+  // ── Computed helpers ───────────────────────────────────────────────────────
+
+  bool get isActive => status == 'active' || status == 'assigned';
+  bool get isPending => status == 'pending';
+  bool get isCompleted => status == 'completed';
+  bool get isVerified => status == 'verified';
+  bool get isObjected => status == 'objected';
+  bool get isRecurring => recurrenceType != null;
+  bool get isOverdue =>
+      dueAt != null && dueAt!.isBefore(DateTime.now()) && isActive;
+  bool get isDueToday {
+    if (dueAt == null) return false;
+    final now = DateTime.now();
+    return dueAt!.year == now.year &&
+        dueAt!.month == now.month &&
+        dueAt!.day == now.day;
+  }
+
+  String get recurrenceLabel {
+    switch (recurrenceType) {
+      case 'daily':
+        return 'Diaria';
+      case 'weekly':
+        return 'Semanal';
+      case 'monthly':
+        return 'Mensual';
+      case 'custom':
+        return 'Personalizada';
+      default:
+        return 'Sin repetición';
+    }
+  }
+
+  Task copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? category,
+    String? assignedTo,
+    String? status,
+    int? xpReward,
+    int? coinReward,
+    String? recurrenceType,
+    int? recurrenceInterval,
+    DateTime? dueAt,
+    DateTime? recurrenceEndAt,
+    String? householdId,
+    DateTime? createdAt,
+    DateTime? completedAt,
+    String? completedBy,
+    String? verifiedBy,
+    DateTime? verifiedAt,
+    String? lastCompletedAt,
+    String? lastVerifiedBy,
+    String? priority,
+    String? type,
+    String? difficulty,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      assignedTo: assignedTo ?? this.assignedTo,
+      status: status ?? this.status,
+      xpReward: xpReward ?? this.xpReward,
+      coinReward: coinReward ?? this.coinReward,
+      recurrenceType: recurrenceType ?? this.recurrenceType,
+      recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
+      dueAt: dueAt ?? this.dueAt,
+      recurrenceEndAt: recurrenceEndAt ?? this.recurrenceEndAt,
+      householdId: householdId ?? this.householdId,
+      createdAt: createdAt ?? this.createdAt,
+      completedAt: completedAt ?? this.completedAt,
+      completedBy: completedBy ?? this.completedBy,
+      verifiedBy: verifiedBy ?? this.verifiedBy,
+      verifiedAt: verifiedAt ?? this.verifiedAt,
+      lastCompletedAt: lastCompletedAt ?? this.lastCompletedAt,
+      lastVerifiedBy: lastVerifiedBy ?? this.lastVerifiedBy,
+      priority: priority ?? this.priority,
+      type: type ?? this.type,
+      difficulty: difficulty ?? this.difficulty,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is Task && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  String toString() => 'Task(id: $id, title: $title, status: $status)';
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  static int _toInt(dynamic value, {int defaultValue = 0}) {
+    if (value == null) return defaultValue;
+    return (value as num).toInt();
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+}

@@ -1,0 +1,1079 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/theme/app_colors.dart';
+import 'package:homesync_client/utils/app_animations.dart';
+import 'package:homesync_client/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/widgets/user_avatar.dart';
+import 'package:homesync_client/providers/expense_providers.dart';
+import 'package:homesync_client/providers/core_providers.dart';
+import 'package:homesync_client/repositories/expense_repository.dart';
+import 'package:homesync_client/screens/savings_screen.dart';
+import 'package:homesync_client/services/mercadopago_service.dart';
+import 'package:homesync_client/models/member.dart';
+import 'package:homesync_client/providers/household_providers.dart';
+
+class FinanceViewNotifier extends Notifier<bool> {
+  @override
+  bool build() => true; // true = Compartido, false = Personal
+
+  void setShared() => state = true;
+  void setPersonal() => state = false;
+  void toggle() => state = !state;
+}
+
+final financeViewProvider = NotifierProvider<FinanceViewNotifier, bool>(FinanceViewNotifier.new);
+
+class ExpensesScreen extends ConsumerStatefulWidget {
+  const ExpensesScreen({super.key});
+
+  @override
+  ConsumerState<ExpensesScreen> createState() => _ExpensesScreenState();
+}
+
+class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final isShared = ref.watch(financeViewProvider);
+    final expensesAsync = ref.watch(expensesAndBalancesProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: FloatingActionButton.extended(
+          heroTag: null,
+          onPressed: () => _showExpenseSheet(),
+          backgroundColor: AppColors.primary,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text(
+            'Nuevo gasto',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(expensesAndBalancesProvider);
+        },
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              expandedHeight: 0,
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(70),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  child: _buildSegmentedControl(isShared),
+                ),
+              ),
+            ),
+            expensesAsync.when(
+              loading: () => const SliverFillRemaining(
+                child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary)),
+              ),
+              error: (err, _) => SliverFillRemaining(
+                child: Center(child: Text('Error: $err')),
+              ),
+              data: (data) {
+                final expenses = data['expenses'] as List;
+                final balances = data['balances'] as List;
+                final householdId = data['householdId'] as String;
+
+                // Filter personal vs shared
+                final filteredExpenses = expenses.where((e) {
+                  final bool isSharedExpense = e['is_shared'] ?? true;
+                  return isShared ? isSharedExpense : !isSharedExpense;
+                }).toList();
+
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      if (isShared) ...[
+                        _buildSharedDashboard(balances, householdId),
+                        const SizedBox(height: 32),
+                      ],
+                      Text(
+                        isShared ? 'Gastos Compartidos' : 'Mis Gastos Personales',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (filteredExpenses.isEmpty)
+                        _buildEmptyState()
+                      else
+                        ...filteredExpenses.map((e) => GestureDetector(
+                              onTap: () => _showExpenseSheet(e),
+                              child: _ExpenseItem(expense: e),
+                            )),
+                      const SizedBox(height: 120),
+                    ]),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl(bool isShared) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildToggleButton(
+              label: 'Nuestras Finanzas',
+              isSelected: isShared,
+              onTap: () => ref.read(financeViewProvider.notifier).setShared(),
+            ),
+          ),
+          Expanded(
+            child: _buildToggleButton(
+              label: 'Mis Finanzas',
+              isSelected: !isShared,
+              onTap: () => ref.read(financeViewProvider.notifier).setPersonal(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleButton(
+      {required String label,
+      required bool isSelected,
+      required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSharedDashboard(List balances, String householdId) {
+    if (balances.isEmpty) return const SizedBox.shrink();
+
+    final currentUserId = ref.read(currentUserIdProvider);
+    // Convert the list to a typed list to avoid Map subtype errors
+    final typedBalances = List<Map<String, dynamic>>.from(balances);
+
+    final myBalData = typedBalances.firstWhere(
+        (b) => b['user_id'] == currentUserId,
+        orElse: () => <String, dynamic>{});
+    final partnerBalData = typedBalances.firstWhere(
+        (b) => b['user_id'] != currentUserId,
+        orElse: () => <String, dynamic>{});
+    
+    final myBal = (myBalData['balance'] ?? 0) as num;
+    final isNegative = myBal < -0.01;
+
+    // Calculate split percentage for visual bar
+    // We'll map the balance difference to a range [0.3, 0.7] for visual appeal.
+    double myPercent = 0.5;
+    if (myBal != 0) {
+      double absBal = myBal.toDouble().abs();
+      double shift = (absBal / (absBal + 2000)).clamp(0, 0.2);
+      myPercent = myBal > 0 ? 0.5 + shift : 0.5 - shift;
+    }
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(36),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 40,
+                offset: const Offset(0, 20),
+              ),
+            ],
+            border: Border.all(color: Colors.black.withOpacity(0.02)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // My Avatar (Left)
+                  CustomUserAvatar(
+                    name: 'Tú',
+                    avatarUrl: myBalData['avatar_url'],
+                    radius: 28,
+                  ),
+                  
+                  // Central Balance info
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'BALANCE DE PAREJA',
+                          style: TextStyle(
+                            color: AppColors.textSecondary.withOpacity(0.7),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '\$${myBal.toDouble().abs().toStringAsFixed(2)}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 38,
+                            fontWeight: FontWeight.w900,
+                            color: isNegative ? AppColors.accentPeach : AppColors.accentTeal,
+                            letterSpacing: -1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Partner Avatar (Right)
+                  CustomUserAvatar(
+                    name: 'Pareja',
+                    avatarUrl: partnerBalData['avatar_url'],
+                    radius: 28,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              // Visual Split Bar
+              Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      height: 12,
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: (myPercent * 100).toInt().clamp(1, 99),
+                            child: Container(color: AppColors.accentPeach),
+                          ),
+                          Expanded(
+                            flex: ((1 - myPercent) * 100).toInt().clamp(1, 99),
+                            child: Container(color: AppColors.accentPeach.withOpacity(0.2)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Tú: ${(myPercent * 100).toInt()}%', 
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                      Text('Tu pareja: ${((1 - myPercent) * 100).toInt()}%', 
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        // Quick Actions
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildQuickAction(
+              icon: Icons.sync_alt_rounded,
+              label: 'Saldar',
+              color: AppColors.accentPeach,
+              onTap: isNegative ? () {
+                HapticFeedback.selectionClick();
+                _confirmSettleDebt(householdId, currentUserId!,
+                    partnerBalData['user_id'] as String, myBal.toDouble().abs());
+              } : null,
+            ),
+            _buildQuickAction(
+              icon: Icons.insights_rounded,
+              label: 'Gráficos',
+              color: AppColors.accentBlue,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                _showChartsSheet();
+              },
+            ),
+            _buildQuickAction(
+              icon: Icons.savings_rounded,
+              label: 'Ahorro',
+              color: AppColors.accentTeal,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.push(
+                  context,
+                  AppTransitions.slideHorizontal(page: const SavingsScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildMPSuggestions(),
+      ],
+    );
+  }
+
+  Widget _buildQuickAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: color.withOpacity(0.1)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.receipt_long_outlined,
+              size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+          const SizedBox(height: 20),
+          const Text(
+            'Sin movimientos',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Comienza a registrar tus gastos para ver el balance.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExpenseSheet([dynamic expense]) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ExpenseFormSheet(
+        expenseToEdit:
+            expense != null ? Map<String, dynamic>.from(expense) : null,
+      ),
+    );
+  }
+
+  void _showChartsSheet() {
+    final expensesAsync = ref.read(expensesAndBalancesProvider);
+    expensesAsync.whenData((data) {
+      final expenses = data['expenses'] as List;
+      if (expenses.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No hay gastos para mostrar gráficos'),
+            backgroundColor: AppColors.info,
+          ),
+        );
+        return;
+      }
+
+      final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble());
+      
+      final categoryTotals = <String, double>{};
+      for (final expense in expenses) {
+        final category = expense['category'] ?? 'other';
+        final amount = (expense['amount'] ?? 0) as num;
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + amount.toDouble();
+      }
+
+      final sortedCategories = categoryTotals.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (ctx, scrollController) => SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppColors.textMuted.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Row(
+                    children: [
+                      Icon(Icons.insights_rounded, color: AppColors.accentBlue),
+                      SizedBox(width: 12),
+                      Text(
+                        'Estadísticas',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Resumen de gastos compartidos',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.accentBlue.withValues(alpha: 0.1),
+                          AppColors.accentBlue.withValues(alpha: 0.02),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Total Gastado',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '\$${totalExpenses.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.accentBlue,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${expenses.length} ${expenses.length == 1 ? 'gasto' : 'gastos'}',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Por Categoría',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...sortedCategories.map((entry) {
+                    final percentage = (entry.value / totalExpenses * 100);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.getCategoryColor(entry.key).withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        AppColors.categoryIcons[entry.key] ?? '📦',
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppColors.categoryNames[entry.key] ?? 'Otro',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '\$${entry.value.toStringAsFixed(2)} (${percentage.toStringAsFixed(1)}%)',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: percentage / 100,
+                              backgroundColor: AppColors.divider,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.getCategoryColor(entry.key),
+                              ),
+                              minHeight: 8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _confirmSettleDebt(String householdId, String debtorId,
+      String creditorId, double amount) async {
+    final membersAsync = ref.read(householdMembersProvider);
+    String? creditorAlias;
+    String creditorName = 'tu pareja';
+
+    if (membersAsync is AsyncData<List<Member>>) {
+      final creditor = membersAsync.value.where((m) => m.userId == creditorId).firstOrNull;
+      if (creditor != null) {
+        creditorAlias = creditor.mercadopagoAlias;
+        creditorName = creditor.fullName ?? 'tu pareja';
+      }
+    }
+
+    final String? method = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Saldar Deuda',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            Text('Debes \$${amount.toStringAsFixed(2)} a $creditorName.',
+                style: const TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 24),
+            
+            // Option 1: Direct Transfer (0% Commission)
+            if (creditorAlias != null && creditorAlias.isNotEmpty)
+              _settleOption(
+                context,
+                icon: Icons.account_balance_rounded,
+                title: 'Transferencia Directa',
+                subtitle: 'Alias: $creditorAlias (0% comisión)',
+                color: Colors.teal,
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: creditorAlias!));
+                  Navigator.pop(context, 'transfer');
+                },
+              ),
+            
+            // Option 2: MP Payment Link (Automatic)
+            _settleOption(
+              context,
+              icon: Icons.bolt_rounded,
+              title: 'Pagar con Mercado Pago',
+              subtitle: 'Automático y seguro (puede aplicar comisión)',
+              color: Colors.blue,
+              onTap: () => Navigator.pop(context, 'mp_link'),
+            ),
+            
+            // Option 3: Manual Record
+            _settleOption(
+              context,
+              icon: Icons.edit_note_rounded,
+              title: 'Anotar como pagado',
+              subtitle: 'Si ya le pagaste por fuera o en efectivo',
+              color: AppColors.textMuted,
+              onTap: () => Navigator.pop(context, 'manual'),
+            ),
+            
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (method == null) return;
+
+    if (method == 'transfer') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Alias copiado. Realiza la transferencia y luego anota el pago.')),
+      );
+      // We don't settle automatically here, user should probably mark as manual after transfer
+      return;
+    }
+
+    if (method == 'mp_link') {
+      try {
+        final mpService = MercadoPagoService();
+        final url = await mpService.createPaymentPreference(
+          title: 'Saldar deuda en HomeSync',
+          amount: amount,
+          externalReference: 'settle|$householdId|$debtorId|$creditorId|$amount',
+        );
+        
+        if (url != null) {
+          await mpService.launchCheckout(url);
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error));
+      }
+      return;
+    }
+
+    // Manual or post-transfer
+    try {
+      await ref.read(expenseRepositoryProvider).settleDebt(
+            householdId: householdId,
+            toUserId: creditorId,
+            amount: amount,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Deuda saldada correctamente'), backgroundColor: AppColors.success),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error));
+    }
+  }
+
+  Widget _buildMPSuggestions() {
+    final movementsAsync = ref.watch(mercadopagoMovementsProvider);
+
+    return movementsAsync.when(
+      data: (movements) {
+        if (movements.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.auto_awesome, color: Colors.blue, size: 18),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Sugerencias de Gastos',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => ref.invalidate(mercadopagoMovementsProvider),
+                  child: const Text('Actualizar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 160,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.zero,
+                itemCount: movements.length,
+                itemBuilder: (context, index) {
+                  final move = movements[index];
+                  final amount = (move['amount'] as num).toDouble();
+                  final title = move['title'] ?? 'Gasto MP';
+                  
+                  return Container(
+                    width: 220,
+                    margin: const EdgeInsets.only(right: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.blue.withOpacity(0.08),
+                          Colors.blue.withOpacity(0.02),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.blue.withOpacity(0.15)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            right: -10,
+                            top: -10,
+                            child: Icon(Icons.shopping_bag_outlined, 
+                              size: 80, color: Colors.blue.withOpacity(0.05)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '\$${amount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.blue,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          _showExpenseSheet({
+                                            'title': title,
+                                            'amount': amount,
+                                            'is_shared': true,
+                                            'category': _suggestCategory(title),
+                                          });
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blue,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(14),
+                                          ),
+                                        ),
+                                        child: const Text('Compartir',
+                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.5),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textMuted),
+                                        onPressed: () {
+                                          // Local dismiss logic could be added here
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  String _suggestCategory(String title) {
+    final t = title.toLowerCase();
+    if (t.contains('super') || t.contains('coto') || t.contains('carrefour') || t.contains('market')) return 'supermarket';
+    if (t.contains('restaurante') || t.contains('café') || t.contains('bar') || t.contains('comida')) return 'restaurants';
+    if (t.contains('taxi') || t.contains('uber') || t.contains('cabify') || t.contains('nafta') || t.contains('combustible')) return 'transport';
+    if (t.contains('netflix') || t.contains('spotify') || t.contains('cine') || t.contains('teatro')) return 'entertainment';
+    if (t.contains('luz') || t.contains('agua') || t.contains('gas') || t.contains('internet')) return 'utilities';
+    if (t.contains('farmacia') || t.contains('médico') || t.contains('hospital')) return 'health';
+    return 'other';
+  }
+
+  Widget _settleOption(BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.1)),
+      ),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+}
+
+class _ExpenseItem extends StatelessWidget {
+  final dynamic expense;
+  const _ExpenseItem({required this.expense});
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = (expense['amount'] ?? 0).toDouble();
+    final title = expense['title'] ?? 'Gasto';
+    final category = expense['category'] ?? 'other';
+    final categoryColor = AppColors.getCategoryColor(category);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(color: Colors.black.withOpacity(0.03)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: categoryColor.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                AppColors.categoryIcons[category] ?? '📦',
+                style: const TextStyle(fontSize: 22),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  '${AppColors.categoryNames[category] ?? 'Otro'} · ${_formatDate(expense['paid_at'] ?? expense['created_at'])}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary.withOpacity(0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${amount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.accentTeal.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'DIVIDIDO',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.accentTeal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(dynamic date) {
+    if (date == null) return '';
+    try {
+      final dt = DateTime.parse(date.toString());
+      return '${dt.day} ${AppColors.getMonthName(dt.month)}';
+    } catch (e) {
+      return '';
+    }
+  }
+}
