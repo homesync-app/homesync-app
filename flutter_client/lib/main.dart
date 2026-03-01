@@ -3,44 +3,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/supabase_auth_service.dart';
-import 'services/supabase_rpc_service.dart';
-import 'services/expense_service.dart';
-import 'services/notification_service.dart';
+import 'core/services/supabase_auth_service.dart';
+import 'core/services/supabase_rpc_service.dart';
+import 'core/services/expense_service.dart';
+import 'core/services/notification_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'utils/app_animations.dart';
-import 'screens/home_screen.dart';
-import 'screens/tasks_screen.dart';
-import 'screens/expenses_screen.dart';
-import 'screens/rewards_screen.dart';
-import 'screens/stats_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/setup_screen.dart';
-import 'screens/weekly_winner_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/notifications_screen.dart';
-import 'screens/shopping_list_screen.dart';
-import 'providers/core_providers.dart';
-import 'providers/theme_provider.dart';
-import 'providers/savings_providers.dart';
+import 'features/dashboard/presentation/screens/home_screen.dart';
+import 'features/tasks/presentation/screens/tasks_screen.dart';
+import 'features/expenses/presentation/screens/expenses_screen.dart';
+import 'features/rewards/presentation/screens/rewards_screen.dart';
+import 'features/stats/presentation/screens/stats_screen.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/household/presentation/screens/setup_screen.dart';
+import 'features/tasks/presentation/screens/weekly_winner_screen.dart';
+import 'features/settings/presentation/screens/settings_screen.dart';
+import 'features/notifications/presentation/screens/notifications_screen.dart';
+import 'features/shopping/presentation/screens/shopping_list_screen.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'core/providers/theme_provider.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart'; // added kIsWeb
 import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 1. Initialize Firebase
-  try {
-    await Firebase.initializeApp();
-    // Pass ALL uncaught Flutter errors to Crashlytics
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+  // 1. Initialize Firebase (Skip on Web as Crashlytics is not supported)
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+      // Pass ALL uncaught Flutter errors to Crashlytics
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    } catch (e) {
+      debugPrint('Firebase initialization error: $e');
+    }
   }
 
   final auth = SupabaseAuthService();
@@ -52,8 +55,10 @@ void main() async {
   // Dual error pipeline: Crashlytics (crash grouping) + Supabase (admin logs)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    // 1. Send to Crashlytics for crash tracking & grouping in Firebase Console
-    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    // 1. Send to Crashlytics (Mobile only)
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    }
     // 2. Send to Supabase for the admin panel logs page
     rpc.logApplicationError(
       message: details.exceptionAsString(),
@@ -64,8 +69,10 @@ void main() async {
 
   // Catch async errors outside of Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    // 1. Crashlytics — marks as fatal
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    // 1. Crashlytics — marks as fatal (Mobile only)
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    }
     // 2. Supabase admin logs
     rpc.logApplicationError(
       message: error.toString(),
@@ -365,7 +372,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       const ExpensesScreen(),
       const RewardsScreen(),
       StatsScreen(rpc: widget.rpc),
-      ShoppingListScreen(auth: widget.auth),
+      ShoppingListScreen(),
     ];
 
     final titles = [

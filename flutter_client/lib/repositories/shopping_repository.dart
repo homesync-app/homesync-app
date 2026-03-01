@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/shopping_service.dart'; // Reuse ShoppingItem model
+import '../core/services/shopping_service.dart'; // Reuse ShoppingItem model
 
 final shoppingRepositoryProvider = Provider<ShoppingRepository>((ref) {
   return ShoppingRepository(Supabase.instance.client);

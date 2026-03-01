@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homesync_client/screens/login_screen.dart';
-import 'package:homesync_client/services/supabase_auth_service.dart';
-import 'package:homesync_client/services/supabase_rpc_service.dart';
+import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
+import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Fakes simplificados para simular el comportamiento de los servicios
