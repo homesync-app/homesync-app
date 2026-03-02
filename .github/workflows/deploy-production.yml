@@ -42,6 +42,11 @@ jobs:
             echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
           fi
       
+      - name: Analyze code
+        run: |
+          cd flutter_client
+          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+      
       - name: Build APK (Release)
         run: |
           cd flutter_client
