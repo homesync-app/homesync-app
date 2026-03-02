@@ -26,19 +26,17 @@ jobs:
           flutter pub get
       
       - name: Decode Keystore
-        if: env.ENCODED_KEYSTORE != ''
         run: |
           echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
       
       - name: Create local.properties
-        if: env.ENCODED_KEYSTORE != ''
         run: |
           echo "storeFile=release.keystore" >> flutter_client/android/local.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> flutter_client/android/local.properties
-          echo "keyAlias=${{ secrets.KEYSTORE_ALIAS }}" >> flutter_client/android/local.properties
-          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> flutter_client/android/local.properties
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/local.properties
+          echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
       
       - name: Build APK (Release)
         run: |
@@ -52,7 +50,6 @@ jobs:
           path: flutter_client/build/app/outputs/flutter-apk/app-release.apk
       
       - name: Deploy to Google Play (Internal Testing)
-        if: env.ENCODED_KEYSTORE != ''
         uses: r0adkll/upload-google-play@v1
         with:
           service-account-json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
