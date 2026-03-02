@@ -11,6 +11,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/shared/widgets/balance_card.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
@@ -37,6 +38,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   RealtimeChannel? _tasksChannel;
   RealtimeChannel? _expensesChannel;
+  RealtimeChannel? _splitsChannel;
 
   @override
   void initState() {
@@ -48,6 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void dispose() {
     _tasksChannel?.unsubscribe();
     _expensesChannel?.unsubscribe();
+    _splitsChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -83,6 +86,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             column: 'household_id',
             value: householdId,
           ),
+          callback: (_) => _refreshFinancials(),
+        )
+        .subscribe();
+
+    _splitsChannel = client
+        .channel('home_splits:$householdId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'expense_splits',
           callback: (_) => _refreshFinancials(),
         )
         .subscribe();
@@ -140,24 +153,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildMainContent(String householdId) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async => _refreshHome(),
-          color: AppColors.primary,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 28),
-              _buildFinancialSummary(),
-              const SizedBox(height: 32),
-              _buildTasksSection(),
-              const SizedBox(height: 32),
-              _buildActivitySection(),
-              const SizedBox(height: 120),
-            ],
+      body: Column(
+        children: [
+          const OfflineIndicator(),
+          Expanded(
+            child: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: () async => _refreshHome(),
+                color: AppColors.primary,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 28),
+                    _buildFinancialSummary(),
+                    const SizedBox(height: 32),
+                    _buildTasksSection(),
+                    const SizedBox(height: 32),
+                    _buildActivitySection(),
+                    const SizedBox(height: 120),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

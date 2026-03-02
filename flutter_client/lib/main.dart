@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'config/app_environment.dart';
 import 'core/services/supabase_auth_service.dart';
 import 'core/services/supabase_rpc_service.dart';
 import 'core/services/expense_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/providers/connectivity_provider.dart';
+import 'core/offline/sync_service.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'utils/app_animations.dart';
@@ -38,7 +41,9 @@ void main() async {
   
   // 1. Initialize Firebase
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+    );
     // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
     if (!kIsWeb) {
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
