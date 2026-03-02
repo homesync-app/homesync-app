@@ -9,13 +9,11 @@ jobs:
   deploy:
     name: Build & Deploy to Staging
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -25,16 +23,23 @@ jobs:
           cache: true
       
       - name: Get dependencies
-        run: flutter pub get
+        run: |
+          cd flutter_client
+          flutter pub get
       
       - name: Run tests
-        run: flutter test
+        run: |
+          cd flutter_client
+          flutter test
       
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos
+        run: |
+          cd flutter_client
+          flutter analyze --no-fatal-infos
       
       - name: Build APK
         run: |
+          cd flutter_client
           flutter build apk --release \
             --build-name="homesync-staging" \
             --build-number=${{ github.run_number }}
@@ -51,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: homesync-staging-apk
-          path: build/app/outputs/flutter-apk/
+          path: flutter_client/build/app/outputs/flutter-apk/
           retention-days: 7
           if-no-files-found: error
       
@@ -70,6 +75,11 @@ jobs:
             
             ### 📥 Download APK
             Download the APK from the artifacts section below.
+            
+            ### 📱 Install on Android
+            1. Enable "Install from unknown sources" in your device
+            2. Download the APK
+            3. Open the APK file to install
           draft: false
           prerelease: true
         env:

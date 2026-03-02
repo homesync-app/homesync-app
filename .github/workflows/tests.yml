@@ -10,13 +10,11 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -26,19 +24,29 @@ jobs:
           cache: true
       
       - name: Get dependencies
-        run: flutter pub get
+        run: |
+          cd flutter_client
+          flutter pub get
       
       - name: Verify Flutter installation
-        run: flutter doctor -v
+        run: |
+          cd flutter_client
+          flutter doctor -v
       
       - name: Run tests
-        run: flutter test --coverage
+        run: |
+          cd flutter_client
+          flutter test --coverage
       
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos
+        run: |
+          cd flutter_client
+          flutter analyze --no-fatal-infos
       
       - name: Build APK (validation only)
-        run: flutter build apk --release
+        run: |
+          cd flutter_client
+          flutter build apk --release
       
       - name: Upload test results
         if: always()
