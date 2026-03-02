@@ -35,6 +35,7 @@ class SupabaseExpenseRepository implements ExpenseRepository {
           created_at,
           paid_by,
           split_type,
+          is_shared,
           description,
           users!expenses_paid_by_fkey(email, full_name, avatar_url),
           expense_splits(*)
@@ -87,44 +88,22 @@ class SupabaseExpenseRepository implements ExpenseRepository {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('No autenticado');
 
-    final expenseData = {
-      'household_id': householdId,
-      'title': title,
-      'amount': amount,
-      'category': category,
-      'paid_by': paidBy,
-      'paid_at': paidAt.toIso8601String(),
-      'description': description,
-      'split_type': splitType.name,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-
-    if (id == null) {
-      // Create
-      expenseData['created_by_id'] = user.id;
-      expenseData['currency'] = 'ARS';
-      
-      final res = await _client.from('expenses').insert(expenseData).select('id').single();
-      final newId = res['id'];
-
-      if (splits != null && splits.isNotEmpty) {
-        await _client.from('expense_splits').insert(
-          splits.map((s) => {...s, 'expense_id': newId}).toList()
-        );
-      }
-    } else {
-      // Update
-      await _client.from('expenses').update(expenseData).eq('id', id);
-      
-      // Delete old splits and insert new ones
-      await _client.from('expense_splits').delete().eq('expense_id', id);
-      
-      if (splits != null && splits.isNotEmpty) {
-        await _client.from('expense_splits').insert(
-          splits.map((s) => {...s, 'expense_id': id}).toList()
-        );
-      }
-    }
+    await _client.rpc(
+      'save_expense_v3',
+      params: {
+        'p_id': id,
+        'p_household_id': householdId,
+        'p_title': title,
+        'p_amount': amount,
+        'p_category': category,
+        'p_paid_by': paidBy,
+        'p_paid_at': paidAt.toIso8601String(),
+        'p_description': description,
+        'p_split_type': splitType.name,
+        'p_is_shared': splitType != SplitType.personal,
+        'p_splits': splits, // Splits should be List<Map<String, dynamic>>
+      },
+    );
   }
 
   @override

@@ -76,6 +76,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               ),
             ),
             expensesAsync.when(
+              skipLoadingOnRefresh: true,
+              skipLoadingOnReload: true,
               loading: () => const SliverFillRemaining(
                 child: Center(
                     child: CircularProgressIndicator(color: AppColors.primary)),
@@ -99,6 +101,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     delegate: SliverChildListDelegate([
                       if (isShared) ...[
                         _buildSharedDashboard(balances, householdId),
+                        const SizedBox(height: 32),
+                      ] else ...[
+                        _buildPersonalSummary(filteredExpenses),
                         const SizedBox(height: 32),
                       ],
                       Text(
@@ -187,7 +192,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   Widget _buildSharedDashboard(List<HouseholdBalanceModel> balances, String householdId) {
     if (balances.isEmpty) return const SizedBox.shrink();
 
-    final currentUserId = ref.read(currentUserIdProvider);
+    final currentUserId = ref.watch(currentUserIdProvider);
     
     final myBal = balances.firstWhere(
         (b) => b.userId == currentUserId,
@@ -242,25 +247,33 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'BALANCE DE PAREJA',
-                          style: TextStyle(
-                            color: AppColors.textSecondary.withValues(alpha: 0.7),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
+                            'BALANCE DE PAREJA',
+                            style: TextStyle(
+                              color: AppColors.textSecondary.withValues(alpha: 0.7),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '\$${myBalance.abs().toStringAsFixed(2)}',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 38,
-                            fontWeight: FontWeight.w900,
-                            color: isNegative ? AppColors.accentPeach : AppColors.accentTeal,
-                            letterSpacing: -1.2,
+                          const SizedBox(height: 8),
+                          Text(
+                            '\$${myBalance.abs().toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isNegative ? AppColors.accentRed : AppColors.sage,
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isNegative ? 'Debes a tu pareja' : (myBalance > 0.01 ? 'Tu pareja te debe' : 'Están al día'),
+                            style: TextStyle(
+                              color: (isNegative ? AppColors.accentRed : AppColors.sage).withValues(alpha: 0.7),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -387,6 +400,67 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalSummary(List<ExpenseModel> personalExpenses) {
+    final total = personalExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.15),
+            AppColors.primary.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'TOTAL PERSONAL',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '\$${total.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Has registrado ${personalExpenses.length} gastos privados',
+            style: TextStyle(
+              color: AppColors.textSecondary.withValues(alpha: 0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

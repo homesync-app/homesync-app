@@ -19,6 +19,11 @@ final bottomNavIndexProvider = NotifierProvider<BottomNavNotifier, int>(() {
   return BottomNavNotifier();
 });
 
+// ── Auth state provider ──────────────────────────────────────────────────────
+final authStateProvider = StreamProvider<AuthState>((ref) {
+  return Supabase.instance.client.auth.onAuthStateChange;
+});
+
 // ── Singleton service providers ───────────────────────────────────────────────
 final authServiceProvider = Provider<SupabaseAuthService>((ref) {
   throw UnimplementedError('authServiceProvider must be overridden in ProviderScope.');
@@ -196,7 +201,7 @@ final recentActivityProvider =
     final expensesResponse = await client
         .from('expenses')
         .select('''
-          id, amount, title, category, split_type, created_at, paid_at, paid_by,
+          id, amount, title, category, split_type, is_shared, created_at, paid_at, paid_by,
           user:users!expenses_paid_by_fkey(id, full_name, avatar_url)
         ''')
         .eq('household_id', householdId)

@@ -18,6 +18,17 @@ class SupabaseAuthService {
       anonKey: AppEnvironment.supabaseAnonKey,
     );
     _client = Supabase.instance.client;
+
+    // Inicializar GoogleSignIn con el Web Client ID (serverClientId)
+    // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
+    try {
+      await GoogleSignIn.instance.initialize(
+        clientId: kIsWeb ? '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com' : null,
+        serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
+      );
+    } catch (e) {
+      debugPrint('Error inicializando GoogleSignIn: $e');
+    }
   }
 
   SupabaseClient get client => _client;
@@ -83,15 +94,23 @@ class SupabaseAuthService {
 
   Future<bool> signInWithGoogle() async {
     try {
-      // Intentar flujo con google_sign_in
-      // Nota: Requiere SHA-1 configurado en Firebase/Google Cloud para Android.
-      // GoogleSignIn v7+ usa GoogleSignIn.instance
-      GoogleSignIn googleSignIn = GoogleSignIn.instance;
+      if (kIsWeb) {
+        // En Web, authenticate() no está soportado. Usamos OAuth directamente.
+        await _client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: null,
+        );
+        return true;
+      }
+
+      // Flujo nativo para Android/iOS con google_sign_in
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
       
       final googleUser = await googleSignIn.authenticate();
       
       if (googleUser != null) {
-        final googleAuth = await googleUser.authentication;
+        // En esta versión authentication es un getter, no un Future.
+        final googleAuth = googleUser.authentication;
         final idToken = googleAuth.idToken;
 
         if (idToken != null) {
@@ -100,7 +119,6 @@ class SupabaseAuthService {
             idToken: idToken,
           );
           
-          await ensureHouseholdExists();
           // Tag user in Crashlytics (mobile only)
           if (!kIsWeb) {
             final user = _client.auth.currentUser;

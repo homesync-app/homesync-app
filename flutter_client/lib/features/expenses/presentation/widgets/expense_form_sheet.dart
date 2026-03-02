@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -227,6 +228,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       if (mounted) {
+        HapticFeedback.mediumImpact();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

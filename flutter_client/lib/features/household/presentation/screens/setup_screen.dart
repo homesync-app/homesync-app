@@ -4,11 +4,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/supabase_auth_service.dart';
 
 class SetupScreen extends StatefulWidget {
+  final SupabaseAuthService auth;
+  final SupabaseRpcService rpc;
+  final SharedPreferences prefs;
   final VoidCallback onComplete;
 
-  const SetupScreen({required this.onComplete, super.key});
+  const SetupScreen({
+    required this.auth,
+    required this.rpc,
+    required this.prefs,
+    required this.onComplete,
+    super.key,
+  });
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -274,6 +284,19 @@ class _SetupScreenState extends State<SetupScreen> {
               ),
               child: const Text('Continuar',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton(
+              onPressed: () => widget.auth.signOut(),
+              child: const Text(
+                'Cerrar sesión',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],

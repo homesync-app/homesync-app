@@ -33,7 +33,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart'; // added kIsWeb
 import 'dart:async';
 
 void main() async {
@@ -90,7 +89,6 @@ void main() async {
 
   await initializeDateFormatting('es', null);
   final prefs = await SharedPreferences.getInstance();
-  final isAuthenticated = await auth.isAuthenticated();
 
   runApp(
     ProviderScope(
@@ -99,7 +97,6 @@ void main() async {
         rpcServiceProvider.overrideWithValue(rpc),
       ],
       child: MyApp(
-        isAuthenticated: isAuthenticated,
         auth: auth,
         rpc: rpc,
         prefs: prefs,
@@ -125,14 +122,12 @@ class _ThemeInit extends ConsumerWidget {
 }
 
 class MyApp extends ConsumerWidget {
-  final bool isAuthenticated;
   final SupabaseAuthService auth;
   final SupabaseRpcService rpc;
   final SharedPreferences prefs;
 
   const MyApp({
     super.key,
-    required this.isAuthenticated,
     required this.auth,
     required this.rpc,
     required this.prefs,
@@ -141,6 +136,8 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final authState = ref.watch(authStateProvider);
+
     return _ThemeInit(
       prefs: prefs,
       child: MaterialApp(
@@ -149,9 +146,64 @@ class MyApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        home: isAuthenticated
-            ? MainScreen(auth: auth, rpc: rpc, prefs: prefs)
-            : LoginScreen(auth: auth, rpc: rpc, prefs: prefs),
+        home: authState.when(
+          data: (state) {
+            if (state.session != null) {
+              return MainScreen(auth: auth, rpc: rpc, prefs: prefs);
+            }
+            return LoginScreen(auth: auth, rpc: rpc, prefs: prefs);
+          },
+          loading: () => const _SplashScreen(),
+          error: (e, stack) {
+            debugPrint('Auth error: $e');
+            return LoginScreen(auth: auth, rpc: rpc, prefs: prefs);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: AppColors.primaryGradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🏡', style: TextStyle(fontSize: 50)),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 3,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -354,11 +406,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     if (_needsSetup) {
       return SetupScreen(
+        auth: widget.auth,
+        rpc: widget.rpc,
+        prefs: widget.prefs,
         onComplete: () async {
           await widget.prefs.setBool('setup_completed', true);
-          setState(() => _needsSetup = false);
-          // Re-init notifications after joining/creating household
-          _initNotifications();
+          setState(() {
+            _needsSetup = false;
+            _isLoading = true; // Trigger re-check
+          });
+          _checkSetup();
         },
       );
     }
@@ -433,15 +490,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           rpc: widget.rpc,
           onLogout: () {
             _notifService.dispose();
-            Navigator.of(context).pushReplacement(
-              AppTransitions.fadeScale(
-                LoginScreen(
-                  auth: widget.auth,
-                  rpc: widget.rpc,
-                  prefs: widget.prefs,
-                ),
-              ),
-            );
+            // Auth changes will be handled by authStateProvider
+            widget.auth.signOut();
           },
         ),
       ),

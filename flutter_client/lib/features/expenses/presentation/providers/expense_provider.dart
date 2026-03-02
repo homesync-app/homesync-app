@@ -68,7 +68,7 @@ final expensesAndBalancesProvider = StreamProvider<Map<String, dynamic>>((ref) a
   yield await snapshot();
 
   // Realtime subscription setup
-  final stream = client
+  final expensesStream = client
       .channel('expenses_stream_$householdIdAsync')
       .onPostgresChanges(
         event: PostgresChangeEvent.all,
@@ -85,7 +85,23 @@ final expensesAndBalancesProvider = StreamProvider<Map<String, dynamic>>((ref) a
       )
       .subscribe();
 
+  final splitsStream = client
+      .channel('splits_stream_$householdIdAsync')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'expense_splits',
+        callback: (_) {
+          // Note: Ideally we'd filter by household here, but splits table 
+          // usually doesn't have household_id directly. Refreshing on any split 
+          // change is safe enough for a couple's app volume.
+          ref.invalidateSelf();
+        },
+      )
+      .subscribe();
+
   ref.onDispose(() {
-    client.removeChannel(stream);
+    client.removeChannel(expensesStream);
+    client.removeChannel(splitsStream);
   });
 });

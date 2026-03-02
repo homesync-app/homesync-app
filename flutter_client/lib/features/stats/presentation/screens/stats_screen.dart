@@ -5,6 +5,7 @@ import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // StatsScreen — rediseñada con fl_chart y tabs de navegación
@@ -199,26 +200,17 @@ class _WeeklyTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
-          // ── Week header ──────────────────────────────────────────────────
-          _SectionLabel(label: weekRange, icon: '📅'),
+          // ── Weekly Duel ──────────────────────────────────────────────────
+          _SectionLabel(label: 'Duelo Semanal ($weekRange)', icon: '⚔️'),
           const SizedBox(height: 16),
 
-          // ── XP Faceoff (weekly duel) ──────────────────────────────────
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
             const SizedBox(height: 28),
           ],
 
-          // ── Duel History ─────────────────────────────────────────────────
-          if (duelHistory.isNotEmpty) ...[
-            const _SectionLabel(label: 'Historial de duelos', icon: '🏆'),
-            const SizedBox(height: 16),
-            _DuelHistoryWidget(duelHistory: duelHistory),
-            const SizedBox(height: 28),
-          ],
-
-          // ── Summary row ──────────────────────────────────────────────────
-          const _SectionLabel(label: 'Resumen global', icon: '📊'),
+          // ── Summary row (Global context) ──────────────────────────────────
+          const _SectionLabel(label: 'Contexto del hogar', icon: '🏠'),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -227,7 +219,7 @@ class _WeeklyTab extends StatelessWidget {
                   icon: '✅',
                   value: '$totalTasks',
                   label: 'Tareas',
-                  color: AppColors.accentGreen,
+                  color: AppColors.primary.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(width: 10),
@@ -235,7 +227,7 @@ class _WeeklyTab extends StatelessWidget {
                 child: _MiniStatCard(
                   icon: '⭐',
                   value: '$totalXp',
-                  label: 'XP',
+                  label: 'Total XP',
                   color: AppColors.accentGold,
                 ),
               ),
@@ -252,19 +244,38 @@ class _WeeklyTab extends StatelessWidget {
           ),
           const SizedBox(height: 28),
 
-          // ── Historical ranking ────────────────────────────────────────────
-          if (memberStats.isNotEmpty) ...[
-            const _SectionLabel(label: 'Ranking histórico', icon: '🏅'),
+          // ── Duel History ─────────────────────────────────────────────────
+          if (duelHistory.isNotEmpty) ...[
+            const _SectionLabel(label: 'Historial de duelos', icon: '🏆'),
             const SizedBox(height: 16),
-            ...memberStats.asMap().entries.map(
-                  (e) => _MemberRankCard(rank: e.key + 1, member: e.value),
-                ),
+            _DuelHistoryWidget(duelHistory: duelHistory),
+            const SizedBox(height: 28),
           ],
+
+          // ── Activity History (Home-like) ──────────────────────────────
+          const _SectionLabel(label: 'Actividad reciente', icon: '🕒'),
+          const SizedBox(height: 16),
+          Container(
+             padding: const EdgeInsets.all(20),
+             decoration: BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.circular(24),
+               border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+             ),
+             child: const Center(
+               child: Text(
+                 'Revisá el muro para ver la actividad detallada',
+                 style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+               ),
+             ),
+          ),
         ],
       ),
     );
   }
 }
+
+// Eliminated _UserSummaryCard as requested by the user.
 
 // Weekly duel bar chart
 class _WeeklyDuelCard extends StatelessWidget {
@@ -495,128 +506,131 @@ class _ProgressTabState extends State<_ProgressTab> {
     final maxY = spots.fold<double>(0, (m, s) => math.max(m, s.y)) * 1.3;
     final color = _showXp ? AppColors.accentGold : AppColors.accentTeal;
 
+    final currentUserStats = widget.memberStats.firstWhere(
+      (m) => m['user_id'] == Supabase.instance.client.auth.currentUser?.id,
+      orElse: () => {},
+    );
+
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
-          // ── XP / Coins toggle ────────────────────────────────────────────
-          const _SectionLabel(label: 'Evolución temporal', icon: '📈'),
+          // ── Header ───────────────────────────────────────────────────────
+          const _SectionLabel(label: 'Tu evolución personal', icon: '📈'),
           const SizedBox(height: 16),
+          
+          // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
             children: [
-              Expanded(
-                child: _ToggleChip(
-                  label: '⭐  XP',
-                  selected: _showXp,
-                  color: AppColors.accentGold,
-                  onTap: () => setState(() => _showXp = true),
-                ),
+              _XPToggleButton(
+                label: 'XP',
+                isSelected: _showXp,
+                color: AppColors.accentGold,
+                onTap: () => setState(() => _showXp = true),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: _ToggleChip(
-                  label: '🪙  Coins',
-                  selected: !_showXp,
-                  color: AppColors.accentTeal,
-                  onTap: () => setState(() => _showXp = false),
-                ),
+              _XPToggleButton(
+                label: 'Coins',
+                isSelected: !_showXp,
+                color: AppColors.accentTeal,
+                onTap: () => setState(() => _showXp = false),
               ),
             ],
           ),
           const SizedBox(height: 20),
 
-          // ── Line chart ───────────────────────────────────────────────────
+          // ── Chart ──────────────────────────────────────────────────────
           Container(
             height: 220,
-            padding: const EdgeInsets.fromLTRB(12, 20, 20, 16),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 20,
-                  offset: const Offset(0, 6),
+                  offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: color.withValues(alpha: 0.15)),
             ),
-            child: spots.length < 2
-                ? const Center(
-                    child: Text(
-                      'Sin historial aún\nCompletá tareas para ver tu progreso 💪',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 14,
-                      ),
+            child: spots.length < 2 || spots.every((s) => s.y == 0)
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🌱', style: TextStyle(fontSize: 32)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Empezá a completar tareas\npara ver tu progreso.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : LineChart(
                     LineChartData(
                       minY: 0,
-                      maxY: maxY <= 0 ? 10 : maxY,
+                      maxY: maxY,
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          getTooltipColor: (_) => AppColors.textPrimary,
+                          getTooltipItems: (touchedSpots) {
+                            return touchedSpots.map((s) {
+                              return LineTooltipItem(
+                                '${s.y.toInt()} ${_showXp ? 'XP' : 'Coins'}',
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }).toList();
+                          },
+                        ),
+                      ),
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
                         getDrawingHorizontalLine: (value) => FlLine(
-                          color: color.withValues(alpha: 0.1),
+                          color: AppColors.border.withValues(alpha: 0.3),
                           strokeWidth: 1,
                         ),
                       ),
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 36,
-                            getTitlesWidget: (v, _) => Text(
-                              '${v.toInt()}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ),
-                        ),
-                        rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 24,
-                            interval: (spots.length / 4).ceilToDouble(),
-                            getTitlesWidget: (v, _) {
-                              if (v.toInt() >= spots.length) {
-                                return const SizedBox.shrink();
-                              }
-                              return Text(
-                                '${v.toInt() + 1}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.textMuted,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                      titlesData: const FlTitlesData(
+                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
+                      borderData: FlBorderData(show: false),
                       lineBarsData: [
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
                           color: color,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: false),
+                          barWidth: 6,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                              radius: 3,
+                              color: Colors.white,
+                              strokeWidth: 3,
+                              strokeColor: color,
+                            ),
+                          ),
                           belowBarData: BarAreaData(
                             show: true,
                             gradient: LinearGradient(
                               colors: [
-                                color.withValues(alpha: 0.2),
+                                color.withValues(alpha: 0.25),
                                 color.withValues(alpha: 0.0),
                               ],
                               begin: Alignment.topCenter,
@@ -630,138 +644,147 @@ class _ProgressTabState extends State<_ProgressTab> {
           ),
           const SizedBox(height: 28),
 
-          // ── MemberModel comparison pie ────────────────────────────────────────
-          if (widget.memberStats.length >= 2) ...[
-            const _SectionLabel(label: 'Contribución por persona', icon: '🥧'),
-            const SizedBox(height: 16),
-            _MemberPieChart(
-              memberStats: widget.memberStats,
-              showXp: _showXp,
-            ),
-            const SizedBox(height: 28),
-          ],
+          // ── Multi-info Cards ─────────────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: _PersonalMetricCard(
+                  icon: '🔥',
+                  label: 'Racha',
+                  value: '7 días',
+                  color: Colors.orange,
+                  subtitle: '¡Vas con todo!',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _PersonalMetricCard(
+                  icon: '📈',
+                  label: 'Nivel',
+                  value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
+                  color: AppColors.primary,
+                  subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
 
-          // ── Streak card ───────────────────────────────────────────────────
-          _StreakCard(memberStats: widget.memberStats),
+          // ── Privacy assurance ───────────────────────────────────────────
+          const _PrivacyBadge(
+            text: 'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
+          ),
         ],
       ),
     );
   }
 }
 
-// Pie chart: XP or tasks share per member
-class _MemberPieChart extends StatelessWidget {
-  final List<Map<String, dynamic>> memberStats;
-  final bool showXp;
+class _XPToggleButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final Color color;
+  final VoidCallback onTap;
 
-  const _MemberPieChart({
-    required this.memberStats,
-    required this.showXp,
+  const _XPToggleButton({
+    required this.label,
+    required this.isSelected,
+    required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colors = [
-      AppColors.primary,
-      AppColors.accentTeal,
-      AppColors.accentGold
-    ];
-    double total = memberStats.fold(0, (s, m) {
-      final val = showXp
-          ? (m['xp_earned'] as num?)?.toDouble() ?? 0
-          : (m['tasks_completed'] as num?)?.toDouble() ?? 0;
-      return s + val;
-    });
-    if (total == 0) total = 1;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? color : AppColors.border,
+            width: 1,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
+class _PersonalMetricCard extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String value;
+  final String subtitle;
+  final Color color;
+
+  const _PersonalMetricCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.subtitle,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 130,
-            width: 130,
-            child: PieChart(
-              PieChartData(
-                sectionsSpace: 3,
-                centerSpaceRadius: 32,
-                sections: memberStats.asMap().entries.map((e) {
-                  final idx = e.key;
-                  final val = showXp
-                      ? (e.value['xp_earned'] as num?)?.toDouble() ?? 0
-                      : (e.value['tasks_completed'] as num?)?.toDouble() ?? 0;
-                  final pct = val / total * 100;
-                  return PieChartSectionData(
-                    color: colors[idx % colors.length],
-                    value: val == 0 ? 0.01 : val,
-                    title: '${pct.toStringAsFixed(0)}%',
-                    radius: 42,
-                    titleStyle: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  );
-                }).toList(),
+          Row(
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: memberStats.asMap().entries.map((e) {
-                final idx = e.key;
-                final name =
-                    (e.value['user_name'] as String? ?? '').split(' ').first;
-                final val = showXp
-                    ? (e.value['xp_earned'] as num?)?.toInt() ?? 0
-                    : (e.value['tasks_completed'] as num?)?.toInt() ?? 0;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: colors[idx % colors.length],
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        showXp ? '$val XP' : '$val tareas',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.8),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -770,76 +793,30 @@ class _MemberPieChart extends StatelessWidget {
   }
 }
 
-// Streak motivational card
-class _StreakCard extends StatelessWidget {
-  final List<Map<String, dynamic>> memberStats;
-  const _StreakCard({required this.memberStats});
+class _PrivacyBadge extends StatelessWidget {
+  final String text;
+  const _PrivacyBadge({required this.text});
 
   @override
   Widget build(BuildContext context) {
-    // Best performer
-    if (memberStats.isEmpty) return const SizedBox.shrink();
-    final best = memberStats.reduce((a, b) =>
-        ((a['tasks_completed'] as num?) ?? 0) >=
-                ((b['tasks_completed'] as num?) ?? 0)
-            ? a
-            : b);
-    final name = (best['user_name'] as String? ?? '').split(' ').first;
-    final tasks = (best['tasks_completed'] as num?)?.toInt() ?? 0;
-    final xp = (best['xp_earned'] as num?)?.toInt() ?? 0;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: AppColors.primaryGradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.primary.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          const Text('🏅', style: TextStyle(fontSize: 40)),
+          const Icon(Icons.shield_outlined, color: AppColors.primary, size: 24),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'MVP HISTÓRICO',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$tasks tareas · $xp XP totales',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -895,17 +872,43 @@ class _CategoriesTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
-          const _SectionLabel(label: 'Por categoría', icon: '🏷️'),
+          // ── Header ───────────────────────────────────────────────────────
+          const _SectionLabel(label: 'Tus preferencias', icon: '🏷️'),
           const SizedBox(height: 16),
 
           // ── Horizontal bar chart ─────────────────────────────────────────
           _CategoryBarChart(taskStats: taskStats),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
 
           // ── Detailed list ────────────────────────────────────────────────
-          const _SectionLabel(label: 'Detalle', icon: '📋'),
+          const _SectionLabel(label: 'Desglose por categoría', icon: '📋'),
           const SizedBox(height: 16),
           ...taskStats.map((stat) => _CategoryDetailCard(stat: stat)),
+          
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              children: [
+                Text('💡', style: TextStyle(fontSize: 20)),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Podés ver qué categorías dominás más para equilibrar las tareas del hogar.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

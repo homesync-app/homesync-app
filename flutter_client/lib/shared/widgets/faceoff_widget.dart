@@ -12,31 +12,13 @@ class AIFaceoffWidget extends StatefulWidget {
   State<AIFaceoffWidget> createState() => _AIFaceoffWidgetState();
 }
 
-class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
   String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   @override
@@ -45,100 +27,85 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
       return const SizedBox.shrink();
     }
 
+    // Sort to ensure current user is easily identifiable or standard order
     final p1 = widget.weeklyRanking[0];
     final p2 = widget.weeklyRanking[1];
 
     final p1Xp = (p1['xp_earned'] as num?)?.toInt() ?? 0;
     final p2Xp = (p2['xp_earned'] as num?)?.toInt() ?? 0;
+    
+    // We create a "mystery" percentage. 
+    // If it's not Sunday, we might want to hide the real progress or show a generic one.
+    // The user mentioned "no se sepa hasta el domingo quien gana".
     final totalXp = p1Xp + p2Xp;
     final p1Pct = totalXp == 0 ? 0.5 : p1Xp / totalXp;
-    final p2Pct = totalXp == 0 ? 0.5 : p2Xp / totalXp;
 
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withValues(alpha: 0.05),
-            AppColors.accent.withValues(alpha: 0.08),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(40),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.1),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.pink.withValues(alpha: 0.15),
-                      Colors.purple.withValues(alpha: 0.15),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.pink.withValues(alpha: 0.2),
-                  ),
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  children: [
-                    const Text('⚔️', style: TextStyle(fontSize: 16)),
-                    const SizedBox(width: 8),
-                    ShaderMask(
-                      shaderCallback: (bounds) => LinearGradient(
-                        colors: [Colors.pink.shade600, Colors.purple.shade600],
-                      ).createShader(bounds),
-                      child: const Text(
-                        'DUELO DE LA SEMANA',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: const Text(
+                  '⚔️ DUELO SEMANAL',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primary,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
           
+          // Competitors
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildCompetitor(p1, isLeft: true, showXp: _currentUserId == p1['user_id']),
+              _buildCompetitor(p1),
               _buildVSIndicator(),
-              _buildCompetitor(p2, isLeft: false, showXp: _currentUserId == p2['user_id']),
+              _buildCompetitor(p2),
             ],
           ),
-          const SizedBox(height: 28),
-          _buildMysteryProgressBar(p1Xp, p2Xp, p1Pct, p2Pct),
+          const SizedBox(height: 32),
+          
+          // Mystery Progress Bar
+          _buildMysteryBar(p1Pct),
+          
+          const SizedBox(height: 24),
+          
+          // Weekly Activity Track
+          _buildWeeklyTrack(),
         ],
       ),
     );
   }
 
-  Widget _buildCompetitor(Map<String, dynamic> player, {required bool isLeft, required bool showXp}) {
+  Widget _buildCompetitor(Map<String, dynamic> player) {
     final name = (player['user_name'] as String? ?? 'Jugador').split(' ').first;
     final avatarUrl = player['avatar_url'] as String?;
     final xp = (player['xp_earned'] as num?)?.toInt() ?? 0;
@@ -147,77 +114,40 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
     return Expanded(
       child: Column(
         children: [
-          ScaleTransition(
-            scale: _pulseAnimation,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CustomUserAvatar(
-                  name: name,
-                  avatarUrl: avatarUrl,
-                  radius: 52,
-                  isAnimated: false,
-                  isPriority: isCurrentUser,
-                  showBorder: true,
-                ),
-                if (isCurrentUser)
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          CustomUserAvatar(
+            name: name,
+            avatarUrl: avatarUrl,
+            radius: 46,
+            isAnimated: false,
+            showBorder: true,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             name,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 16,
-              color: isCurrentUser ? AppColors.primary : const Color(0xFF0F172A),
-              letterSpacing: -0.3,
+              fontSize: 15,
+              color: isCurrentUser ? AppColors.primary : AppColors.textPrimary,
             ),
           ),
           if (isCurrentUser) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.accentGold,
-                    AppColors.accentGold.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accentGold.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+            const SizedBox(height: 4),
+            Text(
+              '$xp XP',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentGold,
+                fontSize: 13,
               ),
-              child: Text(
-                '$xp XP',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  fontSize: 13,
-                ),
+            ),
+          ] else ...[
+             const SizedBox(height: 4),
+             const Text(
+              '??? XP',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textMuted,
+                fontSize: 13,
               ),
             ),
           ],
@@ -227,37 +157,86 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
   }
 
   Widget _buildVSIndicator() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(bottom: 60),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.pink.shade400,
-                Colors.purple.shade500,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withValues(alpha: 0.4),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-            ],
-            border: Border.all(color: Colors.white, width: 3),
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: const Center(
+        child: Text(
+          'VS',
+          style: TextStyle(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
           ),
-          child: const Text(
-            'VS',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMysteryBar(double p1Pct) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted.withValues(alpha: 0.6)),
+            const SizedBox(width: 6),
+            Text(
+              'EL RESULTADO SE REVELA EL DOMINGO',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textMuted.withValues(alpha: 0.8),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 12,
+            width: double.infinity,
+            color: const Color(0xFFF1F5F9),
+            child: Stack(
+              children: [
+                // We show a "balanced" or "shifting" bar that doesn't reveal the winner clearly
+                // unless it's Sunday. For now, let's keep it mystery.
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 800),
+                      width: constraints.maxWidth * 0.5, // Always show 50% for mystery?
+                      // Or slightly offset based on current user's lead but hidden?
+                      // The user said "no se sepa hasta el domingo".
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.4),
+                            AppColors.accent.withValues(alpha: 0.4),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                ),
+                Positioned.fill(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(8, (_) => Icon(
+                      Icons.help_outline,
+                      size: 8,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    )),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -265,103 +244,73 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
     );
   }
 
-  Widget _buildMysteryProgressBar(int p1Xp, int p2Xp, double p1Pct, double p2Pct) {
+  Widget _buildWeeklyTrack() {
+    final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    final today = DateTime.now().weekday; // 1-7
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.lock_outline,
-                size: 16,
-                color: AppColors.textMuted.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Los puntos se revelan el domingo',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted.withValues(alpha: 0.8),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            height: 18,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(seconds: 1),
-                  curve: Curves.easeOutCubic,
-                  width: (p1Pct * MediaQuery.of(context).size.width * 0.75).clamp(20, MediaQuery.of(context).size.width * 0.75 - 40),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withValues(alpha: 0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Icon(
-                        Icons.help_outline,
-                        size: 12,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      Icon(
-                        Icons.help_outline,
-                        size: 12,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const Row(
           children: [
             Text(
-              '¿Quién ganará?',
+              'RITMO SEMANAL',
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary.withValues(alpha: 0.8),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textMuted,
+                letterSpacing: 0.8,
               ),
             ),
+            Spacer(),
             Text(
-              '¡Descubrilo el domingo!',
+              '7 días restantes', // This could be calculated
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accentTeal.withValues(alpha: 0.8),
+                fontSize: 10,
+                color: AppColors.textMuted,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(7, (index) {
+            final dayNum = index + 1;
+            final isToday = dayNum == today;
+            final isPast = dayNum < today;
+            
+            return Expanded(
+              child: Container(
+                margin: EdgeInsets.only(right: index == 6 ? 0 : 6),
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isToday 
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : (isPast ? Colors.black.withValues(alpha: 0.03) : Colors.transparent),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isToday 
+                      ? AppColors.primary.withValues(alpha: 0.3)
+                      : (isPast ? Colors.black.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04)),
+                    width: 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    days[index],
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                      color: isToday 
+                        ? AppColors.primary 
+                        : (isPast ? AppColors.textSecondary : AppColors.textMuted),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
         ),
       ],
     );

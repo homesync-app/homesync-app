@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+
 class AppEnvironment {
   static const Environment current = Environment.staging;
 
@@ -23,6 +25,16 @@ class AppEnvironment {
   static bool get isLocal => current == Environment.local;
   static bool get isStaging => current == Environment.staging;
   static bool get isProduction => current == Environment.production;
+
+  // Firebase Web Options
+  static var firebaseOptions = const FirebaseOptions(
+    apiKey: 'AIzaSyAOH6ZSuqIzI1qOUIynDbWGwOQRym_Wb1I',
+    appId: '1:105041112830:web:da6228c6d202cdf567ffaf',
+    messagingSenderId: '105041112830',
+    projectId: 'homesync-prod-r7-123',
+    authDomain: 'homesync-prod-r7-123.firebaseapp.com',
+    storageBucket: 'homesync-prod-r7-123.firebasestorage.app',
+  );
 }
 
 enum Environment {
