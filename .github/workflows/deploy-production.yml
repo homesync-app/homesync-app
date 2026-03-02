@@ -27,8 +27,10 @@ jobs:
       
       - name: Decode Keystore
         run: |
-          if [ -n "$ENCODED_KEYSTORE" ]; then
+          if [ -n "$ENCODED_KEYSTORE" ] && [ "$ENCODED_KEYSTORE" != "null" ]; then
             echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
+          else
+            echo "No keystore provided, building debug APK"
           fi
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
@@ -40,6 +42,8 @@ jobs:
             echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
             echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/local.properties
             echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+          else
+            echo "No keystore file, building debug APK"
           fi
       
       - name: Analyze code
