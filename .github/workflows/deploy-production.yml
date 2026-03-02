@@ -2,29 +2,29 @@ name: Deploy to Google Play (Internal Testing)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.27.0'
-      
+          flutter-version: "3.27.0"
+
       - name: Get dependencies
         run: |
           cd flutter_client
           flutter pub get
-      
+
       - name: Decode Keystore
         run: |
           if [ -n "$ENCODED_KEYSTORE" ] && [ "$ENCODED_KEYSTORE" != "null" ]; then
@@ -34,7 +34,7 @@ jobs:
           fi
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-      
+
       - name: Create local.properties
         run: |
           if [ -f "release.keystore" ]; then
@@ -45,40 +45,41 @@ jobs:
           else
             echo "No keystore file, building debug APK"
           fi
-      
+
       - name: Analyze code
         run: |
           cd flutter_client
           flutter analyze --no-fatal-infos --no-fatal-warnings || true
-      
-      - name: Build APK (Release)
+
+      - name: Build AAB (Release)
         run: |
           cd flutter_client
           if [ -f "../release.keystore" ]; then
-            flutter build apk --release
+            flutter build appbundle --release
           else
-            flutter build apk --debug
+            flutter build appbundle --debug
           fi
-      
-      - name: Upload APK as Artifact
+
+      - name: Upload AAB as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: homesync-apk
-          path: flutter_client/build/app/outputs/flutter-apk/app-*.apk
-      
+          name: homesync-appbundle
+          path: flutter_client/build/app/outputs/bundle/release/app-release.aab
+
       - name: Create release notes directory
         run: |
           mkdir -p whatsnew/en-US
-          echo "New release with offline mode, retry logic, and UI improvements" > whatsnew/en-US/whatsnew.txt
-      
+          echo "Nueva versión con modo offline, notificaciones push y mejoras de UI." > whatsnew/en-US/whatsnew.txt
+
       - name: Deploy to Google Play (Internal Testing)
         if: env.ENCODED_KEYSTORE != ''
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@v1.1.2
         with:
           serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.blas.homesync
-          releaseFiles: flutter_client/build/app/outputs/flutter-apk/app-release.apk
+          releaseFiles: flutter_client/build/app/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
+          whatsnewDir: whatsnew
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
