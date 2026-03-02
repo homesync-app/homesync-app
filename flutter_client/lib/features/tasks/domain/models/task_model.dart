@@ -1,10 +1,71 @@
+enum TaskStatus {
+  active,
+  assigned,
+  pending,
+  pendingVerification,
+  verified,
+  objected;
+
+  static TaskStatus fromString(String? value) {
+    if (value == 'pending_verification') return TaskStatus.pendingVerification;
+    return TaskStatus.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TaskStatus.active,
+    );
+  }
+
+  String get dbValue => this == TaskStatus.pendingVerification ? 'pending_verification' : name;
+}
+
+enum TaskPriority {
+  low,
+  medium,
+  high,
+  urgent;
+
+  static TaskPriority fromString(String? value) {
+    return TaskPriority.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TaskPriority.medium,
+    );
+  }
+}
+
+enum TaskType {
+  oneTime,
+  recurring;
+
+  static TaskType fromString(String? value) {
+    if (value == 'one_time') return TaskType.oneTime;
+    return TaskType.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TaskType.oneTime,
+    );
+  }
+
+  String get dbValue => this == TaskType.oneTime ? 'one_time' : 'recurring';
+}
+
+enum TaskDifficulty {
+  easy,
+  medium,
+  hard;
+
+  static TaskDifficulty fromString(String? value) {
+    return TaskDifficulty.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TaskDifficulty.medium,
+    );
+  }
+}
+
 class TaskModel {
   final String id;
   final String title;
   final String? description;
   final String? category;
   final String? assignedTo;
-  final String status;
+  final TaskStatus status;
   final int xpReward;
   final int coinReward;
   final String? recurrenceType;
@@ -19,9 +80,9 @@ class TaskModel {
   final DateTime? verifiedAt;
   final String? lastCompletedAt;
   final String? lastVerifiedBy;
-  final String priority;
-  final String type;
-  final String difficulty;
+  final TaskPriority priority;
+  final TaskType type;
+  final TaskDifficulty difficulty;
 
   const TaskModel({
     required this.id,
@@ -44,9 +105,9 @@ class TaskModel {
     this.verifiedAt,
     this.lastCompletedAt,
     this.lastVerifiedBy,
-    this.priority = 'medium',
-    this.type = 'one_time',
-    this.difficulty = 'medium',
+    this.priority = TaskPriority.medium,
+    this.type = TaskType.oneTime,
+    this.difficulty = TaskDifficulty.medium,
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
@@ -56,7 +117,7 @@ class TaskModel {
       description: map['description'] as String?,
       category: map['category'] as String?,
       assignedTo: map['assigned_to'] as String?,
-      status: map['status'] as String? ?? 'active',
+      status: TaskStatus.fromString(map['status'] as String?),
       xpReward: _toInt(map['xp_reward']),
       coinReward: _toInt(map['coin_reward']),
       recurrenceType: map['recurrence_type'] as String?,
@@ -71,9 +132,9 @@ class TaskModel {
       verifiedAt: _parseDate(map['verified_at']),
       lastCompletedAt: map['last_completed_at'] as String?,
       lastVerifiedBy: map['last_verified_by'] as String?,
-      priority: map['priority'] as String? ?? 'medium',
-      type: map['type'] as String? ?? 'one_time',
-      difficulty: map['difficulty'] as String? ?? 'medium',
+      priority: TaskPriority.fromString(map['priority'] as String?),
+      type: TaskType.fromString(map['type'] as String?),
+      difficulty: TaskDifficulty.fromString(map['difficulty'] as String?),
     );
   }
 
@@ -83,7 +144,7 @@ class TaskModel {
         'description': description,
         'category': category,
         'assigned_to': assignedTo,
-        'status': status,
+        'status': status.dbValue,
         'xp_reward': xpReward,
         'coin_reward': coinReward,
         'recurrence_type': recurrenceType,
@@ -98,18 +159,19 @@ class TaskModel {
         'verified_at': verifiedAt?.toIso8601String(),
         'last_completed_at': lastCompletedAt,
         'last_verified_by': lastVerifiedBy,
-        'priority': priority,
-        'type': type,
-        'difficulty': difficulty,
+        'priority': priority.name,
+        'type': type.dbValue,
+        'difficulty': difficulty.name,
       };
 
   // ── Computed helpers ───────────────────────────────────────────────────────
 
-  bool get isActive => status == 'active' || status == 'assigned';
-  bool get isPending => status == 'pending';
-  bool get isCompleted => status == 'completed';
-  bool get isVerified => status == 'verified';
-  bool get isObjected => status == 'objected';
+  bool get isActive => status == TaskStatus.active || status == TaskStatus.assigned;
+  bool get isPending => status == TaskStatus.pending;
+  bool get isPendingVerification => status == TaskStatus.pendingVerification;
+  bool get isCompleted => isPendingVerification || status == TaskStatus.verified;
+  bool get isVerified => status == TaskStatus.verified;
+  bool get isObjected => status == TaskStatus.objected;
   bool get isRecurring => recurrenceType != null;
   bool get isOverdue =>
       dueAt != null && dueAt!.isBefore(DateTime.now()) && isActive;
@@ -142,7 +204,7 @@ class TaskModel {
     String? description,
     String? category,
     String? assignedTo,
-    String? status,
+    TaskStatus? status,
     int? xpReward,
     int? coinReward,
     String? recurrenceType,
@@ -157,9 +219,9 @@ class TaskModel {
     DateTime? verifiedAt,
     String? lastCompletedAt,
     String? lastVerifiedBy,
-    String? priority,
-    String? type,
-    String? difficulty,
+    TaskPriority? priority,
+    TaskType? type,
+    TaskDifficulty? difficulty,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -196,7 +258,7 @@ class TaskModel {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'TaskModel(id: $id, title: $title, status: $status)';
+  String toString() => 'TaskModel(id: $id, title: $title, status: ${status.dbValue})';
 
   // ── Private helpers ───────────────────────────────────────────────────────
 

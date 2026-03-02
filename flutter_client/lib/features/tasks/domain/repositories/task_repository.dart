@@ -3,8 +3,8 @@ import '../models/task_model.dart';
 /// Abstract contract for the tasks data source.
 /// The domain never depends on Supabase — only on this interface.
 abstract class TaskRepository {
-  /// Fetch all tasks for a household.
-  Future<List<TaskModel>> getTasks(String householdId);
+  /// Fetch tasks for a household with pagination.
+  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0});
 
   /// Mark a TaskModel as completed and award XP/coins via RPC.
   /// Returns the result map from the RPC (new balance, etc.)

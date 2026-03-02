@@ -37,8 +37,7 @@ class SupabaseExpenseRepository implements ExpenseRepository {
           split_type,
           description,
           users!expenses_paid_by_fkey(email, full_name, avatar_url),
-          expense_splits(*),
-          is_shared
+          expense_splits(*)
         ''')
         .eq('household_id', householdId)
         .order('paid_at', ascending: false)

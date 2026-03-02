@@ -6,6 +6,7 @@ import 'package:timeago/timeago.dart' as timeago;
 // ignore: implementation_imports
 import 'package:timeago/src/messages/es_messages.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -15,8 +16,8 @@ import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 
-import 'package:homesync_client/shared/widgets/add_task_options_sheet.dart';
-import 'package:homesync_client/shared/widgets/edit_task_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart' show ScheduleDialog, TaskRepeatMode;
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 
@@ -162,7 +163,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final result = await AddTaskOptionsSheet.show(context, members);
 
     if (result == true) {
-      ref.invalidate(tasksProvider);
+      // Creation handled by silentRefresh in notifier
     }
   }
 
@@ -175,7 +176,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
 
     if (result == true) {
-      ref.invalidate(tasksProvider);
+      // Updates handled via silentRefresh or state update
     }
   }
 
@@ -233,9 +234,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget build(BuildContext context) {
     final filteredAsync = ref.watch(filteredTasksProvider);
     final membersAsync = ref.watch(householdMembersProvider);
-    final selectedCategory = ref.watch(taskCategoryFilterProvider);
+    final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isCalendarMode = ref.watch(taskViewModeProvider);
     final currentUserId = ref.read(currentUserIdProvider);
+    final activeCatsAsync = ref.watch(activeCategoriesProvider);
 
     final members = membersAsync.maybeWhen(
       data: (m) => m,
@@ -358,66 +360,102 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                               padding: const EdgeInsets.only(top: 4, bottom: 8),
                               child: SizedBox(
                                 height: 50,
-                                child: categoriesAsync.when(
-                                  data: (catList) {
-                                    // Which normalised cats have tasks?
-                                    final activeCats = tasks
-                                        .map((t) => AppColors.normaliseCategory(t.category))
-                                        .toSet();
-                                    // Filter DB categories to only those with tasks,
-                                    // preserving sort_order from DB
-                                    final visibleCats = catList
-                                        .where((c) => activeCats.contains(
-                                              AppColors.normaliseCategory(c.id)))
-                                        .toList();
-                                    return ListView(
-                                      scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                                      children: [
-                                        _buildCategoryChip(
-                                            null, 'Todas', '📋', AppColors.textSecondary),
-                                        ...visibleCats.map((c) => _buildCategoryChip(
-                                              c.id,
-                                              c.name,
-                                              c.icon,
-                                              AppColors.fromHex(c.color),
-                                            )),
-                                      ],
+                                child: activeCatsAsync.when(
+                                  data: (activeCats) {
+                                    return categoriesAsync.when(
+                                      data: (catList) {
+                                        // Filter DB categories to only those with tasks
+                                        final visibleCats = catList
+                                            .where((c) => activeCats.contains(
+                                                  AppColors.normaliseCategory(c.id)))
+                                            .toList();
+                                        
+                                        return ListView(
+                                          scrollDirection: Axis.horizontal,
+                                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                                          children: [
+                                            _buildCategoryChip(
+                                                null, 'Todas', '📋', AppColors.textSecondary),
+                                            ...visibleCats.map((c) => _buildCategoryChip(
+                                                  c.id,
+                                                  c.name,
+                                                  c.icon,
+                                                  AppColors.fromHex(c.color),
+                                                )),
+                                          ],
+                                        );
+                                      },
+                                      loading: () => const SizedBox(),
+                                      error: (_, __) => ListView(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                                        children: [
+                                          _buildCategoryChip(
+                                              null, 'Todas', '📋', AppColors.textSecondary),
+                                        ],
+                                      ),
                                     );
                                   },
                                   loading: () => const SizedBox(),
-                                  error: (_, __) => ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                                    children: [
-                                      _buildCategoryChip(
-                                          null, 'Todas', '📋', AppColors.textSecondary),
-                                    ],
-                                  ),
+                                  error: (_, __) => const SizedBox(),
                                 ),
                               ),
                             ),
                           ),
                           // Tasks list
                           SliverPadding(
-                            padding: const EdgeInsets.only(bottom: 140),
+                            padding: EdgeInsets.only(
+                              bottom: ref.read(tasksProvider.notifier).hasMore &&
+                                      tasks.isNotEmpty &&
+                                      selectedCategories.isEmpty
+                                  ? 20
+                                  : 140,
+                            ),
                             sliver: SliverList(
                               delegate: SliverChildListDelegate([
                                 if (tasks.isEmpty)
-                                  _buildEmptyState(selectedCategory),
+                                  _buildEmptyState(selectedCategories.isEmpty ? null : 'filtered'),
                                 ..._buildGroupedTasks(
                                   tasks,
                                   categoriesAsync.maybeWhen(
-                                    data: (list) => list.map((c) => {'id': c.id, 'name': c.name, 'icon': c.icon}).toList(),
+                                    data: (list) => list,
                                     orElse: () => [],
                                   ),
                                   members,
                                   currentUserId,
-                                  selectedCategory,
+                                  selectedCategories,
                                 ),
                               ]),
                             ),
                           ),
+                          if (ref.read(tasksProvider.notifier).hasMore &&
+                              tasks.isNotEmpty &&
+                              selectedCategories.isEmpty)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                                child: Center(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () =>
+                                        ref.read(tasksProvider.notifier).loadMore(),
+                                    icon: const Icon(Icons.add_rounded),
+                                    label: const Text('Cargar más tareas',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w700)),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.primary,
+                                      side: const BorderSide(
+                                          color: AppColors.primary, width: 1.5),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 32, vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(24)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -480,11 +518,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   Widget _buildCategoryChip(String? id, String name, String icon, Color color) {
-    final selectedCategory = ref.watch(taskCategoryFilterProvider);
-    final isSelected = selectedCategory == id;
+    final selectedCategories = ref.watch(taskCategoryFilterProvider);
+    final isSelected = id == null ? selectedCategories.isEmpty : selectedCategories.contains(AppColors.normaliseCategory(id));
 
     return GestureDetector(
-      onTap: () => ref.read(taskCategoryFilterProvider.notifier).select(id),
+      onTap: () {
+        if (id == null) {
+          ref.read(taskCategoryFilterProvider.notifier).clear();
+        } else {
+          ref.read(taskCategoryFilterProvider.notifier).toggle(AppColors.normaliseCategory(id));
+        }
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
@@ -537,7 +581,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
 
-  Widget _buildEmptyState(String? selectedCategory) {
+  Widget _buildEmptyState(String? filterStatus) {
     return Padding(
       padding: const EdgeInsets.all(60),
       child: Column(
@@ -549,7 +593,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              selectedCategory == null 
+              filterStatus == null 
                   ? Icons.task_alt_rounded 
                   : Icons.filter_list_off_rounded,
               size: 64,
@@ -558,9 +602,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
           const SizedBox(height: 32),
           Text(
-            selectedCategory == null
+            filterStatus == null
                 ? '¡Todo despejado!'
-                : 'No hay tareas aquí',
+                : 'No hay tareas con estos filtros',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 22,
@@ -571,7 +615,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            selectedCategory == null
+            filterStatus == null
                 ? 'Relájate, no tienes tareas pendientes por ahora.'
                 : 'Prueba a cambiar de categoría o crea una nueva.',
             style: const TextStyle(
@@ -588,97 +632,91 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   List<Widget> _buildGroupedTasks(
     List<TaskModel> tasks,
-    List<Map<String, String>> categories,
+    List<CategoryModel> categories,
     List<MemberModel> members,
     String? currentUserId,
-    String? selectedCategory,
+    Set<String> selectedCategories,
   ) {
+    // 1. Group by marginalised category
+    final activeTasks = tasks.where((t) => t.isActive).toList();
+    
     // Deduplicate by title+normalised-category
     final uniqueMap = <String, TaskModel>{};
-    for (final t in tasks) {
+    for (final t in activeTasks) {
       final normCat = AppColors.normaliseCategory(t.category);
       final key = '${t.title.toLowerCase().trim()}_$normCat';
       final existing = uniqueMap[key];
+      // Keep most rewarding one
       if (existing == null || t.xpReward > existing.xpReward) {
         uniqueMap[key] = t;
       }
     }
     final deduped = uniqueMap.values.toList();
 
-    if (selectedCategory != null) {
-      final normSel = AppColors.normaliseCategory(selectedCategory);
-      final info = categories.firstWhere(
-        (c) => AppColors.normaliseCategory(c['id']) == normSel,
-        orElse: () => {'id': normSel, 'icon': '🏠', 'name': normSel},
-      );
-      return [
-        _SectionHeader(
-          icon: info['icon']!,
-          title: info['name']!,
-          count: deduped.length,
-        ),
-        ...deduped.map((t) => _TaskCard(
-              task : t,
-              members: members,
-              currentUserId: currentUserId,
-              onSchedule: () => _showScheduleDialog(t),
-              onEdit: () => _showEditDialog(t),
-              onDelete: () => _deleteTask(t),
-              onComplete: () => _completeTask(t),
-              onVerify: () => _verifyTask(t),
-              onObject: () => _objectTask(t),
-            )),
-      ];
+    // 2. Build Category Lookup Map (Key: Normalised ID)
+    final catLookup = <String, CategoryModel>{};
+    for (final c in categories) {
+      final norm = AppColors.normaliseCategory(c.id);
+      // If collision, keep existing (usually the first in sort order)
+      if (!catLookup.containsKey(norm)) {
+        catLookup[norm] = c;
+      }
     }
 
-    // Group by normalised category
+    // Filter if specific categories selected
+    List<TaskModel> tasksToDisplay = deduped;
+    if (selectedCategories.isNotEmpty) {
+      tasksToDisplay = deduped
+          .where((t) => selectedCategories
+              .contains(AppColors.normaliseCategory(t.category)))
+          .toList();
+    }
+
+    // 3. Group the tasks to display
     final grouped = <String, List<TaskModel>>{};
-    for (final t in deduped) {
+    for (final t in tasksToDisplay) {
       final normCat = AppColors.normaliseCategory(t.category);
       (grouped[normCat] ??= []).add(t);
     }
 
-    // Build a display map from DB categories (normalised) for label/icon lookup
-    final catDisplayMap = <String, Map<String, String>>{};
-    for (final c in categories) {
-      catDisplayMap[AppColors.normaliseCategory(c['id'])] = c;
-    }
-    // Also add any grouped cats not in the DB list
-    for (final normCat in grouped.keys) {
-      if (!catDisplayMap.containsKey(normCat)) {
-        catDisplayMap[normCat] = {'id': normCat, 'icon': '📦', 'name': normCat};
-      }
-    }
+    // 4. Sort categories by sortOrder if available
+    final displayCats = grouped.keys.toList();
+    displayCats.sort((a, b) {
+      final orderA = catLookup[a]?.sortOrder ?? 99;
+      final orderB = catLookup[b]?.sortOrder ?? 99;
+      return orderA.compareTo(orderB);
+    });
 
     final widgets = <Widget>[];
-    // Preserve the sort order from DB categories first, then extras
-    final orderedCats = [
-      ...categories.map((c) => AppColors.normaliseCategory(c['id'])).where((n) => grouped.containsKey(n)),
-      ...grouped.keys.where((n) => !categories.any((c) => AppColors.normaliseCategory(c['id']) == n)),
-    ];
+    for (final normCat in displayCats) {
+      final catTasks = grouped[normCat]!;
+      final catInfo = catLookup[normCat] ?? CategoryModel(
+        id: normCat,
+        name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+        icon: '🏠',
+        color: '#94A3B8'
+      );
 
-    for (final normCat in orderedCats) {
-      final catTasks = grouped[normCat];
-      if (catTasks != null && catTasks.isNotEmpty) {
-        final info = catDisplayMap[normCat] ?? {'id': normCat, 'icon': '📦', 'name': normCat};
-        widgets.add(_SectionHeader(
-          icon: info['icon']!,
-          title: info['name']!,
-          count: catTasks.length,
-        ));
-        widgets.addAll(catTasks.map((t) => _TaskCard(
-              task : t,
-              members: members,
-              currentUserId: currentUserId,
-              onSchedule: () => _showScheduleDialog(t),
-              onEdit: () => _showEditDialog(t),
-              onDelete: () => _deleteTask(t),
-              onComplete: () => _completeTask(t),
-              onVerify: () => _verifyTask(t),
-              onObject: () => _objectTask(t),
-            )));
-      }
+      widgets.add(_SectionHeader(
+        icon: AppColors.getCategoryMaterialIcon(normCat),
+        title: catInfo.name,
+        count: catTasks.length,
+        color: AppColors.fromHex(catInfo.color),
+      ));
+
+      widgets.addAll(catTasks.map((t) => _TaskCard(
+        task: t,
+        members: members,
+        currentUserId: currentUserId,
+        onSchedule: () => _showScheduleDialog(t),
+        onEdit: () => _showEditDialog(t),
+        onDelete: () => _deleteTask(t),
+        onComplete: () => _completeTask(t),
+        onVerify: () => _verifyTask(t),
+        onObject: () => _objectTask(t),
+      )));
     }
+
     return widgets;
   }
 }
@@ -688,7 +726,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String title;
   final int count;
   final Color? color;
@@ -702,42 +740,49 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColor = color ?? AppColors.primary;
+    
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (color ?? AppColors.primary).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: themeColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  AppColors.getCategoryMaterialIcon(title),
-                  size: 16,
-                  color: color ?? AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: color ?? AppColors.primary,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ],
+            child: Icon(
+              icon,
+              size: 16,
+              color: themeColor,
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 12),
           Text(
-            '$count ${count == 1 ? 'tarea' : 'tareas'}',
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textPrimary.withValues(alpha: 0.8),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.textMuted.withValues(alpha: 0.4),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$count',
             style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
               color: AppColors.textMuted,
             ),
           ),

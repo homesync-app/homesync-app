@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
-import '../../domain/repositories/task_repository.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
@@ -23,15 +23,26 @@ final createTaskUseCaseProvider = Provider<CreateTaskUseCase>((ref) {
 
 // ── UI State Providers ────────────────────────────────────────────────────────
 
-/// Currently selected category filter chip (null = all)
-class TaskCategoryFilterNotifier extends Notifier<String?> {
+/// Currently selected category filters (empty = all)
+class TaskCategoryFilterNotifier extends Notifier<Set<String>> {
   @override
-  String? build() => null;
-  void select(String? category) => state = category;
+  Set<String> build() => {};
+
+  void toggle(String category) {
+    final next = Set<String>.from(state);
+    if (next.contains(category)) {
+      next.remove(category);
+    } else {
+      next.add(category);
+    }
+    state = next;
+  }
+
+  void clear() => state = {};
 }
 
 final taskCategoryFilterProvider =
-    NotifierProvider<TaskCategoryFilterNotifier, String?>(
+    NotifierProvider<TaskCategoryFilterNotifier, Set<String>>(
         TaskCategoryFilterNotifier.new);
 
 /// Search query string
@@ -63,18 +74,56 @@ final tasksProvider =
     AsyncNotifierProvider<TasksNotifier, List<TaskModel>>(TasksNotifier.new);
 
 class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+  static const int _pageSize = 50;
+
   @override
   Future<List<TaskModel>> build() async {
+    _hasMore = true;
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
     final useCase = ref.read(getTasksUseCaseProvider);
-    return useCase(householdId);
+    final tasks = await useCase(householdId, limit: _pageSize, offset: 0);
+    
+    if (tasks.length < _pageSize) {
+      _hasMore = false;
+    }
+    
+    return tasks;
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => build());
+  }
+
+  /// Same as refresh but without showing the loading state, good for instantaneous updates.
+  Future<void> silentRefresh() async {
+    final result = await AsyncValue.guard(() => build());
+    state = result;
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || !_hasMore) return;
+    
+    final currentTasks = state.value ?? [];
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) return;
+    
+    final useCase = ref.read(getTasksUseCaseProvider);
+    final nextTasks = await useCase(
+      householdId, 
+      limit: _pageSize, 
+      offset: currentTasks.length,
+    );
+    
+    if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
+      _hasMore = false;
+    }
+    
+    state = AsyncValue.data([...currentTasks, ...nextTasks]);
   }
 
   Future<Map<String, dynamic>> completeTask(TaskModel task) async {
@@ -124,7 +173,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
       assignedTo: taskData['assignedTo'] as String?,
       recurrenceType: taskData['recurrenceType'] as String?,
     );
-    await refresh();
+    await silentRefresh();
   }
 
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
@@ -136,17 +185,16 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
-/// Tasks filtered by category chip and search query.
 final filteredTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
-  final selectedCategory = ref.watch(taskCategoryFilterProvider);
+  final selectedCategories = ref.watch(taskCategoryFilterProvider);
   final searchQuery = ref.watch(taskSearchQueryProvider);
 
   return tasksAsync.whenData((tasks) {
     var result = tasks;
-    if (selectedCategory != null) {
+    if (selectedCategories.isNotEmpty) {
       result = result
-          .where((t) => (t.category ?? 'general') == selectedCategory)
+          .where((t) => selectedCategories.contains(AppColors.normaliseCategory(t.category)))
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -157,23 +205,32 @@ final filteredTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
   });
 });
 
+/// Only the categories that actually have at least one active task.
+final activeCategoriesProvider = Provider<AsyncValue<List<String>>>((ref) {
+  final tasksAsync = ref.watch(tasksProvider);
+  return tasksAsync.whenData((tasks) {
+    final activeSet = <String>{};
+    for (var t in tasks) {
+      if (t.isActive) {
+        activeSet.add(AppColors.normaliseCategory(t.category));
+      }
+    }
+    return activeSet.toList();
+  });
+});
+
 /// Tasks due today — for Home Screen widget.
 final todayTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
 
   return tasksAsync.whenData((tasks) {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = DateTime(now.year, now.month, now.day + 1);
-
     return tasks.where((task) {
       if (!task.isActive) return false;
       if (task.assignedTo != null && task.assignedTo != currentUserId) return false;
-      if (task.status == 'verified') return false;
+      if (task.isVerified) return false;
       if (task.dueAt != null) {
-        return task.dueAt!.isAfter(startOfDay.subtract(const Duration(seconds: 1))) &&
-            task.dueAt!.isBefore(endOfDay);
+        return task.isDueToday;
       }
       if (task.isRecurring) return true;
       return false;
@@ -188,7 +245,8 @@ final taskStatusCountProvider = Provider<Map<String, int>>((ref) {
     data: (tasks) {
       final counts = <String, int>{};
       for (final task in tasks) {
-        counts[task.status] = (counts[task.status] ?? 0) + 1;
+        final statusKey = task.status.dbValue;
+        counts[statusKey] = (counts[statusKey] ?? 0) + 1;
       }
       return counts;
     },

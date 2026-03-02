@@ -9,15 +9,18 @@ import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
 // StatsScreen — rediseñada con fl_chart y tabs de navegación
 // ─────────────────────────────────────────────────────────────────────────────
 
-class StatsScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+
+class StatsScreen extends ConsumerStatefulWidget {
   final SupabaseRpcService rpc;
   const StatsScreen({super.key, required this.rpc});
 
   @override
-  State<StatsScreen> createState() => _StatsScreenState();
+  ConsumerState<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen>
+class _StatsScreenState extends ConsumerState<StatsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -50,31 +53,13 @@ class _StatsScreenState extends State<StatsScreen>
         widget.rpc.getWeeklyRanking(),
         widget.rpc.getXpHistory(),
         widget.rpc.getCoinHistory(),
-        widget.rpc.getHouseholdMembers(), // Load members for avatars
       ]);
 
       if (mounted) {
-        final rawRanking = results[2];
-        final members = results[5];
-
-        // Merge avatars into ranking
-        final mergedRanking = rawRanking.map((rankEntry) {
-          final userId = rankEntry['user_id'];
-          final member = members.firstWhere(
-            (m) => m['user_id'] == userId,
-            orElse: () => {},
-          );
-          final userData = member['users'] as Map<String, dynamic>?;
-          return {
-            ...rankEntry,
-            'avatar_url': userData?['avatar_url'],
-          };
-        }).toList();
-
         setState(() {
           _taskStats = results[0];
           _memberStats = results[1];
-          _weeklyRanking = mergedRanking;
+          _weeklyRanking = results[2];
           _xpHistory = results[3];
           _coinHistory = results[4];
           _isLoading = false;
@@ -108,6 +93,13 @@ class _StatsScreenState extends State<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Escuchar cambios en el perfil (ej. cambio de avatar) para recargar datos
+    ref.listen(userProfileProvider, (previous, next) {
+      if (next.hasValue && previous?.value != next.value) {
+        _loadStats();
+      }
+    });
+
     return Column(
       children: [
         // Tab bar
@@ -1263,10 +1255,17 @@ class _MemberRankCard extends StatelessWidget {
         children: [
           // Medal
           SizedBox(
-            width: 44,
+            width: 32,
             child: Center(
-              child: Text(medal, style: const TextStyle(fontSize: 28)),
+              child: Text(medal, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             ),
+          ),
+          const SizedBox(width: 8),
+          // Avatar
+          CustomUserAvatar(
+            name: firstName,
+            avatarUrl: member['avatar_url'],
+            radius: 20,
           ),
           const SizedBox(width: 12),
           // Name + detail

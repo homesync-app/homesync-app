@@ -140,6 +140,7 @@ class AppColors {
       case 'urgente':
         return error;
       case 'baño':
+      case 'bano':
       case 'bathroom':
         return const Color(0xFF06B6D4); // Cyan
       case 'dormitorio':
@@ -152,6 +153,7 @@ class AppColors {
       case 'bricolaje':
         return textSecondary;
       case 'niños':
+      case 'ninos':
         return accentOrange;
       default:
         return textSecondary;
@@ -209,6 +211,7 @@ class AppColors {
       case 'regalos':
         return Icons.card_giftcard_rounded;
       case 'baño':
+      case 'bano':
       case 'bathroom':
         return Icons.shower_rounded;
       case 'dormitorio':
@@ -222,6 +225,7 @@ class AppColors {
       case 'mantenimiento':
         return Icons.build_rounded;
       case 'niños':
+      case 'ninos':
         return Icons.child_care_rounded;
       default:
         return Icons.home_work_rounded;
@@ -305,17 +309,17 @@ class AppColors {
   }
 
   static String normaliseCategory(String? category) {
-    if (category == null) return 'general';
-    final lower = category.toLowerCase();
-    if (lower.contains('limpieza') || lower.contains('cleaning')) return 'cleaning';
-    if (lower.contains('cocina') || lower.contains('kitchen')) return 'kitchen';
-    if (lower.contains('baño') || lower.contains('bathroom')) return 'bathroom';
-    if (lower.contains('dormitorio') || lower.contains('bedroom')) return 'bedroom';
-    if (lower.contains('mascotas') || lower.contains('pets')) return 'pets';
-    if (lower.contains('jardin') || lower.contains('jardín') || lower.contains('outdoor')) return 'outdoor';
-    if (lower.contains('compras') || lower.contains('supermarket')) return 'supermarket';
-    if (lower.contains('sala')) return 'sala';
-    if (lower.contains('estudio')) return 'estudio';
-    return 'general';
+    if (category == null || category.trim().isEmpty) return 'general';
+    final lower = category.toLowerCase().trim();
+    if (lower == 'cleaning') return 'limpieza';
+    if (lower == 'kitchen') return 'cocina';
+    if (lower == 'bathroom' || lower == 'baño') return 'bano';
+    if (lower == 'bedroom') return 'dormitorio';
+    if (lower == 'pets') return 'mascotas';
+    if (lower == 'outdoor' || lower == 'garden' || lower == 'jardín' || lower == 'jardin') return 'jardin';
+    if (lower == 'supermarket') return 'compras';
+    if (lower == 'savings') return 'finanzas';
+    if (lower == 'niños' || lower == 'niño' || lower == 'ninos' || lower == 'niña') return 'ninos';
+    return lower;
   }
 }

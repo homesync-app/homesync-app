@@ -75,6 +75,7 @@ class SupabaseRpcService {
     required int xpReward,
     required int coinReward,
     required String householdId,
+    String? userId,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) {
@@ -87,7 +88,7 @@ class SupabaseRpcService {
       'complete_task_transaction',
       params: {
         'p_request_id': requestId,
-        'p_user_id': user.id,
+        'p_user_id': userId ?? user.id,
         'p_task_id': taskId,
         'p_household_id': householdId,
         'p_xp_reward': xpReward,
@@ -207,7 +208,7 @@ class SupabaseRpcService {
   // GET TASKS FROM DATABASE (Direct query)
   // ============================================
 
-  Future<List<Map<String, dynamic>>> getTasks() async {
+  Future<List<Map<String, dynamic>>> getTasks({int limit = 100, int offset = 0}) async {
     final user = _client.auth.currentUser;
     if (user == null) {
       throw Exception('Usuario no autenticado');
@@ -229,7 +230,8 @@ class SupabaseRpcService {
         .from('tasks')
         .select()
         .eq('household_id', householdId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
 
     return response;
   }

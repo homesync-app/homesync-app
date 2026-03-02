@@ -56,7 +56,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
   Future<void> _addTemplate(TaskTemplate template) async {
     if (_addingIds.contains(template.title)) return;
-    setState(() => _addingIds.add(template.title));
+    setState(() {
+      _addingIds.add(template.title);
+      _addedIds.add(template.title);
+    });
     try {
       await ref.read(tasksProvider.notifier).createTask({
         'title': template.title,
@@ -69,7 +72,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'recurrenceType': null,
       });
       if (mounted) {
-        setState(() => _addedIds.add(template.title));
+        // Task successfully added to server (and silentRefresh called in notifier)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(children: [
@@ -209,7 +212,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                           members: widget.members.map((m) => m.toMap()).toList(),
                         ),
                       );
-                      if (result == true && mounted) Navigator.pop(context, true);
+                      if (result == true && context.mounted) Navigator.pop(context, true);
                     },
                     icon: const Icon(Icons.edit_rounded, color: Colors.white),
                     label: const Text('Personalizada'),

@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'video_avatar_player.dart';
 
 class UserAvatar {
   static const List<Map<String, dynamic>> defaultAvatars = [
     // Lindos iconos de animales con colores pastel para el fondo
-    {'emoji': '🐱', 'color': Color(0xFFFFD180), 'name': 'Gato'},
-    {'emoji': '🐶', 'color': Color(0xFF80D8FF), 'name': 'Perro'},
-    {'emoji': '🦊', 'color': Color(0xFFFFAB40), 'name': 'Zorro'},
-    {'emoji': '🐼', 'color': Color(0xFFB9F6CA), 'name': 'Panda'},
-    {'emoji': '🐰', 'color': Color(0xFFFF80AB), 'name': 'Conejo'},
-    {'emoji': '🐻', 'color': Color(0xFFFFD54F), 'name': 'Oso'},
-    {'emoji': '🐨', 'color': Color(0xFFCFD8DC), 'name': 'Koala'},
-    {'emoji': '🐯', 'color': Color(0xFFFFCC80), 'name': 'Tigre'},
-    {'emoji': '🦋', 'color': Color(0xFFE1BEE7), 'name': 'Mariposa'},
-    {'emoji': '🐙', 'color': Color(0xFFFFCDD2), 'name': 'Pulpo'},
-    {'emoji': '🦩', 'color': Color(0xFFF8BBD0), 'name': 'Flamenco'},
-    {'emoji': '🐧', 'color': Color(0xFFE0E0E0), 'name': 'Pingüino'},
-    {'emoji': '🦄', 'color': Color(0xFFF3E5F5), 'name': 'Unicornio'},
-    {'emoji': '🐉', 'color': Color(0xFFC8E6C9), 'name': 'Dragón'},
-    {'emoji': '🦒', 'color': Color(0xFFFFF9C4), 'name': 'Jirafa'},
-    {'emoji': '🦥', 'color': Color(0xFFD7CCC8), 'name': 'Pereza'},
+    {'emoji': '🐱', 'color': const Color(0xFFFFD180), 'name': 'Gato'},
+    {'emoji': '🐶', 'color': const Color(0xFF80D8FF), 'name': 'Perro'},
+    {'emoji': '🦊', 'color': const Color(0xFFFFAB40), 'name': 'Zorro'},
+    {'emoji': '🐼', 'color': const Color(0xFFB9F6CA), 'name': 'Panda'},
+    {'emoji': '🐰', 'color': const Color(0xFFFF80AB), 'name': 'Conejo'},
+    {'emoji': '🐻', 'color': const Color(0xFFFFD54F), 'name': 'Oso'},
+    {'emoji': '🐨', 'color': const Color(0xFFCFD8DC), 'name': 'Koala'},
+    {'emoji': '🐯', 'color': const Color(0xFFFFCC80), 'name': 'Tigre'},
+    {'emoji': '🦋', 'color': const Color(0xFFE1BEE7), 'name': 'Mariposa'},
+    {'emoji': '🐙', 'color': const Color(0xFFFFCDD2), 'name': 'Pulpo'},
+    {'emoji': '🦩', 'color': const Color(0xFFF8BBD0), 'name': 'Flamenco'},
+    {'emoji': '🐧', 'color': const Color(0xFFE0E0E0), 'name': 'Pingüino'},
+    {'emoji': '🦄', 'color': const Color(0xFFF3E5F5), 'name': 'Unicornio'},
+    {'emoji': '🐉', 'color': const Color(0xFFC8E6C9), 'name': 'Dragón'},
+    {'emoji': '🦒', 'color': const Color(0xFFFFF9C4), 'name': 'Jirafa'},
+    {'emoji': '🦥', 'color': const Color(0xFFD7CCC8), 'name': 'Pereza'},
   ];
 
   static const List<Map<String, dynamic>> premiumAvatars = [
@@ -27,37 +28,37 @@ class UserAvatar {
       'id': 'premium_boy',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
-      'color': Color(0xFFE3F2FD)
+      'color': const Color(0xFFE3F2FD)
     },
     {
       'id': 'premium_girl',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
-      'color': Color(0xFFFCE4EC)
+      'color': const Color(0xFFFCE4EC)
     },
     {
       'id': 'premium_cat',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/cat.png',
-      'name': 'Gato 3D',
-      'color': Color(0xFFFFF3E0)
+      'url': 'assets/images/gato_premium_v2.mp4',
+      'name': 'Gato Animado',
+      'color': const Color(0xFFFFF3E0)
     },
     {
       'id': 'premium_dog',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
-      'color': Color(0xFFE8EAF6)
+      'color': const Color(0xFFE8EAF6)
     },
     {
       'id': 'premium_robot',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
-      'color': Color(0xFFE0F2F1)
+      'color': const Color(0xFFE0F2F1)
     },
     {
       'id': 'premium_bird',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'Pájaro 3D',
-      'color': Color(0xFFF3E5F5)
+      'color': const Color(0xFFF3E5F5)
     },
   ];
 
@@ -261,12 +262,17 @@ class _AvatarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasAvatar = avatarUrl != null && avatarUrl!.trim().isNotEmpty;
-    final bool isEmoji = hasAvatar && avatarUrl!.trim().length <= 2;
-    final bool isNetwork = hasAvatar && avatarUrl!.startsWith('http');
+    
+    // Check if it's a premium local asset encoded as premium://assets/...
+    final String cleanUrl = (avatarUrl ?? '').replaceFirst('premium://', '');
+    final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
+    
+    final bool isEmoji = hasAvatar && !isAsset && avatarUrl!.trim().length <= 2;
+    final bool isNetwork = hasAvatar && cleanUrl.startsWith('http');
 
     final color = isEmoji
         ? UserAvatar.getColorForEmoji((avatarUrl ?? '').trim())
-        : (isNetwork ? Colors.transparent : AppColors.primary);
+        : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
 
     final safeName = name?.trim() ?? '';
     final initial = safeName.isNotEmpty
@@ -277,7 +283,7 @@ class _AvatarContent extends StatelessWidget {
       width: radius * 2,
       height: radius * 2,
       decoration: BoxDecoration(
-        color: isEmoji ? color : (isNetwork ? Colors.grey.shade100 : AppColors.primary),
+        color: isEmoji ? color : ((isNetwork || isAsset) ? Colors.grey.shade100 : AppColors.primary),
         shape: BoxShape.circle,
         border: showBorder ? Border.all(color: borderColor ?? Colors.white, width: 2) : null,
         boxShadow: showBorder
@@ -291,9 +297,9 @@ class _AvatarContent extends StatelessWidget {
             : null,
       ),
       child: ClipOval(
-        child: isNetwork
-            ? Image.network(
-                avatarUrl ?? '',
+        child: isAsset
+            ? Image.asset(
+                cleanUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Center(
                   child: Text(
@@ -306,16 +312,12 @@ class _AvatarContent extends StatelessWidget {
                   ),
                 ),
               )
-            : Center(
-                child: isEmoji
-                    ? Text(
-                        (avatarUrl ?? '').trim(),
-                        style: TextStyle(
-                          fontSize: radius * 1.0,
-                          height: 1.1,
-                        ),
-                      )
-                    : Text(
+            : isNetwork
+                ? Image.network(
+                    cleanUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Text(
                         initial,
                         style: TextStyle(
                           color: Colors.white,
@@ -323,7 +325,26 @@ class _AvatarContent extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-              ),
+                    ),
+                  )
+                : Center(
+                    child: isEmoji
+                        ? Text(
+                            (avatarUrl ?? '').trim(),
+                            style: TextStyle(
+                              fontSize: radius * 1.0,
+                              height: 1.1,
+                            ),
+                          )
+                        : Text(
+                            initial,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: radius * 0.9,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
       ),
     );
 
@@ -354,52 +375,86 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use diameter as the base unit so the character fills the intended area
-    final double size = radius * 2.4;
-
     final String cleanUrl = url.startsWith('premium://')
         ? url.replaceFirst('premium://', '')
         : url;
 
-    // The image widget — transparent background, full character visible
-    Widget imageWidget = Image.network(
-      cleanUrl,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return SizedBox(
-          width: size,
-          height: size,
-          child: Center(
-            child: SizedBox(
-              width: radius * 0.6,
-              height: radius * 0.6,
-              child: CircularProgressIndicator(
-                color: AppColors.primary.withValues(alpha: 0.4),
-                strokeWidth: 2,
+    final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
+
+    // Increase size significantly for premium video characters
+    final double size = isVideo ? radius * 3.2 : radius * 2.8;
+
+    final bool isAsset = cleanUrl.startsWith('assets/');
+
+    // The image or video widget — transparent background or clipped circle
+    Widget contentWidget;
+
+    if (isVideo) {
+      contentWidget = VideoAvatarPlayer(
+        url: cleanUrl,
+        size: size,
+        isAsset: isAsset,
+      );
+    } else if (isAsset) {
+      contentWidget = Image.asset(
+        cleanUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Icon(
+                _getFallbackIcon(cleanUrl),
+                size: radius,
+                color: AppColors.primary.withValues(alpha: 0.5),
               ),
             ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return SizedBox(
-          width: size,
-          height: size,
-          child: Center(
-            child: Icon(
-              _getFallbackIcon(cleanUrl),
-              size: radius,
-              color: AppColors.primary.withValues(alpha: 0.5),
+          );
+        },
+      );
+    } else {
+      contentWidget = Image.network(
+        cleanUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: SizedBox(
+                width: radius * 0.6,
+                height: radius * 0.6,
+                child: CircularProgressIndicator(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  strokeWidth: 2,
+                ),
+              ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Icon(
+                _getFallbackIcon(cleanUrl),
+                size: radius,
+                color: AppColors.primary.withValues(alpha: 0.5),
+              ),
+            ),
+          );
+        },
+      );
+    }
 
-    Widget content = imageWidget;
+    Widget content = contentWidget;
 
     // Wrap in floating animation (gentle vertical levitation)
     if (isAnimated || isPriority) {

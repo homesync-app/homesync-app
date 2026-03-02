@@ -5,14 +5,16 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/balance_card.dart';
-import 'package:homesync_client/shared/widgets/complete_task_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
-import 'package:homesync_client/shared/widgets/task_detail_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
@@ -106,17 +108,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(expenseBalancesProvider);
   }
 
-  void _showSnack(String msg, Color color) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -249,9 +240,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             CustomUserAvatar(
               name: displayName,
               avatarUrl: avatarUrl,
-              radius: 28,
-              isAnimated: true,
-              isPriority: true,
+              radius: 36,
+              isAnimated: false,
+              isPriority: false,
             )
           else
             CustomUserAvatar(
@@ -412,17 +403,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildTaskCard(dynamic task) {
-    final String category =
-        (task is Map ? task['category'] : task.category) ?? 'general';
-    final String title =
-        (task is Map ? task['title'] : task.title) ?? 'Sin título';
-    final int xp = (task is Map ? task['xp_reward'] : task.xpReward) ?? 0;
-    final bool isCompleted =
-        (task is Map ? task['status'] : task.status) == 'verified';
+  Widget _buildTaskCard(TaskModel task) {
+    final category = task.category ?? 'general';
+    final title = task.title;
+    final xp = task.xpReward;
+    final isCompleted = task.isVerified;
 
-    final categoryColor = AppColors.getCategoryColor(category);
-    final categoryIcon = AppColors.getCategoryMaterialIcon(category);
+    // Resolve dynamic category data
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoryData = categoriesAsync.maybeWhen(
+      data: (list) {
+        try {
+          return list.firstWhere((c) => c.id == task.category);
+        } catch (_) {
+          return null;
+        }
+      },
+      orElse: () => null,
+    );
+
+    final categoryColor = categoryData != null
+        ? AppColors.fromHex(categoryData.color)
+        : AppColors.getCategoryColor(category);
+    final categoryIcon = categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
 
     return GestureDetector(
       onTap: () {
@@ -454,7 +457,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Icon(categoryIcon, color: categoryColor, size: 28),
+                child: Text(categoryIcon, style: const TextStyle(fontSize: 28)),
               ),
             ),
             const SizedBox(width: 16),
@@ -569,12 +572,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
 
-  Future<void> _handleCompleteFromCard(dynamic task) async {
-    final taskId = (task is Map ? task['id'] : task.id) as String?;
-    final taskTitle = (task is Map ? task['title'] : task.title) as String? ?? '';
-    final xpReward = (task is Map ? task['xp_reward'] : task.xpReward) as int? ?? 0;
-    final coinReward = (task is Map ? task['coin_reward'] : task.coinReward) as int? ?? 0;
-    final householdId = (task is Map ? task['household_id'] : task.householdId) as String? ?? '';
+  Future<void> _handleCompleteFromCard(TaskModel task) async {
+    final taskId = task.id;
+    final taskTitle = task.title;
+    final xpReward = task.xpReward;
+    final coinReward = task.coinReward;
+    final householdId = task.householdId;
 
     if (taskId == null) return;
 
@@ -1043,6 +1046,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
         ],
+      ),
+    );
+  }
+
+  void _showSnack(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(
+                fontWeight: FontWeight.w700, color: Colors.white)),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 100), // Above FAB/Bottom bar
+        duration: const Duration(seconds: 3),
       ),
     );
   }

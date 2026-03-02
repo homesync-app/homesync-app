@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -48,12 +49,14 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     super.dispose();
   }
 
-  String get _taskId => widget.taskData['id'] as String? ?? '';
-  String get _status => widget.taskData['status'] as String? ?? 'pending_verification';
-  String get _title => widget.taskData['title'] as String? ?? '';
-  String get _category => widget.taskData['category'] as String? ?? 'general';
-  int get _xpReward => (widget.taskData['xp_reward'] as num?)?.toInt() ?? 0;
-  int get _coinReward => (widget.taskData['coin_reward'] as num?)?.toInt() ?? 0;
+  TaskModel get _task => TaskModel.fromMap(widget.taskData);
+
+  String get _taskId => _task.id;
+  TaskStatus get _status => _task.status;
+  String get _title => _task.title;
+  String get _category => _task.category ?? 'general';
+  int get _xpReward => _task.xpReward;
+  int get _coinReward => _task.coinReward;
   String? get _objectionReason => widget.taskData['objection_reason'] as String?;
 
   Map? get _completedUser => widget.taskData['completed_user'] as Map?;
@@ -73,8 +76,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
   (String label, Color color, String emoji) get _statusInfo {
     return switch (_status) {
-      'pending_verification' || 'verified' => ('Completada', AppColors.accentTeal, '✅'),
-      'objected' => ('En disputa', AppColors.accentRed, '⚠️'),
+      TaskStatus.pendingVerification || TaskStatus.verified => ('Completada', AppColors.accentTeal, '✅'),
+      TaskStatus.objected => ('En disputa', AppColors.accentRed, '⚠️'),
       _ => ('Pendiente', AppColors.textMuted, '📋'),
     };
   }
@@ -87,7 +90,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.from('tasks').update({
-        'status': 'pending',
+        'status': TaskStatus.active.dbValue,
         'completed_by': null,
         'completed_at': null,
         'objection_reason': null,
@@ -112,7 +115,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.from('tasks').update({
-        'status': 'objected',
+        'status': TaskStatus.objected.name,
         'objection_reason': reason,
         'objected_by': _currentUserId,
         'objected_at': DateTime.now().toUtc().toIso8601String(),
@@ -133,7 +136,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.from('tasks').update({
-        'status': 'verified',
+        'status': TaskStatus.verified.name,
         'objection_reason': null,
         'objected_by': null,
         'objected_at': null,
@@ -476,7 +479,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
     // The author can undo their own completed TaskModel
     if (_isAuthor &&
-        (_status == 'pending_verification' || _status == 'verified')) {
+        (_status == TaskStatus.pendingVerification || _status == TaskStatus.verified)) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
@@ -497,7 +500,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     }
 
     // If it's already objected, and I AM the one who objected, I can undo it
-    if (_status == 'objected' && _iObjected) {
+    if (_status == TaskStatus.objected && _iObjected) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
@@ -517,7 +520,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     }
 
     // The partner can comment/object on pending/verified tasks (not already objected)
-    if (!_isAuthor && _status != 'objected') {
+    if (!_isAuthor && _status != TaskStatus.objected) {
       if (!_showObjectionInput) {
         return SizedBox(
           width: double.infinity,

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-class WeeklyWinnerScreen extends StatefulWidget {
+class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   final SupabaseRpcService rpc;
   final VoidCallback onClose;
 
@@ -16,10 +18,10 @@ class WeeklyWinnerScreen extends StatefulWidget {
   });
 
   @override
-  State<WeeklyWinnerScreen> createState() => _WeeklyWinnerScreenState();
+  ConsumerState<WeeklyWinnerScreen> createState() => _WeeklyWinnerScreenState();
 }
 
-class _WeeklyWinnerScreenState extends State<WeeklyWinnerScreen>
+class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
     with TickerProviderStateMixin {
   List<Map<String, dynamic>> _ranking = [];
   Map<String, dynamic>? _winner;
@@ -88,6 +90,11 @@ class _WeeklyWinnerScreenState extends State<WeeklyWinnerScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Listen for profile changes to refresh ranking/avatar if needed
+    ref.listen(userProfileProvider, (previous, next) {
+      _loadData();
+    });
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(

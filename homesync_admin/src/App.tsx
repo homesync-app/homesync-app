@@ -8,6 +8,7 @@ import { Logs } from './pages/Logs';
 import { UserManagement } from './pages/UserManagement';
 import { Economy } from './pages/Economy';
 import { Login } from './pages/Login';
+import { CrashReports } from './pages/CrashReports';
 import { Loader2 } from 'lucide-react';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/templates" element={<TaskTemplates />} />
           <Route path="/logs" element={<Logs />} />
+          <Route path="/crashes" element={<CrashReports />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/economy" element={<Economy />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -13,3 +13,10 @@ final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
       .map((json) => CategoryModel.fromMap(json))
       .toList();
 });
+
+final categoryMapProvider = Provider<AsyncValue<Map<String, CategoryModel>>>((ref) {
+  final categoriesAsync = ref.watch(categoriesProvider);
+  return categoriesAsync.whenData((list) {
+    return {for (var c in list) c.id: c};
+  });
+});

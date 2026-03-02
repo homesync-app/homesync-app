@@ -23,8 +23,8 @@ class SupabaseTaskRepository implements TaskRepository {
         _rpc = rpc;
 
   @override
-  Future<List<TaskModel>> getTasks(String householdId) async {
-    final raw = await _rpc.getTasks();
+  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+    final raw = await _rpc.getTasks(limit: limit, offset: offset);
     return (raw as List).map((t) => TaskModel.fromMap(t as Map<String, dynamic>)).toList();
   }
 
@@ -42,7 +42,7 @@ class SupabaseTaskRepository implements TaskRepository {
   @override
   Future<void> verifyTask(String taskId, String verifiedByUserId) async {
     await _client.from(AppConstants.tableTasks).update({
-      'status': 'verified',
+      'status': TaskStatus.verified.name,
       'verified_by': verifiedByUserId,
       'verified_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
@@ -52,7 +52,7 @@ class SupabaseTaskRepository implements TaskRepository {
   @override
   Future<void> objectTask(String taskId, String objectedByUserId) async {
     await _client.from(AppConstants.tableTasks).update({
-      'status': 'objected',
+      'status': TaskStatus.objected.name,
       'objected_by': objectedByUserId,
       'objected_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),

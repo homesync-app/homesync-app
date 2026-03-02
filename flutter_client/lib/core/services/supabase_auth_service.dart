@@ -3,7 +3,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:homesync_client/config/app_environment.dart';
+import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
@@ -19,10 +19,13 @@ class SupabaseAuthService {
     );
     _client = Supabase.instance.client;
     
-    // GoogleSignIn config for Web is managed via constructors or meta tags
-    // We skip manual init as it requires ClientID configuration in index.html
-    if (kIsWeb) {
-      debugPrint('GoogleSignIn: Skip manual init in core service');
+    // Initialize GoogleSignIn for Web if needed
+    try {
+      if (kIsWeb) {
+        await GoogleSignIn.instance.initialize();
+      }
+    } catch (e) {
+      debugPrint('Error inicializando GoogleSignIn: $e');
     }
   }
 
@@ -52,21 +55,19 @@ class SupabaseAuthService {
 
   Future<void> _createUserProfile(String userId, String email, String? fullName,
       String householdType) async {
-    // 1. Generamos el ID del hogar previamente
+    // 1. Generate household ID beforehand
     final householdId = const Uuid().v4();
 
-    // 2. Insertamos el hogar SIN .select() porque RLS prohíbe seleccionarlo si no somos miembros todavía
+    // 2. Insert household WITHOUT .select() (RLS restriction)
     await _client.from('households').insert({
       'id': householdId,
       'name': 'Mi Hogar',
       'household_type': householdType,
     });
 
-    // 3. El usuario se inserta automáticamente en la tabla public.users mediante
-    //    el trigger de la base de datos "on_auth_user_created", así que
-    //    no necesitamos re-insertarlo aquí o fallaría por constraint duplicado.
-
-    // 4. Asignamos al usuario como creador/propietario del hogar
+    // 3. User is auto-inserted via database trigger "on_auth_user_created"
+    
+    // 4. Assign user as owner
     await _client.from('household_members').insert({
       'household_id': householdId,
       'user_id': userId,
@@ -82,8 +83,8 @@ class SupabaseAuthService {
       email: email,
       password: password,
     );
-    // Tag user in Crashlytics so we know who crashed (Mobile only)
-    if (!kIsWeb && response.user != null) {
+    // Tag user in Crashlytics (mobile only)
+    if (response.user != null && !kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
     }
     return response;
@@ -91,24 +92,17 @@ class SupabaseAuthService {
 
   Future<bool> signInWithGoogle() async {
     try {
-      // 1. For Web, use the standard OAuth flow (easiest for Supabase)
-      if (kIsWeb) {
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: AppEnvironment.isProduction 
-            ? 'https://your-production-url.com/login-callback' // Replace with your web url
-            : 'http://localhost:3000/login-callback',
-        );
-        return true;
-      }
-
-      // 2. Native flow for Mobile (v7+)
+      // 1. Native flow with GoogleSignIn v7+
       final googleSignIn = GoogleSignIn.instance;
+      
+      // On Web/Chrome v7+ we use authenticate() instead of signIn()
       final googleUser = await googleSignIn.authenticate();
+      if (googleUser == null) return false;
 
       final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
       
+      // Basic scopes for Supabase
       final authorization = await googleUser.authorizationClient.authorizeScopes(
         ['email', 'openid'],
       );
@@ -121,7 +115,7 @@ class SupabaseAuthService {
           accessToken: accessToken,
         );
       } else {
-        // Fallback to OAuth if idToken is missing
+        // 2. Fallback to OAuth if native flow doesn't return idToken
         await _client.auth.signInWithOAuth(
           OAuthProvider.google,
           redirectTo: 'homesync://login-callback',
@@ -129,7 +123,7 @@ class SupabaseAuthService {
       }
 
       await ensureHouseholdExists();
-      // Tag user in Crashlytics (Mobile only)
+      // Tag user in Crashlytics (mobile only)
       if (!kIsWeb) {
         final user = _client.auth.currentUser;
         if (user != null) {
@@ -143,8 +137,6 @@ class SupabaseAuthService {
     }
   }
 
-  /// Called after any sign-in (Google or email) to guarantee the user
-  /// has a household entry. Safe to call multiple times (idempotent).
   Future<void> ensureHouseholdExists() async {
     final user = _client.auth.currentUser;
     if (user == null) return;
@@ -156,9 +148,9 @@ class SupabaseAuthService {
         .eq('user_id', user.id)
         .maybeSingle();
 
-    if (existing != null) return; // already has a household
+    if (existing != null) return;
 
-    // Create a new household for this user
+    // Create a new household
     final email = user.email ?? '';
     final fullName = user.userMetadata?['full_name'] as String? ??
         user.userMetadata?['name'] as String?;
@@ -170,7 +162,7 @@ class SupabaseAuthService {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {}
-    // Clear user identity from Crashlytics for privacy (Mobile only)
+    // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier('');
     }
@@ -183,7 +175,6 @@ class SupabaseAuthService {
     await _client.auth.resetPasswordForEmail(email);
   }
 
-  /// Alias used by LoginScreen
   Future<void> resetPasswordForEmail(String email) async {
     await _client.auth.resetPasswordForEmail(email);
   }
