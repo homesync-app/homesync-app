@@ -1,0 +1,63 @@
+name: Deploy to Google Play (Internal Testing)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.27.0'
+      
+      - name: Get dependencies
+        run: |
+          cd flutter_client
+          flutter pub get
+      
+      - name: Decode Keystore
+        if: env.ENCODED_KEYSTORE != ''
+        run: |
+          echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
+        env:
+          ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
+      
+      - name: Create local.properties
+        if: env.ENCODED_KEYSTORE != ''
+        run: |
+          echo "storeFile=release.keystore" >> flutter_client/android/local.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> flutter_client/android/local.properties
+          echo "keyAlias=${{ secrets.KEYSTORE_ALIAS }}" >> flutter_client/android/local.properties
+          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> flutter_client/android/local.properties
+      
+      - name: Build APK (Release)
+        run: |
+          cd flutter_client
+          flutter build apk --release
+      
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: homesync-release-apk
+          path: flutter_client/build/app/outputs/flutter-apk/app-release.apk
+      
+      - name: Deploy to Google Play (Internal Testing)
+        if: env.ENCODED_KEYSTORE != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          service-account-json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          package-name: com.blas.homesync
+          release-files: flutter_client/build/app/outputs/flutter-apk/app-release.apk
+          track: internal
+          status: completed
+          whats-new: "New release with offline mode, retry logic, and UI improvements"
