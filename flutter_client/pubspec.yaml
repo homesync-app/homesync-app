@@ -1,5 +1,5 @@
 name: homesync_client
-description: HomeSync Flutter Client - Validación del Contrato API
+description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
 publish_to: "none"
 version: 1.0.0+2
 
@@ -11,52 +11,52 @@ dependencies:
     sdk: flutter
 
   # Supabase client
-  supabase_flutter: ^2.8.4
+  supabase_flutter: ^2.12.0
 
   # HTTP client
-  http: ^1.1.0
+  http: ^1.2.0
 
   # Local storage
-  shared_preferences: ^2.2.0
+  shared_preferences: ^2.3.0
 
   # UUID generation
-  uuid: ^4.0.0
+  uuid: ^4.5.0
 
-  # Icons (optional, for better UI)
-  cupertino_icons: ^1.0.2
+  # Icons
+  cupertino_icons: ^1.0.8
 
   # Charts
-  fl_chart: ^0.62.0
+  fl_chart: ^0.69.0
 
   # Internationalization
-  intl: ^0.19.0
+  intl: ^0.20.0
 
   # Confetti animation
-  confetti: ^0.7.0
+  confetti: ^0.8.0
 
   # URL Launcher
-  url_launcher: ^6.2.0
-  timeago: ^3.6.0
-  table_calendar: ^3.0.0
-  flutter_riverpod: ^2.4.0
-  google_sign_in: ^6.2.0
-  app_links: ^6.0.0
-  google_fonts: ^6.1.0
-  firebase_core: ^2.24.0
-  firebase_messaging: ^14.7.0
-  firebase_crashlytics: ^3.4.0
-  video_player: ^2.8.0
+  url_launcher: ^6.3.0
+  timeago: ^3.7.0
+  table_calendar: ^3.1.0
+  flutter_riverpod: ^2.6.0
+  google_sign_in: ^7.0.0
+  app_links: ^6.4.0
+  google_fonts: ^6.2.0
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.0
+  firebase_crashlytics: ^3.5.0
+  video_player: ^2.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
   mockito: ^5.4.0
   build_runner: ^2.4.0
   integration_test:
     sdk: flutter
-  rename: ^2.0.0
+  rename: ^3.0.0
 
 flutter:
   uses-material-design: true
