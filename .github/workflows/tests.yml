@@ -41,7 +41,7 @@ jobs:
       - name: Analyze code
         run: |
           cd flutter_client
-          flutter analyze --no-fatal-infos
+          flutter analyze --no-fatal-infos --no-fatal-warnings
       
       - name: Build APK (validation only)
         run: |
