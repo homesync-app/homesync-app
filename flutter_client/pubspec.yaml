@@ -64,22 +64,3 @@ flutter:
   # Assets
   assets:
     - assets/images/
-  
-  # Flavors configuration
-  # Staging flavor
-  # Command: flutter build apk --flavor staging
-  staging:
-    android:
-      applicationId: "com.homesync.staging"
-      buildConfig:
-        properties:
-          appName: "HomeSync Staging"
-  
-  # Production flavor
-  # Command: flutter build apk --flavor production
-  production:
-    android:
-      applicationId: "com.homesync.app"
-      buildConfig:
-        properties:
-          appName: "HomeSync"
