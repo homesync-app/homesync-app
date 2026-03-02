@@ -75,11 +75,11 @@ jobs:
         if: env.ENCODED_KEYSTORE != ''
         uses: r0adkll/upload-google-play@v1.1.2
         with:
-          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.blas.homesync
           releaseFiles: flutter_client/build/app/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
-          whatsnewDir: whatsnew
+          whatsNewDirectory: whatsnew
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
