@@ -27,29 +27,38 @@ jobs:
       
       - name: Decode Keystore
         run: |
-          echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
+          if [ -n "$ENCODED_KEYSTORE" ]; then
+            echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
+          fi
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
       
       - name: Create local.properties
         run: |
-          echo "storeFile=release.keystore" >> flutter_client/android/local.properties
-          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/local.properties
-          echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+          if [ -f "release.keystore" ]; then
+            echo "storeFile=release.keystore" >> flutter_client/android/local.properties
+            echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/local.properties
+            echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+          fi
       
       - name: Build APK (Release)
         run: |
           cd flutter_client
-          flutter build apk --release
+          if [ -f "../release.keystore" ]; then
+            flutter build apk --release
+          else
+            flutter build apk --debug
+          fi
       
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: homesync-release-apk
-          path: flutter_client/build/app/outputs/flutter-apk/app-release.apk
+          name: homesync-apk
+          path: flutter_client/build/app/outputs/flutter-apk/app-*.apk
       
       - name: Deploy to Google Play (Internal Testing)
+        if: env.ENCODED_KEYSTORE != ''
         uses: r0adkll/upload-google-play@v1
         with:
           service-account-json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -58,3 +67,5 @@ jobs:
           track: internal
           status: completed
           whats-new: "New release with offline mode, retry logic, and UI improvements"
+        env:
+          ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
