@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseRpcService {
@@ -725,5 +726,60 @@ class SupabaseRpcService {
       params: {'p_household_id': householdId},
     );
     return Map<String, dynamic>.from(response);
+  }
+
+  // ============================================
+  // WEEKLY DUEL HISTORY
+  // ============================================
+
+  Future<List<Map<String, dynamic>>> getWeeklyDuelHistory() async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
+    try {
+      final response = await _client.rpc(
+        'get_weekly_duel_history',
+        params: {'p_user_id': user.id},
+      );
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Error getting duel history: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> saveWeeklyDuelResult({
+    required String householdId,
+    required DateTime weekStartDate,
+    required String winnerUserId,
+    required String winnerName,
+    required String loserUserId,
+    required String loserName,
+    required int winnerXp,
+    required int loserXp,
+  }) async {
+    try {
+      final response = await _client.rpc(
+        'save_weekly_duel_result',
+        params: {
+          'p_household_id': householdId,
+          'p_week_start_date': weekStartDate.toIso8601String().split('T')[0],
+          'p_winner_user_id': winnerUserId,
+          'p_winner_name': winnerName,
+          'p_loser_user_id': loserUserId,
+          'p_loser_name': loserName,
+          'p_winner_xp': winnerXp,
+          'p_loser_xp': loserXp,
+        },
+      );
+
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      debugPrint('Error saving duel result: $e');
+      return {'success': false, 'message': e.toString()};
+    }
   }
 }

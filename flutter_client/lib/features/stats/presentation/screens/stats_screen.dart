@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // StatsScreen — rediseñada con fl_chart y tabs de navegación
@@ -30,6 +31,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   List<Map<String, dynamic>> _weeklyRanking = [];
   List<Map<String, dynamic>> _xpHistory = [];
   List<Map<String, dynamic>> _coinHistory = [];
+  List<Map<String, dynamic>> _duelHistory = [];
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         widget.rpc.getWeeklyRanking(),
         widget.rpc.getXpHistory(),
         widget.rpc.getCoinHistory(),
+        widget.rpc.getWeeklyDuelHistory(),
       ]);
 
       if (mounted) {
@@ -62,6 +65,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           _weeklyRanking = results[2];
           _xpHistory = results[3];
           _coinHistory = results[4];
+          _duelHistory = results[5];
           _isLoading = false;
         });
       }
@@ -137,6 +141,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                     _WeeklyTab(
                       weeklyRanking: _weeklyRanking,
                       memberStats: _memberStats,
+                      duelHistory: _duelHistory,
                       weekRange: _getWeekRange(),
                       totalTasks: _totalTasksCompleted,
                       totalXp: _totalXpEarned,
@@ -168,6 +173,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 class _WeeklyTab extends StatelessWidget {
   final List<Map<String, dynamic>> weeklyRanking;
   final List<Map<String, dynamic>> memberStats;
+  final List<Map<String, dynamic>> duelHistory;
   final String weekRange;
   final int totalTasks;
   final int totalXp;
@@ -177,6 +183,7 @@ class _WeeklyTab extends StatelessWidget {
   const _WeeklyTab({
     required this.weeklyRanking,
     required this.memberStats,
+    required this.duelHistory,
     required this.weekRange,
     required this.totalTasks,
     required this.totalXp,
@@ -199,6 +206,14 @@ class _WeeklyTab extends StatelessWidget {
           // ── XP Faceoff (weekly duel) ──────────────────────────────────
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
+            const SizedBox(height: 28),
+          ],
+
+          // ── Duel History ─────────────────────────────────────────────────
+          if (duelHistory.isNotEmpty) ...[
+            const _SectionLabel(label: 'Historial de duelos', icon: '🏆'),
+            const SizedBox(height: 16),
+            _DuelHistoryWidget(duelHistory: duelHistory),
             const SizedBox(height: 28),
           ],
 
@@ -1309,6 +1324,166 @@ class _MemberRankCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DuelHistoryWidget extends StatelessWidget {
+  final List<Map<String, dynamic>> duelHistory;
+
+  const _DuelHistoryWidget({required this.duelHistory});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: duelHistory.asMap().entries.map((entry) {
+          final index = entry.key;
+          final duel = entry.value;
+          final isLast = index == duelHistory.length - 1;
+          
+          final winnerName = (duel['winner_name'] as String? ?? 'Ganador').split(' ').first;
+          final loserName = (duel['loser_name'] as String? ?? 'Perdedor').split(' ').first;
+          final winnerXp = (duel['winner_xp'] as num?)?.toInt() ?? 0;
+          final loserXp = (duel['loser_xp'] as num?)?.toInt() ?? 0;
+          final userResult = duel['user_result'] as String? ?? 'neutral';
+          final weekDate = duel['week_start_date'];
+          
+          String weekLabel = 'Semana pasada';
+          if (weekDate != null) {
+            try {
+              final date = DateTime.parse(weekDate.toString());
+              weekLabel = '${date.day}/${date.month}';
+            } catch (_) {}
+          }
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: isLast ? null : Border(
+                bottom: BorderSide(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: userResult == 'win'
+                          ? [AppColors.success, AppColors.success.withValues(alpha: 0.8)]
+                          : userResult == 'loss'
+                              ? [Colors.red.shade400, Colors.red.shade300]
+                              : [AppColors.textMuted.withValues(alpha: 0.3), AppColors.textMuted.withValues(alpha: 0.2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      userResult == 'win' ? '🏆' : userResult == 'loss' ? '😢' : '⚔️',
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            winnerName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: userResult == 'win' ? AppColors.success : AppColors.textPrimary,
+                            ),
+                          ),
+                          const Text(' vs ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          Text(
+                            loserName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        weekLabel,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: userResult == 'win'
+                        ? AppColors.success.withValues(alpha: 0.1)
+                        : userResult == 'loss'
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : AppColors.accentGold.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        userResult == 'win' ? '✓' : userResult == 'loss' ? '✗' : '=',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: userResult == 'win'
+                              ? AppColors.success
+                              : userResult == 'loss'
+                                  ? Colors.red
+                                  : AppColors.accentGold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$winnerXp - $loserXp',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: userResult == 'win'
+                              ? AppColors.success
+                              : userResult == 'loss'
+                                  ? Colors.red.shade600
+                                  : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

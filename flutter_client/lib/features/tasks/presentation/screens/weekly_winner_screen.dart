@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -21,44 +19,15 @@ class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   ConsumerState<WeeklyWinnerScreen> createState() => _WeeklyWinnerScreenState();
 }
 
-class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
-    with TickerProviderStateMixin {
+class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
   List<Map<String, dynamic>> _ranking = [];
   Map<String, dynamic>? _winner;
   bool _isLoading = true;
-  bool _showContent = false;
-
-  late AnimationController _confettiController;
-  late AnimationController _winnerController;
-  late Animation<double> _winnerAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    _confettiController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
-
-    _winnerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _winnerAnimation = CurvedAnimation(
-      parent: _winnerController,
-      curve: Curves.elasticOut,
-    );
-
     _loadData();
-  }
-
-  @override
-  void dispose() {
-    _confettiController.dispose();
-    _winnerController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -68,19 +37,35 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
         await widget.rpc.awardWeeklyWinner();
+        
+        if (ranking.length >= 2) {
+          final householdInfo = await widget.rpc.getHouseholdInfo();
+          final householdId = householdInfo['household_id'] as String?;
+          
+          if (householdId != null) {
+            final winner = ranking.first;
+            final loser = ranking[1];
+            final weekStart = DateTime.now();
+            final weekStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day)
+                .subtract(Duration(days: weekStart.weekday - 1));
+            
+            await widget.rpc.saveWeeklyDuelResult(
+              householdId: householdId,
+              weekStartDate: weekStartDate,
+              winnerUserId: winner['user_id'] ?? '',
+              winnerName: winner['user_name'] ?? 'Ganador',
+              loserUserId: loser['user_id'] ?? '',
+              loserName: loser['user_name'] ?? 'Perdedor',
+              winnerXp: (winner['xp_earned'] as num?)?.toInt() ?? 0,
+              loserXp: (loser['xp_earned'] as num?)?.toInt() ?? 0,
+            );
+          }
+        }
       }
 
       setState(() {
         _ranking = ranking;
         _isLoading = false;
-      });
-
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          setState(() => _showContent = true);
-          _confettiController.repeat();
-          _winnerController.forward();
-        }
       });
     } catch (e) {
       debugPrint('Error loading winner: $e');
@@ -90,7 +75,6 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Listen for profile changes to refresh ranking/avatar if needed
     ref.listen(userProfileProvider, (previous, next) {
       _loadData();
     });
@@ -107,31 +91,14 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
             radius: 1.2,
           ),
         ),
-        child: Stack(
-          children: [
-            if (_showContent) _buildConfetti(),
-            SafeArea(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    )
-                  : _buildContent(),
-            ),
-          ],
+        child: SafeArea(
+          child: _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : _buildContent(),
         ),
       ),
-    );
-  }
-
-  Widget _buildConfetti() {
-    return AnimatedBuilder(
-      animation: _confettiController,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: ConfettiPainter(_confettiController.value),
-          size: Size.infinite,
-        );
-      },
     );
   }
 
@@ -173,23 +140,20 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
       );
     }
 
-    return AnimatedOpacity(
-      opacity: _showContent ? 1 : 0,
-      duration: const Duration(milliseconds: 500),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            _buildHeader(),
-            const SizedBox(height: 40),
-            _buildWinnerCard(),
-            const SizedBox(height: 32),
-            _buildRanking(),
-            const Spacer(),
-            _buildCloseButton(),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          _buildHeader(),
+          const SizedBox(height: 30),
+          _buildWinnerCard(),
+          const SizedBox(height: 24),
+          _buildRanking(),
+          const Spacer(),
+          _buildCloseButton(),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
@@ -209,7 +173,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
         const Text(
           '¡GANADOR DE LA SEMANA!',
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             letterSpacing: 2,
@@ -229,104 +193,97 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
   }
 
   Widget _buildWinnerCard() {
-    return ScaleTransition(
-      scale: _winnerAnimation,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.accent.withValues(alpha: 0.3),
-              AppColors.success.withValues(alpha: 0.2),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.accent.withValues(alpha: 0.5),
-            width: 2,
-          ),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accent.withValues(alpha: 0.3),
+            AppColors.success.withValues(alpha: 0.2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          children: [
-            Center(
-              child: CustomUserAvatar(
-                name: _winner!['user_name'],
-                avatarUrl: _winner!['avatar_url'],
-                radius: 60,
-                showBorder: true,
-                isPriority: true,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.5),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          CustomUserAvatar(
+            name: _winner!['user_name'],
+            avatarUrl: _winner!['avatar_url'],
+            radius: 60,
+            showBorder: true,
+            isPriority: true,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.star, color: AppColors.accent, size: 28),
+              const SizedBox(width: 8),
+              Text(
+                _winner!['user_name'] ?? 'Ganador',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
+              const SizedBox(width: 8),
+              const Icon(Icons.star, color: AppColors.accent, size: 28),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black26,
+              borderRadius: BorderRadius.circular(30),
             ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.star, color: AppColors.accent, size: 32),
+                const Icon(Icons.star_rounded, color: AppColors.accent, size: 24),
                 const SizedBox(width: 8),
                 Text(
-                  _winner!['user_name'] ?? 'Ganador',
+                  '${_winner!['xp_earned'] ?? 0} XP',
                   style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.star, color: AppColors.accent, size: 32),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star_rounded,
-                      color: AppColors.accent, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_winner!['xp_earned'] ?? 0} XP',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.monetization_on_rounded,
-                      color: AppColors.success, size: 20),
-                  SizedBox(width: 6),
-                  Text(
-                    '+20 coins ganados',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.success,
-                    ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.monetization_on_rounded, color: AppColors.success, size: 20),
+                SizedBox(width: 6),
+                Text(
+                  '+20 coins ganados',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.success,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -408,8 +365,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         child: const Text(
           '¡Genial!',
@@ -426,82 +382,5 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen>
 
     String formatDate(DateTime d) => '${d.day}/${d.month}';
     return '${formatDate(monday)} - ${formatDate(sunday)}';
-  }
-}
-
-class ConfettiPainter extends CustomPainter {
-  final double progress;
-  final List<ConfettiPiece> pieces;
-
-  ConfettiPainter(this.progress) : pieces = [] {
-    final random = Random(42);
-    for (int i = 0; i < 60; i++) {
-      pieces.add(ConfettiPiece(random));
-    }
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (var piece in pieces) {
-      piece.update(progress);
-      piece.draw(canvas, size);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class ConfettiPiece {
-  final Random random;
-  double x;
-  double y;
-  double speed;
-  double size;
-  Color color;
-  double rotation;
-
-  ConfettiPiece(this.random)
-      : x = random.nextDouble(),
-        y = -0.1 - random.nextDouble() * 0.5,
-        speed = 0.002 + random.nextDouble() * 0.004,
-        size = 5 + random.nextDouble() * 8,
-        rotation = random.nextDouble() * 360,
-        color = [
-          AppColors.accent,
-          AppColors.success,
-          AppColors.primary,
-          Colors.pink,
-          Colors.orange,
-          Colors.cyan,
-        ][random.nextInt(6)];
-
-  void update(double progress) {
-    y += speed;
-    rotation += 3;
-
-    if (y > 1.2) {
-      y = -0.1;
-      x = random.nextDouble();
-    }
-  }
-
-  void draw(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-
-    canvas.save();
-    canvas.translate(x * size.width, y * size.height);
-    canvas.rotate(rotation * 3.14159 / 180);
-
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset.zero,
-        width: this.size,
-        height: this.size * 0.5,
-      ),
-      paint,
-    );
-
-    canvas.restore();
   }
 }
