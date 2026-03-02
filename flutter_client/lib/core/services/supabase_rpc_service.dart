@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseRpcService {
@@ -8,8 +10,72 @@ class SupabaseRpcService {
 
   late final SupabaseClient _client;
 
+  static const int _maxRetries = 3;
+  static const Duration _initialDelay = Duration(seconds: 1);
+  static const Duration _maxDelay = Duration(seconds: 30);
+
   Future<void> initialize() async {
     _client = Supabase.instance.client;
+  }
+
+  Future<T> _executeWithRetry<T>(
+    Future<T> Function() request, {
+    String operation = 'RPC',
+  }) async {
+    int retryCount = 0;
+    Duration delay = _initialDelay;
+
+    while (true) {
+      try {
+        return await request();
+      } on PostgrestException catch (e) {
+        if (_isRateLimitError(e)) {
+          retryCount++;
+          if (retryCount >= _maxRetries) {
+            throw RateLimitException(
+              'Rate limit exceeded after $retryCount attempts',
+              timeUntilReset: _extractRetryAfter(e),
+            );
+          }
+          
+          await Future.delayed(delay);
+          if (delay.inSeconds < _maxDelay.inSeconds) {
+            delay = Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
+          }
+        } else {
+          rethrow;
+        }
+      } catch (e) {
+        if (e is RateLimitException) rethrow;
+        
+        retryCount++;
+        if (retryCount >= _maxRetries) {
+          throw NetworkException('Operation failed after $_maxRetries attempts: $e');
+        }
+        
+        await Future.delayed(delay);
+        if (delay.inSeconds < _maxDelay.inSeconds) {
+          delay = Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
+        }
+      }
+    }
+  }
+
+  bool _isRateLimitError(PostgrestException e) {
+    return e.code == '429' || 
+           e.message.contains('rate limit') ||
+           e.message.contains('too many requests');
+  }
+
+  Duration? _extractRetryAfter(PostgrestException e) {
+    final match = RegExp(r'retry[- ]?after["\s:]+(\d+)').firstMatch(e.message);
+    if (match != null) {
+      final seconds = int.tryParse(match.group(1) ?? '');
+      if (seconds != null) {
+        return Duration(seconds: seconds);
+      }
+    }
+    return null;
   }
 
   // ============================================
@@ -30,40 +96,41 @@ class SupabaseRpcService {
     int recurrenceInterval = 1,
     DateTime? recurrenceEndAt,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    return _executeWithRetry(() async {
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
 
-    final response = await _client.rpc(
-      'create_task',
-      params: {
-        'p_user_id': user.id,
-        'p_title': title,
-        'p_category': category,
-        'p_assigned_to': assignedTo,
-        'p_type': type,
-        'p_difficulty': difficulty,
-        'p_xp_reward': xpReward,
-        'p_coin_reward': coinReward,
-        'p_priority': priority,
-        'p_due_at': dueAt?.toIso8601String(),
-        'p_recurrence_type': recurrenceType,
-        'p_recurrence_interval': recurrenceInterval,
-        'p_recurrence_end_at': recurrenceEndAt?.toIso8601String(),
-      },
-    );
+      final response = await _client.rpc(
+        'create_task',
+        params: {
+          'p_user_id': user.id,
+          'p_title': title,
+          'p_category': category,
+          'p_assigned_to': assignedTo,
+          'p_type': type,
+          'p_difficulty': difficulty,
+          'p_xp_reward': xpReward,
+          'p_coin_reward': coinReward,
+          'p_priority': priority,
+          'p_due_at': dueAt?.toIso8601String(),
+          'p_recurrence_type': recurrenceType,
+          'p_recurrence_interval': recurrenceInterval,
+          'p_recurrence_end_at': recurrenceEndAt?.toIso8601String(),
+        },
+      );
 
-    final taskId = response as String;
+      final taskId = response as String;
 
-    // Update description if provided (not in RPC params)
-    if (description != null && description.isNotEmpty) {
-      await _client
-          .from('tasks')
-          .update({'description': description}).eq('id', taskId);
-    }
+      if (description != null && description.isNotEmpty) {
+        await _client
+            .from('tasks')
+            .update({'description': description}).eq('id', taskId);
+      }
 
-    return taskId;
+      return taskId;
+    });
   }
 
   // ============================================
@@ -78,31 +145,33 @@ class SupabaseRpcService {
     required String householdId,
     String? userId,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    return _executeWithRetry(() async {
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
 
-    final requestId = generateRequestId();
+      final requestId = generateRequestId();
 
-    final response = await _client.rpc(
-      'complete_task_transaction',
-      params: {
-        'p_request_id': requestId,
-        'p_user_id': userId ?? user.id,
-        'p_task_id': taskId,
-        'p_household_id': householdId,
-        'p_xp_reward': xpReward,
-        'p_coin_reward': coinReward,
-        'p_task_title': taskTitle,
-      },
-    );
+      final response = await _client.rpc(
+        'complete_task_transaction',
+        params: {
+          'p_request_id': requestId,
+          'p_user_id': userId ?? user.id,
+          'p_task_id': taskId,
+          'p_household_id': householdId,
+          'p_xp_reward': xpReward,
+          'p_coin_reward': coinReward,
+          'p_task_title': taskTitle,
+        },
+      );
 
-    return {
-      'success': response['success'] ?? false,
-      'message': response['message'] ?? '',
-      'data': response,
-    };
+      return {
+        'success': response['success'] ?? false,
+        'message': response['message'] ?? '',
+        'data': response,
+      };
+    });
   }
 
   // ============================================
@@ -210,31 +279,33 @@ class SupabaseRpcService {
   // ============================================
 
   Future<List<Map<String, dynamic>>> getTasks({int limit = 100, int offset = 0}) async {
-    final user = _client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    return _executeWithRetry(() async {
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
 
-    final householdMembers = await _client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .limit(1);
+      final householdMembers = await _client
+          .from('household_members')
+          .select('household_id')
+          .eq('user_id', user.id)
+          .limit(1);
 
-    if (householdMembers.isEmpty) {
-      return [];
-    }
+      if (householdMembers.isEmpty) {
+        return [];
+      }
 
-    final householdId = householdMembers.first['household_id'];
+      final householdId = householdMembers.first['household_id'];
 
-    final response = await _client
-        .from('tasks')
-        .select()
-        .eq('household_id', householdId)
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
+      final response = await _client
+          .from('tasks')
+          .select()
+          .eq('household_id', householdId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
-    return response;
+      return response;
+    });
   }
 
   // ============================================
