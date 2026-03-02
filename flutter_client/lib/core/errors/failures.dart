@@ -36,3 +36,31 @@ class InsufficientCoinsFailure extends Failure {
   const InsufficientCoinsFailure({required this.available, required this.required})
       : super('Coins insuficientes: tenés $available, necesitás $required');
 }
+
+/// Exception thrown when rate limited (429)
+class RateLimitException implements Exception {
+  final String message;
+  final Duration? timeUntilReset;
+  const RateLimitException(this.message, {this.timeUntilReset});
+  
+  @override
+  String toString() => 'RateLimitException: $message';
+}
+
+/// Exception thrown when network is unavailable
+class NetworkException implements Exception {
+  final String message;
+  const NetworkException(this.message);
+  
+  @override
+  String toString() => 'NetworkException: $message';
+}
+
+/// Exception thrown when offline and request cannot be completed
+class OfflineException implements Exception {
+  final String message;
+  const OfflineException(this.message);
+  
+  @override
+  String toString() => 'OfflineException: $message';
+}

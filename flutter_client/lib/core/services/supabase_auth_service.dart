@@ -18,15 +18,6 @@ class SupabaseAuthService {
       anonKey: AppEnvironment.supabaseAnonKey,
     );
     _client = Supabase.instance.client;
-    
-    // Initialize GoogleSignIn for Web if needed
-    try {
-      if (kIsWeb) {
-        await GoogleSignIn.instance.initialize();
-      }
-    } catch (e) {
-      debugPrint('Error inicializando GoogleSignIn: $e');
-    }
   }
 
   SupabaseClient get client => _client;
@@ -92,44 +83,49 @@ class SupabaseAuthService {
 
   Future<bool> signInWithGoogle() async {
     try {
-      // 1. Native flow with GoogleSignIn v7+
-      final googleSignIn = GoogleSignIn.instance;
-      
-      // On Web/Chrome v7+ we use authenticate() instead of signIn()
-      final googleUser = await googleSignIn.authenticate();
-      if (googleUser == null) return false;
-
-      final googleAuth = googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      
-      // Basic scopes for Supabase
-      final authorization = await googleUser.authorizationClient.authorizeScopes(
-        ['email', 'openid'],
+      // 1. Intentar flujo nativo con google_sign_in (Android/iOS)
+      // Nota: Requiere SHA-1 configurado en Firebase/Google Cloud para Android.
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'openid'],
       );
-      final accessToken = authorization.accessToken;
+      
+      final googleUser = await googleSignIn.signIn();
+      
+      if (googleUser != null) {
+        final googleAuth = await googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        final accessToken = googleAuth.accessToken;
 
-      if (idToken != null) {
-        await _client.auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: idToken,
-          accessToken: accessToken,
-        );
-      } else {
-        // 2. Fallback to OAuth if native flow doesn't return idToken
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: 'homesync://login-callback',
-        );
-      }
-
-      await ensureHouseholdExists();
-      // Tag user in Crashlytics (mobile only)
-      if (!kIsWeb) {
-        final user = _client.auth.currentUser;
-        if (user != null) {
-          await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+        if (idToken != null) {
+          await _client.auth.signInWithIdToken(
+            provider: OAuthProvider.google,
+            idToken: idToken,
+            accessToken: accessToken,
+          );
+          
+          await ensureHouseholdExists();
+          // Tag user in Crashlytics (mobile only)
+          if (!kIsWeb) {
+            final user = _client.auth.currentUser;
+            if (user != null) {
+              await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+            }
+          }
+          return true;
         }
       }
+
+      // 2. Fallback a OAuth (Web o si el flujo nativo falla/se cancela)
+      // Esto abrirá el navegador para completar la autenticación.
+      debugPrint('Usando fallback de OAuth para Google Sign-In');
+      
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? null : 'homesync://login-callback',
+      );
+
+      // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
+      // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
     } catch (e) {
       debugPrint('Error en Google Sign-In: $e');
