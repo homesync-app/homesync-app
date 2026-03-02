@@ -83,24 +83,21 @@ class SupabaseAuthService {
 
   Future<bool> signInWithGoogle() async {
     try {
-      // 1. Intentar flujo nativo con google_sign_in (Android/iOS)
+      // Intentar flujo con google_sign_in
       // Nota: Requiere SHA-1 configurado en Firebase/Google Cloud para Android.
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'openid'],
-      );
+      // GoogleSignIn v7+ usa GoogleSignIn.instance
+      GoogleSignIn googleSignIn = GoogleSignIn.instance;
       
-      final googleUser = await googleSignIn.signIn();
+      final googleUser = await googleSignIn.authenticate();
       
       if (googleUser != null) {
         final googleAuth = await googleUser.authentication;
         final idToken = googleAuth.idToken;
-        final accessToken = googleAuth.accessToken;
 
         if (idToken != null) {
           await _client.auth.signInWithIdToken(
             provider: OAuthProvider.google,
             idToken: idToken,
-            accessToken: accessToken,
           );
           
           await ensureHouseholdExists();
@@ -115,8 +112,7 @@ class SupabaseAuthService {
         }
       }
 
-      // 2. Fallback a OAuth (Web o si el flujo nativo falla/se cancela)
-      // Esto abrirá el navegador para completar la autenticación.
+      // Fallback a OAuth
       debugPrint('Usando fallback de OAuth para Google Sign-In');
       
       await _client.auth.signInWithOAuth(
