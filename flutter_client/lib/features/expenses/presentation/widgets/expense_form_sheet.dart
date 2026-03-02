@@ -31,6 +31,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   bool _isLoading = false;
   Map<String, dynamic>? _selectedCategory;
+  String _type = 'expense'; // 'expense' or 'income'
 
   // Form fields
   DateTime _selectedDate = DateTime.now();
@@ -55,6 +56,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     {'id': 'transport', 'name': 'Transporte', 'icon': '🚗', 'color': const Color(0xFF4DB6AC)},
     {'id': 'entertainment', 'name': 'Entretenimiento', 'icon': '🎬', 'color': const Color(0xFF9575CD)},
     {'id': 'health', 'name': 'Salud', 'icon': '💊', 'color': AppColors.accentRed},
+    {'id': 'income', 'name': 'Ingreso/Sueldo', 'icon': '💰', 'color': AppColors.success},
     {'id': 'other', 'name': 'Otros', 'icon': '📦', 'color': AppColors.textSecondary},
   ];
 
@@ -83,7 +85,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _matchAndSetCategory(String t) {
     t = t.toLowerCase();
     String? matchedId;
-    if (t.contains('supermercado') || t.contains('coto') || t.contains('carrefour') || t.contains('despensa') || t.contains('comida') || t.contains('alimento')) {
+    if (t.contains('sueldo') || t.contains('cobro') || t.contains('pago de') || t.contains('transferencia recibida') || t.contains('ingreso')) {
+      matchedId = 'income';
+    } else if (t.contains('supermercado') || t.contains('coto') || t.contains('carrefour') || t.contains('despensa') || t.contains('comida') || t.contains('alimento')) {
       matchedId = 'supermarket';
     } else if (t.contains('luz') || t.contains('agua') || t.contains('gas') || t.contains('internet') || t.contains('wifi') || t.contains('servicio')) matchedId = 'utilities';
     else if (t.contains('alquiler') || t.contains('expensas') || t.contains('renta')) matchedId = 'rent';
@@ -95,6 +99,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (matchedId != null && _selectedCategory?['id'] != matchedId) {
       setState(() {
         _selectedCategory = _categories.firstWhere((c) => c['id'] == matchedId, orElse: () => _categories.first);
+        if (matchedId == 'income') _type = 'income';
+        else _type = 'expense';
       });
     }
   }
@@ -103,6 +109,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     _titleController.text = exp.title;
     _amountController.text = exp.amount.toString();
     _notesController.text = exp.description ?? '';
+    _type = exp.type;
     if (exp.category != null) {
       _selectedCategory = _categories.firstWhere(
         (c) => c['id'] == exp.category,
@@ -144,24 +151,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _saveExpense() async {
-    final cleanAmtStr = _amountController.text.replaceAll('.', '').replaceAll(',', '.');
+    final cleanAmtStr = _amountController.text.replaceAll('.', '').replaceAll(',', '.').replaceAll('\$', '').trim();
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un monto válido.')));
       return;
     }
 
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) throw Exception("No pertenecés a un hogar");
-
-    final membersAsync = ref.read(householdMembersProvider);
-    
-    if (membersAsync.value == null) return;
-    final members = membersAsync.value!;
-
     setState(() => _isLoading = true);
 
     try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) throw Exception("No pertenecés a un hogar");
+
+      final members = await ref.read(householdMembersProvider.future);
+      if (members.isEmpty) throw Exception("No hay miembros en el hogar");
+
       final repo = ref.read(expenseRepositoryProvider);
       
       String computedTitle = _titleController.text.trim();
@@ -212,6 +217,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         paidAt: _selectedDate,
         description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         splitType: _splitMode,
+        type: _type,
         splits: splits,
       );
 
@@ -227,12 +233,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ref.invalidate(shoppingItemsProvider);
       }
 
+      // Invalidate balance and activity providers to force a refresh
+      ref.invalidate(userBalanceProvider);
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(recentActivityProvider);
+      ref.invalidate(expensesAndBalancesProvider);
+
       if (mounted) {
         HapticFeedback.mediumImpact();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado'),
+            content: Text(_type == 'income' 
+              ? (widget.expense != null ? 'Ingreso actualizado' : 'Ingreso guardado') 
+              : (widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado')),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -290,6 +304,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
+                      _buildTypeSelector(),
+                      const SizedBox(height: 24),
                       _buildAmountField(),
                       const SizedBox(height: 32),
                       _buildTitleField(),
@@ -327,7 +343,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             onPressed: () => Navigator.pop(context),
           ),
           Text(
-            isEditing ? 'Modificar Gasto' : 'Nuevo Gasto',
+            isEditing ? 'Modificar ${_type == 'income' ? 'Ingreso' : 'Gasto'}' : 'Nuevo ${_type == 'income' ? 'Ingreso' : 'Gasto'}',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5),
           ),
           if (isEditing)
@@ -393,23 +409,84 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     }
   }
 
+  Widget _buildTypeSelector() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTypeButton(
+              label: 'Gasto',
+              isSelected: _type == 'expense',
+              onTap: () => setState(() {
+                _type = 'expense';
+                if (_selectedCategory?['id'] == 'income') {
+                   _selectedCategory = _categories.first;
+                }
+              }),
+            ),
+          ),
+          Expanded(
+            child: _buildTypeButton(
+              label: 'Ingreso',
+              isSelected: _type == 'income',
+              onTap: () => setState(() {
+                _type = 'income';
+                _selectedCategory = _categories.firstWhere((c) => c['id'] == 'income');
+                _splitMode = SplitType.personal; // Default income to personal
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeButton({required String label, required bool isSelected, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? (_type == 'income' ? AppColors.success : AppColors.accentRed) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAmountField() {
+    final color = _type == 'income' ? AppColors.success : AppColors.textPrimary;
     return Center(
       child: Column(
         children: [
-          const Text('Monto total', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+          Text(_type == 'income' ? 'Total Ingreso' : 'Monto total', style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           TextField(
             controller: _amountController,
             onChanged: _onAmountChanged,
             textAlign: TextAlign.center,
             keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 56, fontWeight: FontWeight.w900, letterSpacing: -2.0),
-            decoration: const InputDecoration(
+            style: TextStyle(color: color, fontSize: 56, fontWeight: FontWeight.w900, letterSpacing: -2.0),
+            decoration: InputDecoration(
               prefixText: '\$',
-              prefixStyle: TextStyle(color: AppColors.textMuted, fontSize: 32, fontWeight: FontWeight.w700),
+              prefixStyle: TextStyle(color: color.withValues(alpha: 0.5), fontSize: 32, fontWeight: FontWeight.w700),
               hintText: '0',
-              hintStyle: TextStyle(color: AppColors.textMuted),
+              hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.5)),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
@@ -843,8 +920,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           elevation: 0,
         ),
         child: _isLoading 
-          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) 
-          : const Text('Guardar Gasto', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+            ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) 
+            : Text(widget.expense == null ? (_type == 'income' ? 'Cargar Ingreso' : 'Cargar Gasto') : 'Guardar Cambios', 
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
       ),
     );
   }

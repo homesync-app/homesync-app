@@ -66,15 +66,19 @@ jobs:
           name: homesync-apk
           path: flutter_client/build/app/outputs/flutter-apk/app-*.apk
       
+      - name: Create release notes directory
+        run: |
+          mkdir -p whatsnew/en-US
+          echo "New release with offline mode, retry logic, and UI improvements" > whatsnew/en-US/whatsnew.txt
+      
       - name: Deploy to Google Play (Internal Testing)
         if: env.ENCODED_KEYSTORE != ''
         uses: r0adkll/upload-google-play@v1
         with:
-          service-account-json: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          package-name: com.blas.homesync
-          release-files: flutter_client/build/app/outputs/flutter-apk/app-release.apk
+          serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.blas.homesync
+          releaseFiles: flutter_client/build/app/outputs/flutter-apk/app-release.apk
           track: internal
           status: completed
-          whats-new: "New release with offline mode, retry logic, and UI improvements"
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}

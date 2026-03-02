@@ -19,6 +19,7 @@ import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
+import 'package:homesync_client/utils/app_animations.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   final SupabaseAuthService auth;
   final SupabaseRpcService rpc;
@@ -179,24 +180,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        width: double.infinity,
-        child: FloatingActionButton.extended(
-          heroTag: null,
-          onPressed: () => _showQuickActionMenu(householdId),
-          backgroundColor: AppColors.primary,
-          elevation: 8,
-          icon: const Icon(Icons.add_outlined, color: Colors.white, size: 28),
-          label: const Text(
-            'Nueva Acción',
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
+        onPressed: () => _showQuickActionMenu(householdId),
+        backgroundColor: AppColors.primary,
+        elevation: 12,
+        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        label: const Text(
+          'Nueva Acción',
+          style: TextStyle(
+              color: Colors.white, 
+              fontWeight: FontWeight.w800, 
+              fontSize: 15,
+              letterSpacing: -0.2,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -221,13 +222,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '¡Hola, $displayName! 👋',
-                style: const TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(-20 * (1 - value), 0),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Text(
+                  '¡Hola, $displayName! 👋',
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.8,
+                  ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -236,7 +250,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: const TextStyle(
                   color: Color(0xFF64748B),
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -352,11 +366,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 12),
         todayTasksAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
-            ),
+          loading: () => Column(
+            children: List.generate(2, (_) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ShimmerLoading(
+                child: Container(
+                  height: 100,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                ),
+              ),
+            )),
           ),
           error: (e, _) => Text('Error: $e', style: const TextStyle(color: AppColors.error)),
           data: (tasks) {
@@ -366,7 +389,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tasks.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) => _buildTaskCard(tasks[index]),
+              itemBuilder: (context, index) {
+                return TweenAnimationBuilder<double>(
+                  duration: Duration(milliseconds: 400 + (index * 100)),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(30 * (1 - value), 0),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildTaskCard(tasks[index]),
+                );
+              },
             );
           },
         ),
@@ -447,7 +486,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         : AppColors.getCategoryColor(category);
     final categoryIcon = categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
 
-    return GestureDetector(
+    return AnimatedPress(
       onTap: () {
         if (!isCompleted) {
           _handleCompleteFromCard(task);
@@ -458,7 +497,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+          border: Border.all(
+            color: isCompleted 
+                ? AppColors.accentGreen.withValues(alpha: 0.1)
+                : const Color(0xFFF1F5F9), 
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -489,7 +533,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 17,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                       color: isCompleted
                           ? const Color(0xFF94A3B8)
                           : const Color(0xFF1E293B),
@@ -510,27 +554,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(width: 12),
             Container(
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: isCompleted ? AppColors.accentGreen : Colors.white,
                 border: Border.all(
                   color: isCompleted
                       ? AppColors.accentGreen
                       : const Color(0xFFE2E8F0),
-                  width: 2,
+                  width: 2.5,
                 ),
               ),
               child: isCompleted
-                  ? Center(
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accentGreen,
-                        ),
-                      ),
+                  ? const Center(
+                      child: Icon(Icons.check_rounded, color: Colors.white, size: 20),
                     )
                   : null,
             ),
@@ -666,12 +704,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 12),
         activityAsync.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: CircularProgressIndicator(
-                  color: AppColors.primary, strokeWidth: 2.5),
-            ),
+          loading: () => Column(
+            children: List.generate(3, (_) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ShimmerLoading(
+                child: Container(
+                  height: 70,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            )),
           ),
           error: (e, _) => Center(
             child: Padding(
@@ -721,55 +767,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildActivityTimeline(List<Map<String, dynamic>> activities) {
     final now = DateTime.now();
-    
-    // Filter strictly for today's activities
-    final todayActivities = activities.where((act) {
-      final date = act['time'] as DateTime;
-      return date.year == now.year &&
-          date.month == now.month &&
-          date.day == now.day;
-    }).toList();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
 
-    if (todayActivities.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 48),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(Icons.history_rounded,
-                  size: 48, color: Colors.grey.shade200),
-              const SizedBox(height: 16),
-              const Text(
-                'Sin actividad todavía hoy.\n¡Empezá haciendo alguna tarea!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final todayActs = activities.where((a) => (a['time'] as DateTime).isAfter(today) || (a['time'] as DateTime).isAtSameMomentAs(today)).toList();
+    final yesterdayActs = activities.where((a) {
+      final t = a['time'] as DateTime;
+      return t.isAfter(yesterday) && t.isBefore(today);
+    }).toList();
+    final earlierActs = activities.where((a) => (a['time'] as DateTime).isBefore(yesterday)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
-          child: Text(
-            'HOY',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF94A3B8),
-              letterSpacing: 0.5,
+        if (todayActs.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
+            child: Text(
+              'HOY',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF94A3B8),
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-        ),
-        ...todayActivities.map((act) => _buildActivityItem(act)),
+          ...todayActs.map((act) => _buildActivityItem(act)),
+        ],
+        if (yesterdayActs.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
+            child: Text(
+              'AYER',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF94A3B8),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          ...yesterdayActs.map((act) => _buildActivityItem(act)),
+        ],
+        if (earlierActs.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
+            child: Text(
+              'ANTERIOR',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF94A3B8),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          ...earlierActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 400 + (entry.key * 100)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: _buildActivityItem(entry.value),
+          )),
+        ],
       ],
     );
   }

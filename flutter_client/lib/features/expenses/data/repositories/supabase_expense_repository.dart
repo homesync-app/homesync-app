@@ -35,7 +35,9 @@ class SupabaseExpenseRepository implements ExpenseRepository {
           created_at,
           paid_by,
           split_type,
+          split_type,
           is_shared,
+          type,
           description,
           users!expenses_paid_by_fkey(email, full_name, avatar_url),
           expense_splits(*)
@@ -83,13 +85,14 @@ class SupabaseExpenseRepository implements ExpenseRepository {
     required DateTime paidAt,
     String? description,
     required SplitType splitType,
+    String type = 'expense',
     List<Map<String, dynamic>>? splits,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('No autenticado');
 
     await _client.rpc(
-      'save_expense_v3',
+      'save_expense_v4',
       params: {
         'p_id': id,
         'p_household_id': householdId,
@@ -101,7 +104,8 @@ class SupabaseExpenseRepository implements ExpenseRepository {
         'p_description': description,
         'p_split_type': splitType.name,
         'p_is_shared': splitType != SplitType.personal,
-        'p_splits': splits, // Splits should be List<Map<String, dynamic>>
+        'p_type': type,
+        'p_splits': splits,
       },
     );
   }

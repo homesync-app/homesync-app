@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NotificationService
@@ -40,17 +41,40 @@ class NotificationService {
   final _supabase = Supabase.instance.client;
   RealtimeChannel? _channel;
   NotificationCallback? _onNotification;
+  bool _isEnabled = true; // Default
 
   // ── Initialization ─────────────────────────────────────────────────────────
 
   Future<void> initialize({NotificationCallback? onNotification}) async {
     _onNotification = onNotification;
+    
+    // Load preference
+    final prefs = await SharedPreferences.getInstance();
+    _isEnabled = prefs.getBool('notifications_enabled') ?? true;
+
     await _setupRealtimeListener();
     // === FIREBASE (Mobile Only) =============================================
-    if (!kIsWeb) {
+    if (!kIsWeb && _isEnabled) {
       await _setupFirebase();
     }
     // =======================================================================
+  }
+
+  bool get isEnabled => _isEnabled;
+
+  Future<void> setEnabled(bool enabled) async {
+    _isEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', enabled);
+
+    if (enabled) {
+      if (!kIsWeb) {
+        await _setupFirebase();
+      }
+    } else {
+      // If disabled, we might want to tell the server to remove this token
+      await _deleteFcmToken();
+    }
   }
 
   // ── Supabase Realtime (in-app notifications) ──────────────────────────────
@@ -139,7 +163,7 @@ class NotificationService {
 
   Future<void> _saveFcmToken(String token) async {
     final user = _supabase.auth.currentUser;
-    if (user == null) return;
+    if (user == null || !_isEnabled) return;
 
     try {
       await _supabase.from('user_fcm_tokens').upsert({
@@ -151,6 +175,25 @@ class NotificationService {
       debugPrint('✅ FCM token guardado');
     } catch (e) {
       debugPrint('Error guardando FCM token: $e');
+    }
+  }
+
+  Future<void> _deleteFcmToken() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      // This will remove all tokens for this user on this platform.
+      // A more precise way would be to get the current token and delete only that,
+      // but this is a good first step to "mute" lahat devices.
+      await _supabase
+          .from('user_fcm_tokens')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('platform', defaultTargetPlatform.name);
+      debugPrint('✅ FCM tokens eliminados del servidor');
+    } catch (e) {
+      debugPrint('Error eliminando FCM token: $e');
     }
   }
   // ==========================================================================

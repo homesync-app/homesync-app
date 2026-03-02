@@ -15,7 +15,7 @@
 | **Gamification**       | ✅     | Weekly Winner + Rewards + XP System            |
 | **Settings**           | ✅     | Household Mgmt + Avatar Picker + MP Config     |
 | **Auth**               | ✅     | Email/Password + Google (OAuth)                |
-| **Notificaciones**     | 🟨     | In-App Realtime (OK), Push Nativo (Pendiente)  |
+| **Notificaciones**     | ✅     | In-App Realtime + Push Nativo (Configurado)    |
 
 ---
 

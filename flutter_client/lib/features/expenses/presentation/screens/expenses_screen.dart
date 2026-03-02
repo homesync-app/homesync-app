@@ -101,11 +101,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     delegate: SliverChildListDelegate([
                       if (isShared) ...[
                         _buildSharedDashboard(balances, householdId),
-                        const SizedBox(height: 32),
                       ] else ...[
                         _buildPersonalSummary(filteredExpenses),
-                        const SizedBox(height: 32),
                       ],
+                      const SizedBox(height: 32),
+                      _buildMPSuggestions(),
+                      const SizedBox(height: 32),
                       Text(
                         isShared ? 'Gastos Compartidos' : 'Mis Gastos Personales',
                         style: const TextStyle(
@@ -363,7 +364,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           ],
         ),
         const SizedBox(height: 24),
-        _buildMPSuggestions(),
       ],
     );
   }
@@ -405,60 +405,120 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildPersonalSummary(List<ExpenseModel> personalExpenses) {
-    final total = personalExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalIncomes = personalExpenses.where((e) => e.isIncome).fold<double>(0, (sum, e) => sum + e.amount);
+    final totalExpenses = personalExpenses.where((e) => e.isExpense).fold<double>(0, (sum, e) => sum + e.amount);
+    final balance = totalIncomes - totalExpenses;
     
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withValues(alpha: 0.15),
-            AppColors.primary.withValues(alpha: 0.05),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'TOTAL PERSONAL',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'BALANCE MENSUAL',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Mis Finanzas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (balance >= 0 ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  balance >= 0 ? 'Superávit' : 'Déficit',
+                  style: TextStyle(
+                    color: balance >= 0 ? AppColors.success : AppColors.error,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${total.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Ingresos', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${totalIncomes.toStringAsFixed(0)}',
+                      style: const TextStyle(color: AppColors.success, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                    ),
+                  ],
+                ),
+              ),
+              Container(width: 1, height: 40, color: AppColors.divider),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Gastos', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${totalExpenses.toStringAsFixed(0)}',
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Has registrado ${personalExpenses.length} gastos privados',
-            style: TextStyle(
-              color: AppColors.textSecondary.withValues(alpha: 0.7),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
+          const SizedBox(height: 20),
+          Divider(color: AppColors.divider.withValues(alpha: 0.5)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Restante', style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w700)),
+              Text(
+                '\$${balance.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: balance >= 0 ? AppColors.success : AppColors.error,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -853,14 +913,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.auto_awesome, color: Colors.blue, size: 18),
+                  child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 18),
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Sugerencias de Gastos',
+                  'Sugerencias de Mercado Pago',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -884,7 +944,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 itemBuilder: (context, index) {
                   final move = movements[index];
                   final amount = (move['amount'] as num).toDouble();
-                  final title = move['title'] ?? 'Gasto MP';
+                  final title = move['title'] ?? (move['type'] == 'income' ? 'Ingreso MP' : 'Gasto MP');
+                  final bool isIncome = move['type'] == 'income';
+                  final Color themeColor = isIncome ? AppColors.success : Colors.blue;
                   
                   return Container(
                     width: 220,
@@ -892,14 +954,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.blue.withValues(alpha: 0.08),
-                          Colors.blue.withValues(alpha: 0.02),
+                          themeColor.withValues(alpha: 0.08),
+                          themeColor.withValues(alpha: 0.02),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.15)),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.15)),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(28),
@@ -908,8 +970,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           Positioned(
                             right: -10,
                             top: -10,
-                            child: Icon(Icons.shopping_bag_outlined, 
-                              size: 80, color: Colors.blue.withValues(alpha: 0.05)),
+                            child: Icon(isIncome ? Icons.payments_rounded : Icons.shopping_bag_outlined, 
+                              size: 80, color: themeColor.withValues(alpha: 0.05)),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(18),
@@ -928,11 +990,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '\$${amount.toStringAsFixed(2)}',
-                                  style: const TextStyle(
+                                  '${isIncome ? '+' : ''}\$${amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w900,
-                                    color: Colors.blue,
+                                    color: themeColor,
                                     letterSpacing: -1,
                                   ),
                                 ),
@@ -951,13 +1013,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                               paidBy: '',
                                               paidAt: DateTime.now(),
                                               createdAt: DateTime.now(),
-                                              isShared: true,
+                                              isShared: !isIncome, // Default to personal if income, shared if expense
+                                              type: isIncome ? 'income' : 'expense',
                                               category: _suggestCategory(title),
                                             ),
                                           );
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
+                                          backgroundColor: themeColor,
                                           foregroundColor: Colors.white,
                                           elevation: 0,
                                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -965,8 +1028,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                             borderRadius: BorderRadius.circular(14),
                                           ),
                                         ),
-                                        child: const Text('Compartir',
-                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                                        child: Text(isIncome ? 'Registrar' : 'Compartir',
+                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1004,6 +1067,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
   String _suggestCategory(String title) {
     final t = title.toLowerCase();
+    if (t.contains('sueldo') || t.contains('haberes') || t.contains('transferencia recibida') || t.contains('cobro')) return 'income';
     if (t.contains('super') || t.contains('coto') || t.contains('carrefour') || t.contains('market')) return 'supermarket';
     if (t.contains('restaurante') || t.contains('café') || t.contains('bar') || t.contains('comida')) return 'restaurants';
     if (t.contains('taxi') || t.contains('uber') || t.contains('cabify') || t.contains('nafta') || t.contains('combustible')) return 'transport';
@@ -1113,30 +1177,31 @@ class _ExpenseItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '\$${amount.toStringAsFixed(2)}',
-                style: const TextStyle(
+                '${expense.isIncome ? '+' : ''}\$${amount.toStringAsFixed(2)}',
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.textPrimary,
+                  color: expense.isIncome ? AppColors.success : AppColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.accentTeal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'DIVIDIDO',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.accentTeal,
+              if (expense.isShared)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentTeal.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'DIVIDIDO',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.accentTeal,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],

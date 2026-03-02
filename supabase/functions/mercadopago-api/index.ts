@@ -247,14 +247,14 @@ serve(async (req) => {
         });
       }
 
-      // NEW: Get user movements for suggestion
+      // NEW: Get user movements for suggestion (now including incomes)
       if (action === 'get_recent_movements') {
         const { userId } = body;
         
         // Find user connection
         const { data: connection, error: connError } = await supabase
           .from('mercadopago_connections')
-          .select('access_token')
+          .select('access_token, mp_user_id')
           .eq('user_id', userId)
           .single();
         
@@ -262,8 +262,6 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: "User not connected to Mercado Pago" }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        // Search for recent approved payments (consuncion)
-        // We filter for payments that are outgoing (positive amounts for items bought)
         const dateFrom = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('.')[0] + 'Z'; // Last 48h
         
         const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&range=date_created&begin_date=${dateFrom}`, {
@@ -272,15 +270,32 @@ serve(async (req) => {
 
         const payments = await mpRes.json();
         const results = (payments.results || [])
-          .filter((p: any) => p.status === 'approved' && p.operation_type === 'regular_payment')
-          .map((p: any) => ({
-            id: p.id,
-            title: p.description || 'Gasto Mercado Pago',
-            amount: p.transaction_amount,
-            date: p.date_created,
-            status: p.status,
-            payment_type: p.payment_type_id
-          }));
+          .filter((p: any) => p.status === 'approved')
+          .map((p: any) => {
+            const isCollector = p.collector_id?.toString() === connection.mp_user_id;
+            const isPayer = p.payer?.id?.toString() === connection.mp_user_id;
+            
+            // If I am the collector, it's an income (regularly)
+            // unless it's a transfer between my own accounts or similar (but usually P2P transfers show you as collector)
+            let type = 'expense';
+            if (isCollector) type = 'income';
+
+            // Special case for transfers
+            if (p.operation_type === 'transfer' || p.operation_type === 'money_transfer') {
+              type = isCollector ? 'income' : 'expense';
+            }
+
+            return {
+              id: p.id,
+              title: p.description || (type === 'income' ? 'Ingreso Mercado Pago' : 'Gasto Mercado Pago'),
+              amount: p.transaction_amount,
+              date: p.date_created,
+              status: p.status,
+              type: type,
+              operation_type: p.operation_type,
+              payer_name: p.metadata?.payer_name || p.payer?.first_name || 'Alguien'
+            };
+          });
 
         return new Response(JSON.stringify({ movements: results }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -139,6 +139,9 @@ class AppColors {
         return iconYellow;
       case 'urgente':
         return error;
+      case 'income':
+      case 'ingreso':
+        return success;
       case 'baño':
       case 'bano':
       case 'bathroom':
@@ -206,6 +209,9 @@ class AppColors {
         return Icons.luggage_rounded;
       case 'salud':
         return Icons.favorite_rounded;
+      case 'income':
+      case 'ingreso':
+        return Icons.payments_rounded;
       case 'ocio':
         return Icons.videogame_asset_rounded;
       case 'regalos':
@@ -262,6 +268,7 @@ class AppColors {
     'mantenimiento': '🔧',
     'niños': '👶',
     'urgente': '🚨',
+    'income': '💰',
     'other': '📦',
   };
 
@@ -293,6 +300,7 @@ class AppColors {
     'mantenimiento': 'Mantenimiento',
     'niños': 'Niños',
     'urgente': 'Urgente',
+    'income': 'Ingreso/Sueldo',
     'other': 'Otros',
   };
 

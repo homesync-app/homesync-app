@@ -12,6 +12,7 @@ class ExpenseModel {
   final bool isShared;
   final String? splitType;
   final String? description;
+  final String type; // 'expense' or 'income'
   final List<Map<String, dynamic>>? expenseSplits;
 
   const ExpenseModel({
@@ -26,6 +27,7 @@ class ExpenseModel {
     this.payerEmail,
     this.payerFullName,
     this.isShared = true,
+    this.type = 'expense',
     this.splitType,
     this.description,
     this.expenseSplits,
@@ -37,7 +39,7 @@ class ExpenseModel {
 
     return ExpenseModel(
       id: map['id'] as String? ?? '',
-      title: map['title'] as String? ?? 'Gasto',
+      title: map['title'] as String? ?? 'Movimiento',
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       category: map['category'] as String?,
       householdId: map['household_id'] as String? ?? '',
@@ -50,6 +52,7 @@ class ExpenseModel {
       payerEmail: payerMap?['email'] as String?,
       payerFullName: payerMap?['full_name'] as String?,
       isShared: map['is_shared'] as bool? ?? true,
+      type: map['type'] as String? ?? 'expense',
       splitType: map['split_type'] as String?,
       description: map['description'] as String?,
       expenseSplits: (map['expense_splits'] as List<dynamic>?)
@@ -68,11 +71,15 @@ class ExpenseModel {
         'paid_at': paidAt.toIso8601String(),
         'created_at': createdAt.toIso8601String(),
         'is_shared': isShared,
+        'type': type,
         'split_type': splitType,
         'description': description,
       };
 
   // ── Display helpers ────────────────────────────────────────────────────────
+
+  bool get isIncome => type == 'income';
+  bool get isExpense => type == 'expense';
 
   String get payerDisplayName {
     if (payerFullName != null && payerFullName!.isNotEmpty) {

@@ -82,4 +82,29 @@ class MercadoPagoService {
       throw 'Error al conectar con Mercado Pago: $e';
     }
   }
+
+  /// Fetches recent approved payments from the user's connected MP account.
+  Future<List<Map<String, dynamic>>> getRecentMovements() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw 'No autenticado';
+
+    try {
+      final response = await _supabase.functions.invoke(
+        'mercadopago-api',
+        body: {
+          'action': 'get_recent_movements',
+          'userId': user.id,
+        },
+      );
+
+      if (response.status == 200 && response.data != null) {
+        final List<dynamic> movements = response.data['movements'] ?? [];
+        return movements.map((m) => m as Map<String, dynamic>).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching MP movements: $e');
+      return [];
+    }
+  }
 }

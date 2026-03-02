@@ -21,6 +21,7 @@ abstract class ExpenseRepository {
     required DateTime paidAt,
     String? description,
     required SplitType splitType,
+    String type = 'expense',
     List<Map<String, dynamic>>? splits,
   });
   

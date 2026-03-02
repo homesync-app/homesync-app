@@ -11,6 +11,9 @@ import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final SupabaseAuthService auth;
@@ -324,10 +327,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(height: 24),
                       _buildAppearanceCard(),
                       const SizedBox(height: 24),
+                      _buildNotificationsCard(),
+                      const SizedBox(height: 24),
                       _buildFAQButton(),
                       const SizedBox(height: 48),
                       _buildLogoutButton(),
                       const SizedBox(height: 32),
+                      _buildResetAccountButton(),
+                      const SizedBox(height: 48),
                       
                       Opacity(
                         opacity: 0.4,
@@ -1254,6 +1261,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildNotificationsCard() {
+    final isEnabled = ref.watch(notificationEnabledProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03), 
+              blurRadius: 20, 
+              offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.notifications_active_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Notificaciones',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Recibe avisos de gastos y tareas',
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: isEnabled,
+                activeColor: AppColors.primary,
+                onChanged: (value) {
+                  HapticFeedback.lightImpact();
+                  ref.read(notificationEnabledProvider.notifier).toggle(value);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(value ? '🔔 Notificaciones activadas' : '🔕 Notificaciones desactivadas'),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: value ? AppColors.success : AppColors.textMuted,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFAQButton() {
     return Container(
       decoration: BoxDecoration(
@@ -1351,5 +1427,119 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildResetAccountButton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 8, bottom: 12),
+          child: Text(
+            'ZONA DE PELIGRO',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: AppColors.error,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          height: 62,
+          child: OutlinedButton(
+            onPressed: () {
+              HapticFeedback.vibrate();
+              _resetAccount();
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.error.withValues(alpha: 0.2), width: 1.5),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              foregroundColor: AppColors.error,
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete_forever_rounded, size: 22),
+                SizedBox(width: 12),
+                Text(
+                  'Reiniciar Datos de Cuenta',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _resetAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.error),
+            SizedBox(width: 12),
+            Text('¿Reiniciar todo?', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.error)),
+          ],
+        ),
+        content: const Text('Esta acción borrará todas tus tareas, gastos y progreso (monedas y XP) de forma permanente. No se borrará tu cuenta de usuario ni tu hogar.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              child: const Text('Reiniciar',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final res = await widget.rpc.resetUserAccount();
+        if (res['success'] == true) {
+           ref.invalidate(userProfileProvider);
+           ref.invalidate(userBalanceProvider);
+           ref.invalidate(expenseBalancesProvider);
+           ref.invalidate(tasksProvider);
+           ref.invalidate(recentActivityProvider);
+           // Force refresh profile provider so we don't display stale name/avatar
+           await ref.refresh(userProfileProvider.future);
+           
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(content: Text('✅ Datos reiniciados con éxito'), backgroundColor: AppColors.success),
+             );
+             _loadData();
+           }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
   }
 }

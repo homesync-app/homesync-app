@@ -853,4 +853,9 @@ class SupabaseRpcService {
       return {'success': false, 'message': e.toString()};
     }
   }
+
+  Future<Map<String, dynamic>> resetUserAccount() async {
+    final response = await _client.rpc('reset_user_account');
+    return Map<String, dynamic>.from(response);
+  }
 }

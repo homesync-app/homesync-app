@@ -12,13 +12,32 @@ class AIFaceoffWidget extends StatefulWidget {
   State<AIFaceoffWidget> createState() => _AIFaceoffWidgetState();
 }
 
-class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
+class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderStateMixin {
   String? _currentUserId;
+  late AnimationController _vsPulseController;
+  late AnimationController _scanningController;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    
+    _vsPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _scanningController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _vsPulseController.dispose();
+    _scanningController.dispose();
+    super.dispose();
   }
 
   @override
@@ -27,80 +46,82 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
       return const SizedBox.shrink();
     }
 
-    // Sort to ensure current user is easily identifiable or standard order
     final p1 = widget.weeklyRanking[0];
     final p2 = widget.weeklyRanking[1];
 
     final p1Xp = (p1['xp_earned'] as num?)?.toInt() ?? 0;
     final p2Xp = (p2['xp_earned'] as num?)?.toInt() ?? 0;
     
-    // We create a "mystery" percentage. 
-    // If it's not Sunday, we might want to hide the real progress or show a generic one.
-    // The user mentioned "no se sepa hasta el domingo quien gana".
     final totalXp = p1Xp + p2Xp;
     final p1Pct = totalXp == 0 ? 0.5 : p1Xp / totalXp;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutQuart,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - value)),
+            child: child,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '⚔️ DUELO SEMANAL',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.primary,
-                    letterSpacing: 1.2,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '⚔️ DUELO SEMANAL',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primary,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          
-          // Competitors
-          Row(
-            children: [
-              _buildCompetitor(p1),
-              _buildVSIndicator(),
-              _buildCompetitor(p2),
-            ],
-          ),
-          const SizedBox(height: 32),
-          
-          // Mystery Progress Bar
-          _buildMysteryBar(p1Pct),
-          
-          const SizedBox(height: 24),
-          
-          // Weekly Activity Track
-          _buildWeeklyTrack(),
-        ],
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                _buildCompetitor(p1),
+                _buildVSIndicator(),
+                _buildCompetitor(p2),
+              ],
+            ),
+            const SizedBox(height: 32),
+            _buildMysteryBar(p1Pct),
+            const SizedBox(height: 24),
+            _buildWeeklyTrack(),
+          ],
+        ),
       ),
     );
   }
@@ -118,7 +139,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
             name: name,
             avatarUrl: avatarUrl,
             radius: 46,
-            isAnimated: false,
+            isAnimated: true,
             showBorder: true,
           ),
           const SizedBox(height: 12),
@@ -157,21 +178,33 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
   }
 
   Widget _buildVSIndicator() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border, width: 1),
+    return ScaleTransition(
+      scale: Tween<double>(begin: 1.0, end: 1.15).animate(
+        CurvedAnimation(parent: _vsPulseController, curve: Curves.easeInOut),
       ),
-      child: const Center(
-        child: Text(
-          'VS',
-          style: TextStyle(
-            color: AppColors.textMuted,
-            fontWeight: FontWeight.w900,
-            fontSize: 12,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Text(
+            'VS',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -201,30 +234,54 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            height: 12,
+            height: 14,
             width: double.infinity,
             color: const Color(0xFFF1F5F9),
             child: Stack(
               children: [
-                // We show a "balanced" or "shifting" bar that doesn't reveal the winner clearly
-                // unless it's Sunday. For now, let's keep it mystery.
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 800),
-                      width: constraints.maxWidth * 0.5, // Always show 50% for mystery?
-                      // Or slightly offset based on current user's lead but hidden?
-                      // The user said "no se sepa hasta el domingo".
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.4),
-                            AppColors.accent.withValues(alpha: 0.4),
-                          ],
+                AnimatedBuilder(
+                  animation: _scanningController,
+                  builder: (context, child) {
+                    return Positioned.fill(
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: 1.0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.transparent,
+                                AppColors.primary.withValues(alpha: 0.1),
+                                AppColors.primary.withValues(alpha: 0.3),
+                                AppColors.primary.withValues(alpha: 0.1),
+                                Colors.transparent,
+                              ],
+                              stops: [
+                                (_scanningController.value - 0.3).clamp(0.0, 1.0),
+                                (_scanningController.value - 0.1).clamp(0.0, 1.0),
+                                _scanningController.value.clamp(0.0, 1.0),
+                                (_scanningController.value + 0.1).clamp(0.0, 1.0),
+                                (_scanningController.value + 0.3).clamp(0.0, 1.0),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     );
-                  }
+                  },
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Center(
+                      child: Container(
+                        width: 2,
+                        height: double.infinity,
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                    );
+                  },
                 ),
                 Positioned.fill(
                   child: Row(
@@ -232,7 +289,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
                     children: List.generate(8, (_) => Icon(
                       Icons.help_outline,
                       size: 8,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.textMuted.withValues(alpha: 0.3),
                     )),
                   ),
                 ),
@@ -251,9 +308,9 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Text(
+            const Text(
               'RITMO SEMANAL',
               style: TextStyle(
                 fontSize: 10,
@@ -262,12 +319,13 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
                 letterSpacing: 0.8,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             Text(
-              '7 días restantes', // This could be calculated
-              style: TextStyle(
+              '${7 - today} días restantes', 
+              style: const TextStyle(
                 fontSize: 10,
                 color: AppColors.textMuted,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -283,7 +341,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
             return Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: index == 6 ? 0 : 6),
-                height: 36,
+                height: 38,
                 decoration: BoxDecoration(
                   color: isToday 
                     ? AppColors.primary.withValues(alpha: 0.1)
@@ -291,9 +349,9 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isToday 
-                      ? AppColors.primary.withValues(alpha: 0.3)
-                      : (isPast ? Colors.black.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04)),
-                    width: 1.5,
+                      ? AppColors.primary.withValues(alpha: 0.4)
+                      : (isPast ? Colors.black.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+                    width: isToday ? 2 : 1.5,
                   ),
                 ),
                 child: Center(
@@ -301,7 +359,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
                     days[index],
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                      fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
                       color: isToday 
                         ? AppColors.primary 
                         : (isPast ? AppColors.textSecondary : AppColors.textMuted),
@@ -316,3 +374,4 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> {
     );
   }
 }
+

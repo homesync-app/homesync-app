@@ -5,6 +5,8 @@ import 'dart:developer' as dev;
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/services/expense_service.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomNavNotifier extends Notifier<int> {
   @override
@@ -141,7 +143,7 @@ final recentActivityProvider =
   final client = Supabase.instance.client;
   final activities = <Map<String, dynamic>>[];
   final now = DateTime.now();
-  final since = DateTime(now.year, now.month, now.day);
+  final since = now.subtract(const Duration(days: 7));
 
 
 
@@ -244,4 +246,29 @@ final recentActivityProvider =
   activities.sort((a, b) => (b['time'] as DateTime).compareTo(a['time'] as DateTime));
   
   return activities.take(30).toList();
+});
+
+// ── Notifications enabled provider ──────────────────────────────────────────
+class NotificationEnabledNotifier extends StateNotifier<bool> {
+  NotificationEnabledNotifier() : super(true) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool('notifications_enabled') ?? true;
+  }
+
+  Future<void> toggle(bool enabled) async {
+    state = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', enabled);
+    
+    // Update the service
+    await NotificationService.instance.setEnabled(enabled);
+  }
+}
+
+final notificationEnabledProvider = StateNotifierProvider<NotificationEnabledNotifier, bool>((ref) {
+  return NotificationEnabledNotifier();
 });

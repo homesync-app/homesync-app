@@ -569,32 +569,35 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildCategoryAndSearch(List<CategoryModel> categories) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
             ),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: const InputDecoration(
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              decoration: InputDecoration(
                 hintText: 'Buscar tarea...',
-                prefixIcon: Icon(Icons.search_rounded, size: 20),
+                hintStyle: TextStyle(color: const Color(0xFF94A3B8).withValues(alpha: 0.8)),
+                prefixIcon: const Icon(Icons.search_rounded, size: 22, color: Color(0xFF64748B)),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
           ),
         ),
+        const SizedBox(height: 20),
         SizedBox(
-          height: 40,
+          height: 44,
           child: Builder(
             builder: (context) {
-              // Which categories actually have tasks currently loaded?
               final activeCats = _allTasks.map((t) => AppColors.normaliseCategory(t.category)).toSet();
               final visibleCats = categories.where((c) => activeCats.contains(AppColors.normaliseCategory(c.id))).toList();
               
@@ -602,7 +605,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 children: [
-                  _buildCategoryChip(null, 'Todas', Colors.grey),
+                  _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
                   ...visibleCats.map((c) => _buildCategoryChip(c.id, c.name, AppColors.fromHex(c.color))),
                 ],
               );
@@ -634,23 +637,31 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? color : color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: isSelected ? color : const Color(0xFFE2E8F0),
-            width: 1.5,
+            color: isSelected ? color : Colors.transparent,
+            width: 2,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
         ),
         child: Center(
           child: Text(
             name,
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? Colors.white : const Color(0xFF64748B),
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+              color: isSelected ? Colors.white : color,
+              letterSpacing: -0.2,
             ),
           ),
         ),
