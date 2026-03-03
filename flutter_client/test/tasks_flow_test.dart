@@ -14,6 +14,8 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:fpdart/fpdart.dart';
 
 import 'tasks_flow_test.mocks.dart';
 
@@ -42,6 +44,10 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 
 @GenerateMocks([TaskRepository])
 void main() {
+  provideDummy<Either<Failure, List<TaskModel>>>(Right([]));
+  provideDummy<Either<Failure, Map<String, dynamic>>>(Right({}));
+  provideDummy<Either<Failure, void>>(Right(null));
+
   late MockTaskRepository mockTaskRepo;
 
   setUp(() {
@@ -71,11 +77,11 @@ void main() {
   testWidgets('TasksScreen renders tasks and allows completion', (WidgetTester tester) async {
     // 1. Mock Repository Responses
     when(mockTaskRepo.getTasks(any, limit: anyNamed('limit'), offset: anyNamed('offset')))
-        .thenAnswer((_) async => [testTask]);
+        .thenAnswer((_) async => Right([testTask]));
     
     // For completion
     when(mockTaskRepo.completeTask(any, userId: anyNamed('userId')))
-        .thenAnswer((_) async => {'xp_earned': 10, 'coins_earned': 5});
+        .thenAnswer((_) async => Right({'xp_earned': 10, 'coins_earned': 5}));
 
     // 2. Build Widget with Overrides
     await tester.pumpWidget(ProviderScope(

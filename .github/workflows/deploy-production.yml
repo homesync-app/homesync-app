@@ -19,6 +19,7 @@ jobs:
         with:
           channel: stable
           flutter-version: "3.27.0"
+          cache: true
 
       - name: Get dependencies
         run: |
@@ -27,24 +28,23 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          if [ -n "$ENCODED_KEYSTORE" ] && [ "$ENCODED_KEYSTORE" != "null" ]; then
-            echo "$ENCODED_KEYSTORE" | base64 --decode > release.keystore
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+            echo "KEYSTORE_AVAILABLE=true" >> $GITHUB_ENV
           else
-            echo "No keystore provided, building debug APK"
+            echo "KEYSTORE_AVAILABLE=false" >> $GITHUB_ENV
+            echo "⚠️ No keystore provided — skipping release signing"
           fi
-        env:
-          ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Create key.properties
+        if: env.KEYSTORE_AVAILABLE == 'true'
         run: |
-          if [ -f "release.keystore" ]; then
-            echo "storeFile=../../../release.keystore" >> flutter_client/android/key.properties
-            echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/key.properties
-            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/key.properties
-            echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/key.properties
-          else
-            echo "No keystore file, building debug APK"
-          fi
+          cat > flutter_client/android/key.properties <<EOF
+          storeFile=../../../release.keystore
+          storePassword=${{ secrets.STORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
 
       - name: Analyze code
         run: |
@@ -54,26 +54,31 @@ jobs:
       - name: Build AAB (Release)
         run: |
           cd flutter_client
-          if [ -f "../release.keystore" ]; then
+          if [ "${{ env.KEYSTORE_AVAILABLE }}" = "true" ]; then
             flutter build appbundle --release
           else
+            echo "No keystore → building debug AAB (not deployable to Play)"
             flutter build appbundle --debug
           fi
 
       - name: Upload AAB as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: homesync-appbundle
+          name: homesync-appbundle-${{ github.sha }}
           path: flutter_client/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
 
-      - name: Create release notes directory
+      - name: Create release notes
+        if: env.KEYSTORE_AVAILABLE == 'true'
         run: |
           mkdir -p whatsnew/en-US
-          echo "Nueva versión con modo offline, notificaciones push y mejoras de UI." > whatsnew/en-US/whatsnew.txt
+          mkdir -p whatsnew/es-AR
+          echo "Bug fixes, performance improvements and UI enhancements." > whatsnew/en-US/whatsnew.txt
+          echo "Correcciones de errores, mejoras de rendimiento y mejoras de interfaz." > whatsnew/es-AR/whatsnew.txt
 
       - name: Deploy to Google Play (Internal Testing)
-        if: env.ENCODED_KEYSTORE != ''
-        uses: r0adkll/upload-google-play@v1.1.2
+        if: env.KEYSTORE_AVAILABLE == 'true'
+        uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.blas.homesync
@@ -81,5 +86,3 @@ jobs:
           track: internal
           status: completed
           whatsNewDirectory: whatsnew
-        env:
-          ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}

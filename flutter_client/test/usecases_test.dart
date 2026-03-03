@@ -6,6 +6,8 @@ import 'package:homesync_client/features/tasks/domain/usecases/create_task_useca
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/usecases/save_expense_usecase.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 // Manual Mock for TaskRepository
 class MockTaskRepository implements TaskRepository {
@@ -13,7 +15,7 @@ class MockTaskRepository implements TaskRepository {
   bool completeTaskCalled = false;
   
   @override
-  Future<void> createTask({
+  Future<Either<Failure, void>> createTask({
     required String title,
     String? description,
     required String category,
@@ -24,26 +26,27 @@ class MockTaskRepository implements TaskRepository {
     String? recurrenceType,
   }) async {
     createTaskCalled = true;
+    return Right(null);
   }
 
   @override
-  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
     completeTaskCalled = true;
-    return {'success': true, 'xp_gained': 20};
+    return right({'success': true, 'xp_gained': 20});
   }
 
   @override
-  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async => throw UnimplementedError();
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async => throw UnimplementedError();
   @override
-  Future<void> deleteTask(String taskId) async => throw UnimplementedError();
+  Future<Either<Failure, void>> deleteTask(String taskId) async => throw UnimplementedError();
   @override
-  Future<void> updateSchedule(String taskId, String? recurrenceType) async => throw UnimplementedError();
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async => throw UnimplementedError();
   @override
-  Future<void> verifyTask(String taskId, String verifiedByUserId) async => throw UnimplementedError();
+  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async => throw UnimplementedError();
   @override
-  Future<void> objectTask(String taskId, String objectedByUserId) async => throw UnimplementedError();
+  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async => throw UnimplementedError();
   @override
-  Future<void> editTask(String taskId, Map<String, dynamic> updates) async => throw UnimplementedError();
+  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async => throw UnimplementedError();
 }
 
 // Manual Mock for ExpenseRepository
@@ -51,7 +54,7 @@ class MockExpenseRepository implements ExpenseRepository {
   bool saveExpenseCalled = false;
 
   @override
-  Future<void> saveExpense({
+  Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,
     required String title,
@@ -65,20 +68,21 @@ class MockExpenseRepository implements ExpenseRepository {
     List<Map<String, dynamic>>? splits,
   }) async {
     saveExpenseCalled = true;
+    return Right(null);
   }
 
   @override
-  Future<String> getHouseholdId(String userId) async => throw UnimplementedError();
+  Future<Either<Failure, String>> getHouseholdId(String userId) async => throw UnimplementedError();
   @override
-  Future<List<ExpenseModel>> getRecentExpenses(String householdId) async => throw UnimplementedError();
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async => throw UnimplementedError();
   @override
-  Future<Map<String, dynamic>> getExpenseWithSplits(String expenseId) async => throw UnimplementedError();
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async => throw UnimplementedError();
   @override
-  Future<List<HouseholdBalanceModel>> getHouseholdBalances(String householdId) async => throw UnimplementedError();
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async => throw UnimplementedError();
   @override
-  Future<void> deleteExpense(String expenseId) async => throw UnimplementedError();
+  Future<Either<Failure, void>> deleteExpense(String expenseId) async => throw UnimplementedError();
   @override
-  Future<void> settleDebt({required String householdId, required String toUserId, required double amount}) async => throw UnimplementedError();
+  Future<Either<Failure, void>> settleDebt({required String householdId, required String toUserId, required double amount}) async => throw UnimplementedError();
 }
 
 void main() {
@@ -102,13 +106,14 @@ void main() {
       expect(mockRepo.completeTaskCalled, isTrue);
     });
 
-    test('Should throw StateError when task is NOT active', () async {
+    test('Should throw ValidationFailure when task is NOT active', () async {
       final task = TaskModel(
         id: '1', title: 'T', status: TaskStatus.verified, // already done
         xpReward: 10, coinReward: 5, householdId: 'h', createdAt: DateTime.now()
       );
       
-      expect(() => useCase.call(task), throwsStateError);
+      final result = await useCase.call(task);
+      expect(result.isLeft(), isTrue);
       expect(mockRepo.completeTaskCalled, isFalse);
     });
   });
@@ -134,24 +139,26 @@ void main() {
       expect(mockRepo.createTaskCalled, isTrue);
     });
 
-    test('Should throw ArgumentError if category is empty', () async {
-      expect(() => useCase.call(
+    test('Should return Failure if category is empty', () async {
+      final result = await useCase.call(
         title: 'Title',
         category: '',
         difficulty: 'easy',
         xpReward: 10,
         coinReward: 5
-      ), throwsArgumentError);
+      );
+      expect(result.isLeft(), isTrue);
     });
 
-    test('Should throw ArgumentError if title is empty', () async {
-      expect(() => useCase.call(
+    test('Should return Failure if title is empty', () async {
+      final result = await useCase.call(
         title: '',
         category: 'kitchen',
         difficulty: 'easy',
         xpReward: 10,
         coinReward: 5
-      ), throwsArgumentError);
+      );
+      expect(result.isLeft(), isTrue);
     });
   });
 
@@ -178,8 +185,8 @@ void main() {
       expect(mockRepo.saveExpenseCalled, isTrue);
     });
 
-    test('Should throw Exception if amount is zero or negative', () async {
-      expect(() => useCase.call(
+    test('Should return Failure if amount is zero or negative', () async {
+      final result = await useCase.call(
         householdId: 'h1',
         title: 'Super',
         amount: 0.0,
@@ -187,11 +194,12 @@ void main() {
         paidBy: 'u1',
         paidAt: DateTime.now(),
         splitType: SplitType.equal
-      ), throwsException);
+      );
+      expect(result.isLeft(), isTrue);
     });
 
-    test('Should throw Exception if householdId is empty', () async {
-      expect(() => useCase.call(
+    test('Should return Failure if householdId is empty', () async {
+      final result = await useCase.call(
         householdId: '',
         title: 'Super',
         amount: 100.0,
@@ -199,7 +207,8 @@ void main() {
         paidBy: 'u1',
         paidAt: DateTime.now(),
         splitType: SplitType.equal
-      ), throwsException);
+      );
+      expect(result.isLeft(), isTrue);
     });
   });
 }

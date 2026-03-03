@@ -6,6 +6,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 class ExpenseFlowSimulator {
   final ExpenseRepository repository;
@@ -30,8 +32,8 @@ class ExpenseFlowSimulator {
       splitType: SplitType.equal,
     );
 
-    final expenses = await repository.getRecentExpenses('household-1');
-    createdExpenses.addAll(expenses);
+    final result = await repository.getRecentExpenses('household-1');
+    createdExpenses.addAll(result.getOrElse((_) => []));
 
     final splitAmount = amount / 2;
     userBalances[paidBy] = (userBalances[paidBy] ?? 0) + amount;
@@ -39,8 +41,8 @@ class ExpenseFlowSimulator {
   }
 
   Future<List<HouseholdBalanceModel>> calculateBalances() async {
-    final balances = await repository.getHouseholdBalances('household-1');
-    return balances;
+    final result = await repository.getHouseholdBalances('household-1');
+    return result.getOrElse((_) => []);
   }
 
   Future<void> settleDebt(String fromUserId, String toUserId, double amount) async {
@@ -59,19 +61,23 @@ class MockExpenseRepository implements ExpenseRepository {
   final List<ExpenseModel> _expenses = [];
 
   @override
-  Future<String> getHouseholdId(String userId) async => 'household-1';
+  Future<Either<Failure, String>> getHouseholdId(String userId) async => right('household-1');
 
   @override
-  Future<List<ExpenseModel>> getRecentExpenses(String householdId) async => _expenses;
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async => right(_expenses);
 
   @override
-  Future<Map<String, dynamic>> getExpenseWithSplits(String expenseId) async {
-    final expense = _expenses.firstWhere((e) => e.id == expenseId);
-    return {'expense': expense, 'splits': []};
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async {
+    try {
+      final expense = _expenses.firstWhere((e) => e.id == expenseId);
+      return right({'expense': expense, 'splits': []});
+    } catch (e) {
+      return Left(ServerFailure('Expense not found'));
+    }
   }
 
   @override
-  Future<List<HouseholdBalanceModel>> getHouseholdBalances(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async {
     final balances = <String, double>{};
     for (final expense in _expenses) {
       final splitAmount = expense.amount / 2;
@@ -79,14 +85,14 @@ class MockExpenseRepository implements ExpenseRepository {
       balances['other'] = (balances['other'] ?? 0) - splitAmount;
     }
 
-    return balances.entries.map((e) => HouseholdBalanceModel(
+    return right(balances.entries.map((e) => HouseholdBalanceModel(
       userId: e.key,
       balance: e.value,
-    )).toList();
+    )).toList());
   }
 
   @override
-  Future<void> saveExpense({
+  Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,
     required String title,
@@ -94,6 +100,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String category,
     required String paidBy,
     required DateTime paidAt,
+    String? id_v2, // Compatibility with previous param if needed, or just follow interface
     String? description,
     required SplitType splitType,
     String type = 'expense',
@@ -110,20 +117,22 @@ class MockExpenseRepository implements ExpenseRepository {
       createdAt: DateTime.now(),
       splitType: splitType.name,
     ));
+    return Right(null);
   }
 
   @override
-  Future<void> deleteExpense(String id) async {
+  Future<Either<Failure, void>> deleteExpense(String id) async {
     _expenses.removeWhere((e) => e.id == id);
+    return Right(null);
   }
 
   @override
-  Future<void> settleDebt({
+  Future<Either<Failure, void>> settleDebt({
     required String householdId,
     required String toUserId,
     required double amount,
   }) async {
-    // Settlement logic
+    return Right(null);
   }
 }
 
@@ -218,7 +227,8 @@ void main() {
 
       // After deletion, the expense list should be empty
       await repository.deleteExpense('expense-1');
-      final finalExpenses = await repository.getRecentExpenses('household-1');
+      final result = await repository.getRecentExpenses('household-1');
+      final finalExpenses = result.getOrElse((_) => []);
       expect(finalExpenses.length, equals(0));
     });
   });

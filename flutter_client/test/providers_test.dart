@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 class MockTaskRepository implements TaskRepository {
   final List<TaskModel> _tasks = [];
@@ -19,40 +21,44 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    return _tasks.skip(offset).take(limit).toList();
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return Right(_tasks.skip(offset).take(limit).toList());
   }
 
   @override
-  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    return {'xp_earned': task.xpReward, 'coins_earned': task.coinReward};
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return Right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }
 
   @override
-  Future<void> verifyTask(String taskId, String verifiedByUserId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return const Right(null);
   }
 
   @override
-  Future<void> objectTask(String taskId, String objectedByUserId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return const Right(null);
   }
 
   @override
-  Future<void> deleteTask(String taskId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> deleteTask(String taskId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     _tasks.removeWhere((t) => t.id == taskId);
+    return const Right(null);
   }
 
   @override
-  Future<void> updateSchedule(String taskId, String? recurrenceType) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return const Right(null);
   }
 
   @override
-  Future<void> createTask({
+  Future<Either<Failure, void>> createTask({
     required String title,
     String? description,
     required String category,
@@ -62,7 +68,7 @@ class MockTaskRepository implements TaskRepository {
     String? assignedTo,
     String? recurrenceType,
   }) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     _tasks.add(TaskModel(
       id: 'new-task-${_tasks.length + 1}',
       title: title,
@@ -75,11 +81,13 @@ class MockTaskRepository implements TaskRepository {
       householdId: 'household-1',
       createdAt: DateTime.now(),
     ));
+    return const Right(null);
   }
 
   @override
-  Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return const Right(null);
   }
 }
 

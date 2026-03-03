@@ -5,11 +5,14 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
+import 'package:fpdart/fpdart.dart' as _i4;
+import 'package:homesync_client/core/errors/failures.dart' as _i5;
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart'
-    as _i4;
+    as _i6;
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart'
     as _i2;
 import 'package:mockito/mockito.dart' as _i1;
+import 'package:mockito/src/dummies.dart' as _i7;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -35,7 +38,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
   }
 
   @override
-  _i3.Future<List<_i4.TaskModel>> getTasks(
+  _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>> getTasks(
     String? householdId, {
     int? limit = 100,
     int? offset = 0,
@@ -49,12 +52,24 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             #offset: offset,
           },
         ),
-        returnValue: _i3.Future<List<_i4.TaskModel>>.value(<_i4.TaskModel>[]),
-      ) as _i3.Future<List<_i4.TaskModel>>);
+        returnValue:
+            _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>.value(
+                _i7.dummyValue<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>(
+          this,
+          Invocation.method(
+            #getTasks,
+            [householdId],
+            {
+              #limit: limit,
+              #offset: offset,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>);
 
   @override
-  _i3.Future<Map<String, dynamic>> completeTask(
-    _i4.TaskModel? task, {
+  _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>> completeTask(
+    _i6.TaskModel? task, {
     String? userId,
   }) =>
       (super.noSuchMethod(
@@ -64,11 +79,19 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           {#userId: userId},
         ),
         returnValue:
-            _i3.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i3.Future<Map<String, dynamic>>);
+            _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>.value(
+                _i7.dummyValue<_i4.Either<_i5.Failure, Map<String, dynamic>>>(
+          this,
+          Invocation.method(
+            #completeTask,
+            [task],
+            {#userId: userId},
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>);
 
   @override
-  _i3.Future<void> verifyTask(
+  _i3.Future<_i4.Either<_i5.Failure, void>> verifyTask(
     String? taskId,
     String? verifiedByUserId,
   ) =>
@@ -80,12 +103,21 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             verifiedByUserId,
           ],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #verifyTask,
+            [
+              taskId,
+              verifiedByUserId,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 
   @override
-  _i3.Future<void> objectTask(
+  _i3.Future<_i4.Either<_i5.Failure, void>> objectTask(
     String? taskId,
     String? objectedByUserId,
   ) =>
@@ -97,22 +129,38 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             objectedByUserId,
           ],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #objectTask,
+            [
+              taskId,
+              objectedByUserId,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 
   @override
-  _i3.Future<void> deleteTask(String? taskId) => (super.noSuchMethod(
+  _i3.Future<_i4.Either<_i5.Failure, void>> deleteTask(String? taskId) =>
+      (super.noSuchMethod(
         Invocation.method(
           #deleteTask,
           [taskId],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #deleteTask,
+            [taskId],
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 
   @override
-  _i3.Future<void> updateSchedule(
+  _i3.Future<_i4.Either<_i5.Failure, void>> updateSchedule(
     String? taskId,
     String? recurrenceType,
   ) =>
@@ -124,12 +172,21 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             recurrenceType,
           ],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #updateSchedule,
+            [
+              taskId,
+              recurrenceType,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 
   @override
-  _i3.Future<void> createTask({
+  _i3.Future<_i4.Either<_i5.Failure, void>> createTask({
     required String? title,
     String? description,
     required String? category,
@@ -154,12 +211,28 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             #recurrenceType: recurrenceType,
           },
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #createTask,
+            [],
+            {
+              #title: title,
+              #description: description,
+              #category: category,
+              #difficulty: difficulty,
+              #xpReward: xpReward,
+              #coinReward: coinReward,
+              #assignedTo: assignedTo,
+              #recurrenceType: recurrenceType,
+            },
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 
   @override
-  _i3.Future<void> editTask(
+  _i3.Future<_i4.Either<_i5.Failure, void>> editTask(
     String? taskId,
     Map<String, dynamic>? updates,
   ) =>
@@ -171,7 +244,16 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             updates,
           ],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
+            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+          this,
+          Invocation.method(
+            #editTask,
+            [
+              taskId,
+              updates,
+            ],
+          ),
+        )),
+      ) as _i3.Future<_i4.Either<_i5.Failure, void>>);
 }

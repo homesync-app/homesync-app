@@ -7,6 +7,8 @@ import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 import 'dart:io';
 
@@ -46,12 +48,13 @@ class FakeAuthRepository implements AuthRepository {
   String? lastEmailed;
 
   @override
-  Future<void> signInWithEmail({required String email, required String password}) async {
+  Future<Either<Failure, void>> signInWithEmail({required String email, required String password}) async {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
-      throw const AuthException('Invalid login credentials');
+      return Left(AuthFailure('Credenciales inválidas o cuenta no existente'));
     }
+    return const Right(null);
   }
 
   @override

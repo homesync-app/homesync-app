@@ -8,6 +8,8 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 class MockExpenseRepository implements ExpenseRepository {
   final List<ExpenseModel> _expenses = [];
@@ -15,31 +17,35 @@ class MockExpenseRepository implements ExpenseRepository {
   String? failMessage;
 
   @override
-  Future<String> getHouseholdId(String userId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    return 'household-1';
+  Future<Either<Failure, String>> getHouseholdId(String userId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return right('household-1');
   }
 
   @override
-  Future<List<ExpenseModel>> getRecentExpenses(String householdId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    return _expenses;
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return right(_expenses);
   }
 
   @override
-  Future<Map<String, dynamic>> getExpenseWithSplits(String expenseId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    final expense = _expenses.firstWhere((e) => e.id == expenseId);
-    return {
-      'expense': expense,
-      'splits': [],
-    };
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    try {
+      final expense = _expenses.firstWhere((e) => e.id == expenseId);
+      return right({
+        'expense': expense,
+        'splits': [],
+      });
+    } catch (e) {
+      return Left(ServerFailure('Expense not found'));
+    }
   }
 
-    @override
-  Future<List<HouseholdBalanceModel>> getHouseholdBalances(String householdId) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
-    return [
+  @override
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return right([
       HouseholdBalanceModel(
         userId: 'user-1',
         userFullName: 'Usuario 1',
@@ -50,11 +56,11 @@ class MockExpenseRepository implements ExpenseRepository {
         userFullName: 'Usuario 2',
         balance: -50.0,
       ),
-    ];
+    ]);
   }
 
-    @override
-  Future<void> saveExpense({
+  @override
+  Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,
     required String title,
@@ -67,7 +73,7 @@ class MockExpenseRepository implements ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
   }) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     final expense = ExpenseModel(
       id: id ?? 'expense-${_expenses.length + 1}',
       title: title,
@@ -82,21 +88,24 @@ class MockExpenseRepository implements ExpenseRepository {
       type: type,
     );
     _expenses.add(expense);
+    return Right(null);
   }
 
   @override
-  Future<void> deleteExpense(String id) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  Future<Either<Failure, void>> deleteExpense(String id) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     _expenses.removeWhere((e) => e.id == id);
+    return Right(null);
   }
 
   @override
-  Future<void> settleDebt({
+  Future<Either<Failure, void>> settleDebt({
     required String householdId,
     required String toUserId,
     required double amount,
   }) async {
-    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return Right(null);
   }
 }
 
@@ -105,33 +114,34 @@ class MockTaskRepository implements TaskRepository {
   bool shouldFail = false;
 
   @override
-  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
-    if (shouldFail) throw Exception('Mock error');
-    return _tasks;
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+    if (shouldFail) return Left(ServerFailure('Mock error'));
+    return right(_tasks);
   }
 
   @override
-  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
-    if (shouldFail) throw Exception('Mock error');
-    return {'xp_earned': task.xpReward, 'coins_earned': task.coinReward};
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
+    if (shouldFail) return Left(ServerFailure('Mock error'));
+    return right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }
 
   @override
-  Future<void> verifyTask(String taskId, String verifiedByUserId) async {}
+  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async => Right(null);
 
   @override
-  Future<void> objectTask(String taskId, String objectedByUserId) async {}
+  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async => Right(null);
 
   @override
-  Future<void> deleteTask(String taskId) async {
+  Future<Either<Failure, void>> deleteTask(String taskId) async {
     _tasks.removeWhere((t) => t.id == taskId);
+    return Right(null);
   }
 
   @override
-  Future<void> updateSchedule(String taskId, String? recurrenceType) async {}
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async => Right(null);
 
   @override
-  Future<void> createTask({
+  Future<Either<Failure, void>> createTask({
     required String title,
     String? description,
     required String category,
@@ -153,10 +163,11 @@ class MockTaskRepository implements TaskRepository {
       householdId: 'household-1',
       createdAt: DateTime.now(),
     ));
+    return Right(null);
   }
 
   @override
-  Future<void> editTask(String taskId, Map<String, dynamic> updates) async {}
+  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async => Right(null);
 }
 
 void main() {
@@ -168,8 +179,8 @@ void main() {
     });
 
     test('getHouseholdId returns correct household', () async {
-      final householdId = await repo.getHouseholdId('user-1');
-      expect(householdId, equals('household-1'));
+      final result = await repo.getHouseholdId('user-1');
+      expect(result.getOrElse((_) => ''), equals('household-1'));
     });
 
     test('saveExpense adds expense to list', () async {
@@ -183,7 +194,8 @@ void main() {
         splitType: SplitType.equal,
       );
 
-      final expenses = await repo.getRecentExpenses('household-1');
+      final result = await repo.getRecentExpenses('household-1');
+      final expenses = result.getOrElse((_) => []);
       expect(expenses.length, equals(1));
       expect(expenses.first.title, equals('Compra supermercado'));
     });
@@ -199,17 +211,20 @@ void main() {
         splitType: SplitType.personal,
       );
 
-      final expenses = await repo.getRecentExpenses('household-1');
+      final result = await repo.getRecentExpenses('household-1');
+      final expenses = result.getOrElse((_) => []);
       final expenseId = expenses.first.id;
 
       await repo.deleteExpense(expenseId);
 
-      final afterDelete = await repo.getRecentExpenses('household-1');
+      final afterDeleteResult = await repo.getRecentExpenses('household-1');
+      final afterDelete = afterDeleteResult.getOrElse((_) => []);
       expect(afterDelete.length, equals(0));
     });
 
     test('getHouseholdBalances returns correct structure', () async {
-      final balances = await repo.getHouseholdBalances('household-1');
+      final result = await repo.getHouseholdBalances('household-1');
+      final balances = result.getOrElse((_) => []);
       
       expect(balances.length, equals(2));
       expect(balances.any((b) => b.balance > 0), isTrue);
@@ -229,18 +244,17 @@ void main() {
       );
 
       final result = await repo.getExpenseWithSplits('expense-1');
-      expect(result['expense'], isNotNull);
-      expect((result['expense'] as ExpenseModel).title, equals('Cena'));
+      final data = result.getOrElse((_) => {});
+      expect(data['expense'], isNotNull);
+      expect((data['expense'] as ExpenseModel).title, equals('Cena'));
     });
 
     test('handles failure gracefully', () async {
       repo.shouldFail = true;
       repo.failMessage = 'Network error';
 
-      expect(
-        () => repo.getHouseholdId('user-1'),
-        throwsException,
-      );
+      final result = await repo.getHouseholdId('user-1');
+      expect(result.isLeft(), isTrue);
     });
   });
 
@@ -260,7 +274,8 @@ void main() {
         coinReward: 10,
       );
 
-      final tasks = await repo.getTasks('household-1');
+      final result = await repo.getTasks('household-1');
+      final tasks = result.getOrElse((_) => []);
       expect(tasks.length, equals(1));
       expect(tasks.first.title, equals('Lavar platos'));
     });
@@ -274,11 +289,13 @@ void main() {
         coinReward: 25,
       );
 
-      final tasks = await repo.getTasks('household-1');
+      final tasksResult = await repo.getTasks('household-1');
+      final tasks = tasksResult.getOrElse((_) => []);
       final result = await repo.completeTask(tasks.first, userId: 'user-1');
+      final data = result.getOrElse((_) => {});
 
-      expect(result['xp_earned'], equals(50));
-      expect(result['coins_earned'], equals(25));
+      expect(data['xp_earned'], equals(50));
+      expect(data['coins_earned'], equals(25));
     });
 
     test('deleteTask removes task', () async {
@@ -290,10 +307,12 @@ void main() {
         coinReward: 5,
       );
 
-      var tasks = await repo.getTasks('household-1');
+      var result = await repo.getTasks('household-1');
+      var tasks = result.getOrElse((_) => []);
       await repo.deleteTask(tasks.first.id);
 
-      tasks = await repo.getTasks('household-1');
+      result = await repo.getTasks('household-1');
+      tasks = result.getOrElse((_) => []);
       expect(tasks.length, equals(0));
     });
 
@@ -308,7 +327,8 @@ void main() {
         );
       }
 
-      final allTasks = await repo.getTasks('household-1', limit: 100, offset: 0);
+      final result = await repo.getTasks('household-1', limit: 100, offset: 0);
+      final allTasks = result.getOrElse((_) => []);
       
       final firstPage = allTasks.sublist(0, 5.clamp(0, allTasks.length));
       final secondPage = allTasks.sublist(5, 10.clamp(0, allTasks.length));
@@ -333,7 +353,8 @@ void main() {
         splitType: SplitType.equal,
       );
 
-      final expenses = await mockRepo.getRecentExpenses('household-1');
+      final result = await mockRepo.getRecentExpenses('household-1');
+      final expenses = result.getOrElse((_) => []);
       expect(expenses.length, equals(1));
     });
 
