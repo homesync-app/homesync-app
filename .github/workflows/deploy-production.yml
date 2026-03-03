@@ -35,13 +35,13 @@ jobs:
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
 
-      - name: Create local.properties
+      - name: Create key.properties
         run: |
           if [ -f "release.keystore" ]; then
-            echo "storeFile=release.keystore" >> flutter_client/android/local.properties
-            echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
-            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/local.properties
-            echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/local.properties
+            echo "storeFile=../../../release.keystore" >> flutter_client/android/key.properties
+            echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/key.properties
+            echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> flutter_client/android/key.properties
+            echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> flutter_client/android/key.properties
           else
             echo "No keystore file, building debug APK"
           fi
