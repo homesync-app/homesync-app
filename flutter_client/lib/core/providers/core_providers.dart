@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:developer' as dev;
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/reward_rpc_service.dart';
@@ -10,6 +9,7 @@ import 'package:homesync_client/core/services/rpc/household_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/balance_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/admin_rpc_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomNavNotifier extends Notifier<int> {
@@ -50,7 +50,7 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   final result = await client
       .from('household_members')
       .select('household_id')
@@ -65,7 +65,7 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   return await client
       .from('users')
       .select('id, full_name, email, avatar_url, mercadopago_alias')
@@ -78,7 +78,7 @@ final mercadopagoConnectionProvider = StreamProvider<Map<String, dynamic>?>((ref
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   return client
       .from('mercadopago_connections')
       .stream(primaryKey: ['user_id'])
@@ -95,7 +95,8 @@ final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>(
   if (connection == null) return [];
 
   try {
-    final response = await Supabase.instance.client.functions.invoke(
+    final client = ref.read(supabaseClientProvider);
+    final response = await client.functions.invoke(
       'mercadopago-api',
       body: {
         'action': 'get_recent_movements',
@@ -109,7 +110,7 @@ final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>(
     }
     return [];
   } catch (e) {
-    debugPrint('Error fetching MP movements: $e');
+    log.e('Error fetching MP movements: $e', error: e);
     return [];
   }
 });

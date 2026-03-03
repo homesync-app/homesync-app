@@ -1,6 +1,9 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/providers/supabase_provider.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
@@ -13,7 +16,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Supabase implementation of AuthRepository.
-class SupabaseAuthRepository implements AuthRepository {
+class SupabaseAuthRepository with RepositoryErrorHandler implements AuthRepository {
   final SupabaseClient _client;
   final SupabaseAuthService _authService;
 
@@ -30,45 +33,62 @@ class SupabaseAuthRepository implements AuthRepository {
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
   @override
-  Future<void> signUpWithEmail({
+  Future<Either<Failure, void>> signUpWithEmail({
     required String email,
     required String password,
     String? fullName,
   }) async {
-    await _authService.signUp(
-      email: email,
-      password: password,
-      fullName: fullName,
-    );
+    return executeWithHandling(() async {
+      await _authService.signUp(
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
+    }, context: 'SupabaseAuthRepository.signUpWithEmail');
   }
 
   @override
-  Future<void> signInWithEmail({
+  Future<Either<Failure, void>> signInWithEmail({
     required String email,
     required String password,
   }) async {
-    await _authService.signIn(email: email, password: password);
+    return executeWithHandling(() async {
+      await _authService.signIn(email: email, password: password);
+    }, context: 'SupabaseAuthRepository.signInWithEmail');
   }
 
   @override
-  Future<bool> signInWithGoogle() => _authService.signInWithGoogle();
+  Future<Either<Failure, bool>> signInWithGoogle() async {
+    return executeWithHandling(() async {
+      return await _authService.signInWithGoogle();
+    }, context: 'SupabaseAuthRepository.signInWithGoogle');
+  }
 
   @override
-  Future<void> signOut() => _authService.signOut();
+  Future<Either<Failure, void>> signOut() async {
+    return executeWithHandling(() async {
+      await _authService.signOut();
+    }, context: 'SupabaseAuthRepository.signOut');
+  }
 
   @override
-  Future<void> resetPassword(String email) =>
-      _authService.resetPasswordForEmail(email);
+  Future<Either<Failure, void>> resetPassword(String email) async {
+    return executeWithHandling(() async {
+      await _authService.resetPasswordForEmail(email);
+    }, context: 'SupabaseAuthRepository.resetPassword');
+  }
 
   @override
-  Future<UserModel?> getUserProfile(String userId) async {
-    final data = await _client
-        .from('users')
-        .select('id, full_name, email, avatar_url, mercadopago_alias')
-        .eq('id', userId)
-        .maybeSingle();
+  Future<Either<Failure, UserModel?>> getUserProfile(String userId) async {
+    return executeWithHandling(() async {
+      final data = await _client
+          .from('users')
+          .select('id, full_name, email, avatar_url, mercadopago_alias')
+          .eq('id', userId)
+          .maybeSingle();
 
-    if (data == null) return null;
-    return UserModel.fromJson(data);
+      if (data == null) return null;
+      return UserModel.fromJson(data);
+    }, context: 'SupabaseAuthRepository.getUserProfile');
   }
 }

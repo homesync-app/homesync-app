@@ -86,7 +86,7 @@ class NetworkClient {
         }
         
         await Future.delayed(delay);
-      } on NetworkException catch (e) {
+      } on NetworkException {
         retryCount++;
         if (retryCount >= config.maxRetries) rethrow;
 

@@ -7,14 +7,12 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
-import 'package:homesync_client/core/services/shopping_service.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {

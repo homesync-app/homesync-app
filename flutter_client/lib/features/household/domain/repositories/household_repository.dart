@@ -22,4 +22,10 @@ abstract class HouseholdRepository {
 
   /// Resets the current user's data (tasks, expenses, balances, etc.)
   Future<Map<String, dynamic>> resetUserAccount();
+
+  /// Removes a member from the household (only for owners)
+  Future<void> removeMember(String userId);
+
+  /// Resets user account and removes them from the household
+  Future<Map<String, dynamic>> resetAndClearHousehold();
 }

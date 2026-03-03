@@ -4,6 +4,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
@@ -94,7 +95,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       final members = await ref.read(householdMembersProvider.future);
       setState(() => _members = members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
     } catch (e) {
-      debugPrint('Error loading members: $e');
+      log.e('Error loading members: $e', error: e);
     }
   }
 

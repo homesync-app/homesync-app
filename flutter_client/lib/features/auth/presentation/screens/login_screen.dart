@@ -7,6 +7,8 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 import 'package:flutter/services.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/error_handler.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -35,6 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void initState() {
     super.initState();
+    log.setScreen('LoginScreen');
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -107,25 +110,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
-    try {
-      final signInUseCase = ref.read(signInUseCaseProvider);
-      await signInUseCase.execute(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              prefs: widget.prefs,
+    
+    final signInUseCase = ref.read(signInUseCaseProvider);
+    final result = await signInUseCase.execute(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+    
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() => _isLoading = false);
+          errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleLogin');
+        },
+        (_) {
+          setState(() => _isLoading = false);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => MainScreen(
+                prefs: widget.prefs,
+              ),
             ),
-          ),
-        );
-      }
-    } catch (e) {
-      _showError('Credenciales inválidas o cuenta no existente');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+          );
+        },
+      );
     }
   }
 
@@ -133,44 +141,59 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
-    try {
-      final signUpUseCase = ref.read(signUpUseCaseProvider);
-      await signUpUseCase.execute(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+    
+    final signUpUseCase = ref.read(signUpUseCaseProvider);
+    final result = await signUpUseCase.execute(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      result.fold(
+        (failure) => errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleSignUp'),
+        (_) => _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧'),
       );
-      _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧');
-    } catch (e) {
-      _showError('Hubo un error al crear la cuenta. Intenta de nuevo.');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.mediumImpact();
     setState(() => _isGoogleLoading = true);
-    try {
-      final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
-      final success = await googleSignInUseCase.execute();
-      if (!success) {
-        throw Exception('Cancelado por el usuario.');
-      }
-      final authService = ref.read(authServiceProvider);
-      await authService.ensureHouseholdExists();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainScreen(
-              prefs: widget.prefs,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      _showError('Error iniciando con Google: ${e.toString()}');
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
+    
+    final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
+    final result = await googleSignInUseCase.execute();
+    
+    if (mounted) {
+      result.fold(
+        (failure) {
+          setState(() => _isGoogleLoading = false);
+          // Only show error if it's not a cancellation
+          if (failure.message != 'Cancelado por el usuario') {
+             errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleGoogleSignIn');
+          }
+        },
+        (success) async {
+          if (!success) {
+            setState(() => _isGoogleLoading = false);
+            return;
+          }
+          
+          final authService = ref.read(authServiceProvider);
+          await authService.ensureHouseholdExists();
+          
+          if (mounted) {
+            setState(() => _isGoogleLoading = false);
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => MainScreen(
+                  prefs: widget.prefs,
+                ),
+              ),
+            );
+          }
+        },
+      );
     }
   }
 
@@ -253,18 +276,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
 
     setState(() => _isLoading = true);
-    try {
-      final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
-      await resetPasswordUseCase.execute(email);
-      if (mounted) {
-        _showSuccess('¡Revisá tu email para cambiar la contraseña! 📧');
-      }
-    } catch (e) {
-      if (mounted) {
-        _showError('No se pudo enviar el email. Verificá el correo.');
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
+    final result = await resetPasswordUseCase.execute(email);
+    
+    if (mounted) {
+      setState(() => _isLoading = false);
+      result.fold(
+        (failure) => errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleForgotPassword'),
+        (_) => _showSuccess('¡Revisá tu email para cambiar tu contraseña! 📧'),
+      );
     }
   }
 
@@ -541,9 +561,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           : Image.network(
               'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
               height: 20,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 24, color: AppColors.primary),
             ),
       label: const Text(
         'Google Workspace',
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );

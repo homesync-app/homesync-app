@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
@@ -6,9 +8,9 @@ class GetBalancesUseCase {
 
   GetBalancesUseCase(this._repository);
 
-  Future<List<HouseholdBalanceModel>> call(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> call(String householdId) async {
     if (householdId.isEmpty) {
-      throw Exception('El ID del hogar no puede estar vacío');
+      return left(const ValidationFailure('El ID del hogar no puede estar vacío'));
     }
     return await _repository.getHouseholdBalances(householdId);
   }

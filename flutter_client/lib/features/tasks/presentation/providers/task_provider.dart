@@ -1,6 +1,9 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/error_handler.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
@@ -85,13 +88,20 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     if (householdId == null) return [];
 
     final useCase = ref.read(getTasksUseCaseProvider);
-    final tasks = await useCase(householdId, limit: _pageSize, offset: 0);
+    final result = await useCase(householdId, limit: _pageSize, offset: 0);
     
-    if (tasks.length < _pageSize) {
-      _hasMore = false;
-    }
-    
-    return tasks;
+    return result.fold(
+      (failure) {
+        log.e('Error loading tasks: ${failure.message}');
+        throw Exception(failure.message);
+      },
+      (tasks) {
+        if (tasks.length < _pageSize) {
+          _hasMore = false;
+        }
+        return tasks;
+      },
+    );
   }
 
   Future<void> refresh() async {
@@ -101,8 +111,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
   /// Same as refresh but without showing the loading state, good for instantaneous updates.
   Future<void> silentRefresh() async {
-    final result = await AsyncValue.guard(() => build());
-    state = result;
+    state = await AsyncValue.guard(() => build());
   }
 
   Future<void> loadMore() async {
@@ -113,57 +122,93 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     if (householdId == null) return;
     
     final useCase = ref.read(getTasksUseCaseProvider);
-    final nextTasks = await useCase(
+    final result = await useCase(
       householdId, 
       limit: _pageSize, 
       offset: currentTasks.length,
     );
     
-    if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
-      _hasMore = false;
-    }
-    
-    state = AsyncValue.data([...currentTasks, ...nextTasks]);
+    result.fold(
+      (failure) => log.w('Error loading more tasks: ${failure.message}'),
+      (nextTasks) {
+        if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
+          _hasMore = false;
+        }
+        state = AsyncValue.data([...currentTasks, ...nextTasks]);
+      },
+    );
   }
 
-  Future<Map<String, dynamic>> completeTask(TaskModel task) async {
+  Future<Map<String, dynamic>?> completeTask(TaskModel task) async {
+    final userId = ref.read(currentUserIdProvider);
     final useCase = ref.read(completeTaskUseCaseProvider);
-    final result = await useCase(task);
-    await refresh();
-    return result;
+    final result = await useCase(task, userId: userId);
+    
+    return result.fold(
+      (failure) {
+        log.w('Complete task failure: ${failure.message}');
+        return null;
+      },
+      (data) async {
+        await refresh();
+        return data;
+      },
+    );
   }
 
   Future<void> verifyTask(TaskModel task) async {
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) throw Exception('No autenticado');
+    if (userId == null) {
+      log.w('Verify task aborted: user not authenticated');
+      return;
+    }
     final repo = ref.read(taskRepositoryProvider);
-    await repo.verifyTask(task.id, userId);
-    await refresh();
+    final result = await repo.verifyTask(task.id, userId);
+    
+    result.fold(
+      (failure) => log.w('Verify task failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> objectTask(TaskModel task) async {
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) throw Exception('No autenticado');
+    if (userId == null) {
+      log.w('Object task aborted: user not authenticated');
+      return;
+    }
     final repo = ref.read(taskRepositoryProvider);
-    await repo.objectTask(task.id, userId);
-    await refresh();
+    final result = await repo.objectTask(task.id, userId);
+    
+    result.fold(
+      (failure) => log.w('Object task failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> deleteTask(TaskModel task) async {
     final repo = ref.read(taskRepositoryProvider);
-    await repo.deleteTask(task.id);
-    await refresh();
+    final result = await repo.deleteTask(task.id);
+    
+    result.fold(
+      (failure) => log.w('Delete task failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> updateSchedule(TaskModel task, String? recurrenceType) async {
     final repo = ref.read(taskRepositoryProvider);
-    await repo.updateSchedule(task.id, recurrenceType);
-    await refresh();
+    final result = await repo.updateSchedule(task.id, recurrenceType);
+    
+    result.fold(
+      (failure) => log.w('Update schedule failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> createTask(Map<String, dynamic> taskData) async {
     final useCase = ref.read(createTaskUseCaseProvider);
-    await useCase(
+    final result = await useCase(
       title: taskData['title'] as String,
       description: taskData['description'] as String?,
       category: taskData['category'] as String,
@@ -173,13 +218,21 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
       assignedTo: taskData['assignedTo'] as String?,
       recurrenceType: taskData['recurrenceType'] as String?,
     );
-    await silentRefresh();
+    
+    result.fold(
+      (failure) => log.w('Create task failure: ${failure.message}'),
+      (_) => silentRefresh(),
+    );
   }
 
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
     final repo = ref.read(taskRepositoryProvider);
-    await repo.editTask(taskId, updates);
-    await refresh();
+    final result = await repo.editTask(taskId, updates);
+    
+    result.fold(
+      (failure) => log.w('Edit task failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 }
 

@@ -8,9 +8,7 @@ import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/utils/app_animations.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/household_providers.dart';
 import '../../data/repositories/supabase_household_repository.dart';
-import '../../../../core/providers/core_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {

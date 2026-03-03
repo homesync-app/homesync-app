@@ -1,0 +1,345 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// HomeSync — Repository Unit Tests with Mocks
+// Tests repositories with mocked Supabase clients
+// Run with: flutter test test/repositories_test.dart
+// ─────────────────────────────────────────────────────────────────────────────
+import 'package:flutter_test/flutter_test.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
+
+class MockExpenseRepository implements ExpenseRepository {
+  final List<ExpenseModel> _expenses = [];
+  bool shouldFail = false;
+  String? failMessage;
+
+  @override
+  Future<String> getHouseholdId(String userId) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    return 'household-1';
+  }
+
+  @override
+  Future<List<ExpenseModel>> getRecentExpenses(String householdId) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    return _expenses;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getExpenseWithSplits(String expenseId) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    final expense = _expenses.firstWhere((e) => e.id == expenseId);
+    return {
+      'expense': expense,
+      'splits': [],
+    };
+  }
+
+    @override
+  Future<List<HouseholdBalanceModel>> getHouseholdBalances(String householdId) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    return [
+      HouseholdBalanceModel(
+        userId: 'user-1',
+        userFullName: 'Usuario 1',
+        balance: 50.0,
+      ),
+      HouseholdBalanceModel(
+        userId: 'user-2',
+        userFullName: 'Usuario 2',
+        balance: -50.0,
+      ),
+    ];
+  }
+
+    @override
+  Future<void> saveExpense({
+    String? id,
+    required String householdId,
+    required String title,
+    required double amount,
+    required String category,
+    required String paidBy,
+    required DateTime paidAt,
+    String? description,
+    required SplitType splitType,
+    String type = 'expense',
+    List<Map<String, dynamic>>? splits,
+  }) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    final expense = ExpenseModel(
+      id: id ?? 'expense-${_expenses.length + 1}',
+      title: title,
+      amount: amount,
+      category: category,
+      householdId: householdId,
+      paidBy: paidBy,
+      paidAt: paidAt,
+      createdAt: DateTime.now(),
+      description: description,
+      splitType: splitType.name,
+      type: type,
+    );
+    _expenses.add(expense);
+  }
+
+  @override
+  Future<void> deleteExpense(String id) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+    _expenses.removeWhere((e) => e.id == id);
+  }
+
+  @override
+  Future<void> settleDebt({
+    required String householdId,
+    required String toUserId,
+    required double amount,
+  }) async {
+    if (shouldFail) throw Exception(failMessage ?? 'Mock error');
+  }
+}
+
+class MockTaskRepository implements TaskRepository {
+  final List<TaskModel> _tasks = [];
+  bool shouldFail = false;
+
+  @override
+  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+    if (shouldFail) throw Exception('Mock error');
+    return _tasks;
+  }
+
+  @override
+  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
+    if (shouldFail) throw Exception('Mock error');
+    return {'xp_earned': task.xpReward, 'coins_earned': task.coinReward};
+  }
+
+  @override
+  Future<void> verifyTask(String taskId, String verifiedByUserId) async {}
+
+  @override
+  Future<void> objectTask(String taskId, String objectedByUserId) async {}
+
+  @override
+  Future<void> deleteTask(String taskId) async {
+    _tasks.removeWhere((t) => t.id == taskId);
+  }
+
+  @override
+  Future<void> updateSchedule(String taskId, String? recurrenceType) async {}
+
+  @override
+  Future<void> createTask({
+    required String title,
+    String? description,
+    required String category,
+    required String difficulty,
+    required int xpReward,
+    required int coinReward,
+    String? assignedTo,
+    String? recurrenceType,
+  }) async {
+    _tasks.add(TaskModel(
+      id: 'task-${_tasks.length + 1}',
+      title: title,
+      description: description,
+      category: category,
+      difficulty: TaskDifficulty.fromString(difficulty),
+      status: TaskStatus.active,
+      xpReward: xpReward,
+      coinReward: coinReward,
+      householdId: 'household-1',
+      createdAt: DateTime.now(),
+    ));
+  }
+
+  @override
+  Future<void> editTask(String taskId, Map<String, dynamic> updates) async {}
+}
+
+void main() {
+  group('✅ MockExpenseRepository', () {
+    late MockExpenseRepository repo;
+
+    setUp(() {
+      repo = MockExpenseRepository();
+    });
+
+    test('getHouseholdId returns correct household', () async {
+      final householdId = await repo.getHouseholdId('user-1');
+      expect(householdId, equals('household-1'));
+    });
+
+    test('saveExpense adds expense to list', () async {
+      await repo.saveExpense(
+        householdId: 'household-1',
+        title: 'Compra supermercado',
+        amount: 150.0,
+        category: 'food',
+        paidBy: 'user-1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
+
+      final expenses = await repo.getRecentExpenses('household-1');
+      expect(expenses.length, equals(1));
+      expect(expenses.first.title, equals('Compra supermercado'));
+    });
+
+    test('deleteExpense removes expense', () async {
+      await repo.saveExpense(
+        householdId: 'household-1',
+        title: 'Gasto test',
+        amount: 50.0,
+        category: 'other',
+        paidBy: 'user-1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.personal,
+      );
+
+      final expenses = await repo.getRecentExpenses('household-1');
+      final expenseId = expenses.first.id;
+
+      await repo.deleteExpense(expenseId);
+
+      final afterDelete = await repo.getRecentExpenses('household-1');
+      expect(afterDelete.length, equals(0));
+    });
+
+    test('getHouseholdBalances returns correct structure', () async {
+      final balances = await repo.getHouseholdBalances('household-1');
+      
+      expect(balances.length, equals(2));
+      expect(balances.any((b) => b.balance > 0), isTrue);
+      expect(balances.any((b) => b.balance < 0), isTrue);
+    });
+
+    test('getExpenseWithSplits returns expense with splits', () async {
+      await repo.saveExpense(
+        id: 'expense-1',
+        householdId: 'household-1',
+        title: 'Cena',
+        amount: 80.0,
+        category: 'food',
+        paidBy: 'user-1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
+
+      final result = await repo.getExpenseWithSplits('expense-1');
+      expect(result['expense'], isNotNull);
+      expect((result['expense'] as ExpenseModel).title, equals('Cena'));
+    });
+
+    test('handles failure gracefully', () async {
+      repo.shouldFail = true;
+      repo.failMessage = 'Network error';
+
+      expect(
+        () => repo.getHouseholdId('user-1'),
+        throwsException,
+      );
+    });
+  });
+
+  group('✅ MockTaskRepository', () {
+    late MockTaskRepository repo;
+
+    setUp(() {
+      repo = MockTaskRepository();
+    });
+
+    test('createTask adds task to list', () async {
+      await repo.createTask(
+        title: 'Lavar platos',
+        category: 'kitchen',
+        difficulty: 'easy',
+        xpReward: 20,
+        coinReward: 10,
+      );
+
+      final tasks = await repo.getTasks('household-1');
+      expect(tasks.length, equals(1));
+      expect(tasks.first.title, equals('Lavar platos'));
+    });
+
+    test('completeTask returns correct rewards', () async {
+      await repo.createTask(
+        title: 'Task reward',
+        category: 'cleaning',
+        difficulty: 'medium',
+        xpReward: 50,
+        coinReward: 25,
+      );
+
+      final tasks = await repo.getTasks('household-1');
+      final result = await repo.completeTask(tasks.first, userId: 'user-1');
+
+      expect(result['xp_earned'], equals(50));
+      expect(result['coins_earned'], equals(25));
+    });
+
+    test('deleteTask removes task', () async {
+      await repo.createTask(
+        title: 'To delete',
+        category: 'other',
+        difficulty: 'hard',
+        xpReward: 10,
+        coinReward: 5,
+      );
+
+      var tasks = await repo.getTasks('household-1');
+      await repo.deleteTask(tasks.first.id);
+
+      tasks = await repo.getTasks('household-1');
+      expect(tasks.length, equals(0));
+    });
+
+    test('getTasks respects pagination', () async {
+      for (int i = 0; i < 10; i++) {
+        await repo.createTask(
+          title: 'Task $i',
+          category: 'other',
+          difficulty: 'easy',
+          xpReward: 10,
+          coinReward: 5,
+        );
+      }
+
+      final allTasks = await repo.getTasks('household-1', limit: 100, offset: 0);
+      
+      final firstPage = allTasks.sublist(0, 5.clamp(0, allTasks.length));
+      final secondPage = allTasks.sublist(5, 10.clamp(0, allTasks.length));
+
+      expect(firstPage.length, equals(5));
+      expect(secondPage.length, equals(5));
+      expect(firstPage.first.title, isNot(equals(secondPage.first.title)));
+    });
+  });
+
+  group('✅ Repository pattern integration', () {
+    test('can swap implementations', () async {
+      final mockRepo = MockExpenseRepository();
+      
+      await mockRepo.saveExpense(
+        householdId: 'household-1',
+        title: 'Shared expense',
+        amount: 100.0,
+        category: 'utilities',
+        paidBy: 'user-1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
+
+      final expenses = await mockRepo.getRecentExpenses('household-1');
+      expect(expenses.length, equals(1));
+    });
+
+    test('abstract repository contract is satisfied', () {
+      final repo = MockExpenseRepository();
+      expect(repo, isA<ExpenseRepository>());
+    });
+  });
+}

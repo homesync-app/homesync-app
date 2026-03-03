@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'base_rpc_service.dart';
 
 class StatsRpcService extends BaseRpcService {
@@ -180,7 +181,7 @@ class StatsRpcService extends BaseRpcService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      debugPrint('Error getting duel history: $e');
+      log.e('Error getting duel history: $e', error: e);
       return [];
     }
   }
@@ -212,7 +213,7 @@ class StatsRpcService extends BaseRpcService {
 
       return Map<String, dynamic>.from(response);
     } catch (e) {
-      debugPrint('Error saving duel result: $e');
+      log.e('Error saving duel result: $e', error: e);
       return {'success': false, 'message': e.toString()};
     }
   }

@@ -31,15 +31,6 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   final Set<int> _selectedMonthDays = {};
 
   final List<String> _dayNames = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-  final List<String> _fullDayNames = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado',
-    'Domingo'
-  ];
 
   @override
   void initState() {

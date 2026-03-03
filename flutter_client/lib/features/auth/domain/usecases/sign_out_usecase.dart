@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../repositories/auth_repository.dart';
 
 class SignOutUseCase {
@@ -5,7 +7,7 @@ class SignOutUseCase {
 
   SignOutUseCase(this._repository);
 
-  Future<void> execute() async {
+  Future<Either<Failure, void>> execute() async {
     return _repository.signOut();
   }
 }

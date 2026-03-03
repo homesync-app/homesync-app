@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confetti/confetti.dart';
@@ -12,8 +13,8 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import '../../../household/data/repositories/supabase_household_repository.dart';
 import '../../data/repositories/supabase_task_repository.dart';
-import '../../domain/usecases/complete_task_usecase.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class CompleteTaskSheet extends ConsumerStatefulWidget {
   final VoidCallback onTasksCompleted;
@@ -64,15 +65,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       if (householdId == null) return;
       
       final taskRepo = ref.read(taskRepositoryProvider);
-      final tasks = await taskRepo.getTasks(householdId, limit: 200);
+      final result = await taskRepo.getTasks(householdId, limit: 200);
       
-      _allTasks = tasks.where((t) => t.isActive).toList();
+      _allTasks = result.getOrElse((_) => []).where((t) => t.isActive).toList();
 
       final householdRepo = ref.read(householdRepositoryProvider);
       final members = await householdRepo.getHouseholdMembersRaw();
       _members = List<Map<String, dynamic>>.from(members);
     } catch (e) {
-      debugPrint('Error loading data for task sheet: $e');
+      log.e('Error loading data for task sheet: $e', error: e);
     }
     if (mounted) {
       setState(() => _isLoading = false);
@@ -109,11 +110,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
       for (var task in selectedTasks) {
         final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
-        final result = await completeTaskLogic(task, userId: _selectedMemberId);
-
-        final data = result['data'] ?? result;
-        totalXp += (data['xp_earned'] ?? 0) as int;
-        totalCoins += (data['coins_earned'] ?? 0) as int;
+        final eitherResult = await completeTaskLogic(task, userId: _selectedMemberId);
+        eitherResult.fold(
+          (failure) => log.e('Error completing task: ${failure.message}'),
+          (data) {
+            totalXp += (data['xp_earned'] ?? 0) as int;
+            totalCoins += (data['coins_earned'] ?? 0) as int;
+          },
+        );
 
         if (!_isRightNow) {
           await Supabase.instance.client
@@ -145,7 +149,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         widget.onTasksCompleted();
       }
     } catch (e) {
-      debugPrint('Error completing tasks: $e');
+      log.e('Error completing tasks: $e', error: e);
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(

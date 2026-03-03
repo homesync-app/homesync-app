@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/providers/supabase_provider.dart';
@@ -59,8 +61,25 @@ final expensesAndBalancesProvider = StreamProvider<Map<String, dynamic>>((ref) a
 
   // Snapshot function
   Future<Map<String, dynamic>> snapshot() async {
-    final expenses = await getExpenses(householdIdAsync);
-    final balances = await getBalances(householdIdAsync);
+    final expensesResult = await getExpenses(householdIdAsync);
+    final balancesResult = await getBalances(householdIdAsync);
+    
+    final expenses = expensesResult.fold(
+      (f) {
+        log.e('Error fetching expenses: ${f.message}');
+        return <ExpenseModel>[];
+      },
+      (r) => r,
+    );
+    
+    final balances = balancesResult.fold(
+      (f) {
+        log.e('Error fetching balances: ${f.message}');
+        return <HouseholdBalanceModel>[];
+      },
+      (r) => r,
+    );
+
     return {'expenses': expenses, 'balances': balances, 'householdId': householdIdAsync};
   }
 
@@ -68,7 +87,7 @@ final expensesAndBalancesProvider = StreamProvider<Map<String, dynamic>>((ref) a
   yield await snapshot();
 
   // Realtime subscription setup
-  final expensesStream = client
+  final expensesChannel = client
       .channel('expenses_stream_$householdIdAsync')
       .onPostgresChanges(
         event: PostgresChangeEvent.all,
@@ -82,26 +101,25 @@ final expensesAndBalancesProvider = StreamProvider<Map<String, dynamic>>((ref) a
         callback: (_) {
           ref.invalidateSelf();
         },
-      )
-      .subscribe();
+      );
+      
+  await expensesChannel.subscribe();
 
-  final splitsStream = client
+  final splitsChannel = client
       .channel('splits_stream_$householdIdAsync')
       .onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
         table: 'expense_splits',
         callback: (_) {
-          // Note: Ideally we'd filter by household here, but splits table 
-          // usually doesn't have household_id directly. Refreshing on any split 
-          // change is safe enough for a couple's app volume.
           ref.invalidateSelf();
         },
-      )
-      .subscribe();
+      );
+      
+  await splitsChannel.subscribe();
 
   ref.onDispose(() {
-    client.removeChannel(expensesStream);
-    client.removeChannel(splitsStream);
+    client.removeChannel(expensesChannel);
+    client.removeChannel(splitsChannel);
   });
 });

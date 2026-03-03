@@ -1,35 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import '../../domain/repositories/reward_repository.dart';
+import '../../data/repositories/supabase_reward_repository.dart';
 
 final rewardsProvider = AsyncNotifierProvider<RewardsNotifier, List<Map<String, dynamic>>>(() {
   return RewardsNotifier();
 });
 
 class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
-
-
   @override
   Future<List<Map<String, dynamic>>> build() async {
-    final client = Supabase.instance.client;
-    final user = client.auth.currentUser;
-    if (user == null) return [];
+    final householdId = await ref.watch(householdIdProvider.future);
+    if (householdId == null) return [];
 
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-    
-    if (householdMembers == null) return [];
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.getRewards(householdId);
 
-    final response = await client
-        .from('rewards')
-        .select()
-        .eq('household_id', householdMembers['household_id'])
-        .order('created_at', ascending: false);
-
-    return List<Map<String, dynamic>>.from(response);
+    return result.fold(
+      (failure) {
+        log.e('Error loading rewards: ${failure.message}');
+        throw Exception(failure.message);
+      },
+      (rewards) => rewards,
+    );
   }
 
   Future<void> refresh() async {
@@ -43,45 +37,57 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
     required int cost,
     String icon = '🎁',
   }) async {
-    final client = Supabase.instance.client;
-    final user = client.auth.currentUser;
-    if (user == null) return;
-
-    final householdMember = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .single();
+    final userId = ref.read(currentUserIdProvider);
+    final householdId = await ref.read(householdIdProvider.future);
     
-    final householdId = householdMember['household_id'];
+    if (userId == null || householdId == null) {
+      log.w('Suggest reward aborted: missing userId or householdId');
+      return;
+    }
 
-    await client.from('rewards').insert({
-      'household_id': householdId,
-      'title': title,
-      'description': description,
-      'cost': cost,
-      'icon': icon,
-      'created_by': user.id,
-      'is_approved': false, // Suggestions start as not approved
-    });
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.suggestReward(
+      householdId: householdId,
+      title: title,
+      description: description,
+      cost: cost,
+      icon: icon,
+      createdBy: userId,
+    );
 
-    await refresh();
+    result.fold(
+      (failure) => log.w('Suggest reward failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> approveReward(String rewardId) async {
-    final client = Supabase.instance.client;
-    await client.from('rewards').update({'is_approved': true}).eq('id', rewardId);
-    await refresh();
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.approveReward(rewardId);
+    
+    result.fold(
+      (failure) => log.w('Approve reward failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> redeem(String rewardId) async {
-    await ref.read(rewardRpcServiceProvider).redeemReward(rewardId);
-    await refresh();
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.redeemReward(rewardId);
+    
+    result.fold(
+      (failure) => log.w('Redeem reward failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 
   Future<void> deleteReward(String rewardId) async {
-    final client = Supabase.instance.client;
-    await client.from('rewards').delete().eq('id', rewardId);
-    await refresh();
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.deleteReward(rewardId);
+    
+    result.fold(
+      (failure) => log.w('Delete reward failure: ${failure.message}'),
+      (_) => refresh(),
+    );
   }
 }

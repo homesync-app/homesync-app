@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
@@ -18,7 +18,6 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_f
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
-import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
 import 'package:homesync_client/utils/app_animations.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -625,27 +624,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Future<void> _handleCompleteFromCard(TaskModel task) async {
-    final taskId = task.id;
-    final taskTitle = task.title;
     final xpReward = task.xpReward;
     final coinReward = task.coinReward;
-    final householdId = task.householdId;
-
-    if (taskId == null) return;
 
     try {
       final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
-      final result = await completeTaskLogic(task);
-
+      final eitherResult = await completeTaskLogic(task);
+      
       if (!mounted) return;
 
-      final data = result['data'] ?? result;
-      final xp = data['xp_earned'] ?? xpReward;
-      final coins = data['coins_earned'] ?? coinReward;
-
-      HapticFeedback.heavyImpact();
-      _showSnack('¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
-      _refreshAll();
+      eitherResult.fold(
+        (failure) => _showSnack('Error: ${failure.message}', AppColors.accentRed),
+        (data) {
+          final xp = data['xp_earned'] ?? xpReward;
+          final coins = data['coins_earned'] ?? coinReward;
+          HapticFeedback.heavyImpact();
+          _showSnack('¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
+          _refreshAll();
+        },
+      );
     } catch (e) {
       _showSnack('Error: $e', AppColors.accentRed);
     }
@@ -1038,21 +1035,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
-  }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inHours < 1) {
-      return 'Hace ${diff.inMinutes} minutos';
-    } else if (diff.inHours < 24) {
-      return 'Hace ${diff.inHours} horas';
-    } else if (diff.inDays == 1) {
-      return 'Ayer';
-    } else {
-      return 'Hace ${diff.inDays} días';
-    }
   }
 
   void _showQuickActionMenu(String householdId) {

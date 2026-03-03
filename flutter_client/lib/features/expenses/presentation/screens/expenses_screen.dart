@@ -6,7 +6,6 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import '../widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
 import 'package:homesync_client/core/services/mercadopago_service.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -235,7 +234,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     // Avatars: Always prioritize real profile/member data over balance metadata
     final myProfile = ref.watch(userProfileProvider).value;
     final members = ref.watch(householdMembersProvider).value ?? [];
-    final partner = members.firstWhere((m) => m.userId != currentUserId, orElse: () => members.firstWhere((m) => m.userId != currentUserId, orElse: () => null as dynamic));
+    final partner = members.where((m) => m.userId != currentUserId).firstOrNull;
 
     return Column(
       children: [

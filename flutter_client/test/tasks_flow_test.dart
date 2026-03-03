@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -10,7 +9,6 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';

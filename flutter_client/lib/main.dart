@@ -1,3 +1,4 @@
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ void main() async {
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
     }
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    log.e('Firebase initialization error: $e');
   }
 
   final auth = SupabaseAuthService();
@@ -41,11 +42,14 @@ void main() async {
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    // 1. Only send to Crashlytics on mobile (not supported on web)
+    // 1. Only send to Crashlytics on mobile
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
-    // 2. Send to Supabase for the admin panel logs page (all platforms)
+    // 2. Log to our central service
+    log.e('Uncaught Flutter Error: ${details.exception}', error: details.exception, stackTrace: details.stack);
+    
+    // 3. Send to Supabase for the admin panel logs page
     adminRpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
@@ -55,10 +59,8 @@ void main() async {
 
   // Catch async errors outside of Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    // 1. Crashlytics — marks as fatal (mobile only)
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    }
+    log.f('Fatal Async Error: $error', error: error, stackTrace: stack);
+    
     // 2. Supabase admin logs (all platforms)
     adminRpc.logApplicationError(
       message: error.toString(),
@@ -129,7 +131,7 @@ class MyApp extends ConsumerWidget {
           },
           loading: () => const _SplashScreen(),
           error: (e, stack) {
-            debugPrint('Auth error: $e');
+            log.e('Auth error in MyApp: $e', error: e, stackTrace: stack);
             return LoginScreen(prefs: prefs);
           },
         ),

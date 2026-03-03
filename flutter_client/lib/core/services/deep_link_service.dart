@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class DeepLinkService {
   late AppLinks _appLinks;
@@ -14,7 +15,7 @@ class DeepLinkService {
   void init(WidgetRef ref, Function(String message, Color color) showToast) {
     _appLinks = AppLinks();
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Deep Link received: $uri');
+      log.i('Deep Link received: $uri');
       
       if (uri.scheme != 'homesync') return;
 

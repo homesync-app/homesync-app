@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 
@@ -10,22 +12,22 @@ abstract class AuthRepository {
   /// Stream of auth state changes.
   Stream<AuthState> get authStateChanges;
 
-  Future<void> signUpWithEmail({
+  Future<Either<Failure, void>> signUpWithEmail({
     required String email,
     required String password,
     String? fullName,
   });
 
-  Future<void> signInWithEmail({
+  Future<Either<Failure, void>> signInWithEmail({
     required String email,
     required String password,
   });
 
-  Future<bool> signInWithGoogle();
+  Future<Either<Failure, bool>> signInWithGoogle();
 
-  Future<void> signOut();
+  Future<Either<Failure, void>> signOut();
 
-  Future<void> resetPassword(String email);
+  Future<Either<Failure, void>> resetPassword(String email);
 
-  Future<UserModel?> getUserProfile(String userId);
+  Future<Either<Failure, UserModel?>> getUserProfile(String userId);
 }

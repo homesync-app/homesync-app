@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
 class SaveExpenseUseCase {
@@ -5,7 +7,7 @@ class SaveExpenseUseCase {
 
   SaveExpenseUseCase(this._repository);
 
-  Future<void> call({
+  Future<Either<Failure, void>> call({
     String? id,
     required String householdId,
     required String title,
@@ -17,11 +19,11 @@ class SaveExpenseUseCase {
     required SplitType splitType,
     List<Map<String, dynamic>>? splits,
   }) async {
-    if (title.isEmpty) throw Exception('El título es requerido');
-    if (amount <= 0) throw Exception('El monto debe ser mayor a 0');
-    if (householdId.isEmpty) throw Exception('El ID del hogar no puede estar vacío');
+    if (title.isEmpty) return left(const ValidationFailure('El título es requerido'));
+    if (amount <= 0) return left(const ValidationFailure('El monto debe ser mayor a 0'));
+    if (householdId.isEmpty) return left(const ValidationFailure('El ID del hogar no puede estar vacío'));
     
-    await _repository.saveExpense(
+    return await _repository.saveExpense(
       id: id,
       householdId: householdId,
       title: title,

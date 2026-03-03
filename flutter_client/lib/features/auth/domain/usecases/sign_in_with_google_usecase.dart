@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../repositories/auth_repository.dart';
 
 class SignInWithGoogleUseCase {
@@ -5,7 +7,7 @@ class SignInWithGoogleUseCase {
 
   SignInWithGoogleUseCase(this._repository);
 
-  Future<bool> execute() async {
+  Future<Either<Failure, bool>> execute() async {
     return _repository.signInWithGoogle();
   }
 }

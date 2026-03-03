@@ -12,9 +12,9 @@ import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/core/services/notification_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -95,7 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error loading settings: $e');
+      log.e('Error loading settings: $e', error: e);
       setState(() => _isLoading = false);
     }
   }
@@ -721,8 +721,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                         if (role == 'owner')
-                          const Icon(Icons.star_rounded,
-                              size: 14, color: Colors.amber),
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8),
+                            child: Icon(Icons.star_rounded,
+                                size: 14, color: Colors.amber),
+                          ),
+                        // Remove member button (only for owner, can't remove self)
+                        if (_members.any((m) => m['user_id'] == currentUserId && m['role'] == 'owner') && !isCurrentUser)
+                          IconButton(
+                            icon: const Icon(Icons.person_remove_outlined, 
+                                size: 18, color: AppColors.error),
+                            onPressed: () => _confirmRemoveMember(member['user_id'], rawName),
+                            constraints: const BoxConstraints(),
+                            padding: const EdgeInsets.all(4),
+                          ),
                       ],
                     ),
                   );
@@ -734,6 +746,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+
+  Future<void> _confirmRemoveMember(String userId, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('¿Quitar miembro?', 
+          style: TextStyle(fontWeight: FontWeight.w900)),
+        content: Text('¿Estás seguro de que quieres quitar a $name de este hogar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Quitar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        await ref.read(householdRepositoryProvider).removeMember(userId);
+        await _loadData();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('✅ $name ha sido quitado del hogar'), backgroundColor: AppColors.success),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
 
   Future<void> _showRenameHouseholdDialog() async {
     final ctrl = TextEditingController(text: _householdName);
@@ -1485,7 +1547,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text('¿Reiniciar todo?', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.error)),
           ],
         ),
-        content: const Text('Esta acción borrará todas tus tareas, gastos y progreso (monedas y XP) de forma permanente. No se borrará tu cuenta de usuario ni tu hogar.'),
+        content: const Text('Esta acción borrará todas tus tareas, gastos y progreso de forma permanente, y te quitará del hogar actual para que puedas configurar uno nuevo o unirte a otro.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1511,21 +1573,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
-        final res = await ref.read(resetAccountUseCaseProvider).execute();
+        final res = await ref.read(householdRepositoryProvider).resetAndClearHousehold();
         if (res['success'] == true) {
            ref.invalidate(userProfileProvider);
            ref.invalidate(userBalanceProvider);
            ref.invalidate(expenseBalancesProvider);
            ref.invalidate(tasksProvider);
            ref.invalidate(recentActivityProvider);
-           // Force refresh profile provider so we don't display stale name/avatar
-           final _ = await ref.refresh(userProfileProvider.future);
+           ref.invalidate(householdIdProvider);
            
            if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(content: Text('✅ Datos reiniciados con éxito'), backgroundColor: AppColors.success),
+               const SnackBar(content: Text('✅ Datos reiniciados y hogar liberado'), backgroundColor: AppColors.success),
              );
-             _loadData();
+             // Return true to signal MainScreen to re-check setup
+             Navigator.pop(context);
            }
         }
       } catch (e) {

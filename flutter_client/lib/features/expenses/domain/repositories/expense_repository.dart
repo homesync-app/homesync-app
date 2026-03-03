@@ -1,17 +1,19 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/expense_model.dart';
 
 enum SplitType { equal, fixed, gift, personal }
 
 abstract class ExpenseRepository {
-  Future<String> getHouseholdId(String userId);
+  Future<Either<Failure, String>> getHouseholdId(String userId);
   
-  Future<List<ExpenseModel>> getRecentExpenses(String householdId);
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId);
   
-  Future<Map<String, dynamic>> getExpenseWithSplits(String expenseId);
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId);
   
-  Future<List<HouseholdBalanceModel>> getHouseholdBalances(String householdId);
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId);
   
-  Future<void> saveExpense({
+  Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,
     required String title,
@@ -25,9 +27,9 @@ abstract class ExpenseRepository {
     List<Map<String, dynamic>>? splits,
   });
   
-  Future<void> deleteExpense(String id);
+  Future<Either<Failure, void>> deleteExpense(String id);
   
-  Future<void> settleDebt({
+  Future<Either<Failure, void>> settleDebt({
     required String householdId,
     required String toUserId,
     required double amount,

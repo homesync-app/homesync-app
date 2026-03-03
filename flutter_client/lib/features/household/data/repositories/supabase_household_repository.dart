@@ -112,4 +112,46 @@ class SupabaseHouseholdRepository implements HouseholdRepository {
     final response = await _client.rpc('reset_user_account');
     return Map<String, dynamic>.from(response);
   }
+
+  @override
+  Future<void> removeMember(String userId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('No autenticado');
+
+    final householdMember = await _client
+        .from(AppConstants.tableHouseholdMembers)
+        .select('household_id, role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (householdMember == null || householdMember['role'] != 'owner') {
+      throw Exception('Solo el propietario puede quitar miembros');
+    }
+
+    await _client
+        .from(AppConstants.tableHouseholdMembers)
+        .delete()
+        .eq('user_id', userId)
+        .eq('household_id', householdMember['household_id']);
+  }
+
+  @override
+  Future<Map<String, dynamic>> resetAndClearHousehold() async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('No autenticado');
+
+    // 1. Reset data via RPC
+    final response = await _client.rpc('reset_user_account');
+    final result = Map<String, dynamic>.from(response);
+
+    if (result['success'] == true) {
+      // 2. Remove from household
+      await _client
+          .from(AppConstants.tableHouseholdMembers)
+          .delete()
+          .eq('user_id', user.id);
+    }
+
+    return result;
+  }
 }

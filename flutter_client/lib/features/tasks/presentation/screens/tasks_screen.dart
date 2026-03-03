@@ -10,6 +10,7 @@ import 'package:homesync_client/features/tasks/domain/models/category_model.dart
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 // legacy services removed — access via providers
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -52,7 +53,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null || !mounted) return;
 
-    _tasksChannel = Supabase.instance.client
+    final client = ref.read(supabaseClientProvider);
+    _tasksChannel = client
         .channel('tasks_screen:$householdId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -179,10 +181,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Future<void> _completeTask(TaskModel task) async {
     try {
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
-      if (mounted) {
-        final data = result['data'] ?? result;
-        final xp = data['xp_earned'] ?? task.xpReward;
-        final coins = data['coins_earned'] ?? task.coinReward;
+      if (mounted && result != null) {
+        final xp = result['xp_earned'] ?? task.xpReward;
+        final coins = result['coins_earned'] ?? task.coinReward;
         _showSnack(
           '⭐ ¡Ganaste $xp XP y $coins coins!',
           AppColors.accentTeal,
@@ -952,7 +953,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
               ClipRect(
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutBack,
+                  curve: Curves.easeOutCubic,
                   alignment: Alignment.topCenter,
                   heightFactor: _isExpanded ? 1.0 : 0.0,
                   child: Padding(
@@ -964,6 +965,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
+                            if (task.isActive)
+                              _buildActionTilePremium(
+                                icon: Icons.check_circle_outline_rounded,
+                                label: 'Completar',
+                                color: AppColors.accentTeal,
+                                onTap: widget.onComplete,
+                              ),
                             _buildActionTilePremium(
                               icon: Icons.edit_rounded,
                               label: 'Editar',
@@ -972,9 +980,15 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             ),
                             _buildActionTilePremium(
                               icon: Icons.calendar_month_rounded,
-                              label: 'Calendario',
+                              label: 'Info',
                               color: AppColors.primary,
                               onTap: widget.onSchedule,
+                            ),
+                            _buildActionTilePremium(
+                              icon: Icons.delete_outline_rounded,
+                              label: 'Borrar',
+                              color: AppColors.accentRed,
+                              onTap: widget.onDelete,
                             ),
                           ],
                         ),
@@ -1003,7 +1017,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.35,
+        width: MediaQuery.of(context).size.width * 0.22,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),

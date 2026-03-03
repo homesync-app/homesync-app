@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../repositories/auth_repository.dart';
 
 class SignUpUseCase {
@@ -5,7 +7,7 @@ class SignUpUseCase {
 
   SignUpUseCase(this._repository);
 
-  Future<void> execute({
+  Future<Either<Failure, void>> execute({
     required String email,
     required String password,
     String? fullName,

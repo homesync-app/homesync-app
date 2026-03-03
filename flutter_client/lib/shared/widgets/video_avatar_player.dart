@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:video_player/video_player.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class VideoAvatarPlayer extends StatefulWidget {
   final String url;
@@ -53,7 +54,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
         _controller.play();
       }
     }).catchError((error) {
-      debugPrint('Error initializing video: $error');
+      log.e('Error initializing video: $error', error: error);
       // If asset path fails, try the original path as a fallback
       if (widget.isAsset) {
          // Fallback logic could go here

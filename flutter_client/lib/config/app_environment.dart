@@ -26,14 +26,14 @@ class AppEnvironment {
   static bool get isStaging => current == Environment.staging;
   static bool get isProduction => current == Environment.production;
 
-  // Firebase Web Options
+  // Firebase Options (proyecto homesync-app-488011 / project number 445710215227)
   static var firebaseOptions = const FirebaseOptions(
-    apiKey: 'AIzaSyAOH6ZSuqIzI1qOUIynDbWGwOQRym_Wb1I',
-    appId: '1:105041112830:web:da6228c6d202cdf567ffaf',
-    messagingSenderId: '105041112830',
-    projectId: 'homesync-prod-r7-123',
-    authDomain: 'homesync-prod-r7-123.firebaseapp.com',
-    storageBucket: 'homesync-prod-r7-123.firebasestorage.app',
+    apiKey: 'AIzaSyDqU1mzjW9ntFjEL9tUTdNZVsP_jIm4DmU',
+    appId: '1:445710215227:android:c59889b57a0dfcfadc141e',
+    messagingSenderId: '445710215227',
+    projectId: 'homesync-app-488011',
+    authDomain: 'homesync-app-488011.firebaseapp.com',
+    storageBucket: 'homesync-app-488011.firebasestorage.app',
   );
 }
 

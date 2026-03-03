@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../config/app_environment.dart';
+import 'logger_service.dart';
 import 'rpc/admin_rpc_service.dart';
 
 class SupabaseAuthService {
@@ -28,7 +29,7 @@ class SupabaseAuthService {
         serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
       );
     } catch (e, stack) {
-      debugPrint('Error inicializando GoogleSignIn: $e');
+      log.e('Error inicializando GoogleSignIn: $e', error: e, stackTrace: stack);
       await AdminRpcService().logApplicationError(
         message: 'Error inicializando GoogleSignIn: $e',
         stackTrace: stack.toString(),
@@ -61,6 +62,7 @@ class SupabaseAuthService {
 
       return response;
     } catch (e, stack) {
+      log.e('Error en signUp: $e', error: e, stackTrace: stack);
       await AdminRpcService().logApplicationError(
         message: 'Error en signUp: $e',
         stackTrace: stack.toString(),
@@ -82,8 +84,6 @@ class SupabaseAuthService {
       'household_type': householdType,
     });
 
-    // 3. User is auto-inserted via database trigger "on_auth_user_created"
-    
     // 4. Assign user as owner
     await _client.from('household_members').insert({
       'household_id': householdId,
@@ -107,6 +107,7 @@ class SupabaseAuthService {
       }
       return response;
     } catch (e, stack) {
+      log.e('Error en signIn: $e', error: e, stackTrace: stack);
       await AdminRpcService().logApplicationError(
         message: 'Error en signIn: $e',
         stackTrace: stack.toString(),
@@ -155,23 +156,29 @@ class SupabaseAuthService {
       }
 
       // Fallback a OAuth
-      debugPrint('Usando fallback de OAuth para Google Sign-In');
+      log.w('Usando fallback de OAuth para Google Sign-In');
       
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'homesync://login-callback',
       );
 
-      // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
-      // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
     } catch (e, stack) {
-      debugPrint('Error en Google Sign-In: $e');
-      await AdminRpcService().logApplicationError(
-        message: 'Error en Google Sign-In: $e',
-        stackTrace: stack.toString(),
-        context: {'platform': kIsWeb ? 'web' : 'native'},
-      );
+      final errorStr = e.toString().toLowerCase();
+      // Ignores cancellations
+      if (!errorStr.contains('canceled') &&
+          !errorStr.contains('cancelled') &&
+          !errorStr.contains('[16]')) {
+        log.e('Error en Google Sign-In: $e', error: e, stackTrace: stack);
+        await AdminRpcService().logApplicationError(
+          message: 'Error en Google Sign-In: $e',
+          stackTrace: stack.toString(),
+          context: {'platform': kIsWeb ? 'web' : 'native'},
+        );
+      } else {
+        log.i('Google Sign-In cancelado por el usuario o error ignorado [16]');
+      }
       return false;
     }
   }
@@ -181,20 +188,24 @@ class SupabaseAuthService {
     if (user == null) return;
 
     // Check if already in a household
-    final existing = await _client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    try {
+      final existing = await _client
+          .from('household_members')
+          .select('household_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-    if (existing != null) return;
+      if (existing != null) return;
 
-    // Create a new household
-    final email = user.email ?? '';
-    final fullName = user.userMetadata?['full_name'] as String? ??
-        user.userMetadata?['name'] as String?;
+      // Create a new household
+      final email = user.email ?? '';
+      final fullName = user.userMetadata?['full_name'] as String? ??
+          user.userMetadata?['name'] as String?;
 
-    await _createUserProfile(user.id, email, fullName, 'couple');
+      await _createUserProfile(user.id, email, fullName, 'couple');
+    } catch (e, stack) {
+      log.e('Error en ensureHouseholdExists: $e', error: e, stackTrace: stack);
+    }
   }
 
   Future<void> signOut() async {

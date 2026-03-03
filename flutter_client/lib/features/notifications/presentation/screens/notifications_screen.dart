@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -34,7 +35,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         setState(() => _notifications = data);
       }
     } catch (e) {
-      debugPrint('Error loading notifications: $e');
+      log.e('Error loading notifications: $e', error: e);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -47,7 +48,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .update({'is_read': true}).eq('id', id);
       _loadNotifications();
     } catch (e) {
-      debugPrint('Error marking notification as read: $e');
+      log.e('Error marking notification as read: $e', error: e);
     }
   }
 
@@ -63,7 +64,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _loadNotifications();
       }
     } catch (e) {
-      debugPrint('Error marking all notifications as read: $e');
+      log.e('Error marking all notifications as read: $e', error: e);
     }
   }
 

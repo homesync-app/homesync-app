@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 // StatsRpcService accessed via statsRpcServiceProvider
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -68,7 +69,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error loading winner: $e');
+      log.e('Error loading winner: $e', error: e);
       setState(() => _isLoading = false);
     }
   }

@@ -5,22 +5,22 @@ import 'video_avatar_player.dart';
 class UserAvatar {
   static const List<Map<String, dynamic>> defaultAvatars = [
     // Lindos iconos de animales con colores pastel para el fondo
-    {'emoji': '🐱', 'color': const Color(0xFFFFD180), 'name': 'Gato'},
-    {'emoji': '🐶', 'color': const Color(0xFF80D8FF), 'name': 'Perro'},
-    {'emoji': '🦊', 'color': const Color(0xFFFFAB40), 'name': 'Zorro'},
-    {'emoji': '🐼', 'color': const Color(0xFFB9F6CA), 'name': 'Panda'},
-    {'emoji': '🐰', 'color': const Color(0xFFFF80AB), 'name': 'Conejo'},
-    {'emoji': '🐻', 'color': const Color(0xFFFFD54F), 'name': 'Oso'},
-    {'emoji': '🐨', 'color': const Color(0xFFCFD8DC), 'name': 'Koala'},
-    {'emoji': '🐯', 'color': const Color(0xFFFFCC80), 'name': 'Tigre'},
-    {'emoji': '🦋', 'color': const Color(0xFFE1BEE7), 'name': 'Mariposa'},
-    {'emoji': '🐙', 'color': const Color(0xFFFFCDD2), 'name': 'Pulpo'},
-    {'emoji': '🦩', 'color': const Color(0xFFF8BBD0), 'name': 'Flamenco'},
-    {'emoji': '🐧', 'color': const Color(0xFFE0E0E0), 'name': 'Pingüino'},
-    {'emoji': '🦄', 'color': const Color(0xFFF3E5F5), 'name': 'Unicornio'},
-    {'emoji': '🐉', 'color': const Color(0xFFC8E6C9), 'name': 'Dragón'},
-    {'emoji': '🦒', 'color': const Color(0xFFFFF9C4), 'name': 'Jirafa'},
-    {'emoji': '🦥', 'color': const Color(0xFFD7CCC8), 'name': 'Pereza'},
+    {'emoji': '🐱', 'color': Color(0xFFFFD180), 'name': 'Gato'},
+    {'emoji': '🐶', 'color': Color(0xFF80D8FF), 'name': 'Perro'},
+    {'emoji': '🦊', 'color': Color(0xFFFFAB40), 'name': 'Zorro'},
+    {'emoji': '🐼', 'color': Color(0xFFB9F6CA), 'name': 'Panda'},
+    {'emoji': '🐰', 'color': Color(0xFFFF80AB), 'name': 'Conejo'},
+    {'emoji': '🐻', 'color': Color(0xFFFFD54F), 'name': 'Oso'},
+    {'emoji': '🐨', 'color': Color(0xFFCFD8DC), 'name': 'Koala'},
+    {'emoji': '🐯', 'color': Color(0xFFFFCC80), 'name': 'Tigre'},
+    {'emoji': '🦋', 'color': Color(0xFFE1BEE7), 'name': 'Mariposa'},
+    {'emoji': '🐙', 'color': Color(0xFFFFCDD2), 'name': 'Pulpo'},
+    {'emoji': '🦩', 'color': Color(0xFFF8BBD0), 'name': 'Flamenco'},
+    {'emoji': '🐧', 'color': Color(0xFFE0E0E0), 'name': 'Pingüino'},
+    {'emoji': '🦄', 'color': Color(0xFFF3E5F5), 'name': 'Unicornio'},
+    {'emoji': '🐉', 'color': Color(0xFFC8E6C9), 'name': 'Dragón'},
+    {'emoji': '🦒', 'color': Color(0xFFFFF9C4), 'name': 'Jirafa'},
+    {'emoji': '🦥', 'color': Color(0xFFD7CCC8), 'name': 'Pereza'},
   ];
 
   static const List<Map<String, dynamic>> premiumAvatars = [
@@ -28,37 +28,37 @@ class UserAvatar {
       'id': 'premium_boy',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
-      'color': const Color(0xFFE3F2FD)
+      'color': Color(0xFFE3F2FD)
     },
     {
       'id': 'premium_girl',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
-      'color': const Color(0xFFFCE4EC)
+      'color': Color(0xFFFCE4EC)
     },
     {
       'id': 'premium_cat',
       'url': 'assets/images/gato_premium_v2.mp4',
       'name': 'Gato Animado',
-      'color': const Color(0xFFFFF3E0)
+      'color': Color(0xFFFFF3E0)
     },
     {
       'id': 'premium_dog',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
-      'color': const Color(0xFFE8EAF6)
+      'color': Color(0xFFE8EAF6)
     },
     {
       'id': 'premium_robot',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
-      'color': const Color(0xFFE0F2F1)
+      'color': Color(0xFFE0F2F1)
     },
     {
       'id': 'premium_bird',
       'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'Pájaro 3D',
-      'color': const Color(0xFFF3E5F5)
+      'color': Color(0xFFF3E5F5)
     },
   ];
 
@@ -486,29 +486,6 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     if (lowerUrl.contains('boy')) return Icons.face;
     if (lowerUrl.contains('girl')) return Icons.face_3;
     return Icons.star;
-  }
-}
-
-class _GlowingBacklight extends StatelessWidget {
-  final double radius;
-  const _GlowingBacklight({required this.radius});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radius * 2.5,
-      height: radius * 2.5,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.2),
-            blurRadius: 40,
-            spreadRadius: 10,
-          ),
-        ],
-      ),
-    );
   }
 }
 

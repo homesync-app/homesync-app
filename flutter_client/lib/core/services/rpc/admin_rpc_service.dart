@@ -31,8 +31,9 @@ class AdminRpcService extends BaseRpcService {
       
       await client.from('application_logs').insert(logData);
     } catch (e) {
-      // If logging fails, we just print so we don't cause an infinite error loop
-      debugPrint('CRITICAL: Failed to log error to Supabase: $e');
+      // If logging fails, use stderr directly to avoid an infinite error loop
+      // ignore: avoid_print
+      print('CRITICAL: Failed to log error to Supabase: $e');
     }
   }
 

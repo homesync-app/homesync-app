@@ -3,10 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:homesync_client/main.dart' as app;
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -118,7 +117,8 @@ void main() {
       // In staging, first 60 requests: 200 OK
       // Request 61+: 429 Rate Limit Exceeded
 
-      final rpcService = SupabaseRpcService();
+      // Uses TaskRpcService (formerly part of the monolithic SupabaseRpcService)
+      final rpcService = TaskRpcService();
       int successCount = 0;
       int rateLimitedCount = 0;
 
@@ -312,6 +312,7 @@ void main() {
       final response = await authService.signIn(email: testEmail, password: testPassword);
       
       // Capture refresh token
+      // ignore: unused_local_variable
       final originalRefreshToken = response.session?.refreshToken;
       
       // Force a refresh (navigate to trigger automatic refresh)

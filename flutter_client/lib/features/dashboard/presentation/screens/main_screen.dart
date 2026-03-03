@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/deep_link_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../utils/app_animations.dart';
@@ -22,8 +23,6 @@ import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../stats/presentation/screens/weekly_winner_screen.dart';
 
 import '../../../../core/providers/core_providers.dart';
-import '../../presentation/providers/dashboard_providers.dart';
-import '../../../savings/presentation/providers/savings_provider.dart';
 
 import '../widgets/notification_bell.dart';
 import '../widgets/in_app_notification_banner.dart';
@@ -49,21 +48,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
   final _notifService = NotificationService.instance;
 
+  late final DeepLinkService _deepLinkService;
+
   @override
   void initState() {
     super.initState();
+    _deepLinkService = ref.read(deepLinkServiceProvider);
     _checkSetup();
     _initNotifications();
-    ref.read(deepLinkServiceProvider).init(ref, _showToast);
+    _deepLinkService.init(ref, _showToast);
   }
 
   @override
   void dispose() {
     _notifService.dispose();
-    ref.read(deepLinkServiceProvider).dispose();
+    _deepLinkService.dispose();
     super.dispose();
   }
-
 
   void _showToast(String message, Color color) {
     if (!mounted) return;
@@ -156,7 +157,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error checking weekly winner: $e');
+      log.e('Error checking weekly winner: $e', error: e);
     }
   }
 
@@ -234,7 +235,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               Icons.settings_outlined,
               color: AppColors.textSecondary,
             ),
-            onPressed: () => _openSettings(context),
+            onPressed: () async {
+              await _openSettings(context);
+              _checkSetup();
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -257,8 +261,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 
-  void _openSettings(BuildContext context) {
-    Navigator.push(
+  Future<void> _openSettings(BuildContext context) async {
+    await Navigator.push(
       context,
       AppTransitions.slideUp(
         SettingsScreen(

@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 
 final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
-  final supabase = Supabase.instance.client;
-  final response = await supabase
+  final client = ref.read(supabaseClientProvider);
+  final response = await client
       .from('categories')
       .select('*')
       .order('sort_order', ascending: true);

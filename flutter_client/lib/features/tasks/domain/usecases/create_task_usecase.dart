@@ -1,12 +1,14 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../repositories/task_repository.dart';
 
 /// Use case: create a new task.
-/// Business rules: title and category must be non-empty.
+/// Business rules: title and category must be non-empty. Returns Either with failure or void.
 class CreateTaskUseCase {
   final TaskRepository _repository;
   const CreateTaskUseCase(this._repository);
 
-  Future<void> call({
+  Future<Either<Failure, void>> call({
     required String title,
     String? description,
     required String category,
@@ -17,13 +19,13 @@ class CreateTaskUseCase {
     String? recurrenceType,
   }) async {
     if (title.trim().isEmpty) {
-      throw ArgumentError('El título de la tarea no puede estar vacío');
+      return left(const ValidationFailure('El título de la tarea no puede estar vacío'));
     }
     if (category.trim().isEmpty) {
-      throw ArgumentError('La categoría no puede estar vacía');
+      return left(const ValidationFailure('La categoría no puede estar vacía'));
     }
 
-    await _repository.createTask(
+    return _repository.createTask(
       title: title.trim(),
       description: description,
       category: category,

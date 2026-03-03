@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ShoppingItem model
@@ -245,8 +246,7 @@ class ShoppingService {
           callback: (_) => onChanged(),
         )
         .subscribe();
-    debugPrint(
-        '✅ ShoppingService: Realtime subscribed for household $householdId');
+    log.i('ShoppingService: Realtime subscribed for household $householdId');
   }
 
   void dispose() {

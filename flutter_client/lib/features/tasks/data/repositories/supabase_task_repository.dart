@@ -1,7 +1,10 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/providers/supabase_provider.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/repositories/task_repository.dart';
@@ -15,7 +18,7 @@ final taskRepositoryProvider = Provider<TaskRepository>((ref) {
 
 /// Concrete Supabase implementation of TaskRepository.
 /// Only this class can talk to Supabase about tasks.
-class SupabaseTaskRepository implements TaskRepository {
+class SupabaseTaskRepository with RepositoryErrorHandler implements TaskRepository {
   final SupabaseClient _client;
   final TaskRpcService _rpc;
 
@@ -24,58 +27,70 @@ class SupabaseTaskRepository implements TaskRepository {
         _rpc = rpc;
 
   @override
-  Future<List<TaskModel>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
-    final raw = await _rpc.getTasks(limit: limit, offset: offset);
-    return (raw as List).map((t) => TaskModel.fromMap(t as Map<String, dynamic>)).toList();
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+    return executeWithHandling(() async {
+      final raw = await _rpc.getTasks(limit: limit, offset: offset);
+      return (raw as List).map((t) => TaskModel.fromMap(t as Map<String, dynamic>)).toList();
+    }, context: 'SupabaseTaskRepository.getTasks');
   }
 
   @override
-  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
-    return _rpc.completeTaskTransaction(
-      taskId: task.id,
-      taskTitle: task.title,
-      xpReward: task.xpReward,
-      coinReward: task.coinReward,
-      householdId: task.householdId,
-      userId: userId,
-    );
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
+    return executeWithHandling(() async {
+      return _rpc.completeTaskTransaction(
+        taskId: task.id,
+        taskTitle: task.title,
+        xpReward: task.xpReward,
+        coinReward: task.coinReward,
+        householdId: task.householdId,
+        userId: userId,
+      );
+    }, context: 'SupabaseTaskRepository.completeTask');
   }
 
   @override
-  Future<void> verifyTask(String taskId, String verifiedByUserId) async {
-    await _client.from(AppConstants.tableTasks).update({
-      'status': TaskStatus.verified.name,
-      'verified_by': verifiedByUserId,
-      'verified_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', taskId);
+  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async {
+    return executeWithHandling(() async {
+      await _client.from(AppConstants.tableTasks).update({
+        'status': TaskStatus.verified.name,
+        'verified_by': verifiedByUserId,
+        'verified_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', taskId);
+    }, context: 'SupabaseTaskRepository.verifyTask');
   }
 
   @override
-  Future<void> objectTask(String taskId, String objectedByUserId) async {
-    await _client.from(AppConstants.tableTasks).update({
-      'status': TaskStatus.objected.name,
-      'objected_by': objectedByUserId,
-      'objected_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', taskId);
+  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async {
+    return executeWithHandling(() async {
+      await _client.from(AppConstants.tableTasks).update({
+        'status': TaskStatus.objected.name,
+        'objected_by': objectedByUserId,
+        'objected_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', taskId);
+    }, context: 'SupabaseTaskRepository.objectTask');
   }
 
   @override
-  Future<void> deleteTask(String taskId) async {
-    await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
+  Future<Either<Failure, void>> deleteTask(String taskId) async {
+    return executeWithHandling(() async {
+      await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
+    }, context: 'SupabaseTaskRepository.deleteTask');
   }
 
   @override
-  Future<void> updateSchedule(String taskId, String? recurrenceType) async {
-    await _client.from(AppConstants.tableTasks).update({
-      'recurrence_type': recurrenceType,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', taskId);
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async {
+    return executeWithHandling(() async {
+      await _client.from(AppConstants.tableTasks).update({
+        'recurrence_type': recurrenceType,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', taskId);
+    }, context: 'SupabaseTaskRepository.updateSchedule');
   }
 
   @override
-  Future<void> createTask({
+  Future<Either<Failure, void>> createTask({
     required String title,
     String? description,
     required String category,
@@ -85,21 +100,25 @@ class SupabaseTaskRepository implements TaskRepository {
     String? assignedTo,
     String? recurrenceType,
   }) async {
-    await _rpc.createTask(
-      title: title,
-      description: description,
-      category: category,
-      difficulty: difficulty,
-      xpReward: xpReward,
-      coinReward: coinReward,
-      assignedTo: assignedTo,
-      recurrenceType: recurrenceType,
-    );
+    return executeWithHandling(() async {
+      await _rpc.createTask(
+        title: title,
+        description: description,
+        category: category,
+        difficulty: difficulty,
+        xpReward: xpReward,
+        coinReward: coinReward,
+        assignedTo: assignedTo,
+        recurrenceType: recurrenceType,
+      );
+    }, context: 'SupabaseTaskRepository.createTask');
   }
 
   @override
-  Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
-    updates['updated_at'] = DateTime.now().toIso8601String();
-    await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
+  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async {
+    return executeWithHandling(() async {
+      updates['updated_at'] = DateTime.now().toIso8601String();
+      await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
+    }, context: 'SupabaseTaskRepository.editTask');
   }
 }

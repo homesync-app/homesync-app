@@ -7,6 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
+import 'package:homesync_client/features/auth/domain/models/user_model.dart';
+import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
+import 'package:homesync_client/features/household/domain/models/household_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 
 void main() {
   // ───────────────────────────────────────────────────────────────────────────
@@ -600,6 +605,129 @@ void main() {
       final contrib = SavingsContributionModel.fromJson(json);
       expect(contrib.userName, isNull);
       expect(contrib.userAvatar, isNull);
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // USER MODEL
+  // ───────────────────────────────────────────────────────────────────────────
+  group('👤 UserModel — fromJson() & displayName', () {
+    test('Parses complete JSON correctly', () {
+      final json = {
+        'id': 'u1',
+        'email': 'test@example.com',
+        'full_name': 'Juan Perez',
+        'avatar_url': '🚀',
+        'mercadopago_alias': 'juan.mp',
+      };
+      final user = UserModel.fromJson(json);
+      expect(user.id, equals('u1'));
+      expect(user.email, equals('test@example.com'));
+      expect(user.fullName, equals('Juan Perez'));
+      expect(user.displayName, equals('Juan Perez'));
+      expect(user.avatarUrl, equals('🚀'));
+    });
+
+    test('displayName falls back to email prefix if full_name is null', () {
+      final user = UserModel(id: 'u2', email: 'pepe@gmail.com');
+      expect(user.displayName, equals('pepe'));
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // REWARD MODEL
+  // ───────────────────────────────────────────────────────────────────────────
+  group('🎁 RewardModel — fromJson() & equality', () {
+    test('Parses complete JSON correctly', () {
+      final json = {
+        'id': 'r1',
+        'household_id': 'h1',
+        'title': 'Masaje',
+        'cost': 500,
+        'icon': '💆‍♂️',
+        'is_approved': true,
+        'is_active': true,
+      };
+      final reward = RewardModel.fromJson(json);
+      expect(reward.id, equals('r1'));
+      expect(reward.cost, equals(500));
+      expect(reward.isApproved, isTrue);
+    });
+
+    test('Defaults icon and status if not in JSON', () {
+      final json = {
+        'id': 'r2',
+        'household_id': 'h1',
+        'title': 'Test',
+      };
+      final reward = RewardModel.fromJson(json);
+      expect(reward.icon, equals('🎁'));
+      expect(reward.isApproved, isFalse);
+      expect(reward.isActive, isTrue);
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // SHOPPING MODEL
+  // ───────────────────────────────────────────────────────────────────────────
+  group('🛒 ShoppingItemModel — fromJson() & helpers', () {
+    test('Parses correctly with user nested data', () {
+      final json = {
+        'id': 's1',
+        'household_id': 'h1',
+        'name': 'Leche',
+        'quantity': '2',
+        'unit': 'unidades',
+        'added_by_user': {'full_name': 'Blas Oroná'},
+        'completed': true,
+        'completed_by_user': {'full_name': 'María García'},
+        'created_at': '2026-01-01T00:00:00Z',
+      };
+      final item = ShoppingItemModel.fromJson(json);
+      expect(item.name, equals('Leche'));
+      expect(item.displayQuantity, equals('2 unidades'));
+      expect(item.addedByDisplay, equals('Blas'));
+      expect(item.completedByDisplay, equals('María'));
+    });
+
+    test('displayQuantity is empty if both null', () {
+      final item = ShoppingItemModel(
+        id: 's', householdId: 'h', name: 'N', createdAt: DateTime.now(),
+      );
+      expect(item.displayQuantity, equals(''));
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // HOUSEHOLD MODEL
+  // ───────────────────────────────────────────────────────────────────────────
+  group('🏠 HouseholdModel — fromJson()', () {
+    test('Parses correctly', () {
+      final json = {
+        'id': 'h1',
+        'name': 'Nuestra Casa',
+        'household_type': 'couple',
+      };
+      final h = HouseholdModel.fromJson(json);
+      expect(h.name, equals('Nuestra Casa'));
+      expect(h.householdType, equals('couple'));
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // CATEGORY MODEL
+  // ───────────────────────────────────────────────────────────────────────────
+  group('🛡️ CategoryModel — fromMap()', () {
+    test('Parses correctly', () {
+      final map = {
+        'id': 'kitchen',
+        'name': 'Cocina',
+        'icon': '🍳',
+        'color': '#FF0000',
+      };
+      final cat = CategoryModel.fromMap(map);
+      expect(cat.name, equals('Cocina'));
+      expect(cat.icon, equals('🍳'));
     });
   });
 }
