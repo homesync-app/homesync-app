@@ -1,3 +1,5 @@
+import 'package:homesync_client/core/theme/app_colors.dart';
+
 class ExpenseModel {
   final String id;
   final String title;
@@ -94,31 +96,11 @@ class ExpenseModel {
   String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
 
   String get categoryIcon {
-    const icons = {
-      'supermarket': '🛒',
-      'utilities': '💡',
-      'rent': '🏠',
-      'restaurants': '🍽️',
-      'transport': '🚗',
-      'entertainment': '🎬',
-      'health': '💊',
-      'other': '📦',
-    };
-    return icons[category] ?? '📦';
+    return AppColors.categoryIcons[category] ?? '📦';
   }
 
   String get categoryLabel {
-    const labels = {
-      'supermarket': 'Supermercado',
-      'utilities': 'Servicios',
-      'rent': 'Alquiler',
-      'restaurants': 'Restaurantes',
-      'transport': 'Transporte',
-      'entertainment': 'Entretenimiento',
-      'health': 'Salud',
-      'other': 'Otros',
-    };
-    return labels[category] ?? 'Otros';
+    return AppColors.categoryNames[category] ?? 'Otros';
   }
 
   @override

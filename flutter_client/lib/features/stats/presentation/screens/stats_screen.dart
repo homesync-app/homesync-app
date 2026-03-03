@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+// rpc accessed via rpcServiceProvider
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,8 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
-  final SupabaseRpcService rpc;
-  const StatsScreen({super.key, required this.rpc});
+  const StatsScreen({super.key});
 
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
@@ -50,13 +49,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
     try {
+      final rpc = ref.read(rpcServiceProvider);
       final results = await Future.wait([
-        widget.rpc.getTaskStatsByCategory(),
-        widget.rpc.getMemberActivityStats(),
-        widget.rpc.getWeeklyRanking(),
-        widget.rpc.getXpHistory(),
-        widget.rpc.getCoinHistory(),
-        widget.rpc.getWeeklyDuelHistory(),
+        rpc.getTaskStatsByCategory(),
+        rpc.getMemberActivityStats(),
+        rpc.getWeeklyRanking(),
+        rpc.getXpHistory(),
+        rpc.getCoinHistory(),
+        rpc.getWeeklyDuelHistory(),
       ]);
 
       if (mounted) {
@@ -215,29 +215,65 @@ class _WeeklyTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _MiniStatCard(
-                  icon: '✅',
-                  value: '$totalTasks',
-                  label: 'Tareas',
-                  color: AppColors.primary.withValues(alpha: 0.7),
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 500),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  ),
+                  child: _MiniStatCard(
+                    icon: '✅',
+                    value: '$totalTasks',
+                    label: 'Tareas',
+                    color: AppColors.primary.withValues(alpha: 0.7),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _MiniStatCard(
-                  icon: '⭐',
-                  value: '$totalXp',
-                  label: 'Total XP',
-                  color: AppColors.accentGold,
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 600),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  ),
+                  child: _MiniStatCard(
+                    icon: '⭐',
+                    value: '$totalXp',
+                    label: 'Total XP',
+                    color: AppColors.accentGold,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _MiniStatCard(
-                  icon: '🪙',
-                  value: '$totalCoins',
-                  label: 'Coins',
-                  color: AppColors.accentTeal,
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 700),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  ),
+                  child: _MiniStatCard(
+                    icon: '🪙',
+                    value: '$totalCoins',
+                    label: 'Coins',
+                    color: AppColors.accentTeal,
+                  ),
                 ),
               ),
             ],
@@ -648,22 +684,46 @@ class _ProgressTabState extends State<_ProgressTab> {
           Row(
             children: [
               Expanded(
-                child: _PersonalMetricCard(
-                  icon: '🔥',
-                  label: 'Racha',
-                  value: '7 días',
-                  color: Colors.orange,
-                  subtitle: '¡Vas con todo!',
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 500),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  ),
+                  child: _PersonalMetricCard(
+                    icon: '🔥',
+                    label: 'Racha',
+                    value: '7 días',
+                    color: Colors.orange,
+                    subtitle: '¡Vas con todo!',
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _PersonalMetricCard(
-                  icon: '📈',
-                  label: 'Nivel',
-                  value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
-                  color: AppColors.primary,
-                  subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 700),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) => Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  ),
+                  child: _PersonalMetricCard(
+                    icon: '📈',
+                    label: 'Nivel',
+                    value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
+                    color: AppColors.primary,
+                    subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                  ),
                 ),
               ),
             ],

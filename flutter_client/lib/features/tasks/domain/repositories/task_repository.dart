@@ -8,7 +8,7 @@ abstract class TaskRepository {
 
   /// Mark a TaskModel as completed and award XP/coins via RPC.
   /// Returns the result map from the RPC (new balance, etc.)
-  Future<Map<String, dynamic>> completeTask(TaskModel task);
+  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId});
 
   /// Verify a completed TaskModel (done by the other household member).
   Future<void> verifyTask(String taskId, String verifiedByUserId);

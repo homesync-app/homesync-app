@@ -1,31 +1,32 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/core/theme/app_theme.dart';
+import 'package:homesync_client/utils/app_animations.dart';
 
-class SetupScreen extends StatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
-  final SharedPreferences prefs;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/household_providers.dart';
+import '../../data/repositories/supabase_household_repository.dart';
+import '../../../../core/providers/core_providers.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
+
+class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
 
   const SetupScreen({
-    required this.auth,
-    required this.rpc,
-    required this.prefs,
     required this.onComplete,
     super.key,
   });
 
   @override
-  State<SetupScreen> createState() => _SetupScreenState();
+  ConsumerState<SetupScreen> createState() => _SetupScreenState();
 }
 
-class _SetupScreenState extends State<SetupScreen> {
-  // Steps: 0=mode, 1=teamOptions, 2=creating(code display), 3=taskSelection
+class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderStateMixin {
+  // Steps: 0=Welcome, 1=mode, 2=teamOptions, 3=creating(code display), 4=taskSelection
   int _currentStep = 0;
   String? _selectedMode;
   bool _createNew = true;
@@ -46,33 +47,34 @@ class _SetupScreenState extends State<SetupScreen> {
   Map<String, List<TaskTemplate>> _templatesByCategory = {};
   bool _isLoadingTemplates = true;
   bool _isSaving = false;
-
-  final SupabaseRpcService _rpc = SupabaseRpcService();
-
   final List<Map<String, dynamic>> _modes = [
     {
       'id': 'couple',
       'name': 'Pareja',
       'icon': '💑',
-      'desc': 'Compartimos el hogar en pareja'
+      'desc': 'Compartimos el hogar juntos',
+      'gradient': [Color(0xFF6B8E85), Color(0xFF84A59D)],
     },
     {
       'id': 'family',
       'name': 'Familia',
       'icon': '👨‍👩‍👧‍👦',
-      'desc': 'Toda la familia participa'
+      'desc': 'Toda la familia participa',
+      'gradient': [Color(0xFFEE652B), Color(0xFFFF8A65)],
     },
     {
       'id': 'roommates',
       'name': 'Compañeros',
       'icon': '🏠',
-      'desc': 'Compartimos piso o apartamento'
+      'desc': 'Compartimos piso o depto',
+      'gradient': [Color(0xFF3B82F6), Color(0xFF60A5FA)],
     },
     {
       'id': 'solo',
       'name': 'Solo yo',
       'icon': '👤',
-      'desc': 'Gestiono mis tareas personales'
+      'desc': 'Mis tareas personales',
+      'gradient': [Color(0xFF9575CD), Color(0xFFB39DDB)],
     },
   ];
 
@@ -111,39 +113,44 @@ class _SetupScreenState extends State<SetupScreen> {
         _isLoadingTemplates = false;
       });
     } catch (e) {
-      setState(() => _isLoadingTemplates = false);
+      if (mounted) setState(() => _isLoadingTemplates = false);
     }
   }
 
   // ── Step handlers ──────────────────────────────────────────────────────────
 
   void _onModeSelected() {
+    HapticFeedback.mediumImpact();
     if (_selectedMode == 'solo') {
-      setState(() => _currentStep = 3); // go straight to TaskModel selection
+      setState(() => _currentStep = 4);
     } else {
-      setState(() => _currentStep = 1);
+      setState(() => _currentStep = 2);
     }
   }
 
   Future<void> _handleCreateTeam() async {
+    HapticFeedback.mediumImpact();
     setState(() {
       _isGeneratingCode = true;
-      _currentStep = 2;
+      _currentStep = 3;
     });
 
     try {
-      final code = await _rpc.generateInvitationCode();
-      setState(() {
-        _myInviteCode = code;
-        _isGeneratingCode = false;
-      });
+      final householdRepo = ref.read(householdRepositoryProvider);
+      final code = await householdRepo.generateInvitationCode();
+      if (mounted) {
+        setState(() {
+          _myInviteCode = code;
+          _isGeneratingCode = false;
+        });
+      }
     } catch (e) {
-      // Code generation failed; still allow continuing
-      setState(() => _isGeneratingCode = false);
+      if (mounted) setState(() => _isGeneratingCode = false);
     }
   }
 
   Future<void> _handleJoinTeam() async {
+    HapticFeedback.mediumImpact();
     final code = _codeController.text.trim().toUpperCase();
     if (code.length != 6) {
       setState(() => _joinError = 'El código debe tener 6 caracteres');
@@ -156,18 +163,18 @@ class _SetupScreenState extends State<SetupScreen> {
     });
 
     try {
-      await _rpc.joinHousehold(code);
-
-      // Mark setup done and update SharedPreferences
+      final householdRepo = ref.read(householdRepositoryProvider);
+      await householdRepo.joinHousehold(code);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
-
       if (mounted) widget.onComplete();
     } catch (e) {
-      setState(() {
-        _isJoining = false;
-        _joinError = e.toString().replaceFirst('Exception: ', '');
-      });
+      if (mounted) {
+        setState(() {
+          _isJoining = false;
+          _joinError = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
     }
   }
 
@@ -185,13 +192,11 @@ class _SetupScreenState extends State<SetupScreen> {
       await _templateService.cloneTemplates(_selectedTemplateIds.toList());
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
-
       if (mounted) widget.onComplete();
     } catch (e) {
-      setState(() => _isSaving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -199,9 +204,14 @@ class _SetupScreenState extends State<SetupScreen> {
   void _copyCode() {
     if (_myInviteCode == null) return;
     Clipboard.setData(ClipboardData(text: _myInviteCode!));
+    HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Código copiado'), backgroundColor: AppColors.success),
+      SnackBar(
+        content: const Text('¡Código copiado al portapapeles! 📋'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 
@@ -211,27 +221,193 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.05, 0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
+      body: Container(
+        decoration: AppTheme.backgroundGradientBox,
+        child: Stack(
+          children: [
+            // Background decor
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -50,
+              left: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accentTeal.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildProgressIndicator(),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      switchInCurve: Curves.easeOutQuart,
+                      switchOutCurve: Curves.easeInQuart,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.05),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: switch (_currentStep) {
+                        0 => _buildWelcomeStep(),
+                        1 => _buildModeSelection(),
+                        2 => _buildTeamOptions(),
+                        3 => _buildInviteCodeStep(),
+                        4 => _buildTaskSelection(),
+                        _ => _buildWelcomeStep(),
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: List.generate(5, (index) {
+          final isActive = index <= _currentStep;
+          final isCurrent = index == _currentStep;
+          
+          return Expanded(
+            child: Container(
+              height: 4,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: isActive 
+                    ? AppColors.primary 
+                    : AppColors.textMuted.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: isCurrent ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ] : null,
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ── Step 0: Welcome ────────────────────────────────────────────────────────
+
+  Widget _buildWelcomeStep() {
+    return Padding(
+      key: const ValueKey('welcome'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          // Profile/Logo Hero
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: AppColors.primaryGradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(44),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: Text('🏡', style: TextStyle(fontSize: 64)),
             ),
           ),
-          child: switch (_currentStep) {
-            0 => _buildModeSelection(),
-            1 => _buildTeamOptions(),
-            2 => _buildInviteCodeStep(),
-            3 => _buildTaskSelection(),
-            _ => _buildModeSelection(),
-          },
-        ),
+          const SizedBox(height: 64),
+          
+          // Premium Glass Welcome Card
+          GlassContainer(
+            borderRadius: 32,
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              children: [
+                const Text(
+                  '¡Bienvenido!',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Estamos felices de tenerte aquí. HomeSync te ayudará a organizar tu hogar de forma inteligente y divertida.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary.withValues(alpha: 0.9),
+                    height: 1.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const Spacer(),
+          
+          _buildPrimaryButton(
+            text: 'Comenzar Configuración',
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              setState(() => _currentStep = 1);
+            },
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Te tomará menos de 1 minuto',
+            style: TextStyle(
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 48),
+        ],
       ),
     );
   }
@@ -241,136 +417,175 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget _buildModeSelection() {
     return Padding(
       key: const ValueKey('mode'),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text('🏠', style: TextStyle(fontSize: 40)),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            '¿Cómo vas a usar\nla app?',
-            style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -1),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Elegí la opción que mejor se adapte a tu situación',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+          const SizedBox(height: 16),
+          _buildHeading(
+            '¡Comencemos!',
+            '¿Cómo vas a organizar tu hogar?',
           ),
           const SizedBox(height: 32),
           Expanded(
-            child: ListView(
-              children: _modes.map(_buildModeCard).toList(),
+            child: ListView.builder(
+              itemCount: _modes.length,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                return TweenAnimationBuilder<double>(
+                  duration: Duration(milliseconds: 400 + (index * 100)),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(30 * (1 - value), 0),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: _buildPremiumModeCard(_modes[index]),
+                );
+              },
             ),
           ),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _selectedMode != null ? _onModeSelected : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text('Continuar',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            ),
+          const SizedBox(height: 24),
+          _buildPrimaryButton(
+            text: 'Continuar',
+            onPressed: _selectedMode != null ? _onModeSelected : null,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Center(
             child: TextButton(
-              onPressed: () => widget.auth.signOut(),
-              child: const Text(
+              onPressed: () {
+                ref.read(signOutUseCaseProvider).execute();
+              },
+              child: Text(
                 'Cerrar sesión',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondary.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildModeCard(Map<String, dynamic> mode) {
+  Widget _buildPremiumModeCard(Map<String, dynamic> mode) {
     final isSelected = _selectedMode == mode['id'];
+    final gradient = mode['gradient'] as List<Color>;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedMode = mode['id'] as String),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() => _selectedMode = mode['id'] as String);
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(18),
+        duration: const Duration(milliseconds: 300),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.cardBorder,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.15)
-                    : AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(mode['icon'] as String,
-                    style: const TextStyle(fontSize: 26)),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected 
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.03),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    mode['name'] as String,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    mode['desc'] as String,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle,
-                  color: AppColors.primary, size: 26),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            children: [
+              if (isSelected)
+                Positioned(
+                  right: -20,
+                  top: -20,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: gradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: gradient[0].withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          mode['icon'] as String,
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            mode['name'] as String,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            mode['desc'] as String,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.primary,
+                        size: 28,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -381,527 +596,540 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget _buildTeamOptions() {
     return Padding(
       key: const ValueKey('team'),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 32),
-          const Text(
-            'Conectá tu hogar',
-            style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -1),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            '¿Querés crear un nuevo hogar o unirte a uno existente?',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+          const SizedBox(height: 16),
+          _buildHeading(
+            'Conecta tu hogar',
+            '¿Quieres crear un nuevo equipo o unirte a uno?',
           ),
           const SizedBox(height: 32),
-          _buildOptionCard(
-            icon: Icons.add_home_rounded,
+          _buildOptionTile(
+            icon: Icons.add_home_work_rounded,
             title: 'Crear nuevo hogar',
-            desc: 'Generás un código para invitar a tu pareja/familia',
+            desc: 'Genera un código para invitar a tu pareja o familia.',
             isSelected: _createNew,
             onTap: () => setState(() {
               _createNew = true;
               _joinError = null;
             }),
           ),
-          const SizedBox(height: 14),
-          _buildOptionCard(
-            icon: Icons.group_add_rounded,
-            title: 'Unirme con código',
-            desc: 'Ingresá el código que te compartió tu pareja',
+          const SizedBox(height: 16),
+          _buildOptionTile(
+            icon: Icons.qr_code_scanner_rounded,
+            title: 'Tengo un código',
+            desc: 'Ingresa el código que te compartieron para unirte.',
             isSelected: !_createNew,
             onTap: () => setState(() {
               _createNew = false;
               _joinError = null;
             }),
           ),
-          if (!_createNew) ...[
-            const SizedBox(height: 24),
-            TextField(
-              controller: _codeController,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 28,
-                  letterSpacing: 10,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.primary),
-              maxLength: 6,
-              onChanged: (_) => setState(() => _joinError = null),
-              decoration: InputDecoration(
-                counterText: '',
-                hintText: 'ABC123',
-                hintStyle:
-                    const TextStyle(letterSpacing: 6, color: AppColors.textMuted),
-                filled: true,
-                fillColor: AppColors.surface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide:
-                      const BorderSide(color: AppColors.cardBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide:
-                      const BorderSide(color: AppColors.primary, width: 2),
-                ),
-                errorText: _joinError,
-              ),
-              textCapitalization: TextCapitalization.characters,
-            ),
-          ],
+          
           const Spacer(),
+          
+          if (!_createNew) ...[
+            _buildJoinInput(),
+            const SizedBox(height: 24),
+          ],
+          
           if (_isJoining)
-            const Center(
-                child: CircularProgressIndicator(color: AppColors.primary))
+            const Center(child: CircularProgressIndicator())
           else
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _createNew ? _handleCreateTeam : _handleJoinTeam,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text(
-                  _createNew ? 'Crear mi hogar' : 'Unirme ahora',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-              ),
+            _buildPrimaryButton(
+              text: _createNew ? 'Crear mi hogar' : 'Unirme ahora',
+              onPressed: _createNew ? _handleCreateTeam : _handleJoinTeam,
             ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => setState(() => _currentStep = 0),
-            child: const Center(
-                child: Text('Volver',
-                    style: TextStyle(color: AppColors.textSecondary))),
+          
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _currentStep = 1),
+              child: const Text('Volver atrás'),
+            ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildOptionCard({
+  Widget _buildOptionTile({
     required IconData icon,
     required String title,
     required String desc,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
+    return AnimatedPress(
+      onTap: () {
+        onTap();
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(18),
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.08)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
+          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.cardBorder,
-            width: isSelected ? 2 : 1,
+            color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+            width: 2,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ] : [],
         ),
         child: Row(
           children: [
             Container(
-              width: 52,
-              height: 52,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.15)
-                    : AppColors.surfaceVariant,
-                borderRadius: BorderRadius.circular(14),
+                color: isSelected ? AppColors.primary : AppColors.textMuted.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon,
-                  color:
-                      isSelected ? AppColors.primary : AppColors.textSecondary,
-                  size: 28),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                size: 28,
+              ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(desc,
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 13)),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
-            if (isSelected)
-              const Icon(Icons.check_circle,
-                  color: AppColors.primary, size: 24),
           ],
         ),
       ),
     );
   }
 
-  // ── Step 2: Show invite code (for "create" path) ──────────────────────────
+  Widget _buildJoinInput() {
+    return SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+        CurvedAnimation(parent: AnimationController(vsync: this, duration: const Duration(milliseconds: 400))..forward(), curve: Curves.easeOut),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Ingresa el código',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _codeController,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 32,
+              letterSpacing: 12,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primary,
+            ),
+            maxLength: 6,
+            onChanged: (_) => setState(() => _joinError = null),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: 'ABCDEF',
+              hintStyle: TextStyle(
+                letterSpacing: 8,
+                color: AppColors.textMuted.withValues(alpha: 0.3),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+              errorText: _joinError,
+            ),
+            textCapitalization: TextCapitalization.characters,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Step 2: Show invite code ──────────────────────────
 
   Widget _buildInviteCodeStep() {
     return Padding(
       key: const ValueKey('invite'),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text('🎉', style: TextStyle(fontSize: 40)),
-          ),
-          const SizedBox(height: 24),
-          const Text(
+          const SizedBox(height: 16),
+          _buildHeading(
             '¡Hogar creado!',
-            style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -1),
+            'Invita a quien quieras compartiendo este código.',
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Compartí este código con tu pareja para que se una',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-          ),
-          const SizedBox(height: 32),
-
-          // Code display card
-          Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.08),
-                  AppColors.primary.withValues(alpha: 0.04)
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-            ),
-            child: _isGeneratingCode
-                ? const Center(
-                    child:
-                        CircularProgressIndicator(color: AppColors.primary))
-                : Column(
-                    children: [
-                      const Text(
-                        'Tu código de invitación',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _myInviteCode ?? '------',
-                        style: const TextStyle(
-                          fontSize: 44,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 12,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      OutlinedButton.icon(
-                        onPressed: _copyCode,
-                        icon: const Icon(Icons.copy_rounded, size: 18),
-                        label: const Text('Copiar código'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
+          const SizedBox(height: 40),
+          
+          // Premium Code Card
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: AspectRatio(
+                aspectRatio: 1.6,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: AppColors.primaryGradient,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
                       ),
                     ],
                   ),
-          ),
-
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    color: AppColors.accent, size: 20),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'El código es válido por 7 días. Tu pareja lo ingresa en la app al crear su cuenta.',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: -20,
+                          right: -20,
+                          child: Icon(
+                            Icons.home_rounded,
+                            size: 150,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'CÓDIGO DE INVITACIÓN',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              if (_isGeneratingCode)
+                                const CircularProgressIndicator(color: Colors.white)
+                              else
+                                Text(
+                                  _myInviteCode ?? '------',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 8,
+                                  ),
+                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton.filledTonal(
+                                    onPressed: _copyCode,
+                                    icon: const Icon(Icons.copy_rounded),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.white24,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => setState(() => _currentStep = 3),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('Continuar →',
-                  style:
-                      TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
+          
+          const SizedBox(height: 40),
+          _buildInfoBox(
+            'El código es válido por 7 días. Tu pareja solo tiene que ingresarlo al registrarse para compartir el hogar contigo.',
+          ),
+          
+          const Spacer(),
+          _buildPrimaryButton(
+            text: 'Ir a seleccionar tareas',
+            onPressed: () => setState(() => _currentStep = 4),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  // ── Step 3: TaskModel selection ────────────────────────────────────────────────
+  // ── Step 3: Task selection ────────────────────────────────────────────────
 
   Widget _buildTaskSelection() {
     if (_isLoadingTemplates) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Column(
       key: const ValueKey('tasks'),
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildTaskHeader(),
-        Expanded(child: _buildTemplateList()),
-        _buildTaskFooter(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              _buildHeading(
+                'Personaliza tu hogar',
+                'Elige las tareas iniciales. Hemos seleccionado algunas por ti.',
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+        
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            itemCount: _categories.length,
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (context, index) {
+              final category = _categories[index];
+              final templates = _templatesByCategory[category.id] ?? [];
+              if (templates.isEmpty) return const SizedBox.shrink();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24, bottom: 16, left: 4),
+                    child: Text(
+                      '${category.icon}  ${category.name.toUpperCase()}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: templates.map((t) => _buildTaskChip(t)).toList(),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: _buildPrimaryButton(
+              text: '¡Terminar configuración!',
+              isLoading: _isSaving,
+              onPressed: _selectedTemplateIds.isNotEmpty ? _saveAndComplete : null,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildTaskHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-      child: Column(
+  Widget _buildTaskChip(TaskTemplate template) {
+    final isSelected = _selectedTemplateIds.contains(template.id);
+    
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() {
+          if (isSelected) {
+            _selectedTemplateIds.remove(template.id);
+          } else {
+            _selectedTemplateIds.add(template.id);
+          }
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: 1.5,
+          ),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              template.title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.check_rounded, color: Colors.white, size: 16),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Shared UI Components ────────────────────────────────────────────────
+
+  Widget _buildHeading(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -1.5,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 18,
+            color: AppColors.textSecondary.withValues(alpha: 0.8),
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryButton({
+    required String text,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: onPressed != null ? [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ] : null,
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          elevation: 0,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+              )
+            : Text(
+                text,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildInfoBox(String message) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+          Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.primary.withValues(alpha: 0.7),
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
-            child: const Text('✨', style: TextStyle(fontSize: 40)),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Elegí tus tareas',
-            style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.w700, letterSpacing: -1),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Seleccioná las tareas habituales de tu hogar. Podés agregar más después.',
-            style: TextStyle(
-                color: AppColors.textSecondary, fontSize: 15, height: 1.5),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildTemplateList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      itemCount: _categories.length,
-      itemBuilder: (context, index) {
-        final category = _categories[index];
-        final templates = _templatesByCategory[category.id] ?? [];
-
-        if (templates.isEmpty) return const SizedBox.shrink();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 24, bottom: 16),
-              child: Row(
-                children: [
-                  Text(category.icon, style: const TextStyle(fontSize: 22)),
-                  const SizedBox(width: 10),
-                  Text(
-                    category.name,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary),
-                  ),
-                ],
-              ),
-            ),
-            ...templates.map(_buildTemplateItem),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTemplateItem(TaskTemplate template) {
-    final isSelected = _selectedTemplateIds.contains(template.id);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          setState(() {
-            if (isSelected) {
-              _selectedTemplateIds.remove(template.id);
-            } else {
-              _selectedTemplateIds.add(template.id);
-            }
-          });
-        },
-        borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.07)
-                : AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.5)
-                  : AppColors.cardBorder,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  border: Border.all(
-                    color:
-                        isSelected ? AppColors.primary : AppColors.inputBorder,
-                    width: 2,
-                  ),
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : null,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(template.title,
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600)),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _rewardBadge(
-                      '⭐ ${template.xpReward}', AppColors.accent),
-                  const SizedBox(width: 6),
-                  _rewardBadge(
-                      '🪙 ${template.coinReward}', AppColors.success),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _rewardBadge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: color)),
-    );
-  }
-
-  Widget _buildTaskFooter() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-              color: AppColors.shadow, blurRadius: 20, offset: Offset(0, -4)),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: _isSaving ? null : () => widget.onComplete(),
-                child: const Text('Omitir',
-                    style: TextStyle(color: AppColors.textSecondary)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveAndComplete,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
-                      )
-                    : Text('Comenzar (${_selectedTemplateIds.length})',
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

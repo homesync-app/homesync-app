@@ -36,9 +36,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _members = [];
   final List<Map<String, dynamic>> _difficulties = [
-    {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'coins': 3},
-    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 5},
-    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'coins': 10},
+    {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'coins': 1},
+    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 2},
+    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'coins': 5},
   ];
 
   final List<Map<String, String>> _recurrenceOptions = [

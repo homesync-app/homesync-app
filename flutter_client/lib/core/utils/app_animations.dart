@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 
@@ -77,12 +78,14 @@ class AppTransitions {
 class AnimatedPress extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double scaleDown;
 
   const AnimatedPress({
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.scaleDown = 0.96,
   });
 
@@ -131,6 +134,7 @@ class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProvider
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
+      onLongPress: widget.onLongPress,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) => Transform.scale(
@@ -210,6 +214,75 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
     );
   }
 }
+
+class FadeIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+  final Duration duration;
+
+  const FadeIndexedStack({
+    super.key,
+    required this.index,
+    required this.children,
+    this.duration = const Duration(milliseconds: 250),
+  });
+
+  @override
+  State<FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<FadeIndexedStack> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.index;
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..forward();
+  }
+
+  @override
+  void didUpdateWidget(FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != _currentIndex) {
+      _controller.reverse().then((_) {
+        setState(() => _currentIndex = widget.index);
+        _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.0, 0.05),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOutCubic,
+        )),
+        child: IndexedStack(
+          index: _currentIndex,
+          children: widget.children,
+        ),
+      ),
+    );
+  }
+}
+
 class CelebrationOverlay extends StatefulWidget {
   final Widget child;
   final ConfettiController controller;

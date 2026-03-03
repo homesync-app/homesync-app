@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -49,13 +50,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   final Map<String, double> _fixedSplitAmounts = {}; // For 'fixed'
 
   final List<Map<String, dynamic>> _categories = [
-    {'id': 'supermarket', 'name': 'Supermercado', 'icon': '🛒', 'color': AppColors.accentGold},
-    {'id': 'utilities', 'name': 'Servicios', 'icon': '💡', 'color': AppColors.accentTeal},
-    {'id': 'rent', 'name': 'Alquiler', 'icon': '🏠', 'color': AppColors.primary},
-    {'id': 'restaurants', 'name': 'Restaurantes', 'icon': '🍽️', 'color': const Color(0xFFF06292)},
-    {'id': 'transport', 'name': 'Transporte', 'icon': '🚗', 'color': const Color(0xFF4DB6AC)},
-    {'id': 'entertainment', 'name': 'Entretenimiento', 'icon': '🎬', 'color': const Color(0xFF9575CD)},
-    {'id': 'health', 'name': 'Salud', 'icon': '💊', 'color': AppColors.accentRed},
+    {'id': 'supermarket', 'name': AppColors.categoryNames['supermarket'], 'icon': AppColors.categoryIcons['supermarket'], 'color': AppColors.getCategoryColor('supermarket')},
+    {'id': 'utilities', 'name': AppColors.categoryNames['utilities'], 'icon': AppColors.categoryIcons['utilities'], 'color': AppColors.getCategoryColor('utilities')},
+    {'id': 'rent', 'name': AppColors.categoryNames['rent'], 'icon': AppColors.categoryIcons['rent'], 'color': AppColors.getCategoryColor('rent')},
+    {'id': 'restaurants', 'name': AppColors.categoryNames['restaurants'], 'icon': AppColors.categoryIcons['restaurants'], 'color': AppColors.getCategoryColor('restaurants')},
+    {'id': 'transport', 'name': AppColors.categoryNames['transport'], 'icon': AppColors.categoryIcons['transport'], 'color': AppColors.getCategoryColor('transport')},
+    {'id': 'entertainment', 'name': AppColors.categoryNames['entertainment'], 'icon': AppColors.categoryIcons['entertainment'], 'color': AppColors.getCategoryColor('entertainment')},
+    {'id': 'health', 'name': AppColors.categoryNames['health'], 'icon': AppColors.categoryIcons['health'], 'color': AppColors.getCategoryColor('health')},
     {'id': 'income', 'name': 'Ingreso/Sueldo', 'icon': '💰', 'color': AppColors.success},
     {'id': 'other', 'name': 'Otros', 'icon': '📦', 'color': AppColors.textSecondary},
   ];
@@ -507,11 +508,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       child: TextField(
         controller: _titleController,
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
-        decoration: const InputDecoration(
-          hintText: '¿Qué compraste? (Opcional)',
-          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: _type == 'income' ? 'Descripción del ingreso (Opcional)' : '¿Qué compraste? (Opcional)',
+          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 16),
           border: InputBorder.none,
-          icon: Icon(Icons.shopping_bag_outlined, color: AppColors.textSecondary),
+          icon: Icon(_type == 'income' ? Icons.monetization_on_outlined : Icons.shopping_bag_outlined, color: AppColors.textSecondary),
         ),
       ),
     );
@@ -532,7 +533,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         Expanded(
           child: _buildActionTile(
             icon: Icons.person_outline_rounded,
-            label: 'Pagó',
+            label: _type == 'income' ? 'Recibió' : 'Pagó',
             value: payer.displayName,
             onTap: () => _showMemberSelector(context, members),
           ),
@@ -553,7 +554,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Pagado por', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                Text(_type == 'income' ? 'Recibido por' : 'Pagado por', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
                 const SizedBox(height: 16),
                 ...members.map((member) => ListTile(
                   leading: CustomUserAvatar(avatarUrl: member.avatarUrl, name: member.displayName, radius: 20),
@@ -680,6 +681,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildShoppingIntegration(BuildContext context, AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
+    if (_type == 'income') return const SizedBox.shrink();
     return shoppingItemsAsync.when(
       data: (items) {
         if (items.isEmpty) return const SizedBox.shrink();
@@ -791,7 +793,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('División del gasto', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        Text(_type == 'income' ? 'División del ingreso' : 'División del gasto', style: const TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
         const SizedBox(height: 16),
         Wrap(
           spacing: 12,
@@ -891,9 +893,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }).toList(),
       );
     } else if (_splitMode == SplitType.gift) {
-      return _buildInfoBox('🎁 Este gasto no afectará el balance de tu pareja.', AppColors.primary);
+      return _buildInfoBox(_type == 'income' ? '🎁 Este ingreso no sumará al balance compartido.' : '🎁 Este gasto no afectará el balance de tu pareja.', AppColors.primary);
     } else if (_splitMode == SplitType.personal) {
-      return _buildInfoBox('👤 Registrado como gasto personal.', AppColors.textSecondary);
+      return _buildInfoBox(_type == 'income' ? '👤 Registrado como ingreso personal.' : '👤 Registrado como gasto personal.', AppColors.textSecondary);
     }
     return const SizedBox.shrink();
   }

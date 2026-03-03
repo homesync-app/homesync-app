@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Terminal, 
@@ -8,7 +8,6 @@ import {
   RotateCcw,
   Smartphone,
   Calendar,
-  Search,
   Loader2,
   Trash2,
   Copy,

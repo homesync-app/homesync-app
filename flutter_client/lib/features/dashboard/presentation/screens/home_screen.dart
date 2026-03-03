@@ -5,14 +5,15 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+// import 'package:homesync_client/core/services/supabase_auth_service.dart'; // no longer needed at widget level
+// import 'package:homesync_client/core/services/supabase_rpc_service.dart'; // no longer needed at widget level
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
-import 'package:homesync_client/shared/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
@@ -21,16 +22,7 @@ import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
 import 'package:homesync_client/utils/app_animations.dart';
 class HomeScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
-  final SharedPreferences prefs;
-
-  const HomeScreen({
-    super.key,
-    required this.auth,
-    required this.rpc,
-    required this.prefs,
-  });
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -355,9 +347,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                ref.read(bottomNavIndexProvider.notifier).setIndex(1);
+                ref.read(taskViewModeProvider.notifier).setCalendar();
+              },
               child: const Text(
-                'Ver todas',
+                'Ver semana',
                 style: TextStyle(
                     color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
               ),
@@ -640,13 +635,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (taskId == null) return;
 
     try {
-      final result = await widget.rpc.completeTaskTransaction(
-        taskId: taskId,
-        taskTitle: taskTitle,
-        xpReward: xpReward,
-        coinReward: coinReward,
-        householdId: householdId,
-      );
+      final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
+      final result = await completeTaskLogic(task);
 
       if (!mounted) return;
 
@@ -682,8 +672,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Navigate to progress/week history screen
-                _showSnack('Próximamente: Historial semanal', AppColors.primary);
+                ref.read(bottomNavIndexProvider.notifier).setIndex(4);
               },
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
@@ -692,7 +681,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: const Text(
-                'Ver semana',
+                'Ver historial',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -793,7 +782,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          ...todayActs.map((act) => _buildActivityItem(act)),
+          ...todayActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 400 + (entry.key * 100)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: _buildActivityItem(entry.value),
+          )),
         ],
         if (yesterdayActs.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -809,7 +812,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          ...yesterdayActs.map((act) => _buildActivityItem(act)),
+          ...yesterdayActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 400 + (entry.key * 100)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: _buildActivityItem(entry.value),
+          )),
         ],
         if (earlierActs.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -1081,7 +1098,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         minChildSize: 0.5,
                         maxChildSize: 0.95,
                         builder: (_, controller) => CompleteTaskSheet(
-                          rpc: widget.rpc,
                           onTasksCompleted: _refreshAll,
                         ),
                       ),

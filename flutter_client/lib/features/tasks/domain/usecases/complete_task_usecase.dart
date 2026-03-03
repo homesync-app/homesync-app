@@ -7,10 +7,10 @@ class CompleteTaskUseCase {
   final TaskRepository _repository;
   const CompleteTaskUseCase(this._repository);
 
-  Future<Map<String, dynamic>> call(TaskModel task) async {
+  Future<Map<String, dynamic>> call(TaskModel task, {String? userId}) async {
     if (!task.isActive) {
       throw StateError('No se puede completar una tarea que no está activa (status: ${task.status})');
     }
-    return _repository.completeTask(task);
+    return _repository.completeTask(task, userId: userId);
   }
 }

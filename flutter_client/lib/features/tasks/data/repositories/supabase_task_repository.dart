@@ -29,13 +29,14 @@ class SupabaseTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> completeTask(TaskModel task) async {
+  Future<Map<String, dynamic>> completeTask(TaskModel task, {String? userId}) async {
     return _rpc.completeTaskTransaction(
       taskId: task.id,
       taskTitle: task.title,
       xpReward: task.xpReward,
       coinReward: task.coinReward,
       householdId: task.householdId,
+      userId: userId,
     );
   }
 

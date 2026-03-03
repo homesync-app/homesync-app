@@ -122,9 +122,8 @@ class AppColors {
       case 'exterior':
       case 'outdoor':
         return const Color(0xFF84CC16); // Lime
-      case 'compras':
       case 'supermarket':
-        return iconBlue;
+        return accentGold;
       case 'ropa':
         return const Color(0xFF818CF8); // Indigo
       case 'auto':
@@ -158,6 +157,18 @@ class AppColors {
       case 'niños':
       case 'ninos':
         return accentOrange;
+      case 'utilities':
+        return accentTeal;
+      case 'rent':
+        return primary;
+      case 'restaurants':
+        return const Color(0xFFF06292);
+      case 'transport':
+        return const Color(0xFF4DB6AC);
+      case 'entertainment':
+        return const Color(0xFF9575CD);
+      case 'health':
+        return accentRed;
       default:
         return textSecondary;
     }
@@ -233,6 +244,18 @@ class AppColors {
       case 'niños':
       case 'ninos':
         return Icons.child_care_rounded;
+      case 'utilities':
+        return Icons.lightbulb_outline_rounded;
+      case 'rent':
+        return Icons.home_work_rounded;
+      case 'restaurants':
+        return Icons.restaurant_rounded;
+      case 'transport':
+        return Icons.directions_car_rounded;
+      case 'entertainment':
+        return Icons.movie_creation_outlined;
+      case 'health':
+        return Icons.medical_services_outlined;
       default:
         return Icons.home_work_rounded;
     }
@@ -270,6 +293,12 @@ class AppColors {
     'urgente': '🚨',
     'income': '💰',
     'other': '📦',
+    'utilities': '💡',
+    'rent': '🏠',
+    'restaurants': '🍽️',
+    'transport': '🚗',
+    'entertainment': '🎬',
+    'health': '💊',
   };
 
 
@@ -291,7 +320,7 @@ class AppColors {
     'garden': 'Jardín',
     'jardin': 'Jardín',
     'jardín': 'Jardín',
-    'supermarket': 'Compras',
+    'supermarket': 'Supermercado',
     'compras': 'Compras',
     'ropa': 'Ropa',
     'residuos': 'Residuos',
@@ -302,6 +331,12 @@ class AppColors {
     'urgente': 'Urgente',
     'income': 'Ingreso/Sueldo',
     'other': 'Otros',
+    'utilities': 'Servicios',
+    'rent': 'Alquiler',
+    'restaurants': 'Restaurantes',
+    'transport': 'Transporte',
+    'entertainment': 'Entretenimiento',
+    'health': 'Salud',
   };
 
 

@@ -10,4 +10,16 @@ abstract class HouseholdRepository {
 
   /// Returns a list of member user IDs for a household.
   Future<List<String>> getMemberIds(String householdId);
+
+  /// Returns raw member data from Supabase
+  Future<List<Map<String, dynamic>>> getHouseholdMembersRaw();
+
+  /// Generates a new invitation code for the user's current household
+  Future<String> generateInvitationCode();
+
+  /// Joins a household using the provided code
+  Future<Map<String, dynamic>> joinHousehold(String code);
+
+  /// Resets the current user's data (tasks, expenses, balances, etc.)
+  Future<Map<String, dynamic>> resetUserAccount();
 }

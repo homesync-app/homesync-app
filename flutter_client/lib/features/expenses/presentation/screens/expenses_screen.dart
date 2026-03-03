@@ -47,7 +47,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           backgroundColor: AppColors.primary,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: const Text(
-            'Nuevo gasto',
+            'Nuevo movimiento',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
         ),
@@ -108,7 +108,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       _buildMPSuggestions(),
                       const SizedBox(height: 32),
                       Text(
-                        isShared ? 'Gastos Compartidos' : 'Mis Gastos Personales',
+                        isShared ? 'Movimientos Compartidos' : 'Mis Movimientos Personales',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -120,10 +120,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       if (filteredExpenses.isEmpty)
                         _buildEmptyState()
                       else
-                        ...filteredExpenses.map((e) => GestureDetector(
+                        ...filteredExpenses.asMap().entries.map((entry) {
+                          final int index = entry.key;
+                          final ExpenseModel e = entry.value;
+                          return TweenAnimationBuilder<double>(
+                            duration: Duration(milliseconds: 400 + (index * 50)),
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, child) {
+                              return Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(0, 30 * (1 - value)),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: AnimatedPress(
                               onTap: () => _showExpenseSheet(e),
                               child: _ExpenseItem(expense: e),
-                            )),
+                            ),
+                          );
+                        }),
                       const SizedBox(height: 120),
                     ]),
                   ),
@@ -214,6 +232,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       myPercent = myBalance > 0 ? 0.5 + shift : 0.5 - shift;
     }
 
+    // Avatars: Always prioritize real profile/member data over balance metadata
+    final myProfile = ref.watch(userProfileProvider).value;
+    final members = ref.watch(householdMembersProvider).value ?? [];
+    final partner = members.firstWhere((m) => m.userId != currentUserId, orElse: () => members.firstWhere((m) => m.userId != currentUserId, orElse: () => null as dynamic));
+
     return Column(
       children: [
         Container(
@@ -236,10 +259,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // My Avatar (Left)
+                   // My Avatar (Left)
                   CustomUserAvatar(
-                    name: 'Tú',
-                    avatarUrl: myBal.avatarUrl,
+                    name: myProfile?['full_name'] ?? 'Tú',
+                    avatarUrl: myProfile?['avatar_url'],
                     radius: 28,
                   ),
                   
@@ -281,9 +304,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   
                   // Partner Avatar (Right)
                   CustomUserAvatar(
-                    name: 'Pareja',
-                    avatarUrl: partnerBal.avatarUrl,
+                    name: partner?.displayName ?? 'Pareja',
+                    avatarUrl: partner?.avatarUrl,
                     radius: 28,
+                    showBorder: true,
+                    borderColor: AppColors.accentPeach.withValues(alpha: 0.3),
                   ),
                 ],
               ),
@@ -547,7 +572,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Comienza a registrar tus gastos para ver el balance.',
+            'Comienza a registrar tus movimientos para ver el balance.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
@@ -570,7 +595,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   void _showChartsSheet() {
     final expensesAsync = ref.read(expensesAndBalancesProvider);
     expensesAsync.whenData((data) {
-      final expenses = data['expenses'] as List;
+      final allExpenses = data['expenses'] as List<ExpenseModel>;
+      final expenses = allExpenses.where((e) => e.isExpense).toList();
+
       if (expenses.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -581,13 +608,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         return;
       }
 
-      final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + ((e['amount'] ?? 0) as num).toDouble());
+      final totalExpenses = expenses.fold<double>(0, (sum, e) => sum + e.amount);
       
       final categoryTotals = <String, double>{};
       for (final expense in expenses) {
-        final category = expense['category'] ?? 'other';
-        final amount = (expense['amount'] ?? 0) as num;
-        categoryTotals[category] = (categoryTotals[category] ?? 0) + amount.toDouble();
+        final category = expense.category ?? 'other';
+        categoryTotals[category] = (categoryTotals[category] ?? 0) + expense.amount;
       }
 
       final sortedCategories = categoryTotals.entries.toList()
@@ -638,7 +664,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Resumen de gastos compartidos',
+                    'Resumen de movimientos compartidos',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
@@ -1013,8 +1039,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                                               paidBy: '',
                                               paidAt: DateTime.now(),
                                               createdAt: DateTime.now(),
-                                              isShared: !isIncome, // Default to personal if income, shared if expense
+                                              isShared: false, // Incomes are personal by default
                                               type: isIncome ? 'income' : 'expense',
+                                              splitType: isIncome ? 'personal' : 'equal',
                                               category: _suggestCategory(title),
                                             ),
                                           );

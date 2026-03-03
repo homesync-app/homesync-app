@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../config/app_environment.dart';
+import 'supabase_rpc_service.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
@@ -26,8 +27,13 @@ class SupabaseAuthService {
         clientId: kIsWeb ? '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com' : null,
         serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
       );
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error inicializando GoogleSignIn: $e');
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error inicializando GoogleSignIn: $e',
+        stackTrace: stack.toString(),
+        level: 'warning',
+      );
     }
   }
 
@@ -41,18 +47,27 @@ class SupabaseAuthService {
     String? fullName,
     String householdType = 'couple',
   }) async {
-    final response = await _client.auth.signUp(
-      email: email,
-      password: password,
-      data: fullName != null ? {'full_name': fullName} : {},
-    );
+    try {
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: fullName != null ? {'full_name': fullName} : {},
+      );
 
-    if (response.user != null) {
-      await _createUserProfile(
-          response.user!.id, email, fullName, householdType);
+      if (response.user != null) {
+        await _createUserProfile(
+            response.user!.id, email, fullName, householdType);
+      }
+
+      return response;
+    } catch (e, stack) {
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error en signUp: $e',
+        stackTrace: stack.toString(),
+        context: {'email': email},
+      );
+      rethrow;
     }
-
-    return response;
   }
 
   Future<void> _createUserProfile(String userId, String email, String? fullName,
@@ -81,15 +96,24 @@ class SupabaseAuthService {
     required String email,
     required String password,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-    // Tag user in Crashlytics (mobile only)
-    if (response.user != null && !kIsWeb) {
-      await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
+    try {
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      // Tag user in Crashlytics (mobile only)
+      if (response.user != null && !kIsWeb) {
+        await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
+      }
+      return response;
+    } catch (e, stack) {
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error en signIn: $e',
+        stackTrace: stack.toString(),
+        context: {'email': email},
+      );
+      rethrow;
     }
-    return response;
   }
 
   Future<bool> signInWithGoogle() async {
@@ -141,8 +165,13 @@ class SupabaseAuthService {
       // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
       // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error en Google Sign-In: $e');
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error en Google Sign-In: $e',
+        stackTrace: stack.toString(),
+        context: {'platform': kIsWeb ? 'web' : 'native'},
+      );
       return false;
     }
   }

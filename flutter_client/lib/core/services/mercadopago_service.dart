@@ -1,5 +1,6 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_rpc_service.dart';
 
 class MercadoPagoService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -30,8 +31,13 @@ class MercadoPagoService {
         return data['init_point'] as String?;
       }
       return null;
-    } catch (e) {
+    } catch (e, stack) {
       print('Error creating MP preference: $e');
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error creating MP preference: $e',
+        stackTrace: stack.toString(),
+        context: {'title': title, 'amount': amount, 'external_reference': externalReference},
+      );
       return null;
     }
   }
@@ -77,8 +83,13 @@ class MercadoPagoService {
       } else {
          throw 'No se pudo obtener la URL de conexión.';
       }
-    } catch (e) {
+    } catch (e, stack) {
       print('Error starting OAuth: $e');
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error starting OAuth: $e',
+        stackTrace: stack.toString(),
+        context: {'userId': user.id},
+      );
       throw 'Error al conectar con Mercado Pago: $e';
     }
   }
@@ -102,8 +113,13 @@ class MercadoPagoService {
         return movements.map((m) => m as Map<String, dynamic>).toList();
       }
       return [];
-    } catch (e) {
+    } catch (e, stack) {
       print('Error fetching MP movements: $e');
+      await SupabaseRpcService().logApplicationError(
+        message: 'Error fetching MP movements: $e',
+        stackTrace: stack.toString(),
+        context: {'userId': user.id},
+      );
       return [];
     }
   }

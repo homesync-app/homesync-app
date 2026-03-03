@@ -278,7 +278,7 @@ ${JSON.stringify(log.device_info, null, 2)}`.trim();
                               <Clock className="w-3 h-3" />
                               {new Date(log.created_at).toLocaleString()}
                             </span>
-                            {log.device_info?.platform && (
+                            {!!log.device_info?.platform && (
                               <span className="flex items-center gap-1">
                                 <Smartphone className="w-3 h-3" />
                                 {String(log.device_info.platform)}

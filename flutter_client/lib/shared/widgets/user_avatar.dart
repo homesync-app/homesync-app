@@ -80,7 +80,8 @@ class CustomUserAvatar extends StatelessWidget {
 
   final bool isAnimated;
   final bool isPriority;
-  final bool forceCircular;
+   final bool forceCircular;
+  final Color? borderColor;
 
   const CustomUserAvatar({
     super.key,
@@ -92,6 +93,7 @@ class CustomUserAvatar extends StatelessWidget {
     this.isAnimated = false,
     this.isPriority = false,
     this.forceCircular = false,
+    this.borderColor,
   });
 
   @override
@@ -116,6 +118,7 @@ class CustomUserAvatar extends StatelessWidget {
         onTap: onTap,
         showBorder: showBorder,
         isPriority: isPriority,
+        borderColor: borderColor,
       );
     }
     return _StaticAvatar(
@@ -124,6 +127,7 @@ class CustomUserAvatar extends StatelessWidget {
       radius: radius,
       onTap: onTap,
       showBorder: showBorder,
+      borderColor: borderColor,
     );
   }
 }
@@ -134,6 +138,7 @@ class _StaticAvatar extends StatelessWidget {
   final double radius;
   final VoidCallback? onTap;
   final bool showBorder;
+  final Color? borderColor;
 
   const _StaticAvatar({
     this.name,
@@ -141,6 +146,7 @@ class _StaticAvatar extends StatelessWidget {
     this.radius = 20,
     this.onTap,
     this.showBorder = false,
+    this.borderColor,
   });
 
   @override
@@ -151,6 +157,7 @@ class _StaticAvatar extends StatelessWidget {
       radius: radius,
       onTap: onTap,
       showBorder: showBorder,
+      borderColor: borderColor,
     );
   }
 }
@@ -162,6 +169,7 @@ class _AnimatedAvatar extends StatefulWidget {
   final VoidCallback? onTap;
   final bool showBorder;
   final bool isPriority;
+  final Color? borderColor;
 
   const _AnimatedAvatar({
     this.name,
@@ -170,6 +178,7 @@ class _AnimatedAvatar extends StatefulWidget {
     this.onTap,
     this.showBorder = false,
     this.isPriority = false,
+    this.borderColor,
   });
 
   @override
@@ -234,7 +243,7 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProvi
             radius: widget.radius,
             onTap: widget.onTap,
             showBorder: widget.showBorder,
-            borderColor: widget.isPriority ? AppColors.accentGold : Colors.white,
+            borderColor: widget.borderColor ?? (widget.isPriority ? AppColors.accentGold : Colors.white),
           ),
         ),
       ],
@@ -381,8 +390,8 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
 
-    // Increase size significantly for premium video characters
-    final double size = isVideo ? radius * 3.2 : radius * 2.8;
+    // Optimized size to fit standard avatar circles without being "giant"
+    final double size = isVideo ? radius * 2.2 : radius * 2.1;
 
     final bool isAsset = cleanUrl.startsWith('assets/');
 

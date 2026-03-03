@@ -11,8 +11,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+// legacy services removed — access via providers
+// import 'package:homesync_client/core/services/supabase_rpc_service.dart'; // no longer needed at widget level
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 
@@ -26,10 +26,7 @@ import 'package:homesync_client/features/tasks/presentation/screens/calendar_scr
 // ─────────────────────────────────────────────────────────────────────────────
 
 class TasksScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
-
-  const TasksScreen({super.key, required this.auth, required this.rpc});
+  const TasksScreen({super.key});
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -704,16 +701,30 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         color: AppColors.fromHex(catInfo.color),
       ));
 
-      widgets.addAll(catTasks.map((t) => _TaskCard(
-        task: t,
-        members: members,
-        currentUserId: currentUserId,
-        onSchedule: () => _showScheduleDialog(t),
-        onEdit: () => _showEditDialog(t),
-        onDelete: () => _deleteTask(t),
-        onComplete: () => _completeTask(t),
-        onVerify: () => _verifyTask(t),
-        onObject: () => _objectTask(t),
+      widgets.addAll(catTasks.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
+        duration: Duration(milliseconds: 300 + (entry.key * 50)),
+        tween: Tween(begin: 0.0, end: 1.0),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(0, 20 * (1 - value)),
+              child: child,
+            ),
+          );
+        },
+        child: _TaskCard(
+          task: entry.value,
+          members: members,
+          currentUserId: currentUserId,
+          onSchedule: () => _showScheduleDialog(entry.value),
+          onEdit: () => _showEditDialog(entry.value),
+          onDelete: () => _deleteTask(entry.value),
+          onComplete: () => _completeTask(entry.value),
+          onVerify: () => _verifyTask(entry.value),
+          onObject: () => _objectTask(entry.value),
+        ),
       )));
     }
 

@@ -5,19 +5,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import '../../../household/data/repositories/supabase_household_repository.dart';
+import '../../data/repositories/supabase_task_repository.dart';
+import '../../domain/usecases/complete_task_usecase.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class CompleteTaskSheet extends ConsumerStatefulWidget {
-  final SupabaseRpcService rpc;
   final VoidCallback onTasksCompleted;
 
   const CompleteTaskSheet({
     super.key,
-    required this.rpc,
     required this.onTasksCompleted,
   });
 
@@ -58,14 +60,16 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      // Fetch with a larger limit to ensure we see all relevant tasks
-      final tasks = await widget.rpc.getTasks(limit: 200);
-      _allTasks = (tasks as List)
-          .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
-          .where((t) => t.isActive)
-          .toList();
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) return;
+      
+      final taskRepo = ref.read(taskRepositoryProvider);
+      final tasks = await taskRepo.getTasks(householdId, limit: 200);
+      
+      _allTasks = tasks.where((t) => t.isActive).toList();
 
-      final members = await widget.rpc.getHouseholdMembers();
+      final householdRepo = ref.read(householdRepositoryProvider);
+      final members = await householdRepo.getHouseholdMembersRaw();
       _members = List<Map<String, dynamic>>.from(members);
     } catch (e) {
       debugPrint('Error loading data for task sheet: $e');
@@ -104,14 +108,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       int totalCoins = 0;
 
       for (var task in selectedTasks) {
-        final result = await widget.rpc.completeTaskTransaction(
-          taskId: task.id,
-          taskTitle: task.title,
-          xpReward: task.xpReward,
-          coinReward: task.coinReward,
-          householdId: task.householdId,
-          userId: _selectedMemberId,
-        );
+        final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
+        final result = await completeTaskLogic(task, userId: _selectedMemberId);
 
         final data = result['data'] ?? result;
         totalXp += (data['xp_earned'] ?? 0) as int;

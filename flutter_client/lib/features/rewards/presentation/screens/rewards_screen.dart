@@ -254,99 +254,118 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
           final s = suggestions[index];
           final isMine = s.createdBy == currentUserId;
 
-          return Container(
-            width: 300,
-            margin: const EdgeInsets.only(right: 16, bottom: 8),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: isMine ? AppColors.divider : const Color(0xFFDDD6FE).withValues(alpha: 0.5), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
+          return TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 300 + (index * 100)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(30 * (1 - value), 0),
+                  child: child,
                 ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: (isMine ? AppColors.primary : const Color(0xFF8B5CF6)).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(s.icon, style: const TextStyle(fontSize: 24)),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s.title,
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.textPrimary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '${s.cost} coins',
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                if (isMine)
-                   Center(
-                     child: Container(
-                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                       decoration: BoxDecoration(
-                         color: AppColors.surfaceVariant,
-                         borderRadius: BorderRadius.circular(20),
-                       ),
-                       child: const Text('Pendiente de aprobación', 
-                         style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
-                     ),
-                   )
-                else
+              );
+            },
+            child: Container(
+              width: 300,
+              margin: const EdgeInsets.only(right: 16, bottom: 8),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: isMine ? AppColors.divider : const Color(0xFFDDD6FE).withValues(alpha: 0.5), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => ref.read(rewardsProvider.notifier).deleteReward(s.id),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.error, width: 1.5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Rechazar', style: TextStyle(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: (isMine ? AppColors.primary : const Color(0xFF8B5CF6)).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        child: Text(s.icon, style: const TextStyle(fontSize: 24)),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => ref.read(rewardsProvider.notifier).approveReward(s.id),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B5CF6), // Royal Purple for approvals
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: const Text('¡Añadir!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              s.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900, 
+                                fontSize: 16, 
+                                color: AppColors.textPrimary,
+                                height: 1.1,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '${s.cost} coins',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-              ],
+                  const Spacer(),
+                  if (isMine)
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text('Pendiente de aprobación', 
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => ref.read(rewardsProvider.notifier).deleteReward(s.id),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppColors.error, width: 1.5),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text('Rechazar', style: TextStyle(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => ref.read(rewardsProvider.notifier).approveReward(s.id),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF8B5CF6), // Royal Purple for approvals
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: const Text('¡Añadir!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -362,12 +381,26 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.90, // Un poco más alto que ancho para dejar más espacio al texto enorme
+        childAspectRatio: 0.78, // Taller for mobile to fit more text
       ),
       itemCount: rewards.length,
       itemBuilder: (context, index) {
         final r = rewards[index];
-        return _buildRewardCard(r);
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 400 + (index * 50)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 30 * (1 - value)),
+                child: child,
+              ),
+            );
+          },
+          child: _buildRewardCard(r),
+        );
       },
     );
   }
@@ -377,29 +410,29 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     final cost = reward.cost;
     final canAfford = userBalance >= cost;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: canAfford ? AppColors.accentGold.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _confirmRedeem(reward, canAfford),
+    return AnimatedPress(
+      onTap: () => _confirmRedeem(reward, canAfford),
+      onLongPress: () => _confirmDelete(reward),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: canAfford ? AppColors.accentGold.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -420,19 +453,19 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                 const SizedBox(height: 14),
                 Expanded(
                   child: Center(
-                    child: Text(
-                      reward.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                        height: 1.15,
+                      child: Text(
+                        reward.title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14, // Slightly smaller for better fit
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.2,
+                          height: 1.1,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -566,6 +599,28 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
             child: const Text('Canjear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(RewardModel reward) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text('¿Eliminar este premio?'),
+        content: Text('Esta acción quitará "${reward.title}" de la boutique permanentemente.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Eliminar'),
           ),
         ],
       ),

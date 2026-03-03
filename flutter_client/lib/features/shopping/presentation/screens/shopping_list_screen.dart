@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../data/shopping_predefined.dart';
+import '../../data/shopping_predefined.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/models/shopping_categories.dart';
 import '../providers/shopping_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/utils/app_animations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ShoppingListScreen — Lista de compras interactiva (Estilo Bring!)
@@ -506,7 +507,7 @@ class _PredefinedItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AnimatedPress(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -572,13 +573,11 @@ class _ShoppingItemTile extends StatelessWidget {
     );
     final catColor = Color(catInfo['color'] as int);
 
-    return GestureDetector(
+    return AnimatedPress(
       onTap: () {
-        HapticFeedback.lightImpact();
         onToggle();
       },
       onLongPress: () {
-        HapticFeedback.mediumImpact();
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(

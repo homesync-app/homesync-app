@@ -25,12 +25,11 @@ CREATE POLICY "Reward Templates are readable by all"
 
 -- Insert reward templates
 INSERT INTO public.reward_templates (title, description, cost, icon, is_popular, sort_order) VALUES
-  ('Helado', 'Una salida por helado', 15, '🍦', true, 1),
-  ('Noche de peli', 'Elige la película de hoy', 20, '🎬', true, 2),
-  ('Masaje de 15 min', 'Masaje relajante', 30, '💆', true, 3),
-  ('Desayuno en la cama', 'Desayuno preparado y servido en cama', 50, '🥞', false, 4),
-  ('Cena especial', 'Preparar la cena favorita', 40, '🍽️', false, 5),
-  ('Exento de una tarea', 'Puede saltarse una tarea del hogar', 25, '🎫', true, 6)
+  ('Masaje Relajante', 'Un masaje de 15 minutos para desestresarse', 50, '💆', true, 1),
+  ('Elegir Película', 'Tienes el control total del control remoto hoy', 30, '🎬', true, 2),
+  ('Desayuno en la Cama', 'Desayuno completo preparado y servido donde estés', 80, '🥞', false, 3),
+  ('Cena Especial', 'Tu comida favorita preparada con amor', 100, '🍽️', false, 4),
+  ('Organizar una Cita', 'Una salida planeada de principio a fin', 150, '✨', true, 5)
 ON CONFLICT DO NOTHING;
 
 -- ============================================

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 
 // Fakes simplificados para simular el comportamiento de los servicios
 class FakeAuthService implements SupabaseAuthService {
@@ -57,14 +59,21 @@ void main() {
     final fakeRpc = FakeRpcService();
     final fakePrefs = FakePrefs();
 
-    await tester.pumpWidget(MaterialApp(
-      home: LoginScreen(auth: fakeAuth, rpc: fakeRpc, prefs: fakePrefs),
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(fakeAuth),
+        supabaseRpcProvider.overrideWithValue(fakeRpc),
+      ],
+      child: MaterialApp(
+        home: LoginScreen(prefs: fakePrefs),
+      ),
     ));
 
     // Verificamos que cargan los textos esperados
-    expect(find.text('Bienvenido de vuelta'), findsOneWidget);
-    expect(find.text('Iniciar sesión'), findsOneWidget);
-    expect(find.text('¿No tienes cuenta?'), findsOneWidget);
+    expect(find.text('Inicio de Sesión'), findsOneWidget);
+    // Cambiado los matches porque la UI original tenía textos diferentes
+    expect(find.text('HomeSync'), findsOneWidget);
+    expect(find.text('¿Eres nuevo?'), findsOneWidget);
     
     // Verificamos inputs
     expect(find.byType(TextFormField), findsNWidgets(2)); // Email y Password
@@ -82,8 +91,14 @@ void main() {
     final fakeRpc = FakeRpcService();
     final fakePrefs = FakePrefs();
 
-    await tester.pumpWidget(MaterialApp(
-      home: LoginScreen(auth: fakeAuth, rpc: fakeRpc, prefs: fakePrefs),
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(fakeAuth),
+        supabaseRpcProvider.overrideWithValue(fakeRpc),
+      ],
+      child: MaterialApp(
+        home: LoginScreen(prefs: fakePrefs),
+      ),
     ));
 
     // Hacemos scroll
@@ -91,19 +106,19 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tocamos el botón de iniciar sesión sin datos
-    await tester.tap(find.text('Iniciar sesión'));
+    await tester.tap(find.text('Entrar al Hogar'));
     await tester.pumpAndSettle();
 
     // Deben aparecer los mensajes de error del form
-    expect(find.text('Requerido'), findsOneWidget);
-    expect(find.text('La contraseña debe tener al menos 6 caracteres'), findsOneWidget);
+    expect(find.text('Ingresa tu correo'), findsOneWidget);
+    expect(find.text('Mínimo 6 caracteres'), findsOneWidget);
 
     // Intentamos un correo no válido
     await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), 'correoInvalido');
-    await tester.tap(find.text('Iniciar sesión'));
+    await tester.tap(find.text('Entrar al Hogar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Debe ser un correo válido'), findsOneWidget);
+    expect(find.text('Correo inválido'), findsOneWidget);
   });
 
   testWidgets('Test de Interacción Front-to-Back - LoginScreen llama a AuthService', (WidgetTester tester) async {
@@ -120,9 +135,15 @@ void main() {
 
     fakeAuth.shouldFail = true; // Simularemos una falla de login del Server para ver el SnackBar
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: LoginScreen(auth: fakeAuth, rpc: fakeRpc, prefs: fakePrefs),
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        authServiceProvider.overrideWithValue(fakeAuth),
+        supabaseRpcProvider.overrideWithValue(fakeRpc),
+      ],
+      child: MaterialApp(
+        home: Scaffold(
+          body: LoginScreen(prefs: fakePrefs),
+        ),
       ),
     ));
 
@@ -134,7 +155,7 @@ void main() {
     await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -300));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Iniciar sesión'));
+    await tester.tap(find.text('Entrar al Hogar'));
     await tester.pumpAndSettle(); // Esperamos animación del loading
 
     // Verificamos que sí se interceptó el botón

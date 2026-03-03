@@ -95,10 +95,14 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
     return SizedBox(
       width: widget.size,
       height: widget.size,
-      child: Center(
-        child: AspectRatio(
-          aspectRatio: _controller.value.aspectRatio,
-          child: VideoPlayer(_controller),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _controller.value.size.width,
+            height: _controller.value.size.height,
+            child: VideoPlayer(_controller),
+          ),
         ),
       ),
     );

@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -16,14 +17,10 @@ import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
   final VoidCallback onLogout;
 
   const SettingsScreen({
     super.key,
-    required this.auth,
-    required this.rpc,
     required this.onLogout,
   });
 
@@ -88,7 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .limit(1)
           .maybeSingle();
 
-      final members = await widget.rpc.getHouseholdMembers();
+      final members = await ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
 
       setState(() {
         _householdName = household?['name'];
@@ -105,7 +102,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _generateNewCode() async {
     try {
-      final code = await widget.rpc.generateInvitationCode();
+      final code = await ref.read(householdRepositoryProvider).generateInvitationCode();
       if (mounted) setState(() => _invitationCode = code);
 
       if (mounted) {
@@ -163,7 +160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
 
             try {
-              await widget.rpc.joinHousehold(code);
+              await ref.read(householdRepositoryProvider).joinHousehold(code);
               if (dialogCtx.mounted) Navigator.pop(dialogCtx);
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1405,7 +1402,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           );
 
           if (confirm == true) {
-            await widget.auth.signOut();
+            await ref.read(signOutUseCaseProvider).execute();
             widget.onLogout();
           }
         },
@@ -1514,7 +1511,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
-        final res = await widget.rpc.resetUserAccount();
+        final res = await ref.read(householdRepositoryProvider).resetUserAccount();
         if (res['success'] == true) {
            ref.invalidate(userProfileProvider);
            ref.invalidate(userBalanceProvider);

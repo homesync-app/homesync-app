@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+// supabase_rpc_service accessed via rpcServiceProvider
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class WeeklyWinnerScreen extends ConsumerStatefulWidget {
-  final SupabaseRpcService rpc;
   final VoidCallback onClose;
 
   const WeeklyWinnerScreen({
     super.key,
-    required this.rpc,
     required this.onClose,
   });
 
@@ -32,14 +30,15 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
 
   Future<void> _loadData() async {
     try {
-      final ranking = await widget.rpc.getWeeklyRanking();
+      final rpc = ref.read(rpcServiceProvider);
+      final ranking = await rpc.getWeeklyRanking();
 
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
-        await widget.rpc.awardWeeklyWinner();
+        await rpc.awardWeeklyWinner();
         
         if (ranking.length >= 2) {
-          final householdInfo = await widget.rpc.getHouseholdInfo();
+          final householdInfo = await rpc.getHouseholdInfo();
           final householdId = householdInfo['household_id'] as String?;
           
           if (householdId != null) {
@@ -49,7 +48,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             final weekStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day)
                 .subtract(Duration(days: weekStart.weekday - 1));
             
-            await widget.rpc.saveWeeklyDuelResult(
+            await rpc.saveWeeklyDuelResult(
               householdId: householdId,
               weekStartDate: weekStartDate,
               winnerUserId: winner['user_id'] ?? '',

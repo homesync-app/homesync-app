@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Users as UsersIcon,
   Crown,
   User,
   Shield,
-  Mail,
   Calendar,
   Loader2,
-  MoreVertical,
   Search
 } from 'lucide-react';
 
