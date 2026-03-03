@@ -84,5 +84,5 @@ jobs:
           packageName: com.blas.homesync
           releaseFiles: flutter_client/build/app/outputs/bundle/release/app-release.aab
           track: internal
-          status: completed
+          status: draft
           whatsNewDirectory: whatsnew
