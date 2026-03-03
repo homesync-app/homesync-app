@@ -62,7 +62,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        supabaseRpcProvider.overrideWithValue(fakeRpc),
+        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: LoginScreen(prefs: fakePrefs),
@@ -94,7 +94,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        supabaseRpcProvider.overrideWithValue(fakeRpc),
+        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: LoginScreen(prefs: fakePrefs),
@@ -138,7 +138,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        supabaseRpcProvider.overrideWithValue(fakeRpc),
+        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: Scaffold(

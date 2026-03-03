@@ -390,8 +390,8 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
 
-    // Optimized size to fit standard avatar circles without being "giant"
-    final double size = isVideo ? radius * 2.2 : radius * 2.1;
+    // Balanced size for 3D characters
+    final double size = isVideo ? radius * 2.0 : radius * 1.9;
 
     final bool isAsset = cleanUrl.startsWith('assets/');
 

@@ -157,51 +157,54 @@ class AvatarPickerSheet extends ConsumerWidget {
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 20),
-                          child: Column(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? char['color'].withValues(alpha: 0.15)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: AppColors.primary,
-                                          width: 3,
-                                        )
-                                      : null,
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.primary.withValues(alpha: 0.25),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 6),
+                          child: GestureDetector(
+                            onTap: () => _updateAvatar(context, ref, premiumUrl),
+                            behavior: HitTestBehavior.opaque,
+                            child: Column(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? char['color'].withValues(alpha: 0.15)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(28),
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: AppColors.primary,
+                                            width: 3,
                                           )
-                                        ]
-                                      : null,
+                                        : null,
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppColors.primary.withValues(alpha: 0.25),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 6),
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: CustomUserAvatar(
+                                    avatarUrl: premiumUrl,
+                                    radius: 40,
+                                    isAnimated: true,
+                                    isPriority: isSelected,
+                                  ),
                                 ),
-                                child: CustomUserAvatar(
-                                  avatarUrl: premiumUrl,
-                                  radius: 40,
-                                  isAnimated: true,
-                                  isPriority: isSelected,
-                                  onTap: () => _updateAvatar(context, ref, premiumUrl),
+                                const SizedBox(height: 8),
+                                Text(
+                                  char['name'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                char['name'] ?? '',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       }).toList(),
