@@ -1,26 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:homesync_client/core/offline/sync_service.dart';
+import 'package:homesync_client/core/services/rpc/admin_rpc_service.dart';
 import 'package:homesync_client/theme/app_colors.dart';
 import 'package:homesync_client/theme/app_theme.dart';
-import 'package:homesync_client/utils/app_animations.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'dart:async';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 
 void main() async {
@@ -42,8 +36,7 @@ void main() async {
   final auth = SupabaseAuthService();
   await auth.initialize();
 
-  final rpc = SupabaseRpcService();
-  await rpc.initialize();
+  final adminRpc = AdminRpcService();
 
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
   FlutterError.onError = (details) {
@@ -53,7 +46,7 @@ void main() async {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
     // 2. Send to Supabase for the admin panel logs page (all platforms)
-    rpc.logApplicationError(
+    adminRpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
       context: {'library': details.library, 'context': details.context?.toString()},
@@ -67,7 +60,7 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     }
     // 2. Supabase admin logs (all platforms)
-    rpc.logApplicationError(
+    adminRpc.logApplicationError(
       message: error.toString(),
       stackTrace: stack.toString(),
       level: 'critical',
@@ -82,7 +75,6 @@ void main() async {
     ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(auth),
-        rpcServiceProvider.overrideWithValue(rpc),
       ],
       child: MyApp(
         prefs: prefs,

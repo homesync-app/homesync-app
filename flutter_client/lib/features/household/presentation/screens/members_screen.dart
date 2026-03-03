@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 
-class MembersScreen extends StatefulWidget {
-  final SupabaseRpcService rpc;
-
-  const MembersScreen({super.key, required this.rpc});
+class MembersScreen extends ConsumerStatefulWidget {
+  const MembersScreen({super.key});
 
   @override
-  State<MembersScreen> createState() => _MembersScreenState();
+  ConsumerState<MembersScreen> createState() => _MembersScreenState();
 }
 
-class _MembersScreenState extends State<MembersScreen> {
+class _MembersScreenState extends ConsumerState<MembersScreen> {
   bool _isLoading = true;
   List<dynamic> _members = [];
 
@@ -23,7 +22,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   Future<void> _loadMembers() async {
     try {
-      final members = await widget.rpc.getHouseholdMembers();
+      final members = await ref.read(householdRpcServiceProvider).getHouseholdMembers();
       setState(() {
         _members = members;
         _isLoading = false;

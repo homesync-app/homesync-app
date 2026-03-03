@@ -5,10 +5,11 @@ import '../../../../core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/repositories/task_repository.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
   final client = ref.read(supabaseClientProvider);
-  final rpc = ref.read(rpcServiceProvider);
+  final rpc = ref.read(taskRpcServiceProvider);
   return SupabaseTaskRepository(client: client, rpc: rpc);
 });
 
@@ -16,9 +17,9 @@ final taskRepositoryProvider = Provider<TaskRepository>((ref) {
 /// Only this class can talk to Supabase about tasks.
 class SupabaseTaskRepository implements TaskRepository {
   final SupabaseClient _client;
-  final dynamic _rpc; // SupabaseRpcService
+  final TaskRpcService _rpc;
 
-  SupabaseTaskRepository({required SupabaseClient client, required dynamic rpc})
+  SupabaseTaskRepository({required SupabaseClient client, required TaskRpcService rpc})
       : _client = client,
         _rpc = rpc;
 

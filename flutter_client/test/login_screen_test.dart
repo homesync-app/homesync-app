@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
@@ -37,10 +37,7 @@ class FakeAuthService implements SupabaseAuthService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class FakeRpcService implements SupabaseRpcService {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+
 
 class FakePrefs {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -56,13 +53,12 @@ void main() {
     });
     
     final fakeAuth = FakeAuthService();
-    final fakeRpc = FakeRpcService();
+
     final fakePrefs = FakePrefs();
 
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: LoginScreen(prefs: fakePrefs),
@@ -88,13 +84,12 @@ void main() {
     });
     
     final fakeAuth = FakeAuthService();
-    final fakeRpc = FakeRpcService();
+
     final fakePrefs = FakePrefs();
 
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: LoginScreen(prefs: fakePrefs),
@@ -130,7 +125,7 @@ void main() {
     });
     
     final fakeAuth = FakeAuthService();
-    final fakeRpc = FakeRpcService();
+
     final fakePrefs = FakePrefs();
 
     fakeAuth.shouldFail = true; // Simularemos una falla de login del Server para ver el SnackBar
@@ -138,7 +133,6 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         authServiceProvider.overrideWithValue(fakeAuth),
-        rpcServiceProvider.overrideWithValue(fakeRpc),
       ],
       child: MaterialApp(
         home: Scaffold(

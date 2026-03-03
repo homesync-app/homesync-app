@@ -4,7 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../config/app_environment.dart';
-import 'supabase_rpc_service.dart';
+import 'rpc/admin_rpc_service.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
@@ -29,7 +29,7 @@ class SupabaseAuthService {
       );
     } catch (e, stack) {
       debugPrint('Error inicializando GoogleSignIn: $e');
-      await SupabaseRpcService().logApplicationError(
+      await AdminRpcService().logApplicationError(
         message: 'Error inicializando GoogleSignIn: $e',
         stackTrace: stack.toString(),
         level: 'warning',
@@ -61,7 +61,7 @@ class SupabaseAuthService {
 
       return response;
     } catch (e, stack) {
-      await SupabaseRpcService().logApplicationError(
+      await AdminRpcService().logApplicationError(
         message: 'Error en signUp: $e',
         stackTrace: stack.toString(),
         context: {'email': email},
@@ -107,7 +107,7 @@ class SupabaseAuthService {
       }
       return response;
     } catch (e, stack) {
-      await SupabaseRpcService().logApplicationError(
+      await AdminRpcService().logApplicationError(
         message: 'Error en signIn: $e',
         stackTrace: stack.toString(),
         context: {'email': email},
@@ -167,7 +167,7 @@ class SupabaseAuthService {
       return true;
     } catch (e, stack) {
       debugPrint('Error en Google Sign-In: $e');
-      await SupabaseRpcService().logApplicationError(
+      await AdminRpcService().logApplicationError(
         message: 'Error en Google Sign-In: $e',
         stackTrace: stack.toString(),
         context: {'platform': kIsWeb ? 'web' : 'native'},

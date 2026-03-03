@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/providers/supabase_provider.dart';
-import '../../../../core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/reward_rpc_service.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../domain/models/reward_model.dart';
 import '../../domain/repositories/rewards_repository_interface.dart';
 
 final rewardsRepositoryProvider = Provider<RewardsRepositoryInterface>((ref) {
   final client = ref.read(supabaseClientProvider);
-  final rpcService = ref.read(rpcServiceProvider);
+  final rpcService = ref.read(rewardRpcServiceProvider);
   return SupabaseRewardsRepository(client: client, rpc: rpcService);
 });
 
@@ -16,11 +16,11 @@ final rewardsRepositoryProvider = Provider<RewardsRepositoryInterface>((ref) {
 /// Only this file knows that Supabase exists.
 class SupabaseRewardsRepository implements RewardsRepositoryInterface {
   final SupabaseClient _client;
-  final SupabaseRpcService _rpc;
+  final RewardRpcService _rpc;
 
   SupabaseRewardsRepository({
     required SupabaseClient client,
-    required SupabaseRpcService rpc,
+    required RewardRpcService rpc,
   })  : _client = client,
         _rpc = rpc;
 

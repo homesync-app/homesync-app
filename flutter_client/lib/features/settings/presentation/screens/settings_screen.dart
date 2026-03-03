@@ -11,10 +11,10 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_providers.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -663,7 +663,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ..._members.where((m) => m != null).map((member) {
+                ..._members.map((member) {
                   final userData = (member['users'] is Map) 
                       ? member['users'] as Map 
                       : {};
@@ -1307,7 +1307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               Switch.adaptive(
                 value: isEnabled,
-                activeColor: AppColors.primary,
+                activeTrackColor: AppColors.primary,
                 onChanged: (value) {
                   HapticFeedback.lightImpact();
                   ref.read(notificationEnabledProvider.notifier).toggle(value);
@@ -1511,7 +1511,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirm == true) {
       setState(() => _isLoading = true);
       try {
-        final res = await ref.read(householdRepositoryProvider).resetUserAccount();
+        final res = await ref.read(resetAccountUseCaseProvider).execute();
         if (res['success'] == true) {
            ref.invalidate(userProfileProvider);
            ref.invalidate(userBalanceProvider);
@@ -1519,7 +1519,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
            ref.invalidate(tasksProvider);
            ref.invalidate(recentActivityProvider);
            // Force refresh profile provider so we don't display stale name/avatar
-           await ref.refresh(userProfileProvider.future);
+           final _ = await ref.refresh(userProfileProvider.future);
            
            if (mounted) {
              ScaffoldMessenger.of(context).showSnackBar(

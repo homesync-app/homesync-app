@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-// rpc accessed via rpcServiceProvider
+// rpc accessed via statsRpcServiceProvider
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -49,14 +49,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
     try {
-      final rpc = ref.read(rpcServiceProvider);
+      final statsRpc = ref.read(statsRpcServiceProvider);
       final results = await Future.wait([
-        rpc.getTaskStatsByCategory(),
-        rpc.getMemberActivityStats(),
-        rpc.getWeeklyRanking(),
-        rpc.getXpHistory(),
-        rpc.getCoinHistory(),
-        rpc.getWeeklyDuelHistory(),
+        statsRpc.getTaskStatsByCategory(),
+        statsRpc.getMemberActivityStats(),
+        statsRpc.getWeeklyRanking(),
+        statsRpc.getXpHistory(),
+        statsRpc.getCoinHistory(),
+        statsRpc.getWeeklyDuelHistory(),
       ]);
 
       if (mounted) {
@@ -109,26 +109,44 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
       children: [
         // Tab bar
         Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textMuted,
-            indicatorColor: AppColors.primary,
-            indicatorWeight: 3,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+          margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          decoration: BoxDecoration(
+            color: AppColors.textMuted.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              tabs: const [
+                Tab(text: 'Semana'),
+                Tab(text: 'Progreso'),
+                Tab(text: 'Categorías'),
+              ],
             ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'Semana'),
-              Tab(text: 'Progreso'),
-              Tab(text: 'Categorías'),
-            ],
           ),
         ),
         Expanded(
@@ -917,9 +935,19 @@ class _CategoriesTab extends StatelessWidget {
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: onRefresh,
-              child: const Text('Actualizar'),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Actualizar datos', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
             ),
           ],
         ),

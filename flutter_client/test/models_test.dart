@@ -44,8 +44,8 @@ void main() {
       expect(task.recurrenceType, equals('weekly'));
       expect(task.recurrenceInterval, equals(2));
       expect(task.householdId, equals('house-1'));
-      expect(task.priority, equals('high'));
-      expect(task.difficulty, equals('easy'));
+      expect(task.priority, equals(TaskPriority.high));
+      expect(task.difficulty, equals(TaskDifficulty.easy));
     });
 
     test('Uses default values when optional fields are null', () {
@@ -67,8 +67,8 @@ void main() {
       expect(task.coinReward, equals(0));
       expect(task.householdId, equals(''));
       expect(task.recurrenceInterval, equals(1));
-      expect(task.priority, equals('medium'));
-      expect(task.difficulty, equals('medium'));
+      expect(task.priority, equals(TaskPriority.medium));
+      expect(task.difficulty, equals(TaskDifficulty.medium));
     });
 
     test('Defaults missing title to "Sin título"', () {
@@ -164,7 +164,7 @@ void main() {
     });
 
     test('isRecurring is false when recurrenceType is null', () {
-      final task = makeTask('active');
+      final task = makeTask(TaskStatus.active);
       expect(task.isRecurring, isFalse);
     });
 
@@ -481,7 +481,7 @@ void main() {
     });
 
     test('displayName falls back to email prefix', () {
-      final b = HouseholdBalance(
+      final b = HouseholdBalanceModel(
         userId: 'u1',
         balance: 0,
         userEmail: 'blas@email.com',

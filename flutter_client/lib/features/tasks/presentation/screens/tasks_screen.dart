@@ -12,7 +12,6 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 // legacy services removed — access via providers
-// import 'package:homesync_client/core/services/supabase_rpc_service.dart'; // no longer needed at widget level
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 

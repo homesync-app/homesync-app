@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_links/app_links.dart';
+import 'package:homesync_client/core/services/deep_link_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,7 +19,7 @@ import '../../../stats/presentation/screens/stats_screen.dart';
 import '../../../shopping/presentation/screens/shopping_list_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
-import '../../../tasks/presentation/screens/weekly_winner_screen.dart';
+import '../../../stats/presentation/screens/weekly_winner_screen.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../presentation/providers/dashboard_providers.dart';
@@ -44,8 +44,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool _isLoading = true;
   bool _needsSetup = false;
   bool _showWeeklyWinner = false;
-  late AppLinks _appLinks;
-  StreamSubscription<Uri>? _linkSubscription;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
@@ -56,55 +54,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     _checkSetup();
     _initNotifications();
-    _initDeepLinks();
+    ref.read(deepLinkServiceProvider).init(ref, _showToast);
   }
 
   @override
   void dispose() {
     _notifService.dispose();
-    _linkSubscription?.cancel();
+    ref.read(deepLinkServiceProvider).dispose();
     super.dispose();
   }
 
-  void _initDeepLinks() {
-    _appLinks = AppLinks();
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Deep Link received: $uri');
-      
-      if (uri.scheme != 'homesync') return;
-
-      // 1. Mercado Pago Auth callback
-      if (uri.host == 'auth-complete' || uri.path.contains('auth-complete')) {
-        final status = uri.queryParameters['status'];
-        final message = uri.queryParameters['message'];
-        
-        if (status == 'success') {
-          _showToast('✅ Mercado Pago conectado con éxito', AppColors.success);
-        } else if (status == 'error') {
-          _showToast('❌ Error al conectar: ${message ?? "Desconocido"}', AppColors.error);
-        }
-      }
-
-      // 2. Mercado Pago Payment callbacks
-      if (uri.host == 'payment-success' || uri.path.contains('payment-success')) {
-        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.', AppColors.success);
-        
-        // Refresh all relevant data
-        ref.invalidate(savingsGoalsProvider);
-        ref.invalidate(expenseBalancesProvider);
-        ref.invalidate(userBalanceProvider);
-        ref.invalidate(recentActivityProvider);
-      }
-      
-      if (uri.host == 'payment-failure' || uri.path.contains('payment-failure')) {
-        _showToast('❌ El pago fue rechazado. Reintentá luego.', AppColors.error);
-      }
-
-      if (uri.host == 'payment-pending' || uri.path.contains('payment-pending')) {
-        _showToast('⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange);
-      }
-    });
-  }
 
   void _showToast(String message, Color color) {
     if (!mounted) return;
@@ -184,12 +143,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (alreadyShown) return;
 
     try {
-      final rpc = ref.read(rpcServiceProvider);
-      final isProcessed = await rpc.isWeekProcessed();
+      final statsRpc = ref.read(statsRpcServiceProvider);
+      final isProcessed = await statsRpc.isWeekProcessed();
       if (!mounted) return;
 
       if (!isProcessed) {
-        final ranking = await rpc.getWeeklyRanking();
+        final ranking = await statsRpc.getWeeklyRanking();
         if (!mounted) return;
 
         if (ranking.isNotEmpty && (ranking.first['xp_earned'] ?? 0) > 0) {
@@ -365,7 +324,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary.withOpacity(0.12)
+                            ? AppColors.primary.withValues(alpha: 0.12)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                       ),

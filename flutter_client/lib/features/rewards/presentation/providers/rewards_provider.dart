@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 
 final rewardsProvider = AsyncNotifierProvider<RewardsNotifier, List<Map<String, dynamic>>>(() {
   return RewardsNotifier();
 });
 
 class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
-  final _rpc = SupabaseRpcService();
+
 
   @override
   Future<List<Map<String, dynamic>>> build() async {
@@ -75,7 +75,7 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }
 
   Future<void> redeem(String rewardId) async {
-    await _rpc.redeemReward(rewardId);
+    await ref.read(rewardRpcServiceProvider).redeemReward(rewardId);
     await refresh();
   }
 

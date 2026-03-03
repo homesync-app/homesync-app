@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'user_avatar.dart';
@@ -21,12 +21,7 @@ class AvatarPickerSheet extends ConsumerWidget {
   Future<void> _updateAvatar(
       BuildContext context, WidgetRef ref, String emoji) async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw Exception('No autenticado');
-
-      await Supabase.instance.client
-          .from('users')
-          .update({'avatar_url': emoji}).eq('id', user.id);
+      await ref.read(updateAvatarUseCaseProvider).execute(emoji);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(recentActivityProvider);

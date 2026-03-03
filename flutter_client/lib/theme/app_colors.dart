@@ -62,10 +62,10 @@ class AppColors {
   static const Color surfaceVariant = Color(0xFFF1F5F9);
   static const Color shadow = Color(0x0A4A4443);
 
-  static Color get infoLight => info.withOpacity(0.12);
-  static Color get successLight => success.withOpacity(0.12);
-  static Color get errorLight => error.withOpacity(0.12);
-  static Color get warningLight => warning.withOpacity(0.12);
+  static Color get infoLight => info.withValues(alpha: 0.12);
+  static Color get successLight => success.withValues(alpha: 0.12);
+  static Color get errorLight => error.withValues(alpha: 0.12);
+  static Color get warningLight => warning.withValues(alpha: 0.12);
 
   // Glassmorphism effects
   static const Color glassWhite = Color(0xB3FFFFFF);

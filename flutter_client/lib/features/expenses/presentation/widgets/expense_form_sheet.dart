@@ -49,7 +49,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Set<String> _selectedMembersForSplit = {}; // For 'equal'
   final Map<String, double> _fixedSplitAmounts = {}; // For 'fixed'
 
-  final List<Map<String, dynamic>> _categories = [
+  final List<Map<String, dynamic>> _expenseCategories = [
     {'id': 'supermarket', 'name': AppColors.categoryNames['supermarket'], 'icon': AppColors.categoryIcons['supermarket'], 'color': AppColors.getCategoryColor('supermarket')},
     {'id': 'utilities', 'name': AppColors.categoryNames['utilities'], 'icon': AppColors.categoryIcons['utilities'], 'color': AppColors.getCategoryColor('utilities')},
     {'id': 'rent', 'name': AppColors.categoryNames['rent'], 'icon': AppColors.categoryIcons['rent'], 'color': AppColors.getCategoryColor('rent')},
@@ -57,14 +57,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     {'id': 'transport', 'name': AppColors.categoryNames['transport'], 'icon': AppColors.categoryIcons['transport'], 'color': AppColors.getCategoryColor('transport')},
     {'id': 'entertainment', 'name': AppColors.categoryNames['entertainment'], 'icon': AppColors.categoryIcons['entertainment'], 'color': AppColors.getCategoryColor('entertainment')},
     {'id': 'health', 'name': AppColors.categoryNames['health'], 'icon': AppColors.categoryIcons['health'], 'color': AppColors.getCategoryColor('health')},
-    {'id': 'income', 'name': 'Ingreso/Sueldo', 'icon': '💰', 'color': AppColors.success},
     {'id': 'other', 'name': 'Otros', 'icon': '📦', 'color': AppColors.textSecondary},
   ];
+
+  final List<Map<String, dynamic>> _incomeCategories = [
+    {'id': 'salary', 'name': AppColors.categoryNames['salary'], 'icon': AppColors.categoryIcons['salary'], 'color': AppColors.getCategoryColor('salary')},
+    {'id': 'transfer', 'name': AppColors.categoryNames['transfer'], 'icon': AppColors.categoryIcons['transfer'], 'color': AppColors.getCategoryColor('transfer')},
+    {'id': 'sales', 'name': AppColors.categoryNames['sales'], 'icon': AppColors.categoryIcons['sales'], 'color': AppColors.getCategoryColor('sales')},
+    {'id': 'gift_income', 'name': AppColors.categoryNames['gift_income'], 'icon': AppColors.categoryIcons['gift_income'], 'color': AppColors.getCategoryColor('gift_income')},
+    {'id': 'other_income', 'name': AppColors.categoryNames['other_income'], 'icon': AppColors.categoryIcons['other_income'], 'color': AppColors.getCategoryColor('other_income')},
+    {'id': 'income', 'name': 'Ingreso General', 'icon': '💰', 'color': AppColors.success},
+  ];
+
+  List<Map<String, dynamic>> get _currentCategories => _type == 'income' ? _incomeCategories : _expenseCategories;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = _categories.first;
+    _selectedCategory = _currentCategories.first;
     _titleController.addListener(_onTitleChanged);
     
     if (widget.expense != null) {
@@ -98,10 +108,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     else if (t.contains('farmacia') || t.contains('medico') || t.contains('salud') || t.contains('pastillas') || t.contains('remedio')) matchedId = 'health';
     
     if (matchedId != null && _selectedCategory?['id'] != matchedId) {
+      // First decide the type so _currentCategories is correct
+      final newType = (matchedId == 'income' || matchedId == 'salary' || matchedId == 'transfer' || matchedId == 'sales' || matchedId == 'gift_income' || matchedId == 'other_income') ? 'income' : 'expense';
+      
       setState(() {
-        _selectedCategory = _categories.firstWhere((c) => c['id'] == matchedId, orElse: () => _categories.first);
-        if (matchedId == 'income') _type = 'income';
-        else _type = 'expense';
+        _type = newType;
+        _selectedCategory = _currentCategories.firstWhere((c) => c['id'] == matchedId, orElse: () => _currentCategories.first);
       });
     }
   }
@@ -112,9 +124,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     _notesController.text = exp.description ?? '';
     _type = exp.type;
     if (exp.category != null) {
-      _selectedCategory = _categories.firstWhere(
+      _selectedCategory = _currentCategories.firstWhere(
         (c) => c['id'] == exp.category,
-        orElse: () => _categories.last,
+        orElse: () => _currentCategories.last,
       );
     }
     _selectedDate = exp.paidAt;
@@ -427,9 +439,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               isSelected: _type == 'expense',
               onTap: () => setState(() {
                 _type = 'expense';
-                if (_selectedCategory?['id'] == 'income') {
-                   _selectedCategory = _categories.first;
-                }
+                _selectedCategory = _currentCategories.first; // Reset to the first expense category 
               }),
             ),
           ),
@@ -439,7 +449,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               isSelected: _type == 'income',
               onTap: () => setState(() {
                 _type = 'income';
-                _selectedCategory = _categories.firstWhere((c) => c['id'] == 'income');
+                _selectedCategory = _currentCategories.first; // Reset to the first income category
                 _splitMode = SplitType.personal; // Default income to personal
               }),
             ),
@@ -646,16 +656,34 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         return SafeArea(
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Seleccionar Categoría', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Seleccionar Categoría', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                    TextButton.icon(
+                      onPressed: () {
+                        // TODO: Navigate to Category Editor
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Próximamente: Editor de Categorías', style: TextStyle())),);
+                      },
+                      icon: const Icon(Icons.edit_rounded, size: 16, color: AppColors.primary),
+                      label: const Text('Editar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: _categories.length,
+                  itemCount: _currentCategories.length,
                   itemBuilder: (context, index) {
-                    final cat = _categories[index];
+                    final cat = _currentCategories[index];
                     final isSelected = _selectedCategory!['id'] == cat['id'];
                     return ListTile(
                       leading: Container(

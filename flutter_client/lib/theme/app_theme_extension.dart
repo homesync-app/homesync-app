@@ -29,7 +29,7 @@ class AppThemeColors {
   Color get inputBorder => border;
 
   Color get shadow =>
-      isDarkMode ? Colors.black.withOpacity(0.3) : AppColors.shadow;
+      isDarkMode ? Colors.black.withValues(alpha: 0.3) : AppColors.shadow;
 
   Color get glassWhite =>
       isDarkMode ? const Color(0x33000000) : AppColors.glassWhite;

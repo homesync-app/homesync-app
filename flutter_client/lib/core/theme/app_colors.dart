@@ -140,6 +140,11 @@ class AppColors {
         return error;
       case 'income':
       case 'ingreso':
+      case 'salary':
+      case 'transfer':
+      case 'sales':
+      case 'gift_income':
+      case 'other_income':
         return success;
       case 'baño':
       case 'bano':
@@ -222,6 +227,11 @@ class AppColors {
         return Icons.favorite_rounded;
       case 'income':
       case 'ingreso':
+      case 'salary':
+      case 'transfer':
+      case 'sales':
+      case 'gift_income':
+      case 'other_income':
         return Icons.payments_rounded;
       case 'ocio':
         return Icons.videogame_asset_rounded;
@@ -292,6 +302,11 @@ class AppColors {
     'niños': '👶',
     'urgente': '🚨',
     'income': '💰',
+    'salary': '💵',
+    'transfer': '💱',
+    'sales': '📈',
+    'gift_income': '🎁',
+    'other_income': '💰',
     'other': '📦',
     'utilities': '💡',
     'rent': '🏠',
@@ -329,7 +344,12 @@ class AppColors {
     'mantenimiento': 'Mantenimiento',
     'niños': 'Niños',
     'urgente': 'Urgente',
-    'income': 'Ingreso/Sueldo',
+    'income': 'Ingreso General',
+    'salary': 'Salario',
+    'transfer': 'Transferencia recibida',
+    'sales': 'Ventas / Negocio',
+    'gift_income': 'Regalo',
+    'other_income': 'Otros Ingresos',
     'other': 'Otros',
     'utilities': 'Servicios',
     'rent': 'Alquiler',

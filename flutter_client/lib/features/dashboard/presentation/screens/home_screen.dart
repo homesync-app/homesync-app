@@ -9,8 +9,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
-// import 'package:homesync_client/core/services/supabase_auth_service.dart'; // no longer needed at widget level
-// import 'package:homesync_client/core/services/supabase_rpc_service.dart'; // no longer needed at widget level
+
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';

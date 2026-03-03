@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:developer' as dev;
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
-import 'package:homesync_client/core/services/expense_service.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/reward_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/stats_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/household_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/balance_rpc_service.dart';
+import 'package:homesync_client/core/services/rpc/admin_rpc_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,13 +30,14 @@ final authServiceProvider = Provider<SupabaseAuthService>((ref) {
   throw UnimplementedError('authServiceProvider must be overridden in ProviderScope.');
 });
 
-final rpcServiceProvider = Provider<SupabaseRpcService>((ref) {
-  throw UnimplementedError('rpcServiceProvider must be overridden in ProviderScope.');
-});
+final taskRpcServiceProvider = Provider<TaskRpcService>((ref) => TaskRpcService());
+final rewardRpcServiceProvider = Provider<RewardRpcService>((ref) => RewardRpcService());
+final statsRpcServiceProvider = Provider<StatsRpcService>((ref) => StatsRpcService());
+final householdRpcServiceProvider = Provider<HouseholdRpcService>((ref) => HouseholdRpcService());
+final balanceRpcServiceProvider = Provider<BalanceRpcService>((ref) => BalanceRpcService());
+final adminRpcServiceProvider = Provider<AdminRpcService>((ref) => AdminRpcService());
 
-final expenseServiceProvider = Provider<ExpenseService>((ref) {
-  return ExpenseService();
-});
+
 
 // ── Current user convenience providers ────────────────────────────────────────
 final currentUserIdProvider = Provider<String?>((ref) {
@@ -114,7 +119,7 @@ final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final householdAsync = await ref.watch(householdIdProvider.future);
   if (householdAsync == null) return null;
 
-  final rpc = ref.read(rpcServiceProvider);
+  final rpc = ref.read(balanceRpcServiceProvider);
   final result = await rpc.getUserBalance(householdId: householdAsync);
   return result['data'] as Map<String, dynamic>?;
 });
@@ -124,7 +129,7 @@ final expenseBalancesProvider = FutureProvider<List<dynamic>>((ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return [];
 
-  final rpc = ref.read(rpcServiceProvider);
+  final rpc = ref.read(balanceRpcServiceProvider);
   final result = await rpc.getHouseholdBalances(householdId);
   return (result['balances'] as List<dynamic>?) ?? [];
 });
