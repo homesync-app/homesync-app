@@ -77,9 +77,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             expensesAsync.when(
               skipLoadingOnRefresh: true,
               skipLoadingOnReload: true,
-              loading: () => const SliverFillRemaining(
-                child: Center(
-                    child: CircularProgressIndicator(color: AppColors.primary)),
+              loading: () => SliverFillRemaining(
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: 4,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (_, __) => ShimmerLoading(
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ),
+                ),
               ),
               error: (err, _) => SliverFillRemaining(
                 child: Center(child: Text('Error: $err')),

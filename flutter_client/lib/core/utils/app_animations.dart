@@ -134,7 +134,10 @@ class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProvider
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      onLongPress: widget.onLongPress,
+      onLongPress: widget.onLongPress != null ? () {
+        HapticFeedback.mediumImpact();
+        widget.onLongPress!();
+      } : null,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) => Transform.scale(

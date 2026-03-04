@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,7 @@ import '../../domain/models/shopping_model.dart';
 import '../../domain/models/shopping_categories.dart';
 import '../providers/shopping_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ShoppingListScreen — Lista de compras interactiva (Estilo Bring!)
@@ -26,7 +27,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final FocusNode _inputFocus = FocusNode();
 
   final Set<String> _expandedSections = {};
-  List<Map<String, String>> _suggestions = [];
+  final ValueNotifier<List<Map<String, String>>> _suggestionsVal = ValueNotifier([]);
+  Timer? _debounce;
+  String _lastQuery = '';
 
   @override
   void initState() {
@@ -36,6 +39,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    _suggestionsVal.dispose();
     _scrollController.dispose();
     _inputController.dispose();
     _inputFocus.dispose();
@@ -44,8 +49,20 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   void _onSearchChanged() {
     final query = _inputController.text.toLowerCase().trim();
+    if (query == _lastQuery) return;
+    _lastQuery = query;
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      _performSearch();
+    });
+  }
+
+  void _performSearch() {
+    final query = _lastQuery;
     if (query.isEmpty) {
-      if (_suggestions.isNotEmpty) setState(() => _suggestions = []);
+      if (_suggestionsVal.value.isNotEmpty) _suggestionsVal.value = [];
       return;
     }
 
@@ -59,7 +76,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         }
       }
     }
-    setState(() => _suggestions = matches.take(5).toList());
+    _suggestionsVal.value = matches.take(5).toList();
   }
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -95,7 +112,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     if (val.isEmpty) return;
 
     _inputController.clear();
-    setState(() => _suggestions = []);
+    _lastQuery = '';
+    _suggestionsVal.value = [];
     _inputFocus.unfocus();
 
     // Find if already exists in pending
@@ -254,27 +272,32 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_suggestions.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
-              ],
-            ),
-            child: Column(
-              children: _suggestions
-                  .map((s) => ListTile(
-                        leading: Text(s['emoji']!, style: const TextStyle(fontSize: 20)),
-                        title: Text(s['name']!, style: const TextStyle(color: AppColors.textPrimary)),
-                        trailing: const Icon(Icons.add_circle_outline, color: AppColors.accentGreen),
-                        onTap: () => _handleSelection(s['name']!, pending, done),
-                      ))
-                  .toList(),
-            ),
-          ),
+        ValueListenableBuilder<List<Map<String, String>>>(
+          valueListenable: _suggestionsVal,
+          builder: (context, suggestions, child) {
+            if (suggestions.isEmpty) return const SizedBox();
+            return Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+                ],
+              ),
+              child: Column(
+                children: suggestions
+                    .map((s) => ListTile(
+                          leading: Text(s['emoji']!, style: const TextStyle(fontSize: 20)),
+                          title: Text(s['name']!, style: const TextStyle(color: AppColors.textPrimary)),
+                          trailing: const Icon(Icons.add_circle_outline, color: AppColors.accentGreen),
+                          onTap: () => _handleSelection(s['name']!, pending, done),
+                        ))
+                    .toList(),
+              ),
+            );
+          },
+        ),
         Container(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
           decoration: BoxDecoration(

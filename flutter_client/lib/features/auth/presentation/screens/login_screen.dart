@@ -175,12 +175,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         },
         (success) async {
           if (!success) {
-            setState(() => _isGoogleLoading = false);
+            // OAuth browser fallback abierto o cancelación.
+            // Si es fallback, la sesión se completará con el deep link y 
+            // authStateProvider navegará automáticamente. Solo reseteamos el loader.
+            if (mounted) setState(() => _isGoogleLoading = false);
             return;
           }
-          
-          final authService = ref.read(authServiceProvider);
-          await authService.ensureHouseholdExists();
           
           if (mounted) {
             setState(() => _isGoogleLoading = false);

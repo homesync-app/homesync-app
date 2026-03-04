@@ -24,23 +24,46 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverAppBar(userBalanceAsync),
-          SliverToBoxAdapter(
-            child: rewardsAsync.when(
-              data: (rewards) => _buildBody(rewards.map((r) => RewardModel.fromJson(r)).toList(), currentUserId),
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(rewardsProvider);
+          ref.invalidate(userBalanceProvider);
+        },
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+          slivers: [
+            _buildSliverAppBar(userBalanceAsync),
+            SliverToBoxAdapter(
+              child: rewardsAsync.when(
+                data: (rewards) => _buildBody(rewards.map((r) => RewardModel.fromJson(r)).toList(), currentUserId),
+                loading: () => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.78,
+                    ),
+                    itemCount: 4,
+                    itemBuilder: (context, index) => ShimmerLoading(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
+                error: (e, _) => Center(child: Text('Error: $e')),
               ),
-              error: (e, _) => Center(child: Text('Error: $e')),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

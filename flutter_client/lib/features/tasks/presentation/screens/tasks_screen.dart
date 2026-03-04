@@ -20,6 +20,7 @@ import 'package:homesync_client/features/tasks/presentation/widgets/add_task_opt
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart' show ScheduleDialog, TaskRepeatMode;
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TasksScreen — Riverpod + Realtime
@@ -297,8 +298,19 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             child: isCalendarMode
                 ? const CalendarScreen()
                 : filteredAsync.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+                    loading: () => ListView.separated(
+                      padding: const EdgeInsets.all(24),
+                      itemCount: 4,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (_, __) => ShimmerLoading(
+                        child: Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                      ),
                     ),
                     error: (e, _) => Center(
                       child: Column(

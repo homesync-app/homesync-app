@@ -2,12 +2,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
-import 'package:homesync_client/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../data/repositories/supabase_household_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 
@@ -130,20 +132,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
     HapticFeedback.mediumImpact();
     setState(() {
       _isGeneratingCode = true;
-      _currentStep = 3;
     });
 
     try {
+      // Force creation of the household if it was skipped or deleted
+      final authService = ref.read(authServiceProvider);
+      await authService.ensureHouseholdExists();
+
       final householdRepo = ref.read(householdRepositoryProvider);
       final code = await householdRepo.generateInvitationCode();
       if (mounted) {
         setState(() {
           _myInviteCode = code;
           _isGeneratingCode = false;
+          _currentStep = 3; // Solo avanzar si tuvimos éxito
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isGeneratingCode = false);
+      if (mounted) {
+        setState(() => _isGeneratingCode = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al generar código: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -163,6 +177,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
     try {
       final householdRepo = ref.read(householdRepositoryProvider);
       await householdRepo.joinHousehold(code);
+      
+      // Invalida proveedores para que MainScreen/HomeScreen vean el nuevo hogar
+      ref.invalidate(householdIdProvider);
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userBalanceProvider);
+      
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
       if (mounted) widget.onComplete();
@@ -188,6 +208,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
 
     try {
       await _templateService.cloneTemplates(_selectedTemplateIds.toList());
+      
+      // Invalida proveedores aquí también para el flujo de creación
+      ref.invalidate(householdIdProvider);
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userBalanceProvider);
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
       if (mounted) widget.onComplete();
@@ -211,6 +237,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  Future<void> _shareViaWhatsApp() async {
+    if (_myInviteCode == null) return;
+    final text = '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        final webUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+        if (await canLaunchUrl(webUrl)) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        } else {
+          _copyCode();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      _copyCode();
+    }
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -842,18 +894,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                               if (_isGeneratingCode)
                                 const CircularProgressIndicator(color: Colors.white)
                               else
-                                Text(
-                                  _myInviteCode ?? '------',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 48,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 8,
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    _myInviteCode ?? '------',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 8,
+                                    ),
                                   ),
                                 ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _shareViaWhatsApp,
+                                    icon: const Icon(Icons.send_rounded, size: 18),
+                                    label: const Text('WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: AppColors.primary,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      elevation: 0,
+                                      minimumSize: const Size(120, 48), // Overrides global infinite width
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   IconButton.filledTonal(
                                     onPressed: _copyCode,
                                     icon: const Icon(Icons.copy_rounded),

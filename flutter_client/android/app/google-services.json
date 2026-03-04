@@ -1,34 +1,57 @@
 {
   "project_info": {
-    "project_number": "445710215227",
-    "project_id": "homesync-app-488011",
-    "storage_bucket": "homesync-app-488011.firebasestorage.app"
+    "project_number": "105041112830",
+    "project_id": "homesync-prod-r7-123",
+    "storage_bucket": "homesync-prod-r7-123.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:445710215227:android:c59889b57a0dfcfadc141e",
+        "mobilesdk_app_id": "1:105041112830:android:5b33f6f83b01f77667ffaf",
         "android_client_info": {
           "package_name": "com.blas.homesync"
         }
       },
       "oauth_client": [
         {
-          "client_id": "445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com",
+          "client_id": "105041112830-i79qb8avlvfv38reurc3aa9hnti1k8vv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "d9dcdbda33a5cf48efc69a43109f1a316f765a99"
+          }
+        },
+        {
+          "client_id": "105041112830-qdkn86j2rtpcabun8vt7lvnlb9t6oppm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "8590bc914f5282853a2593929fbbef11e3c0881f"
+          }
+        },
+        {
+          "client_id": "105041112830-6jca67vnr7ki4hb9lmbbhp13qnhrlgog.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDqU1mzjW9ntFjEL9tUTdNZVsP_jIm4DmU"
+          "current_key": "AIzaSyBFEET0R1HF0S6w0ZRGn_AQSd5tAxhyn1c"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com",
+              "client_id": "105041112830-6jca67vnr7ki4hb9lmbbhp13qnhrlgog.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "105041112830-7v7rhlj1m0rdhrosqh657phl3bi47270.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.blas.homesync"
+              }
             }
           ]
         }

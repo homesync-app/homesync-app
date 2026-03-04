@@ -5,7 +5,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -78,27 +78,34 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 8),
-                child: _buildWeekHeader(),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 100),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: 7,
-                  itemBuilder: (context, index) {
-                    final dayDate = _weekStart.add(Duration(days: index));
-                    final isToday = isSameDay(DateTime.now(), dayDate);
-                    final tasksForDay = scheduledTasks[dayDate] ?? [];
-                    
-                    return _buildDaySection(dayDate, tasksForDay, isToday);
-                  },
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(tasksProvider);
+            },
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, bottom: 8),
+                  child: _buildWeekHeader(),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 100),
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      final dayDate = _weekStart.add(Duration(days: index));
+                      final isToday = isSameDay(DateTime.now(), dayDate);
+                      final tasksForDay = scheduledTasks[dayDate] ?? [];
+                      
+                      return _buildDaySection(dayDate, tasksForDay, isToday);
+                    },
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

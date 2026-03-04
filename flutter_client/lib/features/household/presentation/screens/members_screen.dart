@@ -40,15 +40,21 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        _buildHeader(),
-        const SizedBox(height: 24),
-        ..._members.map((member) => _buildMemberCard(member)),
-        const SizedBox(height: 16),
-        _buildInviteCard(),
-      ],
+    return RefreshIndicator(
+      onRefresh: _loadMembers,
+      color: AppColors.primary,
+      backgroundColor: AppColors.surface,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        padding: const EdgeInsets.all(20),
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 24),
+          ..._members.map((member) => _buildMemberCard(member)),
+          const SizedBox(height: 16),
+          _buildInviteCard(),
+        ],
+      ),
     );
   }
 

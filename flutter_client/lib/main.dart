@@ -112,7 +112,6 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final authState = ref.watch(authStateProvider);
 
     return _ThemeInit(
       prefs: prefs,
@@ -122,66 +121,156 @@ class MyApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        home: authState.when(
-          data: (state) {
-            if (state.session != null) {
-              return MainScreen(prefs: prefs);
-            }
-            return LoginScreen(prefs: prefs);
-          },
-          loading: () => const _SplashScreen(),
-          error: (e, stack) {
-            log.e('Auth error in MyApp: $e', error: e, stackTrace: stack);
-            return LoginScreen(prefs: prefs);
-          },
-        ),
+        home: _RootScreen(prefs: prefs),
       ),
     );
   }
 }
 
-class _SplashScreen extends StatelessWidget {
-  const _SplashScreen();
+class _RootScreen extends ConsumerStatefulWidget {
+  final SharedPreferences prefs;
+  const _RootScreen({required this.prefs});
+
+  @override
+  ConsumerState<_RootScreen> createState() => _RootScreenState();
+}
+
+class _RootScreenState extends ConsumerState<_RootScreen> {
+  bool _splashFinished = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _splashFinished = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authStateProvider);
+
+    Widget currentScreen;
+    if (!_splashFinished || authState.isLoading) {
+      currentScreen = const _SplashScreen(key: ValueKey('splash'));
+    } else {
+      currentScreen = authState.when(
+        data: (state) {
+          if (state.session != null) {
+            return MainScreen(key: const ValueKey('main'), prefs: widget.prefs);
+          }
+          return LoginScreen(key: const ValueKey('login'), prefs: widget.prefs);
+        },
+        loading: () => const _SplashScreen(key: ValueKey('splash_fallback')),
+        error: (e, stack) => LoginScreen(key: const ValueKey('login_error'), prefs: widget.prefs),
+      );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 800),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+      child: currentScreen,
+    );
+  }
+}
+
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen({super.key});
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: AppColors.primaryGradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _opacityAnimation.value,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: child,
+              ),
+            );
+          },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: AppColors.primaryGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(35),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text('🏡', style: TextStyle(fontSize: 60)),
+                ),
               ),
-              child: const Center(
-                child: Text('🏡', style: TextStyle(fontSize: 50)),
+              const SizedBox(height: 40),
+              const CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 3,
+                strokeCap: StrokeCap.round,
               ),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 3,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
 

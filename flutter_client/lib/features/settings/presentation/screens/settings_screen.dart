@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
@@ -136,6 +137,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Future<void> _shareViaWhatsApp() async {
+    if (_invitationCode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Genera un código primero')));
+      return;
+    }
+    final text = '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        final webUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+        if (await canLaunchUrl(webUrl)) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        } else {
+          _copyCode();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      _copyCode();
+    }
+  }
+
   void _showJoinDialog() {
     final codeController = TextEditingController();
     String? errorText;
@@ -240,7 +270,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onPressed: isLoading ? null : doJoin,
                 style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(100, 48), // Prevents infinite width error
+                ),
                 child: isLoading
                     ? const SizedBox(
                         width: 18,
@@ -268,9 +300,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               strokeWidth: 3,
             ),
           )
-        : CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
+        : RefreshIndicator(
+            onRefresh: _loadData,
+            color: AppColors.primary,
+            backgroundColor: AppColors.surface,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+              slivers: [
               SliverAppBar(
                 expandedHeight: 140,
                 floating: false,
@@ -362,6 +398,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+        ),
     );
   }
 
@@ -767,6 +804,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              minimumSize: const Size(100, 48), // Prevents infinite width error
             ),
             child: const Text('Quitar'),
           ),
@@ -825,7 +863,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(100, 48), // Prevents infinite width error
+            ),
             child: const Text('Guardar'),
           ),
         ],
@@ -1014,7 +1054,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: _shareViaWhatsApp,
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          label: const Text('WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            elevation: 0,
+                            minimumSize: const Size(120, 48), // Overrides global infinite width
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         IconButton(
                           onPressed: () {
                             _copyCode();
@@ -1049,6 +1102,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onPressed: () async {
                       setSheetState(() {});
                       await _generateNewCode();
+                      setSheetState(() {});
                     },
                     icon: const Icon(Icons.refresh_rounded),
                     label: Text(_invitationCode == null

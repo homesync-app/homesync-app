@@ -99,7 +99,20 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             ),
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.separated(
+          padding: const EdgeInsets.all(24),
+          itemCount: 3,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (_, __) => ShimmerLoading(
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+          ),
+        ),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );

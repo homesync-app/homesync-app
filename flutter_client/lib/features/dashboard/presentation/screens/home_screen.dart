@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,7 +20,6 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_f
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
-import 'package:homesync_client/utils/app_animations.dart';
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -255,7 +256,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildCircularAvatar(String displayName, String? avatarUrl) {
     final bool isPremium = avatarUrl?.startsWith('premium://') == true;
-    return GestureDetector(
+    return AnimatedPress(
       onTap: () => AvatarPickerSheet.show(context),
       child: Stack(
         clipBehavior: Clip.none,
@@ -909,7 +910,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: GestureDetector(
+              child: AnimatedPress(
                 onTap: () {
                   HapticFeedback.selectionClick();
                   if (type == 'TaskModel') {

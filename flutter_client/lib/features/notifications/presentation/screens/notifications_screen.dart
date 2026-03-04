@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
+import 'package:homesync_client/core/utils/app_animations.dart';
+
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
@@ -83,110 +85,135 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           )
         ],
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary))
-          : _notifications.isEmpty
-              ? _buildEmptyState()
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _notifications.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final notification = _notifications[index];
-                    final isRead = notification['is_read'] == true;
+      body: RefreshIndicator(
+        onRefresh: _loadNotifications,
+        color: AppColors.primary,
+        child: _isLoading
+            ? ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: 6,
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  return ShimmerLoading(
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  );
+                },
+              )
+            : _notifications.isEmpty
+                ? SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height - 200,
+                      child: _buildEmptyState(),
+                    ),
+                  )
+                : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _notifications.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final notification = _notifications[index];
+                      final isRead = notification['is_read'] == true;
 
-                    return InkWell(
-                      onTap: () {
-                        if (!isRead) {
-                          _markAsRead(notification['id']);
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isRead
-                              ? AppColors.surface
-                              : AppColors.surfaceVariant.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
+                      return InkWell(
+                        onTap: () {
+                          if (!isRead) {
+                            _markAsRead(notification['id']);
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
                             color: isRead
-                                ? AppColors.border
-                                : AppColors.primary.withValues(alpha: 0.3),
-                            width: 1,
+                                ? AppColors.surface
+                                : AppColors.surfaceVariant.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isRead
+                                  ? AppColors.border
+                                  : AppColors.primary.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _getIconForType(notification['type']),
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notification['title'] ?? 'Notificación',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: isRead
-                                          ? FontWeight.w500
-                                          : FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    notification['body'] ?? '',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isRead
-                                          ? AppColors.textSecondary
-                                          : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    timeago.format(
-                                        DateTime.parse(
-                                            notification['created_at']),
-                                        locale: 'es'),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (!isRead)
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Container(
-                                width: 8,
-                                height: 8,
-                                margin: const EdgeInsets.only(top: 8),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
+                                child: Icon(
+                                  _getIconForType(notification['type']),
+                                  color: AppColors.primary,
+                                ),
                               ),
-                          ],
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      notification['title'] ?? 'Notificación',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: isRead
+                                            ? FontWeight.w500
+                                            : FontWeight.bold,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      notification['body'] ?? '',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isRead
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      timeago.format(
+                                          DateTime.parse(
+                                              notification['created_at']),
+                                          locale: 'es'),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isRead)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.only(top: 8),
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+      ),
     );
   }
 

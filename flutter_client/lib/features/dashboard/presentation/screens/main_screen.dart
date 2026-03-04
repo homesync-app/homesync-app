@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../utils/app_animations.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 // import '../../../../core/widgets/animated_press.dart'; // should be in utils/app_animations or shared
 import '../../../../core/services/notification_service.dart';
 

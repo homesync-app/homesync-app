@@ -16,7 +16,6 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
   final _aliasController = TextEditingController();
   final _mpService = MercadoPagoService();
   bool _isSaving = false;
-  bool _isConnectingMP = false;
 
   @override
   void dispose() {
@@ -57,24 +56,11 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
       if (mounted) setState(() => _isSaving = false);
     }
   }
-  Future<void> _connectMP() async {
-    setState(() => _isConnectingMP = true);
-    try {
-      await _mpService.startOAuthFlow();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
-      );
-    } finally {
-      if (mounted) setState(() => _isConnectingMP = false);
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userProfileProvider);
-    final connectionAsync = ref.watch(mercadopagoConnectionProvider);
 
     return profileAsync.when(
       loading: () => const Padding(
@@ -175,55 +161,26 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
               const Divider(),
               const SizedBox(height: 16),
               
-              // OAuth Connection Section
-              Row(
-                children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Sincronización Automática',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                        Text('Conecta tu cuenta para sugerir gastos automáticamente.',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                      ],
+              // Pagos habilitados vía CheckoutPro
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.',
+                        style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  connectionAsync.when(
-                    loading: () => const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    error: (_, __) => const Icon(Icons.error, color: AppColors.error, size: 20),
-                    data: (conn) {
-                      final isConnected = conn != null;
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isConnected) ...[
-                            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
-                            const SizedBox(width: 6),
-                            const Text('Conectado', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12)),
-                          ] else 
-                            ElevatedButton(
-                              onPressed: _isConnectingMP ? null : _connectMP,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                                minimumSize: const Size(80, 32),
-                                shape: const StadiumBorder(),
-                              ),
-                              child: _isConnectingMP
-                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Conectar', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),

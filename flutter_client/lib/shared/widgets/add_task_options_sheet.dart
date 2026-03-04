@@ -61,13 +61,13 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'xpReward': template.xpReward,
         'coinReward': template.coinReward,
       });
-      if (mounted) Navigator.pop(context, true);
+      if (!context.mounted) return;
+      Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+      );
     }
   }
 
@@ -151,7 +151,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     members: widget.members.map((m) => m.toMap()).toList(),
                   ),
                 );
-                if (result == true && mounted) {
+                if (result == true && context.mounted) {
                   Navigator.pop(context, true);
                 }
               },

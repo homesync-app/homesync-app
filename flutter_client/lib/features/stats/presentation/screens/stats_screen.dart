@@ -7,6 +7,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // StatsScreen — rediseñada con fl_chart y tabs de navegación
@@ -152,9 +153,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         ),
         Expanded(
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                )
+              ? _buildSkeleton()
               : TabBarView(
                   controller: _tabController,
                   children: [
@@ -180,6 +179,53 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                     ),
                   ],
                 ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkeleton() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+      children: [
+        ShimmerLoading(
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        ),
+        const SizedBox(height: 28),
+        Row(
+          children: List.generate(
+            3,
+            (index) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: index < 2 ? 10 : 0),
+                child: ShimmerLoading(
+                  child: Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 28),
+        ShimmerLoading(
+          child: Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
         ),
       ],
     );
@@ -584,7 +630,7 @@ class _XPToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return AnimatedPress(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
