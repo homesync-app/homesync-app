@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fba;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../config/app_environment.dart';
@@ -106,86 +106,46 @@ class SupabaseAuthService {
   Future<bool> signInWithGoogle() async {
     try {
       if (!kIsWeb) {
-        // Flujo nativo: usar Firebase Auth como puente (más estable en Android)
-        final fba.FirebaseAuth auth = fba.FirebaseAuth.instance;
-        final fba.GoogleAuthProvider googleProvider = fba.GoogleAuthProvider();
-        
-        log.i('Google Sign-In: Iniciando signInWithProvider de Firebase...');
-        
-        // Esto lanza el diálogo nativo de Google gestionado por Firebase
-        final fba.UserCredential userCredential = await auth.signInWithProvider(googleProvider);
-        
-        log.i('Google Sign-In: Firebase respondió. uid=${userCredential.user?.uid}, '
-              'credential type=${userCredential.credential?.runtimeType}');
-        
-        final fba.AuthCredential? credential = userCredential.credential;
-        
-        if (credential is fba.OAuthCredential) {
-          final idToken = credential.idToken;
-          final accessToken = credential.accessToken;
-          
-          log.i('Google Sign-In: OAuthCredential obtenida. idToken=${idToken != null ? "PRESENTE" : "NULO"}, '
-                'accessToken=${accessToken != null ? "PRESENTE" : "NULO"}');
-          
-          if (idToken != null) {
-            log.i('Google Sign-In: Enviando idToken a Supabase...');
-            await _client.auth.signInWithIdToken(
-              provider: OAuthProvider.google,
-              idToken: idToken,
-              accessToken: accessToken,
-            );
-            
-            final user = _client.auth.currentUser;
-            log.i('Google Sign-In: Supabase respondió. supabase_user=${user?.id}');
-            
-            if (user != null) {
-              await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
-              
-              // Ensure household exists for Google sign-in users
-              await ensureHouseholdExists();
-            }
+        log.i('Google Sign-In: Intentando Auth Nativo con google_sign_in...');
 
-            return true;
-          } else {
-            // idToken nulo — loguear para diagnóstico
-            final msg = 'Google Sign-In: idToken es NULO. '
-                        'El credential llegó pero sin token. '
-                        'Puede ser problema de SHA-1 no registrado en Firebase.';
-            log.e(msg);
-            await AdminRpcService().logApplicationError(
-              message: msg,
-              context: {
-                'firebase_uid': userCredential.user?.uid,
-                'credential_type': credential.runtimeType.toString(),
-                'provider': credential.providerId,
-                'access_token_present': accessToken != null,
-              },
-            );
-          }
-        } else {
-          // credential NO es OAuthCredential — loguear para diagnóstico  
-          final msg = 'Google Sign-In: credential type inesperado: ${credential?.runtimeType}. '
-                      'Firebase devolvió ${userCredential.user?.uid} pero el credential no tiene idToken.';
+        // El plugin google_sign_in lee automáticamente el client ID de google-services.json
+        // en Android o de GoogleService-Info.plist en iOS. No necesitas pasar serverClientId
+        // si tienes Firebase configurado porque usan los mismos archivos.
+        final googleSignIn = GoogleSignIn();
+        final googleUser = await googleSignIn.signIn();
+
+        if (googleUser == null) {
+          log.i('Google Sign-In cancelado por el usuario en flujo nativo.');
+          return false;
+        }
+
+        final googleAuth = await googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        final accessToken = googleAuth.accessToken;
+
+        if (accessToken == null || idToken == null) {
+          final msg =
+              'Google Sign-In: OAuth Token faltante tras auth nativa. idToken presente: ${idToken != null}, accessToken presente: ${accessToken != null}';
           log.e(msg);
           await AdminRpcService().logApplicationError(
-            message: msg,
-            context: {
-              'firebase_uid': userCredential.user?.uid,
-              'credential_runtime_type': credential?.runtimeType.toString(),
-              'credential_is_null': credential == null,
-            },
-          );
+              message: msg, level: 'error', context: {'platform': 'native'});
+          // Si faltan tokens, forzamos el fallback web.
+          throw Exception('Missing OAuth Token (posible problema de SHA-1)');
         }
-        
-        // Fallback: if the credential didn't work but Firebase user exists, try oauth flow
-        log.w('Google Sign-In: credential nulo o sin idToken — activando fallback OAuth...');
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: 'homesync://login-callback',
-          authScreenLaunchMode: LaunchMode.externalApplication,
+
+        log.i('Google Sign-In: Tokens obtenidos. Enviando a Supabase...');
+        await _client.auth.signInWithIdToken(
+          provider: OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
         );
-        return false;
-        
+
+        final user = _client.auth.currentUser;
+        if (user != null) {
+          await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+          await ensureHouseholdExists();
+        }
+        return true;
       } else {
         // En Web usamos OAuth de Supabase directamente
         await _client.auth.signInWithOAuth(
@@ -197,31 +157,54 @@ class SupabaseAuthService {
       final errorStr = e.toString().toLowerCase();
 
       // Cancelación del usuario — ignorar silenciosamente
-      if (errorStr.contains('canceled') || errorStr.contains('cancelled') ||
-          errorStr.contains('sign_in_canceled') || errorStr.contains('12501')) {
+      if (errorStr.contains('canceled') ||
+          errorStr.contains('cancelled') ||
+          errorStr.contains('sign_in_canceled') ||
+          errorStr.contains('12501')) {
         log.i('Google Sign-In cancelado por el usuario');
         return false;
       }
-      
-      // Para cualquier otro error (como SHA-1 mismatch de App Distribution), 
-      // logueamos el fallo nativo e intentamos el fallback OAuth por navegador.
-      log.w('Fallo el login nativo de Google ($e). Intentando fallback OAuth en el navegador...');
-      await AdminRpcService().logApplicationError(
-        message: 'Google Sign-In Nativo falló — usando fallback OAuth',
-        stackTrace: stack.toString(),
-        level: 'warning',
-        context: {'error': e.toString(), 'platform': kIsWeb ? 'web' : 'native'},
-      );
-      
+
+      // IMPORTANTE: "no provider dependencies found" significa SHA-1 no registrado en Firebase/GCP.
+      if (errorStr.contains('provider dependencies found') ||
+          errorStr.contains('10')) {
+        log.e('⚠️ SHA-1 RECHAZADO EN FIREBASE: $e');
+        await AdminRpcService().logApplicationError(
+          message:
+              'Google Sign-In Bloqueado: SHA-1 inválido/faltante en Firebase (Error CredentialManager)',
+          stackTrace: stack.toString(),
+          level: 'critical',
+          context: {
+            'error': e.toString(),
+            'action_required':
+                'Eliminar app del proyecto Firebase viejo y agregar SHA-1 actual.'
+          },
+        );
+      } else {
+        log.w(
+            'Fallo el login nativo de Google ($e). Intentando fallback OAuth...');
+        await AdminRpcService().logApplicationError(
+          message: 'Google Sign-In Nativo falló — usando fallback OAuth',
+          stackTrace: stack.toString(),
+          level: 'warning',
+          context: {
+            'error': e.toString(),
+            'platform': kIsWeb ? 'web' : 'native'
+          },
+        );
+      }
+
+      // Intentar siempre el fallback usando el navegador IN-APP (mantiene al usuario en la app)
       try {
         await _client.auth.signInWithOAuth(
           OAuthProvider.google,
           redirectTo: 'homesync://login-callback',
-          authScreenLaunchMode: LaunchMode.externalApplication,
+          authScreenLaunchMode: LaunchMode.inAppWebView, // UX más fluida
         );
         return false; // Retornamos false porque la sesión se establecerá vía deep link
       } catch (oauthError, oauthStack) {
-        log.e('Error en fallback OAuth: $oauthError', error: oauthError, stackTrace: oauthStack);
+        log.e('Error en fallback OAuth: $oauthError',
+            error: oauthError, stackTrace: oauthStack);
         await AdminRpcService().logApplicationError(
           message: 'Error crítico en fallback OAuth: $oauthError',
           stackTrace: oauthStack.toString(),
@@ -232,7 +215,6 @@ class SupabaseAuthService {
       }
     }
   }
-
 
   Future<void> ensureHouseholdExists() async {
     final user = _client.auth.currentUser;
