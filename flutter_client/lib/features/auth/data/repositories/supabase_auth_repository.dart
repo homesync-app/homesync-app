@@ -16,7 +16,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Supabase implementation of AuthRepository.
-class SupabaseAuthRepository with RepositoryErrorHandler implements AuthRepository {
+class SupabaseAuthRepository
+    with RepositoryErrorHandler
+    implements AuthRepository {
   final SupabaseClient _client;
   final SupabaseAuthService _authService;
 

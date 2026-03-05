@@ -12,8 +12,10 @@ class AppTransitions {
         const end = Offset.zero;
         const curve = Curves.easeOutCubic;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var fadeTween =
+            Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
         return FadeTransition(
           opacity: animation.drive(fadeTween),
@@ -34,8 +36,10 @@ class AppTransitions {
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const curve = Curves.easeOutCubic;
 
-        var scaleTween = Tween<double>(begin: 0.92, end: 1.0).chain(CurveTween(curve: curve));
-        var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+        var scaleTween = Tween<double>(begin: 0.92, end: 1.0)
+            .chain(CurveTween(curve: curve));
+        var fadeTween =
+            Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
         return FadeTransition(
           opacity: animation.drive(fadeTween),
@@ -50,16 +54,20 @@ class AppTransitions {
     );
   }
 
-  static Route<T> slideHorizontal<T>({required Widget page, bool fromRight = true}) {
+  static Route<T> slideHorizontal<T>(
+      {required Widget page, bool fromRight = true}) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const curve = Curves.easeOutCubic;
-        final begin = fromRight ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
+        final begin =
+            fromRight ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
         const end = Offset.zero;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var fadeTween = Tween<double>(begin: 0.7, end: 1.0).chain(CurveTween(curve: curve));
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var fadeTween =
+            Tween<double>(begin: 0.7, end: 1.0).chain(CurveTween(curve: curve));
 
         return FadeTransition(
           opacity: animation.drive(fadeTween),
@@ -93,7 +101,8 @@ class AnimatedPress extends StatefulWidget {
   State<AnimatedPress> createState() => _AnimatedPressState();
 }
 
-class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProviderStateMixin {
+class _AnimatedPressState extends State<AnimatedPress>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -134,10 +143,12 @@ class _AnimatedPressState extends State<AnimatedPress> with SingleTickerProvider
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      onLongPress: widget.onLongPress != null ? () {
-        HapticFeedback.mediumImpact();
-        widget.onLongPress!();
-      } : null,
+      onLongPress: widget.onLongPress != null
+          ? () {
+              HapticFeedback.mediumImpact();
+              widget.onLongPress!();
+            }
+          : null,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) => Transform.scale(
@@ -164,7 +175,8 @@ class ShimmerLoading extends StatefulWidget {
   State<ShimmerLoading> createState() => _ShimmerLoadingState();
 }
 
-class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProviderStateMixin {
+class _ShimmerLoadingState extends State<ShimmerLoading>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -234,7 +246,8 @@ class FadeIndexedStack extends StatefulWidget {
   State<FadeIndexedStack> createState() => _FadeIndexedStackState();
 }
 
-class _FadeIndexedStackState extends State<FadeIndexedStack> with SingleTickerProviderStateMixin {
+class _FadeIndexedStackState extends State<FadeIndexedStack>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late int _currentIndex;
 
@@ -333,8 +346,10 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
 }
 
 class SuccessCelebration {
-  static void show(BuildContext context, {required String title, required String message, String? icon}) {
-    final confettiController = ConfettiController(duration: const Duration(seconds: 3));
+  static void show(BuildContext context,
+      {required String title, required String message, String? icon}) {
+    final confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
     confettiController.play();
 
     showDialog(
@@ -372,10 +387,17 @@ class _CelebrationDialog extends StatelessWidget {
           confettiController: confettiController,
           blastDirectionality: BlastDirectionality.explosive,
           shouldLoop: false,
-          colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
+          colors: const [
+            Colors.green,
+            Colors.blue,
+            Colors.pink,
+            Colors.orange,
+            Colors.purple
+          ],
         ),
         Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           elevation: 0,
           backgroundColor: Colors.transparent,
           child: Container(
@@ -408,13 +430,17 @@ class _CelebrationDialog extends StatelessWidget {
                 const SizedBox(height: 24),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF166534)),
+                  style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF166534)),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   message,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600], height: 1.5),
+                  style: TextStyle(
+                      fontSize: 16, color: Colors.grey[600], height: 1.5),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -429,10 +455,13 @@ class _CelebrationDialog extends StatelessWidget {
                       backgroundColor: const Color(0xFF22C55E),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                       elevation: 0,
                     ),
-                    child: const Text('¡GENIAL!', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                    child: const Text('¡GENIAL!',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, letterSpacing: 1)),
                   ),
                 ),
               ],

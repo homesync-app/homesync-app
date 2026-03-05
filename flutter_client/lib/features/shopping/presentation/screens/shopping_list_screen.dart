@@ -27,7 +27,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final FocusNode _inputFocus = FocusNode();
 
   final Set<String> _expandedSections = {};
-  final ValueNotifier<List<Map<String, String>>> _suggestionsVal = ValueNotifier([]);
+  final ValueNotifier<List<Map<String, String>>> _suggestionsVal =
+      ValueNotifier([]);
   Timer? _debounce;
   String _lastQuery = '';
 
@@ -83,7 +84,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
     HapticFeedback.lightImpact();
-    ref.read(shoppingItemsProvider.notifier).toggleItem(item.id, !item.completed);
+    ref
+        .read(shoppingItemsProvider.notifier)
+        .toggleItem(item.id, !item.completed);
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
@@ -149,13 +152,13 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
     try {
       await ref.read(shoppingItemsProvider.notifier).addItem(
-        name: val,
-        quantity: '',
-        unit: '',
-        category: categoryId,
-        emoji: finalEmoji,
-        note: '',
-      );
+            name: val,
+            quantity: '',
+            unit: '',
+            category: categoryId,
+            emoji: finalEmoji,
+            note: '',
+          );
     } catch (e) {
       if (mounted) _showSnack('Error: $e', AppColors.error);
     }
@@ -175,7 +178,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
-  Widget _buildSectionHeader(String title, String sectionId, {bool isAccent = false, String? emoji}) {
+  Widget _buildSectionHeader(String title, String sectionId,
+      {bool isAccent = false, String? emoji}) {
     final isExpanded = _expandedSections.contains(sectionId);
     return SliverToBoxAdapter(
       child: Padding(
@@ -187,10 +191,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: isExpanded ? AppColors.surfaceVariant.withValues(alpha: 0.3) : AppColors.surface,
+              color: isExpanded
+                  ? AppColors.surfaceVariant.withValues(alpha: 0.3)
+                  : AppColors.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isExpanded ? AppColors.accentGreen.withValues(alpha: 0.3) : Colors.transparent,
+                color: isExpanded
+                    ? AppColors.accentGreen.withValues(alpha: 0.3)
+                    : Colors.transparent,
                 width: 1,
               ),
             ),
@@ -208,14 +216,20 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: isAccent ? AppColors.accentGreen : AppColors.textPrimary,
+                        color: isAccent
+                            ? AppColors.accentGreen
+                            : AppColors.textPrimary,
                       ),
                     ),
                   ],
                 ),
                 Icon(
-                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_right,
-                  color: isAccent ? AppColors.accentGreen : AppColors.textSecondary,
+                  isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_right,
+                  color: isAccent
+                      ? AppColors.accentGreen
+                      : AppColors.textSecondary,
                   size: 20,
                 ),
               ],
@@ -226,7 +240,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     );
   }
 
-  Widget _buildPredefinedGrid(Map<String, dynamic> cat, List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
+  Widget _buildPredefinedGrid(Map<String, dynamic> cat,
+      List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
     final predefined = ShoppingPredefined.itemsPerCategory[cat['id']] ?? [];
     if (predefined.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox());
@@ -247,7 +262,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           (ctx, i) {
             final prefItem = predefined[i];
             final name = prefItem['name']!;
-            final isPending = pending.any((item) => item.name.toLowerCase() == name.toLowerCase());
+            final isPending = pending
+                .any((item) => item.name.toLowerCase() == name.toLowerCase());
 
             return _PredefinedItemTile(
               item: prefItem,
@@ -268,7 +284,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     );
   }
 
-  Widget _buildBottomOverlay(List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
+  Widget _buildBottomOverlay(
+      List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -282,16 +299,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10)
                 ],
               ),
               child: Column(
                 children: suggestions
                     .map((s) => ListTile(
-                          leading: Text(s['emoji']!, style: const TextStyle(fontSize: 20)),
-                          title: Text(s['name']!, style: const TextStyle(color: AppColors.textPrimary)),
-                          trailing: const Icon(Icons.add_circle_outline, color: AppColors.accentGreen),
-                          onTap: () => _handleSelection(s['name']!, pending, done),
+                          leading: Text(s['emoji']!,
+                              style: const TextStyle(fontSize: 20)),
+                          title: Text(s['name']!,
+                              style: const TextStyle(
+                                  color: AppColors.textPrimary)),
+                          trailing: const Icon(Icons.add_circle_outline,
+                              color: AppColors.accentGreen),
+                          onTap: () =>
+                              _handleSelection(s['name']!, pending, done),
                         ))
                     .toList(),
               ),
@@ -299,7 +323,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           },
         ),
         Container(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
+          padding:
+              const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
           decoration: BoxDecoration(
             color: AppColors.surface,
             boxShadow: [
@@ -323,8 +348,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       hintStyle: const TextStyle(color: AppColors.textMuted),
                       filled: true,
                       fillColor: AppColors.background,
-                      prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      prefixIcon:
+                          const Icon(Icons.search, color: AppColors.textMuted),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
@@ -335,7 +362,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 ),
                 const SizedBox(width: 12),
                 InkWell(
-                  onTap: () => _handleSelection(_inputController.text, pending, done),
+                  onTap: () =>
+                      _handleSelection(_inputController.text, pending, done),
                   borderRadius: BorderRadius.circular(25),
                   child: Container(
                     width: 50,
@@ -344,7 +372,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       color: AppColors.accentGreen,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+                    child: const Icon(Icons.add_rounded,
+                        color: Colors.white, size: 30),
                   ),
                 ),
               ],
@@ -362,33 +391,44 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Lista de Compras', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Lista de Compras',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined, color: AppColors.textSecondary),
+            icon: const Icon(Icons.delete_sweep_outlined,
+                color: AppColors.textSecondary),
             onPressed: () {
               // Limpiar completados logic
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: AppColors.surface,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  title: const Text('¿Limpiar completados?', style: TextStyle(color: AppColors.textPrimary)),
-                  content: const Text('Se eliminarán todos los ítems que ya fueron comprados.', style: TextStyle(color: AppColors.textSecondary)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: const Text('¿Limpiar completados?',
+                      style: TextStyle(color: AppColors.textPrimary)),
+                  content: const Text(
+                      'Se eliminarán todos los ítems que ya fueron comprados.',
+                      style: TextStyle(color: AppColors.textSecondary)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                      child: const Text('Cancelar',
+                          style: TextStyle(color: AppColors.textSecondary)),
                     ),
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pop(ctx);
-                        ref.read(shoppingItemsProvider.notifier).clearCompleted();
+                        ref
+                            .read(shoppingItemsProvider.notifier)
+                            .clearCompleted();
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                      child: const Text('Limpiar', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error),
+                      child: const Text('Limpiar',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -398,8 +438,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         ],
       ),
       body: shoppingState.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, stack) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, stack) => Center(
+            child: Text('Error: $err',
+                style: const TextStyle(color: AppColors.error))),
         data: (items) {
           final pending = items.where((i) => !i.completed).toList();
           final done = items.where((i) => i.completed).toList();
@@ -416,14 +459,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     color: AppColors.primary,
                     child: CustomScrollView(
                       controller: _scrollController,
-                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics()),
                       slivers: [
                         // ── PENDING ITEMS ──────────────────────────────────
                         if (pending.isNotEmpty) ...[
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                             sliver: SliverGrid(
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
                                 childAspectRatio: 0.85,
                                 crossAxisSpacing: 10,
@@ -465,12 +510,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           ),
 
                         if (done.isNotEmpty) ...[
-                          _buildSectionHeader('Utilizados recientemente', 'recent', emoji: '🕒'),
+                          _buildSectionHeader(
+                              'Utilizados recientemente', 'recent',
+                              emoji: '🕒'),
                           if (_expandedSections.contains('recent'))
                             SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                              padding:
+                                  const EdgeInsets.fromLTRB(16, 12, 16, 16),
                               sliver: SliverGrid(
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 4,
                                   childAspectRatio: 0.85,
                                   crossAxisSpacing: 10,
@@ -491,7 +540,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
                         // ── CATEGORIES SECTIONS ─────────────────────────────────
                         for (var cat in ShoppingCategories.all) ...[
-                          _buildSectionHeader(cat['name'], cat['id'], emoji: cat['emoji']),
+                          _buildSectionHeader(cat['name'], cat['id'],
+                              emoji: cat['emoji']),
                           if (_expandedSections.contains(cat['id']))
                             _buildPredefinedGrid(cat, pending, done),
                         ],
@@ -535,10 +585,14 @@ class _PredefinedItemTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isPending ? AppColors.surfaceVariant.withValues(alpha: 0.3) : catColor.withValues(alpha: 0.12),
+          color: isPending
+              ? AppColors.surfaceVariant.withValues(alpha: 0.3)
+              : catColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isPending ? Colors.transparent : catColor.withValues(alpha: 0.2),
+            color: isPending
+                ? Colors.transparent
+                : catColor.withValues(alpha: 0.2),
             width: 1.5,
           ),
         ),
@@ -549,7 +603,9 @@ class _PredefinedItemTile extends StatelessWidget {
               item['emoji']!,
               style: TextStyle(
                 fontSize: 28,
-                color: isPending ? AppColors.textMuted.withValues(alpha: 0.5) : null,
+                color: isPending
+                    ? AppColors.textMuted.withValues(alpha: 0.5)
+                    : null,
               ),
             ),
             const SizedBox(height: 6),
@@ -564,7 +620,8 @@ class _PredefinedItemTile extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                   height: 1.1,
-                  color: isPending ? AppColors.textMuted : AppColors.textPrimary,
+                  color:
+                      isPending ? AppColors.textMuted : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -605,20 +662,25 @@ class _ShoppingItemTile extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('¿Eliminar ${item.name}?', style: const TextStyle(color: AppColors.textPrimary)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text('¿Eliminar ${item.name}?',
+                style: const TextStyle(color: AppColors.textPrimary)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                child: const Text('Cancelar',
+                    style: TextStyle(color: AppColors.textSecondary)),
               ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(ctx);
                   onDelete();
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+                style:
+                    ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                child: const Text('Eliminar',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -627,9 +689,13 @@ class _ShoppingItemTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          color: isCompleted ? AppColors.surfaceVariant.withValues(alpha: 0.5) : catColor.withValues(alpha: 0.2),
+          color: isCompleted
+              ? AppColors.surfaceVariant.withValues(alpha: 0.5)
+              : catColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(20),
-          border: isCompleted ? null : Border.all(color: catColor.withValues(alpha: 0.5), width: 2.0),
+          border: isCompleted
+              ? null
+              : Border.all(color: catColor.withValues(alpha: 0.5), width: 2.0),
           boxShadow: isCompleted
               ? []
               : [
@@ -648,7 +714,9 @@ class _ShoppingItemTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    item.emoji.isNotEmpty ? item.emoji : catInfo['emoji'] as String,
+                    item.emoji.isNotEmpty
+                        ? item.emoji
+                        : catInfo['emoji'] as String,
                     style: TextStyle(
                       fontSize: isCompleted ? 20 : 32,
                       color: isCompleted ? AppColors.textMuted : null,
@@ -666,8 +734,11 @@ class _ShoppingItemTile extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: isCompleted ? 11 : 13,
                         height: 1.1,
-                        color: isCompleted ? AppColors.textMuted : AppColors.textPrimary,
-                        decoration: isCompleted ? TextDecoration.lineThrough : null,
+                        color: isCompleted
+                            ? AppColors.textMuted
+                            : AppColors.textPrimary,
+                        decoration:
+                            isCompleted ? TextDecoration.lineThrough : null,
                       ),
                     ),
                   ),

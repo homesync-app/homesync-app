@@ -110,18 +110,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
-    
+
     final signInUseCase = ref.read(signInUseCaseProvider);
     final result = await signInUseCase.execute(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
-    
+
     if (mounted) {
       result.fold(
         (failure) {
           setState(() => _isLoading = false);
-          errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleLogin');
+          errorHandler.handleAndShow(context, failure,
+              where: 'LoginScreen._handleLogin');
         },
         (_) {
           setState(() => _isLoading = false);
@@ -141,17 +142,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
-    
+
     final signUpUseCase = ref.read(signUpUseCaseProvider);
     final result = await signUpUseCase.execute(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
-    
+
     if (mounted) {
       setState(() => _isLoading = false);
       result.fold(
-        (failure) => errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleSignUp'),
+        (failure) => errorHandler.handleAndShow(context, failure,
+            where: 'LoginScreen._handleSignUp'),
         (_) => _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧'),
       );
     }
@@ -160,28 +162,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.mediumImpact();
     setState(() => _isGoogleLoading = true);
-    
+
     final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
     final result = await googleSignInUseCase.execute();
-    
+
     if (mounted) {
       result.fold(
         (failure) {
           setState(() => _isGoogleLoading = false);
           // Only show error if it's not a cancellation
           if (failure.message != 'Cancelado por el usuario') {
-             errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleGoogleSignIn');
+            errorHandler.handleAndShow(context, failure,
+                where: 'LoginScreen._handleGoogleSignIn');
           }
         },
         (success) async {
           if (!success) {
             // OAuth browser fallback abierto o cancelación.
-            // Si es fallback, la sesión se completará con el deep link y 
+            // Si es fallback, la sesión se completará con el deep link y
             // authStateProvider navegará automáticamente. Solo reseteamos el loader.
             if (mounted) setState(() => _isGoogleLoading = false);
             return;
           }
-          
+
           if (mounted) {
             setState(() => _isGoogleLoading = false);
             Navigator.of(context).pushReplacement(
@@ -278,16 +281,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     setState(() => _isLoading = true);
     final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
     final result = await resetPasswordUseCase.execute(email);
-    
+
     if (mounted) {
       setState(() => _isLoading = false);
       result.fold(
-        (failure) => errorHandler.handleAndShow(context, failure, where: 'LoginScreen._handleForgotPassword'),
+        (failure) => errorHandler.handleAndShow(context, failure,
+            where: 'LoginScreen._handleForgotPassword'),
         (_) => _showSuccess('¡Revisá tu email para cambiar tu contraseña! 📧'),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -300,18 +303,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Positioned(
             top: -100,
             right: -50,
-            child: _buildBackgroundBlob(AppColors.primary.withValues(alpha: 0.08), 300),
+            child: _buildBackgroundBlob(
+                AppColors.primary.withValues(alpha: 0.08), 300),
           ),
           Positioned(
             bottom: -50,
             left: -50,
-            child: _buildBackgroundBlob(AppColors.accentGold.withValues(alpha: 0.05), 250),
+            child: _buildBackgroundBlob(
+                AppColors.accentGold.withValues(alpha: 0.05), 250),
           ),
-          
+
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SlideTransition(
@@ -323,7 +329,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         children: [
                           _buildLogoHeader(),
                           const SizedBox(height: 40),
-                          
                           GlassContainer(
                             borderRadius: 32,
                             padding: const EdgeInsets.all(32),
@@ -349,7 +354,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     child: TextButton(
                                       onPressed: _handleForgotPassword,
                                       style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8),
                                       ),
                                       child: const Text(
                                         '¿Olvidaste tu contraseña?',
@@ -370,7 +376,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                             ),
                           ),
-                          
                           const SizedBox(height: 32),
                           _buildSignUpPrompt(),
                         ],
@@ -464,7 +469,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+          borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.8), width: 1.5),
         ),
       ),
       keyboardType: TextInputType.emailAddress,
@@ -491,11 +497,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+          borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.8), width: 1.5),
         ),
         suffixIcon: IconButton(
           icon: Icon(
-            _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
             color: AppColors.textSecondary,
           ),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -522,7 +531,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ? const SizedBox(
               height: 24,
               width: 24,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+              child: CircularProgressIndicator(
+                  color: Colors.white, strokeWidth: 2.5),
             )
           : const Text(
               'Entrar al Hogar',
@@ -534,15 +544,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
+        Expanded(
+            child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'o continúa con',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
           ),
         ),
-        Expanded(child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
+        Expanded(
+            child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
       ],
     );
   }
@@ -557,16 +572,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       icon: _isGoogleLoading
-          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2))
           : Image.network(
               'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
               height: 20,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, size: 24, color: AppColors.primary),
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.g_mobiledata,
+                  size: 24,
+                  color: AppColors.primary),
             ),
       label: const Text(
         'Google Workspace',
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
+        style: TextStyle(
+            color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -577,7 +599,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       children: [
         const Text(
           '¿Eres nuevo?',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.w500),
+          style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w500),
         ),
         TextButton(
           onPressed: _isLoading || _isGoogleLoading ? null : _handleSignUp,

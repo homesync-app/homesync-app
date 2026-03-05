@@ -8,7 +8,7 @@ import '../../domain/usecases/reset_password_usecase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Repositories
-// Note: authRepositoryProvider is already defined in supabase_auth_repository.dart, 
+// Note: authRepositoryProvider is already defined in supabase_auth_repository.dart,
 // but we re-export it here or just use it directly.
 
 // Use Cases
@@ -20,7 +20,8 @@ final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
   return SignOutUseCase(ref.read(authRepositoryProvider));
 });
 
-final signInWithGoogleUseCaseProvider = Provider<SignInWithGoogleUseCase>((ref) {
+final signInWithGoogleUseCaseProvider =
+    Provider<SignInWithGoogleUseCase>((ref) {
   return SignInWithGoogleUseCase(ref.read(authRepositoryProvider));
 });
 

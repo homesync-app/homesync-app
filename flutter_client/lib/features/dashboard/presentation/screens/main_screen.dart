@@ -70,7 +70,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content:
+            Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -122,7 +123,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     await widget.prefs.setBool('setup_completed', true);
     if (!mounted) return;
-    
+
     await _checkWeeklyWinner();
     if (!mounted) return;
 
@@ -218,7 +219,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final titles = [
       'Inicio',
       'Tareas',
-      'Gastos',
+      'Finanzas',
       'Tienda',
       'Progreso',
       'Compras'
@@ -289,7 +290,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final navItems = [
       (icon: Icons.home_rounded, label: 'Inicio', screenIndex: 0),
       (icon: Icons.task_alt_rounded, label: 'Tareas', screenIndex: 1),
-      (icon: Icons.account_balance_wallet_rounded, label: 'Gastos', screenIndex: 2),
+      (
+        icon: Icons.account_balance_wallet_outlined,
+        label: 'Finanzas',
+        screenIndex: 2
+      ),
       (icon: Icons.shopping_cart_rounded, label: 'Compras', screenIndex: 5),
     ];
 
@@ -309,10 +314,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: navItems.map((item) {
-            final isSelected = currentIndex == item.screenIndex || 
-                             (item.screenIndex == 0 && (currentIndex == 3 || currentIndex == 4));
+            final isSelected = currentIndex == item.screenIndex ||
+                (item.screenIndex == 0 &&
+                    (currentIndex == 3 || currentIndex == 4));
             return AnimatedPress(
-              onTap: () => ref.read(bottomNavIndexProvider.notifier).setIndex(item.screenIndex),
+              onTap: () => ref
+                  .read(bottomNavIndexProvider.notifier)
+                  .setIndex(item.screenIndex),
               scaleDown: 0.9,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 64),
@@ -338,8 +346,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         scale: isSelected ? 1.15 : 1.0,
                         child: Icon(
                           item.icon,
-                          color:
-                              isSelected ? AppColors.primary : AppColors.textMuted,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textMuted,
                           size: 22,
                         ),
                       ),
@@ -352,8 +361,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         fontSize: isSelected ? 11 : 10,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color:
-                            isSelected ? AppColors.primary : AppColors.textMuted,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textMuted,
                       ),
                       child: Text(item.label),
                     ),

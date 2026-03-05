@@ -19,7 +19,8 @@ class FakeAuthService implements SupabaseAuthService {
   String? lastEmailed;
 
   @override
-  Future<AuthResponse> signIn({required String email, required String password}) async {
+  Future<AuthResponse> signIn(
+      {required String email, required String password}) async {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
@@ -48,7 +49,8 @@ class FakeAuthRepository implements AuthRepository {
   String? lastEmailed;
 
   @override
-  Future<Either<Failure, void>> signInWithEmail({required String email, required String password}) async {
+  Future<Either<Failure, void>> signInWithEmail(
+      {required String email, required String password}) async {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
@@ -76,21 +78,23 @@ class MockHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
 void main() {
   HttpOverrides.global = MockHttpOverrides();
 
-  testWidgets('Test de Interfaz Visual - LoginScreen Renderiza Correctamente', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(600, 1000); 
+  testWidgets('Test de Interfaz Visual - LoginScreen Renderiza Correctamente',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-    
+
     final fakeRepo = FakeAuthRepository();
     final fakePrefs = FakePrefs();
 
@@ -110,19 +114,20 @@ void main() {
     expect(find.text('Inicio de Sesión'), findsAtLeastNWidgets(1));
     expect(find.text('HomeSync'), findsAtLeastNWidgets(1));
     expect(find.text('¿Eres nuevo?'), findsOneWidget);
-    
+
     // Verificamos inputs
     expect(find.byType(TextFormField), findsNWidgets(2)); // Email y Password
   });
 
-  testWidgets('Test de Validaciones - LoginScreen requiere inputs válidos', (WidgetTester tester) async {
+  testWidgets('Test de Validaciones - LoginScreen requiere inputs válidos',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-    
+
     final fakeRepo = FakeAuthRepository();
     final fakePrefs = FakePrefs();
 
@@ -148,25 +153,30 @@ void main() {
     expect(find.text('Mínimo 6 caracteres'), findsOneWidget);
 
     // Intentamos un correo no válido
-    await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), 'correoInvalido');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Correo electrónico'),
+        'correoInvalido');
     await tester.tap(find.text('Entrar al Hogar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Correo inválido'), findsOneWidget);
   });
 
-  testWidgets('Test de Interacción Front-to-Back - LoginScreen llama a AuthService', (WidgetTester tester) async {
+  testWidgets(
+      'Test de Interacción Front-to-Back - LoginScreen llama a AuthService',
+      (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
-    
+
     final fakeRepo = FakeAuthRepository();
     final fakePrefs = FakePrefs();
 
-    fakeRepo.shouldFail = true; // Simularemos una falla de login del Server para ver el SnackBar
+    fakeRepo.shouldFail =
+        true; // Simularemos una falla de login del Server para ver el SnackBar
 
     await tester.pumpWidget(ProviderScope(
       overrides: [
@@ -183,21 +193,26 @@ void main() {
     await tester.pumpAndSettle();
 
     // Ingresamos datos correctos estructuralmente pero fallarán desde el "backend simulado"
-    await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), 'test@test.com');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), '123456');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Correo electrónico'),
+        'test@test.com');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Contraseña'), '123456');
 
     // Nos aseguramos que el botón sea visible y lo tocamos
     await tester.ensureVisible(find.text('Entrar al Hogar'));
     await tester.tap(find.text('Entrar al Hogar'));
     await tester.pump(); // Inicia proceso
-    await tester.pump(const Duration(milliseconds: 500)); // Espera un poco de la animación
+    await tester.pump(
+        const Duration(milliseconds: 500)); // Espera un poco de la animación
     await tester.pumpAndSettle(); // Termina animaciones
 
     // Verificamos que sí se interceptó el botón
     expect(fakeRepo.didCallSignIn, isTrue);
     expect(fakeRepo.lastEmailed, 'test@test.com');
-    
+
     // Verificamos que la falla generó el SnackBar rojo en pantalla al usuario
-    expect(find.text('Credenciales inválidas o cuenta no existente'), findsOneWidget);
+    expect(find.text('Credenciales inválidas o cuenta no existente'),
+        findsOneWidget);
   });
 }

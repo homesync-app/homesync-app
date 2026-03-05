@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../data/repositories/supabase_household_repository.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../providers/household_providers.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -25,7 +26,8 @@ class SetupScreen extends ConsumerStatefulWidget {
   ConsumerState<SetupScreen> createState() => _SetupScreenState();
 }
 
-class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderStateMixin {
+class _SetupScreenState extends ConsumerState<SetupScreen>
+    with TickerProviderStateMixin {
   // Steps: 0=Welcome, 1=mode, 2=teamOptions, 3=creating(code display), 4=taskSelection
   int _currentStep = 0;
   String? _selectedMode;
@@ -177,15 +179,27 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
     try {
       final householdRepo = ref.read(householdRepositoryProvider);
       await householdRepo.joinHousehold(code);
-      
+
       // Invalida proveedores para que MainScreen/HomeScreen vean el nuevo hogar
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(userBalanceProvider);
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('setup_completed', true);
-      if (mounted) widget.onComplete();
+      ref.invalidate(householdMembersProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                '¡Te has unido con éxito! 🎉 Ahora personaliza tus tareas.'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        setState(() {
+          _isJoining = false;
+          _currentStep = 4;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -208,11 +222,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
 
     try {
       await _templateService.cloneTemplates(_selectedTemplateIds.toList());
-      
+
       // Invalida proveedores aquí también para el flujo de creación
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(userBalanceProvider);
+      ref.invalidate(householdMembersProvider);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
@@ -220,7 +235,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -241,21 +257,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
 
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
-    final text = '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+    final text =
+        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n🏡 Organizemos nuestro hogar juntos.';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
-    
+
     try {
       if (await canLaunchUrl(url)) {
         await launchUrl(url);
       } else {
-        final webUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+        final webUrl =
+            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
         if (await canLaunchUrl(webUrl)) {
           await launchUrl(webUrl, mode: LaunchMode.externalApplication);
         } else {
           _copyCode();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+              const SnackBar(
+                  content: Text('No se pudo abrir WhatsApp. Código copiado.')),
             );
           }
         }
@@ -300,7 +319,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                 ),
               ),
             ),
-            
+
             SafeArea(
               child: Column(
                 children: [
@@ -348,23 +367,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
         children: List.generate(5, (index) {
           final isActive = index <= _currentStep;
           final isCurrent = index == _currentStep;
-          
+
           return Expanded(
             child: Container(
               height: 4,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                color: isActive 
-                    ? AppColors.primary 
+                color: isActive
+                    ? AppColors.primary
                     : AppColors.textMuted.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
-                boxShadow: isCurrent ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  )
-                ] : null,
+                boxShadow: isCurrent
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
+                    : null,
               ),
             ),
           );
@@ -407,7 +428,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 64),
-          
+
           // Premium Glass Welcome Card
           GlassContainer(
             borderRadius: 32,
@@ -437,9 +458,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
               ],
             ),
           ),
-          
+
           const Spacer(),
-          
+
           _buildPrimaryButton(
             text: 'Comenzar Configuración',
             onPressed: () {
@@ -547,7 +568,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected 
+              color: isSelected
                   ? AppColors.primary.withValues(alpha: 0.1)
                   : Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
@@ -611,7 +632,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -677,14 +700,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
               _joinError = null;
             }),
           ),
-          
           const Spacer(),
-          
           if (!_createNew) ...[
             _buildJoinInput(),
             const SizedBox(height: 24),
           ],
-          
           if (_isJoining)
             const Center(child: CircularProgressIndicator())
           else
@@ -692,7 +712,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
               text: _createNew ? 'Crear mi hogar' : 'Unirme ahora',
               onPressed: _createNew ? _handleCreateTeam : _handleJoinTeam,
             ),
-          
           const SizedBox(height: 16),
           Center(
             child: TextButton(
@@ -721,26 +740,33 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          color:
+              isSelected ? Colors.white : Colors.white.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.border.withValues(alpha: 0.5),
             width: 2,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ]
+              : [],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.textMuted.withValues(alpha: 0.1),
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.textMuted.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -759,7 +785,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -780,10 +808,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
   }
 
   Widget _buildJoinInput() {
-    return SlideTransition(
-      position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-        CurvedAnimation(parent: AnimationController(vsync: this, duration: const Duration(milliseconds: 400))..forward(), curve: Curves.easeOut),
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return FractionalTranslation(
+          translation: Offset(0, 0.1 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -840,7 +877,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             'Invita a quien quieras compartiendo este código.',
           ),
           const SizedBox(height: 40),
-          
+
           // Premium Code Card
           Center(
             child: ConstrainedBox(
@@ -892,7 +929,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                                 ),
                               ),
                               if (_isGeneratingCode)
-                                const CircularProgressIndicator(color: Colors.white)
+                                const CircularProgressIndicator(
+                                    color: Colors.white)
                               else
                                 FittedBox(
                                   fit: BoxFit.scaleDown,
@@ -912,14 +950,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                                 children: [
                                   ElevatedButton.icon(
                                     onPressed: _shareViaWhatsApp,
-                                    icon: const Icon(Icons.send_rounded, size: 18),
-                                    label: const Text('WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    icon: const Icon(Icons.send_rounded,
+                                        size: 18),
+                                    label: const Text('WhatsApp',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: AppColors.primary,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
                                       elevation: 0,
-                                      minimumSize: const Size(120, 48), // Overrides global infinite width
+                                      minimumSize: const Size(120,
+                                          48), // Overrides global infinite width
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -943,12 +986,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
               ),
             ),
           ),
-          
+
           const SizedBox(height: 40),
           _buildInfoBox(
             'El código es válido por 7 días. Tu pareja solo tiene que ingresarlo al registrarse para compartir el hogar contigo.',
           ),
-          
+
           const Spacer(),
           _buildPrimaryButton(
             text: 'Ir a seleccionar tareas',
@@ -984,7 +1027,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             ],
           ),
         ),
-        
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -999,7 +1041,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 24, bottom: 16, left: 4),
+                    padding:
+                        const EdgeInsets.only(top: 24, bottom: 16, left: 4),
                     child: Text(
                       '${category.icon}  ${category.name.toUpperCase()}',
                       style: const TextStyle(
@@ -1020,7 +1063,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             },
           ),
         ),
-        
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -1038,7 +1080,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             child: _buildPrimaryButton(
               text: '¡Terminar configuración!',
               isLoading: _isSaving,
-              onPressed: _selectedTemplateIds.isNotEmpty ? _saveAndComplete : null,
+              onPressed:
+                  _selectedTemplateIds.isNotEmpty ? _saveAndComplete : null,
             ),
           ),
         ),
@@ -1048,7 +1091,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
 
   Widget _buildTaskChip(TaskTemplate template) {
     final isSelected = _selectedTemplateIds.contains(template.id);
-    
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1070,13 +1113,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
             color: isSelected ? AppColors.primary : AppColors.border,
             width: 1.5,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1136,30 +1181,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> with TickerProviderSt
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        boxShadow: onPressed != null ? [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          )
-        ] : null,
+        boxShadow: onPressed != null
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                )
+              ]
+            : null,
       ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
         ),
         child: isLoading
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2.5),
               )
             : Text(
                 text,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
               ),
       ),
     );

@@ -12,7 +12,8 @@ class AIFaceoffWidget extends StatefulWidget {
   State<AIFaceoffWidget> createState() => _AIFaceoffWidgetState();
 }
 
-class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderStateMixin {
+class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
+    with TickerProviderStateMixin {
   String? _currentUserId;
   late AnimationController _vsPulseController;
   late AnimationController _scanningController;
@@ -21,7 +22,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
   void initState() {
     super.initState();
     _currentUserId = Supabase.instance.client.auth.currentUser?.id;
-    
+
     _vsPulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -51,7 +52,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
 
     final p1Xp = (p1['xp_earned'] as num?)?.toInt() ?? 0;
     final p2Xp = (p2['xp_earned'] as num?)?.toInt() ?? 0;
-    
+
     final totalXp = p1Xp + p2Xp;
     final p1Pct = totalXp == 0 ? 0.5 : p1Xp / totalXp;
 
@@ -91,7 +92,8 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
@@ -162,8 +164,8 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
               ),
             ),
           ] else ...[
-             const SizedBox(height: 4),
-             const Text(
+            const SizedBox(height: 4),
+            const Text(
               '??? XP',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -217,7 +219,8 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted.withValues(alpha: 0.6)),
+            Icon(Icons.lock_outline,
+                size: 14, color: AppColors.textMuted.withValues(alpha: 0.6)),
             const SizedBox(width: 6),
             Text(
               'EL RESULTADO SE REVELA EL DOMINGO',
@@ -259,11 +262,15 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
                                 Colors.transparent,
                               ],
                               stops: [
-                                (_scanningController.value - 0.3).clamp(0.0, 1.0),
-                                (_scanningController.value - 0.1).clamp(0.0, 1.0),
+                                (_scanningController.value - 0.3)
+                                    .clamp(0.0, 1.0),
+                                (_scanningController.value - 0.1)
+                                    .clamp(0.0, 1.0),
                                 _scanningController.value.clamp(0.0, 1.0),
-                                (_scanningController.value + 0.1).clamp(0.0, 1.0),
-                                (_scanningController.value + 0.3).clamp(0.0, 1.0),
+                                (_scanningController.value + 0.1)
+                                    .clamp(0.0, 1.0),
+                                (_scanningController.value + 0.3)
+                                    .clamp(0.0, 1.0),
                               ],
                             ),
                           ),
@@ -286,11 +293,13 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
                 Positioned.fill(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(8, (_) => Icon(
-                      Icons.help_outline,
-                      size: 8,
-                      color: AppColors.textMuted.withValues(alpha: 0.3),
-                    )),
+                    children: List.generate(
+                        8,
+                        (_) => Icon(
+                              Icons.help_outline,
+                              size: 8,
+                              color: AppColors.textMuted.withValues(alpha: 0.3),
+                            )),
                   ),
                 ),
               ],
@@ -321,7 +330,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
             ),
             const Spacer(),
             Text(
-              '${7 - today} días restantes', 
+              '${7 - today} días restantes',
               style: const TextStyle(
                 fontSize: 10,
                 color: AppColors.textMuted,
@@ -337,20 +346,24 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
             final dayNum = index + 1;
             final isToday = dayNum == today;
             final isPast = dayNum < today;
-            
+
             return Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: index == 6 ? 0 : 6),
                 height: 38,
                 decoration: BoxDecoration(
-                  color: isToday 
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : (isPast ? Colors.black.withValues(alpha: 0.03) : Colors.transparent),
+                  color: isToday
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : (isPast
+                          ? Colors.black.withValues(alpha: 0.03)
+                          : Colors.transparent),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isToday 
-                      ? AppColors.primary.withValues(alpha: 0.4)
-                      : (isPast ? Colors.black.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+                    color: isToday
+                        ? AppColors.primary.withValues(alpha: 0.4)
+                        : (isPast
+                            ? Colors.black.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.05)),
                     width: isToday ? 2 : 1.5,
                   ),
                 ),
@@ -360,9 +373,11 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
-                      color: isToday 
-                        ? AppColors.primary 
-                        : (isPast ? AppColors.textSecondary : AppColors.textMuted),
+                      color: isToday
+                          ? AppColors.primary
+                          : (isPast
+                              ? AppColors.textSecondary
+                              : AppColors.textMuted),
                     ),
                   ),
                 ),
@@ -374,4 +389,3 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget> with TickerProviderSt
     );
   }
 }
-

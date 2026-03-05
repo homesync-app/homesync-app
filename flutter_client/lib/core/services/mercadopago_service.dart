@@ -6,7 +6,8 @@ class MercadoPagoService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Mercado Pago Public Key for FE initialization
-  static const String publicKey = 'APP_USR-c6c4925e-2e11-4fb3-980f-ac459a542677';
+  static const String publicKey =
+      'APP_USR-c6c4925e-2e11-4fb3-980f-ac459a542677';
 
   /// Creates a payment preference by calling our Supabase Edge Function.
   /// This returns the [initPoint] URL to redirect the user to.
@@ -36,7 +37,11 @@ class MercadoPagoService {
       await AdminRpcService().logApplicationError(
         message: 'Error creating MP preference: $e',
         stackTrace: stack.toString(),
-        context: {'title': title, 'amount': amount, 'external_reference': externalReference},
+        context: {
+          'title': title,
+          'amount': amount,
+          'external_reference': externalReference
+        },
       );
       return null;
     }
@@ -48,7 +53,8 @@ class MercadoPagoService {
     if (await canLaunchUrl(uri)) {
       await launchUrl(
         uri,
-        mode: LaunchMode.externalApplication, // Important for opening MP app or mobile browser
+        mode: LaunchMode
+            .externalApplication, // Important for opening MP app or mobile browser
       );
     } else {
       throw 'Could not launch $url';
@@ -81,7 +87,7 @@ class MercadoPagoService {
         final url = data['url'] as String;
         await launchCheckout(url);
       } else {
-         throw 'No se pudo obtener la URL de conexión.';
+        throw 'No se pudo obtener la URL de conexión.';
       }
     } catch (e, stack) {
       print('Error starting OAuth: $e');

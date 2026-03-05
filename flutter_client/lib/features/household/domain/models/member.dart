@@ -86,5 +86,6 @@ class MemberModel {
   int get hashCode => userId.hashCode;
 
   @override
-  String toString() => 'MemberModel(userId: $userId, displayName: $displayName)';
+  String toString() =>
+      'MemberModel(userId: $userId, displayName: $displayName)';
 }

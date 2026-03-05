@@ -99,7 +99,7 @@ class _NotificationBellState extends State<NotificationBell>
             top: 8,
             right: 8,
             child: AnimatedContainer(
-               duration: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               width: 16,
               height: 16,
               decoration: const BoxDecoration(

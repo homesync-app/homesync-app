@@ -22,7 +22,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
 
   Future<void> _loadMembers() async {
     try {
-      final members = await ref.read(householdRpcServiceProvider).getHouseholdMembers();
+      final members =
+          await ref.read(householdRpcServiceProvider).getHouseholdMembers();
       setState(() {
         _members = members;
         _isLoading = false;
@@ -45,7 +46,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       color: AppColors.primary,
       backgroundColor: AppColors.surface,
       child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics()),
         padding: const EdgeInsets.all(20),
         children: [
           _buildHeader(),

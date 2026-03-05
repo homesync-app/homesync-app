@@ -14,8 +14,10 @@ class SupabaseSavingsRepository implements SavingsRepository {
           .select()
           .eq('household_id', householdId)
           .order('created_at', ascending: false);
-          
-      return (response as List).map((json) => SavingsGoalModel.fromJson(json)).toList();
+
+      return (response as List)
+          .map((json) => SavingsGoalModel.fromJson(json))
+          .toList();
     } catch (e) {
       dev.log('Error getting goals: $e');
       return [];
@@ -23,15 +25,18 @@ class SupabaseSavingsRepository implements SavingsRepository {
   }
 
   @override
-  Future<List<SavingsContributionModel>> getGoalContributions({required String goalId}) async {
+  Future<List<SavingsContributionModel>> getGoalContributions(
+      {required String goalId}) async {
     try {
       final response = await _client
           .from('savings_contributions')
           .select('*, user:users!user_id(full_name, avatar_url)')
           .eq('goal_id', goalId)
           .order('created_at', ascending: false);
-          
-      return (response as List).map((json) => SavingsContributionModel.fromJson(json)).toList();
+
+      return (response as List)
+          .map((json) => SavingsContributionModel.fromJson(json))
+          .toList();
     } catch (e) {
       dev.log('Error loading contributions: $e');
       return [];

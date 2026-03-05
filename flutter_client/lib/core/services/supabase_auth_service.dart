@@ -243,7 +243,9 @@ class SupabaseAuthService {
 
   Future<void> signOut() async {
     try {
-      await fba.FirebaseAuth.instance.signOut();
+      if (!kIsWeb) {
+        await GoogleSignIn().signOut();
+      }
     } catch (_) {}
     // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {

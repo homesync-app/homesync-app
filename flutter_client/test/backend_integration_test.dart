@@ -21,7 +21,8 @@ void main() {
       expect(AuthValidator.isValidPassword(''), isFalse);
     });
 
-    test('Full name is optional on sign-up but cannot be blank if provided', () {
+    test('Full name is optional on sign-up but cannot be blank if provided',
+        () {
       expect(AuthValidator.isValidName(null), isTrue); // optional
       expect(AuthValidator.isValidName('Blas'), isTrue);
       expect(AuthValidator.isValidName('  '), isFalse); // whitespace only
@@ -117,7 +118,10 @@ void main() {
   group('✅ Tasks — Model & Status Logic', () {
     test('Active task is eligible for completion', () {
       final task = TaskModel(
-          id: '1', title: 'Lavar platos', status: 'active', category: 'kitchen');
+          id: '1',
+          title: 'Lavar platos',
+          status: 'active',
+          category: 'kitchen');
       expect(task.canComplete, isTrue);
     });
 
@@ -132,7 +136,10 @@ void main() {
 
     test('Verified task cannot be completed', () {
       final task = TaskModel(
-          id: '3', title: 'Hacer cama', status: 'verified', category: 'bedroom');
+          id: '3',
+          title: 'Hacer cama',
+          status: 'verified',
+          category: 'bedroom');
       expect(task.canComplete, isFalse);
     });
 
@@ -162,9 +169,13 @@ void main() {
     });
 
     test('Task XP reward is non-negative', () {
-      final task =
-          TaskModel(id: '5', title: 'Test', status: 'active', category: 'general',
-              xpReward: 20, coinReward: 10);
+      final task = TaskModel(
+          id: '5',
+          title: 'Test',
+          status: 'active',
+          category: 'general',
+          xpReward: 20,
+          coinReward: 10);
       expect(task.xpReward, greaterThanOrEqualTo(0));
       expect(task.coinReward, greaterThanOrEqualTo(0));
     });
@@ -320,7 +331,8 @@ void main() {
   // ───────────────────────────────────────────────────────────────────────────
   group('🎁 Rewards — Store Logic', () {
     test('User can afford reward if coins >= cost', () {
-      final reward = Reward(id: '1', title: 'Pizza', cost: 50, icon: '🍕', isCustom: false);
+      final reward = Reward(
+          id: '1', title: 'Pizza', cost: 50, icon: '🍕', isCustom: false);
       expect(reward.canAfford(100), isTrue);
       expect(reward.canAfford(50), isTrue);
       expect(reward.canAfford(49), isFalse);
@@ -339,7 +351,8 @@ void main() {
     });
 
     test('Custom reward requires title and positive cost', () {
-      final valid = CustomRewardInput(title: 'Movie Night', cost: 30, icon: '🎬');
+      final valid =
+          CustomRewardInput(title: 'Movie Night', cost: 30, icon: '🎬');
       final noTitle = CustomRewardInput(title: '', cost: 30, icon: '🎬');
       final zeroCost = CustomRewardInput(title: 'Test', cost: 0, icon: '🎁');
 
@@ -428,11 +441,10 @@ void main() {
         {'user': 'u1', 'xp_earned': 60},
         {'user': 'u2', 'xp_earned': 40},
       ];
-      final total = members.fold<int>(
-          0, (s, m) => s + ((m['xp_earned'] as num).toInt()));
-      final percents = members
-          .map((m) => (m['xp_earned'] as int) / total * 100)
-          .toList();
+      final total =
+          members.fold<int>(0, (s, m) => s + ((m['xp_earned'] as num).toInt()));
+      final percents =
+          members.map((m) => (m['xp_earned'] as int) / total * 100).toList();
       final sum = percents.reduce((a, b) => a + b);
       expect(sum, closeTo(100.0, 0.01));
     });
@@ -546,8 +558,7 @@ class AuthValidator {
 // ── Household & Invitations ───────────────────────────────────────────────────
 class InviteCodeValidator {
   static bool isValid(String code) =>
-      RegExp(r'^[A-Z0-9]{6}$').hasMatch(code.toUpperCase()) &&
-      code.length == 6;
+      RegExp(r'^[A-Z0-9]{6}$').hasMatch(code.toUpperCase()) && code.length == 6;
   static String normalize(String code) => code.trim().toUpperCase();
   static String generateFakeCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -611,8 +622,7 @@ class HouseholdEnsurer {
 }
 
 class HouseholdType {
-  static int maxMembers(String type) =>
-      type == 'couple' ? 2 : -1;
+  static int maxMembers(String type) => type == 'couple' ? 2 : -1;
 
   static bool anyoneCanVerify(String type) => type != 'family';
 
@@ -649,7 +659,13 @@ class TaskModel {
 
 class TaskCategory {
   static const _valid = {
-    'cleaning', 'kitchen', 'bathroom', 'bedroom', 'general', 'outdoor', 'pets'
+    'cleaning',
+    'kitchen',
+    'bathroom',
+    'bedroom',
+    'general',
+    'outdoor',
+    'pets'
   };
   static bool isValid(String cat) => _valid.contains(cat);
 }
@@ -657,10 +673,14 @@ class TaskCategory {
 class TaskDifficulty {
   static int defaultXp(String difficulty) {
     switch (difficulty) {
-      case 'easy': return 10;
-      case 'medium': return 20;
-      case 'hard': return 40;
-      default: return 20;
+      case 'easy':
+        return 10;
+      case 'medium':
+        return 20;
+      case 'hard':
+        return 40;
+      default:
+        return 20;
     }
   }
 }
@@ -689,11 +709,16 @@ class RecurrenceCalculator {
 class RecurrenceHelper {
   static String getLabel(String type) {
     switch (type) {
-      case 'daily': return '🔄 Diaria';
-      case 'weekly': return '🔄 Semanal';
-      case 'monthly': return '🔄 Mensual';
-      case 'custom': return '🔄 Personalizada';
-      default: return '🔄 $type';
+      case 'daily':
+        return '🔄 Diaria';
+      case 'weekly':
+        return '🔄 Semanal';
+      case 'monthly':
+        return '🔄 Mensual';
+      case 'custom':
+        return '🔄 Personalizada';
+      default:
+        return '🔄 $type';
     }
   }
 }
@@ -703,7 +728,8 @@ class ExpenseSplit {
   final double perPerson;
   ExpenseSplit._({required this.perPerson});
 
-  static ExpenseSplit equal({required double amount, required int memberCount}) =>
+  static ExpenseSplit equal(
+          {required double amount, required int memberCount}) =>
       ExpenseSplit._(perPerson: amount / memberCount);
 }
 
@@ -713,9 +739,7 @@ class FakeExpense {
   final List<String> splitBetween;
 
   FakeExpense(
-      {required this.amount,
-      required this.paidBy,
-      required this.splitBetween});
+      {required this.amount, required this.paidBy, required this.splitBetween});
 
   double amountOwedBy(String userId) {
     final share = amount / splitBetween.length;
@@ -731,8 +755,14 @@ class ExpenseValidator {
 
 class ExpenseCategory {
   static const _valid = {
-    'food', 'transport', 'home', 'entertainment',
-    'health', 'shopping', 'utilities', 'other'
+    'food',
+    'transport',
+    'home',
+    'entertainment',
+    'health',
+    'shopping',
+    'utilities',
+    'other'
   };
   static bool isValid(String cat) => _valid.contains(cat);
 }
@@ -750,7 +780,7 @@ class BalanceCalculator {
   }
 
   static double afterSettlement(
-      {required double currentBalance, required double settledAmount}) =>
+          {required double currentBalance, required double settledAmount}) =>
       currentBalance + settledAmount;
 }
 

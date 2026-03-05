@@ -69,7 +69,8 @@ class HouseholdRpcService extends BaseRpcService {
 
     final response = await client
         .from('household_members')
-        .select('user_id, role, users(full_name, email, avatar_url, mercadopago_alias)')
+        .select(
+            'user_id, role, users(full_name, email, avatar_url, mercadopago_alias)')
         .eq('household_id', householdMember['household_id']);
 
     return List<Map<String, dynamic>>.from(response);

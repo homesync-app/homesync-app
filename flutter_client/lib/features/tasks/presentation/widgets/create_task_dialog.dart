@@ -8,7 +8,6 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
-
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
 
@@ -73,7 +72,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Future<void> _loadMembers() async {
     try {
       final members = await ref.read(householdMembersProvider.future);
-      setState(() => _members = members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
+      setState(() => _members =
+          members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
     } catch (e) {
       log.e('Error loading members: $e', error: e);
     }
@@ -134,7 +134,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         if (mounted) setState(() => _selectedCategory = categories.first.id);
       });
     }
-    final currentCategoryId = _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
+    final currentCategoryId =
+        _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -211,28 +212,45 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                 final isSelected = currentCategoryId == cat.id;
                                 final color = AppColors.fromHex(cat.color);
                                 return GestureDetector(
-                                  onTap: () => setState(() => _selectedCategory = cat.id),
+                                  onTap: () => setState(
+                                      () => _selectedCategory = cat.id),
                                   child: Padding(
                                     padding: const EdgeInsets.only(right: 16),
                                     child: Column(
                                       children: [
                                         Container(
-                                          width: 56, height: 56,
+                                          width: 56,
+                                          height: 56,
                                           decoration: BoxDecoration(
-                                            color: isSelected ? color.withValues(alpha: 0.15) : const Color(0xFFF8FAFC),
+                                            color: isSelected
+                                                ? color.withValues(alpha: 0.15)
+                                                : const Color(0xFFF8FAFC),
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: isSelected ? color : const Color(0xFFF1F5F9),
+                                              color: isSelected
+                                                  ? color
+                                                  : const Color(0xFFF1F5F9),
                                               width: isSelected ? 2.5 : 1.5,
                                             ),
-                                            boxShadow: isSelected ? [
-                                              BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4)),
-                                            ] : [],
+                                            boxShadow: isSelected
+                                                ? [
+                                                    BoxShadow(
+                                                        color: color.withValues(
+                                                            alpha: 0.2),
+                                                        blurRadius: 10,
+                                                        offset:
+                                                            const Offset(0, 4)),
+                                                  ]
+                                                : [],
                                           ),
                                           child: Center(
                                             child: Icon(
-                                              AppColors.getCategoryMaterialIcon(cat.id),
-                                              color: isSelected ? color : color.withValues(alpha: 0.8),
+                                              AppColors.getCategoryMaterialIcon(
+                                                  cat.id),
+                                              color: isSelected
+                                                  ? color
+                                                  : color.withValues(
+                                                      alpha: 0.8),
                                               size: 24,
                                             ),
                                           ),
@@ -242,8 +260,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                           cat.name,
                                           style: TextStyle(
                                             fontSize: 11,
-                                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                            color: isSelected ? color : AppColors.textSecondary,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w800
+                                                : FontWeight.w600,
+                                            color: isSelected
+                                                ? color
+                                                : AppColors.textSecondary,
                                           ),
                                         ),
                                       ],
@@ -255,7 +277,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           ),
                           loading: () => const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
+                            child: Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.primary, strokeWidth: 2)),
                           ),
                           error: (_, __) => const SizedBox(),
                         ),
@@ -660,9 +684,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundColor: isSelected
-                  ? AppColors.primary
-                  : const Color(0xFFCBD5E1),
+              backgroundColor:
+                  isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               child: Text(
                 initial,
                 style: const TextStyle(

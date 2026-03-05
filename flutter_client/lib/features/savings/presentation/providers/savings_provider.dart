@@ -20,11 +20,13 @@ final getSavingsGoalsUseCaseProvider = Provider<GetSavingsGoalsUseCase>((ref) {
   return GetSavingsGoalsUseCase(ref.watch(savingsRepositoryProvider));
 });
 
-final getGoalContributionsUseCaseProvider = Provider<GetGoalContributionsUseCase>((ref) {
+final getGoalContributionsUseCaseProvider =
+    Provider<GetGoalContributionsUseCase>((ref) {
   return GetGoalContributionsUseCase(ref.watch(savingsRepositoryProvider));
 });
 
-final createSavingsGoalUseCaseProvider = Provider<CreateSavingsGoalUseCase>((ref) {
+final createSavingsGoalUseCaseProvider =
+    Provider<CreateSavingsGoalUseCase>((ref) {
   return CreateSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
 });
 
@@ -32,18 +34,22 @@ final addContributionUseCaseProvider = Provider<AddContributionUseCase>((ref) {
   return AddContributionUseCase(ref.watch(savingsRepositoryProvider));
 });
 
-final deleteSavingsGoalUseCaseProvider = Provider<DeleteSavingsGoalUseCase>((ref) {
+final deleteSavingsGoalUseCaseProvider =
+    Provider<DeleteSavingsGoalUseCase>((ref) {
   return DeleteSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
 });
 
 // --- UI State Providers ---
 
-final goalContributionsProvider = FutureProvider.family<List<SavingsContributionModel>, String>((ref, goalId) async {
+final goalContributionsProvider =
+    FutureProvider.family<List<SavingsContributionModel>, String>(
+        (ref, goalId) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
   return await getGoalContributions.execute(goalId);
 });
 
-final savingsGoalsProvider = AsyncNotifierProvider<SavingsGoalsNotifier, List<SavingsGoalModel>>(() {
+final savingsGoalsProvider =
+    AsyncNotifierProvider<SavingsGoalsNotifier, List<SavingsGoalModel>>(() {
   return SavingsGoalsNotifier();
 });
 
@@ -52,25 +58,26 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
   Future<List<SavingsGoalModel>> build() async {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
-    
+
     final getSavingsGoals = ref.watch(getSavingsGoalsUseCaseProvider);
     return await getSavingsGoals.execute(householdId);
   }
 
-  Future<void> addGoal(String title, double targetAmount, String color, String icon) async {
+  Future<void> addGoal(
+      String title, double targetAmount, String color, String icon) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) throw Exception('No household ID found');
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(createSavingsGoalUseCaseProvider).execute(
-        householdId: householdId,
-        title: title,
-        targetAmount: targetAmount,
-        color: color,
-        icon: icon,
-      );
-      
+            householdId: householdId,
+            title: title,
+            targetAmount: targetAmount,
+            color: color,
+            icon: icon,
+          );
+
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       return await getSavingsGoals.execute(householdId);
     });
@@ -79,20 +86,20 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
   Future<void> contribute(String goalId, double amount, {String? note}) async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) throw Exception('No user ID found');
-    
+
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) throw Exception('No household ID found');
 
     state = await AsyncValue.guard(() async {
       await ref.read(addContributionUseCaseProvider).execute(
-        goalId: goalId,
-        userId: userId,
-        amount: amount,
-        note: note,
-      );
-      
+            goalId: goalId,
+            userId: userId,
+            amount: amount,
+            note: note,
+          );
+
       ref.invalidate(goalContributionsProvider(goalId));
-      
+
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       return await getSavingsGoals.execute(householdId);
     });
@@ -105,7 +112,7 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(deleteSavingsGoalUseCaseProvider).execute(goalId);
-      
+
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       return await getSavingsGoals.execute(householdId);
     });

@@ -33,7 +33,8 @@ class HouseholdFailure extends Failure {
 class InsufficientCoinsFailure extends Failure {
   final int available;
   final int required;
-  const InsufficientCoinsFailure({required this.available, required this.required})
+  const InsufficientCoinsFailure(
+      {required this.available, required this.required})
       : super('Coins insuficientes: tenés $available, necesitás $required');
 }
 
@@ -42,7 +43,7 @@ class RateLimitException implements Exception {
   final String message;
   final Duration? timeUntilReset;
   const RateLimitException(this.message, {this.timeUntilReset});
-  
+
   @override
   String toString() => 'RateLimitException: $message';
 }
@@ -51,7 +52,7 @@ class RateLimitException implements Exception {
 class NetworkException implements Exception {
   final String message;
   const NetworkException(this.message);
-  
+
   @override
   String toString() => 'NetworkException: $message';
 }
@@ -60,7 +61,7 @@ class NetworkException implements Exception {
 class OfflineException implements Exception {
   final String message;
   const OfflineException(this.message);
-  
+
   @override
   String toString() => 'OfflineException: $message';
 }

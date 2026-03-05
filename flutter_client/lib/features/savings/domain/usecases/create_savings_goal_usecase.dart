@@ -14,7 +14,8 @@ class CreateSavingsGoalUseCase {
   }) {
     if (householdId.isEmpty) throw ArgumentError('householdId is required');
     if (title.isEmpty) throw ArgumentError('title is required');
-    if (targetAmount <= 0) throw ArgumentError('targetAmount must be greater than zero');
+    if (targetAmount <= 0)
+      throw ArgumentError('targetAmount must be greater than zero');
 
     return repository.createGoal(
       householdId: householdId,

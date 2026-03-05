@@ -32,7 +32,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
 
   void _initializeController() {
     String finalUrl = widget.url;
-    
+
     // Fix for Flutter Web: VideoPlayerController.asset can cause double 'assets/' prefix
     if (widget.isAsset && kIsWeb && finalUrl.startsWith('assets/')) {
       finalUrl = finalUrl.replaceFirst('assets/', '');
@@ -57,7 +57,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
       log.e('Error initializing video: $error', error: error);
       // If asset path fails, try the original path as a fallback
       if (widget.isAsset) {
-         // Fallback logic could go here
+        // Fallback logic could go here
       }
     });
   }

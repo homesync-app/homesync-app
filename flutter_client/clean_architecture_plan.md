@@ -212,6 +212,7 @@ El Provider consume Use Cases, no el Repositorio directamente.
 | **3** | ✅ Hecho | Migración de **Expenses** (Complejidad media alta). |
 | **4** | ✅ Hecho | Migración de **Savings** y **Shopping** (Listas y Progreso). |
 | **5** | ✅ Hecho | Limpieza final: BORRAR `/models`, `/providers`, `/repositories`, `/screens` viejos. |
+| **6** | ✅ Hecho | **Polish & Robustness (2026-03-04)**: Root Screen, Animaciones Splash, Pull-to-Refresh y Seguridad RLS. |
 
 ---
 

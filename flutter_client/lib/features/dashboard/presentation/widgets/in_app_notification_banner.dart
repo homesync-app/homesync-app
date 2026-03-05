@@ -13,8 +13,7 @@ class InAppNotificationBanner extends StatefulWidget {
   const InAppNotificationBanner({super.key, required this.onTap});
 
   @override
-  InAppNotificationBannerState createState() =>
-      InAppNotificationBannerState();
+  InAppNotificationBannerState createState() => InAppNotificationBannerState();
 }
 
 class InAppNotificationBannerState extends State<InAppNotificationBanner>

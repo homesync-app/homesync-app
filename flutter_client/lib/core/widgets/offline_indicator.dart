@@ -11,7 +11,9 @@ class OfflineIndicator extends ConsumerWidget {
     final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
 
-    if (connectivity.isOnline && !syncState.isSyncing && syncState.pendingCount == 0) {
+    if (connectivity.isOnline &&
+        !syncState.isSyncing &&
+        syncState.pendingCount == 0) {
       return const SizedBox.shrink();
     }
 
@@ -76,7 +78,8 @@ class OfflineIndicator extends ConsumerWidget {
     );
   }
 
-  Color _getBackgroundColor(ConnectivityState connectivity, SyncState syncState) {
+  Color _getBackgroundColor(
+      ConnectivityState connectivity, SyncState syncState) {
     if (!connectivity.isOnline) {
       return Colors.red.shade600;
     } else if (syncState.isSyncing) {
@@ -118,7 +121,9 @@ class SyncFAB extends ConsumerWidget {
     final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
 
-    if (connectivity.isOnline && syncState.pendingCount > 0 && !syncState.isSyncing) {
+    if (connectivity.isOnline &&
+        syncState.pendingCount > 0 &&
+        !syncState.isSyncing) {
       return FloatingActionButton.extended(
         onPressed: () {
           ref.read(syncProvider.notifier).sync();

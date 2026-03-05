@@ -38,12 +38,13 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
 
   Future<void> _init() async {
     await _checkConnection();
-    _subscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    _subscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
   }
 
   Future<void> _checkConnection() async {
     state = state.copyWith(status: ConnectivityStatus.checking);
-    
+
     try {
       final results = await _connectivity.checkConnectivity();
       _updateConnectionStatus(results);
@@ -57,9 +58,9 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
-    final isOnline = results.isNotEmpty && 
-        !results.contains(ConnectivityResult.none);
-    
+    final isOnline =
+        results.isNotEmpty && !results.contains(ConnectivityResult.none);
+
     state = state.copyWith(
       status: isOnline ? ConnectivityStatus.online : ConnectivityStatus.offline,
       isOnline: isOnline,
@@ -78,7 +79,8 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   }
 }
 
-final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
+final connectivityProvider =
+    StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
   return ConnectivityNotifier();
 });
 

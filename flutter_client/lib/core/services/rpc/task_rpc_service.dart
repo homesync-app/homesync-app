@@ -150,7 +150,8 @@ class TaskRpcService extends BaseRpcService {
     };
   }
 
-  Future<List<Map<String, dynamic>>> getTasks({int limit = 100, int offset = 0}) async {
+  Future<List<Map<String, dynamic>>> getTasks(
+      {int limit = 100, int offset = 0}) async {
     return executeWithRetry(() async {
       final user = client.auth.currentUser;
       if (user == null) {
@@ -201,7 +202,8 @@ class TaskRpcService extends BaseRpcService {
     return Map<String, dynamic>.from(response);
   }
 
-  Future<Map<String, dynamic>> restoreTaskCoins({required String taskId}) async {
+  Future<Map<String, dynamic>> restoreTaskCoins(
+      {required String taskId}) async {
     final user = client.auth.currentUser;
     if (user == null) {
       throw Exception('Usuario no autenticado');

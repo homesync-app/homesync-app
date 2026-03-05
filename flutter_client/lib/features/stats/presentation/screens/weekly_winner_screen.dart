@@ -38,18 +38,19 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
         await statsRpc.awardWeeklyWinner();
-        
+
         if (ranking.length >= 2) {
           final householdInfo = await householdRpc.getHouseholdInfo();
           final householdId = householdInfo['household_id'] as String?;
-          
+
           if (householdId != null) {
             final winner = ranking.first;
             final loser = ranking[1];
             final weekStart = DateTime.now();
-            final weekStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day)
-                .subtract(Duration(days: weekStart.weekday - 1));
-            
+            final weekStartDate =
+                DateTime(weekStart.year, weekStart.month, weekStart.day)
+                    .subtract(Duration(days: weekStart.weekday - 1));
+
             await statsRpc.saveWeeklyDuelResult(
               householdId: householdId,
               weekStartDate: weekStartDate,
@@ -248,7 +249,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.star_rounded, color: AppColors.accent, size: 24),
+                const Icon(Icons.star_rounded,
+                    color: AppColors.accent, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   '${_winner!['xp_earned'] ?? 0} XP',
@@ -271,7 +273,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.monetization_on_rounded, color: AppColors.success, size: 20),
+                Icon(Icons.monetization_on_rounded,
+                    color: AppColors.success, size: 20),
                 SizedBox(width: 6),
                 Text(
                   '+20 coins ganados',
@@ -330,14 +333,16 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.star_rounded, color: AppColors.accent, size: 16),
+                        const Icon(Icons.star_rounded,
+                            color: AppColors.accent, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           '${player['xp_earned'] ?? 0}',
@@ -366,7 +371,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
         child: const Text(
           '¡Genial!',

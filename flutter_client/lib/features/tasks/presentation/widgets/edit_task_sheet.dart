@@ -5,7 +5,6 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 
-
 class EditTaskSheet extends ConsumerStatefulWidget {
   final TaskModel task;
 
@@ -25,16 +24,14 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
   String? _selectedCategory;
   bool _isLoading = false;
 
-
-
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.task.title);
     _xpController =
         TextEditingController(text: widget.task.xpReward.toString());
-    _coinController = TextEditingController(
-        text: widget.task.coinReward.toString());
+    _coinController =
+        TextEditingController(text: widget.task.coinReward.toString());
     _selectedCategory = widget.task.category;
   }
 
@@ -130,12 +127,14 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final currentCategories = categoriesAsync.maybeWhen(
-      data: (list) => list.map((c) => {
-        'id': c.id, 
-        'name': c.name, 
-        'icon': c.icon,
-        'color': c.color,
-      }).toList(),
+      data: (list) => list
+          .map((c) => {
+                'id': c.id,
+                'name': c.name,
+                'icon': c.icon,
+                'color': c.color,
+              })
+          .toList(),
       orElse: () => [],
     );
 
@@ -218,7 +217,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                 : const Color(0xFFF8FAFC),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: isSelected ? color : const Color(0xFFF1F5F9),
+                              color:
+                                  isSelected ? color : const Color(0xFFF1F5F9),
                               width: isSelected ? 2.5 : 1.5,
                             ),
                             boxShadow: isSelected
@@ -234,7 +234,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           child: Center(
                             child: Icon(
                               AppColors.getCategoryMaterialIcon(cat['name']),
-                              color: isSelected ? color : color.withValues(alpha: 0.8),
+                              color: isSelected
+                                  ? color
+                                  : color.withValues(alpha: 0.8),
                               size: 24,
                             ),
                           ),
@@ -244,7 +246,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           cat['name']!,
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            fontWeight:
+                                isSelected ? FontWeight.w800 : FontWeight.w600,
                             color: isSelected ? color : AppColors.textSecondary,
                           ),
                         ),
@@ -331,7 +334,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     )
                   : const Text(
                       'Guardar Cambios',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5),
                     ),
             ),
           ),

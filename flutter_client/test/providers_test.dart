@@ -21,25 +21,29 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
+      {int limit = 100, int offset = 0}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right(_tasks.skip(offset).take(limit).toList());
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+      {String? userId}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }
 
   @override
-  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async {
+  Future<Either<Failure, void>> verifyTask(
+      String taskId, String verifiedByUserId) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async {
+  Future<Either<Failure, void>> objectTask(
+      String taskId, String objectedByUserId) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -52,7 +56,8 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async {
+  Future<Either<Failure, void>> updateSchedule(
+      String taskId, String? recurrenceType) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -85,7 +90,8 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async {
+  Future<Either<Failure, void>> editTask(
+      String taskId, Map<String, dynamic> updates) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -216,14 +222,17 @@ void main() {
 
     test('category filter logic works correctly', () {
       final filter = <String>{'kitchen'};
-      final filtered = testTasks.where((t) => filter.contains(t.category)).toList();
+      final filtered =
+          testTasks.where((t) => filter.contains(t.category)).toList();
       expect(filtered.length, equals(2));
       expect(filtered.every((t) => t.category == 'kitchen'), isTrue);
     });
 
     test('search filter works correctly', () {
       const query = 'lavar';
-      final filtered = testTasks.where((t) => t.title.toLowerCase().contains(query)).toList();
+      final filtered = testTasks
+          .where((t) => t.title.toLowerCase().contains(query))
+          .toList();
       expect(filtered.length, equals(1));
       expect(filtered.first.title, equals('Lavar platos'));
     });
@@ -231,8 +240,11 @@ void main() {
     test('combined filters work correctly', () {
       final categoryFilter = <String>{'kitchen'};
       const searchQuery = 'cocinar';
-      var result = testTasks.where((t) => categoryFilter.contains(t.category)).toList();
-      result = result.where((t) => t.title.toLowerCase().contains(searchQuery)).toList();
+      var result =
+          testTasks.where((t) => categoryFilter.contains(t.category)).toList();
+      result = result
+          .where((t) => t.title.toLowerCase().contains(searchQuery))
+          .toList();
       expect(result.length, equals(1));
     });
   });
@@ -240,10 +252,38 @@ void main() {
   group('✅ taskStatusCountProvider', () {
     test('counts tasks by status correctly', () {
       final tasks = [
-        TaskModel(id: '1', title: 'Task 1', status: TaskStatus.active, xpReward: 10, coinReward: 5, householdId: 'h1', createdAt: DateTime.now()),
-        TaskModel(id: '2', title: 'Task 2', status: TaskStatus.active, xpReward: 10, coinReward: 5, householdId: 'h1', createdAt: DateTime.now()),
-        TaskModel(id: '3', title: 'Task 3', status: TaskStatus.verified, xpReward: 10, coinReward: 5, householdId: 'h1', createdAt: DateTime.now()),
-        TaskModel(id: '4', title: 'Task 4', status: TaskStatus.pendingVerification, xpReward: 10, coinReward: 5, householdId: 'h1', createdAt: DateTime.now()),
+        TaskModel(
+            id: '1',
+            title: 'Task 1',
+            status: TaskStatus.active,
+            xpReward: 10,
+            coinReward: 5,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
+        TaskModel(
+            id: '2',
+            title: 'Task 2',
+            status: TaskStatus.active,
+            xpReward: 10,
+            coinReward: 5,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
+        TaskModel(
+            id: '3',
+            title: 'Task 3',
+            status: TaskStatus.verified,
+            xpReward: 10,
+            coinReward: 5,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
+        TaskModel(
+            id: '4',
+            title: 'Task 4',
+            status: TaskStatus.pendingVerification,
+            xpReward: 10,
+            coinReward: 5,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
       ];
 
       final counts = <String, int>{};

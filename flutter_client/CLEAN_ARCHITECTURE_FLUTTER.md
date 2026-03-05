@@ -1,8 +1,7 @@
 # 🏗️ HomeSync Flutter - Clean Architecture
 
-**Fecha de migración:** 2026-03-01
-**Commit:** 124312b - "refactor: complete clean architecture migration and fix imports"
-**Estado:** ✅ COMPLETADO
+**Fecha de actualización:** 2026-03-04
+**Estado:** ✅ COMPLETADO & MANTENIDO
 
 ---
 
@@ -307,12 +306,7 @@ flutter_client/lib/
 ├── config/                           # CONFIGURATION
 │   └── app_environment.dart
 │
-├── data/                             # SHARED DATA LAYER
-│   └── repositories/
-│       └── shopping_repository.dart
-│
-└── models/                           # SHARED MODELS
-    └── (deprecated - moved to features/domain/models)
+└── main.dart                          # RootScreen & Navigation Logic
 ```
 
 ---
@@ -402,8 +396,10 @@ flutter_client/lib/
 
 ## 🎯 Responsabilidades por Capa
 
-### PRESENTATION LAYER (features/*/presentation/)
+### PRESENTATION LAYER (features/\*/presentation/)
+
 **Responsabilidades:**
+
 - ✅ UI Components (Screens, Widgets)
 - ✅ State Management (Riverpod Providers)
 - ✅ User Input Handling
@@ -411,13 +407,16 @@ flutter_client/lib/
 - ✅ Handle User Gestures
 
 **NO debe:**
+
 - ❌ Contener lógica de negocio
 - ❌ Acceder directamente a APIs externas
 - ❌ Conocer sobre la implementación de repositorios
 - ❌ Conocer sobre la estructura de datos externa
 
-### DOMAIN LAYER (features/*/domain/)
+### DOMAIN LAYER (features/\*/domain/)
+
 **Responsabilidades:**
+
 - ✅ Business Logic (Use Cases)
 - ✅ Domain Models (Pure Dart classes)
 - ✅ Repository Interfaces (Abstractions)
@@ -425,19 +424,23 @@ flutter_client/lib/
 - ✅ Value Objects
 
 **NO debe:**
+
 - ❌ Depender de frameworks (Flutter, Riverpod)
 - ❌ Acceder a APIs externas
 - ❌ Contener código UI
 - ❌ Conocer sobre la implementación de datos
 
-### DATA LAYER (features/*/data/)
+### DATA LAYER (features/\*/data/)
+
 **Responsabilidades:**
+
 - ✅ Repository Implementations
 - ✅ Data Sources (Supabase, SharedPreferences)
 - ✅ Data Mapping (DTO → Domain Model)
 - ✅ Error Handling for data operations
 
 **NO debe:**
+
 - ❌ Contener lógica de negocio
 - ❌ Conocer sobre UI
 - ❌ Exponer estructuras de datos externas
@@ -447,6 +450,7 @@ flutter_client/lib/
 ## 📦 Patrones Implementados
 
 ### 1. Repository Pattern
+
 ```dart
 // DOMAIN LAYER - Interface
 abstract class TaskRepository {
@@ -469,6 +473,7 @@ class SupabaseTaskRepository implements TaskRepository {
 ```
 
 ### 2. Use Case Pattern
+
 ```dart
 // DOMAIN LAYER
 class CompleteTaskUseCase {
@@ -489,6 +494,7 @@ class CompleteTaskUseCase {
 ```
 
 ### 3. Provider Pattern (Riverpod)
+
 ```dart
 // PRESENTATION LAYER
 final taskProvider = StateNotifierProvider<TaskNotifier, TaskState>((ref) {
@@ -500,6 +506,7 @@ final taskProvider = StateNotifierProvider<TaskNotifier, TaskState>((ref) {
 ```
 
 ### 4. DTO Pattern
+
 ```dart
 // DOMAIN MODEL (Rich)
 class TaskModel {
@@ -540,21 +547,25 @@ class TaskModel {
 ## 🎨 Beneficios de esta Arquitectura
 
 ### ✅ Testabilidad
+
 - **Domain Layer**: Test unitario sin dependencias
 - **Use Cases**: Test de lógica de negocio aislado
 - **Repositories**: Mock fácil para test UI
 
 ### ✅ Mantenibilidad
+
 - **Separación de responsabilidades**: Cada capa tiene su propósito claro
 - **Feature-based structure**: Cada feature es independiente
 - **Fácil localizar bugs**: Error de datos → Data layer, Error UI → Presentation
 
 ### ✅ Escalabilidad
+
 - **Agregar nuevos features**: Copiar estructura de feature existente
 - **Reemplazar data source**: Cambiar implementación de repository sin afectar UI
 - **Agregar nuevos casos de uso**: Crear nuevo use case en domain
 
 ### ✅ Colaboración
+
 - **Trabajo en paralelo**: Diferentes desarrolladores pueden trabajar en diferentes features
 - **Reutilización**: Shared widgets se usan en múltiples features
 - **Consistencia**: Todos los features siguen el mismo patrón
@@ -564,6 +575,7 @@ class TaskModel {
 ## 📊 Estadísticas de la Migración
 
 ### Commit 124312b - Resumen
+
 ```
 Files Changed: 135
 Insertions: 11,226
@@ -596,6 +608,7 @@ Core Services:
 ## 🚀 Guía para Agregar Nuevas Features
 
 ### Paso 1: Crear estructura del feature
+
 ```bash
 flutter_client/lib/features/new_feature/
 ├── data/
@@ -619,6 +632,7 @@ flutter_client/lib/features/new_feature/
 ```
 
 ### Paso 2: Implementar Domain Model
+
 ```dart
 class NewFeatureModel {
   final String id;
@@ -647,6 +661,7 @@ class NewFeatureModel {
 ```
 
 ### Paso 3: Crear Repository Interface
+
 ```dart
 abstract class NewFeatureRepository {
   Future<List<NewFeatureModel>> getAll();
@@ -658,6 +673,7 @@ abstract class NewFeatureRepository {
 ```
 
 ### Paso 4: Implementar Repository
+
 ```dart
 class SupabaseNewFeatureRepository implements NewFeatureRepository {
   final SupabaseClient _client;
@@ -675,6 +691,7 @@ class SupabaseNewFeatureRepository implements NewFeatureRepository {
 ```
 
 ### Paso 5: Crear Use Cases
+
 ```dart
 class GetAllNewFeatureUseCase {
   final NewFeatureRepository _repository;
@@ -688,6 +705,7 @@ class GetAllNewFeatureUseCase {
 ```
 
 ### Paso 6: Crear Provider
+
 ```dart
 final newFeatureProvider =
     StateNotifierProvider<NewFeatureNotifier, NewFeatureState>((ref) {
@@ -699,6 +717,7 @@ final newFeatureProvider =
 ```
 
 ### Paso 7: Crear Screen
+
 ```dart
 class NewFeatureScreen extends ConsumerWidget {
   @override
@@ -727,6 +746,7 @@ class NewFeatureScreen extends ConsumerWidget {
 ## 📝 Notas Importantes
 
 ### Services en `/lib/core/services/`
+
 - **supabase_rpc_service.dart**: Servicio central para llamar a RPC functions de Supabase
 - **supabase_auth_service.dart**: Servicio para autenticación
 - **notification_service.dart**: Servicio para notificaciones
@@ -735,11 +755,13 @@ class NewFeatureScreen extends ConsumerWidget {
 Estos servicios son CROSS-CUTTING y son usados por múltiples features.
 
 ### Shared Widgets en `/lib/shared/widgets/`
+
 - Componentes reutilizables que NO pertenecen a un feature específico
 - Se usan en múltiples features
 - Ejemplos: task_card.dart, balance_card.dart, avatar_picker_sheet.dart
 
 ### Providers en `/lib/core/providers/`
+
 - Providers GLOBALES (Supabase, Theme, etc.)
 - No feature-specific
 
@@ -748,6 +770,7 @@ Estos servicios son CROSS-CUTTING y son usados por múltiples features.
 ## 🔍 Convenciones de Código
 
 ### Nomenclatura
+
 - **Files**: snake_case (ej: `task_model.dart`)
 - **Classes**: PascalCase (ej: `TaskModel`)
 - **Methods**: camelCase (ej: `getTasks()`)
@@ -755,6 +778,7 @@ Estos servicios son CROSS-CUTTING y son usados por múltiples features.
 - **Constants**: UPPER_SNAKE_CASE (ej: `MAX_RETRIES`)
 
 ### Imports
+
 ```dart
 // 1. Dart core
 import 'dart:async';
@@ -789,6 +813,7 @@ Esta Clean Architecture implementada en Flutter sigue principios SOLID:
 ✅ **Dependency Inversion**: Capas de alto nivel no dependen de capas de bajo nivel
 
 La arquitectura hace que el código sea:
+
 - ✅ Testable
 - ✅ Mantenible
 - ✅ Escalable
@@ -796,6 +821,38 @@ La arquitectura hace que el código sea:
 
 ---
 
-**Última actualización:** 2026-03-02
-**Autor:** Migración completada en commit 124312b
+## 🛡️ Seguridad y Robustez (Actualización 2026-03-04)
+
+### 1. Supabase RLS (Row Level Security)
+
+Se ha implementado RLS en tablas críticas como `household_activities` para garantizar que los usuarios solo puedan acceder a datos de su propio hogar.
+
+```sql
+-- Ejemplo de política implementada
+CREATE POLICY users_view_household_activities
+ON public.household_activities
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.household_members
+    WHERE public.household_members.household_id = public.household_activities.household_id
+    AND public.household_members.user_id = auth.uid()
+  )
+);
+```
+
+### 2. Autenticación Resiliente
+
+`SupabaseAuthService` ahora implementa un mecanismo de **fallback automático** para Google Sign-In. Si el método nativo falla (por ejemplo, por mismatch de SHA-1 en App Distribution), el sistema redirige automáticamente al flujo OAuth vía navegador.
+
+### 3. UX Fluida - Animaciones y Refresh
+
+- **Root Screen Logic**: `main.dart` utiliza un `_RootScreen` con `AnimatedSwitcher` para transicionar suavemente entre el `SplashScreen` animado y el contenido principal.
+- **Pull-to-Refresh Unificado**: Implementado en `CalendarScreen`, `MembersScreen` y `SettingsScreen` utilizando `RefreshIndicator` para una experiencia consistente.
+
+---
+
+**Última actualización:** 2026-03-04
+**Arquitecto:** Antigravity (Advanced Agentic Coding)
 **Estado:** ✅ Producción funcional (Nivel 3 con Clean Architecture)

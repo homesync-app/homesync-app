@@ -88,7 +88,10 @@ class AvatarPickerSheet extends ConsumerWidget {
             'Elegí un avatar de la colección o creá el tuyo propio',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant
+                  .withValues(alpha: 0.7),
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
@@ -109,7 +112,8 @@ class AvatarPickerSheet extends ConsumerWidget {
                         emoji: animal['emoji'],
                         color: animal['color'],
                         isSelected: isSelected,
-                        onTap: () => _updateAvatar(context, ref, animal['emoji']),
+                        onTap: () =>
+                            _updateAvatar(context, ref, animal['emoji']),
                       );
                     }).toList(),
                   ),
@@ -119,11 +123,13 @@ class AvatarPickerSheet extends ConsumerWidget {
                     children: [
                       const Text(
                         'Personajes 3D',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 20),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -153,7 +159,8 @@ class AvatarPickerSheet extends ConsumerWidget {
                         return Padding(
                           padding: const EdgeInsets.only(right: 20),
                           child: GestureDetector(
-                            onTap: () => _updateAvatar(context, ref, premiumUrl),
+                            onTap: () =>
+                                _updateAvatar(context, ref, premiumUrl),
                             behavior: HitTestBehavior.opaque,
                             child: Column(
                               children: [
@@ -175,7 +182,8 @@ class AvatarPickerSheet extends ConsumerWidget {
                                     boxShadow: isSelected
                                         ? [
                                             BoxShadow(
-                                              color: AppColors.primary.withValues(alpha: 0.25),
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.25),
                                               blurRadius: 20,
                                               offset: const Offset(0, 6),
                                             )
@@ -194,8 +202,12 @@ class AvatarPickerSheet extends ConsumerWidget {
                                   char['name'] ?? '',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : AppColors.textSecondary,
                                   ),
                                 ),
                               ],

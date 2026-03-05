@@ -37,7 +37,9 @@ class RewardModel {
       createdBy: json['created_by'] as String?,
       isApproved: json['is_approved'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
     );
   }
 

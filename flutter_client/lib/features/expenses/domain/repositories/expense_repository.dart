@@ -6,13 +6,16 @@ enum SplitType { equal, fixed, gift, personal }
 
 abstract class ExpenseRepository {
   Future<Either<Failure, String>> getHouseholdId(String userId);
-  
-  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId);
-  
-  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId);
-  
-  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId);
-  
+
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
+      String householdId);
+
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
+      String expenseId);
+
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
+      String householdId);
+
   Future<Either<Failure, void>> saveExpense({
     String? id,
     required String householdId,
@@ -26,9 +29,9 @@ abstract class ExpenseRepository {
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
   });
-  
+
   Future<Either<Failure, void>> deleteExpense(String id);
-  
+
   Future<Either<Failure, void>> settleDebt({
     required String householdId,
     required String toUserId,

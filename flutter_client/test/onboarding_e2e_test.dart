@@ -10,7 +10,13 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 
 enum AuthState { loggedOut, authenticating, authenticated, needsSetup }
 
-enum SetupStep { welcome, createOrJoin, householdDetails, invitePartner, complete }
+enum SetupStep {
+  welcome,
+  createOrJoin,
+  householdDetails,
+  invitePartner,
+  complete
+}
 
 class OnboardingFlowSimulator {
   AuthState authState = AuthState.loggedOut;
@@ -49,7 +55,7 @@ class OnboardingFlowSimulator {
     }
   }
 
-    Future<void> createHousehold(String name, String type) async {
+  Future<void> createHousehold(String name, String type) async {
     household = HouseholdModel(
       id: 'household-${DateTime.now().millisecondsSinceEpoch}',
       name: name,
@@ -159,10 +165,10 @@ void main() {
       await simulator.checkHouseholdSetup();
       expect(simulator.currentStep, equals(SetupStep.welcome));
 
-    // Step 3: Create household
-    await simulator.createHousehold('Mi Hogar', 'couple');
-    expect(simulator.household?.name, equals('Mi Hogar'));
-    expect(simulator.household?.householdType, equals('couple'));
+      // Step 3: Create household
+      await simulator.createHousehold('Mi Hogar', 'couple');
+      expect(simulator.household?.name, equals('Mi Hogar'));
+      expect(simulator.household?.householdType, equals('couple'));
 
       // Step 4: Complete setup
       await simulator.completeSetup();
@@ -173,13 +179,13 @@ void main() {
     test('Join existing household with invite code', () async {
       // Step 1: Sign in
       await simulator.signIn('maria@email.com', 'password123');
-      
+
       // Step 2: Check setup
       await simulator.checkHouseholdSetup();
 
       // Step 3: Join with invite code
       await simulator.joinHousehold('ABC123');
-      
+
       expect(simulator.household, isNotNull);
       expect(simulator.currentStep, equals(SetupStep.complete));
     });
@@ -246,9 +252,18 @@ void main() {
       await simulator.completeSetup();
 
       final tasks = [
-        await simulator.createTask(title: 'Tarea 1', category: 'kitchen', difficulty: TaskDifficulty.easy),
-        await simulator.createTask(title: 'Tarea 2', category: 'cleaning', difficulty: TaskDifficulty.medium),
-        await simulator.createTask(title: 'Tarea 3', category: 'other', difficulty: TaskDifficulty.hard),
+        await simulator.createTask(
+            title: 'Tarea 1',
+            category: 'kitchen',
+            difficulty: TaskDifficulty.easy),
+        await simulator.createTask(
+            title: 'Tarea 2',
+            category: 'cleaning',
+            difficulty: TaskDifficulty.medium),
+        await simulator.createTask(
+            title: 'Tarea 3',
+            category: 'other',
+            difficulty: TaskDifficulty.hard),
       ];
 
       for (final task in tasks) {

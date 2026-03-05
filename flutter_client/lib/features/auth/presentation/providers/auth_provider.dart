@@ -21,9 +21,9 @@ final currentUserProfileProvider = FutureProvider<UserModel?>((ref) async {
   final repo = ref.watch(authRepositoryProvider);
   final user = repo.currentUser;
   if (user == null) return null;
-  
+
   final result = await repo.getUserProfile(user.id);
-  
+
   return result.fold(
     (f) {
       log.e('Error loading user profile: ${f.message}');

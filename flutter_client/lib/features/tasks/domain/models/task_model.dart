@@ -14,7 +14,8 @@ enum TaskStatus {
     );
   }
 
-  String get dbValue => this == TaskStatus.pendingVerification ? 'pending_verification' : name;
+  String get dbValue =>
+      this == TaskStatus.pendingVerification ? 'pending_verification' : name;
 }
 
 enum TaskPriority {
@@ -166,10 +167,12 @@ class TaskModel {
 
   // ── Computed helpers ───────────────────────────────────────────────────────
 
-  bool get isActive => status == TaskStatus.active || status == TaskStatus.assigned;
+  bool get isActive =>
+      status == TaskStatus.active || status == TaskStatus.assigned;
   bool get isPending => status == TaskStatus.pending;
   bool get isPendingVerification => status == TaskStatus.pendingVerification;
-  bool get isCompleted => isPendingVerification || status == TaskStatus.verified;
+  bool get isCompleted =>
+      isPendingVerification || status == TaskStatus.verified;
   bool get isVerified => status == TaskStatus.verified;
   bool get isObjected => status == TaskStatus.objected;
   bool get isRecurring => recurrenceType != null;
@@ -258,7 +261,8 @@ class TaskModel {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'TaskModel(id: $id, title: $title, status: ${status.dbValue})';
+  String toString() =>
+      'TaskModel(id: $id, title: $title, status: ${status.dbValue})';
 
   // ── Private helpers ───────────────────────────────────────────────────────
 

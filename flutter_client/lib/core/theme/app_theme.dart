@@ -192,7 +192,8 @@ class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle:
+              GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -203,13 +204,15 @@ class AppTheme {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          textStyle: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle:
+              GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700),
+          textStyle:
+              GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

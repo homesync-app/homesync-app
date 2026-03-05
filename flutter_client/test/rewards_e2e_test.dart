@@ -157,9 +157,36 @@ void main() {
 
     test('Accumulate coins from multiple tasks', () async {
       final tasks = [
-        TaskModel(id: 't1', title: 'Tarea 1', category: 'other', difficulty: TaskDifficulty.easy, status: TaskStatus.active, xpReward: 10, coinReward: 5, householdId: 'h1', createdAt: DateTime.now()),
-        TaskModel(id: 't2', title: 'Tarea 2', category: 'other', difficulty: TaskDifficulty.medium, status: TaskStatus.active, xpReward: 20, coinReward: 10, householdId: 'h1', createdAt: DateTime.now()),
-        TaskModel(id: 't3', title: 'Tarea 3', category: 'other', difficulty: TaskDifficulty.hard, status: TaskStatus.active, xpReward: 40, coinReward: 20, householdId: 'h1', createdAt: DateTime.now()),
+        TaskModel(
+            id: 't1',
+            title: 'Tarea 1',
+            category: 'other',
+            difficulty: TaskDifficulty.easy,
+            status: TaskStatus.active,
+            xpReward: 10,
+            coinReward: 5,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
+        TaskModel(
+            id: 't2',
+            title: 'Tarea 2',
+            category: 'other',
+            difficulty: TaskDifficulty.medium,
+            status: TaskStatus.active,
+            xpReward: 20,
+            coinReward: 10,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
+        TaskModel(
+            id: 't3',
+            title: 'Tarea 3',
+            category: 'other',
+            difficulty: TaskDifficulty.hard,
+            status: TaskStatus.active,
+            xpReward: 40,
+            coinReward: 20,
+            householdId: 'h1',
+            createdAt: DateTime.now()),
       ];
 
       for (final task in tasks) {
@@ -188,7 +215,8 @@ void main() {
       expect(user1.coins, equals(60));
 
       // Then redeem a reward
-      final reward = simulator.getAvailableRewards().firstWhere((r) => r.cost <= 60);
+      final reward =
+          simulator.getAvailableRewards().firstWhere((r) => r.cost <= 60);
       final success = await simulator.redeemReward(user1, reward);
 
       expect(success, isTrue);
@@ -201,7 +229,8 @@ void main() {
       user1.addCoins(20);
 
       // Try to redeem expensive reward
-      final reward = simulator.getAvailableRewards().firstWhere((r) => r.cost > 20);
+      final reward =
+          simulator.getAvailableRewards().firstWhere((r) => r.cost > 20);
       final success = await simulator.redeemReward(user1, reward);
 
       expect(success, isFalse);
@@ -246,7 +275,7 @@ void main() {
       final reward1 = simulator.getAvailableRewards()[0];
       await simulator.redeemReward(user1, reward1);
 
-      // Redeem second reward (100 coins)  
+      // Redeem second reward (100 coins)
       final reward2 = simulator.getAvailableRewards()[1];
       await simulator.redeemReward(user1, reward2);
 

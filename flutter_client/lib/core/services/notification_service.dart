@@ -18,7 +18,7 @@ class NotificationService {
 
   Future<void> initialize({NotificationCallback? onNotification}) async {
     _onNotification = onNotification;
-    
+
     // Load preference
     final prefs = await SharedPreferences.getInstance();
     _isEnabled = prefs.getBool('notifications_enabled') ?? true;
@@ -87,10 +87,11 @@ class NotificationService {
   Future<void> _setupFirebase() async {
     // Check if Firebase is initialized to avoid [core/no-app] error
     if (Firebase.apps.isEmpty) {
-      log.w('⚠️ NotificationService: Firebase no inicializado. Push bloqueado.');
+      log.w(
+          '⚠️ NotificationService: Firebase no inicializado. Push bloqueado.');
       return;
     }
-    
+
     final messaging = FirebaseMessaging.instance;
 
     // 1. Request permission (iOS requires explicit permission)

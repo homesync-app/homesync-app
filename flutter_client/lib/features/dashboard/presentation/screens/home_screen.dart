@@ -6,6 +6,7 @@ import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -20,6 +21,10 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_f
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -31,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   RealtimeChannel? _tasksChannel;
   RealtimeChannel? _expensesChannel;
   RealtimeChannel? _splitsChannel;
+  RealtimeChannel? _membersChannel;
 
   @override
   void initState() {
@@ -43,6 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _tasksChannel?.unsubscribe();
     _expensesChannel?.unsubscribe();
     _splitsChannel?.unsubscribe();
+    _membersChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -91,6 +98,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           callback: (_) => _refreshFinancials(),
         )
         .subscribe();
+
+    _membersChannel = client
+        .channel('home_members:$householdId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'household_members',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'household_id',
+            value: householdId,
+          ),
+          callback: (_) {
+            ref.invalidate(householdMembersProvider);
+            _refreshFinancials();
+          },
+        )
+        .subscribe();
   }
 
   void _refreshAll() {
@@ -113,7 +138,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(expenseBalancesProvider);
   }
 
-
   @override
   Widget build(BuildContext context) {
     final householdAsync = ref.watch(householdIdProvider);
@@ -121,7 +145,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return householdAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body:
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.background,
@@ -133,7 +158,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             backgroundColor: AppColors.background,
             body: Center(
               child: Text('No pertenecés a un hogar aún.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ),
           );
         }
@@ -154,11 +180,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onRefresh: () async => _refreshHome(),
                 color: AppColors.primary,
                 child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   children: [
                     _buildHeader(),
                     const SizedBox(height: 28),
-                    _buildFinancialSummary(),
+                    _buildFinancialSummary(householdId),
                     const SizedBox(height: 32),
                     _buildTasksSection(),
                     const SizedBox(height: 32),
@@ -180,10 +207,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         label: const Text(
           'Nueva Acción',
           style: TextStyle(
-              color: Colors.white, 
-              fontWeight: FontWeight.w800, 
-              fontSize: 15,
-              letterSpacing: -0.2,
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 15,
+            letterSpacing: -0.2,
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -196,14 +223,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final profileAsync = ref.watch(userProfileProvider);
     final dateFormat = DateFormat('EEEE, d MMM', 'es');
     final dateStr = dateFormat.format(DateTime.now());
-    final capitalized = dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1);
+    final capitalized =
+        dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1);
 
     final displayName = profileAsync.whenOrNull(
           data: (p) => (p?['full_name'] as String?)?.split(' ').first ?? 'User',
         ) ??
         'User';
 
-    final avatarUrl = profileAsync.whenOrNull(data: (p) => p?['avatar_url'] as String?);
+    final avatarUrl =
+        profileAsync.whenOrNull(data: (p) => p?['avatar_url'] as String?);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -292,17 +321,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
         ],
-
       ),
     );
   }
 
-  Widget _buildFinancialSummary() {
+  Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
     final expensesAsync = ref.watch(expenseBalancesProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
-    final coins = balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
+    final coins =
+        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
     double myBalance = 0;
@@ -319,12 +349,189 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
 
+    // Find partner info for settlement
+    final partner = membersAsync.whenOrNull(
+      data: (members) =>
+          members.where((m) => m.userId != currentUserId).firstOrNull,
+    );
+
     return BalanceCard(
       coins: coins,
       xp: xp,
       userBalance: myBalance,
+      partnerName: partner?.displayName,
+      onSettle: partner != null && myBalance.abs() > 1.0
+          ? () => _showSettlementDialog(
+                householdId: householdId,
+                partnerId: partner.userId,
+                partnerName: partner.displayName ?? 'tu pareja',
+                amount: myBalance.abs(),
+                isOwedByMe: myBalance < 0,
+                alias: partner.mercadopagoAlias,
+              )
+          : null,
       isDark: false,
     );
+  }
+
+  void _showSettlementDialog({
+    required String householdId,
+    required String partnerId,
+    required String partnerName,
+    required double amount,
+    required bool isOwedByMe,
+    String? alias,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text('Equilibrar'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '¿Registrar equilibración por \$${NumberFormat.decimalPattern('es_AR').format(amount.round())}?',
+              style: const TextStyle(fontSize: 16),
+            ),
+            if (isOwedByMe && alias != null) ...[
+              const SizedBox(height: 20),
+              const Text(
+                '¿Querés transferir ahora por Mercado Pago?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          if (isOwedByMe && alias != null)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _handleSettle(alias, amount);
+                // Optionally show another dialog later to confirm registration
+              },
+              icon: const Icon(Icons.account_balance_wallet_rounded, size: 18),
+              label: const Text('Transferir'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _registerSettlementInDB(
+                  householdId, partnerId, amount, isOwedByMe);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _registerSettlementInDB(
+    String householdId,
+    String partnerId,
+    double amount,
+    bool isOwedByMe,
+  ) async {
+    try {
+      // If I owe, I am the one settling to partner
+      // If partner owes, I am recording that partner settled to me
+      final toUserId =
+          isOwedByMe ? partnerId : ref.read(currentUserIdProvider)!;
+      // Wait, the RPC settle_debt(p_user_id, p_household_id, p_to_user_id, p_amount)
+      // p_user_id is the one PAYING.
+      final payerId = isOwedByMe ? ref.read(currentUserIdProvider)! : partnerId;
+      final receiverId =
+          isOwedByMe ? partnerId : ref.read(currentUserIdProvider)!;
+
+      final repo = ref.read(expenseRepositoryProvider);
+      // We need to ensure we have a version of settleDebt that takes the payerId or use the RPC
+      // The repository currently uses the authenticated user as the payer.
+      // If I am recording that partner paid me, I might need a different call or the repo needs to allow specifying payer.
+
+      // For now, let's use the repo settleDebt which uses current user as payer (Settling my own debt)
+      if (isOwedByMe) {
+        await repo.settleDebt(
+          householdId: householdId,
+          toUserId: partnerId,
+          amount: amount,
+        );
+      } else {
+        // Recording partner's payment to me.
+        // We can simulate this by saving a special expense paid by partner where I am the beneficiary 100%
+        await repo.saveExpense(
+          householdId: householdId,
+          title: 'Liquidación recibida',
+          amount: amount,
+          category: 'other',
+          paidBy: partnerId,
+          paidAt: DateTime.now(),
+          splitType: SplitType
+              .gift, // In our logic, gift usually means payer pays for others
+          type: 'expense',
+          description: 'Saldado por pareja',
+          splits: [
+            {'user_id': ref.read(currentUserIdProvider)!, 'amount': amount}
+          ],
+        );
+      }
+
+      // Refresh data
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(filteredExpensesProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Deuda saldada correctamente 🎉')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al saldar: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleSettle(String alias, double amount) async {
+    final url = 'https://link.mercadopago.com.ar/transfer/alias/$alias';
+    final uri = Uri.parse(url);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir Mercado Pago')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al abrir link: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildTasksSection() {
@@ -353,7 +560,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Text(
                 'Ver semana',
                 style: TextStyle(
-                    color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 14),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
               ),
             ),
           ],
@@ -361,21 +570,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 12),
         todayTasksAsync.when(
           loading: () => Column(
-            children: List.generate(2, (_) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ShimmerLoading(
-                child: Container(
-                  height: 100,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                ),
-              ),
-            )),
+            children: List.generate(
+                2,
+                (_) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ShimmerLoading(
+                        child: Container(
+                          height: 100,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                      ),
+                    )),
           ),
-          error: (e, _) => Text('Error: $e', style: const TextStyle(color: AppColors.error)),
+          error: (e, _) =>
+              Text('Error: $e', style: const TextStyle(color: AppColors.error)),
           data: (tasks) {
             if (tasks.isEmpty) return _buildEmptyTasksState();
             return ListView.separated(
@@ -449,7 +661,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const Text(
             'No hay tareas pendientes. Disfruten el tiempo juntos.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.4),
+            style:
+                TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.4),
           ),
         ],
       ),
@@ -478,7 +691,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : AppColors.getCategoryColor(category);
-    final categoryIcon = categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
+    final categoryIcon =
+        categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
 
     return AnimatedPress(
       onTap: () {
@@ -492,9 +706,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: isCompleted 
+            color: isCompleted
                 ? AppColors.accentGreen.withValues(alpha: 0.1)
-                : const Color(0xFFF1F5F9), 
+                : const Color(0xFFF1F5F9),
             width: 1.5,
           ),
           boxShadow: [
@@ -562,7 +776,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               child: isCompleted
                   ? const Center(
-                      child: Icon(Icons.check_rounded, color: Colors.white, size: 20),
+                      child: Icon(Icons.check_rounded,
+                          color: Colors.white, size: 20),
                     )
                   : null,
             ),
@@ -571,8 +786,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
-
 
   Widget _buildCategoryChip(String category) {
     final cat = category.toLowerCase();
@@ -597,7 +810,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-
   Widget _buildRewardChip(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -617,13 +829,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-
-
-
-
-
-
-
   Future<void> _handleCompleteFromCard(TaskModel task) async {
     final xpReward = task.xpReward;
     final coinReward = task.coinReward;
@@ -631,16 +836,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
       final eitherResult = await completeTaskLogic(task);
-      
+
       if (!mounted) return;
 
       eitherResult.fold(
-        (failure) => _showSnack('Error: ${failure.message}', AppColors.accentRed),
+        (failure) =>
+            _showSnack('Error: ${failure.message}', AppColors.accentRed),
         (data) {
           final xp = data['xp_earned'] ?? xpReward;
           final coins = data['coins_earned'] ?? coinReward;
           HapticFeedback.heavyImpact();
-          _showSnack('¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
+          _showSnack(
+              '¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
           _refreshAll();
         },
       );
@@ -685,25 +892,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-
           ],
         ),
         const SizedBox(height: 12),
         activityAsync.when(
           loading: () => Column(
-            children: List.generate(3, (_) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ShimmerLoading(
-                child: Container(
-                  height: 70,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-            )),
+            children: List.generate(
+                3,
+                (_) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ShimmerLoading(
+                        child: Container(
+                          height: 70,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    )),
           ),
           error: (e, _) => Center(
             child: Padding(
@@ -756,12 +964,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    final todayActs = activities.where((a) => (a['time'] as DateTime).isAfter(today) || (a['time'] as DateTime).isAtSameMomentAs(today)).toList();
+    final todayActs = activities
+        .where((a) =>
+            (a['time'] as DateTime).isAfter(today) ||
+            (a['time'] as DateTime).isAtSameMomentAs(today))
+        .toList();
     final yesterdayActs = activities.where((a) {
       final t = a['time'] as DateTime;
       return t.isAfter(yesterday) && t.isBefore(today);
     }).toList();
-    final earlierActs = activities.where((a) => (a['time'] as DateTime).isBefore(yesterday)).toList();
+    final earlierActs = activities
+        .where((a) => (a['time'] as DateTime).isBefore(yesterday))
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,21 +993,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          ...todayActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 400 + (entry.key * 100)),
-            tween: Tween(begin: 0.0, end: 1.0),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildActivityItem(entry.value),
-          )),
+          ...todayActs
+              .asMap()
+              .entries
+              .map((entry) => TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildActivityItem(entry.value),
+                  )),
         ],
         if (yesterdayActs.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -809,21 +1026,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          ...yesterdayActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 400 + (entry.key * 100)),
-            tween: Tween(begin: 0.0, end: 1.0),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildActivityItem(entry.value),
-          )),
+          ...yesterdayActs
+              .asMap()
+              .entries
+              .map((entry) => TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildActivityItem(entry.value),
+                  )),
         ],
         if (earlierActs.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -839,21 +1059,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          ...earlierActs.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 400 + (entry.key * 100)),
-            tween: Tween(begin: 0.0, end: 1.0),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildActivityItem(entry.value),
-          )),
+          ...earlierActs
+              .asMap()
+              .entries
+              .map((entry) => TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildActivityItem(entry.value),
+                  )),
         ],
       ],
     );
@@ -894,7 +1117,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                          color: activityColor.withValues(alpha: 0.3), blurRadius: 4),
+                          color: activityColor.withValues(alpha: 0.3),
+                          blurRadius: 4),
                     ]),
               ),
               Expanded(
@@ -952,7 +1176,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 color: AppColors.getCategoryColor(category),
                               ),
                             ),
-
                           ),
                         ],
                       ),
@@ -1103,7 +1326,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
             const SizedBox(height: 20),
-
           ],
         ),
       ),
@@ -1133,7 +1355,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Icon(icon, color: color, size: 32),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+          Text(label,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
         ],
       ),
     );
@@ -1149,7 +1373,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 100), // Above FAB/Bottom bar
+        margin:
+            const EdgeInsets.fromLTRB(20, 0, 20, 100), // Above FAB/Bottom bar
         duration: const Duration(seconds: 3),
       ),
     );

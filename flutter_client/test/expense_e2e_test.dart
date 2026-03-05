@@ -45,7 +45,8 @@ class ExpenseFlowSimulator {
     return result.getOrElse((_) => []);
   }
 
-  Future<void> settleDebt(String fromUserId, String toUserId, double amount) async {
+  Future<void> settleDebt(
+      String fromUserId, String toUserId, double amount) async {
     await repository.settleDebt(
       householdId: 'household-1',
       toUserId: toUserId,
@@ -61,13 +62,17 @@ class MockExpenseRepository implements ExpenseRepository {
   final List<ExpenseModel> _expenses = [];
 
   @override
-  Future<Either<Failure, String>> getHouseholdId(String userId) async => right('household-1');
+  Future<Either<Failure, String>> getHouseholdId(String userId) async =>
+      right('household-1');
 
   @override
-  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async => right(_expenses);
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
+          String householdId) async =>
+      right(_expenses);
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async {
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
+      String expenseId) async {
     try {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
       return right({'expense': expense, 'splits': []});
@@ -77,18 +82,22 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
+      String householdId) async {
     final balances = <String, double>{};
     for (final expense in _expenses) {
       final splitAmount = expense.amount / 2;
-      balances[expense.paidBy] = (balances[expense.paidBy] ?? 0) + expense.amount;
+      balances[expense.paidBy] =
+          (balances[expense.paidBy] ?? 0) + expense.amount;
       balances['other'] = (balances['other'] ?? 0) - splitAmount;
     }
 
-    return right(balances.entries.map((e) => HouseholdBalanceModel(
-      userId: e.key,
-      balance: e.value,
-    )).toList());
+    return right(balances.entries
+        .map((e) => HouseholdBalanceModel(
+              userId: e.key,
+              balance: e.value,
+            ))
+        .toList());
   }
 
   @override
@@ -100,7 +109,8 @@ class MockExpenseRepository implements ExpenseRepository {
     required String category,
     required String paidBy,
     required DateTime paidAt,
-    String? id_v2, // Compatibility with previous param if needed, or just follow interface
+    String?
+        id_v2, // Compatibility with previous param if needed, or just follow interface
     String? description,
     required SplitType splitType,
     String type = 'expense',
@@ -160,7 +170,7 @@ void main() {
 
       // Step 2: Calculate balances - user-1 should be owed $50
       final balances = await simulator.calculateBalances();
-      
+
       final user1Balance = balances.firstWhere((b) => b.userId == 'user-1');
       expect(user1Balance.balance, equals(100.0)); // Paid full amount
 
@@ -195,7 +205,7 @@ void main() {
       );
 
       final balances = await simulator.calculateBalances();
-      
+
       // Net: user-1 paid $90, user-2 paid $40 → user-1 is owed $25
       expect(balances.any((b) => b.balance > 0), isTrue);
     });

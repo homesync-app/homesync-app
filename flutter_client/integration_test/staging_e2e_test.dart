@@ -6,7 +6,6 @@ import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -14,23 +13,27 @@ void main() {
   const testPassword = 'StagingTest123!';
 
   group('E2E Staging Tests', () {
-    
     // ============================================================
     // TEST 1: TOKEN REFRESH
     // ============================================================
-    testWidgets('TEST 1: Token Refresh - Auto-refresh on 401', (WidgetTester tester) async {
+    testWidgets('TEST 1: Token Refresh - Auto-refresh on 401',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
 
-      expect(find.text('Inicio'), findsWidgets, reason: 'Should navigate to home after login');
+      expect(find.text('Inicio'), findsWidgets,
+          reason: 'Should navigate to home after login');
 
       // Navigate to tasks to trigger API calls
       await tester.tap(find.text('Tareas'));
@@ -49,18 +52,21 @@ void main() {
       expect(find.byType(MaterialApp), findsWidgets);
     });
 
-
     // ============================================================
     // TEST 2: DOUBLE TAP IDEMPOTENCY
     // ============================================================
-    testWidgets('TEST 2: Double Tap Idempotency - No double XP', (WidgetTester tester) async {
+    testWidgets('TEST 2: Double Tap Idempotency - No double XP',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -90,7 +96,7 @@ void main() {
 
       // Look for any task to complete
       final completeButtons = find.byIcon(Icons.check_circle_outline);
-      
+
       if (completeButtons.evaluate().isNotEmpty) {
         // First tap - complete task
         await tester.tap(completeButtons.first);
@@ -108,11 +114,11 @@ void main() {
       expect(find.byType(MaterialApp), findsWidgets);
     });
 
-
     // ============================================================
     // TEST 3: RATE LIMIT HANDLING
     // ============================================================
-    testWidgets('TEST 3: Rate Limit - Client respects 429', (WidgetTester tester) async {
+    testWidgets('TEST 3: Rate Limit - Client respects 429',
+        (WidgetTester tester) async {
       // This test requires making multiple API calls
       // In staging, first 60 requests: 200 OK
       // Request 61+: 429 Rate Limit Exceeded
@@ -128,7 +134,8 @@ void main() {
           await rpcService.getTasks();
           successCount++;
         } catch (e) {
-          if (e.toString().contains('429') || e.toString().contains('rate limit')) {
+          if (e.toString().contains('429') ||
+              e.toString().contains('rate limit')) {
             rateLimitedCount++;
             // Should have headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
           }
@@ -142,18 +149,21 @@ void main() {
       expect(rateLimitedCount, greaterThan(0));
     });
 
-
     // ============================================================
     // TEST 4: APP KILL MID-REQUEST
     // ============================================================
-    testWidgets('TEST 4: Kill App Mid-Request - No duplicate data', (WidgetTester tester) async {
+    testWidgets('TEST 4: Kill App Mid-Request - No duplicate data',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -177,38 +187,41 @@ void main() {
         // 2. Close app while loading (swipe from multitasking)
         // 3. Reopen app after 5 seconds
         // 4. Verify no duplicate data in backend
-        
+
         // This is a manual test step - automation would require native code
       }
 
       // Check offline queue for pending requests
       final queueService = OfflineQueueService();
       final pendingCount = await queueService.getQueueLength();
-      
+
       // If app was killed mid-request, the request should be in queue
       // This validates idempotency key prevents duplication
       expect(pendingCount, greaterThanOrEqualTo(0));
     });
 
-
     // ============================================================
     // TEST 5: POOR NETWORK CONDITIONS
     // ============================================================
-    testWidgets('TEST 5: Poor Network - App handles gracefully', (WidgetTester tester) async {
+    testWidgets('TEST 5: Poor Network - App handles gracefully',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
 
       // Test operations under poor network conditions
       // (This test validates error handling - actual network simulation is manual)
-      
+
       await tester.tap(find.text('Tareas'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -227,7 +240,7 @@ void main() {
         final createButton = find.text('Crear');
         if (createButton.evaluate().isNotEmpty) {
           await tester.tap(createButton);
-          
+
           // Wait for timeout (30s) - but we just check app doesn't crash
           await tester.pump(const Duration(seconds: 5));
         }
@@ -235,23 +248,26 @@ void main() {
 
       // Validation: App should NOT crash, should show clear error message
       expect(find.byType(MaterialApp), findsWidgets);
-      
+
       // Should show network error message if offline
       // (This is validated by checking connectivity provider)
     });
 
-
     // ============================================================
     // TEST 6: CONCURRENT REQUESTS
     // ============================================================
-    testWidgets('TEST 6: Concurrent Requests - No race conditions', (WidgetTester tester) async {
+    testWidgets('TEST 6: Concurrent Requests - No race conditions',
+        (WidgetTester tester) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -261,8 +277,14 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
       // Create 5 tasks simultaneously
-      final tasks = ['Concurrent A', 'Concurrent B', 'Concurrent C', 'Concurrent D', 'Concurrent E'];
-      
+      final tasks = [
+        'Concurrent A',
+        'Concurrent B',
+        'Concurrent C',
+        'Concurrent D',
+        'Concurrent E'
+      ];
+
       for (final taskName in tasks) {
         final addButton = find.byIcon(Icons.add);
         if (addButton.evaluate().isNotEmpty) {
@@ -281,12 +303,12 @@ void main() {
         }
       }
 
-      // Validation: 
+      // Validation:
       // - NO race conditions
       // - Idempotency prevents duplication
       // - Ledger is consistent
       // - XP/Coins are correct (not duplicated)
-      
+
       // Navigate to rewards to check balances
       await tester.tap(find.text('Tienda'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
@@ -295,11 +317,11 @@ void main() {
       expect(find.byType(MaterialApp), findsWidgets);
     });
 
-
     // ============================================================
     // TEST 7: TOKEN ROTATION SECURITY
     // ============================================================
-    testWidgets('TEST 7: Token Rotation - Old refresh rejected', (WidgetTester tester) async {
+    testWidgets('TEST 7: Token Rotation - Old refresh rejected',
+        (WidgetTester tester) async {
       // This test validates security:
       // 1. Login and capture refresh token
       // 2. Force refresh (token rotates)
@@ -307,17 +329,18 @@ void main() {
       // 4. Verify it's rejected with 401/403
 
       final authService = SupabaseAuthService();
-      
+
       // Login
-      final response = await authService.signIn(email: testEmail, password: testPassword);
-      
+      final response =
+          await authService.signIn(email: testEmail, password: testPassword);
+
       // Capture refresh token
       // ignore: unused_local_variable
       final originalRefreshToken = response.session?.refreshToken;
-      
+
       // Force a refresh (navigate to trigger automatic refresh)
       // In real scenario: wait 15 minutes or manually trigger refresh
-      
+
       // Try to use old refresh token (this should fail)
       bool oldTokenRejected = false;
       try {
@@ -336,107 +359,110 @@ void main() {
       expect(oldTokenRejected, isTrue);
     });
 
-
     // ============================================================
     // TEST 8: OFFLINE QUEUE INTEGRATION
     // ============================================================
-    testWidgets('TEST 8: Offline Queue - Requests queued when offline', (WidgetTester tester) async {
+    testWidgets('TEST 8: Offline Queue - Requests queued when offline',
+        (WidgetTester tester) async {
       // Test offline queue service
-      
+
       final queueService = OfflineQueueService();
-      
+
       // Create a test request
       final testRequest = QueuedRequest(
         method: 'POST',
         endpoint: '/tasks',
         body: {'name': 'Offline Task'},
       );
-      
+
       // Enqueue when offline
       await queueService.enqueue(testRequest);
-      
+
       // Check queue has the request
       final pendingCount = await queueService.getQueueLength();
       expect(pendingCount, 1);
-      
+
       // Get pending requests
       final pending = await queueService.getPending();
       expect(pending.length, 1);
       expect(pending.first.endpoint, '/tasks');
-      
+
       // Simulate processing
       if (pending.first.id != null) {
         await queueService.markProcessing(pending.first.id!);
         await queueService.markCompleted(pending.first.id!);
       }
-      
+
       // Verify completed
       final finalCount = await queueService.getQueueLength();
       expect(finalCount, 0);
     });
 
-
     // ============================================================
     // TEST 9: CONNECTIVITY DETECTION
     // ============================================================
-    testWidgets('TEST 9: Connectivity Provider - Detects online/offline', (WidgetTester tester) async {
+    testWidgets('TEST 9: Connectivity Provider - Detects online/offline',
+        (WidgetTester tester) async {
       // Test connectivity provider
-      
+
       // This is tested via Riverpod provider
       // The provider should:
       // - Detect when online
-      // - Detect when offline  
+      // - Detect when offline
       // - Update state automatically
-      
+
       // For E2E, we verify the UI shows appropriate indicators
-      
+
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
-      
+
       // Login
       final loginTitleFinder = find.text('Bienvenido de vuelta');
       if (loginTitleFinder.evaluate().isNotEmpty) {
-        await tester.enterText(find.widgetWithText(TextFormField, 'Correo electrónico'), testEmail);
-        await tester.enterText(find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Correo electrónico'),
+            testEmail);
+        await tester.enterText(
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
-      
+
       // App should work when online
       expect(find.byType(MaterialApp), findsWidgets);
     });
 
-
     // ============================================================
     // TEST 10: IDEMPOTENCY KEY GENERATION
     // ============================================================
-    testWidgets('TEST 10: Idempotency Keys - Unique per request', (WidgetTester tester) async {
+    testWidgets('TEST 10: Idempotency Keys - Unique per request',
+        (WidgetTester tester) async {
       // Test that idempotency keys are generated correctly
-      
+
       final key1 = DateTime.now().millisecondsSinceEpoch.toString();
       final key2 = (DateTime.now().millisecondsSinceEpoch + 1).toString();
-      
+
       // Keys should be unique
       expect(key1, isNot(equals(key2)));
-      
+
       // Test offline queue uses idempotency
       final queueService = OfflineQueueService();
-      
+
       final request1 = QueuedRequest(
         method: 'POST',
         endpoint: '/tasks',
         body: {'name': 'Task 1'},
       );
-      
+
       final request2 = QueuedRequest(
-        method: 'POST', 
+        method: 'POST',
         endpoint: '/tasks',
         body: {'name': 'Task 2'},
       );
-      
+
       await queueService.enqueue(request1);
       await queueService.enqueue(request2);
-      
+
       final pending = await queueService.getPending();
       expect(pending.length, 2);
     });

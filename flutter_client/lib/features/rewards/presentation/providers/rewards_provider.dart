@@ -4,7 +4,8 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import '../../domain/repositories/reward_repository.dart';
 import '../../data/repositories/supabase_reward_repository.dart';
 
-final rewardsProvider = AsyncNotifierProvider<RewardsNotifier, List<Map<String, dynamic>>>(() {
+final rewardsProvider =
+    AsyncNotifierProvider<RewardsNotifier, List<Map<String, dynamic>>>(() {
   return RewardsNotifier();
 });
 
@@ -39,7 +40,7 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   }) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
-    
+
     if (userId == null || householdId == null) {
       log.w('Suggest reward aborted: missing userId or householdId');
       return;
@@ -64,7 +65,7 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   Future<void> approveReward(String rewardId) async {
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.approveReward(rewardId);
-    
+
     result.fold(
       (failure) => log.w('Approve reward failure: ${failure.message}'),
       (_) => refresh(),
@@ -74,7 +75,7 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   Future<void> redeem(String rewardId) async {
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.redeemReward(rewardId);
-    
+
     result.fold(
       (failure) => log.w('Redeem reward failure: ${failure.message}'),
       (_) => refresh(),
@@ -84,7 +85,7 @@ class RewardsNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   Future<void> deleteReward(String rewardId) async {
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.deleteReward(rewardId);
-    
+
     result.fold(
       (failure) => log.w('Delete reward failure: ${failure.message}'),
       (_) => refresh(),

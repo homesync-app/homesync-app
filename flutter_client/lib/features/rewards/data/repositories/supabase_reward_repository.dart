@@ -13,16 +13,20 @@ final rewardRepositoryProvider = Provider<RewardRepository>((ref) {
   return SupabaseRewardRepository(client: client, rpc: rpc);
 });
 
-class SupabaseRewardRepository with RepositoryErrorHandler implements RewardRepository {
+class SupabaseRewardRepository
+    with RepositoryErrorHandler
+    implements RewardRepository {
   final SupabaseClient _client;
   final dynamic _rpc; // rewardRpcServiceProvider type
 
-  SupabaseRewardRepository({required SupabaseClient client, required dynamic rpc})
+  SupabaseRewardRepository(
+      {required SupabaseClient client, required dynamic rpc})
       : _client = client,
         _rpc = rpc;
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(String householdId) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
+      String householdId) async {
     return executeWithHandling(() async {
       final response = await _client
           .from('rewards')
@@ -58,7 +62,9 @@ class SupabaseRewardRepository with RepositoryErrorHandler implements RewardRepo
   @override
   Future<Either<Failure, void>> approveReward(String rewardId) async {
     return executeWithHandling(() async {
-      await _client.from('rewards').update({'is_approved': true}).eq('id', rewardId);
+      await _client
+          .from('rewards')
+          .update({'is_approved': true}).eq('id', rewardId);
     }, context: 'SupabaseRewardRepository.approveReward');
   }
 

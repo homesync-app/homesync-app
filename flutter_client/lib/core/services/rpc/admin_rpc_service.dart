@@ -25,10 +25,11 @@ class AdminRpcService extends BaseRpcService {
           'platform': kIsWeb ? 'web' : 'native',
           'is_web': kIsWeb,
           'timestamp': DateTime.now().toIso8601String(),
-          'operating_system': kIsWeb ? 'Browser' : defaultTargetPlatform.toString(),
+          'operating_system':
+              kIsWeb ? 'Browser' : defaultTargetPlatform.toString(),
         }
       };
-      
+
       await client.from('application_logs').insert(logData);
     } catch (e) {
       // If logging fails, use stderr directly to avoid an infinite error loop

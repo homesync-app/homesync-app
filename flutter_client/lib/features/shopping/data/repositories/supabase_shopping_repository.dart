@@ -9,7 +9,8 @@ class SupabaseShoppingRepository implements ShoppingRepository {
   Future<List<ShoppingItemModel>> fetchItems(String householdId) async {
     final raw = await _client
         .from('shopping_items')
-        .select('*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+        .select(
+            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
         .eq('household_id', householdId)
         .order('completed', ascending: true)
         .order('created_at', ascending: false);
@@ -35,7 +36,8 @@ class SupabaseShoppingRepository implements ShoppingRepository {
         .insert({
           'household_id': householdId,
           'name': name.trim(),
-          'quantity': quantity?.trim().isEmpty == true ? null : quantity?.trim(),
+          'quantity':
+              quantity?.trim().isEmpty == true ? null : quantity?.trim(),
           'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
           'category': category,
           'emoji': emoji,
@@ -43,7 +45,8 @@ class SupabaseShoppingRepository implements ShoppingRepository {
           'added_by': userId,
           'completed': false,
         })
-        .select('*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+        .select(
+            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
         .single();
 
     return ShoppingItemModel.fromJson(Map<String, dynamic>.from(raw));

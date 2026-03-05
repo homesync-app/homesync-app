@@ -92,7 +92,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ? ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: 6,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   return ShimmerLoading(
                     child: Container(
@@ -114,7 +115,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics()),
                     padding: const EdgeInsets.all(16),
                     itemCount: _notifications.length,
                     separatorBuilder: (context, index) =>
@@ -135,7 +137,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           decoration: BoxDecoration(
                             color: isRead
                                 ? AppColors.surface
-                                : AppColors.surfaceVariant.withValues(alpha: 0.5),
+                                : AppColors.surfaceVariant
+                                    .withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isRead
@@ -150,7 +153,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(

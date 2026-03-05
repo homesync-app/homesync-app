@@ -89,7 +89,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
     final useCase = ref.read(getTasksUseCaseProvider);
     final result = await useCase(householdId, limit: _pageSize, offset: 0);
-    
+
     return result.fold(
       (failure) {
         log.e('Error loading tasks: ${failure.message}');
@@ -116,18 +116,18 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
   Future<void> loadMore() async {
     if (state.isLoading || !_hasMore) return;
-    
+
     final currentTasks = state.value ?? [];
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
-    
+
     final useCase = ref.read(getTasksUseCaseProvider);
     final result = await useCase(
-      householdId, 
-      limit: _pageSize, 
+      householdId,
+      limit: _pageSize,
       offset: currentTasks.length,
     );
-    
+
     result.fold(
       (failure) => log.w('Error loading more tasks: ${failure.message}'),
       (nextTasks) {
@@ -143,7 +143,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     final userId = ref.read(currentUserIdProvider);
     final useCase = ref.read(completeTaskUseCaseProvider);
     final result = await useCase(task, userId: userId);
-    
+
     return result.fold(
       (failure) {
         log.w('Complete task failure: ${failure.message}');
@@ -164,7 +164,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     }
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.verifyTask(task.id, userId);
-    
+
     result.fold(
       (failure) => log.w('Verify task failure: ${failure.message}'),
       (_) => refresh(),
@@ -179,7 +179,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     }
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.objectTask(task.id, userId);
-    
+
     result.fold(
       (failure) => log.w('Object task failure: ${failure.message}'),
       (_) => refresh(),
@@ -189,7 +189,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
   Future<void> deleteTask(TaskModel task) async {
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.deleteTask(task.id);
-    
+
     result.fold(
       (failure) => log.w('Delete task failure: ${failure.message}'),
       (_) => refresh(),
@@ -199,7 +199,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
   Future<void> updateSchedule(TaskModel task, String? recurrenceType) async {
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.updateSchedule(task.id, recurrenceType);
-    
+
     result.fold(
       (failure) => log.w('Update schedule failure: ${failure.message}'),
       (_) => refresh(),
@@ -218,7 +218,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
       assignedTo: taskData['assignedTo'] as String?,
       recurrenceType: taskData['recurrenceType'] as String?,
     );
-    
+
     result.fold(
       (failure) => log.w('Create task failure: ${failure.message}'),
       (_) => silentRefresh(),
@@ -228,7 +228,7 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.editTask(taskId, updates);
-    
+
     result.fold(
       (failure) => log.w('Edit task failure: ${failure.message}'),
       (_) => refresh(),
@@ -247,7 +247,8 @@ final filteredTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
     var result = tasks;
     if (selectedCategories.isNotEmpty) {
       result = result
-          .where((t) => selectedCategories.contains(AppColors.normaliseCategory(t.category)))
+          .where((t) => selectedCategories
+              .contains(AppColors.normaliseCategory(t.category)))
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -280,7 +281,8 @@ final todayTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
   return tasksAsync.whenData((tasks) {
     return tasks.where((task) {
       if (!task.isActive) return false;
-      if (task.assignedTo != null && task.assignedTo != currentUserId) return false;
+      if (task.assignedTo != null && task.assignedTo != currentUserId)
+        return false;
       if (task.isVerified) return false;
       if (task.dueAt != null) {
         return task.isDueToday;

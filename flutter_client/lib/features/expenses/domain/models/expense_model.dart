@@ -1,4 +1,5 @@
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:intl/intl.dart';
 
 class ExpenseModel {
   final String id;
@@ -93,7 +94,8 @@ class ExpenseModel {
     return 'Alguien';
   }
 
-  String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
+  String get formattedAmount =>
+      '\$${NumberFormat.decimalPattern('es_AR').format(amount.round())}';
 
   String get categoryIcon {
     return AppColors.categoryIcons[category] ?? '📦';

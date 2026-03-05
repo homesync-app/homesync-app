@@ -18,14 +18,14 @@ class RetryService {
     while (retryCount < maxRetries) {
       try {
         return await request();
-      }       on RateLimitException catch (e) {
+      } on RateLimitException catch (e) {
         retryCount++;
         if (retryCount >= maxRetries) rethrow;
 
         Duration waitTime = e.timeUntilReset ?? delay;
         int multiplier = pow(2, retryCount - 1).toInt();
         delay = Duration(milliseconds: waitTime.inMilliseconds * multiplier);
-        
+
         await Future.delayed(delay);
       } on NetworkException {
         retryCount++;
@@ -42,20 +42,20 @@ class RetryService {
         }
       }
     }
-    
+
     throw const NetworkException('Max retries exceeded');
   }
 
   bool isRetryable(Exception e) {
     return e is RateLimitException ||
-           e is NetworkException ||
-           e is OfflineException;
+        e is NetworkException ||
+        e is OfflineException;
   }
 }
 
 class OfflineRetryService {
   final RetryService _retryService = RetryService();
-  
+
   Future<T> executeOnline<T>({
     required Future<T> Function() request,
     required bool isOnline,
@@ -64,7 +64,7 @@ class OfflineRetryService {
     if (!isOnline) {
       throw const OfflineException('No internet connection');
     }
-    
+
     return _retryService.executeWithRetry(
       request: request,
       maxRetries: maxRetries,

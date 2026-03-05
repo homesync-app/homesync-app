@@ -8,9 +8,11 @@ class GetBalancesUseCase {
 
   GetBalancesUseCase(this._repository);
 
-  Future<Either<Failure, List<HouseholdBalanceModel>>> call(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> call(
+      String householdId) async {
     if (householdId.isEmpty) {
-      return left(const ValidationFailure('El ID del hogar no puede estar vacío'));
+      return left(
+          const ValidationFailure('El ID del hogar no puede estar vacío'));
     }
     return await _repository.getHouseholdBalances(householdId);
   }

@@ -38,10 +38,10 @@ class SyncService {
 
     try {
       final pendingRequests = await _queueService.getPending();
-      
+
       for (final request in pendingRequests) {
         if (request.id == null) continue;
-        
+
         await _queueService.markProcessing(request.id!);
         processed++;
 
@@ -51,7 +51,7 @@ class SyncService {
           } else {
             await _defaultProcessRequest(request);
           }
-          
+
           await _queueService.markCompleted(request.id!);
           successful++;
         } catch (e) {
@@ -124,7 +124,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
   void _init() {
     _ref.listen<bool>(
-      isOnlineProvider, 
+      isOnlineProvider,
       (previous, isOnline) {
         if (isOnline && !_syncService.isSyncing) {
           sync();
@@ -137,7 +137,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
     Future<dynamic> Function(QueuedRequest request)? processRequest,
   }) async {
     state = state.copyWith(isSyncing: true, lastError: null);
-    
+
     try {
       final result = await _syncService.sync(processRequest: processRequest);
       state = state.copyWith(

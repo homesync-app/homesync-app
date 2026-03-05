@@ -13,16 +13,18 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
 });
 
 // 2. UseCase Provider
-final getRecentActivityUseCaseProvider = Provider<GetRecentActivityUseCase>((ref) {
+final getRecentActivityUseCaseProvider =
+    Provider<GetRecentActivityUseCase>((ref) {
   final repository = ref.read(dashboardRepositoryProvider);
   return GetRecentActivityUseCase(repository);
 });
 
 // 3. Data Provider (replaces the old one in core_providers)
-final recentActivityProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final recentActivityProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return [];
-  
+
   final useCase = ref.watch(getRecentActivityUseCaseProvider);
   return useCase.execute(householdId);
 });

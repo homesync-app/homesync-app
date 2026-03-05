@@ -26,13 +26,15 @@ class UserAvatar {
   static const List<Map<String, dynamic>> premiumAvatars = [
     {
       'id': 'premium_boy',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
       'color': Color(0xFFE3F2FD)
     },
     {
       'id': 'premium_girl',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
       'color': Color(0xFFFCE4EC)
     },
@@ -44,19 +46,22 @@ class UserAvatar {
     },
     {
       'id': 'premium_dog',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
       'color': Color(0xFFE8EAF6)
     },
     {
       'id': 'premium_robot',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
       'color': Color(0xFFE0F2F1)
     },
     {
       'id': 'premium_bird',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'Pájaro 3D',
       'color': Color(0xFFF3E5F5)
     },
@@ -80,7 +85,7 @@ class CustomUserAvatar extends StatelessWidget {
 
   final bool isAnimated;
   final bool isPriority;
-   final bool forceCircular;
+  final bool forceCircular;
   final Color? borderColor;
 
   const CustomUserAvatar({
@@ -185,7 +190,8 @@ class _AnimatedAvatar extends StatefulWidget {
   State<_AnimatedAvatar> createState() => _AnimatedAvatarState();
 }
 
-class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProviderStateMixin {
+class _AnimatedAvatarState extends State<_AnimatedAvatar>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _pulseAnimation;
@@ -228,7 +234,8 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProvi
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.accentGold.withValues(alpha: 1 - _pulseAnimation.value),
+                    color: AppColors.accentGold
+                        .withValues(alpha: 1 - _pulseAnimation.value),
                     width: 2,
                   ),
                 ),
@@ -243,7 +250,8 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProvi
             radius: widget.radius,
             onTap: widget.onTap,
             showBorder: widget.showBorder,
-            borderColor: widget.borderColor ?? (widget.isPriority ? AppColors.accentGold : Colors.white),
+            borderColor: widget.borderColor ??
+                (widget.isPriority ? AppColors.accentGold : Colors.white),
           ),
         ),
       ],
@@ -271,11 +279,11 @@ class _AvatarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasAvatar = avatarUrl != null && avatarUrl!.trim().isNotEmpty;
-    
+
     // Check if it's a premium local asset encoded as premium://assets/...
     final String cleanUrl = (avatarUrl ?? '').replaceFirst('premium://', '');
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
-    
+
     final bool isEmoji = hasAvatar && !isAsset && avatarUrl!.trim().length <= 2;
     final bool isNetwork = hasAvatar && cleanUrl.startsWith('http');
 
@@ -284,17 +292,22 @@ class _AvatarContent extends StatelessWidget {
         : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
 
     final safeName = name?.trim() ?? '';
-    final initial = safeName.isNotEmpty
-        ? safeName.substring(0, 1).toUpperCase()
-        : '?';
+    final initial =
+        safeName.isNotEmpty ? safeName.substring(0, 1).toUpperCase() : '?';
 
     final avatarWidget = Container(
       width: radius * 2,
       height: radius * 2,
       decoration: BoxDecoration(
-        color: isEmoji ? color : ((isNetwork || isAsset) ? Colors.grey.shade100 : AppColors.primary),
+        color: isEmoji
+            ? color
+            : ((isNetwork || isAsset)
+                ? Colors.grey.shade100
+                : AppColors.primary),
         shape: BoxShape.circle,
-        border: showBorder ? Border.all(color: borderColor ?? Colors.white, width: 2) : null,
+        border: showBorder
+            ? Border.all(color: borderColor ?? Colors.white, width: 2)
+            : null,
         boxShadow: showBorder
             ? [
                 BoxShadow(
@@ -367,6 +380,7 @@ class _AvatarContent extends StatelessWidget {
     return avatarWidget;
   }
 }
+
 class _PremiumCharacterAvatar extends StatelessWidget {
   final String url;
   final double radius;
@@ -384,9 +398,8 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String cleanUrl = url.startsWith('premium://')
-        ? url.replaceFirst('premium://', '')
-        : url;
+    final String cleanUrl =
+        url.startsWith('premium://') ? url.replaceFirst('premium://', '') : url;
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
 
@@ -536,5 +549,3 @@ class _FloatingAnimationState extends State<_FloatingAnimation>
     );
   }
 }
-
-

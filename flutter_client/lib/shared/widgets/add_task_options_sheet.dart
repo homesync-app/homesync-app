@@ -22,7 +22,8 @@ class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<AddTaskOptionsSheet> createState() => _AddTaskOptionsSheetState();
+  ConsumerState<AddTaskOptionsSheet> createState() =>
+      _AddTaskOptionsSheetState();
 }
 
 class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
@@ -74,7 +75,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   @override
   Widget build(BuildContext context) {
     final existingTasks = ref.watch(tasksProvider).maybeWhen(
-          data: (tasks) => tasks.map((t) => t.title.toLowerCase().trim()).toSet(),
+          data: (tasks) =>
+              tasks.map((t) => t.title.toLowerCase().trim()).toSet(),
           orElse: () => <String>{},
         );
 
@@ -110,11 +112,13 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   children: [
                     Text(
                       'Añadir Tarea',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
                     ),
                     Text(
                       'Elige una sugerencia o crea una nueva',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
@@ -128,7 +132,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           const SizedBox(height: 24),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary))
                 : availableTemplates.isEmpty
                     ? _buildEmptyTemplates()
                     : ListView.builder(
@@ -161,7 +166,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
               ),
             ),
           ),
@@ -175,7 +181,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.auto_awesome_rounded, size: 64, color: AppColors.primary.withValues(alpha: 0.2)),
+          Icon(Icons.auto_awesome_rounded,
+              size: 64, color: AppColors.primary.withValues(alpha: 0.2)),
           const SizedBox(height: 20),
           const Text(
             '¡Ya tienes todas las tareas sugeridas!',
@@ -197,10 +204,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           orElse: () => [],
         );
     final found = categories.where((c) => c.id == template.categoryId);
-    final category = found.isNotEmpty 
-        ? found.first 
+    final category = found.isNotEmpty
+        ? found.first
         : (categories.isNotEmpty ? categories.first : null);
-    final color = category != null ? AppColors.fromHex(category.color) : AppColors.primary;
+    final color = category != null
+        ? AppColors.fromHex(category.color)
+        : AppColors.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -227,10 +236,16 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         subtitle: Row(
           children: [
             Text('⭐ ${template.xpReward} XP',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accentGold)),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.accentGold)),
             const SizedBox(width: 12),
             Text('🪙 ${template.coinReward}',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accentGreen)),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.accentGreen)),
           ],
         ),
         trailing: Container(
@@ -238,7 +253,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2)),
+              BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2)),
             ],
           ),
           child: IconButton(

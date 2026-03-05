@@ -20,7 +20,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // 1. Initialize Firebase
   try {
     await Firebase.initializeApp(
@@ -28,7 +28,8 @@ void main() async {
     );
     // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
     if (!kIsWeb) {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
     }
   } catch (e) {
     log.e('Firebase initialization error: $e');
@@ -47,20 +48,24 @@ void main() async {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
     // 2. Log to our central service
-    log.e('Uncaught Flutter Error: ${details.exception}', error: details.exception, stackTrace: details.stack);
-    
+    log.e('Uncaught Flutter Error: ${details.exception}',
+        error: details.exception, stackTrace: details.stack);
+
     // 3. Send to Supabase for the admin panel logs page
     adminRpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
-      context: {'library': details.library, 'context': details.context?.toString()},
+      context: {
+        'library': details.library,
+        'context': details.context?.toString()
+      },
     );
   };
 
   // Catch async errors outside of Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
     log.f('Fatal Async Error: $error', error: error, stackTrace: stack);
-    
+
     // 2. Supabase admin logs (all platforms)
     adminRpc.logApplicationError(
       message: error.toString(),
@@ -162,7 +167,8 @@ class _RootScreenState extends ConsumerState<_RootScreen> {
           return LoginScreen(key: const ValueKey('login'), prefs: widget.prefs);
         },
         loading: () => const _SplashScreen(key: ValueKey('splash_fallback')),
-        error: (e, stack) => LoginScreen(key: const ValueKey('login_error'), prefs: widget.prefs),
+        error: (e, stack) => LoginScreen(
+            key: const ValueKey('login_error'), prefs: widget.prefs),
       );
     }
 
@@ -188,7 +194,8 @@ class _SplashScreen extends StatefulWidget {
   State<_SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<_SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<_SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -206,7 +213,9 @@ class _SplashScreenState extends State<_SplashScreen> with SingleTickerProviderS
     );
 
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
     );
 
     _controller.forward();
@@ -272,5 +281,3 @@ class _SplashScreenState extends State<_SplashScreen> with SingleTickerProviderS
     );
   }
 }
-
-

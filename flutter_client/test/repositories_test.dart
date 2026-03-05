@@ -23,13 +23,15 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async {
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
+      String householdId) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return right(_expenses);
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async {
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
+      String expenseId) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     try {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
@@ -43,7 +45,8 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
+      String householdId) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return right([
       HouseholdBalanceModel(
@@ -114,22 +117,28 @@ class MockTaskRepository implements TaskRepository {
   bool shouldFail = false;
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId, {int limit = 100, int offset = 0}) async {
+  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
+      {int limit = 100, int offset = 0}) async {
     if (shouldFail) return Left(ServerFailure('Mock error'));
     return right(_tasks);
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task, {String? userId}) async {
+  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+      {String? userId}) async {
     if (shouldFail) return Left(ServerFailure('Mock error'));
     return right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }
 
   @override
-  Future<Either<Failure, void>> verifyTask(String taskId, String verifiedByUserId) async => Right(null);
+  Future<Either<Failure, void>> verifyTask(
+          String taskId, String verifiedByUserId) async =>
+      Right(null);
 
   @override
-  Future<Either<Failure, void>> objectTask(String taskId, String objectedByUserId) async => Right(null);
+  Future<Either<Failure, void>> objectTask(
+          String taskId, String objectedByUserId) async =>
+      Right(null);
 
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async {
@@ -138,7 +147,9 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType) async => Right(null);
+  Future<Either<Failure, void>> updateSchedule(
+          String taskId, String? recurrenceType) async =>
+      Right(null);
 
   @override
   Future<Either<Failure, void>> createTask({
@@ -167,7 +178,9 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> editTask(String taskId, Map<String, dynamic> updates) async => Right(null);
+  Future<Either<Failure, void>> editTask(
+          String taskId, Map<String, dynamic> updates) async =>
+      Right(null);
 }
 
 void main() {
@@ -225,7 +238,7 @@ void main() {
     test('getHouseholdBalances returns correct structure', () async {
       final result = await repo.getHouseholdBalances('household-1');
       final balances = result.getOrElse((_) => []);
-      
+
       expect(balances.length, equals(2));
       expect(balances.any((b) => b.balance > 0), isTrue);
       expect(balances.any((b) => b.balance < 0), isTrue);
@@ -329,7 +342,7 @@ void main() {
 
       final result = await repo.getTasks('household-1', limit: 100, offset: 0);
       final allTasks = result.getOrElse((_) => []);
-      
+
       final firstPage = allTasks.sublist(0, 5.clamp(0, allTasks.length));
       final secondPage = allTasks.sublist(5, 10.clamp(0, allTasks.length));
 
@@ -342,7 +355,7 @@ void main() {
   group('✅ Repository pattern integration', () {
     test('can swap implementations', () async {
       final mockRepo = MockExpenseRepository();
-      
+
       await mockRepo.saveExpense(
         householdId: 'household-1',
         title: 'Shared expense',

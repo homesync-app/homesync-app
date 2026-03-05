@@ -20,8 +20,7 @@ class SupabaseSettingsRepository implements SettingsRepository {
 
     await _client
         .from('users')
-        .update({'avatar_url': avatarUrl})
-        .eq('id', user.id);
+        .update({'avatar_url': avatarUrl}).eq('id', user.id);
   }
 
   @override
@@ -29,17 +28,14 @@ class SupabaseSettingsRepository implements SettingsRepository {
     final user = _client.auth.currentUser;
     if (user == null) throw Exception('No autenticado');
 
-    await _client
-        .from('users')
-        .update({'full_name': name})
-        .eq('id', user.id);
+    await _client.from('users').update({'full_name': name}).eq('id', user.id);
   }
 
   @override
   Future<void> updateNotificationSettings(bool enabled) async {
     // This currently updates local shared preferences via a Notifier
     // but we could store it in the database too in the future.
-    // For now, the implementation might be just a placeholder or 
+    // For now, the implementation might be just a placeholder or
     // it could interact with Supabase if we add it to the 'users' table.
   }
 }

@@ -20,7 +20,7 @@ class RetryConfig {
 class NetworkClient {
   final RetryConfig config;
   final Ref _ref;
-  
+
   NetworkClient({
     this.config = const RetryConfig(),
     required Ref ref,
@@ -84,7 +84,7 @@ class NetworkClient {
             ),
           );
         }
-        
+
         await Future.delayed(delay);
       } on NetworkException {
         retryCount++;
@@ -100,14 +100,15 @@ class NetworkClient {
         } else {
           delay = delay + config.initialDelay;
         }
-        
+
         await Future.delayed(delay);
       } catch (e) {
         if (e is OfflineException) rethrow;
-        
+
         retryCount++;
         if (retryCount >= config.maxRetries) {
-          throw NetworkException('Operation failed after $retryCount attempts: $e');
+          throw NetworkException(
+              'Operation failed after $retryCount attempts: $e');
         }
 
         if (config.exponentialBackoff) {
@@ -118,7 +119,7 @@ class NetworkClient {
             ),
           );
         }
-        
+
         await Future.delayed(delay);
       }
     }

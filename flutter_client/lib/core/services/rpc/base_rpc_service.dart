@@ -7,7 +7,7 @@ import '../../errors/failures.dart';
 abstract class BaseRpcService {
   final SupabaseClient client;
 
-  BaseRpcService({SupabaseClient? clientOverride}) 
+  BaseRpcService({SupabaseClient? clientOverride})
       : client = clientOverride ?? Supabase.instance.client;
 
   static const int _maxRetries = 3;
@@ -33,34 +33,37 @@ abstract class BaseRpcService {
               timeUntilReset: _extractRetryAfter(e),
             );
           }
-          
+
           await Future.delayed(delay);
           if (delay.inSeconds < _maxDelay.inSeconds) {
-            delay = Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
+            delay = Duration(
+                seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
           }
         } else {
           rethrow;
         }
       } catch (e) {
         if (e is RateLimitException) rethrow;
-        
+
         retryCount++;
         if (retryCount >= _maxRetries) {
-          throw NetworkException('Operation failed after $_maxRetries attempts: $e');
+          throw NetworkException(
+              'Operation failed after $_maxRetries attempts: $e');
         }
-        
+
         await Future.delayed(delay);
         if (delay.inSeconds < _maxDelay.inSeconds) {
-          delay = Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
+          delay =
+              Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
         }
       }
     }
   }
 
   bool _isRateLimitError(PostgrestException e) {
-    return e.code == '429' || 
-           e.message.toLowerCase().contains('rate limit') ||
-           e.message.toLowerCase().contains('too many requests');
+    return e.code == '429' ||
+        e.message.toLowerCase().contains('rate limit') ||
+        e.message.toLowerCase().contains('too many requests');
   }
 
   Duration? _extractRetryAfter(PostgrestException e) {

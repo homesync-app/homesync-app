@@ -27,17 +27,22 @@ final bottomNavIndexProvider = NotifierProvider<BottomNavNotifier, int>(() {
 
 // ── Singleton service providers ───────────────────────────────────────────────
 final authServiceProvider = Provider<SupabaseAuthService>((ref) {
-  throw UnimplementedError('authServiceProvider must be overridden in ProviderScope.');
+  throw UnimplementedError(
+      'authServiceProvider must be overridden in ProviderScope.');
 });
 
-final taskRpcServiceProvider = Provider<TaskRpcService>((ref) => TaskRpcService());
-final rewardRpcServiceProvider = Provider<RewardRpcService>((ref) => RewardRpcService());
-final statsRpcServiceProvider = Provider<StatsRpcService>((ref) => StatsRpcService());
-final householdRpcServiceProvider = Provider<HouseholdRpcService>((ref) => HouseholdRpcService());
-final balanceRpcServiceProvider = Provider<BalanceRpcService>((ref) => BalanceRpcService());
-final adminRpcServiceProvider = Provider<AdminRpcService>((ref) => AdminRpcService());
-
-
+final taskRpcServiceProvider =
+    Provider<TaskRpcService>((ref) => TaskRpcService());
+final rewardRpcServiceProvider =
+    Provider<RewardRpcService>((ref) => RewardRpcService());
+final statsRpcServiceProvider =
+    Provider<StatsRpcService>((ref) => StatsRpcService());
+final householdRpcServiceProvider =
+    Provider<HouseholdRpcService>((ref) => HouseholdRpcService());
+final balanceRpcServiceProvider =
+    Provider<BalanceRpcService>((ref) => BalanceRpcService());
+final adminRpcServiceProvider =
+    Provider<AdminRpcService>((ref) => AdminRpcService());
 
 // ── Current user convenience providers ────────────────────────────────────────
 final currentUserIdProvider = Provider<String?>((ref) {
@@ -74,7 +79,8 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 // ── Mercado Pago connection status ─────────────────────────────────────────────
-final mercadopagoConnectionProvider = StreamProvider<Map<String, dynamic>?>((ref) {
+final mercadopagoConnectionProvider =
+    StreamProvider<Map<String, dynamic>?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
 
@@ -86,7 +92,8 @@ final mercadopagoConnectionProvider = StreamProvider<Map<String, dynamic>?>((ref
       .map((data) => data.isNotEmpty ? data.first : null);
 });
 
-final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final mercadopagoMovementsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return [];
 
@@ -105,7 +112,8 @@ final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>(
     );
 
     if (response.status == 200) {
-      final movements = (response.data['movements'] as List).cast<Map<String, dynamic>>();
+      final movements =
+          (response.data['movements'] as List).cast<Map<String, dynamic>>();
       return movements;
     }
     return [];
@@ -135,7 +143,6 @@ final expenseBalancesProvider = FutureProvider<List<dynamic>>((ref) async {
   return (result['balances'] as List<dynamic>?) ?? [];
 });
 
-
 // ── Notifications enabled provider ──────────────────────────────────────────
 class NotificationEnabledNotifier extends StateNotifier<bool> {
   NotificationEnabledNotifier() : super(true) {
@@ -151,12 +158,13 @@ class NotificationEnabledNotifier extends StateNotifier<bool> {
     state = enabled;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', enabled);
-    
+
     // Update the service
     await NotificationService.instance.setEnabled(enabled);
   }
 }
 
-final notificationEnabledProvider = StateNotifierProvider<NotificationEnabledNotifier, bool>((ref) {
+final notificationEnabledProvider =
+    StateNotifierProvider<NotificationEnabledNotifier, bool>((ref) {
   return NotificationEnabledNotifier();
 });

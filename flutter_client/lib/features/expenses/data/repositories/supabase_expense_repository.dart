@@ -6,7 +6,9 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 
-class SupabaseExpenseRepository with RepositoryErrorHandler implements ExpenseRepository {
+class SupabaseExpenseRepository
+    with RepositoryErrorHandler
+    implements ExpenseRepository {
   final SupabaseClient _client;
 
   SupabaseExpenseRepository(this._client);
@@ -28,7 +30,8 @@ class SupabaseExpenseRepository with RepositoryErrorHandler implements ExpenseRe
   }
 
   @override
-  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(String householdId) async {
+  Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
+      String householdId) async {
     return executeWithHandling(() async {
       final response = await _client
           .from('expenses')
@@ -50,7 +53,7 @@ class SupabaseExpenseRepository with RepositoryErrorHandler implements ExpenseRe
           .eq('household_id', householdId)
           .order('paid_at', ascending: false)
           .limit(30);
-          
+
       return (response as List<dynamic>)
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -58,21 +61,19 @@ class SupabaseExpenseRepository with RepositoryErrorHandler implements ExpenseRe
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(String expenseId) async {
+  Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
+      String expenseId) async {
     return executeWithHandling(() async {
-      return await _client
-          .from('expenses')
-          .select('''
+      return await _client.from('expenses').select('''
             *,
             expense_splits(*)
-          ''')
-          .eq('id', expenseId)
-          .single();
+          ''').eq('id', expenseId).single();
     }, context: 'SupabaseExpenseRepository.getExpenseWithSplits');
   }
 
   @override
-  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(String householdId) async {
+  Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
+      String householdId) async {
     return executeWithHandling(() async {
       final response = await _client.rpc(
         'get_expense_balance',

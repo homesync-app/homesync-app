@@ -61,8 +61,7 @@ class SupabaseRewardsRepository implements RewardsRepositoryInterface {
   Future<void> approveReward(String rewardId) async {
     await _client
         .from('rewards')
-        .update({'is_approved': true})
-        .eq('id', rewardId);
+        .update({'is_approved': true}).eq('id', rewardId);
   }
 
   @override

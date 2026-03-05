@@ -44,12 +44,17 @@ class ShoppingItemModel {
       emoji: map['emoji'] as String? ?? '🛒',
       note: map['note'] as String?,
       addedBy: map['added_by'] as String?,
-      addedByName: (map['added_by_user'] as Map<String, dynamic>?)?['full_name'] as String?,
+      addedByName: (map['added_by_user'] as Map<String, dynamic>?)?['full_name']
+          as String?,
       completed: map['completed'] as bool? ?? false,
       completedBy: map['completed_by'] as String?,
-      completedByName: (map['completed_by_user'] as Map<String, dynamic>?)?['full_name'] as String?,
-      completedAt: map['completed_at'] != null ? DateTime.tryParse(map['completed_at'] as String) : null,
-      createdAt: DateTime.tryParse(map['created_at'] as String? ?? '') ?? DateTime.now(),
+      completedByName: (map['completed_by_user']
+          as Map<String, dynamic>?)?['full_name'] as String?,
+      completedAt: map['completed_at'] != null
+          ? DateTime.tryParse(map['completed_at'] as String)
+          : null,
+      createdAt: DateTime.tryParse(map['created_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -87,7 +92,8 @@ class ShoppingItemModel {
     return completedByName!.split(' ').first;
   }
 
-  ShoppingItemModel copyWith({bool? completed, String? completedBy, DateTime? completedAt}) {
+  ShoppingItemModel copyWith(
+      {bool? completed, String? completedBy, DateTime? completedAt}) {
     return ShoppingItemModel(
       id: id,
       householdId: householdId,
@@ -110,7 +116,9 @@ class ShoppingItemModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ShoppingItemModel && runtimeType == other.runtimeType && id == other.id;
+      other is ShoppingItemModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
 
   @override
   int get hashCode => id.hashCode;

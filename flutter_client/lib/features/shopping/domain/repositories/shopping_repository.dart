@@ -2,7 +2,7 @@ import '../models/shopping_model.dart';
 
 abstract class ShoppingRepository {
   Future<List<ShoppingItemModel>> fetchItems(String householdId);
-  
+
   Future<ShoppingItemModel> addItem({
     required String householdId,
     required String name,
@@ -13,16 +13,16 @@ abstract class ShoppingRepository {
     String emoji = '🛒',
     String? note,
   });
-  
+
   Future<void> toggleItem({
-    required String itemId, 
+    required String itemId,
     required bool completed,
     required String? userId,
   });
-  
+
   Future<void> deleteItem(String itemId);
-  
+
   Future<void> clearCompleted(String householdId);
-  
+
   Future<void> uncompleteAll(String householdId);
 }

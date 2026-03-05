@@ -9,10 +9,12 @@ class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
   const MercadoPagoSettingsCard({super.key});
 
   @override
-  ConsumerState<MercadoPagoSettingsCard> createState() => _MercadoPagoSettingsCardState();
+  ConsumerState<MercadoPagoSettingsCard> createState() =>
+      _MercadoPagoSettingsCardState();
 }
 
-class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCard> {
+class _MercadoPagoSettingsCardState
+    extends ConsumerState<MercadoPagoSettingsCard> {
   final _aliasController = TextEditingController();
   final _mpService = MercadoPagoService();
   bool _isSaving = false;
@@ -33,11 +35,10 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
       final userId = Supabase.instance.client.auth.currentUser!.id;
       await Supabase.instance.client
           .from('users')
-          .update({'mercadopago_alias': alias})
-          .eq('id', userId);
-      
+          .update({'mercadopago_alias': alias}).eq('id', userId);
+
       ref.invalidate(userProfileProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -49,14 +50,14 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text('Error: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +85,10 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Theme.of(context).dividerColor),
             boxShadow: const [
-              BoxShadow(color: AppColors.shadow, blurRadius: 12, offset: Offset(0, 4)),
+              BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 12,
+                  offset: Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -92,14 +96,14 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
             children: [
               Row(
                 children: [
-                   Container(
+                  Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.lightBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.account_balance_wallet_rounded, 
-                      color: Colors.lightBlue, size: 22),
+                    child: const Icon(Icons.account_balance_wallet_rounded,
+                        color: Colors.lightBlue, size: 22),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
@@ -107,19 +111,25 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Pagos y Mercado Pago',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
                         Text('Configura cómo recibir y pagar gastos',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Alias/CVU Field
-              const Text('TU ALIAS O CVU', 
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 1.2)),
+              const Text('TU ALIAS O CVU',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textMuted,
+                      letterSpacing: 1.2)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -130,8 +140,11 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
                         hintText: 'ej: mi.alias.mp',
                         filled: true,
                         fillColor: AppColors.primary.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                       ),
                     ),
                   ),
@@ -141,42 +154,56 @@ class _MercadoPagoSettingsCardState extends ConsumerState<MercadoPagoSettingsCar
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       minimumSize: const Size(80, 48),
                     ),
-                    child: _isSaving 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text('Guardar'),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Text('Guardar'),
                   ),
                 ],
               ),
               const Padding(
                 padding: EdgeInsets.only(top: 6, left: 4),
-                child: Text('Esto permite que tu pareja te transfiera directamente sin comisiones.', 
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                child: Text(
+                    'Esto permite que tu pareja te transfiera directamente sin comisiones.',
+                    style: TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary)),
               ),
-              
+
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
-              
+
               // Pagos habilitados vía CheckoutPro
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.success.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+                  border: Border.all(
+                      color: AppColors.success.withValues(alpha: 0.25)),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 20),
+                    Icon(Icons.check_circle_outline_rounded,
+                        color: AppColors.success, size: 20),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.',
-                        style: TextStyle(fontSize: 12, color: AppColors.success, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],

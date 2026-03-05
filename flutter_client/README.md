@@ -9,18 +9,17 @@ Cliente Flutter mínimo real para validar el contrato API de HomeSync.
 ## 📋 Estado Actual
 
 ### ✅ Implementado
-- Auth flow (Login, Refresh, Logout)
-- HTTP client con interceptores
-- Exception handling (401, 403, 409, 429, etc.)
-- Task service con patrón dorado
-- Idempotency en tasks
-- Validation de inputs
-- Screens (Login, Tasks, Create Dialog)
-- Multi-environment support (Local, Staging, Production)
 
-### ⏳ Pendiente
-- Retry con exponential backoff
-- Offline mode
+- **Clean Architecture**: Estructura sólida basada en Features, Domain-Driven Design y Repository Pattern.
+- **Auth Flow**: Login con Google (Nativo con fallback a OAuth web), Refresh de tokens y Logout.
+- **Gestión de Hogar**: Crear/Unirse a hogares, gestión de miembros.
+- **Tareas**: CRUD de tareas, categorías, completado y sistema de coins.
+- **Gastos**: Control de gastos compartidos, balances y liquidación de deudas.
+- **Ahorros**: Metas de ahorro y seguimiento de progreso.
+- **Lista de Compras**: Gestión unificada de ítems para el hogar.
+- **Dashboard & Stats**: Resumen visual del estado del hogar y estadísticas detalladas.
+- **UX/UI Premium**: Splash screen animado, transiciones fluidas y Pull-to-Refresh unificado.
+- **Seguridad**: Row Level Security (RLS) en Supabase para protección de datos.
 
 ---
 
@@ -82,29 +81,34 @@ Ver `STAGING_DEPLOY_CHECKLIST.md` para tests completos.
 ```
 flutter_client/
 ├── lib/
-│   ├── main.dart                 # Entry point + screens
-│   ├── config/
-│   │   └── app_environment.dart  # Multi-environment config
-│   └── api/
-│       ├── api_client.dart       # HTTP client con interceptores
-│       ├── api_exceptions.dart    # Exceptiones: ApiException, AuthException, etc.
-│       ├── auth_service.dart     # Auth: login, refresh, logout
-│       └── task_service.dart    # Tasks: CRUD (PATRÓN DORADO)
-├── pubspec.yaml                  # Dependencias
-├── TESTING_GUIDE.md             # Guía de testing detallada
-├── ENVIRONMENTS.md              # Configuración de entornos
-└── README.md                    # Este archivo
+│   ├── main.dart                 # Entry point + RootScreen
+│   ├── core/                     # Infraestructura y servicios cross-cutting
+│   │   ├── services/             # Auth, RPC, MP, etc.
+│   │   ├── theme/                # Design System (Colors, Theme)
+│   │   └── providers/            # Providers globales
+│   ├── features/                 # Lógica por dominio (Clean Arch)
+│   │   ├── auth/
+│   │   ├── tasks/
+│   │   ├── expenses/
+│   │   ├── household/
+│   │   ├── savings/
+│   │   ├── shopping/
+│   │   └── stats/
+│   └── shared/                   # Widgets y componentes reutilizables
+├── android/                      # Configuración nativa Android
+├── ios/                          # Configuración nativa iOS
+└── pubspec.yaml                  # Dependencias del proyecto
 ```
 
 ---
 
 ## 🔧 Configuración de Entornos
 
-| Entorno | URL | Uso |
-|---------|-----|-----|
-| Local | http://localhost:3000/api | Desarrollo local |
-| Staging | https://tfavamqszdkoeabpyxms.supabase.co/api | Validación E2E |
-| Production | https://api.homesync.com/api | Producción |
+| Entorno    | URL                                          | Uso              |
+| ---------- | -------------------------------------------- | ---------------- |
+| Local      | http://localhost:3000/api                    | Desarrollo local |
+| Staging    | https://tfavamqszdkoeabpyxms.supabase.co/api | Validación E2E   |
+| Production | https://api.homesync.com/api                 | Producción       |
 
 Ver `ENVIRONMENTS.md` para configuración detallada.
 
@@ -115,12 +119,14 @@ Ver `ENVIRONMENTS.md` para configuración detallada.
 ### Fase 1: Auth Flow
 
 **Test 1: Login Exitoso**
+
 1. Ingresar email y password válidos
 2. Click "Iniciar Sesión"
 3. ✅ Navega a pantalla de tareas
 4. ✅ Tokens guardados
 
 **Test 2: Auto-Refresh en 401 (CRÍTICO)**
+
 1. Login exitosamente
 2. Esperar 15 minutos (o simular token expirado)
 3. Intentar listar tareas
@@ -134,30 +140,35 @@ Ver `TESTING_GUIDE.md` para tests completos.
 ## 🎯 Tests de Staging
 
 ### Test 1: Refresh Real
+
 - ✅ Login y esperar 15 min
 - ✅ Forzar 401
 - ✅ Verificar auto-refresh
 - ✅ Confirmar que no se pierde estado
 
 ### Test 2: Doble Tap Idempotente
+
 - ✅ Tap rápido dos veces en completar tarea
 - ✅ Solo una mutación
 - ✅ Response con idempotency replay
 - ✅ UI no duplica estado
 
 ### Test 3: Rate Limit Real
+
 - ✅ Forzar 60+ requests
 - ✅ Confirmar 429
 - ✅ Confirmar headers
 - ✅ Confirmar UX clara
 
 ### Test 4: Kill App Mid-Request
+
 - ✅ Enviar POST
 - ✅ Cerrar app
 - ✅ Reabrir
 - ✅ Confirmar que no duplica
 
 ### Test 5: Simular Mala Red
+
 - ✅ Activar Network Link Conditioner
 - ✅ 3G / 2G
 - ✅ Latencia 500ms
@@ -169,19 +180,19 @@ Ver `STAGING_DEPLOY_CHECKLIST.md` para checklist completo.
 
 ## 📊 Estado del Cliente
 
-| Componente | Estado |
-|-----------|--------|
-| Auth Flow (Login, Refresh, Logout) | 100% ✅ |
-| Auto-refresh en 401 | 100% ✅ |
-| HTTP Client con Interceptors | 100% ✅ |
+| Componente                            | Estado  |
+| ------------------------------------- | ------- |
+| Auth Flow (Login, Refresh, Logout)    | 100% ✅ |
+| Auto-refresh en 401                   | 100% ✅ |
+| HTTP Client con Interceptors          | 100% ✅ |
 | Exceptions (401, 403, 409, 429, etc.) | 100% ✅ |
-| Task Service (Patrón Dorado) | 100% ✅ |
-| Idempotency en Tasks | 100% ✅ |
-| Validation de Inputs | 100% ✅ |
+| Task Service (Patrón Dorado)          | 100% ✅ |
+| Idempotency en Tasks                  | 100% ✅ |
+| Validation de Inputs                  | 100% ✅ |
 | Screens (Login, Tasks, Create Dialog) | 100% ✅ |
-| Multi-Environment Support | 100% ✅ |
-| Retry con Exponential Backoff | 0% ⏳ |
-| Offline Mode | 0% ⏳ |
+| Multi-Environment Support             | 100% ✅ |
+| Retry con Exponential Backoff         | 0% ⏳   |
+| Offline Mode                          | 0% ⏳   |
 
 **Overall Completion: 90%**
 

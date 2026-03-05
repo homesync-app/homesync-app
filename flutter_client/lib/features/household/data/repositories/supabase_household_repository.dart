@@ -61,7 +61,8 @@ class SupabaseHouseholdRepository implements HouseholdRepository {
 
     final response = await _client
         .from(AppConstants.tableHouseholdMembers)
-        .select('user_id, role, users(full_name, email, avatar_url, mercadopago_alias)')
+        .select(
+            'user_id, role, users(full_name, email, avatar_url, mercadopago_alias)')
         .eq('household_id', householdMember['household_id']);
 
     return List<Map<String, dynamic>>.from(response);

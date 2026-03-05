@@ -25,7 +25,7 @@ class AppColors {
   static const Color accentPeach = Color(0xFFE88D67);
   static const Color accentOrange = Color(0xFFFF8A65);
   static const Color accentYellow = Color(0xFFD4C550);
-  
+
   // Icon Palette (Mockup specific)
   static const Color iconPeach = Color(0xFFE88D67);
   static const Color iconSage = Color(0xFF6B8E85);
@@ -53,7 +53,6 @@ class AppColors {
     buffer.write(hexString.replaceFirst('#', ''));
     return Color(int.parse(buffer.toString(), radix: 16));
   }
-
 
   static const Color divider = Color(0xFFE2E8F0);
   static const Color border = Color(0xFFE2E8F0);
@@ -271,9 +270,6 @@ class AppColors {
     }
   }
 
-
-
-
   static const Map<String, String> categoryIcons = {
     'cleaning': '🧹',
     'limpieza': '🧹',
@@ -315,7 +311,6 @@ class AppColors {
     'entertainment': '🎬',
     'health': '💊',
   };
-
 
   static const Map<String, String> categoryNames = {
     'cleaning': 'Limpieza',
@@ -359,13 +354,20 @@ class AppColors {
     'health': 'Salud',
   };
 
-
-
-
   static String getMonthName(int month) {
     const months = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic'
     ];
     if (month >= 1 && month <= 12) return months[month - 1];
     return '';
@@ -379,10 +381,16 @@ class AppColors {
     if (lower == 'bathroom' || lower == 'baño') return 'bano';
     if (lower == 'bedroom') return 'dormitorio';
     if (lower == 'pets') return 'mascotas';
-    if (lower == 'outdoor' || lower == 'garden' || lower == 'jardín' || lower == 'jardin') return 'jardin';
+    if (lower == 'outdoor' ||
+        lower == 'garden' ||
+        lower == 'jardín' ||
+        lower == 'jardin') return 'jardin';
     if (lower == 'supermarket') return 'compras';
     if (lower == 'savings') return 'finanzas';
-    if (lower == 'niños' || lower == 'niño' || lower == 'ninos' || lower == 'niña') return 'ninos';
+    if (lower == 'niños' ||
+        lower == 'niño' ||
+        lower == 'ninos' ||
+        lower == 'niña') return 'ninos';
     return lower;
   }
 }

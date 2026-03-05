@@ -22,7 +22,9 @@ import 'tasks_flow_test.mocks.dart';
 // Fake Supabase for Realtime setup
 class FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
-  RealtimeChannel channel(String name, {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) => FakeRealtimeChannel();
+  RealtimeChannel channel(String name,
+          {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) =>
+      FakeRealtimeChannel();
 }
 
 class FakeRealtimeChannel extends Fake implements RealtimeChannel {
@@ -33,10 +35,15 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
     String? table,
     dynamic filter,
     required void Function(PostgresChangePayload payload) callback,
-  }) => this;
+  }) =>
+      this;
 
   @override
-  RealtimeChannel subscribe([void Function(RealtimeSubscribeStatus status, Object? error)? callback, Duration? timeout]) => this;
+  RealtimeChannel subscribe(
+          [void Function(RealtimeSubscribeStatus status, Object? error)?
+              callback,
+          Duration? timeout]) =>
+      this;
 
   @override
   Future<String> unsubscribe([Duration? timeout]) async => 'ok';
@@ -74,11 +81,13 @@ void main() {
     householdId: 'h1',
   );
 
-  testWidgets('TasksScreen renders tasks and allows completion', (WidgetTester tester) async {
+  testWidgets('TasksScreen renders tasks and allows completion',
+      (WidgetTester tester) async {
     // 1. Mock Repository Responses
-    when(mockTaskRepo.getTasks(any, limit: anyNamed('limit'), offset: anyNamed('offset')))
+    when(mockTaskRepo.getTasks(any,
+            limit: anyNamed('limit'), offset: anyNamed('offset')))
         .thenAnswer((_) async => Right([testTask]));
-    
+
     // For completion
     when(mockTaskRepo.completeTask(any, userId: anyNamed('userId')))
         .thenAnswer((_) async => Right({'xp_earned': 10, 'coins_earned': 5}));
@@ -92,16 +101,16 @@ void main() {
         currentUserIdProvider.overrideWithValue('u1'),
         categoriesProvider.overrideWith((ref) => [testCategory]),
         householdMembersProvider.overrideWith((ref) => [
-          MemberModel(
-            id: 'm1',
-            userId: 'u1',
-            householdId: 'h1',
-            role: 'owner',
-            joinedAt: DateTime.now(),
-            fullName: 'User One',
-            email: 'u1@test.com',
-          )
-        ]),
+              MemberModel(
+                id: 'm1',
+                userId: 'u1',
+                householdId: 'h1',
+                role: 'owner',
+                joinedAt: DateTime.now(),
+                fullName: 'User One',
+                email: 'u1@test.com',
+              )
+            ]),
       ],
       child: MaterialApp(
         theme: ThemeData(useMaterial3: true),
@@ -123,7 +132,7 @@ void main() {
     expect(completeButton, findsOneWidget);
     await tester.tap(completeButton);
     await tester.pumpAndSettle();
-    
+
     // 6. Verify Repository Call
     verify(mockTaskRepo.completeTask(any, userId: 'u1')).called(1);
 

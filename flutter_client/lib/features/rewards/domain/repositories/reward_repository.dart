@@ -4,7 +4,8 @@ import '../../../../core/errors/failures.dart';
 /// Abstract contract for rewards data.
 abstract class RewardRepository {
   /// Fetch all rewards for a household.
-  Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(String householdId);
+  Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
+      String householdId);
 
   /// Create or suggest a new reward.
   Future<Either<Failure, void>> suggestReward({

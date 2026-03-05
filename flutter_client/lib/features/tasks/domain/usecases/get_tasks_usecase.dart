@@ -8,7 +8,8 @@ class GetTasksUseCase {
   final TaskRepository _repository;
   const GetTasksUseCase(this._repository);
 
-  Future<Either<Failure, List<TaskModel>>> call(String householdId, {int limit = 100, int offset = 0}) {
+  Future<Either<Failure, List<TaskModel>>> call(String householdId,
+      {int limit = 100, int offset = 0}) {
     return _repository.getTasks(householdId, limit: limit, offset: offset);
   }
 }

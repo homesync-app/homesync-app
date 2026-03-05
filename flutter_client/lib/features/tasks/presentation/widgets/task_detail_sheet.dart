@@ -57,7 +57,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   String get _category => _task.category ?? 'general';
   int get _xpReward => _task.xpReward;
   int get _coinReward => _task.coinReward;
-  String? get _objectionReason => widget.taskData['objection_reason'] as String?;
+  String? get _objectionReason =>
+      widget.taskData['objection_reason'] as String?;
 
   Map? get _completedUser => widget.taskData['completed_user'] as Map?;
   String get _completedByName =>
@@ -76,12 +77,15 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
   (String label, Color color, String emoji) get _statusInfo {
     return switch (_status) {
-      TaskStatus.pendingVerification || TaskStatus.verified => ('Completada', AppColors.accentTeal, '✅'),
+      TaskStatus.pendingVerification || TaskStatus.verified => (
+          'Completada',
+          AppColors.accentTeal,
+          '✅'
+        ),
       TaskStatus.objected => ('En disputa', AppColors.accentRed, '⚠️'),
       _ => ('Pendiente', AppColors.textMuted, '📋'),
     };
   }
-
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
@@ -152,7 +156,6 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     }
   }
 
-
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
@@ -185,8 +188,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           margin: const EdgeInsets.only(top: 60),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -303,8 +305,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                       Expanded(
                         child: Column(
                           children: [
-                            const Text('⭐',
-                                style: TextStyle(fontSize: 28)),
+                            const Text('⭐', style: TextStyle(fontSize: 28)),
                             const SizedBox(height: 4),
                             Text('+$_xpReward XP',
                                 style: const TextStyle(
@@ -380,8 +381,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                         Text(
                           _objectionReason!,
                           style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurface,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 14,
                           ),
                         ),
@@ -412,10 +412,11 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                         maxLines: 3,
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText:
-                              'Ej: Faltó limpiar debajo del mueble...',
-                          hintStyle:
-                              TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          hintText: 'Ej: Faltó limpiar debajo del mueble...',
+                          hintStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant),
                           filled: true,
                           fillColor: Theme.of(context).cardColor,
                           border: OutlineInputBorder(
@@ -437,8 +438,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.accentRed,
                             foregroundColor: Colors.white,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16)),
                           ),
@@ -447,8 +447,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white),
+                                      strokeWidth: 2, color: Colors.white),
                                 )
                               : const Text('Enviar comentario',
                                   style: TextStyle(
@@ -474,12 +473,14 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
   Widget _buildActions() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     // The author can undo their own completed TaskModel
     if (_isAuthor &&
-        (_status == TaskStatus.pendingVerification || _status == TaskStatus.verified)) {
+        (_status == TaskStatus.pendingVerification ||
+            _status == TaskStatus.verified)) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
@@ -489,8 +490,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            side: BorderSide(
-                color: Theme.of(context).dividerColor, width: 1.5),
+            side: BorderSide(color: Theme.of(context).dividerColor, width: 1.5),
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -532,12 +532,10 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             },
             icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
             label: const Text('Objetar / Comentar',
-                style:
-                    TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.accentRed,
-              side:
-                  const BorderSide(color: AppColors.accentRed, width: 1.5),
+              side: const BorderSide(color: AppColors.accentRed, width: 1.5),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
@@ -546,7 +544,6 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
         );
       }
     }
-
 
     // Already objected or no actions available
     return const SizedBox.shrink();

@@ -15,8 +15,7 @@ void main() async {
 
 final taskSearchQueryProvider = NotifierProvider<TaskSearchQueryNotifier, String>(TaskSearchQueryNotifier.new);
 
-class TaskViewModeNotifier extends Notifier<bool> {'''
-  );
+class TaskViewModeNotifier extends Notifier<bool> {''');
 
   content = content.replaceFirst(
       '''if (selectedCategory == null) return tasks;\n    return tasks.where((t) => t.category == selectedCategory).toList();''',
@@ -28,8 +27,7 @@ class TaskViewModeNotifier extends Notifier<bool> {'''
       final q = searchQuery.toLowerCase();
       tasks = tasks.where((t) => t.title.toLowerCase().contains(q)).toList();
     }
-    return tasks;'''
-  );
+    return tasks;''');
 
   content = content.replaceFirst(
       '''if (selectedCategory == null) return tasks;\r\n    return tasks.where((t) => t.category == selectedCategory).toList();''',
@@ -41,8 +39,7 @@ class TaskViewModeNotifier extends Notifier<bool> {'''
       final q = searchQuery.toLowerCase();
       tasks = tasks.where((t) => t.title.toLowerCase().contains(q)).toList();
     }
-    return tasks;'''
-  );
+    return tasks;''');
 
   await file.writeAsString(content);
   print('Done!');

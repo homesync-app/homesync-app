@@ -49,14 +49,18 @@ class QueuedRequest {
       id: map['id'] as int?,
       method: map['method'] as String,
       endpoint: map['endpoint'] as String,
-      body: map['body'] != null ? jsonDecode(map['body'] as String) as Map<String, dynamic> : null,
-      headers: map['headers'] != null ? Map<String, String>.from(jsonDecode(map['headers'] as String)) : null,
+      body: map['body'] != null
+          ? jsonDecode(map['body'] as String) as Map<String, dynamic>
+          : null,
+      headers: map['headers'] != null
+          ? Map<String, String>.from(jsonDecode(map['headers'] as String))
+          : null,
       status: QueueStatus.values.firstWhere((e) => e.name == map['status']),
       retryCount: map['retry_count'] as int? ?? 0,
       error: map['error'] as String?,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
-      processedAt: map['processed_at'] != null 
-          ? DateTime.fromMillisecondsSinceEpoch(map['processed_at'] as int) 
+      processedAt: map['processed_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['processed_at'] as int)
           : null,
     );
   }

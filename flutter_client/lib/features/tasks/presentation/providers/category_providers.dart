@@ -8,13 +8,12 @@ final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
       .from('categories')
       .select('*')
       .order('sort_order', ascending: true);
-  
-  return (response as List)
-      .map((json) => CategoryModel.fromMap(json))
-      .toList();
+
+  return (response as List).map((json) => CategoryModel.fromMap(json)).toList();
 });
 
-final categoryMapProvider = Provider<AsyncValue<Map<String, CategoryModel>>>((ref) {
+final categoryMapProvider =
+    Provider<AsyncValue<Map<String, CategoryModel>>>((ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   return categoriesAsync.whenData((list) {
     return {for (var c in list) c.id: c};

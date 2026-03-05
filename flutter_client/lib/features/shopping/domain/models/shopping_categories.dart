@@ -1,7 +1,12 @@
 class ShoppingCategories {
   static const List<Map<String, dynamic>> all = [
     {'id': 'general', 'name': 'General', 'emoji': '🛒', 'color': 0xFF6366F1},
-    {'id': 'fruits', 'name': 'Frutas y verd.', 'emoji': '🥦', 'color': 0xFF22C55E},
+    {
+      'id': 'fruits',
+      'name': 'Frutas y verd.',
+      'emoji': '🥦',
+      'color': 0xFF22C55E
+    },
     {'id': 'meat', 'name': 'Carnes', 'emoji': '🥩', 'color': 0xFFEF4444},
     {'id': 'dairy', 'name': 'Lácteos', 'emoji': '🥛', 'color': 0xFF3B82F6},
     {'id': 'bakery', 'name': 'Panadería', 'emoji': '🍞', 'color': 0xFFF59E0B},
@@ -15,11 +20,14 @@ class ShoppingCategories {
   ];
 
   static String emojiFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['emoji'] as String;
+      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['emoji']
+          as String;
 
   static String nameFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['name'] as String;
+      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['name']
+          as String;
 
   static int colorFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['color'] as int;
+      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['color']
+          as int;
 }

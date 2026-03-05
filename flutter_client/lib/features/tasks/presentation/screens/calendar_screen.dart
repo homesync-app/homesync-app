@@ -21,7 +21,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _weekStart = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+    _weekStart = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
   }
 
   void _nextWeek() {
@@ -73,8 +74,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: tasksAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppColors.error))),
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (err, _) => Center(
+            child: Text('Error: $err',
+                style: const TextStyle(color: AppColors.error))),
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);
 
@@ -92,14 +96,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24).copyWith(bottom: 100),
-                    physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                    padding: const EdgeInsets.symmetric(horizontal: 24)
+                        .copyWith(bottom: 100),
+                    physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics()),
                     itemCount: 7,
                     itemBuilder: (context, index) {
                       final dayDate = _weekStart.add(Duration(days: index));
                       final isToday = isSameDay(DateTime.now(), dayDate);
                       final tasksForDay = scheduledTasks[dayDate] ?? [];
-                      
+
                       return _buildDaySection(dayDate, tasksForDay, isToday);
                     },
                   ),
@@ -149,7 +155,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _buildArrowButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildArrowButton(
+      {required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -182,25 +189,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isToday ? AppColors.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: isToday ? null : Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: isToday ? [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ] : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ]
-                ),
+                    color: isToday ? AppColors.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: isToday
+                        ? null
+                        : Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: isToday
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ]
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            )
+                          ]),
                 child: Text(
                   '$dayName ${date.day}',
                   style: TextStyle(
@@ -215,13 +226,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 child: Container(
                   height: 1.5,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFE2E8F0),
-                        const Color(0xFFE2E8F0).withValues(alpha: 0),
-                      ],
-                    )
-                  ),
+                      gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFE2E8F0),
+                      const Color(0xFFE2E8F0).withValues(alpha: 0),
+                    ],
+                  )),
                 ),
               )
             ],
@@ -238,7 +248,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     color: Color(0xFFF1F5F9),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.nightlight_round, color: Color(0xFF94A3B8), size: 14),
+                  child: const Icon(Icons.nightlight_round,
+                      color: Color(0xFF94A3B8), size: 14),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -278,7 +289,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : AppColors.getCategoryColor(category);
-    final categoryIcon = categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
+    final categoryIcon =
+        categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
 
     return AnimatedPress(
       onTap: () {},
@@ -289,9 +301,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isCompleted 
+            color: isCompleted
                 ? AppColors.accentGreen.withValues(alpha: 0.1)
-                : const Color(0xFFF1F5F9), 
+                : const Color(0xFFF1F5F9),
             width: 1.5,
           ),
           boxShadow: [
@@ -336,7 +348,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppColors.accentGold.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
@@ -354,9 +367,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       if (isCompleted) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.accentGreen.withValues(alpha: 0.12),
+                            color:
+                                AppColors.accentGreen.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
@@ -389,7 +404,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
                 child: const Center(
-                  child: Icon(Icons.check_rounded, color: Colors.white, size: 16),
+                  child:
+                      Icon(Icons.check_rounded, color: Colors.white, size: 16),
                 ),
               ),
           ],

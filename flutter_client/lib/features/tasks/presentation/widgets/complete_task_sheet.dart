@@ -34,11 +34,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   final Set<String> _selectedCategories = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
-  
+
   bool _isLoading = true;
   List<TaskModel> _allTasks = [];
   List<Map<String, dynamic>> _members = [];
-  
+
   DateTime _customDate = DateTime.now();
   bool _isRightNow = true;
   late ConfettiController _confettiController;
@@ -46,7 +46,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
     _loadData();
     _selectedMemberId = Supabase.instance.client.auth.currentUser?.id;
   }
@@ -63,10 +64,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     try {
       final householdId = await ref.read(householdIdProvider.future);
       if (householdId == null) return;
-      
+
       final taskRepo = ref.read(taskRepositoryProvider);
       final result = await taskRepo.getTasks(householdId, limit: 200);
-      
+
       _allTasks = result.getOrElse((_) => []).where((t) => t.isActive).toList();
 
       final householdRepo = ref.read(householdRepositoryProvider);
@@ -110,7 +111,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
       for (var task in selectedTasks) {
         final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
-        final eitherResult = await completeTaskLogic(task, userId: _selectedMemberId);
+        final eitherResult =
+            await completeTaskLogic(task, userId: _selectedMemberId);
         eitherResult.fold(
           (failure) => log.e('Error completing task: ${failure.message}'),
           (data) {
@@ -225,7 +227,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     // Apply filters
     final filteredTasks = _allTasks.where((task) {
       final taskCatNorm = AppColors.normaliseCategory(task.category);
-      if (_selectedCategories.isNotEmpty && !_selectedCategories.contains(taskCatNorm)) {
+      if (_selectedCategories.isNotEmpty &&
+          !_selectedCategories.contains(taskCatNorm)) {
         return false;
       }
       if (_searchQuery.isNotEmpty) {
@@ -326,7 +329,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         ],
       ),
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
               children: [
                 const SizedBox(height: 12),
@@ -343,7 +347,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   padding: EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [
-                      Icon(Icons.task_alt_rounded, color: AppColors.primary, size: 28),
+                      Icon(Icons.task_alt_rounded,
+                          color: AppColors.primary, size: 28),
                       SizedBox(width: 12),
                       Text(
                         'Completar Tareas',
@@ -362,18 +367,20 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   child: ListView(
                     padding: const EdgeInsets.only(bottom: 140),
                     children: [
-                      _buildSectionHeader(Icons.people_alt_rounded, '¿Quién lo hizo?', 'Selecciona quienes ayudaron'),
+                      _buildSectionHeader(Icons.people_alt_rounded,
+                          '¿Quién lo hizo?', 'Selecciona quienes ayudaron'),
                       _buildMembersSelection(),
                       const SizedBox(height: 32),
-
-                      _buildSectionHeader(Icons.schedule_rounded, '¿Cuándo?', 'Elige el momento de finalización'),
+                      _buildSectionHeader(Icons.schedule_rounded, '¿Cuándo?',
+                          'Elige el momento de finalización'),
                       _buildDateSelection(),
                       const SizedBox(height: 32),
-
-                      _buildSectionHeader(Icons.layers_rounded, 'Seleccionar Tareas', 'Busca y selecciona lo terminado'),
+                      _buildSectionHeader(
+                          Icons.layers_rounded,
+                          'Seleccionar Tareas',
+                          'Busca y selecciona lo terminado'),
                       _buildCategoryAndSearch(categories),
                       const SizedBox(height: 16),
-                      
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Column(
@@ -419,7 +426,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontSize: 12, 
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF64748B),
                   ),
@@ -462,7 +469,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : Colors.transparent,
+                        color:
+                            isSelected ? AppColors.primary : Colors.transparent,
                         width: 2.0,
                       ),
                     ),
@@ -477,8 +485,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     nameStr.split(' ')[0],
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? AppColors.primary : const Color(0xFF64748B),
+                      fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.primary
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -506,7 +517,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildDateOptionCard(
-              title: !_isRightNow ? DateFormat('d/M HH:mm').format(_customDate) : 'Ahora mismo',
+              title: !_isRightNow
+                  ? DateFormat('d/M HH:mm').format(_customDate)
+                  : 'Ahora mismo',
               icon: Icons.calendar_today_rounded,
               isSelected: !_isRightNow,
               onTap: _selectCustomDate,
@@ -538,18 +551,22 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
             width: 1.5,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: isSelected ? Colors.white : const Color(0xFF94A3B8), size: 18),
+            Icon(icon,
+                color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                size: 18),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -587,10 +604,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: 'Buscar tarea...',
-                hintStyle: TextStyle(color: const Color(0xFF94A3B8).withValues(alpha: 0.8)),
-                prefixIcon: const Icon(Icons.search_rounded, size: 22, color: Color(0xFF64748B)),
+                hintStyle: TextStyle(
+                    color: const Color(0xFF94A3B8).withValues(alpha: 0.8)),
+                prefixIcon: const Icon(Icons.search_rounded,
+                    size: 22, color: Color(0xFF64748B)),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
           ),
@@ -598,21 +618,25 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         const SizedBox(height: 20),
         SizedBox(
           height: 44,
-          child: Builder(
-            builder: (context) {
-              final activeCats = _allTasks.map((t) => AppColors.normaliseCategory(t.category)).toSet();
-              final visibleCats = categories.where((c) => activeCats.contains(AppColors.normaliseCategory(c.id))).toList();
-              
-              return ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
-                  ...visibleCats.map((c) => _buildCategoryChip(c.id, c.name, AppColors.fromHex(c.color))),
-                ],
-              );
-            }
-          ),
+          child: Builder(builder: (context) {
+            final activeCats = _allTasks
+                .map((t) => AppColors.normaliseCategory(t.category))
+                .toSet();
+            final visibleCats = categories
+                .where((c) =>
+                    activeCats.contains(AppColors.normaliseCategory(c.id)))
+                .toList();
+
+            return ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              children: [
+                _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
+                ...visibleCats.map((c) => _buildCategoryChip(
+                    c.id, c.name, AppColors.fromHex(c.color))),
+              ],
+            );
+          }),
         ),
       ],
     );
@@ -620,7 +644,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildCategoryChip(String? id, String name, Color color) {
     final normId = id != null ? AppColors.normaliseCategory(id) : null;
-    final isSelected = normId == null ? _selectedCategories.isEmpty : _selectedCategories.contains(normId);
+    final isSelected = normId == null
+        ? _selectedCategories.isEmpty
+        : _selectedCategories.contains(normId);
 
     return GestureDetector(
       onTap: () {
@@ -648,13 +674,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             color: isSelected ? color : Colors.transparent,
             width: 2,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Center(
           child: Text(
@@ -671,9 +699,16 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     );
   }
 
-  List<Widget> _buildGroupedTasksInFull(List<TaskModel> tasks, List<CategoryModel> categories) {
-    if (tasks.isEmpty) return [const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No hay tareas disponibles')))];
-    
+  List<Widget> _buildGroupedTasksInFull(
+      List<TaskModel> tasks, List<CategoryModel> categories) {
+    if (tasks.isEmpty)
+      return [
+        const Center(
+            child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Text('No hay tareas disponibles')))
+      ];
+
     final catLookup = <String, CategoryModel>{};
     for (final c in categories) {
       final norm = AppColors.normaliseCategory(c.id);
@@ -696,12 +731,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     final widgets = <Widget>[];
     for (final normCat in displayCats) {
       final catTasks = grouped[normCat]!;
-      final catInfo = catLookup[normCat] ?? CategoryModel(
-        id: normCat,
-        name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
-        icon: '🏠',
-        color: '#94A3B8'
-      );
+      final catInfo = catLookup[normCat] ??
+          CategoryModel(
+              id: normCat,
+              name:
+                  normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+              icon: '🏠',
+              color: '#94A3B8');
 
       widgets.add(_buildCategoryDivider(
         icon: AppColors.getCategoryMaterialIcon(normCat),
@@ -709,13 +745,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         color: AppColors.fromHex(catInfo.color),
       ));
 
-      widgets.addAll(catTasks.map((t) => _buildTaskSelectionItem(t, AppColors.fromHex(catInfo.color))));
+      widgets.addAll(catTasks.map(
+          (t) => _buildTaskSelectionItem(t, AppColors.fromHex(catInfo.color))));
     }
 
     return widgets;
   }
 
-  Widget _buildCategoryDivider({required IconData icon, required String title, required Color color}) {
+  Widget _buildCategoryDivider(
+      {required IconData icon, required String title, required Color color}) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
       child: Row(
@@ -732,7 +770,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(child: Divider(color: color.withValues(alpha: 0.1), thickness: 1)),
+          Expanded(
+              child:
+                  Divider(color: color.withValues(alpha: 0.1), thickness: 1)),
         ],
       ),
     );
@@ -750,7 +790,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.05)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
@@ -760,7 +802,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
               color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               size: 24,
             ),
@@ -771,14 +815,18 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? AppColors.primary : const Color(0xFF1E293B),
+                  color:
+                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
                 ),
               ),
             ),
             if (task.xpReward > 0)
               Text(
                 '${task.xpReward} XP',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textMuted),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textMuted),
               ),
           ],
         ),

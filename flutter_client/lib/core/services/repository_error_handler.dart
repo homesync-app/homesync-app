@@ -23,9 +23,11 @@ mixin RepositoryErrorHandler {
     } on Exception catch (e, stack) {
       log.e('$context: Unexpected Exception - $e', error: e, stackTrace: stack);
       if (e.toString().contains('429') || e.toString().contains('rate limit')) {
-        return left(const ServerFailure('Demasiadas solicitudes. Intentá en un rato.'));
+        return left(
+            const ServerFailure('Demasiadas solicitudes. Intentá en un rato.'));
       }
-      return left(ServerFailure('Ocurrió un error inesperado al procesar la solicitud.'));
+      return left(ServerFailure(
+          'Ocurrió un error inesperado al procesar la solicitud.'));
     } catch (e, stack) {
       log.f('$context: Fatal Error - $e', error: e, stackTrace: stack);
       return left(ServerFailure('Ocurrió un error crítico inesperado.'));

@@ -6,7 +6,6 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
-
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
 
@@ -55,7 +54,6 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     {'id': 'general', 'name': 'Otros', 'icon': '🏠'},
   ];
 
-
   final List<Map<String, dynamic>> _difficulties = [
     {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'coins': 3},
     {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 5},
@@ -93,7 +91,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Future<void> _loadMembers() async {
     try {
       final members = await ref.read(householdMembersProvider.future);
-      setState(() => _members = members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
+      setState(() => _members =
+          members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
     } catch (e) {
       log.e('Error loading members: $e', error: e);
     }
@@ -144,12 +143,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final currentCategories = categoriesAsync.maybeWhen(
-      data: (list) => list.map((c) => {
-        'id': c.id, 
-        'name': c.name, 
-        'icon': c.icon,
-        'color': c.color,
-      }).toList(),
+      data: (list) => list
+          .map((c) => {
+                'id': c.id,
+                'name': c.name,
+                'icon': c.icon,
+                'color': c.color,
+              })
+          .toList(),
       orElse: () => _categories,
     );
 
@@ -235,59 +236,63 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                               return GestureDetector(
                                 onTap: () => setState(
                                     () => _selectedCategory = c['id']!),
-                                   child: Padding(
-                                     padding: const EdgeInsets.only(right: 16),
-                                     child: Column(
-                                       children: [
-                                         Container(
-                                           width: 56,
-                                           height: 56,
-                                           decoration: BoxDecoration(
-                                             color: isSelected
-                                                 ? color.withValues(alpha: 0.15)
-                                                 : const Color(0xFFF8FAFC),
-                                             shape: BoxShape.circle,
-                                             border: Border.all(
-                                               color: isSelected
-                                                   ? color
-                                                   : const Color(0xFFF1F5F9),
-                                               width: isSelected ? 2.5 : 1.5,
-                                             ),
-                                             boxShadow: isSelected
-                                                 ? [
-                                                     BoxShadow(
-                                                       color: color.withValues(alpha: 0.2),
-                                                       blurRadius: 10,
-                                                       offset: const Offset(0, 4),
-                                                     )
-                                                   ]
-                                                 : [],
-                                           ),
-                                           child: Center(
-                                             child: Icon(
-                                               AppColors.getCategoryMaterialIcon(c['name']),
-                                               color: isSelected ? color : color.withValues(alpha: 0.8),
-                                               size: 24,
-                                             ),
-                                           ),
-                                         ),
-                                         const SizedBox(height: 8),
-                                         Text(
-                                           c['name']!,
-                                           style: TextStyle(
-                                             fontSize: 11,
-                                             fontWeight: isSelected
-                                                 ? FontWeight.w800
-                                                 : FontWeight.w600,
-                                             color: isSelected
-                                                 ? color
-                                                 : AppColors.textSecondary,
-                                           ),
-                                         ),
-                                       ],
-                                     ),
-                                   ),
-                                 );
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? color.withValues(alpha: 0.15)
+                                              : const Color(0xFFF8FAFC),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? color
+                                                : const Color(0xFFF1F5F9),
+                                            width: isSelected ? 2.5 : 1.5,
+                                          ),
+                                          boxShadow: isSelected
+                                              ? [
+                                                  BoxShadow(
+                                                    color: color.withValues(
+                                                        alpha: 0.2),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  )
+                                                ]
+                                              : [],
+                                        ),
+                                        child: Center(
+                                          child: Icon(
+                                            AppColors.getCategoryMaterialIcon(
+                                                c['name']),
+                                            color: isSelected
+                                                ? color
+                                                : color.withValues(alpha: 0.8),
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        c['name']!,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w800
+                                              : FontWeight.w600,
+                                          color: isSelected
+                                              ? color
+                                              : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
                             }).toList(),
                           ),
                         ),
@@ -692,9 +697,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundColor: isSelected
-                  ? AppColors.primary
-                  : const Color(0xFFCBD5E1),
+              backgroundColor:
+                  isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               child: Text(
                 initial,
                 style: const TextStyle(

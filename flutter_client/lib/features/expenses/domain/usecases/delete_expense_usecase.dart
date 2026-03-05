@@ -6,7 +6,8 @@ class DeleteExpenseUseCase {
   DeleteExpenseUseCase(this._repository);
 
   Future<void> call(String expenseId) async {
-    if (expenseId.isEmpty) throw Exception('El ID del gasto no puede estar vacío');
+    if (expenseId.isEmpty)
+      throw Exception('El ID del gasto no puede estar vacío');
     await _repository.deleteExpense(expenseId);
   }
 }

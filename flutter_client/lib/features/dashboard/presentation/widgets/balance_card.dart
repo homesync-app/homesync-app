@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:intl/intl.dart';
 
 class BalanceCard extends ConsumerWidget {
   final int coins;
   final int xp;
   final double? userBalance;
   final bool isDark;
+  final VoidCallback? onSettle;
+  final String? partnerName;
 
   const BalanceCard({
     super.key,
@@ -16,11 +19,25 @@ class BalanceCard extends ConsumerWidget {
     required this.xp,
     this.userBalance,
     this.isDark = false,
+    this.onSettle,
+    this.partnerName,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isNegative = userBalance != null && userBalance! < -0.01;
+    final balance = userBalance ?? 0.0;
+    final bool isPositive = balance > 0.01;
+    final bool isNegative = balance < -0.01;
+    final bool isBalanced = !isPositive && !isNegative;
+
+    // Relational Colors: Sage for credit, Orange for debt, Grey for balanced
+    final statusColor = isNegative
+        ? AppColors.accentOrange
+        : (isBalanced ? const Color(0xFF94A3B8) : AppColors.sage);
+
+    final backgroundColor = isNegative
+        ? AppColors.accentOrange.withValues(alpha: 0.08)
+        : AppColors.sage.withValues(alpha: 0.08);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -38,21 +55,15 @@ class BalanceCard extends ConsumerWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.sage.withValues(alpha: 0.15),
-              AppColors.sage.withValues(alpha: 0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: AppColors.sage.withValues(alpha: 0.2),
+            color: statusColor.withValues(alpha: 0.2),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.sage.withValues(alpha: 0.1),
+              color: statusColor.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -61,85 +72,111 @@ class BalanceCard extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Partner Balance Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tu Balance',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isBalanced
+                              ? '¡Equilibrio perfecto! 🤍'
+                              : 'Balance de Pareja',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '\$',
-                            style: TextStyle(
-                              color: isNegative ? AppColors.accentRed : AppColors.sage,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              isPositive ? '+' : (isNegative ? '' : ''),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          _AnimatedDigitCounter(
-                            value: userBalance ?? 0.0,
-                            style: TextStyle(
-                              color: isNegative ? AppColors.accentRed : AppColors.sage,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1.0,
+                            Text(
+                              '\$',
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                height: 1.5,
+                              ),
                             ),
-                            isDecimal: true,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(9999),
-                      border: Border.all(
-                        color: AppColors.sage.withValues(alpha: 0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.sage.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                            _AnimatedDigitCounter(
+                              value: balance.abs(),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -1.0,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    child: const Text(
-                      'Premium',
-                      style: TextStyle(
-                        color: AppColors.sage,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
                   ),
+
+                  // Saldar Button (Show only if negative, i.e., debtor)
+                  if (isNegative && onSettle != null)
+                    AnimatedPress(
+                      onTap: onSettle!,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Equilibrar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_rounded,
+                                color: Colors.white, size: 16),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (isBalanced)
+                    const Icon(Icons.check_circle_rounded,
+                        color: AppColors.sage, size: 32),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Row(
                 children: [
                   // XP Card (Clickable)
                   Expanded(
                     child: AnimatedPress(
-                      onTap: () => ref.read(bottomNavIndexProvider.notifier).setIndex(4), // Progreso index
+                      onTap: () =>
+                          ref.read(bottomNavIndexProvider.notifier).setIndex(4),
                       child: _buildMetricCard(
                         context,
                         label: 'XP',
@@ -154,7 +191,8 @@ class BalanceCard extends ConsumerWidget {
                   // Coins Card (Clickable)
                   Expanded(
                     child: AnimatedPress(
-                      onTap: () => ref.read(bottomNavIndexProvider.notifier).setIndex(3), // Tienda index
+                      onTap: () =>
+                          ref.read(bottomNavIndexProvider.notifier).setIndex(3),
                       child: _buildMetricCard(
                         context,
                         label: 'Coins',
@@ -257,10 +295,10 @@ class _AnimatedDigitCounter extends StatelessWidget {
       duration: const Duration(milliseconds: 1500),
       curve: Curves.easeOutExpo,
       builder: (context, val, child) {
-        final formatted = isDecimal ? val.toStringAsFixed(2) : val.toInt().toString();
+        final formatted =
+            NumberFormat.decimalPattern('es_AR').format(val.round());
         return Text(formatted, style: style);
       },
     );
   }
 }
-

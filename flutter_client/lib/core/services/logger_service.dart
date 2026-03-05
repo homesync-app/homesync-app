@@ -56,7 +56,9 @@ class LoggerService {
   }
 
   /// Reports errors to Crashlytics in production (mobile only).
-  void _reportToCrashlytics(dynamic message, Object? error, StackTrace? stackTrace, {required bool isFatal}) {
+  void _reportToCrashlytics(
+      dynamic message, Object? error, StackTrace? stackTrace,
+      {required bool isFatal}) {
     if (kDebugMode || kIsWeb) return;
 
     try {
@@ -74,7 +76,7 @@ class LoggerService {
   /// Set custom keys for Crashlytics context
   void setCustomKey(String key, dynamic value) {
     if (kDebugMode || kIsWeb) return;
-    
+
     try {
       if (value is int) {
         FirebaseCrashlytics.instance.setCustomKey(key, value);
@@ -93,7 +95,7 @@ class LoggerService {
   /// Set user ID for Crashlytics context
   void setUserId(String userId) {
     if (kDebugMode || kIsWeb) return;
-    
+
     try {
       FirebaseCrashlytics.instance.setUserIdentifier(userId);
     } catch (e) {

@@ -8,7 +8,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
   SupabaseDashboardRepository(this._client);
 
   @override
-  Future<List<Map<String, dynamic>>> getRecentActivity(String householdId) async {
+  Future<List<Map<String, dynamic>>> getRecentActivity(
+      String householdId) async {
     final activities = <Map<String, dynamic>>[];
     final now = DateTime.now();
     final since = now.subtract(const Duration(days: 7));
@@ -23,7 +24,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
             completed_user:users!tasks_completed_by_fkey(id, full_name, avatar_url)
           ''')
           .eq('household_id', householdId)
-          .not('completed_at', 'is', null) 
+          .not('completed_at', 'is', null)
           .gte('updated_at', since.toIso8601String())
           .order('updated_at', ascending: false)
           .limit(20);
@@ -48,9 +49,10 @@ class SupabaseDashboardRepository implements DashboardRepository {
             .gte('completed_at', since.toIso8601String())
             .order('updated_at', ascending: false)
             .limit(20);
-        
+
         for (final t in fallbackTasks) {
-          final timeStr = t['completed_at'] ?? t['updated_at'] ?? t['created_at'];
+          final timeStr =
+              t['completed_at'] ?? t['updated_at'] ?? t['created_at'];
           activities.add({
             'type': 'TaskModel',
             'data': t,
@@ -94,7 +96,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
             .gte('created_at', since.toIso8601String())
             .order('created_at', ascending: false)
             .limit(20);
-        
+
         for (final e in fallbackExpenses) {
           final timeStr = e['paid_at'] ?? e['created_at'];
           activities.add({
@@ -107,8 +109,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
     }
 
     // 3. Final cleanup and sorting
-    activities.sort((a, b) => (b['time'] as DateTime).compareTo(a['time'] as DateTime));
-    
+    activities.sort(
+        (a, b) => (b['time'] as DateTime).compareTo(a['time'] as DateTime));
+
     return activities.take(30).toList();
   }
 }

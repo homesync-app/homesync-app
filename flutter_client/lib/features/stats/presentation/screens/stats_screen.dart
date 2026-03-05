@@ -357,18 +357,19 @@ class _WeeklyTab extends StatelessWidget {
           const _SectionLabel(label: 'Actividad reciente', icon: '🕒'),
           const SizedBox(height: 16),
           Container(
-             padding: const EdgeInsets.all(20),
-             decoration: BoxDecoration(
-               color: Colors.white,
-               borderRadius: BorderRadius.circular(24),
-               border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-             ),
-             child: const Center(
-               child: Text(
-                 'Revisá el muro para ver la actividad detallada',
-                 style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-               ),
-             ),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border:
+                  Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+            ),
+            child: const Center(
+              child: Text(
+                'Revisá el muro para ver la actividad detallada',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+              ),
+            ),
           ),
         ],
       ),
@@ -431,7 +432,7 @@ class _ProgressTabState extends State<_ProgressTab> {
           // ── Header ───────────────────────────────────────────────────────
           const _SectionLabel(label: 'Tu evolución personal', icon: '📈'),
           const SizedBox(height: 16),
-          
+
           // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
             children: [
@@ -514,10 +515,14 @@ class _ProgressTabState extends State<_ProgressTab> {
                         ),
                       ),
                       titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
@@ -595,9 +600,11 @@ class _ProgressTabState extends State<_ProgressTab> {
                   child: _PersonalMetricCard(
                     icon: '📈',
                     label: 'Nivel',
-                    value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
+                    value:
+                        '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
                     color: AppColors.primary,
-                    subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                    subtitle:
+                        '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
                   ),
                 ),
               ),
@@ -607,7 +614,8 @@ class _ProgressTabState extends State<_ProgressTab> {
 
           // ── Privacy assurance ───────────────────────────────────────────
           const _PrivacyBadge(
-            text: 'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
+            text:
+                'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
           ),
         ],
       ),
@@ -642,13 +650,15 @@ class _XPToggleButton extends StatelessWidget {
             color: isSelected ? color : AppColors.border,
             width: 1,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Text(
           label,
@@ -795,12 +805,14 @@ class _CategoriesTab extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRefresh,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Actualizar datos', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text('Actualizar datos',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -829,7 +841,7 @@ class _CategoriesTab extends StatelessWidget {
           const _SectionLabel(label: 'Desglose por categoría', icon: '📋'),
           const SizedBox(height: 16),
           ...taskStats.map((stat) => _CategoryDetailCard(stat: stat)),
-          
+
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),
@@ -1142,14 +1154,16 @@ class _DuelHistoryWidget extends StatelessWidget {
           final index = entry.key;
           final duel = entry.value;
           final isLast = index == duelHistory.length - 1;
-          
-          final winnerName = (duel['winner_name'] as String? ?? 'Ganador').split(' ').first;
-          final loserName = (duel['loser_name'] as String? ?? 'Perdedor').split(' ').first;
+
+          final winnerName =
+              (duel['winner_name'] as String? ?? 'Ganador').split(' ').first;
+          final loserName =
+              (duel['loser_name'] as String? ?? 'Perdedor').split(' ').first;
           final winnerXp = (duel['winner_xp'] as num?)?.toInt() ?? 0;
           final loserXp = (duel['loser_xp'] as num?)?.toInt() ?? 0;
           final userResult = duel['user_result'] as String? ?? 'neutral';
           final weekDate = duel['week_start_date'];
-          
+
           String weekLabel = 'Semana pasada';
           if (weekDate != null) {
             try {
@@ -1161,11 +1175,13 @@ class _DuelHistoryWidget extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: isLast ? null : Border(
-                bottom: BorderSide(
-                  color: AppColors.border.withValues(alpha: 0.5),
-                ),
-              ),
+              border: isLast
+                  ? null
+                  : Border(
+                      bottom: BorderSide(
+                        color: AppColors.border.withValues(alpha: 0.5),
+                      ),
+                    ),
             ),
             child: Row(
               children: [
@@ -1175,10 +1191,16 @@ class _DuelHistoryWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: userResult == 'win'
-                          ? [AppColors.success, AppColors.success.withValues(alpha: 0.8)]
+                          ? [
+                              AppColors.success,
+                              AppColors.success.withValues(alpha: 0.8)
+                            ]
                           : userResult == 'loss'
                               ? [Colors.red.shade400, Colors.red.shade300]
-                              : [AppColors.textMuted.withValues(alpha: 0.3), AppColors.textMuted.withValues(alpha: 0.2)],
+                              : [
+                                  AppColors.textMuted.withValues(alpha: 0.3),
+                                  AppColors.textMuted.withValues(alpha: 0.2)
+                                ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -1186,7 +1208,11 @@ class _DuelHistoryWidget extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      userResult == 'win' ? '🏆' : userResult == 'loss' ? '😢' : '⚔️',
+                      userResult == 'win'
+                          ? '🏆'
+                          : userResult == 'loss'
+                              ? '😢'
+                              : '⚔️',
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),
@@ -1203,10 +1229,14 @@ class _DuelHistoryWidget extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: userResult == 'win' ? AppColors.success : AppColors.textPrimary,
+                              color: userResult == 'win'
+                                  ? AppColors.success
+                                  : AppColors.textPrimary,
                             ),
                           ),
-                          const Text(' vs ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                          const Text(' vs ',
+                              style: TextStyle(
+                                  color: AppColors.textMuted, fontSize: 12)),
                           Text(
                             loserName,
                             style: const TextStyle(
@@ -1229,7 +1259,8 @@ class _DuelHistoryWidget extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: userResult == 'win'
                         ? AppColors.success.withValues(alpha: 0.1)
@@ -1242,7 +1273,11 @@ class _DuelHistoryWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        userResult == 'win' ? '✓' : userResult == 'loss' ? '✗' : '=',
+                        userResult == 'win'
+                            ? '✓'
+                            : userResult == 'loss'
+                                ? '✗'
+                                : '=',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,

@@ -21,17 +21,20 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<List<SavingsGoalModel>>>(savingsGoalsProvider, (previous, next) {
+    ref.listen<AsyncValue<List<SavingsGoalModel>>>(savingsGoalsProvider,
+        (previous, next) {
       if (previous != null && previous.hasValue && next.hasValue) {
         final prevGoals = previous.value!;
         final nextGoals = next.value!;
-        
+
         for (final goal in nextGoals) {
-          final prevGoal = prevGoals.any((g) => g.id == goal.id) 
-              ? prevGoals.firstWhere((g) => g.id == goal.id) 
+          final prevGoal = prevGoals.any((g) => g.id == goal.id)
+              ? prevGoals.firstWhere((g) => g.id == goal.id)
               : null;
-          
-          if (prevGoal != null && prevGoal.progress < 1.0 && goal.progress >= 1.0) {
+
+          if (prevGoal != null &&
+              prevGoal.progress < 1.0 &&
+              goal.progress >= 1.0) {
             _showGoalCompletionAnim(goal);
           }
         }
@@ -207,7 +210,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             style: TextStyle(
                 color: color, fontWeight: FontWeight.w800, fontSize: 18)),
         Text(label,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            style:
+                const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
       ],
     );
   }
@@ -236,8 +240,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child:
-                Center(child: Text(goal.icon, style: const TextStyle(fontSize: 24))),
+            child: Center(
+                child: Text(goal.icon, style: const TextStyle(fontSize: 24))),
           ),
           title: Text(goal.title,
               style: const TextStyle(
@@ -246,7 +250,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   color: AppColors.textPrimary)),
           subtitle: Text(
               '\$${goal.currentAmount.toStringAsFixed(0)} de \$${goal.targetAmount.toStringAsFixed(0)}',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 13)),
           trailing: Text('${(progress * 100).toStringAsFixed(0)}%',
               style: TextStyle(
                   color: color, fontWeight: FontWeight.w900, fontSize: 15)),
@@ -283,8 +288,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: () => _confirmDelete(goal),
-                  icon: const Icon(Icons.delete_outline,
-                      color: AppColors.error),
+                  icon:
+                      const Icon(Icons.delete_outline, color: AppColors.error),
                 ),
               ],
             ),
@@ -314,7 +319,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
                 child: Text('Aún no hay aportes en este pocito.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12)),
               );
             }
             return ListView.builder(
@@ -336,12 +342,14 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       Expanded(
                         child: Text(
                           '${contribution.userName?.split(' ')[0] ?? 'Alguien'} sumó \$${contribution.amount.toStringAsFixed(0)}',
-                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                          style: const TextStyle(
+                              fontSize: 13, color: AppColors.textPrimary),
                         ),
                       ),
                       Text(
                         DateFormat('dd MMM').format(contribution.createdAt),
-                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -382,7 +390,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               ref.read(savingsGoalsProvider.notifier).removeGoal(goal.id);
               Navigator.pop(context);
             },
-            child: const Text('Eliminar', style: TextStyle(color: AppColors.error)),
+            child: const Text('Eliminar',
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -424,8 +433,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               decoration: InputDecoration(
                 prefixText: '\$ ',
                 hintText: '0.00',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
             const SizedBox(height: 24),
@@ -447,7 +456,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     );
   }
 
-  Future<void> _handleMPContribution(SavingsGoalModel goal, String amountStr) async {
+  Future<void> _handleMPContribution(
+      SavingsGoalModel goal, String amountStr) async {
     final amount = double.tryParse(amountStr);
     if (amount == null || amount <= 0) return;
 
@@ -542,11 +552,13 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       ),
     );
   }
+
   void _showGoalCompletionAnim(SavingsGoalModel goal) {
     SuccessCelebration.show(
       context,
       title: '¡META CUMPLIDA! 🎯',
-      message: '¡Increíble! Han logrado llegar al objetivo de "${goal.title}". ¡A disfrutarlo juntos!',
+      message:
+          '¡Increíble! Han logrado llegar al objetivo de "${goal.title}". ¡A disfrutarlo juntos!',
       icon: goal.icon,
     );
   }
