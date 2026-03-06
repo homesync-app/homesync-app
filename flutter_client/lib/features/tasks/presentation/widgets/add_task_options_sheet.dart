@@ -225,8 +225,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                               widget.members.map((m) => m.toMap()).toList(),
                         ),
                       );
-                      if (result == true && context.mounted)
+                      if (result == true && context.mounted) {
                         Navigator.pop(context, true);
+                      }
                     },
                     icon: const Icon(Icons.edit_rounded, color: Colors.white),
                     label: const Text('Personalizada'),

@@ -25,4 +25,7 @@ abstract class RewardRepository {
 
   /// Delete a reward.
   Future<Either<Failure, void>> deleteReward(String rewardId);
+
+  /// Clone reward templates to the current household.
+  Future<Either<Failure, int>> cloneTemplates();
 }

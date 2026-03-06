@@ -35,10 +35,6 @@ class BalanceCard extends ConsumerWidget {
         ? AppColors.accentOrange
         : (isBalanced ? const Color(0xFF94A3B8) : AppColors.sage);
 
-    final backgroundColor = isNegative
-        ? AppColors.accentOrange.withValues(alpha: 0.08)
-        : AppColors.sage.withValues(alpha: 0.08);
-
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 1000),
@@ -280,12 +276,10 @@ class BalanceCard extends ConsumerWidget {
 class _AnimatedDigitCounter extends StatelessWidget {
   final double value;
   final TextStyle style;
-  final bool isDecimal;
 
   const _AnimatedDigitCounter({
     required this.value,
     required this.style,
-    this.isDecimal = false,
   });
 
   @override

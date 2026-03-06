@@ -105,22 +105,36 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       return;
     }
 
-    final hasHousehold = await Supabase.instance.client
-        .from('household_members')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    log.i('MainScreen: Verificando hogar para usuario ${user.id}...');
+    
+    dynamic hasHousehold;
+    int attempts = 0;
+    while (hasHousehold == null && attempts < 10) {
+      hasHousehold = await Supabase.instance.client
+          .from('household_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      if (hasHousehold != null) break;
+      
+      log.i('MainScreen: Hogar no encontrado aún (intento ${attempts + 1}). Esperando...');
+      await Future.delayed(const Duration(milliseconds: 500));
+      attempts++;
+    }
 
     if (!mounted) return;
 
     if (hasHousehold == null) {
+      log.w('MainScreen: Usuario no tiene hogar tras varios reintentos. Forzando SetupScreen.');
       setState(() {
         _needsSetup = true;
         _isLoading = false;
       });
       return;
     }
-
+    
+    log.i('MainScreen: Hogar confirmado. Procediendo al Dashboard.');
     await widget.prefs.setBool('setup_completed', true);
     if (!mounted) return;
 
@@ -179,9 +193,57 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+      return Scaffold(
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.background, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Preparando tu hogar...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -269,7 +331,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         SettingsScreen(
           onLogout: () {
             _notifService.dispose();
-            // Auth state change handled by authStateProvider
+            // Cerrar la pantalla de ajustes inmediatamente para que AnimatedSwitcher 
+            // en RootScreen (main.dart) muestre el Login sin "atrasos"
+            Navigator.pop(context);
           },
         ),
       ),

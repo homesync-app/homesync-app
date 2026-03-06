@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 
 class CreateSavingsGoalUseCase {
@@ -5,17 +7,23 @@ class CreateSavingsGoalUseCase {
 
   CreateSavingsGoalUseCase(this.repository);
 
-  Future<void> execute({
+  Future<Either<Failure, void>> execute({
     required String householdId,
     required String title,
     required double targetAmount,
     required String color,
     required String icon,
   }) {
-    if (householdId.isEmpty) throw ArgumentError('householdId is required');
-    if (title.isEmpty) throw ArgumentError('title is required');
-    if (targetAmount <= 0)
-      throw ArgumentError('targetAmount must be greater than zero');
+    if (householdId.isEmpty) {
+      return Future.value(Left(ValidationFailure('householdId is required')));
+    }
+    if (title.isEmpty) {
+      return Future.value(Left(ValidationFailure('title is required')));
+    }
+    if (targetAmount <= 0) {
+      return Future.value(
+          Left(ValidationFailure('targetAmount must be greater than zero')));
+    }
 
     return repository.createGoal(
       householdId: householdId,

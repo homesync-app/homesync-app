@@ -296,7 +296,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           // ── Content ──────────────────────────────────────────────────────
           Expanded(
             child: isCalendarMode
-                ? const CalendarScreen()
+                ? CalendarScreen(
+                    onEdit: _showEditDialog,
+                    onSchedule: _showScheduleDialog,
+                  )
                 : filteredAsync.when(
                     loading: () => ListView.separated(
                       padding: const EdgeInsets.all(24),
@@ -675,11 +678,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Set<String> selectedCategories,
   ) {
     // 1. Group by marginalised category
-    final activeTasks = tasks.where((t) => t.isActive).toList();
+    // We show all tasks now so they can be edited even if completed
+    final filteredTasks = tasks; 
 
     // Deduplicate by title+normalised-category
     final uniqueMap = <String, TaskModel>{};
-    for (final t in activeTasks) {
+    for (final t in filteredTasks) {
       final normCat = AppColors.normaliseCategory(t.category);
       final key = '${t.title.toLowerCase().trim()}_$normCat';
       final existing = uniqueMap[key];
@@ -1010,30 +1014,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            if (task.isActive)
-                              _buildActionTilePremium(
-                                icon: Icons.check_circle_outline_rounded,
-                                label: 'Completar',
-                                color: AppColors.accentTeal,
-                                onTap: widget.onComplete,
-                              ),
                             _buildActionTilePremium(
                               icon: Icons.edit_rounded,
                               label: 'Editar',
-                              color: AppColors.accentGold,
+                              color: AppColors.primary,
                               onTap: widget.onEdit,
                             ),
                             _buildActionTilePremium(
                               icon: Icons.calendar_month_rounded,
-                              label: 'Info',
-                              color: AppColors.primary,
+                              label: 'Programar',
+                              color: AppColors.accentGold,
                               onTap: widget.onSchedule,
-                            ),
-                            _buildActionTilePremium(
-                              icon: Icons.delete_outline_rounded,
-                              label: 'Borrar',
-                              color: AppColors.accentRed,
-                              onTap: widget.onDelete,
                             ),
                           ],
                         ),

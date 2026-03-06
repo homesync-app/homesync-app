@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 // rpc accessed via statsRpcServiceProvider
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';

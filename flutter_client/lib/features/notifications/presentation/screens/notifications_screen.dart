@@ -7,7 +7,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();

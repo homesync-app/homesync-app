@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 
 class ToggleShoppingItemUseCase {
@@ -5,14 +7,17 @@ class ToggleShoppingItemUseCase {
 
   ToggleShoppingItemUseCase(this.repository);
 
-  Future<void> execute({
+  Future<Either<Failure, void>> execute({
     required String itemId,
     required bool completed,
     required String? userId,
   }) {
-    if (itemId.isEmpty) throw ArgumentError('itemId is required');
+    if (itemId.isEmpty) {
+      return Future.value(Left(ValidationFailure('itemId is required')));
+    }
     if (completed && (userId == null || userId.isEmpty)) {
-      throw ArgumentError('userId is required when marking as completed');
+      return Future.value(
+          Left(ValidationFailure('userId is required when marking as completed')));
     }
 
     return repository.toggleItem(

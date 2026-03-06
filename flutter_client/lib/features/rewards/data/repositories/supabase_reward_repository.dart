@@ -5,12 +5,13 @@ import '../../../../core/providers/supabase_provider.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/providers/connectivity_provider.dart';
 import '../../domain/repositories/reward_repository.dart';
 
 final rewardRepositoryProvider = Provider<RewardRepository>((ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(rewardRpcServiceProvider);
-  return SupabaseRewardRepository(client: client, rpc: rpc);
+  return SupabaseRewardRepository(client: client, rpc: rpc, ref: ref);
 });
 
 class SupabaseRewardRepository
@@ -18,11 +19,15 @@ class SupabaseRewardRepository
     implements RewardRepository {
   final SupabaseClient _client;
   final dynamic _rpc; // rewardRpcServiceProvider type
+  final Ref _ref;
 
   SupabaseRewardRepository(
-      {required SupabaseClient client, required dynamic rpc})
+      {required SupabaseClient client, required dynamic rpc, required Ref ref})
       : _client = client,
-        _rpc = rpc;
+        _rpc = rpc,
+        _ref = ref;
+
+  bool get _isOnline => _ref.read(isOnlineProvider);
 
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
@@ -34,7 +39,7 @@ class SupabaseRewardRepository
           .eq('household_id', householdId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
-    }, context: 'SupabaseRewardRepository.getRewards');
+    }, context: 'SupabaseRewardRepository.getRewards', isOnline: _isOnline);
   }
 
   @override
@@ -56,7 +61,7 @@ class SupabaseRewardRepository
         'created_by': createdBy,
         'is_approved': false,
       });
-    }, context: 'SupabaseRewardRepository.suggestReward');
+    }, context: 'SupabaseRewardRepository.suggestReward', isOnline: _isOnline);
   }
 
   @override
@@ -65,20 +70,27 @@ class SupabaseRewardRepository
       await _client
           .from('rewards')
           .update({'is_approved': true}).eq('id', rewardId);
-    }, context: 'SupabaseRewardRepository.approveReward');
+    }, context: 'SupabaseRewardRepository.approveReward', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> redeemReward(String rewardId) async {
     return executeWithHandling(() async {
       await _rpc.redeemReward(rewardId);
-    }, context: 'SupabaseRewardRepository.redeemReward');
+    }, context: 'SupabaseRewardRepository.redeemReward', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> deleteReward(String rewardId) async {
     return executeWithHandling(() async {
       await _client.from('rewards').delete().eq('id', rewardId);
-    }, context: 'SupabaseRewardRepository.deleteReward');
+    }, context: 'SupabaseRewardRepository.deleteReward', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, int>> cloneTemplates() async {
+    return executeWithHandling(() async {
+      return await _rpc.cloneRewardTemplates();
+    }, context: 'SupabaseRewardRepository.cloneTemplates', isOnline: _isOnline);
   }
 }

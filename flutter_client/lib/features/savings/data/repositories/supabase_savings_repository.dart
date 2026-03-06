@@ -1,14 +1,26 @@
-import 'dart:developer' as dev;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/providers/connectivity_provider.dart';
+import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/savings_model.dart';
 import '../../domain/repositories/savings_repository.dart';
 
-class SupabaseSavingsRepository implements SavingsRepository {
+class SupabaseSavingsRepository
+    with RepositoryErrorHandler
+    implements SavingsRepository {
   final SupabaseClient _client = Supabase.instance.client;
+  final Ref _ref;
+
+  SupabaseSavingsRepository({required Ref ref}) : _ref = ref;
+
+  bool get _isOnline => _ref.read(isOnlineProvider);
 
   @override
-  Future<List<SavingsGoalModel>> getGoals({required String householdId}) async {
-    try {
+  Future<Either<Failure, List<SavingsGoalModel>>> getGoals(
+      {required String householdId}) async {
+    return executeWithHandling(() async {
       final response = await _client
           .from('savings_goals')
           .select()
@@ -18,16 +30,13 @@ class SupabaseSavingsRepository implements SavingsRepository {
       return (response as List)
           .map((json) => SavingsGoalModel.fromJson(json))
           .toList();
-    } catch (e) {
-      dev.log('Error getting goals: $e');
-      return [];
-    }
+    }, context: 'SupabaseSavingsRepository.getGoals', isOnline: _isOnline);
   }
 
   @override
-  Future<List<SavingsContributionModel>> getGoalContributions(
+  Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions(
       {required String goalId}) async {
-    try {
+    return executeWithHandling(() async {
       final response = await _client
           .from('savings_contributions')
           .select('*, user:users!user_id(full_name, avatar_url)')
@@ -37,46 +46,49 @@ class SupabaseSavingsRepository implements SavingsRepository {
       return (response as List)
           .map((json) => SavingsContributionModel.fromJson(json))
           .toList();
-    } catch (e) {
-      dev.log('Error loading contributions: $e');
-      return [];
-    }
+    }, context: 'SupabaseSavingsRepository.getGoalContributions', isOnline: _isOnline);
   }
 
   @override
-  Future<void> createGoal({
+  Future<Either<Failure, void>> createGoal({
     required String householdId,
     required String title,
     required double targetAmount,
     required String color,
     required String icon,
   }) async {
-    await _client.from('savings_goals').insert({
-      'household_id': householdId,
-      'title': title,
-      'target_amount': targetAmount,
-      'color': color,
-      'icon': icon,
-    });
+    return executeWithHandling(() async {
+      await _client.from('savings_goals').insert({
+        'household_id': householdId,
+        'title': title,
+        'target_amount': targetAmount,
+        'color': color,
+        'icon': icon,
+      });
+    }, context: 'SupabaseSavingsRepository.createGoal', isOnline: _isOnline);
   }
 
   @override
-  Future<void> addContribution({
+  Future<Either<Failure, void>> addContribution({
     required String goalId,
     required String userId,
     required double amount,
     String? note,
   }) async {
-    await _client.from('savings_contributions').insert({
-      'goal_id': goalId,
-      'user_id': userId,
-      'amount': amount,
-      'note': note,
-    });
+    return executeWithHandling(() async {
+      await _client.from('savings_contributions').insert({
+        'goal_id': goalId,
+        'user_id': userId,
+        'amount': amount,
+        'note': note,
+      });
+    }, context: 'SupabaseSavingsRepository.addContribution', isOnline: _isOnline);
   }
 
   @override
-  Future<void> deleteGoal({required String goalId}) async {
-    await _client.from('savings_goals').delete().eq('id', goalId);
+  Future<Either<Failure, void>> deleteGoal({required String goalId}) async {
+    return executeWithHandling(() async {
+      await _client.from('savings_goals').delete().eq('id', goalId);
+    }, context: 'SupabaseSavingsRepository.deleteGoal', isOnline: _isOnline);
   }
 }

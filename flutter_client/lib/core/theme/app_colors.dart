@@ -384,13 +384,17 @@ class AppColors {
     if (lower == 'outdoor' ||
         lower == 'garden' ||
         lower == 'jardín' ||
-        lower == 'jardin') return 'jardin';
+        lower == 'jardin') {
+      return 'jardin';
+    }
     if (lower == 'supermarket') return 'compras';
     if (lower == 'savings') return 'finanzas';
     if (lower == 'niños' ||
         lower == 'niño' ||
         lower == 'ninos' ||
-        lower == 'niña') return 'ninos';
+        lower == 'niña') {
+      return 'ninos';
+    }
     return lower;
   }
 }

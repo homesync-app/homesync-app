@@ -483,6 +483,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     if (url != null) {
       await _mpService.launchCheckout(url);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error al generar el link de pago')),
       );

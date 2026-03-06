@@ -70,6 +70,7 @@ class FakeAuthRepository implements AuthRepository {
 }
 
 class FakePrefs {
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

@@ -6,12 +6,18 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/providers/connectivity_provider.dart';
+
 class SupabaseExpenseRepository
     with RepositoryErrorHandler
     implements ExpenseRepository {
   final SupabaseClient _client;
+  final Ref _ref;
 
-  SupabaseExpenseRepository(this._client);
+  SupabaseExpenseRepository(this._client, this._ref);
+
+  bool get _isOnline => _ref.read(isOnlineProvider);
 
   @override
   Future<Either<Failure, String>> getHouseholdId(String userId) async {
@@ -26,7 +32,7 @@ class SupabaseExpenseRepository
         throw const HouseholdFailure('No pertenecés a un hogar');
       }
       return memberData['household_id'] as String;
-    }, context: 'SupabaseExpenseRepository.getHouseholdId');
+    }, context: 'SupabaseExpenseRepository.getHouseholdId', isOnline: _isOnline);
   }
 
   @override
@@ -57,7 +63,7 @@ class SupabaseExpenseRepository
       return (response as List<dynamic>)
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseExpenseRepository.getRecentExpenses');
+    }, context: 'SupabaseExpenseRepository.getRecentExpenses', isOnline: _isOnline);
   }
 
   @override
@@ -68,7 +74,7 @@ class SupabaseExpenseRepository
             *,
             expense_splits(*)
           ''').eq('id', expenseId).single();
-    }, context: 'SupabaseExpenseRepository.getExpenseWithSplits');
+    }, context: 'SupabaseExpenseRepository.getExpenseWithSplits', isOnline: _isOnline);
   }
 
   @override
@@ -82,7 +88,7 @@ class SupabaseExpenseRepository
       return (response as List<dynamic>)
           .map((e) => HouseholdBalanceModel.fromJson(e as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseExpenseRepository.getHouseholdBalances');
+    }, context: 'SupabaseExpenseRepository.getHouseholdBalances', isOnline: _isOnline);
   }
 
   @override
@@ -120,14 +126,14 @@ class SupabaseExpenseRepository
           'p_splits': splits,
         },
       );
-    }, context: 'SupabaseExpenseRepository.saveExpense');
+    }, context: 'SupabaseExpenseRepository.saveExpense', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
     return executeWithHandling(() async {
       await _client.from('expenses').delete().eq('id', id);
-    }, context: 'SupabaseExpenseRepository.deleteExpense');
+    }, context: 'SupabaseExpenseRepository.deleteExpense', isOnline: _isOnline);
   }
 
   @override
@@ -149,6 +155,6 @@ class SupabaseExpenseRepository
           'p_amount': amount,
         },
       );
-    }, context: 'SupabaseExpenseRepository.settleDebt');
+    }, context: 'SupabaseExpenseRepository.settleDebt', isOnline: _isOnline);
   }
 }

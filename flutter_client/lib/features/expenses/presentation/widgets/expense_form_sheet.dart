@@ -183,39 +183,41 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         t.contains('gas') ||
         t.contains('internet') ||
         t.contains('wifi') ||
-        t.contains('servicio'))
+        t.contains('servicio')) {
       matchedId = 'utilities';
-    else if (t.contains('alquiler') ||
+    } else if (t.contains('alquiler') ||
         t.contains('expensas') ||
-        t.contains('renta'))
+        t.contains('renta')) {
       matchedId = 'rent';
-    else if (t.contains('restaurante') ||
+    } else if (t.contains('restaurante') ||
         t.contains('cena') ||
         t.contains('pedidosya') ||
         t.contains('delivery') ||
         t.contains('mc') ||
-        t.contains('pizza'))
+        t.contains('pizza')) {
       matchedId = 'restaurants';
-    else if (t.contains('transporte') ||
+    } else if (t.contains('transporte') ||
         t.contains('uber') ||
         t.contains('cabify') ||
         t.contains('nafta') ||
         t.contains('gasolina') ||
         t.contains('sube') ||
         t.contains('taxi') ||
-        t.contains('cole'))
+        t.contains('cole')) {
       matchedId = 'transport';
-    else if (t.contains('cine') ||
+    } else if (t.contains('cine') ||
         t.contains('teatro') ||
         t.contains('juego') ||
         t.contains('fiesta') ||
-        t.contains('salida'))
+        t.contains('salida')) {
       matchedId = 'entertainment';
-    else if (t.contains('farmacia') ||
+    } else if (t.contains('farmacia') ||
         t.contains('medico') ||
         t.contains('salud') ||
         t.contains('pastillas') ||
-        t.contains('remedio')) matchedId = 'health';
+        t.contains('remedio')) {
+      matchedId = 'health';
+    }
 
     if (matchedId != null && _selectedCategory?['id'] != matchedId) {
       // First decide the type so _currentCategories is correct
@@ -424,10 +426,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: $e')),
       data: (members) {
-        if (_paidByUserId.isEmpty) {
+        if (members.isEmpty) {
+          return const Center(child: Text('No hay miembros en el hogar'));
+        }
+        
+        // Ensure _paidByUserId is valid and exists in members
+        if (_paidByUserId.isEmpty || !members.any((m) => m.userId == _paidByUserId)) {
           final currentUserId = ref.read(currentUserIdProvider);
           final matchingMember = members.any((m) => m.userId == currentUserId)
-              ? members.firstWhere((m) => m.userId == currentUserId)
+              ? members.firstWhere((m) => m.userId == currentUserId, orElse: () => members.first)
               : members.first;
           _paidByUserId = matchingMember.userId;
 
@@ -435,7 +442,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             _selectedMembersForSplit = members.map((m) => m.userId).toSet();
           }
         }
-
         final payer = members.firstWhere((m) => m.userId == _paidByUserId,
             orElse: () => members.first);
 
@@ -559,9 +565,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ref.invalidate(filteredExpensesProvider);
         ref.invalidate(expenseBalancesProvider);
       } catch (e) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context)
               .showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }

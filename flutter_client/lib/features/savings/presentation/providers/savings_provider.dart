@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/providers/supabase_provider.dart';
 import '../../domain/models/savings_model.dart';
 import '../../domain/repositories/savings_repository.dart';
 import '../../domain/usecases/get_savings_goals_usecase.dart';
@@ -13,7 +15,7 @@ import '../../data/repositories/supabase_savings_repository.dart';
 // --- Repositories & Use Cases ---
 
 final savingsRepositoryProvider = Provider<SavingsRepository>((ref) {
-  return SupabaseSavingsRepository();
+  return SupabaseSavingsRepository(ref: ref);
 });
 
 final getSavingsGoalsUseCaseProvider = Provider<GetSavingsGoalsUseCase>((ref) {
@@ -45,7 +47,11 @@ final goalContributionsProvider =
     FutureProvider.family<List<SavingsContributionModel>, String>(
         (ref, goalId) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
-  return await getGoalContributions.execute(goalId);
+  final result = await getGoalContributions.execute(goalId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (contributions) => contributions,
+  );
 });
 
 final savingsGoalsProvider =
@@ -54,13 +60,54 @@ final savingsGoalsProvider =
 });
 
 class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
+  RealtimeChannel? _channel;
+
   @override
   Future<List<SavingsGoalModel>> build() async {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
+    // Realtime setup
+    _setupRealtime(householdId);
+
     final getSavingsGoals = ref.watch(getSavingsGoalsUseCaseProvider);
-    return await getSavingsGoals.execute(householdId);
+    final result = await getSavingsGoals.execute(householdId);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (goals) => goals,
+    );
+  }
+
+  void _setupRealtime(String householdId) {
+    _channel?.unsubscribe();
+    final client = ref.read(supabaseClientProvider);
+
+    _channel = client
+        .channel('savings_realtime_$householdId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: AppConstants.tableSavingsGoals,
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'household_id',
+            value: householdId,
+          ),
+          callback: (payload) async {
+            // Trigger a re-fetch when changes are detected
+            final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+            final result = await getSavingsGoals.execute(householdId);
+            state = result.fold(
+              (failure) => AsyncValue.error(failure, StackTrace.current),
+              (goals) => AsyncValue.data(goals),
+            );
+          },
+        )
+        .subscribe();
+
+    ref.onDispose(() {
+      _channel?.unsubscribe();
+    });
   }
 
   Future<void> addGoal(
@@ -79,7 +126,11 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
           );
 
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 
@@ -101,7 +152,11 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
       ref.invalidate(goalContributionsProvider(goalId));
 
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 
@@ -114,7 +169,11 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
       await ref.read(deleteSavingsGoalUseCaseProvider).execute(goalId);
 
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 }

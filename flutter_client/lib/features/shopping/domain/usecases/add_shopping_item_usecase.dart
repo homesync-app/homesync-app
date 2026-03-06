@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 
@@ -6,7 +8,7 @@ class AddShoppingItemUseCase {
 
   AddShoppingItemUseCase(this.repository);
 
-  Future<ShoppingItemModel> execute({
+  Future<Either<Failure, ShoppingItemModel>> execute({
     required String householdId,
     required String name,
     required String userId,
@@ -16,9 +18,15 @@ class AddShoppingItemUseCase {
     String emoji = '🛒',
     String? note,
   }) {
-    if (householdId.isEmpty) throw ArgumentError('householdId is required');
-    if (name.trim().isEmpty) throw ArgumentError('name is required');
-    if (userId.isEmpty) throw ArgumentError('userId is required');
+    if (householdId.isEmpty) {
+      return Future.value(Left(ValidationFailure('householdId is required')));
+    }
+    if (name.trim().isEmpty) {
+      return Future.value(Left(ValidationFailure('name is required')));
+    }
+    if (userId.isEmpty) {
+      return Future.value(Left(ValidationFailure('userId is required')));
+    }
 
     return repository.addItem(
       householdId: householdId,

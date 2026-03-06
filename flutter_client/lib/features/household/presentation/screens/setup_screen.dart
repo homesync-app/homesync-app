@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -142,13 +141,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       await authService.ensureHouseholdExists();
 
       final householdRepo = ref.read(householdRepositoryProvider);
-      final code = await householdRepo.generateInvitationCode();
+      final result = await householdRepo.generateInvitationCode();
       if (mounted) {
-        setState(() {
-          _myInviteCode = code;
-          _isGeneratingCode = false;
-          _currentStep = 3; // Solo avanzar si tuvimos éxito
-        });
+        result.fold(
+          (failure) {
+            setState(() => _isGeneratingCode = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${failure.message}'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          },
+          (code) {
+            setState(() {
+              _myInviteCode = code;
+              _isGeneratingCode = false;
+              _currentStep = 3; // Solo avanzar si tuvimos éxito
+            });
+          },
+        );
       }
     } catch (e) {
       if (mounted) {

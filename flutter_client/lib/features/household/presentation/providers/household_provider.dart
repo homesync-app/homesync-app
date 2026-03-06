@@ -9,5 +9,9 @@ final householdIdFeatureProvider = FutureProvider<String?>((ref) async {
   if (userId == null) return null;
 
   final repo = ref.read(householdRepositoryProvider);
-  return repo.getHouseholdId(userId);
+  final result = await repo.getHouseholdId(userId);
+  return result.fold(
+    (l) => throw l,
+    (r) => r,
+  );
 });

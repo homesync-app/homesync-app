@@ -18,14 +18,14 @@ class SupabaseAuthService {
     await Supabase.initialize(
       url: AppEnvironment.supabaseUrl,
       anonKey: AppEnvironment.supabaseAnonKey,
-      // Supabase interceptará automáticamente deep links con este host
-      // para completar el flujo OAuth (Google Sign-In con browser).
-      authOptions: FlutterAuthClientOptions(
+      // Supabase automatically intercepts deep links with this host
+      // to complete the OAuth flow (Google Sign-In with browser fallback).
+      authOptions: const FlutterAuthClientOptions(
         authFlowType: AuthFlowType.implicit,
       ),
     );
     _client = Supabase.instance.client;
-    // Firebase se inicializa en el main() antes de llamar a este método.
+    // Firebase is initialized in main() before calling this method.
   }
 
   SupabaseClient get client => _client;
@@ -106,38 +106,46 @@ class SupabaseAuthService {
   Future<bool> signInWithGoogle() async {
     try {
       if (!kIsWeb) {
-        log.i('Google Sign-In: Intentando Auth Nativo con google_sign_in...');
+        log.i('Google Sign-In: Attempting Native Auth with google_sign_in...');
 
-        // El plugin google_sign_in lee automáticamente el client ID de google-services.json
-        // en Android o de GoogleService-Info.plist en iOS. No necesitas pasar serverClientId
-        // si tienes Firebase configurado porque usan los mismos archivos.
-        final googleSignIn = GoogleSignIn();
-        final googleUser = await googleSignIn.signIn();
+        // Using serverClientId is critical for Supabase to receive a valid idToken.
+        // This is the "Web Client ID" from Firebase Project Settings / google-services.json type 3.
+        const serverClientId =
+            '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com';
 
-        if (googleUser == null) {
-          log.i('Google Sign-In cancelado por el usuario en flujo nativo.');
+        final googleSignIn = GoogleSignIn.instance;
+        await googleSignIn.initialize(
+          serverClientId: serverClientId,
+        );
+        
+        GoogleSignInAccount? googleUser;
+        try {
+          // In v7, use authenticate() instead of signIn()
+          googleUser = await googleSignIn.authenticate();
+        } catch (e) {
+          log.e('Google Sign-In error: $e', error: e);
           return false;
         }
 
-        final googleAuth = await googleUser.authentication;
-        final idToken = googleAuth.idToken;
-        final accessToken = googleAuth.accessToken;
+        if (googleUser == null) return false;
 
-        if (accessToken == null || idToken == null) {
+        // In v7, authentication is a synchronous getter
+        final googleAuth = googleUser.authentication;
+        final idToken = googleAuth.idToken;
+
+        if (idToken == null) {
           final msg =
-              'Google Sign-In: OAuth Token faltante tras auth nativa. idToken presente: ${idToken != null}, accessToken presente: ${accessToken != null}';
+              'Google Sign-In: OAuth Token faltante tras auth nativa. idToken presente: ${idToken != null}';
           log.e(msg);
           await AdminRpcService().logApplicationError(
               message: msg, level: 'error', context: {'platform': 'native'});
-          // Si faltan tokens, forzamos el fallback web.
           throw Exception('Missing OAuth Token (posible problema de SHA-1)');
         }
 
-        log.i('Google Sign-In: Tokens obtenidos. Enviando a Supabase...');
+        log.i('Google Sign-In: Tokens obtained. Sending to Supabase...');
         await _client.auth.signInWithIdToken(
           provider: OAuthProvider.google,
           idToken: idToken,
-          accessToken: accessToken,
         );
 
         final user = _client.auth.currentUser;
@@ -196,10 +204,15 @@ class SupabaseAuthService {
 
       // Intentar siempre el fallback usando el navegador IN-APP (mantiene al usuario en la app)
       try {
+        // Determinamos la URI de retorno dinámicamente
+        final String redirectTo = kIsWeb 
+            ? '${Uri.base.origin}/' // Vuelve a la URL actual de la web
+            : 'homesync://login-callback';
+
         await _client.auth.signInWithOAuth(
           OAuthProvider.google,
-          redirectTo: 'homesync://login-callback',
-          authScreenLaunchMode: LaunchMode.inAppWebView, // UX más fluida
+          redirectTo: redirectTo,
+          authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.inAppWebView,
         );
         return false; // Retornamos false porque la sesión se establecerá vía deep link
       } catch (oauthError, oauthStack) {
@@ -244,7 +257,7 @@ class SupabaseAuthService {
   Future<void> signOut() async {
     try {
       if (!kIsWeb) {
-        await GoogleSignIn().signOut();
+        await GoogleSignIn.instance.signOut();
       }
     } catch (_) {}
     // Clear identity from Crashlytics (mobile only)

@@ -8,6 +8,7 @@ class AppConstants {
   static const String tableHouseholdMembers = 'household_members';
   static const String tableTasks = 'tasks';
   static const String tableExpenses = 'expenses';
+  static const String tableExpenseSplits = 'expense_splits';
   static const String tableRewards = 'rewards';
   static const String tableRewardRedemptions = 'reward_redemptions';
   static const String tableLedgerEntries = 'ledger_entries';

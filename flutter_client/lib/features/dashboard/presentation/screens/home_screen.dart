@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -359,12 +357,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       coins: coins,
       xp: xp,
       userBalance: myBalance,
-      partnerName: partner?.displayName,
       onSettle: partner != null && myBalance.abs() > 1.0
           ? () => _showSettlementDialog(
                 householdId: householdId,
                 partnerId: partner.userId,
-                partnerName: partner.displayName ?? 'tu pareja',
+                partnerName: partner.displayName,
                 amount: myBalance.abs(),
                 isOwedByMe: myBalance < 0,
                 alias: partner.mercadopagoAlias,
@@ -450,16 +447,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     bool isOwedByMe,
   ) async {
     try {
-      // If I owe, I am the one settling to partner
-      // If partner owes, I am recording that partner settled to me
-      final toUserId =
-          isOwedByMe ? partnerId : ref.read(currentUserIdProvider)!;
-      // Wait, the RPC settle_debt(p_user_id, p_household_id, p_to_user_id, p_amount)
-      // p_user_id is the one PAYING.
-      final payerId = isOwedByMe ? ref.read(currentUserIdProvider)! : partnerId;
-      final receiverId =
-          isOwedByMe ? partnerId : ref.read(currentUserIdProvider)!;
-
       final repo = ref.read(expenseRepositoryProvider);
       // We need to ensure we have a version of settleDebt that takes the payerId or use the RPC
       // The repository currently uses the authenticated user as the payer.
@@ -519,18 +506,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo abrir Mercado Pago')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al abrir link: $e')),
+          const SnackBar(content: Text('No se pudo abrir Mercado Pago')),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al abrir link: $e')),
+      );
     }
   }
 
@@ -840,18 +825,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!mounted) return;
 
       eitherResult.fold(
-        (failure) =>
-            _showSnack('Error: ${failure.message}', AppColors.accentRed),
+        (failure) {
+          if (!mounted) return;
+          _showSnack('Error: ${failure.message}', AppColors.accentRed);
+        },
         (data) {
           final xp = data['xp_earned'] ?? xpReward;
           final coins = data['coins_earned'] ?? coinReward;
           HapticFeedback.heavyImpact();
+          if (!mounted) return;
           _showSnack(
               '¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
           _refreshAll();
         },
       );
     } catch (e) {
+      if (!mounted) return;
       _showSnack('Error: $e', AppColors.accentRed);
     }
   }
@@ -1267,66 +1256,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '¿Qué querés hacer?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildQuickActionItem(
-                  icon: Icons.task_alt_rounded,
-                  label: 'Completar Tarea',
-                  color: AppColors.primary,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => DraggableScrollableSheet(
-                        initialChildSize: 0.9,
-                        minChildSize: 0.5,
-                        maxChildSize: 0.95,
-                        builder: (_, controller) => CompleteTaskSheet(
-                          onTasksCompleted: _refreshAll,
-                        ),
-                      ),
-                    );
-                  },
+                const Text(
+                  '¿Qué querés hacer?',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.3,
+                  ),
                 ),
-                _buildQuickActionItem(
-                  icon: Icons.receipt_long_rounded,
-                  label: 'Cargar un Gasto',
-                  color: AppColors.accentPeach,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const ExpenseFormSheet(),
-                    );
-                  },
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildQuickActionItem(
+                      icon: Icons.task_alt_rounded,
+                      label: 'Completar Tarea',
+                      color: AppColors.primary,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => DraggableScrollableSheet(
+                            initialChildSize: 0.9,
+                            minChildSize: 0.5,
+                            maxChildSize: 0.95,
+                            builder: (_, controller) => CompleteTaskSheet(
+                              onTasksCompleted: _refreshAll,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildQuickActionItem(
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Cargar un Gasto',
+                      color: AppColors.accentPeach,
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const ExpenseFormSheet(),
+                        );
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 8),
               ],
             ),
-            const SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );

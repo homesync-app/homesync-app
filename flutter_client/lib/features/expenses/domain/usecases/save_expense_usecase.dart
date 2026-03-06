@@ -19,13 +19,16 @@ class SaveExpenseUseCase {
     required SplitType splitType,
     List<Map<String, dynamic>>? splits,
   }) async {
-    if (title.isEmpty)
+    if (title.isEmpty) {
       return left(const ValidationFailure('El título es requerido'));
-    if (amount <= 0)
+    }
+    if (amount <= 0) {
       return left(const ValidationFailure('El monto debe ser mayor a 0'));
-    if (householdId.isEmpty)
+    }
+    if (householdId.isEmpty) {
       return left(
           const ValidationFailure('El ID del hogar no puede estar vacío'));
+    }
 
     return await _repository.saveExpense(
       id: id,

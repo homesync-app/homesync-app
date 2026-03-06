@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/savings_model.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 
@@ -6,8 +8,10 @@ class GetSavingsGoalsUseCase {
 
   GetSavingsGoalsUseCase(this.repository);
 
-  Future<List<SavingsGoalModel>> execute(String householdId) {
-    if (householdId.isEmpty) throw ArgumentError('householdId is required');
+  Future<Either<Failure, List<SavingsGoalModel>>> execute(String householdId) {
+    if (householdId.isEmpty) {
+      return Future.value(Left(ValidationFailure('householdId is required')));
+    }
     return repository.getGoals(householdId: householdId);
   }
 }

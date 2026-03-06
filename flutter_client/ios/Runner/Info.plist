@@ -14,6 +14,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>homesync</string>
+				<string>com.googleusercontent.apps.105041112830-7v7rhlj1m0rdhrosqh657phl3bi47270</string>
 			</array>
 		</dict>
 	</array>

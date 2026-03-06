@@ -29,7 +29,12 @@ INSERT INTO public.reward_templates (title, description, cost, icon, is_popular,
   ('Elegir Película', 'Tienes el control total del control remoto hoy', 30, '🎬', true, 2),
   ('Desayuno en la Cama', 'Desayuno completo preparado y servido donde estés', 80, '🥞', false, 3),
   ('Cena Especial', 'Tu comida favorita preparada con amor', 100, '🍽️', false, 4),
-  ('Organizar una Cita', 'Una salida planeada de principio a fin', 150, '✨', true, 5)
+  ('Organizar una Cita', 'Una salida planeada de principio a fin', 150, '✨', true, 5),
+  ('Vale por un Chocolate', 'Un antojo dulce de tu elección', 15, '🍫', false, 6),
+  ('Día Libre de Tareas', 'Hoy no tienes que lavar platos ni limpiar nada', 200, '🏠', true, 7),
+  ('Elegir Música una Semana', 'Control total de la playlist en el auto y la casa', 45, '🎵', false, 8),
+  ('Café de Especialidad', 'Un café preparado con arte', 20, '☕', false, 9),
+  ('Siesta Ininterrumpida', '1 hora de silencio absoluto para dormir', 40, '😴', false, 10)
 ON CONFLICT DO NOTHING;
 
 -- ============================================

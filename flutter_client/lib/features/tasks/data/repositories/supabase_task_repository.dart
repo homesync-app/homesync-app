@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/repositories/task_repository.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
@@ -13,7 +14,7 @@ import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(taskRpcServiceProvider);
-  return SupabaseTaskRepository(client: client, rpc: rpc);
+  return SupabaseTaskRepository(client: client, rpc: rpc, ref: ref);
 });
 
 /// Concrete Supabase implementation of TaskRepository.
@@ -23,11 +24,17 @@ class SupabaseTaskRepository
     implements TaskRepository {
   final SupabaseClient _client;
   final TaskRpcService _rpc;
+  final Ref _ref;
 
-  SupabaseTaskRepository(
-      {required SupabaseClient client, required TaskRpcService rpc})
-      : _client = client,
-        _rpc = rpc;
+  SupabaseTaskRepository({
+    required SupabaseClient client,
+    required TaskRpcService rpc,
+    required Ref ref,
+  })  : _client = client,
+        _rpc = rpc,
+        _ref = ref;
+
+  bool get _isOnline => _ref.read(isOnlineProvider);
 
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
@@ -37,7 +44,7 @@ class SupabaseTaskRepository
       return (raw as List)
           .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseTaskRepository.getTasks');
+    }, context: 'SupabaseTaskRepository.getTasks', isOnline: _isOnline);
   }
 
   @override
@@ -52,7 +59,7 @@ class SupabaseTaskRepository
         householdId: task.householdId,
         userId: userId,
       );
-    }, context: 'SupabaseTaskRepository.completeTask');
+    }, context: 'SupabaseTaskRepository.completeTask', isOnline: _isOnline);
   }
 
   @override
@@ -65,7 +72,7 @@ class SupabaseTaskRepository
         'verified_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.verifyTask');
+    }, context: 'SupabaseTaskRepository.verifyTask', isOnline: _isOnline);
   }
 
   @override
@@ -78,14 +85,14 @@ class SupabaseTaskRepository
         'objected_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.objectTask');
+    }, context: 'SupabaseTaskRepository.objectTask', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async {
     return executeWithHandling(() async {
       await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.deleteTask');
+    }, context: 'SupabaseTaskRepository.deleteTask', isOnline: _isOnline);
   }
 
   @override
@@ -96,7 +103,7 @@ class SupabaseTaskRepository
         'recurrence_type': recurrenceType,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.updateSchedule');
+    }, context: 'SupabaseTaskRepository.updateSchedule', isOnline: _isOnline);
   }
 
   @override
@@ -121,7 +128,7 @@ class SupabaseTaskRepository
         assignedTo: assignedTo,
         recurrenceType: recurrenceType,
       );
-    }, context: 'SupabaseTaskRepository.createTask');
+    }, context: 'SupabaseTaskRepository.createTask', isOnline: _isOnline);
   }
 
   @override
@@ -133,6 +140,6 @@ class SupabaseTaskRepository
           .from(AppConstants.tableTasks)
           .update(updates)
           .eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.editTask');
+    }, context: 'SupabaseTaskRepository.editTask', isOnline: _isOnline);
   }
 }

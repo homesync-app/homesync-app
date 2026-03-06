@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 enum ConnectivityStatus { online, offline, checking }
 
@@ -37,33 +38,37 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   }
 
   Future<void> _init() async {
-    await _checkConnection();
-    _subscription =
-        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-  }
-
-  Future<void> _checkConnection() async {
-    state = state.copyWith(status: ConnectivityStatus.checking);
-
+    // Assume online by default - connectivity_plus has known issues
+    // that cause false positives. Let Supabase handle actual connection errors.
+    state = state.copyWith(
+      status: ConnectivityStatus.online,
+      isOnline: true,
+      lastChecked: DateTime.now(),
+    );
+    
+    // Start listening for changes but don't block on them
     try {
-      final results = await _connectivity.checkConnectivity();
-      _updateConnectionStatus(results);
+      _subscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
     } catch (e) {
-      state = state.copyWith(
-        status: ConnectivityStatus.offline,
-        isOnline: false,
-        lastChecked: DateTime.now(),
-      );
+      log.w('Failed to subscribe to connectivity changes: $e');
     }
   }
 
-  void _updateConnectionStatus(List<ConnectivityResult> results) {
-    final isOnline =
-        results.isNotEmpty && !results.contains(ConnectivityResult.none);
-
+  Future<void> _checkConnection() async {
+    // Always assume online - let Supabase handle actual connection errors
     state = state.copyWith(
-      status: isOnline ? ConnectivityStatus.online : ConnectivityStatus.offline,
-      isOnline: isOnline,
+      status: ConnectivityStatus.online,
+      isOnline: true,
+      lastChecked: DateTime.now(),
+    );
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> results) {
+    // Ignore connectivity_plus results - they are unreliable
+    // Always stay online and let Supabase handle actual errors
+    state = state.copyWith(
+      status: ConnectivityStatus.online,
+      isOnline: true,
       lastChecked: DateTime.now(),
     );
   }

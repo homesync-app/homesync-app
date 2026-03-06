@@ -154,16 +154,21 @@ class _RootScreenState extends ConsumerState<_RootScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final isAuthenticatingGoogle = ref.watch(isAuthenticatingWithGoogleProvider);
 
     Widget currentScreen;
+    log.t('RootScreen Build: splashFinished=$_splashFinished, authLoading=${authState.isLoading}, isAuthenticatingGoogle=$isAuthenticatingGoogle, sessionPresent=${authState.value?.session != null}');
+
     if (!_splashFinished || authState.isLoading) {
       currentScreen = const _SplashScreen(key: ValueKey('splash'));
     } else {
       currentScreen = authState.when(
         data: (state) {
           if (state.session != null) {
+            log.t('RootScreen: Session found, showing MainScreen');
             return MainScreen(key: const ValueKey('main'), prefs: widget.prefs);
           }
+          log.t('RootScreen: No session, showing LoginScreen');
           return LoginScreen(key: const ValueKey('login'), prefs: widget.prefs);
         },
         loading: () => const _SplashScreen(key: ValueKey('splash_fallback')),

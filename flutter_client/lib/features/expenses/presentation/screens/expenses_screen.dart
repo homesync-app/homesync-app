@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/core/services/mercadopago_service.dart';
 import 'package:intl/intl.dart';
 import '../widgets/expense_form_sheet.dart';
 
@@ -185,7 +181,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             ],
           ),
           const SizedBox(height: 28),
-          const Divider(height: 1),
+          Divider(height: 1, color: AppColors.divider.withValues(alpha: 0.5)),
           const SizedBox(height: 28),
           Row(
             children: [
@@ -193,7 +189,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               Container(
                   width: 1,
                   height: 40,
-                  color: AppColors.divider,
+                  color: AppColors.divider.withValues(alpha: 0.5),
                   margin: const EdgeInsets.symmetric(horizontal: 20)),
               _buildMiniMetric('Gastos', expense, AppColors.textPrimary),
             ],

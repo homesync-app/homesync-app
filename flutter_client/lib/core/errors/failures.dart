@@ -19,6 +19,11 @@ class ValidationFailure extends Failure {
   const ValidationFailure(super.message);
 }
 
+/// Failures from connectivity issues
+class NetworkFailure extends Failure {
+  const NetworkFailure([super.message = 'No se puede conectar al servidor.']);
+}
+
 /// When the user is not authenticated
 class AuthFailure extends Failure {
   const AuthFailure([super.message = 'Usuario no autenticado']);

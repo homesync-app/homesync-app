@@ -43,3 +43,6 @@ final currentUserProvider = Provider<User?>((ref) {
   final repo = ref.read(authRepositoryProvider);
   return repo.currentUser;
 });
+
+// Flag to prevent premature navigation during Google Sign-In
+final isAuthenticatingWithGoogleProvider = StateProvider<bool>((ref) => false);

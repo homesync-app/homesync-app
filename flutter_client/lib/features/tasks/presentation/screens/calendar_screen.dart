@@ -5,10 +5,16 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
-  const CalendarScreen({super.key});
+  final Function(TaskModel) onEdit;
+  final Function(TaskModel) onSchedule;
+
+  const CalendarScreen({
+    super.key,
+    required this.onEdit,
+    required this.onSchedule,
+  });
 
   @override
   ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
@@ -264,12 +270,37 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           )
         else
-          ...tasks.map((task) => _buildTaskCard(task)),
+          ...tasks.map((task) => _CalendarTaskCard(
+                  task: task,
+                  onEdit: () => widget.onEdit(task),
+                  onSchedule: () => widget.onSchedule(task),
+                )),
       ],
     );
   }
+}
 
-  Widget _buildTaskCard(TaskModel task) {
+class _CalendarTaskCard extends ConsumerStatefulWidget {
+  final TaskModel task;
+  final VoidCallback onEdit;
+  final VoidCallback onSchedule;
+
+  const _CalendarTaskCard({
+    required this.task,
+    required this.onEdit,
+    required this.onSchedule,
+  });
+
+  @override
+  ConsumerState<_CalendarTaskCard> createState() => _CalendarTaskCardState();
+}
+
+class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final task = widget.task;
     final isCompleted = task.isVerified;
     final xp = task.xpReward;
     final category = task.category ?? 'general';
@@ -292,122 +323,206 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final categoryIcon =
         categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
 
-    return AnimatedPress(
-      onTap: () {},
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isCompleted
-                ? AppColors.accentGreen.withValues(alpha: 0.1)
-                : const Color(0xFFF1F5F9),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: _isExpanded
+              ? categoryColor.withValues(alpha: 0.3)
+              : (isCompleted
+                  ? AppColors.accentGreen.withValues(alpha: 0.1)
+                  : const Color(0xFFF1F5F9)),
+          width: 1.5,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(categoryIcon, style: const TextStyle(fontSize: 24)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _isExpanded ? 0.06 : 0.02),
+            blurRadius: _isExpanded ? 15 : 10,
+            offset: Offset(0, _isExpanded ? 6 : 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () {
+          setState(() => _isExpanded = !_isExpanded);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    task.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: isCompleted
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF1E293B),
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(categoryIcon,
+                          style: const TextStyle(fontSize: 24)),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGold.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '+$xp XP',
-                          style: const TextStyle(
-                            fontSize: 10,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.accentGold,
-                            letterSpacing: 0.5,
+                            color: isCompleted
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF1E293B),
+                            decoration:
+                                isCompleted ? TextDecoration.lineThrough : null,
                           ),
                         ),
-                      ),
-                      if (isCompleted) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.accentGreen.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'COMPLETADA',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.accentGreen,
-                              letterSpacing: 0.5,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.accentGold.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '+$xp XP',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.accentGold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (isCompleted) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGreen
+                                      .withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'COMPLETADA',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.accentGreen,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ]
+                          ],
                         ),
-                      ]
-                    ],
+                      ],
+                    ),
                   ),
+                  if (isCompleted && !_isExpanded)
+                    Container(
+                      margin: const EdgeInsets.only(left: 12),
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.accentGreen,
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.check_rounded,
+                            color: Colors.white, size: 16),
+                      ),
+                    ),
                 ],
               ),
-            ),
-            if (isCompleted)
-              Container(
-                margin: const EdgeInsets.only(left: 12),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.accentGreen,
-                  border: Border.all(
-                    color: AppColors.accentGreen,
-                    width: 2,
+              ClipRect(
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  heightFactor: _isExpanded ? 1.0 : 0.0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: [
+                        const Divider(color: Color(0xFFF1F5F9), height: 1),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildActionTile(
+                              icon: Icons.edit_rounded,
+                              label: 'Editar',
+                              color: AppColors.primary,
+                              onTap: widget.onEdit,
+                            ),
+                            _buildActionTile(
+                              icon: Icons.calendar_month_rounded,
+                              label: 'Programar',
+                              color: AppColors.accentGold,
+                              onTap: widget.onSchedule,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: const Center(
-                  child:
-                      Icon(Icons.check_rounded, color: Colors.white, size: 16),
-                ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: () {
+        setState(() => _isExpanded = false);
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.3,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

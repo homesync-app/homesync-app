@@ -1,9 +1,10 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/services/error_handler.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/providers/supabase_provider.dart';
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
@@ -80,12 +81,16 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
   bool _hasMore = true;
   bool get hasMore => _hasMore;
   static const int _pageSize = 50;
+  RealtimeChannel? _channel;
 
   @override
   Future<List<TaskModel>> build() async {
     _hasMore = true;
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
+
+    // Realtime setup
+    _setupRealtime(householdId);
 
     final useCase = ref.read(getTasksUseCaseProvider);
     final result = await useCase(householdId, limit: _pageSize, offset: 0);
@@ -102,6 +107,33 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
         return tasks;
       },
     );
+  }
+
+  void _setupRealtime(String householdId) {
+    _channel?.unsubscribe();
+    final client = ref.read(supabaseClientProvider);
+    
+    _channel = client
+        .channel('tasks_realtime_$householdId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: AppConstants.tableTasks,
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'household_id',
+            value: householdId,
+          ),
+          callback: (payload) {
+            log.i('Realtime task change detected: ${payload.eventType}');
+            silentRefresh();
+          },
+        )
+        .subscribe();
+
+    ref.onDispose(() {
+      _channel?.unsubscribe();
+    });
   }
 
   Future<void> refresh() async {
@@ -281,8 +313,9 @@ final todayTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
   return tasksAsync.whenData((tasks) {
     return tasks.where((task) {
       if (!task.isActive) return false;
-      if (task.assignedTo != null && task.assignedTo != currentUserId)
+      if (task.assignedTo != null && task.assignedTo != currentUserId) {
         return false;
+      }
       if (task.isVerified) return false;
       if (task.dueAt != null) {
         return task.isDueToday;

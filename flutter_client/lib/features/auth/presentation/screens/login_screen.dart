@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -6,9 +7,9 @@ import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/error_handler.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -30,6 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   bool _obscurePassword = true;
+  String _loadingMessage = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -54,6 +56,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
     ));
     _animationController.forward();
+  }
+
+  void _setGoogleLoading(bool loading, String message) {
+    if (mounted) {
+      setState(() {
+        _isGoogleLoading = loading;
+        _loadingMessage = message;
+      });
+    }
   }
 
   @override
@@ -160,16 +171,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isGoogleLoading = true);
+    HapticFeedback.heavyImpact();
+    ref.read(isAuthenticatingWithGoogleProvider.notifier).state = true;
+    _setGoogleLoading(true, 'Conectando con Google...');
 
-    final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
-    final result = await googleSignInUseCase.execute();
+    try {
+      log.i('LoginScreen: Iniciando flujo de Google Sign-In...');
+      final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
+      final result = await googleSignInUseCase.execute();
 
-    if (mounted) {
-      result.fold(
-        (failure) {
-          setState(() => _isGoogleLoading = false);
+      if (!mounted) {
+        log.w('LoginScreen: Widget no montado tras execute()');
+        return;
+      }
+
+      log.i('LoginScreen: Resultado de UseCase obtenido. Right: ${result.isRight()}');
+
+      await result.fold(
+        (failure) async {
+          log.w('LoginScreen: Google Sign-In falló: ${failure.message}');
           // Only show error if it's not a cancellation
           if (failure.message != 'Cancelado por el usuario') {
             errorHandler.handleAndShow(context, failure,
@@ -178,25 +198,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         },
         (success) async {
           if (!success) {
-            // OAuth browser fallback abierto o cancelación.
-            // Si es fallback, la sesión se completará con el deep link y
-            // authStateProvider navegará automáticamente. Solo reseteamos el loader.
-            if (mounted) setState(() => _isGoogleLoading = false);
+            log.i('LoginScreen: Google Sign-In terminó sin éxito (posible cancelación o fallback).');
+            return;
+          }
+          
+          if (kIsWeb) {
+            log.i('LoginScreen: Flujo Web detectado. Esperando redirección de Supabase...');
+            // En web, si no es popup, la redirección es inminente. 
+            // Mostramos un mensaje y dejamos que Supabase haga lo suyo.
             return;
           }
 
-          if (mounted) {
-            setState(() => _isGoogleLoading = false);
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => MainScreen(
-                  prefs: widget.prefs,
-                ),
-              ),
-            );
+          log.i('LoginScreen: Google Sign-In exitoso localmente. Esperando sesión global de Supabase...');
+          
+          // Wait for the authStateProvider or client to catch up (Mobile only)
+          bool hasSession = false;
+          int attempts = 0;
+          while (mounted && !hasSession && attempts < 15) {
+            if (Supabase.instance.client.auth.currentSession != null) {
+               log.i('LoginScreen: Sesión detectada directamente en el cliente.');
+               hasSession = true;
+            } else {
+              final state = ref.read(authStateProvider);
+              if (state.value?.session != null) {
+                log.i('LoginScreen: Sesión detectada en authStateProvider.');
+                hasSession = true;
+              } else {
+                await Future.delayed(const Duration(milliseconds: 300));
+                attempts++;
+                if (attempts % 3 == 0) log.t('LoginScreen: Esperando sesión... (intento $attempts)');
+              }
+            }
           }
+          log.i('LoginScreen: Bucle de espera finalizado. hasSession: $hasSession');
         },
       );
+    } catch (e, stack) {
+      log.e('LoginScreen: Error crítico en _handleGoogleSignIn: $e', error: e, stackTrace: stack);
+      if (mounted) {
+        _showError('Error inesperado durante el inicio de sesión: $e');
+      }
+    } finally {
+      if (mounted) {
+        log.i('LoginScreen: Limpiando estados de autenticación.');
+        ref.read(isAuthenticatingWithGoogleProvider.notifier).state = false;
+        _setGoogleLoading(false, '');
+      }
     }
   }
 
@@ -278,12 +325,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingMessage = 'Enviando link de recuperación...';
+    });
     final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
     final result = await resetPasswordUseCase.execute(email);
 
     if (mounted) {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _loadingMessage = '';
+      });
       result.fold(
         (failure) => errorHandler.handleAndShow(context, failure,
             where: 'LoginScreen._handleForgotPassword'),
@@ -295,22 +348,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Background Gradient and Blobs
           Container(decoration: AppTheme.backgroundGradientBox),
-          Positioned(
+          _AnimatedBackgroundBlob(
             top: -100,
             right: -50,
-            child: _buildBackgroundBlob(
-                AppColors.primary.withValues(alpha: 0.08), 300),
+            color: AppColors.primary.withValues(alpha: 0.12),
+            size: 400,
+            duration: const Duration(seconds: 10),
           ),
-          Positioned(
+          _AnimatedBackgroundBlob(
             bottom: -50,
             left: -50,
-            child: _buildBackgroundBlob(
-                AppColors.accentGold.withValues(alpha: 0.05), 250),
+            color: AppColors.accentGold.withValues(alpha: 0.08),
+            size: 350,
+            duration: const Duration(seconds: 12),
           ),
 
           SafeArea(
@@ -386,25 +440,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ),
           ),
+
+          // Premium Loading Overlay
+          if (_isLoading || _isGoogleLoading)
+            _PremiumLoadingOverlay(message: _loadingMessage),
         ],
       ),
     );
   }
 
-  Widget _buildBackgroundBlob(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-        child: Container(color: Colors.transparent),
-      ),
-    );
-  }
+
 
   Widget _buildLogoHeader() {
     return Column(
@@ -563,32 +608,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildGoogleButton() {
-    return OutlinedButton.icon(
-      onPressed: _isLoading || _isGoogleLoading ? null : _handleGoogleSignIn,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        backgroundColor: Colors.white,
-        side: BorderSide(color: AppColors.textMuted.withValues(alpha: 0.1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      icon: _isGoogleLoading
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2))
-          : Image.network(
+      child: OutlinedButton(
+        onPressed: _isLoading || _isGoogleLoading ? null : _handleGoogleSignIn,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          backgroundColor: Colors.white,
+          side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          elevation: 0,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.network(
               'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-              height: 20,
+              height: 22,
               errorBuilder: (context, error, stackTrace) => const Icon(
                   Icons.g_mobiledata,
-                  size: 24,
+                  size: 26,
                   color: AppColors.primary),
             ),
-      label: const Text(
-        'Google Workspace',
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-            color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
+            const SizedBox(width: 14),
+            const Text(
+              'Google',
+              style: TextStyle(
+                color: Color(0xFF1E293B),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -608,10 +673,160 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           onPressed: _isLoading || _isGoogleLoading ? null : _handleSignUp,
           child: const Text(
             'Crea tu cuenta',
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+              decoration: TextDecoration.underline,
+              decorationThickness: 2,
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedBackgroundBlob extends StatefulWidget {
+  final double? top, bottom, left, right;
+  final Color color;
+  final double size;
+  final Duration duration;
+
+  const _AnimatedBackgroundBlob({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.color,
+    required this.size,
+    required this.duration,
+  });
+
+  @override
+  State<_AnimatedBackgroundBlob> createState() =>
+      _AnimatedBackgroundBlobState();
+}
+
+class _AnimatedBackgroundBlobState extends State<_AnimatedBackgroundBlob>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: widget.top,
+      bottom: widget.bottom,
+      left: widget.left,
+      right: widget.right,
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _animation.value,
+            child: Container(
+              width: widget.size,
+              height: widget.size,
+              decoration: BoxDecoration(
+                color: widget.color,
+                shape: BoxShape.circle,
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PremiumLoadingOverlay extends StatelessWidget {
+  final String message;
+  const _PremiumLoadingOverlay({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12 * value, sigmaY: 12 * value),
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.4 * value),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 40,
+                            offset: const Offset(0, 20),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 4,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary),
+                              strokeCap: StrokeCap.round,
+                            ),
+                          ),
+                          if (message.isNotEmpty) ...[
+                            const SizedBox(height: 32),
+                            Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1E293B),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

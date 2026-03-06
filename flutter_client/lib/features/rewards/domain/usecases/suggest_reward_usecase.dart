@@ -15,8 +15,9 @@ class SuggestRewardUseCase {
     String icon = '🎁',
   }) async {
     // Business rules:
-    if (title.trim().isEmpty)
+    if (title.trim().isEmpty) {
       throw ArgumentError('El título no puede estar vacío');
+    }
     if (cost <= 0) throw ArgumentError('El costo debe ser mayor a 0');
 
     await _repository.suggestReward(

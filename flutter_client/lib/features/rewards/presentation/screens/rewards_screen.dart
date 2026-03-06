@@ -245,10 +245,20 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
             const SizedBox(height: 32),
           ],
           _buildSectionHeader('🛍️ Boutique de la Casa',
-              action: IconButton(
-                icon: const Icon(Icons.add_circle_outline,
-                    color: AppColors.primary),
-                onPressed: _showCreateRewardSheet,
+              action: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Cargar predeterminados',
+                    icon: const Icon(Icons.auto_awesome_motion_rounded,
+                        color: AppColors.textSecondary, size: 20),
+                    onPressed: _cloneTemplates,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline,
+                        color: AppColors.primary),
+                    onPressed: _showCreateRewardSheet,
+                  ),
+                ],
               )),
           const SizedBox(height: 16),
           if (approvedRewards.isEmpty)
@@ -393,9 +403,24 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => ref
-                                .read(rewardsProvider.notifier)
-                                .deleteReward(s.id),
+                            onPressed: () async {
+                              final result = await ref
+                                  .read(rewardsProvider.notifier)
+                                  .deleteReward(s.id);
+
+                              if (!context.mounted) return;
+
+                              result.fold(
+                                (failure) =>
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: ${failure.message}'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                ),
+                                (_) => null,
+                              );
+                            },
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(
                                   color: AppColors.error, width: 1.5),
@@ -413,9 +438,24 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () => ref
-                                .read(rewardsProvider.notifier)
-                                .approveReward(s.id),
+                            onPressed: () async {
+                              final result = await ref
+                                  .read(rewardsProvider.notifier)
+                                  .approveReward(s.id);
+
+                              if (!context.mounted) return;
+
+                              result.fold(
+                                (failure) =>
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: ${failure.message}'),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                ),
+                                (_) => null,
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(
                                   0xFF8B5CF6), // Royal Purple for approvals
@@ -588,23 +628,96 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+      ),
       child: Column(
         children: [
-          const Text('🏚️', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
+          const Text('🏚️', style: TextStyle(fontSize: 64)),
+          const SizedBox(height: 24),
           const Text(
             'Boutique vacía',
             style: TextStyle(
-                fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+          const Text(
+            'Personalizá tu tienda añadiendo premios que ambos puedan canjear.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _cloneTemplates,
+              icon: const Icon(Icons.auto_awesome_motion_rounded),
+              label: const Text('CARGAR PREMIOS POR DEFECTO'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           TextButton(
             onPressed: _showCreateRewardSheet,
-            child: const Text('Crear primer premio'),
+            child: const Text(
+              'O crear uno desde cero',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _cloneTemplates() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+    );
+
+    final result = await ref.read(rewardsProvider.notifier).cloneTemplates();
+
+    if (!mounted) return;
+    Navigator.pop(context); // Remove loading dialog
+
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${failure.message}'),
+          backgroundColor: AppColors.error,
+        ),
+      ),
+      (count) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('¡$count premios añadidos con éxito! ✨'),
+          backgroundColor: Colors.green,
+        ),
       ),
     );
   }
@@ -672,24 +785,29 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
               onPressed: () => Navigator.pop(dialogCtx),
               child: const Text('Cancelar')),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogCtx); // Close dialog immediately
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
 
-              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
-                if (!context.mounted) return;
-                // Invalidate immediately so next build fetches correct amount
-                ref.invalidate(userBalanceProvider);
-                _showSuccessAnim(reward);
-              }).catchError((e) {
-                if (!context.mounted) return;
-                final errStr = e.toString().replaceFirst('Exception: ', '');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Error: $errStr'),
-                      backgroundColor: AppColors.error),
-                );
-                ref.invalidate(userBalanceProvider);
-              });
+              final result =
+                  await ref.read(rewardsProvider.notifier).redeem(reward.id);
+
+              if (!context.mounted) return;
+
+              result.fold(
+                (failure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${failure.message}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  ref.invalidate(userBalanceProvider);
+                },
+                (_) {
+                  ref.invalidate(userBalanceProvider);
+                  _showSuccessAnim(reward);
+                },
+              );
             },
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -714,9 +832,23 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
               onPressed: () => Navigator.pop(dialogCtx),
               child: const Text('Cancelar')),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogCtx);
-              ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+              final result = await ref
+                  .read(rewardsProvider.notifier)
+                  .deleteReward(reward.id);
+
+              if (!context.mounted) return;
+
+              result.fold(
+                (failure) => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${failure.message}'),
+                    backgroundColor: AppColors.error,
+                  ),
+                ),
+                (_) => null, // Success handled by provider refresh
+              );
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Eliminar'),
@@ -909,16 +1041,31 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final cost = int.tryParse(costController.text) ?? 0;
                     if (titleController.text.isNotEmpty && cost > 0) {
-                      ref.read(rewardsProvider.notifier).suggestReward(
+                      final result = await ref
+                          .read(rewardsProvider.notifier)
+                          .suggestReward(
                             title: titleController.text,
                             cost: cost,
                             icon: selectedIcon,
                           );
-                      Navigator.pop(context);
-                      _showSentToast(isSuggestion);
+
+                      if (!context.mounted) return;
+
+                      result.fold(
+                        (failure) => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: ${failure.message}'),
+                            backgroundColor: AppColors.error,
+                          ),
+                        ),
+                        (_) {
+                          Navigator.pop(context);
+                          _showSentToast(isSuggestion);
+                        },
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(

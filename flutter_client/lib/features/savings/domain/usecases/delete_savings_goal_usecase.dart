@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 
 class DeleteSavingsGoalUseCase {
@@ -5,8 +7,10 @@ class DeleteSavingsGoalUseCase {
 
   DeleteSavingsGoalUseCase(this.repository);
 
-  Future<void> execute(String goalId) {
-    if (goalId.isEmpty) throw ArgumentError('goalId is required');
+  Future<Either<Failure, void>> execute(String goalId) {
+    if (goalId.isEmpty) {
+      return Future.value(Left(ValidationFailure('goalId is required')));
+    }
     return repository.deleteGoal(goalId: goalId);
   }
 }

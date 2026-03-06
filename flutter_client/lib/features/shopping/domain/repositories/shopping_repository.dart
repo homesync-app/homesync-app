@@ -1,9 +1,12 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import '../models/shopping_model.dart';
 
 abstract class ShoppingRepository {
-  Future<List<ShoppingItemModel>> fetchItems(String householdId);
+  Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
+      String householdId);
 
-  Future<ShoppingItemModel> addItem({
+  Future<Either<Failure, ShoppingItemModel>> addItem({
     required String householdId,
     required String name,
     required String userId,
@@ -14,15 +17,15 @@ abstract class ShoppingRepository {
     String? note,
   });
 
-  Future<void> toggleItem({
+  Future<Either<Failure, void>> toggleItem({
     required String itemId,
     required bool completed,
     required String? userId,
   });
 
-  Future<void> deleteItem(String itemId);
+  Future<Either<Failure, void>> deleteItem(String itemId);
 
-  Future<void> clearCompleted(String householdId);
+  Future<Either<Failure, void>> clearCompleted(String householdId);
 
-  Future<void> uncompleteAll(String householdId);
+  Future<Either<Failure, void>> uncompleteAll(String householdId);
 }

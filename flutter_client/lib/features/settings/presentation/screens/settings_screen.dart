@@ -12,7 +12,6 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -86,14 +85,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .limit(1)
           .maybeSingle();
 
-      final members =
+      final membersResult =
           await ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
+      final membersList = membersResult.getOrElse((failure) {
+        log.e('Error loading members: ${failure.message}');
+        return [];
+      });
 
       setState(() {
         _householdName = household?['name'];
         _householdType = household?['household_type'];
         _invitationCode = invitation?['code'];
-        _members = members;
+        _members = List<Map<String, dynamic>>.from(membersList);
         _isLoading = false;
       });
     } catch (e) {
@@ -104,9 +107,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _generateNewCode() async {
     try {
-      final code =
+      final result =
           await ref.read(householdRepositoryProvider).generateInvitationCode();
-      if (mounted) setState(() => _invitationCode = code);
+      
+      if (mounted) {
+        result.fold(
+          (failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${failure.message}'),
+                backgroundColor: AppColors.error
+              ),
+            );
+          },
+          (code) => setState(() => _invitationCode = code),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -198,17 +214,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
 
             try {
-              await ref.read(householdRepositoryProvider).joinHousehold(code);
-              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('🎉 ¡Te uniste al hogar exitosamente!'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-                _loadData();
-              }
+              final result = await ref
+                  .read(householdRepositoryProvider)
+                  .joinHousehold(code);
+
+              result.fold(
+                (failure) {
+                  setDialogState(() {
+                    isLoading = false;
+                    errorText = failure.message;
+                  });
+                },
+                (success) {
+                  if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎉 ¡Te uniste al hogar exitosamente!'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                    _loadData();
+                  }
+                },
+              );
             } catch (e) {
               setDialogState(() {
                 isLoading = false;
@@ -1703,7 +1732,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         final res = await ref
             .read(householdRepositoryProvider)
             .resetAndClearHousehold();
-        if (res['success'] == true) {
+
+        res.fold(
+          (failure) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('Error: ${failure.message}'),
+                    backgroundColor: AppColors.error),
+              );
+            }
+          },
+          (data) {
+            if (data['success'] == true) {
           ref.invalidate(userProfileProvider);
           ref.invalidate(userBalanceProvider);
           ref.invalidate(expenseBalancesProvider);
@@ -1718,9 +1759,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   backgroundColor: AppColors.success),
             );
             // Return true to signal MainScreen to re-check setup
-            Navigator.pop(context);
-          }
-        }
+                Navigator.pop(context);
+              }
+            }
+          },
+        );
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

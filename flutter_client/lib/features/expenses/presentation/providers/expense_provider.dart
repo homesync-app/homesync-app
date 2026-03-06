@@ -1,7 +1,7 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/constants/app_constants.dart';
 import '../../../../core/providers/supabase_provider.dart';
 import '../../domain/models/expense_model.dart';
 import '../../domain/repositories/expense_repository.dart';
@@ -17,7 +17,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
-  return SupabaseExpenseRepository(client);
+  return SupabaseExpenseRepository(client, ref);
 });
 
 final getExpensesUseCaseProvider = Provider<GetExpensesUseCase>((ref) {
@@ -100,30 +100,32 @@ final expensesAndBalancesProvider =
       client.channel('expenses_stream_$householdIdAsync').onPostgresChanges(
             event: PostgresChangeEvent.all,
             schema: 'public',
-            table: 'expenses',
+            table: AppConstants.tableExpenses,
             filter: PostgresChangeFilter(
               type: PostgresChangeFilterType.eq,
               column: 'household_id',
               value: householdIdAsync,
             ),
-            callback: (_) {
+            callback: (payload) {
+              log.i('Realtime expense change detected: ${payload.eventType}');
               ref.invalidateSelf();
             },
           );
 
-  await expensesChannel.subscribe();
+  expensesChannel.subscribe();
 
   final splitsChannel =
       client.channel('splits_stream_$householdIdAsync').onPostgresChanges(
             event: PostgresChangeEvent.all,
             schema: 'public',
-            table: 'expense_splits',
-            callback: (_) {
+            table: AppConstants.tableExpenseSplits,
+            callback: (payload) {
+              log.i('Realtime expense split change detected: ${payload.eventType}');
               ref.invalidateSelf();
             },
           );
 
-  await splitsChannel.subscribe();
+  splitsChannel.subscribe();
 
   ref.onDispose(() {
     client.removeChannel(expensesChannel);

@@ -110,4 +110,20 @@ class RewardRpcService extends BaseRpcService {
 
     return Map<String, dynamic>.from(response);
   }
+
+  Future<int> cloneRewardTemplates() async {
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
+    final response = await client.rpc(
+      'clone_reward_templates',
+      params: {
+        'p_user_id': user.id,
+      },
+    );
+
+    return response as int;
+  }
 }

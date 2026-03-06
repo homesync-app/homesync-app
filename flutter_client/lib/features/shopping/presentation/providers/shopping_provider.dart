@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/constants/app_constants.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 import '../../domain/models/shopping_model.dart';
 import '../../domain/repositories/shopping_repository.dart';
@@ -15,7 +18,7 @@ import '../../data/repositories/supabase_shopping_repository.dart';
 // --- Repositories & Use Cases ---
 
 final shoppingRepositoryProvider = Provider<ShoppingRepository>((ref) {
-  return SupabaseShoppingRepository();
+  return SupabaseShoppingRepository(ref: ref);
 });
 
 final getShoppingItemsUseCaseProvider =
@@ -65,18 +68,21 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     if (householdId == null) return [];
 
     _channel?.unsubscribe();
-    _channel = Supabase.instance.client
-        .channel('shopping:$householdId')
+    final client = ref.read(supabaseClientProvider);
+    
+    _channel = client
+        .channel('shopping_realtime_$householdId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
-          table: 'shopping_items',
+          table: AppConstants.tableShoppingItems,
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
             column: 'household_id',
             value: householdId,
           ),
-          callback: (_) {
+          callback: (payload) {
+            log.i('Realtime shopping change detected: ${payload.eventType}');
             _refresh();
           },
         )
@@ -87,14 +93,22 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     });
 
     final getItems = ref.watch(getShoppingItemsUseCaseProvider);
-    return getItems.execute(householdId);
+    final result = await getItems.execute(householdId);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (items) => items,
+    );
   }
 
   Future<void> _refresh() async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
     state = await AsyncValue.guard(() async {
-      return ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 
@@ -109,8 +123,9 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     final householdId = await ref.read(householdIdProvider.future);
     final userId = ref.read(currentUserIdProvider);
 
-    if (householdId == null || userId == null)
+    if (householdId == null || userId == null) {
       throw Exception('Authentication or Household required');
+    }
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -124,8 +139,11 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
             emoji: emoji,
             note: note,
           );
-      final getItems = ref.read(getShoppingItemsUseCaseProvider);
-      return getItems.execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 
@@ -134,7 +152,6 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     final userId = ref.read(currentUserIdProvider);
     if (householdId == null) return;
 
-    // We update UI optimistically, or wait for server. Let's wait for server to keep it simple and sure
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(toggleShoppingItemUseCaseProvider).execute(
@@ -142,8 +159,11 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
             completed: completed,
             userId: userId,
           );
-      final getItems = ref.read(getShoppingItemsUseCaseProvider);
-      return getItems.execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 
@@ -154,8 +174,11 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(deleteShoppingItemUseCaseProvider).execute(itemId);
-      final getItems = ref.read(getShoppingItemsUseCaseProvider);
-      return getItems.execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 
@@ -168,8 +191,11 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
       await ref
           .read(clearCompletedShoppingItemsUseCaseProvider)
           .execute(householdId);
-      final getItems = ref.read(getShoppingItemsUseCaseProvider);
-      return getItems.execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 
@@ -182,8 +208,11 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
       await ref
           .read(uncompleteAllShoppingItemsUseCaseProvider)
           .execute(householdId);
-      final getItems = ref.read(getShoppingItemsUseCaseProvider);
-      return getItems.execute(householdId);
+      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (items) => items,
+      );
     });
   }
 }

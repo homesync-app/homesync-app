@@ -1,4 +1,3 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

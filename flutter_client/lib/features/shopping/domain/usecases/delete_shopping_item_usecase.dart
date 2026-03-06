@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 
 class DeleteShoppingItemUseCase {
@@ -5,8 +7,10 @@ class DeleteShoppingItemUseCase {
 
   DeleteShoppingItemUseCase(this.repository);
 
-  Future<void> execute(String itemId) {
-    if (itemId.isEmpty) throw ArgumentError('itemId is required');
+  Future<Either<Failure, void>> execute(String itemId) {
+    if (itemId.isEmpty) {
+      return Future.value(Left(ValidationFailure('itemId is required')));
+    }
     return repository.deleteItem(itemId);
   }
 }

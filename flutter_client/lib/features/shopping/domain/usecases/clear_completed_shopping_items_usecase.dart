@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
 
 class ClearCompletedShoppingItemsUseCase {
@@ -5,8 +7,10 @@ class ClearCompletedShoppingItemsUseCase {
 
   ClearCompletedShoppingItemsUseCase(this.repository);
 
-  Future<void> execute(String householdId) {
-    if (householdId.isEmpty) throw ArgumentError('householdId is required');
+  Future<Either<Failure, void>> execute(String householdId) {
+    if (householdId.isEmpty) {
+      return Future.value(Left(ValidationFailure('householdId is required')));
+    }
     return repository.clearCompleted(householdId);
   }
 }

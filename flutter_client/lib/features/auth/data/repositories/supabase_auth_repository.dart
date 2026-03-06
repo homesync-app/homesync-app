@@ -1,32 +1,47 @@
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import '../../../../core/providers/supabase_provider.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/firebase_auth_service.dart';
+
+final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
+  return FirebaseAuthService();
+});
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final client = ref.read(supabaseClientProvider);
-  final authService = ref.read(authServiceProvider);
-  return SupabaseAuthRepository(client: client, authService: authService);
+  final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
+  return SupabaseAuthRepository(
+    client: client, 
+    firebaseAuthService: firebaseAuthService,
+    ref: ref
+  );
 });
 
-/// Supabase implementation of AuthRepository.
+/// Supabase implementation of AuthRepository, powered by Firebase Auth for identity.
 class SupabaseAuthRepository
     with RepositoryErrorHandler
     implements AuthRepository {
   final SupabaseClient _client;
-  final SupabaseAuthService _authService;
+  final FirebaseAuthService _firebaseAuthService;
+  final Ref _ref;
 
   SupabaseAuthRepository({
     required SupabaseClient client,
-    required SupabaseAuthService authService,
+    required FirebaseAuthService firebaseAuthService,
+    required Ref ref,
   })  : _client = client,
-        _authService = authService;
+        _firebaseAuthService = firebaseAuthService,
+        _ref = ref;
+
+  bool get _isOnline => _ref.read(isOnlineProvider);
 
   @override
   User? get currentUser => _client.auth.currentUser;
@@ -41,12 +56,12 @@ class SupabaseAuthRepository
     String? fullName,
   }) async {
     return executeWithHandling(() async {
-      await _authService.signUp(
-        email: email,
+      await _client.auth.signUp(
+        email: email, 
         password: password,
-        fullName: fullName,
+        data: fullName != null ? {'full_name': fullName} : {},
       );
-    }, context: 'SupabaseAuthRepository.signUpWithEmail');
+    }, context: 'SupabaseAuthRepository.signUpWithEmail', isOnline: _isOnline);
   }
 
   @override
@@ -55,29 +70,43 @@ class SupabaseAuthRepository
     required String password,
   }) async {
     return executeWithHandling(() async {
-      await _authService.signIn(email: email, password: password);
-    }, context: 'SupabaseAuthRepository.signInWithEmail');
+      await _client.auth.signInWithPassword(email: email, password: password);
+    }, context: 'SupabaseAuthRepository.signInWithEmail', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, bool>> signInWithGoogle() async {
+    log.i('SupabaseAuthRepository: Iniciando signInWithGoogle...');
     return executeWithHandling(() async {
-      return await _authService.signInWithGoogle();
-    }, context: 'SupabaseAuthRepository.signInWithGoogle');
+      if (kIsWeb) {
+        log.i('SupabaseAuthRepository: Usando Supabase OAuth para Web');
+        await _client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: kIsWeb ? Uri.base.origin : null,
+        );
+        return true; 
+      } else {
+        log.i('SupabaseAuthRepository: Usando Firebase Auth para Mobile');
+        final success = await _firebaseAuthService.signInWithGoogle();
+        log.i('SupabaseAuthRepository: _firebaseAuthService.signInWithGoogle retornó: $success');
+        return success;
+      }
+    }, context: 'SupabaseAuthRepository.signInWithGoogle', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> signOut() async {
     return executeWithHandling(() async {
-      await _authService.signOut();
-    }, context: 'SupabaseAuthRepository.signOut');
+      await _client.auth.signOut();
+      await _firebaseAuthService.signOut();
+    }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> resetPassword(String email) async {
     return executeWithHandling(() async {
-      await _authService.resetPasswordForEmail(email);
-    }, context: 'SupabaseAuthRepository.resetPassword');
+      await _client.auth.resetPasswordForEmail(email);
+    }, context: 'SupabaseAuthRepository.resetPassword', isOnline: _isOnline);
   }
 
   @override
@@ -91,6 +120,6 @@ class SupabaseAuthRepository
 
       if (data == null) return null;
       return UserModel.fromJson(data);
-    }, context: 'SupabaseAuthRepository.getUserProfile');
+    }, context: 'SupabaseAuthRepository.getUserProfile', isOnline: _isOnline);
   }
 }

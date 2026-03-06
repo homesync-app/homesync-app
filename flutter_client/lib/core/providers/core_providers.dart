@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
@@ -66,16 +66,49 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
 });
 
 // ── User profile (full_name, avatar) ──────────────────────────────────────────
-final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
   final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return null;
+  if (userId == null) {
+    yield null;
+    return;
+  }
 
   final client = ref.read(supabaseClientProvider);
-  return await client
-      .from('users')
-      .select('id, full_name, email, avatar_url, mercadopago_alias')
-      .eq('id', userId)
-      .maybeSingle();
+
+  // Snapshot function
+  Future<Map<String, dynamic>?> fetch() async {
+    return await client
+        .from('users')
+        .select('id, full_name, email, avatar_url, mercadopago_alias')
+        .eq('id', userId)
+        .maybeSingle();
+  }
+
+  // Initial fetch
+  yield await fetch();
+
+  // Realtime subscription
+  final channel = client
+      .channel('user_profile_$userId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'users',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'id',
+          value: userId,
+        ),
+        callback: (payload) {
+          log.i('Realtime user profile change detected: ${payload.eventType}');
+          ref.invalidateSelf();
+        },
+      )
+      .subscribe();
+
+  ref.onDispose(() {
+    client.removeChannel(channel);
+  });
 });
 
 // ── Mercado Pago connection status ─────────────────────────────────────────────
@@ -124,13 +157,48 @@ final mercadopagoMovementsProvider =
 });
 
 // ── User balance (XP + coins) ─────────────────────────────────────────────────
-final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
-  final householdAsync = await ref.watch(householdIdProvider.future);
-  if (householdAsync == null) return null;
+final userBalanceProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
+  final householdId = await ref.watch(householdIdProvider.future);
+  final userId = ref.watch(currentUserIdProvider);
+  if (householdId == null || userId == null) {
+    yield null;
+    return;
+  }
 
+  final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(balanceRpcServiceProvider);
-  final result = await rpc.getUserBalance(householdId: householdAsync);
-  return result['data'] as Map<String, dynamic>?;
+
+  // Snapshot function
+  Future<Map<String, dynamic>?> fetch() async {
+    final result = await rpc.getUserBalance(householdId: householdId);
+    return result['data'] as Map<String, dynamic>?;
+  }
+
+  // Initial fetch
+  yield await fetch();
+
+  // Realtime subscription - listen to ledger entries for this user
+  final channel = client
+      .channel('user_balance_$userId')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'ledger_entries',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'user_id',
+          value: userId,
+        ),
+        callback: (payload) {
+          log.i('Realtime balance change detected (ledger entry): ${payload.eventType}');
+          ref.invalidateSelf();
+        },
+      )
+      .subscribe();
+
+  ref.onDispose(() {
+    client.removeChannel(channel);
+  });
 });
 
 // ── ExpenseModel balances for all household members ────────────────────────────────

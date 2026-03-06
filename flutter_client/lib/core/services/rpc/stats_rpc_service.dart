@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'base_rpc_service.dart';
 

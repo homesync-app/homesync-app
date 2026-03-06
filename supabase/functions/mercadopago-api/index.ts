@@ -212,7 +212,9 @@ serve(async (req) => {
 
       if (action === 'get_auth_url') {
         const { userId } = body;
-        const redirectUri = url.origin + url.pathname;
+        // La redirect_uri DEBE ser HTTPS y apuntar exactamente a la Edge Function.
+        // Este valor debe coincidir con lo que está registrado en el panel de MP Developer.
+        const redirectUri = `https://tfavamqszdkoeabpyxms.supabase.co/functions/v1/mercadopago-api`;
         const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&state=${userId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
         
         return new Response(JSON.stringify({ url: authUrl }), {

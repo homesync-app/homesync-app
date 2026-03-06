@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confetti/confetti.dart';
@@ -71,8 +70,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       _allTasks = result.getOrElse((_) => []).where((t) => t.isActive).toList();
 
       final householdRepo = ref.read(householdRepositoryProvider);
-      final members = await householdRepo.getHouseholdMembersRaw();
-      _members = List<Map<String, dynamic>>.from(members);
+      final membersResult = await householdRepo.getHouseholdMembersRaw();
+      _members = membersResult.getOrElse((failure) {
+        log.e('Error loading members: ${failure.message}');
+        return [];
+      });
     } catch (e) {
       log.e('Error loading data for task sheet: $e', error: e);
     }
@@ -701,13 +703,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   List<Widget> _buildGroupedTasksInFull(
       List<TaskModel> tasks, List<CategoryModel> categories) {
-    if (tasks.isEmpty)
+    if (tasks.isEmpty) {
       return [
         const Center(
             child: Padding(
                 padding: EdgeInsets.all(32),
                 child: Text('No hay tareas disponibles')))
       ];
+    }
 
     final catLookup = <String, CategoryModel>{};
     for (final c in categories) {
