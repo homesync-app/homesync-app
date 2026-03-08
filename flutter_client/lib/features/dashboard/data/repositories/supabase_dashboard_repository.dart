@@ -12,7 +12,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
       String householdId) async {
     final activities = <Map<String, dynamic>>[];
     final now = DateTime.now();
-    final since = now.subtract(const Duration(days: 7));
+    // Only show activities from the current day (today at 00:00:00)
+    final since = DateTime(now.year, now.month, now.day);
 
     // 1. Fetch Completed Tasks (joined with user info)
     try {

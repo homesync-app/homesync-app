@@ -26,7 +26,7 @@ class MockTaskRepository implements TaskRepository {
     String? recurrenceType,
   }) async {
     createTaskCalled = true;
-    return Right(null);
+    return const Right(null);
   }
 
   @override
@@ -80,7 +80,7 @@ class MockExpenseRepository implements ExpenseRepository {
     List<Map<String, dynamic>>? splits,
   }) async {
     saveExpenseCalled = true;
-    return Right(null);
+    return const Right(null);
   }
 
   @override

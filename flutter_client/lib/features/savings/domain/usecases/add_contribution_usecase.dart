@@ -14,14 +14,14 @@ class AddContributionUseCase {
     String? note,
   }) {
     if (goalId.isEmpty) {
-      return Future.value(Left(ValidationFailure('goalId is required')));
+      return Future.value(const Left(ValidationFailure('goalId is required')));
     }
     if (userId.isEmpty) {
-      return Future.value(Left(ValidationFailure('userId is required')));
+      return Future.value(const Left(ValidationFailure('userId is required')));
     }
     if (amount <= 0) {
       return Future.value(
-          Left(ValidationFailure('amount must be greater than zero')));
+          const Left(ValidationFailure('amount must be greater than zero')));
     }
 
     return repository.addContribution(

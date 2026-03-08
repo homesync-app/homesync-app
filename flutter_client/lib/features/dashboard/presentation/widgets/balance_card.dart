@@ -30,182 +30,162 @@ class BalanceCard extends ConsumerWidget {
     final bool isNegative = balance < -0.01;
     final bool isBalanced = !isPositive && !isNegative;
 
-    // Relational Colors: Sage for credit, Orange for debt, Grey for balanced
     final statusColor = isNegative
         ? AppColors.accentOrange
         : (isBalanced ? const Color(0xFF94A3B8) : AppColors.sage);
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 1000),
-      curve: Curves.easeOutQuart,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 30 * (1 - value)),
-            child: child,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(
-            color: statusColor.withValues(alpha: 0.2),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: statusColor.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isBalanced
+                            ? '¡Equilibrio perfecto! 🤍'
+                            : 'Balance de Pareja',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            isPositive ? '+' : (isNegative ? '-' : ''),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            '\$',
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              height: 1.5,
+                            ),
+                          ),
+                          _AnimatedDigitCounter(
+                            value: balance.abs(),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (isNegative && onSettle != null)
+                  AnimatedPress(
+                    onTap: onSettle!,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Equilibrar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward_rounded,
+                              color: Colors.white, size: 16),
+                        ],
+                      ),
+                    ),
+                  ).animatePulse()
+                else if (isBalanced)
+                  const Icon(Icons.check_circle_rounded,
+                      color: AppColors.sage, size: 32).animateScaleIn()
+              ],
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: AnimatedPress(
+                    onTap: () =>
+                        ref.read(bottomNavIndexProvider.notifier).setIndex(4),
+                    child: _buildMetricCard(
+                      context,
+                      label: 'XP',
+                      value: xp,
+                      icon: Icons.star_rounded,
+                      iconBg: const Color(0xFFFEF3C7),
+                      iconColor: const Color(0xFFFBBF24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AnimatedPress(
+                    onTap: () =>
+                        ref.read(bottomNavIndexProvider.notifier).setIndex(3),
+                    child: _buildMetricCard(
+                      context,
+                      label: 'Coins',
+                      value: coins,
+                      icon: Icons.monetization_on_rounded,
+                      iconBg: AppColors.primary.withValues(alpha: 0.12),
+                      iconColor: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              // Partner Balance Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isBalanced
-                              ? '¡Equilibrio perfecto! 🤍'
-                              : 'Balance de Pareja',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              isPositive ? '+' : (isNegative ? '' : ''),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            Text(
-                              '\$',
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                height: 1.5,
-                              ),
-                            ),
-                            _AnimatedDigitCounter(
-                              value: balance.abs(),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Saldar Button (Show only if negative, i.e., debtor)
-                  if (isNegative && onSettle != null)
-                    AnimatedPress(
-                      onTap: onSettle!,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Equilibrar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 13,
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward_rounded,
-                                color: Colors.white, size: 16),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (isBalanced)
-                    const Icon(Icons.check_circle_rounded,
-                        color: AppColors.sage, size: 32),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  // XP Card (Clickable)
-                  Expanded(
-                    child: AnimatedPress(
-                      onTap: () =>
-                          ref.read(bottomNavIndexProvider.notifier).setIndex(4),
-                      child: _buildMetricCard(
-                        context,
-                        label: 'XP',
-                        value: xp,
-                        icon: Icons.star_rounded,
-                        iconBg: const Color(0xFFFEF3C7),
-                        iconColor: const Color(0xFFFBBF24),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Coins Card (Clickable)
-                  Expanded(
-                    child: AnimatedPress(
-                      onTap: () =>
-                          ref.read(bottomNavIndexProvider.notifier).setIndex(3),
-                      child: _buildMetricCard(
-                        context,
-                        label: 'Coins',
-                        value: coins,
-                        icon: Icons.monetization_on_rounded,
-                        iconBg: AppColors.primary.withValues(alpha: 0.12),
-                        iconColor: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
-    );
+    ).animateEntrance(delay: 200);
   }
 
   Widget _buildMetricCard(

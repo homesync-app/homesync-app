@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -439,7 +439,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                       margin: const EdgeInsets.only(left: 12),
                       width: 28,
                       height: 28,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.accentGreen,
                       ),

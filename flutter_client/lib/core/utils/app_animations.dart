@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AppTransitions {
   static Route<T> slideUp<T>(Widget page) {
@@ -83,6 +84,8 @@ class AppTransitions {
   }
 }
 
+/// A wrapper for widgets that should scale down slightly when pressed.
+/// Now enhanced with HapticFeedback and smoother curves.
 class AnimatedPress extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -94,7 +97,7 @@ class AnimatedPress extends StatefulWidget {
     required this.child,
     this.onTap,
     this.onLongPress,
-    this.scaleDown = 0.96,
+    this.scaleDown = 0.95,
   });
 
   @override
@@ -111,10 +114,10 @@ class _AnimatedPressState extends State<AnimatedPress>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 80),
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
   }
 
@@ -124,25 +127,19 @@ class _AnimatedPressState extends State<AnimatedPress>
     super.dispose();
   }
 
-  void _onTapDown(TapDownDetails details) {
-    _controller.forward();
-  }
-
-  void _onTapUp(TapUpDetails details) {
-    _controller.reverse();
-    widget.onTap?.call();
-  }
-
-  void _onTapCancel() {
-    _controller.reverse();
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
+        _controller.forward();
+        HapticFeedback.selectionClick();
+      },
+      onTapUp: (_) {
+        _controller.reverse();
+        widget.onTap?.call();
+      },
+      onTapCancel: () => _controller.reverse(),
       onLongPress: widget.onLongPress != null
           ? () {
               HapticFeedback.mediumImpact();
@@ -161,7 +158,8 @@ class _AnimatedPressState extends State<AnimatedPress>
   }
 }
 
-class ShimmerLoading extends StatefulWidget {
+/// Standardized Shimmer that feels premium.
+class ShimmerLoading extends StatelessWidget {
   final Widget child;
   final bool isLoading;
 
@@ -172,61 +170,46 @@ class ShimmerLoading extends StatefulWidget {
   });
 
   @override
-  State<ShimmerLoading> createState() => _ShimmerLoadingState();
+  Widget build(BuildContext context) {
+    if (!isLoading) return child;
+
+    return child
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(
+          duration: 1200.ms,
+          color: Colors.white.withValues(alpha: 0.6),
+        );
+  }
 }
 
-class _ShimmerLoadingState extends State<ShimmerLoading>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+/// Extension for easy access to premium micro-animations via [flutter_animate].
+extension AppAnimationsExtension on Widget {
+  Widget animateEntrance({int delay = 0}) {
+    return animate()
+        .fadeIn(duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic)
+        .slideY(begin: 0.1, end: 0, duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic);
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Widget animateStaggered(int index) {
+    return animateEntrance(delay: index * 40);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (!widget.isLoading) return widget.child;
+  Widget animateScaleIn({int delay = 0}) {
+    return animate()
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1, 1),
+          duration: 500.ms,
+          delay: delay.ms,
+          curve: Curves.elasticOut,
+        )
+        .fadeIn(duration: 300.ms, delay: delay.ms);
+  }
 
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return ShaderMask(
-          shaderCallback: (bounds) {
-            return LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: const [
-                Color(0xFFEEEEEE),
-                Color(0xFFF5F5F5),
-                Color(0xFFEEEEEE),
-              ],
-              stops: [
-                _animation.value - 0.3,
-                _animation.value,
-                _animation.value + 0.3,
-              ].map((e) => e.clamp(0.0, 1.0)).toList(),
-            ).createShader(bounds);
-          },
-          blendMode: BlendMode.srcIn,
-          child: widget.child,
-        );
-      },
-    );
+  Widget animatePulse({bool active = true}) {
+    if (!active) return this;
+    return animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02), duration: 1000.ms);
   }
 }
 
@@ -299,7 +282,7 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   }
 }
 
-class CelebrationOverlay extends StatefulWidget {
+class CelebrationOverlay extends StatelessWidget {
   final Widget child;
   final ConfettiController controller;
 
@@ -310,19 +293,14 @@ class CelebrationOverlay extends StatefulWidget {
   });
 
   @override
-  State<CelebrationOverlay> createState() => _CelebrationOverlayState();
-}
-
-class _CelebrationOverlayState extends State<CelebrationOverlay> {
-  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        widget.child,
+        child,
         Align(
           alignment: Alignment.topCenter,
           child: ConfettiWidget(
-            confettiController: widget.controller,
+            confettiController: controller,
             blastDirection: pi / 2,
             maxBlastForce: 5,
             minBlastForce: 2,
@@ -426,7 +404,7 @@ class _CelebrationDialog extends StatelessWidget {
                     icon ?? '🎉',
                     style: const TextStyle(fontSize: 48),
                   ),
-                ),
+                ).animate().shake(delay: 400.ms),
                 const SizedBox(height: 24),
                 Text(
                   title,
@@ -466,7 +444,7 @@ class _CelebrationDialog extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+          ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
         ),
       ],
     );

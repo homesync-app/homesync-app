@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'logger_service.dart';
-import 'rpc/admin_rpc_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:uuid/uuid.dart';
 
 class FirebaseAuthService {
@@ -19,20 +19,22 @@ class FirebaseAuthService {
 
   Future<void> _ensureInitialized() async {
     if (_googleSignIn == null) {
+      log.i('FirebaseAuthService: Initializing GoogleSignIn.instance...');
       _googleSignIn = GoogleSignIn.instance;
       
       await _googleSignIn!.initialize(
-        clientId: kIsWeb ? null : '105041112830-i79qb8avlvfv38reurc3aa9hnti1k8vv.apps.googleusercontent.com',
+        // On Android, we should not pass clientId, it's automatically picked from google-services.json.
+        // Hardcoding it here might cause failures if the signature doesn't match the one tied to this ID.
+        clientId: kIsWeb ? AppEnvironment.firebaseOptions.appId : null,
         serverClientId: '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com',
       );
+      log.i('FirebaseAuthService: GoogleSignIn initialized.');
     }
   }
 
   Future<bool> signInWithGoogle() async {
     try {
-      _ensureInitialized();
-      
-      final googleSignIn = _googleSignIn!;
+      await _ensureInitialized();
       
       // For web, use OAuth flow through Supabase directly (recommended for web)
       if (kIsWeb) {
@@ -54,8 +56,6 @@ class FirebaseAuthService {
         log.e('Google Sign-In error: $e', error: e);
         return false;
       }
-
-      if (googleUser == null) return false;
 
       // In v7, authentication is a synchronous getter on the account
       final googleAuth = googleUser.authentication;
@@ -275,12 +275,5 @@ class FirebaseAuthService {
 
   Future<String?> getIdToken() async {
     return await _auth.currentUser?.getIdToken();
-  }
-
-  Future<void> _signInWithSupabaseOAuth() async {
-    final supabaseClient = Supabase.instance.client;
-    await supabaseClient.auth.signInWithOAuth(
-      OAuthProvider.google,
-    );
   }
 }

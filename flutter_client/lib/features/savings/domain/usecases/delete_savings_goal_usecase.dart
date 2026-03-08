@@ -9,7 +9,7 @@ class DeleteSavingsGoalUseCase {
 
   Future<Either<Failure, void>> execute(String goalId) {
     if (goalId.isEmpty) {
-      return Future.value(Left(ValidationFailure('goalId is required')));
+      return Future.value(const Left(ValidationFailure('goalId is required')));
     }
     return repository.deleteGoal(goalId: goalId);
   }

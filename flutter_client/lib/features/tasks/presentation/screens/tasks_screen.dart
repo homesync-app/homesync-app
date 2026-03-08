@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:confetti/confetti.dart';
+import 'dart:math' as math;
 import 'package:timeago/timeago.dart' as timeago;
 // ignore: implementation_imports
 import 'package:timeago/src/messages/es_messages.dart';
@@ -11,10 +13,10 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 // legacy services removed — access via providers
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
@@ -36,17 +38,20 @@ class TasksScreen extends ConsumerStatefulWidget {
 
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   RealtimeChannel? _tasksChannel;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('es', EsMessages());
     _setupRealtime();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
   }
 
   @override
   void dispose() {
     _tasksChannel?.unsubscribe();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -80,7 +85,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   void _showScheduleDialog(TaskModel task) {
     final members = ref
-        .read(householdMembersProvider)
+        .read(householdMembersNotifierProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
     showDialog(
@@ -157,7 +162,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   void _showCreateTaskDialog() async {
     final members = ref
-        .read(householdMembersProvider)
+        .read(householdMembersNotifierProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
     final result = await AddTaskOptionsSheet.show(context, members);
@@ -184,12 +189,21 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     try {
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
       if (mounted && result != null) {
+        HapticFeedback.vibrate();
+        
         final xp = result['xp_earned'] ?? task.xpReward;
         final coins = result['coins_earned'] ?? task.coinReward;
+        
         _showSnack(
           '⭐ ¡Ganaste $xp XP y $coins coins!',
           AppColors.accentTeal,
         );
+
+        // Si no quedan tareas para hoy, ¡conffetti!
+        final todayTasks = ref.read(todayTasksProvider).value ?? [];
+        if (todayTasks.length <= 1) { // 1 because we just completed one and state might not be updated yet
+           _confettiController.play();
+        }
       }
     } catch (e) {
       if (mounted) _showSnack('Error al completar: $e', AppColors.error);
@@ -232,7 +246,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredAsync = ref.watch(filteredTasksProvider);
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isCalendarMode = ref.watch(taskViewModeProvider);
     final currentUserId = ref.read(currentUserIdProvider);
@@ -245,8 +259,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Scaffold(
-      floatingActionButton: Padding(
+    return Stack(
+      children: [
+        Scaffold(
+          floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: FloatingActionButton.extended(
           heroTag: null,
@@ -498,7 +514,54 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
         ],
       ),
+    ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              Colors.green,
+              Colors.blue,
+              Colors.pink,
+              Colors.orange,
+              Colors.purple,
+              AppColors.primary,
+            ],
+            createParticlePath: _drawStar,
+          ),
+        ),
+      ],
     );
+  }
+
+  Path _drawStar(Size size) {
+    // Media star shape path for confetti
+    double degToRad(double deg) => deg * (math.pi / 180.0);
+    const numberOfPoints = 5;
+    final halfWidth = size.width / 2;
+    final externalRadius = halfWidth;
+    final internalRadius = halfWidth / 2.5;
+    final degreesPerStep = degToRad(360 / numberOfPoints);
+    final halfDegreesPerStep = degreesPerStep / 2;
+    final path = Path();
+    final fullAngle = degToRad(-90);
+    path.moveTo(size.width, halfWidth + externalRadius * math.sin(fullAngle));
+    for (double step = 0; step < 360; step += 360 / numberOfPoints) {
+      path.lineTo(
+          halfWidth + externalRadius * math.cos(degToRad(step) + fullAngle),
+          halfWidth + externalRadius * math.sin(degToRad(step) + fullAngle));
+      path.lineTo(
+          halfWidth +
+              internalRadius *
+                  math.cos(degToRad(step) + halfDegreesPerStep + fullAngle),
+          halfWidth +
+              internalRadius *
+                  math.sin(degToRad(step) + halfDegreesPerStep + fullAngle));
+    }
+    path.close();
+    return path;
   }
 
   // ── Widgets ────────────────────────────────────────────────────────────────
@@ -1011,23 +1074,23 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       children: [
                         const Divider(color: Color(0xFFF1F5F9), height: 1),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildActionTilePremium(
-                              icon: Icons.edit_rounded,
-                              label: 'Editar',
-                              color: AppColors.primary,
-                              onTap: widget.onEdit,
-                            ),
-                            _buildActionTilePremium(
-                              icon: Icons.calendar_month_rounded,
-                              label: 'Programar',
-                              color: AppColors.accentGold,
-                              onTap: widget.onSchedule,
-                            ),
-                          ],
-                        ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildActionTilePremium(
+                                icon: Icons.edit_rounded,
+                                label: 'Editar',
+                                color: AppColors.primary,
+                                onTap: widget.onEdit,
+                              ),
+                              _buildActionTilePremium(
+                                icon: Icons.calendar_month_rounded,
+                                label: 'Programar',
+                                color: AppColors.accentGold,
+                                onTap: widget.onSchedule,
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
@@ -1048,6 +1111,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }) {
     return InkWell(
       onTap: () {
+        HapticFeedback.lightImpact();
         setState(() => _isExpanded = false);
         onTap();
       },

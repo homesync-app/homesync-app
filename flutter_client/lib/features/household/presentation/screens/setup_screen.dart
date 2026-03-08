@@ -10,8 +10,8 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../data/repositories/supabase_household_repository.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
-import '../providers/household_providers.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
+import '../providers/household_provider.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -54,28 +54,28 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       'name': 'Pareja',
       'icon': '💑',
       'desc': 'Compartimos el hogar juntos',
-      'gradient': [Color(0xFF6B8E85), Color(0xFF84A59D)],
+      'gradient': [const Color(0xFF6B8E85), const Color(0xFF84A59D)],
     },
     {
       'id': 'family',
       'name': 'Familia',
       'icon': '👨‍👩‍👧‍👦',
       'desc': 'Toda la familia participa',
-      'gradient': [Color(0xFFEE652B), Color(0xFFFF8A65)],
+      'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8A65)],
     },
     {
       'id': 'roommates',
       'name': 'Compañeros',
       'icon': '🏠',
       'desc': 'Compartimos piso o depto',
-      'gradient': [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+      'gradient': [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
     },
     {
       'id': 'solo',
       'name': 'Solo yo',
       'icon': '👤',
       'desc': 'Mis tareas personales',
-      'gradient': [Color(0xFF9575CD), Color(0xFFB39DDB)],
+      'gradient': [const Color(0xFF9575CD), const Color(0xFFB39DDB)],
     },
   ];
 
@@ -196,7 +196,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(userBalanceProvider);
-      ref.invalidate(householdMembersProvider);
+      ref.invalidate(householdMembersNotifierProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -239,7 +239,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(userBalanceProvider);
-      ref.invalidate(householdMembersProvider);
+      ref.invalidate(householdMembersNotifierProvider);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('setup_completed', true);
@@ -542,7 +542,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           Center(
             child: TextButton(
               onPressed: () {
-                ref.read(signOutUseCaseProvider).execute();
+                ref.read(authControllerProvider.notifier).signOut();
               },
               child: Text(
                 'Cerrar sesión',
@@ -1251,7 +1251,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
                 height: 1.5,

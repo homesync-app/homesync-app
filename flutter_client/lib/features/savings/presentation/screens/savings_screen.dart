@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
-import 'package:homesync_client/features/savings/presentation/providers/savings_providers.dart';
-import 'package:homesync_client/core/services/mercadopago_service.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
@@ -17,7 +15,6 @@ class SavingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SavingsScreenState extends ConsumerState<SavingsScreen> {
-  final _mpService = MercadoPagoService();
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +279,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Ahorrar con MP 💳'),
+                    child: const Text('Ingresar Ahorro'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -439,55 +436,27 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => _handleMPContribution(goal, controller.text),
+              onPressed: () {
+                final amount = double.tryParse(controller.text);
+                if (amount != null && amount > 0) {
+                  ref.read(savingsGoalsProvider.notifier).contribute(goal.id, amount);
+                  Navigator.pop(context);
+                }
+              },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF009EE3), // Mercado Pago Blue
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('Pagar con Mercado Pago',
+              child: const Text('Confirmar Ahorro',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _handleMPContribution(
-      SavingsGoalModel goal, String amountStr) async {
-    final amount = double.tryParse(amountStr);
-    if (amount == null || amount <= 0) return;
-
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
-
-    Navigator.pop(context); // Close sheet
-
-    // Show loading
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Generando link de ahorro...')),
-    );
-
-    // external_reference: savings|householdId|goalId|userId|amount
-    final extRef = 'savings|${goal.householdId}|${goal.id}|${user.id}|$amount';
-
-    final url = await _mpService.createPaymentPreference(
-      title: 'Ahorro: ${goal.title}',
-      amount: amount,
-      externalReference: extRef,
-    );
-
-    if (url != null) {
-      await _mpService.launchCheckout(url);
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al generar el link de pago')),
-      );
-    }
   }
 
   Widget _buildAddGoalButton() {

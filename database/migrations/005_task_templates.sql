@@ -56,44 +56,44 @@ ON CONFLICT (id) DO NOTHING;
 -- CLEANING (Limpieza) - 8 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
   ('Barrer el piso', 'cleaning', 'easy', 5, 1, '🧹', true, 1),
-  ('Trapear el piso', 'cleaning', 'medium', 10, 2, '🧽', true, 2),
-  ('Aspirar la casa', 'cleaning', 'medium', 10, 2, '🤖', false, 3),
-  ('Limpiar ventanas', 'cleaning', 'hard', 20, 5, '🪟', false, 4),
+  ('Trapear el piso', 'cleaning', 'medium', 10, 1, '🧽', true, 2),
+  ('Aspirar la casa', 'cleaning', 'medium', 10, 1, '🤖', false, 3),
+  ('Limpiar ventanas', 'cleaning', 'hard', 20, 2, '🪟', false, 4),
   ('Sacudir muebles', 'cleaning', 'easy', 5, 1, '🪑', false, 5),
   ('Limpiar espejos', 'cleaning', 'easy', 5, 1, '🪞', false, 6),
   ('Limpiar polvo', 'cleaning', 'easy', 5, 1, '✨', true, 7),
-  ('Organizar la sala', 'cleaning', 'medium', 10, 2, '🛋️', false, 8)
+  ('Organizar la sala', 'cleaning', 'medium', 10, 1, '🛋️', false, 8)
 ON CONFLICT DO NOTHING;
 
 -- KITCHEN (Cocina) - 8 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
   ('Lavar los platos', 'kitchen', 'easy', 5, 1, '🍽️', true, 1),
-  ('Cocinar almuerzo', 'kitchen', 'hard', 20, 5, '👨‍🍳', true, 2),
-  ('Cocinar cena', 'kitchen', 'hard', 20, 5, '🍳', false, 3),
-  ('Limpiar la cocina', 'kitchen', 'medium', 10, 2, '🧽', true, 4),
-  ('Hacer la compra', 'kitchen', 'medium', 10, 2, '🛒', true, 5),
+  ('Cocinar almuerzo', 'kitchen', 'hard', 20, 2, '👨‍🍳', true, 2),
+  ('Cocinar cena', 'kitchen', 'hard', 20, 2, '🍳', false, 3),
+  ('Limpiar la cocina', 'kitchen', 'medium', 10, 1, '🧽', true, 4),
+  ('Hacer la compra', 'kitchen', 'medium', 10, 1, '🛒', true, 5),
   ('Guardar las compras', 'kitchen', 'easy', 5, 1, '📦', false, 6),
-  ('Organizar la despensa', 'kitchen', 'medium', 10, 2, '🥫', false, 7),
-  ('Limpiar el refrigerador', 'kitchen', 'medium', 10, 2, '🧊', false, 8)
+  ('Organizar la despensa', 'kitchen', 'medium', 10, 1, '🥫', false, 7),
+  ('Limpiar el refrigerador', 'kitchen', 'medium', 10, 1, '🧊', false, 8)
 ON CONFLICT DO NOTHING;
 
 -- BEDROOM (Dormitorio) - 6 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
   ('Hacer la cama', 'bedroom', 'easy', 5, 1, '🛏️', true, 1),
-  ('Cambiar sábanas', 'bedroom', 'medium', 10, 2, '🧺', false, 2),
-  ('Ordenar el cuarto', 'bedroom', 'medium', 10, 2, '🧹', true, 3),
-  ('Organizar armario', 'bedroom', 'hard', 20, 5, '👕', false, 4),
-  ('Ordenar la ropa', 'bedroom', 'medium', 10, 2, '👔', false, 5),
-  ('Limpiar bajo la cama', 'bedroom', 'medium', 10, 2, '🧹', false, 6)
+  ('Cambiar sábanas', 'bedroom', 'medium', 10, 1, '🧺', false, 2),
+  ('Ordenar el cuarto', 'bedroom', 'medium', 10, 1, '🧹', true, 3),
+  ('Organizar armario', 'bedroom', 'hard', 20, 2, '👕', false, 4),
+  ('Ordenar la ropa', 'bedroom', 'medium', 10, 1, '👔', false, 5),
+  ('Limpiar bajo la cama', 'bedroom', 'medium', 10, 1, '🧹', false, 6)
 ON CONFLICT DO NOTHING;
 
 -- BATHROOM (Baño) - 5 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
-  ('Limpiar el baño', 'bathroom', 'hard', 20, 5, '🚿', true, 1),
-  ('Limpiar el inodoro', 'bathroom', 'medium', 10, 2, '🚽', false, 2),
+  ('Limpiar el baño', 'bathroom', 'hard', 20, 2, '🚿', true, 1),
+  ('Limpiar el inodoro', 'bathroom', 'medium', 10, 1, '🚽', false, 2),
   ('Cambiar toallas', 'bathroom', 'easy', 5, 1, '🧺', false, 3),
   ('Limpiar espejo baño', 'bathroom', 'easy', 5, 1, '🪞', false, 4),
-  ('Desinfectar baño', 'bathroom', 'medium', 10, 2, '🧴', false, 5)
+  ('Desinfectar baño', 'bathroom', 'medium', 10, 1, '🧴', false, 5)
 ON CONFLICT DO NOTHING;
 
 -- GENERAL - 8 tasks
@@ -101,31 +101,31 @@ INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, co
   ('Sacar la basura', 'general', 'easy', 5, 1, '🗑️', true, 1),
   ('Regar las plantas', 'general', 'easy', 5, 1, '🌿', true, 2),
   ('Recoger correos', 'general', 'easy', 5, 1, '📬', false, 3),
-  ('Organizar entrada', 'general', 'medium', 10, 2, '🚪', false, 4),
-  ('Lavar ropa', 'general', 'medium', 10, 2, '🧺', true, 5),
-  ('Tender la ropa', 'general', 'medium', 10, 2, '👕', false, 6),
-  ('Planchar ropa', 'general', 'medium', 10, 2, '⚡', false, 7),
-  ('Hacer la cama invitados', 'general', 'medium', 10, 2, '🛏️', false, 8)
+  ('Organizar entrada', 'general', 'medium', 10, 1, '🚪', false, 4),
+  ('Lavar ropa', 'general', 'medium', 10, 1, '🧺', true, 5),
+  ('Tender la ropa', 'general', 'medium', 10, 1, '👕', false, 6),
+  ('Planchar ropa', 'general', 'medium', 10, 1, '⚡', false, 7),
+  ('Hacer la cama invitados', 'general', 'medium', 10, 1, '🛏️', false, 8)
 ON CONFLICT DO NOTHING;
 
 -- PETS (Mascotas) - 6 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
   ('Alimentar mascotas', 'pets', 'easy', 5, 1, '🐾', true, 1),
-  ('Pasear al perro', 'pets', 'medium', 10, 2, '🐕', true, 2),
-  ('Limpiar arenero', 'pets', 'medium', 10, 2, '🐱', false, 3),
+  ('Pasear al perro', 'pets', 'medium', 10, 1, '🐕', true, 2),
+  ('Limpiar arenero', 'pets', 'medium', 10, 1, '🐱', false, 3),
   ('Dar agua a mascotas', 'pets', 'easy', 5, 1, '💧', false, 4),
   ('Cepillar mascota', 'pets', 'easy', 5, 1, '✨', false, 5),
-  ('Limpiar jaula/pecera', 'pets', 'hard', 20, 5, '🐠', false, 6)
+  ('Limpiar jaula/pecera', 'pets', 'hard', 20, 2, '🐠', false, 6)
 ON CONFLICT DO NOTHING;
 
 -- OUTDOOR (Exterior) - 6 tasks
 INSERT INTO public.task_templates (title, category_id, difficulty, xp_reward, coin_reward, icon, is_popular, sort_order) VALUES
-  ('Cortar el césped', 'outdoor', 'hard', 20, 5, '🌿', false, 1),
-  ('Regar el jardín', 'outdoor', 'medium', 10, 2, '💧', false, 2),
+  ('Cortar el césped', 'outdoor', 'hard', 20, 2, '🌿', false, 1),
+  ('Regar el jardín', 'outdoor', 'medium', 10, 1, '💧', false, 2),
   ('Barrer la entrada', 'outdoor', 'easy', 5, 1, '🧹', false, 3),
-  ('Limpiar terraza', 'outdoor', 'medium', 10, 2, '🏠', false, 4),
-  ('Podar plantas', 'outdoor', 'medium', 10, 2, '✂️', false, 5),
-  ('Lavar el coche', 'outdoor', 'medium', 10, 2, '🚗', false, 6)
+  ('Limpiar terraza', 'outdoor', 'medium', 10, 1, '🏠', false, 4),
+  ('Podar plantas', 'outdoor', 'medium', 10, 1, '✂️', false, 5),
+  ('Lavar el coche', 'outdoor', 'medium', 10, 1, '🚗', false, 6)
 ON CONFLICT DO NOTHING;
 
 -- ============================================

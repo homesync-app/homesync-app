@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -37,8 +37,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   List<Map<String, dynamic>> _members = [];
   final List<Map<String, dynamic>> _difficulties = [
     {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'coins': 1},
-    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 2},
-    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'coins': 5},
+    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 1},
+    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'coins': 2},
   ];
 
   final List<Map<String, String>> _recurrenceOptions = [
@@ -71,7 +71,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Future<void> _loadMembers() async {
     try {
-      final members = await ref.read(householdMembersProvider.future);
+      final members = await ref.read(householdMembersNotifierProvider.future);
       setState(() => _members =
           members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
     } catch (e) {

@@ -1,15 +1,14 @@
-import 'dart:ui';
+import 'dart:ui' show ImageFilter;
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 import 'package:flutter/services.dart';
-import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
-import 'package:homesync_client/core/services/error_handler.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -28,10 +27,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
-  String _loadingMessage = '';
+  final String _loadingMessage = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -58,14 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _animationController.forward();
   }
 
-  void _setGoogleLoading(bool loading, String message) {
-    if (mounted) {
-      setState(() {
-        _isGoogleLoading = loading;
-        _loadingMessage = message;
-      });
-    }
-  }
+
 
   @override
   void dispose() {
@@ -120,132 +110,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-
-    final signInUseCase = ref.read(signInUseCaseProvider);
-    final result = await signInUseCase.execute(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
+    
+    await ref.read(authControllerProvider.notifier).signInWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text,
     );
 
-    if (mounted) {
-      result.fold(
-        (failure) {
-          setState(() => _isLoading = false);
-          errorHandler.handleAndShow(context, failure,
-              where: 'LoginScreen._handleLogin');
-        },
-        (_) {
-          setState(() => _isLoading = false);
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => MainScreen(
-                prefs: widget.prefs,
-              ),
-            ),
-          );
-        },
-      );
+    final authState = ref.read(authControllerProvider);
+    if (authState.hasError && mounted) {
+      _showError(authState.error.toString());
     }
   }
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
 
-    final signUpUseCase = ref.read(signUpUseCaseProvider);
-    final result = await signUpUseCase.execute(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
+    await ref.read(authControllerProvider.notifier).signUpWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text,
+      null, // Full name handled by profile creation or separate field
     );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      result.fold(
-        (failure) => errorHandler.handleAndShow(context, failure,
-            where: 'LoginScreen._handleSignUp'),
-        (_) => _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧'),
-      );
+    final authState = ref.read(authControllerProvider);
+    if (authState.hasError && mounted) {
+      _showError(authState.error.toString());
+    } else if (mounted) {
+      _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧');
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.heavyImpact();
-    ref.read(isAuthenticatingWithGoogleProvider.notifier).state = true;
-    _setGoogleLoading(true, 'Conectando con Google...');
+    
+    final success = await ref.read(authControllerProvider.notifier).signInWithGoogle();
 
-    try {
-      log.i('LoginScreen: Iniciando flujo de Google Sign-In...');
-      final googleSignInUseCase = ref.read(signInWithGoogleUseCaseProvider);
-      final result = await googleSignInUseCase.execute();
-
-      if (!mounted) {
-        log.w('LoginScreen: Widget no montado tras execute()');
-        return;
-      }
-
-      log.i('LoginScreen: Resultado de UseCase obtenido. Right: ${result.isRight()}');
-
-      await result.fold(
-        (failure) async {
-          log.w('LoginScreen: Google Sign-In falló: ${failure.message}');
-          // Only show error if it's not a cancellation
-          if (failure.message != 'Cancelado por el usuario') {
-            errorHandler.handleAndShow(context, failure,
-                where: 'LoginScreen._handleGoogleSignIn');
-          }
-        },
-        (success) async {
-          if (!success) {
-            log.i('LoginScreen: Google Sign-In terminó sin éxito (posible cancelación o fallback).');
-            return;
-          }
-          
-          if (kIsWeb) {
-            log.i('LoginScreen: Flujo Web detectado. Esperando redirección de Supabase...');
-            // En web, si no es popup, la redirección es inminente. 
-            // Mostramos un mensaje y dejamos que Supabase haga lo suyo.
-            return;
-          }
-
-          log.i('LoginScreen: Google Sign-In exitoso localmente. Esperando sesión global de Supabase...');
-          
-          // Wait for the authStateProvider or client to catch up (Mobile only)
-          bool hasSession = false;
-          int attempts = 0;
-          while (mounted && !hasSession && attempts < 15) {
-            if (Supabase.instance.client.auth.currentSession != null) {
-               log.i('LoginScreen: Sesión detectada directamente en el cliente.');
-               hasSession = true;
-            } else {
-              final state = ref.read(authStateProvider);
-              if (state.value?.session != null) {
-                log.i('LoginScreen: Sesión detectada en authStateProvider.');
-                hasSession = true;
-              } else {
-                await Future.delayed(const Duration(milliseconds: 300));
-                attempts++;
-                if (attempts % 3 == 0) log.t('LoginScreen: Esperando sesión... (intento $attempts)');
-              }
-            }
-          }
-          log.i('LoginScreen: Bucle de espera finalizado. hasSession: $hasSession');
-        },
-      );
-    } catch (e, stack) {
-      log.e('LoginScreen: Error crítico en _handleGoogleSignIn: $e', error: e, stackTrace: stack);
-      if (mounted) {
-        _showError('Error inesperado durante el inicio de sesión: $e');
-      }
-    } finally {
-      if (mounted) {
-        log.i('LoginScreen: Limpiando estados de autenticación.');
-        ref.read(isAuthenticatingWithGoogleProvider.notifier).state = false;
-        _setGoogleLoading(false, '');
+    if (!success && mounted) {
+      final authState = ref.read(authControllerProvider);
+      if (authState.hasError) {
+        final error = authState.error.toString();
+        if (!error.contains('Cancelado')) {
+          _showError(error);
+        }
       }
     }
   }
+
+
 
   Future<void> _handleForgotPassword() async {
     HapticFeedback.lightImpact();
@@ -325,28 +236,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _loadingMessage = 'Enviando link de recuperación...';
-    });
-    final resetPasswordUseCase = ref.read(resetPasswordUseCaseProvider);
-    final result = await resetPasswordUseCase.execute(email);
+    await ref.read(authControllerProvider.notifier).resetPassword(email);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _loadingMessage = '';
-      });
-      result.fold(
-        (failure) => errorHandler.handleAndShow(context, failure,
-            where: 'LoginScreen._handleForgotPassword'),
-        (_) => _showSuccess('¡Revisá tu email para cambiar tu contraseña! 📧'),
-      );
+    final authState = ref.read(authControllerProvider);
+    if (authState.hasError && mounted) {
+      _showError(authState.error.toString());
+    } else if (mounted) {
+      _showSuccess('¡Revisa tu email para cambiar tu contraseña! 📧');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -442,7 +346,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
 
           // Premium Loading Overlay
-          if (_isLoading || _isGoogleLoading)
+          if (isLoading)
             _PremiumLoadingOverlay(message: _loadingMessage),
         ],
       ),
@@ -564,15 +468,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildPrimaryButton() {
+    final isLoading = ref.watch(authControllerProvider).isLoading;
     return ElevatedButton(
-      onPressed: _isLoading || _isGoogleLoading ? null : _handleLogin,
+      onPressed: isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 8,
         shadowColor: AppColors.primary.withValues(alpha: 0.3),
       ),
-      child: _isLoading
+      child: isLoading
           ? const SizedBox(
               height: 24,
               width: 24,
@@ -608,6 +513,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildGoogleButton() {
+    final isLoading = ref.watch(authControllerProvider).isLoading;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -620,7 +526,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ],
       ),
       child: OutlinedButton(
-        onPressed: _isLoading || _isGoogleLoading ? null : _handleGoogleSignIn,
+        onPressed: isLoading ? null : _handleGoogleSignIn,
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
           backgroundColor: Colors.white,
@@ -659,6 +565,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildSignUpPrompt() {
+    final isLoading = ref.watch(authControllerProvider).isLoading;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -670,7 +577,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               fontWeight: FontWeight.w500),
         ),
         TextButton(
-          onPressed: _isLoading || _isGoogleLoading ? null : _handleSignUp,
+          onPressed: isLoading ? null : _handleSignUp,
           child: const Text(
             'Crea tu cuenta',
             style: TextStyle(
@@ -715,8 +622,12 @@ class _AnimatedBackgroundBlobState extends State<_AnimatedBackgroundBlob>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration)
-      ..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
+      _controller.forward();
+    } else {
+      _controller.repeat(reverse: true);
+    }
     _animation = Tween<double>(begin: 0.9, end: 1.1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );

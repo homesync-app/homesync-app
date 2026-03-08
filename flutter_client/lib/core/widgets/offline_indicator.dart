@@ -8,7 +8,7 @@ class OfflineIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityProvider);
+    final connectivity = ref.watch(connectivityNotifierProvider);
     final syncState = ref.watch(syncProvider);
 
     if (connectivity.isOnline &&
@@ -118,7 +118,7 @@ class SyncFAB extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityProvider);
+    final connectivity = ref.watch(connectivityNotifierProvider);
     final syncState = ref.watch(syncProvider);
 
     if (connectivity.isOnline &&

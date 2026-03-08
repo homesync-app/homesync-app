@@ -77,7 +77,7 @@ class MockExpenseRepository implements ExpenseRepository {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
       return right({'expense': expense, 'splits': []});
     } catch (e) {
-      return Left(ServerFailure('Expense not found'));
+      return const Left(ServerFailure('Expense not found'));
     }
   }
 
@@ -127,13 +127,13 @@ class MockExpenseRepository implements ExpenseRepository {
       createdAt: DateTime.now(),
       splitType: splitType.name,
     ));
-    return Right(null);
+    return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
     _expenses.removeWhere((e) => e.id == id);
-    return Right(null);
+    return const Right(null);
   }
 
   @override
@@ -142,7 +142,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String toUserId,
     required double amount,
   }) async {
-    return Right(null);
+    return const Right(null);
   }
 }
 
@@ -245,21 +245,21 @@ void main() {
 
   group('✅ Expense Balance Display', () {
     test('HouseholdBalanceModel displayName works correctly', () {
-      final balanceWithName = HouseholdBalanceModel(
+      const balanceWithName = HouseholdBalanceModel(
         userId: 'user-1',
         userFullName: 'Juan Perez',
         balance: 50.0,
       );
       expect(balanceWithName.displayName, equals('Juan'));
 
-      final balanceWithEmail = HouseholdBalanceModel(
+      const balanceWithEmail = HouseholdBalanceModel(
         userId: 'user-2',
         userEmail: 'juan@email.com',
         balance: -25.0,
       );
       expect(balanceWithEmail.displayName, equals('juan'));
 
-      final balanceDefault = HouseholdBalanceModel(
+      const balanceDefault = HouseholdBalanceModel(
         userId: 'user-3',
         balance: 0.0,
       );
@@ -267,21 +267,21 @@ void main() {
     });
 
     test('HouseholdBalanceModel isCreditor and isSettled work correctly', () {
-      final creditor = HouseholdBalanceModel(
+      const creditor = HouseholdBalanceModel(
         userId: 'user-1',
         balance: 50.0,
       );
       expect(creditor.isCreditor, isTrue);
       expect(creditor.isSettled, isFalse);
 
-      final debtor = HouseholdBalanceModel(
+      const debtor = HouseholdBalanceModel(
         userId: 'user-2',
         balance: -30.0,
       );
       expect(debtor.isCreditor, isFalse);
       expect(debtor.isSettled, isFalse);
 
-      final settled = HouseholdBalanceModel(
+      const settled = HouseholdBalanceModel(
         userId: 'user-3',
         balance: 0.0,
       );

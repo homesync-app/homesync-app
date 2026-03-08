@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'user_avatar.dart';
 

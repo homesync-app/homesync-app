@@ -18,14 +18,28 @@ class SupabaseAuthService {
     await Supabase.initialize(
       url: AppEnvironment.supabaseUrl,
       anonKey: AppEnvironment.supabaseAnonKey,
-      // Supabase automatically intercepts deep links with this host
-      // to complete the OAuth flow (Google Sign-In with browser fallback).
+      // Supabase recommends PKCE (Proof Key for Code Exchange) for mobile
+      // to handle redirects securely and reliably across builds.
       authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.implicit,
+        authFlowType: AuthFlowType.pkce,
       ),
     );
     _client = Supabase.instance.client;
     // Firebase is initialized in main() before calling this method.
+  }
+
+  bool _googleInitialized = false;
+  Future<void> _ensureGoogleInitialized() async {
+    if (!_googleInitialized) {
+      log.i('SupabaseAuthService: Initializing GoogleSignIn.instance...');
+      const serverClientId =
+          '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com';
+      await GoogleSignIn.instance.initialize(
+        serverClientId: serverClientId,
+      );
+      _googleInitialized = true;
+      log.i('SupabaseAuthService: GoogleSignIn initialized.');
+    }
   }
 
   SupabaseClient get client => _client;
@@ -108,15 +122,8 @@ class SupabaseAuthService {
       if (!kIsWeb) {
         log.i('Google Sign-In: Attempting Native Auth with google_sign_in...');
 
-        // Using serverClientId is critical for Supabase to receive a valid idToken.
-        // This is the "Web Client ID" from Firebase Project Settings / google-services.json type 3.
-        const serverClientId =
-            '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com';
-
+        await _ensureGoogleInitialized();
         final googleSignIn = GoogleSignIn.instance;
-        await googleSignIn.initialize(
-          serverClientId: serverClientId,
-        );
         
         GoogleSignInAccount? googleUser;
         try {
@@ -126,8 +133,6 @@ class SupabaseAuthService {
           log.e('Google Sign-In error: $e', error: e);
           return false;
         }
-
-        if (googleUser == null) return false;
 
         // In v7, authentication is a synchronous getter
         final googleAuth = googleUser.authentication;
@@ -235,13 +240,13 @@ class SupabaseAuthService {
 
     // Check if already in a household
     try {
-      final existing = await _client
+      final List<dynamic> response = await _client
           .from('household_members')
           .select('household_id')
           .eq('user_id', user.id)
-          .maybeSingle();
-
-      if (existing != null) return;
+          .limit(1);
+      
+      if (response.isNotEmpty) return;
 
       // Create a new household
       final email = user.email ?? '';

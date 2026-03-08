@@ -54,7 +54,7 @@ class FakeAuthRepository implements AuthRepository {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
-      return Left(AuthFailure('Credenciales inválidas o cuenta no existente'));
+      return const Left(AuthFailure('Credenciales inválidas o cuenta no existente'));
     }
     return const Right(null);
   }
@@ -63,7 +63,7 @@ class FakeAuthRepository implements AuthRepository {
   User? get currentUser => null;
 
   @override
-  Stream<AuthState> get authStateChanges => const Stream.empty();
+  Stream<AuthState> get authStateChanges => Stream.value(const AuthState(AuthChangeEvent.initialSession, null));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

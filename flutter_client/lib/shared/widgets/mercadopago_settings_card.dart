@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/services/mercadopago_service.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
@@ -16,7 +15,6 @@ class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
 class _MercadoPagoSettingsCardState
     extends ConsumerState<MercadoPagoSettingsCard> {
   final _aliasController = TextEditingController();
-  final _mpService = MercadoPagoService();
   bool _isSaving = false;
 
   @override

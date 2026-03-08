@@ -1,3 +1,5 @@
+import 'package:fpdart/fpdart.dart';
+import '../../../../core/errors/failures.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
 class DeleteExpenseUseCase {
@@ -5,10 +7,10 @@ class DeleteExpenseUseCase {
 
   DeleteExpenseUseCase(this._repository);
 
-  Future<void> call(String expenseId) async {
+  Future<Either<Failure, void>> call(String expenseId) async {
     if (expenseId.isEmpty) {
-      throw Exception('El ID del gasto no puede estar vacío');
+      return left(const ValidationFailure('El ID del gasto no puede estar vacío'));
     }
-    await _repository.deleteExpense(expenseId);
+    return await _repository.deleteExpense(expenseId);
   }
 }

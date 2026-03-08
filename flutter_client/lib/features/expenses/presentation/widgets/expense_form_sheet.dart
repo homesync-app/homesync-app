@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
@@ -304,10 +304,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final householdId = await ref.read(householdIdProvider.future);
       if (householdId == null) throw Exception("No pertenecés a un hogar");
 
-      final members = await ref.read(householdMembersProvider.future);
+      final members = await ref.read(householdMembersNotifierProvider.future);
       if (members.isEmpty) throw Exception("No hay miembros en el hogar");
-
-      final repo = ref.read(expenseRepositoryProvider);
 
       String computedTitle = _titleController.text.trim();
       if (computedTitle.isEmpty) {
@@ -353,7 +351,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ];
       }
 
-      await repo.saveExpense(
+      await ref.read(expenseControllerProvider.notifier).saveExpense(
         id: widget.expense?.id,
         householdId: householdId,
         title: computedTitle,
@@ -419,7 +417,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final shoppingItemsAsync = ref.watch(shoppingItemsProvider);
 
     return membersAsync.when(
@@ -558,12 +556,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       setState(() => _isLoading = true);
       try {
         await ref
-            .read(expenseRepositoryProvider)
+            .read(expenseControllerProvider.notifier)
             .deleteExpense(widget.expense!.id);
         if (mounted) Navigator.pop(context);
-        ref.invalidate(personalFinanceSummaryProvider);
-        ref.invalidate(filteredExpensesProvider);
-        ref.invalidate(expenseBalancesProvider);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context)

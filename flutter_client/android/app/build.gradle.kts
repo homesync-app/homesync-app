@@ -53,13 +53,14 @@ android {
 
     buildTypes {
         release {
-            // Use the release keystore for production builds
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                // Fallback to debug if key.properties is missing (e.g., in CI before secrets are set)
-                signingConfigs.getByName("debug")
-            }
+            // Disable shrinking/obfuscation temporarily to debug Login issues
+            isMinifyEnabled = false
+            isShrinkResources = false
+            
+            // FORCE the release keystore. If it's missing, the build SHOULD fail
+            // instead of using the debug key (which causes the SHA1 mismatch)
+            signingConfig = signingConfigs.getByName("release")
+
             // Enable Crashlytics native symbol upload for better crash reports
             firebaseCrashlytics {
                 nativeSymbolUploadEnabled = true

@@ -9,7 +9,7 @@ class DeleteShoppingItemUseCase {
 
   Future<Either<Failure, void>> execute(String itemId) {
     if (itemId.isEmpty) {
-      return Future.value(Left(ValidationFailure('itemId is required')));
+      return Future.value(const Left(ValidationFailure('itemId is required')));
     }
     return repository.deleteItem(itemId);
   }

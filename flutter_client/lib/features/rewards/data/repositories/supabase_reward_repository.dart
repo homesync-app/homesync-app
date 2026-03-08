@@ -1,18 +1,22 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/repository_error_handler.dart';
+import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/providers/supabase_provider.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/services/repository_error_handler.dart';
-import '../../../../core/providers/core_providers.dart';
-import '../../../../core/providers/connectivity_provider.dart';
-import '../../domain/repositories/reward_repository.dart';
 
-final rewardRepositoryProvider = Provider<RewardRepository>((ref) {
+part 'supabase_reward_repository.g.dart';
+
+@riverpod
+RewardRepository rewardRepository(RewardRepositoryRef ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(rewardRpcServiceProvider);
   return SupabaseRewardRepository(client: client, rpc: rpc, ref: ref);
-});
+}
 
 class SupabaseRewardRepository
     with RepositoryErrorHandler

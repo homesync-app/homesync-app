@@ -5,8 +5,8 @@ import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
@@ -51,9 +51,9 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 
 @GenerateMocks([TaskRepository])
 void main() {
-  provideDummy<Either<Failure, List<TaskModel>>>(Right([]));
-  provideDummy<Either<Failure, Map<String, dynamic>>>(Right({}));
-  provideDummy<Either<Failure, void>>(Right(null));
+  provideDummy<Either<Failure, List<TaskModel>>>(const Right([]));
+  provideDummy<Either<Failure, Map<String, dynamic>>>(const Right({}));
+  provideDummy<Either<Failure, void>>(const Right(null));
 
   late MockTaskRepository mockTaskRepo;
 
@@ -90,7 +90,7 @@ void main() {
 
     // For completion
     when(mockTaskRepo.completeTask(any, userId: anyNamed('userId')))
-        .thenAnswer((_) async => Right({'xp_earned': 10, 'coins_earned': 5}));
+        .thenAnswer((_) async => const Right({'xp_earned': 10, 'coins_earned': 5}));
 
     // 2. Build Widget with Overrides
     await tester.pumpWidget(ProviderScope(
@@ -100,7 +100,7 @@ void main() {
         householdIdProvider.overrideWith((ref) => 'h1'),
         currentUserIdProvider.overrideWithValue('u1'),
         categoriesProvider.overrideWith((ref) => [testCategory]),
-        householdMembersProvider.overrideWith((ref) => [
+        householdMembersNotifierProvider.overrideWith((ref) => Stream.value([
               MemberModel(
                 id: 'm1',
                 userId: 'u1',
@@ -110,7 +110,7 @@ void main() {
                 fullName: 'User One',
                 email: 'u1@test.com',
               )
-            ]),
+            ])),
       ],
       child: MaterialApp(
         theme: ThemeData(useMaterial3: true),

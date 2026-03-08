@@ -13,11 +13,11 @@ class ToggleShoppingItemUseCase {
     required String? userId,
   }) {
     if (itemId.isEmpty) {
-      return Future.value(Left(ValidationFailure('itemId is required')));
+      return Future.value(const Left(ValidationFailure('itemId is required')));
     }
     if (completed && (userId == null || userId.isEmpty)) {
       return Future.value(
-          Left(ValidationFailure('userId is required when marking as completed')));
+          const Left(ValidationFailure('userId is required when marking as completed')));
     }
 
     return repository.toggleItem(

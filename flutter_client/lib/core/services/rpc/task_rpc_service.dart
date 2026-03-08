@@ -61,7 +61,7 @@ class TaskRpcService extends BaseRpcService {
     required int xpReward,
     required int coinReward,
     required String householdId,
-    String? userId,
+    List<String>? userIds,
   }) async {
     return executeWithRetry(() async {
       final user = client.auth.currentUser;
@@ -75,7 +75,7 @@ class TaskRpcService extends BaseRpcService {
         'complete_task_transaction',
         params: {
           'p_request_id': requestId,
-          'p_user_id': userId ?? user.id,
+          'p_user_ids': userIds ?? [user.id],
           'p_task_id': taskId,
           'p_household_id': householdId,
           'p_xp_reward': xpReward,

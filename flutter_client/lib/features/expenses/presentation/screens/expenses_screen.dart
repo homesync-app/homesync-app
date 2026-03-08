@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -7,6 +8,10 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:intl/intl.dart';
 import '../widgets/expense_form_sheet.dart';
+import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/features/savings/presentation/screens/savings_screen.dart';
+
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -24,8 +29,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final summaryAsync = ref.watch(personalFinanceSummaryProvider);
-    final expensesAsync = ref.watch(filteredExpensesProvider);
-    final filters = ref.watch(expenseFiltersProvider);
+    final expensesAsync = ref.watch(expenseControllerProvider);
+    final filters = ref.watch(expenseFiltersNotifierProvider);
     final movementsAsync = ref.watch(mercadopagoMovementsProvider);
 
     return Scaffold(
@@ -43,7 +48,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(personalFinanceSummaryProvider);
-          ref.invalidate(filteredExpensesProvider);
+          ref.invalidate(expenseControllerProvider);
           ref.invalidate(mercadopagoMovementsProvider);
         },
         color: AppColors.primary,
@@ -75,6 +80,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
               error: (_, __) =>
                   const SliverToBoxAdapter(child: SizedBox.shrink()),
+            ),
+
+            // ── Savings Goals Section (METAS) ───────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: _buildSavingsSection(),
+              ),
             ),
 
             // ── Filter Chips ────────────────────────────────────────────────
@@ -125,10 +138,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildSummaryCard(Map<String, dynamic> summary) {
-    final balance = (summary['total_balance'] ?? 0).toDouble();
-    final income = (summary['month_income'] ?? 0).toDouble();
-    final expense = (summary['month_expense'] ?? 0).toDouble();
-    final variation = (summary['variation_pct'] ?? 0).toDouble();
+    final balance = (summary['balance'] ?? 0).toDouble();
+    final income = (summary['income'] ?? 0).toDouble();
+    final expense = (summary['expense'] ?? 0).toDouble();
+    final variation = (summary['variation'] ?? 0).toDouble();
 
     final isPositive = balance >= 0;
 
@@ -166,7 +179,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _formatCurrency(balance),
+                    '${isPositive ? '+' : '-'} \$ ${_formatCurrency(balance.abs())}',
                     style: TextStyle(
                       color:
                           isPositive ? AppColors.sage : AppColors.accentOrange,
@@ -361,20 +374,26 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           _FilterChip(
             label: 'Todos',
             isSelected: current.sharing == 'all' && current.type == 'all',
-            onTap: () => ref.read(expenseFiltersProvider.notifier).state =
-                ExpenseFilters(sharing: 'all', type: 'all'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(expenseFiltersNotifierProvider.notifier).updateFilters(sharing: 'all', type: 'all');
+            },
           ),
           _FilterChip(
             label: 'Personal',
             isSelected: current.sharing == 'mine',
-            onTap: () => ref.read(expenseFiltersProvider.notifier).state =
-                current.copyWith(sharing: 'mine'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(expenseFiltersNotifierProvider.notifier).updateFilters(sharing: 'mine');
+            },
           ),
           _FilterChip(
             label: 'Compartido',
             isSelected: current.sharing == 'shared',
-            onTap: () => ref.read(expenseFiltersProvider.notifier).state =
-                current.copyWith(sharing: 'shared'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(expenseFiltersNotifierProvider.notifier).updateFilters(sharing: 'shared');
+            },
           ),
           const SizedBox(width: 12),
           Container(width: 1, height: 24, color: AppColors.divider),
@@ -382,15 +401,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           _FilterChip(
             label: 'Ingresos',
             isSelected: current.type == 'income',
-            onTap: () => ref.read(expenseFiltersProvider.notifier).state =
-                current.copyWith(type: 'income'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(expenseFiltersNotifierProvider.notifier).updateFilters(type: 'income');
+            },
             activeColor: AppColors.success,
           ),
           _FilterChip(
             label: 'Gastos',
             isSelected: current.type == 'expense',
-            onTap: () => ref.read(expenseFiltersProvider.notifier).state =
-                current.copyWith(type: 'expense'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              ref.read(expenseFiltersNotifierProvider.notifier).updateFilters(type: 'expense');
+            },
             activeColor: AppColors.accentOrange,
           ),
         ],
@@ -399,14 +422,42 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   Widget _buildSummaryShimmer() {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+    return ShimmerLoading(
+      child: Container(
+        height: 180,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(width: 80, height: 10, color: Colors.white),
+                    const SizedBox(height: 10),
+                    Container(width: 140, height: 30, color: Colors.white),
+                  ],
+                ),
+                Container(width: 60, height: 30, decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: Colors.white)),
+              ],
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(child: Container(height: 40, color: Colors.white)),
+                const SizedBox(width: 20),
+                Expanded(child: Container(height: 40, color: Colors.white)),
+              ],
+            ),
+          ],
+        ),
       ),
-      child: const Center(
-          child: CircularProgressIndicator(color: AppColors.primary)),
     );
   }
 
@@ -437,11 +488,149 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   }
 
   void _showExpenseSheet([ExpenseModel? expense]) {
+    HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ExpenseFormSheet(expense: expense),
+    );
+  }
+
+  Widget _buildSavingsSection() {
+    final savingsGoalsAsync = ref.watch(savingsGoalsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Text(
+            'METAS DE AHORRO',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        savingsGoalsAsync.when(
+          data: (goals) {
+            if (goals.isEmpty) {
+              return _buildEmptySavingsCard();
+            }
+            return _buildSavingsCard(goals.first); // Show first goal as teaser
+          },
+          loading: () => ShimmerLoading(
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptySavingsCard() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+          context, AppTransitions.slideHorizontal(page: const SavingsScreen())),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.divider),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.savings_rounded,
+                  color: AppColors.primary, size: 24),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('¿Empezamos a ahorrar?',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Crea una meta y junten dinero juntos.',
+                      style:
+                          TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.add_circle_outline, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSavingsCard(SavingsGoalModel goal) {
+    final progress = goal.currentAmount / goal.targetAmount;
+    return GestureDetector(
+      onTap: () => Navigator.push(
+          context, AppTransitions.slideHorizontal(page: const SavingsScreen())),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                  color: Colors.white, shape: BoxShape.circle),
+              child: Text(goal.icon.isEmpty ? '💰' : goal.icon,
+                  style: const TextStyle(fontSize: 24)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(goal.title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: progress.clamp(0.0, 1.0),
+                    backgroundColor: Colors.white,
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                    minHeight: 6,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(0)}% • \$${_formatCurrency(goal.currentAmount)} de \$${_formatCurrency(goal.targetAmount)}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+          ],
+        ),
+      ),
     );
   }
 }

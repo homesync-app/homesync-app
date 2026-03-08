@@ -17,6 +17,7 @@ class SaveExpenseUseCase {
     required DateTime paidAt,
     String? description,
     required SplitType splitType,
+    String type = 'expense',
     List<Map<String, dynamic>>? splits,
   }) async {
     if (title.isEmpty) {
@@ -40,6 +41,7 @@ class SaveExpenseUseCase {
       paidAt: paidAt,
       description: description,
       splitType: splitType,
+      type: type,
       splits: splits,
     );
   }

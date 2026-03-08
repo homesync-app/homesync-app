@@ -1,34 +1,40 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/constants/app_constants.dart';
+
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
 
+part 'task_provider.g.dart';
+
 // ── Use Case Providers ────────────────────────────────────────────────────────
 
-final getTasksUseCaseProvider = Provider<GetTasksUseCase>((ref) {
-  return GetTasksUseCase(ref.read(taskRepositoryProvider));
-});
+@riverpod
+GetTasksUseCase getTasksUseCase(GetTasksUseCaseRef ref) {
+  return GetTasksUseCase(ref.watch(taskRepositoryProvider));
+}
 
-final completeTaskUseCaseProvider = Provider<CompleteTaskUseCase>((ref) {
-  return CompleteTaskUseCase(ref.read(taskRepositoryProvider));
-});
+@riverpod
+CompleteTaskUseCase completeTaskUseCase(CompleteTaskUseCaseRef ref) {
+  return CompleteTaskUseCase(ref.watch(taskRepositoryProvider));
+}
 
-final createTaskUseCaseProvider = Provider<CreateTaskUseCase>((ref) {
-  return CreateTaskUseCase(ref.read(taskRepositoryProvider));
-});
+@riverpod
+CreateTaskUseCase createTaskUseCase(CreateTaskUseCaseRef ref) {
+  return CreateTaskUseCase(ref.watch(taskRepositoryProvider));
+}
 
 // ── UI State Providers ────────────────────────────────────────────────────────
 
-/// Currently selected category filters (empty = all)
-class TaskCategoryFilterNotifier extends Notifier<Set<String>> {
+@riverpod
+class TaskCategoryFilter extends _$TaskCategoryFilter {
   @override
   Set<String> build() => {};
 
@@ -45,23 +51,15 @@ class TaskCategoryFilterNotifier extends Notifier<Set<String>> {
   void clear() => state = {};
 }
 
-final taskCategoryFilterProvider =
-    NotifierProvider<TaskCategoryFilterNotifier, Set<String>>(
-        TaskCategoryFilterNotifier.new);
-
-/// Search query string
-class TaskSearchQueryNotifier extends Notifier<String> {
+@riverpod
+class TaskSearchQuery extends _$TaskSearchQuery {
   @override
   String build() => '';
   void setQuery(String query) => state = query;
 }
 
-final taskSearchQueryProvider =
-    NotifierProvider<TaskSearchQueryNotifier, String>(
-        TaskSearchQueryNotifier.new);
-
-/// View mode toggle (false = list, true = calendar)
-class TaskViewModeNotifier extends Notifier<bool> {
+@riverpod
+class TaskViewMode extends _$TaskViewMode {
   @override
   bool build() => false;
   void setList() => state = false;
@@ -69,15 +67,10 @@ class TaskViewModeNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final taskViewModeProvider =
-    NotifierProvider<TaskViewModeNotifier, bool>(TaskViewModeNotifier.new);
-
 // ── Main Tasks Notifier ───────────────────────────────────────────────────────
 
-final tasksProvider =
-    AsyncNotifierProvider<TasksNotifier, List<TaskModel>>(TasksNotifier.new);
-
-class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
+@Riverpod(keepAlive: true)
+class Tasks extends _$Tasks {
   bool _hasMore = true;
   bool get hasMore => _hasMore;
   static const int _pageSize = 50;
@@ -89,10 +82,9 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
-    // Realtime setup
     _setupRealtime(householdId);
 
-    final useCase = ref.read(getTasksUseCaseProvider);
+    final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await useCase(householdId, limit: _pageSize, offset: 0);
 
     return result.fold(
@@ -137,11 +129,10 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading();
+    state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => build());
   }
 
-  /// Same as refresh but without showing the loading state, good for instantaneous updates.
   Future<void> silentRefresh() async {
     state = await AsyncValue.guard(() => build());
   }
@@ -171,18 +162,33 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
     );
   }
 
-  Future<Map<String, dynamic>?> completeTask(TaskModel task) async {
-    final userId = ref.read(currentUserIdProvider);
+  Future<Map<String, dynamic>?> completeTask(TaskModel task, {List<String>? userIds}) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final primaryUserId = performers?.first ?? currentUserId;
+    
+    final oldState = state.value;
+    
+    // Optimistic update
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState.map((t) => t.id == task.id 
+          ? t.copyWith(status: TaskStatus.pendingVerification, completedBy: primaryUserId, completedAt: DateTime.now())
+          : t
+        ).toList()
+      );
+    }
+
     final useCase = ref.read(completeTaskUseCaseProvider);
-    final result = await useCase(task, userId: userId);
+    final result = await useCase(task, userIds: performers);
 
     return result.fold(
       (failure) {
         log.w('Complete task failure: ${failure.message}');
+        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
         return null;
       },
       (data) async {
-        await refresh();
         return data;
       },
     );
@@ -190,41 +196,73 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
   Future<void> verifyTask(TaskModel task) async {
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) {
-      log.w('Verify task aborted: user not authenticated');
-      return;
+    if (userId == null) return;
+
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState.map((t) => t.id == task.id 
+          ? t.copyWith(status: TaskStatus.verified, verifiedBy: userId, verifiedAt: DateTime.now())
+          : t
+        ).toList()
+      );
     }
+
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.verifyTask(task.id, userId);
 
     result.fold(
-      (failure) => log.w('Verify task failure: ${failure.message}'),
-      (_) => refresh(),
+      (failure) {
+        log.w('Verify task failure: ${failure.message}');
+        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      },
+      (_) => null,
     );
   }
 
   Future<void> objectTask(TaskModel task) async {
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) {
-      log.w('Object task aborted: user not authenticated');
-      return;
+    if (userId == null) return;
+
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState.map((t) => t.id == task.id 
+          ? t.copyWith(status: TaskStatus.active, completedBy: null, completedAt: null)
+          : t
+        ).toList()
+      );
     }
+
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.objectTask(task.id, userId);
 
     result.fold(
-      (failure) => log.w('Object task failure: ${failure.message}'),
-      (_) => refresh(),
+      (failure) {
+        log.w('Object task failure: ${failure.message}');
+        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      },
+      (_) => null,
     );
   }
 
   Future<void> deleteTask(TaskModel task) async {
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState.where((t) => t.id != task.id).toList()
+      );
+    }
+
     final repo = ref.read(taskRepositoryProvider);
     final result = await repo.deleteTask(task.id);
 
     result.fold(
-      (failure) => log.w('Delete task failure: ${failure.message}'),
-      (_) => refresh(),
+      (failure) {
+        log.w('Delete task failure: ${failure.message}');
+        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      },
+      (_) => null,
     );
   }
 
@@ -270,7 +308,8 @@ class TasksNotifier extends AsyncNotifier<List<TaskModel>> {
 
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
-final filteredTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
+@riverpod
+AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final selectedCategories = ref.watch(taskCategoryFilterProvider);
   final searchQuery = ref.watch(taskSearchQueryProvider);
@@ -289,10 +328,10 @@ final filteredTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
     }
     return result;
   });
-});
+}
 
-/// Only the categories that actually have at least one active task.
-final activeCategoriesProvider = Provider<AsyncValue<List<String>>>((ref) {
+@riverpod
+AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
   final tasksAsync = ref.watch(tasksProvider);
   return tasksAsync.whenData((tasks) {
     final activeSet = <String>{};
@@ -303,31 +342,39 @@ final activeCategoriesProvider = Provider<AsyncValue<List<String>>>((ref) {
     }
     return activeSet.toList();
   });
-});
+}
 
-/// Tasks due today — for Home Screen widget.
-final todayTasksProvider = Provider<AsyncValue<List<TaskModel>>>((ref) {
+@riverpod
+AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
 
   return tasksAsync.whenData((tasks) {
     return tasks.where((task) {
-      if (!task.isActive) return false;
+      // 1. Must be active (includes objected) and NOT completed/verified
+      if (!task.isActive || task.isCompleted) return false;
+
+      // 2. Ownership check
       if (task.assignedTo != null && task.assignedTo != currentUserId) {
         return false;
       }
-      if (task.isVerified) return false;
-      if (task.dueAt != null) {
-        return task.isDueToday;
+
+      // 3. Visibility check:
+      // - Already due today?
+      if (task.isDueToday) return true;
+
+      // - Is it overdue? (Due in the past but still active)
+      if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {
+        return true;
       }
-      if (task.isRecurring) return true;
+
       return false;
     }).toList();
   });
-});
+}
 
-/// Count of tasks by status — for stats badges.
-final taskStatusCountProvider = Provider<Map<String, int>>((ref) {
+@riverpod
+Map<String, int> taskStatusCount(TaskStatusCountRef ref) {
   final tasksAsync = ref.watch(tasksProvider);
   return tasksAsync.maybeWhen(
     data: (tasks) {
@@ -340,4 +387,4 @@ final taskStatusCountProvider = Provider<Map<String, int>>((ref) {
     },
     orElse: () => {},
   );
-});
+}

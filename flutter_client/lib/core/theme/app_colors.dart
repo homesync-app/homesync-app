@@ -279,6 +279,7 @@ class AppColors {
     'dormitorio': '🛌',
     'bathroom': '🚿',
     'baño': '🚿',
+    'bano': '🚿',
     'general': '🏠',
     'hogar': '🏠',
     'pets': '🐾',
@@ -296,6 +297,7 @@ class AppColors {
     'estudio': '📚',
     'mantenimiento': '🔧',
     'niños': '👶',
+    'ninos': '👶',
     'urgente': '🚨',
     'income': '💰',
     'salary': '💵',
@@ -321,6 +323,7 @@ class AppColors {
     'dormitorio': 'Dormitorio',
     'bathroom': 'Baño',
     'baño': 'Baño',
+    'bano': 'Baño',
     'general': 'Hogar',
     'hogar': 'Hogar',
     'pets': 'Mascotas',
@@ -338,6 +341,7 @@ class AppColors {
     'estudio': 'Estudio / Educación',
     'mantenimiento': 'Mantenimiento',
     'niños': 'Niños',
+    'ninos': 'Niños',
     'urgente': 'Urgente',
     'income': 'Ingreso General',
     'salary': 'Salario',
@@ -352,6 +356,8 @@ class AppColors {
     'transport': 'Transporte',
     'entertainment': 'Entretenimiento',
     'health': 'Salud',
+    'finanzas': 'Finanzas',
+    'savings': 'Finanzas',
   };
 
   static String getMonthName(int month) {
@@ -388,7 +394,7 @@ class AppColors {
       return 'jardin';
     }
     if (lower == 'supermarket') return 'compras';
-    if (lower == 'savings') return 'finanzas';
+    if (lower == 'savings' || lower == 'finanzas') return 'finanzas';
     if (lower == 'niños' ||
         lower == 'niño' ||
         lower == 'ninos' ||

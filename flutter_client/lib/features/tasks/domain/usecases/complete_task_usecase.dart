@@ -10,11 +10,11 @@ class CompleteTaskUseCase {
   const CompleteTaskUseCase(this._repository);
 
   Future<Either<Failure, Map<String, dynamic>>> call(TaskModel task,
-      {String? userId}) async {
+      {List<String>? userIds}) async {
     if (!task.isActive) {
       return left(ValidationFailure(
           'No se puede completar una tarea que no está activa (status: ${task.status})'));
     }
-    return _repository.completeTask(task, userId: userId);
+    return _repository.completeTask(task, userIds: userIds);
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'create_task_dialog.dart';
@@ -72,7 +72,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'assignedTo': null,
         'recurrenceType': null,
       });
-      if (!context.mounted) return;
+      if (!mounted) return;
       // Task successfully added to server (and silentRefresh called in notifier)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -90,7 +90,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ),
       );
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
       );
@@ -108,16 +108,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         );
     _categories = dbCategories; // expose to helpers
 
-    final existingTasks = ref.watch(tasksProvider).maybeWhen(
-          data: (tasks) =>
-              tasks.map((t) => t.title.toLowerCase().trim()).toSet(),
-          orElse: () => <String>{},
-        );
-
-    // Templates not yet added
-    final availableTemplates = _templates
-        .where((t) => !existingTasks.contains(t.title.toLowerCase().trim()))
-        .toList();
+    // Templates - Show all templates as requested
+    final availableTemplates = _templates.toList();
 
     // Which categories actually have available templates? (preserves DB sort order)
     final activeCatIds = availableTemplates.map((t) => t.categoryId).toSet();

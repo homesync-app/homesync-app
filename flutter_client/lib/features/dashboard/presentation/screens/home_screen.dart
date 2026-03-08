@@ -6,10 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:confetti/confetti.dart';
 
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
@@ -19,9 +20,10 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_f
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -35,10 +37,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   RealtimeChannel? _expensesChannel;
   RealtimeChannel? _splitsChannel;
   RealtimeChannel? _membersChannel;
+  late ConfettiController _confettiController;
+  final Set<String> _completedTaskIds = {};
 
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     WidgetsBinding.instance.addPostFrameCallback((_) => _setupRealtime());
   }
 
@@ -48,6 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _expensesChannel?.unsubscribe();
     _splitsChannel?.unsubscribe();
     _membersChannel?.unsubscribe();
+    _confettiController.dispose();
     super.dispose();
   }
 
@@ -109,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             value: householdId,
           ),
           callback: (_) {
-            ref.invalidate(householdMembersProvider);
+            ref.invalidate(householdMembersNotifierProvider);
             _refreshFinancials();
           },
         )
@@ -138,6 +144,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _setupTaskCompletionListener();
     final householdAsync = ref.watch(householdIdProvider);
 
     return householdAsync.when(
@@ -161,9 +168,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         }
-        return _buildMainContent(householdId);
+        return Stack(
+          children: [
+            _buildMainContent(householdId),
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  AppColors.primary,
+                  AppColors.success,
+                  AppColors.accentOrange,
+                  Colors.blue,
+                  Colors.pink,
+                ],
+                numberOfParticles: 30,
+                gravity: 0.1,
+              ),
+            ),
+          ],
+        );
       },
     );
+  }
+
+  void _setupTaskCompletionListener() {
+    ref.listen(todayTasksProvider, (previous, next) {
+      if (previous?.asData?.value.isNotEmpty == true && 
+          next.asData?.value.isEmpty == true &&
+          !next.isLoading &&
+          !next.hasError) {
+        // Trigger confetti!
+        _confettiController.play();
+        HapticFeedback.heavyImpact();
+      }
+    });
   }
 
   Widget _buildMainContent(String householdId) {
@@ -240,28 +281,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 600),
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(-20 * (1 - value), 0),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Text(
-                  '¡Hola, $displayName! 👋',
-                  style: const TextStyle(
-                    color: Color(0xFF0F172A),
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.8,
-                  ),
+              Text(
+                '¡Hola, $displayName! 👋',
+                style: const TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.8,
                 ),
-              ),
+              ).animateEntrance(),
               const SizedBox(height: 4),
               Text(
                 capitalized,
@@ -276,7 +304,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
 
         // Right Side: Avatar
-        _buildCircularAvatar(displayName, avatarUrl),
+        _buildCircularAvatar(displayName, avatarUrl).animateScaleIn(delay: 150),
       ],
     );
   }
@@ -326,7 +354,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
     final expensesAsync = ref.watch(expenseBalancesProvider);
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
     final coins =
@@ -337,11 +365,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     expensesAsync.whenOrNull(
       data: (balances) {
         try {
-          final myBal = balances.firstWhere(
-              (b) => b['user_id'] == currentUserId,
-              orElse: () => null);
+          final myBal = balances.where((b) => b.userId == currentUserId).firstOrNull;
           if (myBal != null) {
-            myBalance = (myBal['balance'] ?? 0).toDouble();
+            myBalance = myBal.balance;
           }
         } catch (_) {}
       },
@@ -574,28 +600,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           error: (e, _) =>
               Text('Error: $e', style: const TextStyle(color: AppColors.error)),
           data: (tasks) {
-            if (tasks.isEmpty) return _buildEmptyTasksState();
+            // Filtrar tareas que ya se completaron localmente o que ya están marcadas como completas
+            final visibleTasks = tasks.where((t) => 
+              !t.isCompleted && !_completedTaskIds.contains(t.id)
+            ).toList();
+
+            if (visibleTasks.isEmpty) return _buildEmptyTasksState();
             return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: tasks.length,
+              itemCount: visibleTasks.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                return TweenAnimationBuilder<double>(
-                  duration: Duration(milliseconds: 400 + (index * 100)),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(30 * (1 - value), 0),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _buildTaskCard(tasks[index]),
-                );
+                return _buildTaskCard(visibleTasks[index]).animateStaggered(index);
               },
             );
           },
@@ -630,7 +647,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             child: const Center(
               child: Text('✨', style: TextStyle(fontSize: 40)),
-            ),
+            ).animatePulse(),
           ),
           const SizedBox(height: 20),
           const Text(
@@ -658,7 +675,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final category = task.category ?? 'general';
     final title = task.title;
     final xp = task.xpReward;
-    final isCompleted = task.isVerified;
+    final isCompleted = task.isCompleted;
 
     // Resolve dynamic category data
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -773,9 +790,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCategoryChip(String category) {
-    final cat = category.toLowerCase();
+    final cat = AppColors.normaliseCategory(category);
     final color = AppColors.getCategoryColor(cat);
-    final name = AppColors.categoryNames[cat] ?? category;
+    final name = AppColors.categoryNames[cat] ?? cat;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -819,6 +836,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final coinReward = task.coinReward;
 
     try {
+      // Optimistic Update: Ocultar inmediatamente
+      setState(() {
+        _completedTaskIds.add(task.id);
+      });
+
       final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
       final eitherResult = await completeTaskLogic(task);
 
@@ -951,127 +973,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildActivityTimeline(List<Map<String, dynamic>> activities) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
 
     final todayActs = activities
         .where((a) =>
             (a['time'] as DateTime).isAfter(today) ||
             (a['time'] as DateTime).isAtSameMomentAs(today))
         .toList();
-    final yesterdayActs = activities.where((a) {
-      final t = a['time'] as DateTime;
-      return t.isAfter(yesterday) && t.isBefore(today);
-    }).toList();
-    final earlierActs = activities
-        .where((a) => (a['time'] as DateTime).isBefore(yesterday))
-        .toList();
+
+    if (todayActs.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 48),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.history_rounded,
+                  size: 48, color: Colors.grey.shade200),
+              const SizedBox(height: 16),
+              const Text(
+                'Sin actividad registrada hoy.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (todayActs.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
-            child: Text(
-              'HOY',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF94A3B8),
-                letterSpacing: 0.5,
-              ),
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
+          child: Text(
+            'HOY',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF94A3B8),
+              letterSpacing: 0.5,
             ),
           ),
-          ...todayActs
-              .asMap()
-              .entries
-              .map((entry) => TweenAnimationBuilder<double>(
-                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _buildActivityItem(entry.value),
-                  )),
-        ],
-        if (yesterdayActs.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
-            child: Text(
-              'AYER',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF94A3B8),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          ...yesterdayActs
-              .asMap()
-              .entries
-              .map((entry) => TweenAnimationBuilder<double>(
-                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _buildActivityItem(entry.value),
-                  )),
-        ],
-        if (earlierActs.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
-            child: Text(
-              'ANTERIOR',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF94A3B8),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          ...earlierActs
-              .asMap()
-              .entries
-              .map((entry) => TweenAnimationBuilder<double>(
-                    duration: Duration(milliseconds: 400 + (entry.key * 100)),
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 20 * (1 - value)),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _buildActivityItem(entry.value),
-                  )),
-        ],
+        ),
+        ...todayActs.asMap().entries.map((entry) {
+          final activity = entry.value;
+          final id = activity['data']?['id']?.toString() ?? entry.key.toString();
+          return _buildActivityItem(activity, key: ValueKey('activity_$id'))
+              .animateStaggered(entry.key);
+        }),
       ],
     );
   }
 
-  Widget _buildActivityItem(Map<String, dynamic> activity) {
+  Widget _buildActivityItem(Map<String, dynamic> activity, {Key? key}) {
     final type = activity['type'] as String;
     final data = activity['data'] as Map<String, dynamic>;
     final time = activity['time'] as DateTime;
@@ -1081,17 +1039,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final String userName =
         (userData?['full_name'] as String? ?? 'Alguien').split(' ').first;
     final String? avatarUrl = userData?['avatar_url'] as String?;
-    final String category = data['category'] as String? ?? 'general';
+    final String rawCategory = data['category'] as String? ?? 'general';
+    final String category = AppColors.normaliseCategory(rawCategory);
 
-    final Color activityColor =
-        type == 'TaskModel' ? AppColors.primary : AppColors.sage;
+    final Color activityColor = AppColors.getCategoryColor(category);
     final String title = data['title'] as String? ??
         data['description'] as String? ??
         (type == 'TaskModel' ? 'Tarea' : 'Gasto');
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Container(
+      key: key,
+      margin: const EdgeInsets.only(bottom: 4),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Timeline strip
           Column(
@@ -1245,7 +1206,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

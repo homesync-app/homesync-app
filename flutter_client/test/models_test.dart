@@ -510,7 +510,7 @@ void main() {
     });
 
     test('displayName uses full name first', () {
-      final b = HouseholdBalanceModel(
+      const b = HouseholdBalanceModel(
         userId: 'u1',
         balance: 0,
         userFullName: 'Blas Oroná',
@@ -520,7 +520,7 @@ void main() {
     });
 
     test('displayName falls back to email prefix', () {
-      final b = HouseholdBalanceModel(
+      const b = HouseholdBalanceModel(
         userId: 'u1',
         balance: 0,
         userEmail: 'blas@email.com',
@@ -682,7 +682,7 @@ void main() {
     });
 
     test('displayName falls back to email prefix if full_name is null', () {
-      final user = UserModel(id: 'u2', email: 'pepe@gmail.com');
+      const user = UserModel(id: 'u2', email: 'pepe@gmail.com');
       expect(user.displayName, equals('pepe'));
     });
   });

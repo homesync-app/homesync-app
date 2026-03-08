@@ -27,7 +27,6 @@ import 'package:mockito/src/dummies.dart' as _i7;
 // ignore_for_file: unnecessary_parenthesis
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
-// ignore_for_file: invalid_use_of_internal_member
 
 /// A class which mocks [TaskRepository].
 ///
@@ -70,13 +69,13 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
   @override
   _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>> completeTask(
     _i6.TaskModel? task, {
-    String? userId,
+    List<String>? userIds,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #completeTask,
           [task],
-          {#userId: userId},
+          {#userIds: userIds},
         ),
         returnValue:
             _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>.value(
@@ -85,7 +84,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           Invocation.method(
             #completeTask,
             [task],
-            {#userId: userId},
+            {#userIds: userIds},
           ),
         )),
       ) as _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>);

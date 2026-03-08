@@ -9,7 +9,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import '../../../household/data/repositories/supabase_household_repository.dart';
 import '../../data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -29,7 +29,7 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
 
 class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   final Set<String> _selectedTaskIds = {};
-  String? _selectedMemberId;
+  final Set<String> _selectedMemberIds = {};
   final Set<String> _selectedCategories = {};
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -48,7 +48,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
     _loadData();
-    _selectedMemberId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    if (currentUserId != null) {
+      _selectedMemberIds.add(currentUserId);
+    }
   }
 
   @override
@@ -83,12 +86,6 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     }
   }
 
-  void _toggleMember(String memberId) {
-    setState(() {
-      _selectedMemberId = memberId;
-    });
-  }
-
   void _toggleTask(String taskId) {
     setState(() {
       if (_selectedTaskIds.contains(taskId)) {
@@ -100,28 +97,31 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Future<void> _submitCompletedTasks() async {
-    if (_selectedTaskIds.isEmpty) return;
+    if (_selectedTaskIds.isEmpty || _selectedMemberIds.isEmpty) return;
 
     setState(() => _isLoading = true);
 
     try {
       final selectedTasks =
-          _allTasks.where((t) => _selectedTaskIds.contains(t.id));
+          _allTasks.where((t) => _selectedTaskIds.contains(t.id)).toList();
 
       int totalXp = 0;
       int totalCoins = 0;
 
+      for (final id in _selectedTaskIds) {
+        final t = selectedTasks.firstWhere((task) => task.id == id);
+        totalXp += t.xpReward;
+        totalCoins += t.coinReward;
+      }
+
+      final currentUserId = ref.read(currentUserIdProvider);
+      final onlyMe =
+          _selectedMemberIds.length == 1 && _selectedMemberIds.contains(currentUserId);
+
       for (var task in selectedTasks) {
-        final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
-        final eitherResult =
-            await completeTaskLogic(task, userId: _selectedMemberId);
-        eitherResult.fold(
-          (failure) => log.e('Error completing task: ${failure.message}'),
-          (data) {
-            totalXp += (data['xp_earned'] ?? 0) as int;
-            totalCoins += (data['coins_earned'] ?? 0) as int;
-          },
-        );
+        await ref
+            .read(tasksProvider.notifier)
+            .completeTask(task, userIds: _selectedMemberIds.toList());
 
         if (!_isRightNow) {
           await Supabase.instance.client
@@ -134,22 +134,24 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       if (mounted) {
         _confettiController.play();
         HapticFeedback.heavyImpact();
-        Navigator.pop(context);
+        Navigator.pop(context); // Pop the sheet first
+
+        final String verb = onlyMe ? "Ganaste" : "Ganaron";
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.stars_rounded, color: Colors.white),
-                const SizedBox(width: 12),
-                Text('¡Ganaron $totalXp XP y $totalCoins coins!'),
-              ],
+            content: Text(
+              '⭐ $verb $totalXp XP y $totalCoins coins!',
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-            backgroundColor: AppColors.accentTeal,
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
           ),
         );
+
         widget.onTasksCompleted();
       }
     } catch (e) {
@@ -450,15 +452,21 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         itemCount: _members.length,
         itemBuilder: (context, index) {
           final member = _members[index];
-          final userId = member['user_id'];
+          final userId = member['user_id'] as String;
           final nameStr = member['users']?['full_name'] as String? ?? 'Miembro';
           final avatarUrl = member['users']?['avatar_url'] as String?;
-          final isSelected = _selectedMemberId == userId;
+          final isSelected = _selectedMemberIds.contains(userId);
 
           return GestureDetector(
             onTap: () {
               HapticFeedback.selectionClick();
-              _toggleMember(userId);
+              setState(() {
+                if (isSelected) {
+                  _selectedMemberIds.remove(userId);
+                } else {
+                  _selectedMemberIds.add(userId);
+                }
+              });
             },
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8),

@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'connectivity_provider.g.dart';
 
 enum ConnectivityStatus { online, offline, checking }
 
@@ -29,26 +31,33 @@ class ConnectivityState {
   }
 }
 
-class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
+@Riverpod(keepAlive: true)
+class ConnectivityNotifier extends _$ConnectivityNotifier {
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  ConnectivityNotifier() : super(const ConnectivityState()) {
-    _init();
-  }
+  @override
+  ConnectivityState build() {
+    // Setup listener after build completes
+    Future.microtask(() => _init());
+    
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
 
-  Future<void> _init() async {
-    // Assume online by default - connectivity_plus has known issues
-    // that cause false positives. Let Supabase handle actual connection errors.
-    state = state.copyWith(
+    // Assume online by default to avoid blocking startup
+    return ConnectivityState(
       status: ConnectivityStatus.online,
       isOnline: true,
       lastChecked: DateTime.now(),
     );
-    
+  }
+
+  Future<void> _init() async {
     // Start listening for changes but don't block on them
     try {
-      _subscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+      _subscription =
+          _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
     } catch (e) {
       log.w('Failed to subscribe to connectivity changes: $e');
     }
@@ -76,23 +85,14 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   Future<void> refresh() async {
     await _checkConnection();
   }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
-  }
 }
 
-final connectivityProvider =
-    StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
-  return ConnectivityNotifier();
-});
+@riverpod
+bool isOnline(IsOnlineRef ref) {
+  return ref.watch(connectivityNotifierProvider).isOnline;
+}
 
-final isOnlineProvider = Provider<bool>((ref) {
-  return ref.watch(connectivityProvider).isOnline;
-});
-
-final connectivityStatusProvider = Provider<ConnectivityStatus>((ref) {
-  return ref.watch(connectivityProvider).status;
-});
+@riverpod
+ConnectivityStatus connectivityStatus(ConnectivityStatusRef ref) {
+  return ref.watch(connectivityNotifierProvider).status;
+}

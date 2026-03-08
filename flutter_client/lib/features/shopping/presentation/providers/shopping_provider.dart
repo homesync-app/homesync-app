@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -15,51 +15,49 @@ import '../../domain/usecases/clear_completed_shopping_items_usecase.dart';
 import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
 import '../../data/repositories/supabase_shopping_repository.dart';
 
-// --- Repositories & Use Cases ---
+part 'shopping_provider.g.dart';
 
-final shoppingRepositoryProvider = Provider<ShoppingRepository>((ref) {
+// ── Repositories & Use Cases ──────────────────────────────────────────────────
+
+@riverpod
+ShoppingRepository shoppingRepository(ShoppingRepositoryRef ref) {
   return SupabaseShoppingRepository(ref: ref);
-});
+}
 
-final getShoppingItemsUseCaseProvider =
-    Provider<GetShoppingItemsUseCase>((ref) {
+@riverpod
+GetShoppingItemsUseCase getShoppingItemsUseCase(GetShoppingItemsUseCaseRef ref) {
   return GetShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
-});
+}
 
-final addShoppingItemUseCaseProvider = Provider<AddShoppingItemUseCase>((ref) {
+@riverpod
+AddShoppingItemUseCase addShoppingItemUseCase(AddShoppingItemUseCaseRef ref) {
   return AddShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
-});
+}
 
-final toggleShoppingItemUseCaseProvider =
-    Provider<ToggleShoppingItemUseCase>((ref) {
+@riverpod
+ToggleShoppingItemUseCase toggleShoppingItemUseCase(ToggleShoppingItemUseCaseRef ref) {
   return ToggleShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
-});
+}
 
-final deleteShoppingItemUseCaseProvider =
-    Provider<DeleteShoppingItemUseCase>((ref) {
+@riverpod
+DeleteShoppingItemUseCase deleteShoppingItemUseCase(DeleteShoppingItemUseCaseRef ref) {
   return DeleteShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
-});
+}
 
-final clearCompletedShoppingItemsUseCaseProvider =
-    Provider<ClearCompletedShoppingItemsUseCase>((ref) {
-  return ClearCompletedShoppingItemsUseCase(
-      ref.watch(shoppingRepositoryProvider));
-});
+@riverpod
+ClearCompletedShoppingItemsUseCase clearCompletedShoppingItemsUseCase(ClearCompletedShoppingItemsUseCaseRef ref) {
+  return ClearCompletedShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
+}
 
-final uncompleteAllShoppingItemsUseCaseProvider =
-    Provider<UncompleteAllShoppingItemsUseCase>((ref) {
-  return UncompleteAllShoppingItemsUseCase(
-      ref.watch(shoppingRepositoryProvider));
-});
+@riverpod
+UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(UncompleteAllShoppingItemsUseCaseRef ref) {
+  return UncompleteAllShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
+}
 
-// --- Realtime Streams Setup (Optional future refactor, but for now we'll do AsyncNotifier) ---
+// ── Main Shopping Controller ──────────────────────────────────────────────────
 
-final shoppingItemsProvider =
-    AsyncNotifierProvider<ShoppingItemsNotifier, List<ShoppingItemModel>>(() {
-  return ShoppingItemsNotifier();
-});
-
-class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
+@Riverpod(keepAlive: true)
+class ShoppingItems extends _$ShoppingItems {
   RealtimeChannel? _channel;
 
   @override
@@ -67,6 +65,18 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
+    _setupRealtime(householdId);
+
+    final getItems = ref.watch(getShoppingItemsUseCaseProvider);
+    final result = await getItems.execute(householdId);
+    
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (items) => items,
+    );
+  }
+
+  void _setupRealtime(String householdId) {
     _channel?.unsubscribe();
     final client = ref.read(supabaseClientProvider);
     
@@ -83,7 +93,7 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
           ),
           callback: (payload) {
             log.i('Realtime shopping change detected: ${payload.eventType}');
-            _refresh();
+            silentRefresh();
           },
         )
         .subscribe();
@@ -91,25 +101,26 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     ref.onDispose(() {
       _channel?.unsubscribe();
     });
+  }
 
-    final getItems = ref.watch(getShoppingItemsUseCaseProvider);
-    final result = await getItems.execute(householdId);
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchItems());
+  }
+
+  Future<void> silentRefresh() async {
+    state = await AsyncValue.guard(() => _fetchItems());
+  }
+
+  Future<List<ShoppingItemModel>> _fetchItems() async {
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) return [];
+    
+    final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
     return result.fold(
       (failure) => throw Exception(failure.message),
       (items) => items,
     );
-  }
-
-  Future<void> _refresh() async {
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) return;
-    state = await AsyncValue.guard(() async {
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
-      );
-    });
   }
 
   Future<void> addItem({
@@ -127,9 +138,28 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
       throw Exception('Authentication or Household required');
     }
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(addShoppingItemUseCaseProvider).execute(
+    final oldState = state.value ?? [];
+    
+    // Create optimistic temporary item
+    final tempItem = ShoppingItemModel(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      householdId: householdId,
+      name: name,
+      quantity: quantity,
+      unit: unit,
+      category: category,
+      emoji: emoji,
+      note: note,
+      addedBy: userId,
+      createdAt: DateTime.now(),
+      completed: false,
+    );
+
+    // Update state immediately
+    state = AsyncValue.data([tempItem, ...oldState]);
+
+    try {
+      final result = await ref.read(addShoppingItemUseCaseProvider).execute(
             householdId: householdId,
             name: name,
             userId: userId,
@@ -139,12 +169,24 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
             emoji: emoji,
             note: note,
           );
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
+      
+      result.fold(
+        (failure) {
+          log.e('Failed to add item: ${failure.message}');
+          state = AsyncValue.data(oldState); // Rollback
+        },
+        (newItem) {
+          // Replace temp item with real one to get the proper ID
+          final currentState = state.value ?? [];
+          state = AsyncValue.data(
+            currentState.map((item) => item.id == tempItem.id ? newItem : item).toList()
+          );
+        },
       );
-    });
+    } catch (e) {
+      log.e('Error in addItem: $e');
+      state = AsyncValue.data(oldState);
+    }
   }
 
   Future<void> toggleItem(String itemId, bool completed) async {
@@ -152,67 +194,112 @@ class ShoppingItemsNotifier extends AsyncNotifier<List<ShoppingItemModel>> {
     final userId = ref.read(currentUserIdProvider);
     if (householdId == null) return;
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(toggleShoppingItemUseCaseProvider).execute(
+    final oldState = state.value ?? [];
+    
+    // Optimistic Update
+    final newState = oldState.map((item) {
+      if (item.id == itemId) {
+        return item.copyWith(
+          completed: completed,
+          completedBy: completed ? userId : null,
+          completedAt: completed ? DateTime.now() : null,
+        );
+      }
+      return item;
+    }).toList();
+    
+    state = AsyncValue.data(newState);
+
+    try {
+      final result = await ref.read(toggleShoppingItemUseCaseProvider).execute(
             itemId: itemId,
             completed: completed,
             userId: userId,
           );
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
-      );
-    });
+      
+      if (result.isLeft()) {
+        log.e('Failed to toggle item');
+        state = AsyncValue.data(oldState); // Rollback
+      }
+    } catch (e) {
+      log.e('Error in toggleItem: $e');
+      state = AsyncValue.data(oldState);
+    }
   }
 
   Future<void> deleteItem(String itemId) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref.read(deleteShoppingItemUseCaseProvider).execute(itemId);
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
-      );
-    });
+    final oldState = state.value ?? [];
+    
+    // Optimistic Delete
+    state = AsyncValue.data(
+      oldState.where((item) => item.id != itemId).toList(),
+    );
+
+    try {
+      final result = await ref.read(deleteShoppingItemUseCaseProvider).execute(itemId);
+      if (result.isLeft()) {
+        log.e('Failed to delete item');
+        state = AsyncValue.data(oldState); // Rollback
+      }
+    } catch (e) {
+      log.e('Error in deleteItem: $e');
+      state = AsyncValue.data(oldState);
+    }
   }
 
   Future<void> clearCompleted() async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref
+    final oldState = state.value ?? [];
+    
+    // Optimistic Clear
+    state = AsyncValue.data(
+      oldState.where((item) => !item.completed).toList(),
+    );
+
+    try {
+      final result = await ref
           .read(clearCompletedShoppingItemsUseCaseProvider)
           .execute(householdId);
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
-      );
-    });
+      
+      if (result.isLeft()) {
+        log.e('Failed to clear completed items');
+        state = AsyncValue.data(oldState); // Rollback
+      }
+    } catch (e) {
+      log.e('Error in clearCompleted: $e');
+      state = AsyncValue.data(oldState);
+    }
   }
 
   Future<void> uncompleteAll() async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await ref
+    final oldState = state.value ?? [];
+    
+    // Optimistic Uncomplete All
+    state = AsyncValue.data(
+      oldState.map((item) => item.copyWith(completed: false)).toList(),
+    );
+
+    try {
+      final result = await ref
           .read(uncompleteAllShoppingItemsUseCaseProvider)
           .execute(householdId);
-      final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (items) => items,
-      );
-    });
+      
+      if (result.isLeft()) {
+        log.e('Failed to uncomplete items');
+        state = AsyncValue.data(oldState); // Rollback
+      }
+    } catch (e) {
+      log.e('Error in uncompleteAll: $e');
+      state = AsyncValue.data(oldState);
+    }
   }
 }
+

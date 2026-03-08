@@ -21,6 +21,8 @@ import '../../../shopping/presentation/screens/shopping_list_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../stats/presentation/screens/weekly_winner_screen.dart';
+import '../../../savings/presentation/screens/savings_screen.dart';
+
 
 import '../../../../core/providers/core_providers.dart';
 
@@ -110,13 +112,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     dynamic hasHousehold;
     int attempts = 0;
     while (hasHousehold == null && attempts < 10) {
-      hasHousehold = await Supabase.instance.client
+      final List<dynamic> response = await Supabase.instance.client
           .from('household_members')
           .select('id')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .limit(1);
       
-      if (hasHousehold != null) break;
+      if (response.isNotEmpty) {
+        hasHousehold = response.first;
+        break;
+      }
       
       log.i('MainScreen: Hogar no encontrado aún (intento ${attempts + 1}). Esperando...');
       await Future.delayed(const Duration(milliseconds: 500));
@@ -275,7 +280,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       const ExpensesScreen(),
       const RewardsScreen(),
       const StatsScreen(),
-      ShoppingListScreen(),
+      const ShoppingListScreen(),
+      const SavingsScreen(),
     ];
 
     final titles = [
@@ -284,7 +290,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       'Finanzas',
       'Tienda',
       'Progreso',
-      'Compras'
+      'Compras',
+      'Ahorros'
     ];
 
     return Scaffold(
@@ -292,7 +299,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         title: Text(titles[currentIndex]),
         toolbarHeight: 80,
         actions: [
-          NotificationBell(),
+          const NotificationBell(),
           IconButton(
             icon: const Icon(
               Icons.settings_outlined,

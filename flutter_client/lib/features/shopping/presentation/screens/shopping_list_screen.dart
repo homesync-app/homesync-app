@@ -111,6 +111,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     String? emoji,
     String? category,
   }) async {
+    HapticFeedback.lightImpact();
     final val = name.trim();
     if (val.isEmpty) return;
 
@@ -420,6 +421,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
+                        HapticFeedback.mediumImpact();
                         Navigator.pop(ctx);
                         ref
                             .read(shoppingItemsProvider.notifier)
@@ -438,8 +440,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         ],
       ),
       body: shoppingState.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
+        loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
             child: Text('Error: $err',
                 style: const TextStyle(color: AppColors.error))),
@@ -453,9 +454,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 child: GestureDetector(
                   onTap: () => FocusScope.of(context).unfocus(),
                   child: RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(shoppingItemsProvider);
-                    },
+        onRefresh: () async {
+          ref.invalidate(shoppingItemsProvider);
+        },
                     color: AppColors.primary,
                     child: CustomScrollView(
                       controller: _scrollController,
@@ -475,11 +476,27 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                 mainAxisSpacing: 10,
                               ),
                               delegate: SliverChildBuilderDelegate(
-                                (ctx, i) => _ShoppingItemTile(
-                                  item: pending[i],
-                                  onToggle: () => _toggleItem(pending[i]),
-                                  onDelete: () => _deleteItem(pending[i]),
-                                ),
+                                (ctx, i) {
+                                  final item = pending[i];
+                                  return TweenAnimationBuilder<double>(
+                                    key: ValueKey(item.id),
+                                    duration: const Duration(milliseconds: 300),
+                                    tween: Tween(begin: 0.0, end: 1.0),
+                                    curve: Curves.easeOutCubic,
+                                    builder: (context, value, child) => Opacity(
+                                      opacity: value,
+                                      child: Transform.translate(
+                                        offset: Offset(0, 15 * (1 - value)),
+                                        child: child,
+                                      ),
+                                    ),
+                                    child: _ShoppingItemTile(
+                                      item: item,
+                                      onToggle: () => _toggleItem(item),
+                                      onDelete: () => _deleteItem(item),
+                                    ),
+                                  );
+                                },
                                 childCount: pending.length,
                               ),
                             ),
@@ -526,12 +543,25 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                   mainAxisSpacing: 10,
                                 ),
                                 delegate: SliverChildBuilderDelegate(
-                                  (ctx, i) => _ShoppingItemTile(
-                                    item: done[i],
-                                    onToggle: () => _toggleItem(done[i]),
-                                    onDelete: () => _deleteItem(done[i]),
-                                    isCompleted: true,
-                                  ),
+                                  (ctx, i) {
+                                    final item = done[i];
+                                    return TweenAnimationBuilder<double>(
+                                      key: ValueKey(item.id),
+                                      duration: const Duration(milliseconds: 300),
+                                      tween: Tween(begin: 0.0, end: 1.0),
+                                      curve: Curves.easeOutCubic,
+                                      builder: (context, value, child) => Opacity(
+                                        opacity: value,
+                                        child: child,
+                                      ),
+                                      child: _ShoppingItemTile(
+                                        item: item,
+                                        onToggle: () => _toggleItem(item),
+                                        onDelete: () => _deleteItem(item),
+                                        isCompleted: true,
+                                      ),
+                                    );
+                                  },
                                   childCount: done.length,
                                 ),
                               ),
@@ -559,6 +589,27 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       ),
     );
   }
+
+  Widget _buildShimmerGrid() {
+    return ShimmerLoading(
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 0.85,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: 9,
+        itemBuilder: (context, index) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -581,7 +632,10 @@ class _PredefinedItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedPress(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap.call();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
@@ -655,6 +709,7 @@ class _ShoppingItemTile extends StatelessWidget {
 
     return AnimatedPress(
       onTap: () {
+        HapticFeedback.lightImpact();
         onToggle();
       },
       onLongPress: () {

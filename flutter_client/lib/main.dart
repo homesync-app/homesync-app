@@ -7,11 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/admin_rpc_service.dart';
-import 'package:homesync_client/theme/app_colors.dart';
-import 'package:homesync_client/theme/app_theme.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -153,11 +153,10 @@ class _RootScreenState extends ConsumerState<_RootScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authStateProvider);
-    final isAuthenticatingGoogle = ref.watch(isAuthenticatingWithGoogleProvider);
+    final authState = ref.watch(authControllerProvider);
 
     Widget currentScreen;
-    log.t('RootScreen Build: splashFinished=$_splashFinished, authLoading=${authState.isLoading}, isAuthenticatingGoogle=$isAuthenticatingGoogle, sessionPresent=${authState.value?.session != null}');
+    log.t('RootScreen Build: splashFinished=$_splashFinished, authLoading=${authState.isLoading}, sessionPresent=${authState.value?.session != null}');
 
     if (!_splashFinished || authState.isLoading) {
       currentScreen = const _SplashScreen(key: ValueKey('splash'));

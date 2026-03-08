@@ -127,9 +127,9 @@ class TaskModel {
       recurrenceEndAt: _parseDate(map['recurrence_end_at']),
       householdId: map['household_id'] as String? ?? '',
       createdAt: _parseDate(map['created_at']) ?? DateTime.now(),
-      completedAt: _parseDate(map['completed_at']),
+      completedAt: _parseDate(map['completed_at'] ?? map['last_completed_at']),
       completedBy: map['completed_by'] as String?,
-      verifiedBy: map['verified_by'] as String?,
+      verifiedBy: map['verified_by'] as String? ?? map['last_verified_by'] as String?,
       verifiedAt: _parseDate(map['verified_at']),
       lastCompletedAt: map['last_completed_at'] as String?,
       lastVerifiedBy: map['last_verified_by'] as String?,
@@ -168,7 +168,9 @@ class TaskModel {
   // ── Computed helpers ───────────────────────────────────────────────────────
 
   bool get isActive =>
-      status == TaskStatus.active || status == TaskStatus.assigned;
+      status == TaskStatus.active ||
+      status == TaskStatus.assigned ||
+      status == TaskStatus.objected;
   bool get isPending => status == TaskStatus.pending;
   bool get isPendingVerification => status == TaskStatus.pendingVerification;
   bool get isCompleted =>

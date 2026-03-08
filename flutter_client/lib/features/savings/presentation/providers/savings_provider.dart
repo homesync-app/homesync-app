@@ -1,4 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -11,55 +12,63 @@ import '../../domain/usecases/create_savings_goal_usecase.dart';
 import '../../domain/usecases/add_contribution_usecase.dart';
 import '../../domain/usecases/delete_savings_goal_usecase.dart';
 import '../../data/repositories/supabase_savings_repository.dart';
+import '../../../expenses/presentation/providers/expense_provider.dart';
+import '../../../expenses/domain/repositories/expense_repository.dart';
 
 // --- Repositories & Use Cases ---
 
-final savingsRepositoryProvider = Provider<SavingsRepository>((ref) {
+part 'savings_provider.g.dart';
+
+// --- Repositories & Use Cases ---
+
+@riverpod
+SavingsRepository savingsRepository(SavingsRepositoryRef ref) {
   return SupabaseSavingsRepository(ref: ref);
-});
+}
 
-final getSavingsGoalsUseCaseProvider = Provider<GetSavingsGoalsUseCase>((ref) {
+@riverpod
+GetSavingsGoalsUseCase getSavingsGoalsUseCase(GetSavingsGoalsUseCaseRef ref) {
   return GetSavingsGoalsUseCase(ref.watch(savingsRepositoryProvider));
-});
+}
 
-final getGoalContributionsUseCaseProvider =
-    Provider<GetGoalContributionsUseCase>((ref) {
+@riverpod
+GetGoalContributionsUseCase getGoalContributionsUseCase(
+    GetGoalContributionsUseCaseRef ref) {
   return GetGoalContributionsUseCase(ref.watch(savingsRepositoryProvider));
-});
+}
 
-final createSavingsGoalUseCaseProvider =
-    Provider<CreateSavingsGoalUseCase>((ref) {
+@riverpod
+CreateSavingsGoalUseCase createSavingsGoalUseCase(
+    CreateSavingsGoalUseCaseRef ref) {
   return CreateSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
-});
+}
 
-final addContributionUseCaseProvider = Provider<AddContributionUseCase>((ref) {
+@riverpod
+AddContributionUseCase addContributionUseCase(AddContributionUseCaseRef ref) {
   return AddContributionUseCase(ref.watch(savingsRepositoryProvider));
-});
+}
 
-final deleteSavingsGoalUseCaseProvider =
-    Provider<DeleteSavingsGoalUseCase>((ref) {
+@riverpod
+DeleteSavingsGoalUseCase deleteSavingsGoalUseCase(
+    DeleteSavingsGoalUseCaseRef ref) {
   return DeleteSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
-});
+}
 
 // --- UI State Providers ---
 
-final goalContributionsProvider =
-    FutureProvider.family<List<SavingsContributionModel>, String>(
-        (ref, goalId) async {
+@riverpod
+Future<List<SavingsContributionModel>> goalContributions(
+    GoalContributionsRef ref, String goalId) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
   final result = await getGoalContributions.execute(goalId);
   return result.fold(
     (failure) => throw Exception(failure.message),
     (contributions) => contributions,
   );
-});
+}
 
-final savingsGoalsProvider =
-    AsyncNotifierProvider<SavingsGoalsNotifier, List<SavingsGoalModel>>(() {
-  return SavingsGoalsNotifier();
-});
-
-class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
+@riverpod
+class SavingsGoals extends _$SavingsGoals {
   RealtimeChannel? _channel;
 
   @override
@@ -93,14 +102,9 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
             column: 'household_id',
             value: householdId,
           ),
-          callback: (payload) async {
-            // Trigger a re-fetch when changes are detected
-            final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-            final result = await getSavingsGoals.execute(householdId);
-            state = result.fold(
-              (failure) => AsyncValue.error(failure, StackTrace.current),
-              (goals) => AsyncValue.data(goals),
-            );
+          callback: (payload) {
+            log.i('Realtime savings change detected: ${payload.eventType}');
+            ref.invalidateSelf();
           },
         )
         .subscribe();
@@ -153,10 +157,30 @@ class SavingsGoalsNotifier extends AsyncNotifier<List<SavingsGoalModel>> {
 
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
-      return result.fold(
+      final goals = result.fold(
         (failure) => throw Exception(failure.message),
         (goals) => goals,
       );
+
+      // Impactar en balance personal registrando un gasto tipo 'personal'
+      if (amount > 0) {
+        final goal = goals.firstWhere((g) => g.id == goalId);
+        try {
+          await ref.read(expenseControllerProvider.notifier).saveExpense(
+            householdId: householdId,
+            title: 'Ahorro: ${goal.title}',
+            amount: amount,
+            category: 'finanzas',
+            paidBy: userId,
+            paidAt: DateTime.now(),
+            splitType: SplitType.personal,
+          );
+        } catch (e) {
+          log.e('Error recording savings as expense: $e');
+        }
+      }
+
+      return goals;
     });
   }
 

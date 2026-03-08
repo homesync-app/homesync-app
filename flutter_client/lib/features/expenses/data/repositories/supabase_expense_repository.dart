@@ -121,7 +121,7 @@ class SupabaseExpenseRepository
           'p_paid_at': paidAt.toIso8601String(),
           'p_description': description,
           'p_split_type': splitType.name,
-          'p_is_shared': splitType != SplitType.personal,
+          'p_is_shared': splitType != SplitType.personal && splitType != SplitType.gift,
           'p_type': type,
           'p_splits': splits,
         },

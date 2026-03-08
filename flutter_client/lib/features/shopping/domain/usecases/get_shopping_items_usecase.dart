@@ -10,7 +10,7 @@ class GetShoppingItemsUseCase {
 
   Future<Either<Failure, List<ShoppingItemModel>>> execute(String householdId) {
     if (householdId.isEmpty) {
-      return Future.value(Left(ValidationFailure('householdId is required')));
+      return Future.value(const Left(ValidationFailure('householdId is required')));
     }
     return repository.fetchItems(householdId);
   }

@@ -269,7 +269,7 @@ class _WeeklyTab extends StatelessWidget {
           const SizedBox(height: 16),
 
           if (weeklyRanking.isNotEmpty) ...[
-            AIFaceoffWidget(weeklyRanking: weeklyRanking),
+            AIFaceoffWidget(weeklyRanking: weeklyRanking).animateEntrance(delay: 100),
             const SizedBox(height: 28),
           ],
 
@@ -279,66 +279,30 @@ class _WeeklyTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 500),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  ),
-                  child: _MiniStatCard(
-                    icon: '✅',
-                    value: '$totalTasks',
-                    label: 'Tareas',
-                    color: AppColors.primary.withValues(alpha: 0.7),
-                  ),
-                ),
+                child: _MiniStatCard(
+                  icon: '✅',
+                  value: '$totalTasks',
+                  label: 'Tareas',
+                  color: AppColors.primary.withValues(alpha: 0.7),
+                ).animateStaggered(0),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 600),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  ),
-                  child: _MiniStatCard(
-                    icon: '⭐',
-                    value: '$totalXp',
-                    label: 'Total XP',
-                    color: AppColors.accentGold,
-                  ),
-                ),
+                child: _MiniStatCard(
+                  icon: '✨',
+                  value: '$totalXp',
+                  label: 'XP',
+                  color: AppColors.accentGold.withValues(alpha: 0.7),
+                ).animateStaggered(1),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 700),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  ),
-                  child: _MiniStatCard(
-                    icon: '🪙',
-                    value: '$totalCoins',
-                    label: 'Coins',
-                    color: AppColors.accentTeal,
-                  ),
-                ),
+                child: _MiniStatCard(
+                  icon: '🪙',
+                  value: '$totalCoins',
+                  label: 'Monedas',
+                  color: AppColors.accentPeach.withValues(alpha: 0.7),
+                ).animateStaggered(2),
               ),
             ],
           ),
@@ -468,13 +432,13 @@ class _ProgressTabState extends State<_ProgressTab> {
               ],
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
-                ? Center(
+                ? const Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('🌱', style: TextStyle(fontSize: 32)),
-                        const SizedBox(height: 12),
-                        const Text(
+                        Text('🌱', style: TextStyle(fontSize: 32)),
+                        SizedBox(height: 12),
+                        Text(
                           'Empezá a completar tareas\npara ver tu progreso.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -574,7 +538,7 @@ class _ProgressTabState extends State<_ProgressTab> {
                       child: child,
                     ),
                   ),
-                  child: _PersonalMetricCard(
+                  child: const _PersonalMetricCard(
                     icon: '🔥',
                     label: 'Racha',
                     value: '7 días',

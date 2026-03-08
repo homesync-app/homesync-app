@@ -19,13 +19,13 @@ class AddShoppingItemUseCase {
     String? note,
   }) {
     if (householdId.isEmpty) {
-      return Future.value(Left(ValidationFailure('householdId is required')));
+      return Future.value(const Left(ValidationFailure('householdId is required')));
     }
     if (name.trim().isEmpty) {
-      return Future.value(Left(ValidationFailure('name is required')));
+      return Future.value(const Left(ValidationFailure('name is required')));
     }
     if (userId.isEmpty) {
-      return Future.value(Left(ValidationFailure('userId is required')));
+      return Future.value(const Left(ValidationFailure('userId is required')));
     }
 
     return repository.addItem(

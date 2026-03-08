@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/reward_rpc_service.dart';
@@ -8,11 +9,13 @@ import 'package:homesync_client/core/services/rpc/stats_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/household_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/balance_rpc_service.dart';
 import 'package:homesync_client/core/services/rpc/admin_rpc_service.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class BottomNavNotifier extends Notifier<int> {
+part 'core_providers.g.dart';
+
+@riverpod
+class BottomNavIndex extends _$BottomNavIndex {
   @override
   int build() => 0;
 
@@ -21,52 +24,57 @@ class BottomNavNotifier extends Notifier<int> {
   }
 }
 
-final bottomNavIndexProvider = NotifierProvider<BottomNavNotifier, int>(() {
-  return BottomNavNotifier();
-});
-
 // ── Singleton service providers ───────────────────────────────────────────────
-final authServiceProvider = Provider<SupabaseAuthService>((ref) {
-  throw UnimplementedError(
-      'authServiceProvider must be overridden in ProviderScope.');
-});
+@riverpod
+SupabaseAuthService authService(AuthServiceRef ref) {
+  throw UnimplementedError('authService must be overridden in ProviderScope.');
+}
 
-final taskRpcServiceProvider =
-    Provider<TaskRpcService>((ref) => TaskRpcService());
-final rewardRpcServiceProvider =
-    Provider<RewardRpcService>((ref) => RewardRpcService());
-final statsRpcServiceProvider =
-    Provider<StatsRpcService>((ref) => StatsRpcService());
-final householdRpcServiceProvider =
-    Provider<HouseholdRpcService>((ref) => HouseholdRpcService());
-final balanceRpcServiceProvider =
-    Provider<BalanceRpcService>((ref) => BalanceRpcService());
-final adminRpcServiceProvider =
-    Provider<AdminRpcService>((ref) => AdminRpcService());
+@riverpod
+TaskRpcService taskRpcService(TaskRpcServiceRef ref) => TaskRpcService();
+
+@riverpod
+RewardRpcService rewardRpcService(RewardRpcServiceRef ref) => RewardRpcService();
+
+@riverpod
+StatsRpcService statsRpcService(StatsRpcServiceRef ref) => StatsRpcService();
+
+@riverpod
+HouseholdRpcService householdRpcService(HouseholdRpcServiceRef ref) => HouseholdRpcService();
+
+@riverpod
+BalanceRpcService balanceRpcService(BalanceRpcServiceRef ref) => BalanceRpcService();
+
+@riverpod
+AdminRpcService adminRpcService(AdminRpcServiceRef ref) => AdminRpcService();
 
 // ── Current user convenience providers ────────────────────────────────────────
-final currentUserIdProvider = Provider<String?>((ref) {
+@riverpod
+String? currentUserId(CurrentUserIdRef ref) {
   final auth = ref.watch(authServiceProvider);
   return auth.currentUser?.id;
-});
+}
 
 // ── Household ID — single source of truth ─────────────────────────────────────
-final householdIdProvider = FutureProvider<String?>((ref) async {
+@riverpod
+Future<String?> householdId(HouseholdIdRef ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
   final client = ref.read(supabaseClientProvider);
-  final result = await client
+  final List<dynamic> response = await client
       .from('household_members')
       .select('household_id')
       .eq('user_id', userId)
-      .maybeSingle();
+      .limit(1);
 
-  return result?['household_id'] as String?;
-});
+  if (response.isEmpty) return null;
+  return response.first['household_id'] as String?;
+}
 
 // ── User profile (full_name, avatar) ──────────────────────────────────────────
-final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
+@riverpod
+Stream<Map<String, dynamic>?> userProfile(UserProfileRef ref) async* {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) {
     yield null;
@@ -75,19 +83,18 @@ final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
 
   final client = ref.read(supabaseClientProvider);
 
-  // Snapshot function
   Future<Map<String, dynamic>?> fetch() async {
-    return await client
+    final List<dynamic> response = await client
         .from('users')
         .select('id, full_name, email, avatar_url, mercadopago_alias')
         .eq('id', userId)
-        .maybeSingle();
+        .limit(1);
+        
+    return response.isNotEmpty ? response.first as Map<String, dynamic> : null;
   }
 
-  // Initial fetch
   yield await fetch();
 
-  // Realtime subscription
   final channel = client
       .channel('user_profile_$userId')
       .onPostgresChanges(
@@ -109,11 +116,11 @@ final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
   ref.onDispose(() {
     client.removeChannel(channel);
   });
-});
+}
 
 // ── Mercado Pago connection status ─────────────────────────────────────────────
-final mercadopagoConnectionProvider =
-    StreamProvider<Map<String, dynamic>?>((ref) {
+@riverpod
+Stream<Map<String, dynamic>?> mercadopagoConnection(MercadopagoConnectionRef ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
 
@@ -123,14 +130,13 @@ final mercadopagoConnectionProvider =
       .stream(primaryKey: ['user_id'])
       .eq('user_id', userId)
       .map((data) => data.isNotEmpty ? data.first : null);
-});
+}
 
-final mercadopagoMovementsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+@riverpod
+Future<List<Map<String, dynamic>>> mercadopagoMovements(MercadopagoMovementsRef ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return [];
 
-  // Re-check connection status
   final connection = ref.watch(mercadopagoConnectionProvider).value;
   if (connection == null) return [];
 
@@ -154,10 +160,11 @@ final mercadopagoMovementsProvider =
     log.e('Error fetching MP movements: $e', error: e);
     return [];
   }
-});
+}
 
 // ── User balance (XP + coins) ─────────────────────────────────────────────────
-final userBalanceProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
+@riverpod
+Stream<Map<String, dynamic>?> userBalance(UserBalanceRef ref) async* {
   final householdId = await ref.watch(householdIdProvider.future);
   final userId = ref.watch(currentUserIdProvider);
   if (householdId == null || userId == null) {
@@ -168,16 +175,13 @@ final userBalanceProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(balanceRpcServiceProvider);
 
-  // Snapshot function
   Future<Map<String, dynamic>?> fetch() async {
     final result = await rpc.getUserBalance(householdId: householdId);
     return result['data'] as Map<String, dynamic>?;
   }
 
-  // Initial fetch
   yield await fetch();
 
-  // Realtime subscription - listen to ledger entries for this user
   final channel = client
       .channel('user_balance_$userId')
       .onPostgresChanges(
@@ -199,22 +203,15 @@ final userBalanceProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
   ref.onDispose(() {
     client.removeChannel(channel);
   });
-});
-
-// ── ExpenseModel balances for all household members ────────────────────────────────
-final expenseBalancesProvider = FutureProvider<List<dynamic>>((ref) async {
-  final householdId = await ref.watch(householdIdProvider.future);
-  if (householdId == null) return [];
-
-  final rpc = ref.read(balanceRpcServiceProvider);
-  final result = await rpc.getHouseholdBalances(householdId);
-  return (result['balances'] as List<dynamic>?) ?? [];
-});
+}
 
 // ── Notifications enabled provider ──────────────────────────────────────────
-class NotificationEnabledNotifier extends StateNotifier<bool> {
-  NotificationEnabledNotifier() : super(true) {
+@riverpod
+class NotificationEnabled extends _$NotificationEnabled {
+  @override
+  bool build() {
     _load();
+    return true;
   }
 
   Future<void> _load() async {
@@ -231,8 +228,3 @@ class NotificationEnabledNotifier extends StateNotifier<bool> {
     await NotificationService.instance.setEnabled(enabled);
   }
 }
-
-final notificationEnabledProvider =
-    StateNotifierProvider<NotificationEnabledNotifier, bool>((ref) {
-  return NotificationEnabledNotifier();
-});

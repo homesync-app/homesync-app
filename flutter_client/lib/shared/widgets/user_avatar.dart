@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'video_avatar_player.dart';
+import 'sprite_sequence_player.dart';
 
 class UserAvatar {
   static const List<Map<String, dynamic>> defaultAvatars = [
@@ -40,8 +41,14 @@ class UserAvatar {
     },
     {
       'id': 'premium_cat',
+      'url': 'sequence://assets/images/premium_cat_wave/',
+      'name': 'Gato Saludo',
+      'color': Color(0xFFFFF3E0)
+    },
+    {
+      'id': 'premium_cat_old',
       'url': 'assets/images/gato_premium_v2.mp4',
-      'name': 'Gato Animado',
+      'name': 'Gato Video',
       'color': Color(0xFFFFF3E0)
     },
     {
@@ -401,11 +408,11 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     final String cleanUrl =
         url.startsWith('premium://') ? url.replaceFirst('premium://', '') : url;
 
+    final bool isSequence = cleanUrl.startsWith('assets/') &&
+        url.startsWith('sequence://');
+
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
-
-    // Balanced size for 3D characters
     final double size = isVideo ? radius * 2.0 : radius * 1.9;
-
     final bool isAsset = cleanUrl.startsWith('assets/');
 
     // The image or video widget — transparent background or clipped circle
@@ -416,6 +423,12 @@ class _PremiumCharacterAvatar extends StatelessWidget {
         url: cleanUrl,
         size: size,
         isAsset: isAsset,
+      );
+    } else if (isSequence) {
+      contentWidget = SpriteSequencePlayer(
+        directoryPath: cleanUrl,
+        totalFrames: 36,
+        size: size,
       );
     } else if (isAsset) {
       contentWidget = Image.asset(

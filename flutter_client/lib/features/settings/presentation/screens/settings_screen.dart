@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/features/auth/presentation/providers/auth_providers.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
@@ -1605,7 +1606,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           );
 
           if (confirm == true) {
-            await ref.read(signOutUseCaseProvider).execute();
+            await ref.read(authControllerProvider.notifier).signOut();
             widget.onLogout();
           }
         },

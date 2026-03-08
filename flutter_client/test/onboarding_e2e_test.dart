@@ -310,7 +310,7 @@ void main() {
     });
 
     test('UserModel displayName returns full name or email prefix', () {
-      final userWithName = UserModel(
+      const userWithName = UserModel(
         id: 'user-1',
         email: 'test@email.com',
         fullName: 'Juan Perez',
@@ -318,7 +318,7 @@ void main() {
 
       expect(userWithName.displayName, equals('Juan Perez'));
 
-      final userWithoutName = UserModel(
+      const userWithoutName = UserModel(
         id: 'user-2',
         email: 'another@email.com',
       );

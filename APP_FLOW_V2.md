@@ -102,6 +102,7 @@
 ```
 
 **Botón Registrar (FAB):**
+
 ```
 ┌──────────────────────────────────┐
 │  ¿Qué querés registrar?          │
@@ -147,6 +148,7 @@
 ```
 
 **Crear Nueva Tarea:**
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  ➕ Nueva Tarea                                          │
@@ -178,19 +180,25 @@
 └──────────────────────────────────────────────────────────┘
 ```
 
-### 4. Gastos (Expenses Screen)
+### 4. Gastos y Ahorros (Expenses & Savings)
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  GASTOS                                    ⚙️ Settings       │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
-│  ─── BALANCE ───                                            │
+│  ─── BALANCE DE PAREJA ───                                   │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │  👤 María debe recibir    +$150                      │    │
 │  │  👤 Juan debe pagar       -$150                      │    │
 │  │                                                       │    │
 │  │  [Liquidar deuda]                                     │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                              │
+│  ─── METAS DE AHORRO 🎯 ───                                  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  🚗 Auto Nuevo      ██████░░░░  60%  $12.000/$20.000 │    │
+│  │  🏝️ Vacaciones      ██░░░░░░░░  25%   $2.500/$10.000 │    │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                              │
 │  ─── GASTOS RECIENTES ───                                   │
@@ -257,13 +265,13 @@
 
 ### Separación de Responsabilidades
 
-| Pantalla | Propósito | Acciones |
-|----------|-----------|----------|
-| **Inicio** | Dashboard operativo | Ver estado del día, completar tareas frecuentes, registrar gastos |
-| **Tareas** | Gestión y configuración | Crear, editar, eliminar, programar tareas |
-| **Gastos** | Control financiero | Ver balances, liquidar deudas, historial |
-| **Tienda** | Motivación | Canjear premios, crear premios custom |
-| **Stats** | Análisis | Ver progreso, estadísticas |
+| Pantalla   | Propósito               | Acciones                                                          |
+| ---------- | ----------------------- | ----------------------------------------------------------------- |
+| **Inicio** | Dashboard operativo     | Ver estado del día, completar tareas frecuentes, registrar gastos |
+| **Tareas** | Gestión y configuración | Crear, editar, eliminar, programar tareas                         |
+| **Gastos** | Control financiero      | Ver balances, liquidar deudas, historial                          |
+| **Tienda** | Motivación              | Canjear premios, crear premios custom                             |
+| **Stats**  | Análisis                | Ver progreso, estadísticas                                        |
 
 ### Principios de UX
 
@@ -309,48 +317,51 @@ flutter_client/lib/
 
 ### Tablas Principales
 
-| Tabla | Descripción |
-|-------|-------------|
-| `users` | Usuarios de la app |
-| `households` | Hogares/Equipos |
-| `household_members` | Relación usuario-hogar |
-| `tasks` | Tareas del hogar |
-| `task_templates` | Plantillas de tareas |
-| `expenses` | Gastos compartidos |
-| `expense_splits` | División de gastos |
-| `rewards` | Premios disponibles |
-| `reward_redemptions` | Canjes realizados |
-| `ledger_entries` | Historial de XP/Coins |
+| Tabla                | Descripción            |
+| -------------------- | ---------------------- |
+| `users`              | Usuarios de la app     |
+| `households`         | Hogares/Equipos        |
+| `household_members`  | Relación usuario-hogar |
+| `tasks`              | Tareas del hogar       |
+| `task_templates`     | Plantillas de tareas   |
+| `expenses`           | Gastos compartidos     |
+| `expense_splits`     | División de gastos     |
+| `rewards`            | Premios disponibles    |
+| `reward_redemptions` | Canjes realizados      |
+| `ledger_entries`     | Historial de XP/Coins  |
 
 ### Funciones RPC Principales
 
-| Función | Uso |
-|---------|-----|
-| `create_task` | Crear nueva tarea |
+| Función                     | Uso                              |
+| --------------------------- | -------------------------------- |
+| `create_task`               | Crear nueva tarea                |
 | `complete_task_transaction` | Completar tarea (ganar XP/Coins) |
-| `get_user_balance` | Obtener balance de XP/Coins |
-| `get_tasks` | Listar tareas del hogar |
-| `generate_invitation_code` | Generar código para invitar |
-| `join_household` | Unirse a un hogar |
-| `create_expense` | Registrar gasto |
-| `get_expense_balance` | Balance de deudas |
-| `redeem_reward` | Canjear premio |
+| `get_user_balance`          | Obtener balance de XP/Coins      |
+| `get_tasks`                 | Listar tareas del hogar          |
+| `generate_invitation_code`  | Generar código para invitar      |
+| `join_household`            | Unirse a un hogar                |
+| `create_expense`            | Registrar gasto                  |
+| `get_expense_balance`       | Balance de deudas                |
+| `redeem_reward`             | Canjear premio                   |
 
 ---
 
 ## Próximas Mejoras
 
 ### Prioridad Alta
+
 - [ ] Notificaciones push para recordatorios
 - [ ] Indicador de racha diaria
 - [ ] Mostrar días de frecuencia (ej: "Lun/Mié/Vie")
 
 ### Prioridad Media
+
 - [ ] Modo oscuro
 - [ ] Animaciones al completar tareas
 - [ ] Gráficos en Stats
 
 ### Prioridad Baja
+
 - [ ] Chat entre miembros
 - [ ] Exportar historial
 - [ ] Temas personalizables
@@ -359,17 +370,17 @@ flutter_client/lib/
 
 ## Diferenciador vs Competencia
 
-| Feature | Nipto | HomeSync |
-|---------|-------|----------|
-| Tareas predefinidas | ✅ | ✅ |
-| Sistema de puntos | ✅ | ✅ |
-| Categorías | ✅ | ✅ |
-| **Gastos compartidos** | ❌ | ✅ |
-| **Split automático** | ❌ | ✅ |
-| **Balance deudas** | ❌ | ✅ |
-| **Monedas virtuales** | ❌ | ✅ |
-| **Tienda de premios** | ❌ | ✅ |
-| **Dashboard del día** | ❌ | ✅ |
-| **Tareas frecuentes** | ❌ | ✅ |
+| Feature                | Nipto | HomeSync |
+| ---------------------- | ----- | -------- |
+| Tareas predefinidas    | ✅    | ✅       |
+| Sistema de puntos      | ✅    | ✅       |
+| Categorías             | ✅    | ✅       |
+| **Gastos compartidos** | ❌    | ✅       |
+| **Split automático**   | ❌    | ✅       |
+| **Balance deudas**     | ❌    | ✅       |
+| **Monedas virtuales**  | ❌    | ✅       |
+| **Tienda de premios**  | ❌    | ✅       |
+| **Dashboard del día**  | ❌    | ✅       |
+| **Tareas frecuentes**  | ❌    | ✅       |
 
 **HomeSync = Gestión de tareas + División de gastos + Gamificación completa**

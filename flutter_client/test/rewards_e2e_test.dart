@@ -43,7 +43,7 @@ class RewardRedemptionSimulator {
 
   void _initDefaultRewards() {
     availableRewards.addAll([
-      RewardModel(
+      const RewardModel(
         id: 'reward-1',
         householdId: 'household-1',
         title: 'Cenar afuera',
@@ -53,7 +53,7 @@ class RewardRedemptionSimulator {
         isApproved: true,
         isActive: true,
       ),
-      RewardModel(
+      const RewardModel(
         id: 'reward-2',
         householdId: 'household-1',
         title: 'Día de descanso',
@@ -63,7 +63,7 @@ class RewardRedemptionSimulator {
         isApproved: true,
         isActive: true,
       ),
-      RewardModel(
+      const RewardModel(
         id: 'reward-3',
         householdId: 'household-1',
         title: 'Película elegida',
@@ -241,7 +241,7 @@ void main() {
     test('Cannot redeem inactive reward', () async {
       user1.addCoins(200);
 
-      final inactiveReward = RewardModel(
+      const inactiveReward = RewardModel(
         id: 'inactive-1',
         householdId: 'household-1',
         title: 'Recompensa inactiva',
@@ -324,7 +324,7 @@ void main() {
     });
 
     test('RewardModel equality works', () {
-      final reward1 = RewardModel(
+      const reward1 = RewardModel(
         id: 'r1',
         householdId: 'h1',
         title: 'Same',
@@ -334,7 +334,7 @@ void main() {
         isActive: true,
       );
 
-      final reward2 = RewardModel(
+      const reward2 = RewardModel(
         id: 'r1',
         householdId: 'h1',
         title: 'Same',
