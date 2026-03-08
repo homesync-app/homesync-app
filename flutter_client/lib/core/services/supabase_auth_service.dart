@@ -4,8 +4,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../config/app_environment.dart';
-import 'logger_service.dart';
-import 'rpc/admin_rpc_service.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
@@ -18,27 +16,18 @@ class SupabaseAuthService {
     await Supabase.initialize(
       url: AppEnvironment.supabaseUrl,
       anonKey: AppEnvironment.supabaseAnonKey,
-      // Supabase recommends PKCE (Proof Key for Code Exchange) for mobile
-      // to handle redirects securely and reliably across builds.
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-      ),
     );
     _client = Supabase.instance.client;
-    // Firebase is initialized in main() before calling this method.
-  }
 
-  bool _googleInitialized = false;
-  Future<void> _ensureGoogleInitialized() async {
-    if (!_googleInitialized) {
-      log.i('SupabaseAuthService: Initializing GoogleSignIn.instance...');
-      const serverClientId =
-          '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com';
+    // Inicializar GoogleSignIn con el Web Client ID (serverClientId)
+    // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
+    try {
       await GoogleSignIn.instance.initialize(
-        serverClientId: serverClientId,
+        clientId: kIsWeb ? '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com' : null,
+        serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
       );
-      _googleInitialized = true;
-      log.i('SupabaseAuthService: GoogleSignIn initialized.');
+    } catch (e) {
+      debugPrint('Error inicializando GoogleSignIn: $e');
     }
   }
 
@@ -52,24 +41,18 @@ class SupabaseAuthService {
     String? fullName,
     String householdType = 'couple',
   }) async {
-    try {
-      final response = await _client.auth.signUp(
-        email: email,
-        password: password,
-        data: fullName != null ? {'full_name': fullName} : {},
-      );
+    final response = await _client.auth.signUp(
+      email: email,
+      password: password,
+      data: fullName != null ? {'full_name': fullName} : {},
+    );
 
-      // No creamos el hogar automáticamente aquí para permitir flujo de "Unirse" en SetupScreen
-      return response;
-    } catch (e, stack) {
-      log.e('Error en signUp: $e', error: e, stackTrace: stack);
-      await AdminRpcService().logApplicationError(
-        message: 'Error en signUp: $e',
-        stackTrace: stack.toString(),
-        context: {'email': email},
-      );
-      rethrow;
+    if (response.user != null) {
+      await _createUserProfile(
+          response.user!.id, email, fullName, householdType);
     }
+
+    return response;
   }
 
   Future<void> _createUserProfile(String userId, String email, String? fullName,
@@ -84,6 +67,8 @@ class SupabaseAuthService {
       'household_type': householdType,
     });
 
+    // 3. User is auto-inserted via database trigger "on_auth_user_created"
+    
     // 4. Assign user as owner
     await _client.from('household_members').insert({
       'household_id': householdId,
@@ -96,141 +81,67 @@ class SupabaseAuthService {
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await _client.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      // Tag user in Crashlytics (mobile only)
-      if (response.user != null && !kIsWeb) {
-        await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
-      }
-      return response;
-    } catch (e, stack) {
-      log.e('Error en signIn: $e', error: e, stackTrace: stack);
-      await AdminRpcService().logApplicationError(
-        message: 'Error en signIn: $e',
-        stackTrace: stack.toString(),
-        context: {'email': email},
-      );
-      rethrow;
+    final response = await _client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    // Tag user in Crashlytics (mobile only)
+    if (response.user != null && !kIsWeb) {
+      await FirebaseCrashlytics.instance.setUserIdentifier(response.user!.id);
     }
+    return response;
   }
 
   Future<bool> signInWithGoogle() async {
     try {
-      if (!kIsWeb) {
-        log.i('Google Sign-In: Attempting Native Auth with google_sign_in...');
+      if (kIsWeb) {
+        // En Web, authenticate() no está soportado. Usamos OAuth directamente.
+        await _client.auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: null,
+        );
+        return true;
+      }
 
-        await _ensureGoogleInitialized();
-        final googleSignIn = GoogleSignIn.instance;
-        
-        GoogleSignInAccount? googleUser;
-        try {
-          // In v7, use authenticate() instead of signIn()
-          googleUser = await googleSignIn.authenticate();
-        } catch (e) {
-          log.e('Google Sign-In error: $e', error: e);
-          return false;
-        }
+      // Flujo nativo para Android/iOS con google_sign_in
+      final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+      
+      final googleUser = await googleSignIn.authenticate();
+      
+      // En esta versión authentication es un getter, no un Future.
+      final googleAuth = googleUser.authentication;
+      final idToken = googleAuth.idToken;
 
-        // In v7, authentication is a synchronous getter
-        final googleAuth = googleUser.authentication;
-        final idToken = googleAuth.idToken;
-
-        if (idToken == null) {
-          final msg =
-              'Google Sign-In: OAuth Token faltante tras auth nativa. idToken presente: ${idToken != null}';
-          log.e(msg);
-          await AdminRpcService().logApplicationError(
-              message: msg, level: 'error', context: {'platform': 'native'});
-          throw Exception('Missing OAuth Token (posible problema de SHA-1)');
-        }
-
-        log.i('Google Sign-In: Tokens obtained. Sending to Supabase...');
+      if (idToken != null) {
         await _client.auth.signInWithIdToken(
           provider: OAuthProvider.google,
           idToken: idToken,
         );
-
-        final user = _client.auth.currentUser;
-        if (user != null) {
-          await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
-          await ensureHouseholdExists();
+        
+        // Tag user in Crashlytics (mobile only)
+        if (!kIsWeb) {
+          final user = _client.auth.currentUser;
+          if (user != null) {
+            await FirebaseCrashlytics.instance.setUserIdentifier(user.id);
+          }
         }
         return true;
-      } else {
-        // En Web usamos OAuth de Supabase directamente
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-        );
-        return true;
       }
-    } catch (e, stack) {
-      final errorStr = e.toString().toLowerCase();
+    
+      // Fallback a OAuth
+      debugPrint('Usando fallback de OAuth para Google Sign-In');
+      
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? null : 'homesync://login-callback',
+      );
 
-      // Cancelación del usuario — ignorar silenciosamente
-      if (errorStr.contains('canceled') ||
-          errorStr.contains('cancelled') ||
-          errorStr.contains('sign_in_canceled') ||
-          errorStr.contains('12501')) {
-        log.i('Google Sign-In cancelado por el usuario');
-        return false;
-      }
-
-      // IMPORTANTE: "no provider dependencies found" significa SHA-1 no registrado en Firebase/GCP.
-      if (errorStr.contains('provider dependencies found') ||
-          errorStr.contains('10')) {
-        log.e('⚠️ SHA-1 RECHAZADO EN FIREBASE: $e');
-        await AdminRpcService().logApplicationError(
-          message:
-              'Google Sign-In Bloqueado: SHA-1 inválido/faltante en Firebase (Error CredentialManager)',
-          stackTrace: stack.toString(),
-          level: 'critical',
-          context: {
-            'error': e.toString(),
-            'action_required':
-                'Eliminar app del proyecto Firebase viejo y agregar SHA-1 actual.'
-          },
-        );
-      } else {
-        log.w(
-            'Fallo el login nativo de Google ($e). Intentando fallback OAuth...');
-        await AdminRpcService().logApplicationError(
-          message: 'Google Sign-In Nativo falló — usando fallback OAuth',
-          stackTrace: stack.toString(),
-          level: 'warning',
-          context: {
-            'error': e.toString(),
-            'platform': kIsWeb ? 'web' : 'native'
-          },
-        );
-      }
-
-      // Intentar siempre el fallback usando el navegador IN-APP (mantiene al usuario en la app)
-      try {
-        // Determinamos la URI de retorno dinámicamente
-        final String redirectTo = kIsWeb 
-            ? '${Uri.base.origin}/' // Vuelve a la URL actual de la web
-            : 'homesync://login-callback';
-
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: redirectTo,
-          authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.inAppWebView,
-        );
-        return false; // Retornamos false porque la sesión se establecerá vía deep link
-      } catch (oauthError, oauthStack) {
-        log.e('Error en fallback OAuth: $oauthError',
-            error: oauthError, stackTrace: oauthStack);
-        await AdminRpcService().logApplicationError(
-          message: 'Error crítico en fallback OAuth: $oauthError',
-          stackTrace: oauthStack.toString(),
-          level: 'error',
-          context: {'native_error': e.toString()},
-        );
-        return false;
-      }
+      // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
+      // Retornamos true para indicar que el proceso se inició correctamente.
+      return true;
+    } catch (e) {
+      debugPrint('Error en Google Sign-In: $e');
+      return false;
     }
   }
 
@@ -239,31 +150,25 @@ class SupabaseAuthService {
     if (user == null) return;
 
     // Check if already in a household
-    try {
-      final List<dynamic> response = await _client
-          .from('household_members')
-          .select('household_id')
-          .eq('user_id', user.id)
-          .limit(1);
-      
-      if (response.isNotEmpty) return;
+    final existing = await _client
+        .from('household_members')
+        .select('household_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // Create a new household
-      final email = user.email ?? '';
-      final fullName = user.userMetadata?['full_name'] as String? ??
-          user.userMetadata?['name'] as String?;
+    if (existing != null) return;
 
-      await _createUserProfile(user.id, email, fullName, 'couple');
-    } catch (e, stack) {
-      log.e('Error en ensureHouseholdExists: $e', error: e, stackTrace: stack);
-    }
+    // Create a new household
+    final email = user.email ?? '';
+    final fullName = user.userMetadata?['full_name'] as String? ??
+        user.userMetadata?['name'] as String?;
+
+    await _createUserProfile(user.id, email, fullName, 'couple');
   }
 
   Future<void> signOut() async {
     try {
-      if (!kIsWeb) {
-        await GoogleSignIn.instance.signOut();
-      }
+      await GoogleSignIn.instance.signOut();
     } catch (_) {}
     // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {

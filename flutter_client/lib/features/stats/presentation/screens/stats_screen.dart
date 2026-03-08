@@ -1,12 +1,11 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-// rpc accessed via statsRpcServiceProvider
+import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
+import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // StatsScreen — rediseñada con fl_chart y tabs de navegación
@@ -16,7 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
-  const StatsScreen({super.key});
+  final SupabaseRpcService rpc;
+  const StatsScreen({super.key, required this.rpc});
 
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
@@ -50,14 +50,13 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
     try {
-      final statsRpc = ref.read(statsRpcServiceProvider);
       final results = await Future.wait([
-        statsRpc.getTaskStatsByCategory(),
-        statsRpc.getMemberActivityStats(),
-        statsRpc.getWeeklyRanking(),
-        statsRpc.getXpHistory(),
-        statsRpc.getCoinHistory(),
-        statsRpc.getWeeklyDuelHistory(),
+        widget.rpc.getTaskStatsByCategory(),
+        widget.rpc.getMemberActivityStats(),
+        widget.rpc.getWeeklyRanking(),
+        widget.rpc.getXpHistory(),
+        widget.rpc.getCoinHistory(),
+        widget.rpc.getWeeklyDuelHistory(),
       ]);
 
       if (mounted) {
@@ -72,7 +71,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
         });
       }
     } catch (e) {
-      log.e('Error loading stats: $e', error: e);
+      debugPrint('Error loading stats: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -110,49 +109,33 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
       children: [
         // Tab bar
         Container(
-          margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          decoration: BoxDecoration(
-            color: AppColors.textMuted.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              indicator: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(26),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-              tabs: const [
-                Tab(text: 'Semana'),
-                Tab(text: 'Progreso'),
-                Tab(text: 'Categorías'),
-              ],
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: TabBar(
+            controller: _tabController,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textMuted,
+            indicatorColor: AppColors.primary,
+            indicatorWeight: 3,
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
             ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+            tabs: const [
+              Tab(text: 'Semana'),
+              Tab(text: 'Progreso'),
+              Tab(text: 'Categorías'),
+            ],
           ),
         ),
         Expanded(
           child: _isLoading
-              ? _buildSkeleton()
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
               : TabBarView(
                   controller: _tabController,
                   children: [
@@ -178,53 +161,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                     ),
                   ],
                 ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSkeleton() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
-      children: [
-        ShimmerLoading(
-          child: Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        Row(
-          children: List.generate(
-            3,
-            (index) => Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: index < 2 ? 10 : 0),
-                child: ShimmerLoading(
-                  child: Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        ShimmerLoading(
-          child: Container(
-            height: 200,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-            ),
-          ),
         ),
       ],
     );
@@ -269,7 +205,7 @@ class _WeeklyTab extends StatelessWidget {
           const SizedBox(height: 16),
 
           if (weeklyRanking.isNotEmpty) ...[
-            AIFaceoffWidget(weeklyRanking: weeklyRanking).animateEntrance(delay: 100),
+            AIFaceoffWidget(weeklyRanking: weeklyRanking),
             const SizedBox(height: 28),
           ],
 
@@ -284,25 +220,25 @@ class _WeeklyTab extends StatelessWidget {
                   value: '$totalTasks',
                   label: 'Tareas',
                   color: AppColors.primary.withValues(alpha: 0.7),
-                ).animateStaggered(0),
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: _MiniStatCard(
-                  icon: '✨',
+                  icon: '⭐',
                   value: '$totalXp',
-                  label: 'XP',
-                  color: AppColors.accentGold.withValues(alpha: 0.7),
-                ).animateStaggered(1),
+                  label: 'Total XP',
+                  color: AppColors.accentGold,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: _MiniStatCard(
                   icon: '🪙',
                   value: '$totalCoins',
-                  label: 'Monedas',
-                  color: AppColors.accentPeach.withValues(alpha: 0.7),
-                ).animateStaggered(2),
+                  label: 'Coins',
+                  color: AppColors.accentTeal,
+                ),
               ),
             ],
           ),
@@ -320,17 +256,206 @@ class _WeeklyTab extends StatelessWidget {
           const _SectionLabel(label: 'Actividad reciente', icon: '🕒'),
           const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border:
-                  Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-            ),
-            child: const Center(
-              child: Text(
-                'Revisá el muro para ver la actividad detallada',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+             padding: const EdgeInsets.all(20),
+             decoration: BoxDecoration(
+               color: Colors.white,
+               borderRadius: BorderRadius.circular(24),
+               border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+             ),
+             child: const Center(
+               child: Text(
+                 'Revisá el muro para ver la actividad detallada',
+                 style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+               ),
+             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Eliminated _UserSummaryCard as requested by the user.
+
+// Weekly duel bar chart
+class _WeeklyDuelCard extends StatelessWidget {
+  final List<Map<String, dynamic>> weeklyRanking;
+  const _WeeklyDuelCard({required this.weeklyRanking});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxXp = weeklyRanking.fold<double>(
+      0,
+      (max, p) => math.max(max, (p['xp_earned'] as num?)?.toDouble() ?? 0),
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.08),
+            AppColors.accent.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Text('🏆', style: TextStyle(fontSize: 22)),
+              ),
+              const SizedBox(width: 12),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'DUELO DE LA SEMANA',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.accentGold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'XP acumulados esta semana',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 160,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxXp <= 0 ? 10 : maxXp * 1.3,
+                barGroups: weeklyRanking.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final xp = (e.value['xp_earned'] as num?)?.toDouble() ?? 0;
+                  final isLeader = idx == 0;
+                  return BarChartGroupData(
+                    x: idx,
+                    barRods: [
+                      BarChartRodData(
+                        toY: xp <= 0 ? 0.5 : xp,
+                        width: 40,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12)),
+                        gradient: LinearGradient(
+                          colors: isLeader
+                              ? [AppColors.primary, AppColors.accentTeal]
+                              : [
+                                  AppColors.textMuted.withValues(alpha: 0.5),
+                                  AppColors.textMuted.withValues(alpha: 0.3),
+                                ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx >= weeklyRanking.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final xp = weeklyRanking[idx]['xp_earned'] ?? 0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            '$xp XP',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: idx == 0
+                                  ? AppColors.primary
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx >= weeklyRanking.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final name =
+                            weeklyRanking[idx]['user_name'] as String? ??
+                                'P${idx + 1}';
+                        final short = name.split(' ').first;
+                        final isLeader = idx == 0;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Column(
+                            children: [
+                              if (isLeader)
+                                const Text('👑',
+                                    style: TextStyle(fontSize: 14)),
+                              Text(
+                                short,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isLeader
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  color: isLeader
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: AppColors.border.withValues(alpha: 0.3),
+                    strokeWidth: 1,
+                    dashArray: [4, 4],
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
               ),
             ),
           ),
@@ -395,7 +520,7 @@ class _ProgressTabState extends State<_ProgressTab> {
           // ── Header ───────────────────────────────────────────────────────
           const _SectionLabel(label: 'Tu evolución personal', icon: '📈'),
           const SizedBox(height: 16),
-
+          
           // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
             children: [
@@ -478,14 +603,10 @@ class _ProgressTabState extends State<_ProgressTab> {
                         ),
                       ),
                       titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        leftTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
@@ -526,49 +647,23 @@ class _ProgressTabState extends State<_ProgressTab> {
           // ── Multi-info Cards ─────────────────────────────────────────────
           Row(
             children: [
-              Expanded(
-                child: TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 500),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  ),
-                  child: const _PersonalMetricCard(
-                    icon: '🔥',
-                    label: 'Racha',
-                    value: '7 días',
-                    color: Colors.orange,
-                    subtitle: '¡Vas con todo!',
-                  ),
+              const Expanded(
+                child: _PersonalMetricCard(
+                  icon: '🔥',
+                  label: 'Racha',
+                  value: '7 días',
+                  color: Colors.orange,
+                  subtitle: '¡Vas con todo!',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 700),
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) => Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  ),
-                  child: _PersonalMetricCard(
-                    icon: '📈',
-                    label: 'Nivel',
-                    value:
-                        '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
-                    color: AppColors.primary,
-                    subtitle:
-                        '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
-                  ),
+                child: _PersonalMetricCard(
+                  icon: '📈',
+                  label: 'Nivel',
+                  value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
+                  color: AppColors.primary,
+                  subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
                 ),
               ),
             ],
@@ -577,8 +672,7 @@ class _ProgressTabState extends State<_ProgressTab> {
 
           // ── Privacy assurance ───────────────────────────────────────────
           const _PrivacyBadge(
-            text:
-                'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
+            text: 'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
           ),
         ],
       ),
@@ -601,7 +695,7 @@ class _XPToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPress(
+    return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
@@ -613,15 +707,13 @@ class _XPToggleButton extends StatelessWidget {
             color: isSelected ? color : AppColors.border,
             width: 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [],
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
         ),
         child: Text(
           label,
@@ -765,21 +857,9 @@ class _CategoriesTab extends StatelessWidget {
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            ElevatedButton(
               onPressed: onRefresh,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Actualizar datos',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
+              child: const Text('Actualizar'),
             ),
           ],
         ),
@@ -804,7 +884,7 @@ class _CategoriesTab extends StatelessWidget {
           const _SectionLabel(label: 'Desglose por categoría', icon: '📋'),
           const SizedBox(height: 16),
           ...taskStats.map((stat) => _CategoryDetailCard(stat: stat)),
-
+          
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(20),
@@ -1094,8 +1174,167 @@ class _MiniStatCard extends StatelessWidget {
   }
 }
 
+class _ToggleChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ToggleChip({
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? color : AppColors.border,
+            width: selected ? 0 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: selected ? Colors.white : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberRankCard extends StatelessWidget {
+  final int rank;
+  final Map<String, dynamic> member;
+
+  const _MemberRankCard({required this.rank, required this.member});
+
+  @override
+  Widget build(BuildContext context) {
+    final rawName = member['user_name'] as String? ??
+        member['user_email'] as String? ??
+        'Miembro';
+    // Use full_name if available, otherwise email prefix
+    final name = rawName.contains('@') ? rawName.split('@').first : rawName;
+    final firstName = name.split(' ').first;
+
+    final tasks = (member['tasks_completed'] as num?)?.toInt() ?? 0;
+    final xp = (member['xp_earned'] as num?)?.toInt() ?? 0;
+    final coins = (member['coins_earned'] as num?)?.toInt() ?? 0;
+
+    const medals = ['🥇', '🥈', '🥉'];
+    final medal = rank <= 3 ? medals[rank - 1] : '#$rank';
+    final isTop = rank == 1;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:
+            isTop ? AppColors.accentGold.withValues(alpha: 0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isTop
+              ? AppColors.accentGold.withValues(alpha: 0.3)
+              : AppColors.border.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Medal
+          SizedBox(
+            width: 32,
+            child: Center(
+              child: Text(medal, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Avatar
+          CustomUserAvatar(
+            name: firstName,
+            avatarUrl: member['avatar_url'],
+            radius: 20,
+          ),
+          const SizedBox(width: 12),
+          // Name + detail
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  firstName,
+                  style: TextStyle(
+                    fontWeight: isTop ? FontWeight.w800 : FontWeight.w600,
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$tasks tareas · $xp XP · $coins coins',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // XP badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '⭐ $xp',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DuelHistoryWidget extends StatelessWidget {
   final List<Map<String, dynamic>> duelHistory;
+
   const _DuelHistoryWidget({required this.duelHistory});
 
   @override
@@ -1117,16 +1356,14 @@ class _DuelHistoryWidget extends StatelessWidget {
           final index = entry.key;
           final duel = entry.value;
           final isLast = index == duelHistory.length - 1;
-
-          final winnerName =
-              (duel['winner_name'] as String? ?? 'Ganador').split(' ').first;
-          final loserName =
-              (duel['loser_name'] as String? ?? 'Perdedor').split(' ').first;
+          
+          final winnerName = (duel['winner_name'] as String? ?? 'Ganador').split(' ').first;
+          final loserName = (duel['loser_name'] as String? ?? 'Perdedor').split(' ').first;
           final winnerXp = (duel['winner_xp'] as num?)?.toInt() ?? 0;
           final loserXp = (duel['loser_xp'] as num?)?.toInt() ?? 0;
           final userResult = duel['user_result'] as String? ?? 'neutral';
           final weekDate = duel['week_start_date'];
-
+          
           String weekLabel = 'Semana pasada';
           if (weekDate != null) {
             try {
@@ -1138,13 +1375,11 @@ class _DuelHistoryWidget extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: isLast
-                  ? null
-                  : Border(
-                      bottom: BorderSide(
-                        color: AppColors.border.withValues(alpha: 0.5),
-                      ),
-                    ),
+              border: isLast ? null : Border(
+                bottom: BorderSide(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+              ),
             ),
             child: Row(
               children: [
@@ -1154,16 +1389,10 @@ class _DuelHistoryWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: userResult == 'win'
-                          ? [
-                              AppColors.success,
-                              AppColors.success.withValues(alpha: 0.8)
-                            ]
+                          ? [AppColors.success, AppColors.success.withValues(alpha: 0.8)]
                           : userResult == 'loss'
                               ? [Colors.red.shade400, Colors.red.shade300]
-                              : [
-                                  AppColors.textMuted.withValues(alpha: 0.3),
-                                  AppColors.textMuted.withValues(alpha: 0.2)
-                                ],
+                              : [AppColors.textMuted.withValues(alpha: 0.3), AppColors.textMuted.withValues(alpha: 0.2)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -1171,11 +1400,7 @@ class _DuelHistoryWidget extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      userResult == 'win'
-                          ? '🏆'
-                          : userResult == 'loss'
-                              ? '😢'
-                              : '⚔️',
+                      userResult == 'win' ? '🏆' : userResult == 'loss' ? '😢' : '⚔️',
                       style: const TextStyle(fontSize: 18),
                     ),
                   ),
@@ -1192,14 +1417,10 @@ class _DuelHistoryWidget extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: userResult == 'win'
-                                  ? AppColors.success
-                                  : AppColors.textPrimary,
+                              color: userResult == 'win' ? AppColors.success : AppColors.textPrimary,
                             ),
                           ),
-                          const Text(' vs ',
-                              style: TextStyle(
-                                  color: AppColors.textMuted, fontSize: 12)),
+                          const Text(' vs ', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                           Text(
                             loserName,
                             style: const TextStyle(
@@ -1222,8 +1443,7 @@ class _DuelHistoryWidget extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: userResult == 'win'
                         ? AppColors.success.withValues(alpha: 0.1)
@@ -1236,11 +1456,7 @@ class _DuelHistoryWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        userResult == 'win'
-                            ? '✓'
-                            : userResult == 'loss'
-                                ? '✗'
-                                : '=',
+                        userResult == 'win' ? '✓' : userResult == 'loss' ? '✗' : '=',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12,

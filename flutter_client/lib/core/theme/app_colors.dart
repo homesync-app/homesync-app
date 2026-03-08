@@ -25,7 +25,7 @@ class AppColors {
   static const Color accentPeach = Color(0xFFE88D67);
   static const Color accentOrange = Color(0xFFFF8A65);
   static const Color accentYellow = Color(0xFFD4C550);
-
+  
   // Icon Palette (Mockup specific)
   static const Color iconPeach = Color(0xFFE88D67);
   static const Color iconSage = Color(0xFF6B8E85);
@@ -53,6 +53,7 @@ class AppColors {
     buffer.write(hexString.replaceFirst('#', ''));
     return Color(int.parse(buffer.toString(), radix: 16));
   }
+
 
   static const Color divider = Color(0xFFE2E8F0);
   static const Color border = Color(0xFFE2E8F0);
@@ -121,8 +122,9 @@ class AppColors {
       case 'exterior':
       case 'outdoor':
         return const Color(0xFF84CC16); // Lime
+      case 'compras':
       case 'supermarket':
-        return accentGold;
+        return iconBlue;
       case 'ropa':
         return const Color(0xFF818CF8); // Indigo
       case 'auto':
@@ -137,14 +139,6 @@ class AppColors {
         return iconYellow;
       case 'urgente':
         return error;
-      case 'income':
-      case 'ingreso':
-      case 'salary':
-      case 'transfer':
-      case 'sales':
-      case 'gift_income':
-      case 'other_income':
-        return success;
       case 'baño':
       case 'bano':
       case 'bathroom':
@@ -161,18 +155,6 @@ class AppColors {
       case 'niños':
       case 'ninos':
         return accentOrange;
-      case 'utilities':
-        return accentTeal;
-      case 'rent':
-        return primary;
-      case 'restaurants':
-        return const Color(0xFFF06292);
-      case 'transport':
-        return const Color(0xFF4DB6AC);
-      case 'entertainment':
-        return const Color(0xFF9575CD);
-      case 'health':
-        return accentRed;
       default:
         return textSecondary;
     }
@@ -224,14 +206,6 @@ class AppColors {
         return Icons.luggage_rounded;
       case 'salud':
         return Icons.favorite_rounded;
-      case 'income':
-      case 'ingreso':
-      case 'salary':
-      case 'transfer':
-      case 'sales':
-      case 'gift_income':
-      case 'other_income':
-        return Icons.payments_rounded;
       case 'ocio':
         return Icons.videogame_asset_rounded;
       case 'regalos':
@@ -253,22 +227,13 @@ class AppColors {
       case 'niños':
       case 'ninos':
         return Icons.child_care_rounded;
-      case 'utilities':
-        return Icons.lightbulb_outline_rounded;
-      case 'rent':
-        return Icons.home_work_rounded;
-      case 'restaurants':
-        return Icons.restaurant_rounded;
-      case 'transport':
-        return Icons.directions_car_rounded;
-      case 'entertainment':
-        return Icons.movie_creation_outlined;
-      case 'health':
-        return Icons.medical_services_outlined;
       default:
         return Icons.home_work_rounded;
     }
   }
+
+
+
 
   static const Map<String, String> categoryIcons = {
     'cleaning': '🧹',
@@ -279,7 +244,6 @@ class AppColors {
     'dormitorio': '🛌',
     'bathroom': '🚿',
     'baño': '🚿',
-    'bano': '🚿',
     'general': '🏠',
     'hogar': '🏠',
     'pets': '🐾',
@@ -297,22 +261,10 @@ class AppColors {
     'estudio': '📚',
     'mantenimiento': '🔧',
     'niños': '👶',
-    'ninos': '👶',
     'urgente': '🚨',
-    'income': '💰',
-    'salary': '💵',
-    'transfer': '💱',
-    'sales': '📈',
-    'gift_income': '🎁',
-    'other_income': '💰',
     'other': '📦',
-    'utilities': '💡',
-    'rent': '🏠',
-    'restaurants': '🍽️',
-    'transport': '🚗',
-    'entertainment': '🎬',
-    'health': '💊',
   };
+
 
   static const Map<String, String> categoryNames = {
     'cleaning': 'Limpieza',
@@ -323,7 +275,6 @@ class AppColors {
     'dormitorio': 'Dormitorio',
     'bathroom': 'Baño',
     'baño': 'Baño',
-    'bano': 'Baño',
     'general': 'Hogar',
     'hogar': 'Hogar',
     'pets': 'Mascotas',
@@ -333,7 +284,7 @@ class AppColors {
     'garden': 'Jardín',
     'jardin': 'Jardín',
     'jardín': 'Jardín',
-    'supermarket': 'Supermercado',
+    'supermarket': 'Compras',
     'compras': 'Compras',
     'ropa': 'Ropa',
     'residuos': 'Residuos',
@@ -341,39 +292,18 @@ class AppColors {
     'estudio': 'Estudio / Educación',
     'mantenimiento': 'Mantenimiento',
     'niños': 'Niños',
-    'ninos': 'Niños',
     'urgente': 'Urgente',
-    'income': 'Ingreso General',
-    'salary': 'Salario',
-    'transfer': 'Transferencia recibida',
-    'sales': 'Ventas / Negocio',
-    'gift_income': 'Regalo',
-    'other_income': 'Otros Ingresos',
+    'bano': 'Baño',
     'other': 'Otros',
-    'utilities': 'Servicios',
-    'rent': 'Alquiler',
-    'restaurants': 'Restaurantes',
-    'transport': 'Transporte',
-    'entertainment': 'Entretenimiento',
-    'health': 'Salud',
-    'finanzas': 'Finanzas',
-    'savings': 'Finanzas',
   };
+
+
+
 
   static String getMonthName(int month) {
     const months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic'
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
     ];
     if (month >= 1 && month <= 12) return months[month - 1];
     return '';
@@ -387,20 +317,10 @@ class AppColors {
     if (lower == 'bathroom' || lower == 'baño') return 'bano';
     if (lower == 'bedroom') return 'dormitorio';
     if (lower == 'pets') return 'mascotas';
-    if (lower == 'outdoor' ||
-        lower == 'garden' ||
-        lower == 'jardín' ||
-        lower == 'jardin') {
-      return 'jardin';
-    }
+    if (lower == 'outdoor' || lower == 'garden' || lower == 'jardín' || lower == 'jardin') return 'jardin';
     if (lower == 'supermarket') return 'compras';
-    if (lower == 'savings' || lower == 'finanzas') return 'finanzas';
-    if (lower == 'niños' ||
-        lower == 'niño' ||
-        lower == 'ninos' ||
-        lower == 'niña') {
-      return 'ninos';
-    }
+    if (lower == 'savings') return 'finanzas';
+    if (lower == 'niños' || lower == 'niño' || lower == 'ninos' || lower == 'niña') return 'ninos';
     return lower;
   }
 }

@@ -37,4 +37,6 @@ abstract class ExpenseRepository {
     required String toUserId,
     required double amount,
   });
+
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(String userId, String householdId);
 }

@@ -157,4 +157,16 @@ class SupabaseExpenseRepository
       );
     }, context: 'SupabaseExpenseRepository.settleDebt', isOnline: _isOnline);
   }
+
+  @override
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(String userId, String householdId) async {
+    final response = await _client.rpc(
+      'get_personal_finance_summary',
+      params: {
+        'p_user_id': userId,
+        'p_household_id': householdId,
+      },
+    );
+    return Map<String, dynamic>.from(response);
+  }
 }

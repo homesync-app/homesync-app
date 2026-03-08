@@ -4,14 +4,9 @@
 // Run with: flutter test test/models_test.dart
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
-import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
-import 'package:homesync_client/features/auth/domain/models/user_model.dart';
-import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
-import 'package:homesync_client/features/household/domain/models/household_model.dart';
-import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/models/task.dart';
+import 'package:homesync_client/models/expense.dart';
+import 'package:homesync_client/models/savings_goal.dart';
 
 void main() {
   // ───────────────────────────────────────────────────────────────────────────
@@ -38,42 +33,42 @@ void main() {
         'difficulty': 'easy',
       };
 
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
 
       expect(task.id, equals('task-1'));
       expect(task.title, equals('Lavar platos'));
       expect(task.category, equals('kitchen'));
-      expect(task.status, equals(TaskStatus.active));
+      expect(task.status, equals('active'));
       expect(task.xpReward, equals(20));
       expect(task.coinReward, equals(10));
       expect(task.recurrenceType, equals('weekly'));
       expect(task.recurrenceInterval, equals(2));
       expect(task.householdId, equals('house-1'));
-      expect(task.priority, equals(TaskPriority.high));
-      expect(task.difficulty, equals(TaskDifficulty.easy));
+      expect(task.priority, equals('high'));
+      expect(task.difficulty, equals('easy'));
     });
 
     test('Uses default values when optional fields are null', () {
       final map = {
         'id': 'task-2',
         'title': 'Tarea minimal',
-        'status': null, // should default to 'active'
-        'xp_reward': null, // should default to 0
-        'coin_reward': null, // should default to 0
+        'status': null,       // should default to 'active'
+        'xp_reward': null,    // should default to 0
+        'coin_reward': null,  // should default to 0
         'household_id': null, // should default to ''
-        'created_at': null, // should default to now
+        'created_at': null,   // should default to now
         'recurrence_interval': null, // should default to 1
       };
 
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
 
-      expect(task.status, equals(TaskStatus.active));
+      expect(task.status, equals('active'));
       expect(task.xpReward, equals(0));
       expect(task.coinReward, equals(0));
       expect(task.householdId, equals(''));
       expect(task.recurrenceInterval, equals(1));
-      expect(task.priority, equals(TaskPriority.medium));
-      expect(task.difficulty, equals(TaskDifficulty.medium));
+      expect(task.priority, equals('medium'));
+      expect(task.difficulty, equals('medium'));
     });
 
     test('Defaults missing title to "Sin título"', () {
@@ -84,7 +79,7 @@ void main() {
         'household_id': 'h1',
         'created_at': '2026-01-01T00:00:00.000Z',
       };
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
       expect(task.title, equals('Sin título'));
     });
 
@@ -98,7 +93,7 @@ void main() {
         'household_id': 'h1',
         'created_at': '2026-01-01T00:00:00.000Z',
       };
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
       expect(task.xpReward, equals(15));
       expect(task.coinReward, equals(7));
     });
@@ -112,7 +107,7 @@ void main() {
         'created_at': '2026-01-01T00:00:00.000Z',
         'due_at': '2026-06-15T10:30:00.000Z',
       };
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
       expect(task.dueAt, isNotNull);
       expect(task.dueAt!.month, equals(6));
       expect(task.dueAt!.day, equals(15));
@@ -127,13 +122,13 @@ void main() {
         'created_at': '2026-01-01T00:00:00.000Z',
         'due_at': 'not-a-date',
       };
-      final task = TaskModel.fromMap(map);
+      final task = Task.fromMap(map);
       expect(task.dueAt, isNull);
     });
   });
 
   group('✅ Task — Status computed properties', () {
-    TaskModel makeTask(TaskStatus status) => TaskModel(
+    Task makeTask(String status) => Task(
           id: 't',
           title: 'Test',
           status: status,
@@ -144,40 +139,40 @@ void main() {
         );
 
     test('isActive is true for "active"', () {
-      expect(makeTask(TaskStatus.active).isActive, isTrue);
+      expect(makeTask('active').isActive, isTrue);
     });
 
     test('isActive is true for "assigned" (also active)', () {
-      expect(makeTask(TaskStatus.assigned).isActive, isTrue);
+      expect(makeTask('assigned').isActive, isTrue);
     });
 
     test('isActive is false for other statuses', () {
-      expect(makeTask(TaskStatus.pendingVerification).isActive, isFalse);
-      expect(makeTask(TaskStatus.verified).isActive, isFalse);
-      expect(makeTask(TaskStatus.objected).isActive, isFalse);
+      expect(makeTask('completed').isActive, isFalse);
+      expect(makeTask('verified').isActive, isFalse);
+      expect(makeTask('objected').isActive, isFalse);
     });
 
     test('isCompleted/isVerified/isObjected are mutually exclusive', () {
-      expect(makeTask(TaskStatus.pendingVerification).isCompleted, isTrue);
-      expect(makeTask(TaskStatus.pendingVerification).isVerified, isFalse);
+      expect(makeTask('completed').isCompleted, isTrue);
+      expect(makeTask('completed').isVerified, isFalse);
 
-      expect(makeTask(TaskStatus.verified).isVerified, isTrue);
-      expect(makeTask(TaskStatus.verified).isCompleted, isTrue);
+      expect(makeTask('verified').isVerified, isTrue);
+      expect(makeTask('verified').isCompleted, isFalse);
 
-      expect(makeTask(TaskStatus.objected).isObjected, isTrue);
-      expect(makeTask(TaskStatus.objected).isCompleted, isFalse);
+      expect(makeTask('objected').isObjected, isTrue);
+      expect(makeTask('objected').isCompleted, isFalse);
     });
 
     test('isRecurring is false when recurrenceType is null', () {
-      final task = makeTask(TaskStatus.active);
+      final task = makeTask('active');
       expect(task.isRecurring, isFalse);
     });
 
     test('isRecurring is true when recurrenceType is set', () {
-      final task = TaskModel(
+      final task = Task(
         id: 't',
         title: 'Weekly',
-        status: TaskStatus.active,
+        status: 'active',
         xpReward: 10,
         coinReward: 5,
         householdId: 'h1',
@@ -190,10 +185,10 @@ void main() {
 
   group('✅ Task — isOverdue', () {
     test('Task with past due date and active status is overdue', () {
-      final task = TaskModel(
+      final task = Task(
         id: 't',
         title: 'Overdue task',
-        status: TaskStatus.active,
+        status: 'active',
         xpReward: 10,
         coinReward: 5,
         householdId: 'h1',
@@ -204,11 +199,10 @@ void main() {
     });
 
     test('Completed task with past due date is NOT overdue', () {
-      final task = TaskModel(
+      final task = Task(
         id: 't',
         title: 'Done task',
-        status: TaskStatus
-            .pendingVerification, // Was 'completed', in new model 'pending_verification' acts as completed
+        status: 'completed',
         xpReward: 10,
         coinReward: 5,
         householdId: 'h1',
@@ -219,10 +213,10 @@ void main() {
     });
 
     test('Task with no due date is never overdue', () {
-      final task = TaskModel(
+      final task = Task(
         id: 't',
         title: 'No due',
-        status: TaskStatus.active,
+        status: 'active',
         xpReward: 10,
         coinReward: 5,
         householdId: 'h1',
@@ -232,10 +226,10 @@ void main() {
     });
 
     test('Task with future due date is not overdue', () {
-      final task = TaskModel(
+      final task = Task(
         id: 't',
         title: 'Future task',
-        status: TaskStatus.active,
+        status: 'active',
         xpReward: 10,
         coinReward: 5,
         householdId: 'h1',
@@ -247,10 +241,10 @@ void main() {
   });
 
   group('✅ Task — recurrenceLabel', () {
-    String labelFor(String? type) => TaskModel(
+    String labelFor(String? type) => Task(
           id: 't',
           title: 'T',
-          status: TaskStatus.active,
+          status: 'active',
           xpReward: 0,
           coinReward: 0,
           householdId: 'h',
@@ -259,21 +253,17 @@ void main() {
         ).recurrenceLabel;
 
     test('daily → "Diaria"', () => expect(labelFor('daily'), equals('Diaria')));
-    test('weekly → "Semanal"',
-        () => expect(labelFor('weekly'), equals('Semanal')));
-    test('monthly → "Mensual"',
-        () => expect(labelFor('monthly'), equals('Mensual')));
-    test('custom → "Personalizada"',
-        () => expect(labelFor('custom'), equals('Personalizada')));
-    test('null → "Sin repetición"',
-        () => expect(labelFor(null), equals('Sin repetición')));
+    test('weekly → "Semanal"', () => expect(labelFor('weekly'), equals('Semanal')));
+    test('monthly → "Mensual"', () => expect(labelFor('monthly'), equals('Mensual')));
+    test('custom → "Personalizada"', () => expect(labelFor('custom'), equals('Personalizada')));
+    test('null → "Sin repetición"', () => expect(labelFor(null), equals('Sin repetición')));
   });
 
   group('✅ Task — copyWith()', () {
-    final original = TaskModel(
+    final original = Task(
       id: 'task-1',
       title: 'Original',
-      status: TaskStatus.active,
+      status: 'active',
       xpReward: 10,
       coinReward: 5,
       householdId: 'h1',
@@ -281,12 +271,11 @@ void main() {
     );
 
     test('copyWith changes only specified fields', () {
-      final updated = original.copyWith(
-          status: TaskStatus.pendingVerification, title: 'Modified');
-      expect(updated.id, equals('task-1')); // unchanged
+      final updated = original.copyWith(status: 'completed', title: 'Modified');
+      expect(updated.id, equals('task-1'));       // unchanged
       expect(updated.householdId, equals('h1')); // unchanged
-      expect(updated.status, equals(TaskStatus.pendingVerification)); // changed
-      expect(updated.title, equals('Modified')); // changed
+      expect(updated.status, equals('completed')); // changed
+      expect(updated.title, equals('Modified'));   // changed
     });
 
     test('copyWith preserves all fields if nothing specified', () {
@@ -305,43 +294,19 @@ void main() {
 
   group('✅ Task — equality & hashCode', () {
     test('Two tasks with same id are equal', () {
-      final t1 = TaskModel(
-          id: 'x',
-          title: 'A',
-          status: TaskStatus.active,
-          xpReward: 10,
-          coinReward: 5,
-          householdId: 'h',
-          createdAt: DateTime(2026));
-      final t2 = TaskModel(
-          id: 'x',
-          title: 'B',
-          status: TaskStatus.verified,
-          xpReward: 99,
-          coinReward: 0,
-          householdId: 'h2',
-          createdAt: DateTime(2025));
+      final t1 = Task(id: 'x', title: 'A', status: 'active', xpReward: 10,
+          coinReward: 5, householdId: 'h', createdAt: DateTime(2026));
+      final t2 = Task(id: 'x', title: 'B', status: 'verified', xpReward: 99,
+          coinReward: 0, householdId: 'h2', createdAt: DateTime(2025));
       expect(t1, equals(t2));
       expect(t1.hashCode, equals(t2.hashCode));
     });
 
     test('Tasks with different ids are not equal', () {
-      final t1 = TaskModel(
-          id: 'a',
-          title: 'T',
-          status: TaskStatus.active,
-          xpReward: 0,
-          coinReward: 0,
-          householdId: 'h',
-          createdAt: DateTime(2026));
-      final t2 = TaskModel(
-          id: 'b',
-          title: 'T',
-          status: TaskStatus.active,
-          xpReward: 0,
-          coinReward: 0,
-          householdId: 'h',
-          createdAt: DateTime(2026));
+      final t1 = Task(id: 'a', title: 'T', status: 'active', xpReward: 0,
+          coinReward: 0, householdId: 'h', createdAt: DateTime(2026));
+      final t2 = Task(id: 'b', title: 'T', status: 'active', xpReward: 0,
+          coinReward: 0, householdId: 'h', createdAt: DateTime(2026));
       expect(t1, isNot(equals(t2)));
     });
   });
@@ -363,7 +328,7 @@ void main() {
         'payer': {'email': 'blas@email.com', 'full_name': 'Blas Oroná'},
       };
 
-      final expense = ExpenseModel.fromJson(map);
+      final expense = Expense.fromMap(map);
 
       expect(expense.id, equals('exp-1'));
       expect(expense.title, equals('Supermercado'));
@@ -385,7 +350,7 @@ void main() {
         'users': {'email': 'novia@email.com', 'full_name': 'María García'},
       };
 
-      final expense = ExpenseModel.fromJson(map);
+      final expense = Expense.fromMap(map);
       expect(expense.payerEmail, equals('novia@email.com'));
     });
 
@@ -399,8 +364,8 @@ void main() {
         'created_at': '2026-02-01T12:00:00.000Z',
       };
 
-      expect(() => ExpenseModel.fromJson(map), returnsNormally);
-      final expense = ExpenseModel.fromJson(map);
+      expect(() => Expense.fromMap(map), returnsNormally);
+      final expense = Expense.fromMap(map);
       expect(expense.payerEmail, isNull);
       expect(expense.payerFullName, isNull);
     });
@@ -414,18 +379,18 @@ void main() {
         'paid_by': 'u1',
         'created_at': '2026-02-01T12:00:00.000Z',
       };
-      expect(ExpenseModel.fromJson(map).amount, equals(0.0));
+      expect(Expense.fromMap(map).amount, equals(0.0));
     });
   });
 
   group('💸 Expense — Display helpers', () {
-    ExpenseModel makeExpense({
+    Expense makeExpense({
       String? fullName,
       String? email,
       String? category,
       double amount = 1234.5,
     }) =>
-        ExpenseModel(
+        Expense(
           id: 'e',
           title: 'Test',
           amount: amount,
@@ -439,13 +404,11 @@ void main() {
         );
 
     test('payerDisplayName uses first name from full name', () {
-      expect(
-          makeExpense(fullName: 'Blas Oroná').payerDisplayName, equals('Blas'));
+      expect(makeExpense(fullName: 'Blas Oroná').payerDisplayName, equals('Blas'));
     });
 
     test('payerDisplayName falls back to email prefix', () {
-      expect(makeExpense(email: 'blas@email.com').payerDisplayName,
-          equals('blas'));
+      expect(makeExpense(email: 'blas@email.com').payerDisplayName, equals('blas'));
     });
 
     test('payerDisplayName returns "Alguien" when both are null', () {
@@ -471,23 +434,21 @@ void main() {
     });
 
     test('categoryLabel returns Spanish label for known categories', () {
-      expect(makeExpense(category: 'supermarket').categoryLabel,
-          equals('Supermercado'));
-      expect(makeExpense(category: 'utilities').categoryLabel,
-          equals('Servicios'));
+      expect(makeExpense(category: 'supermarket').categoryLabel, equals('Supermercado'));
+      expect(makeExpense(category: 'utilities').categoryLabel, equals('Servicios'));
       expect(makeExpense(category: 'rent').categoryLabel, equals('Alquiler'));
     });
   });
 
   group('💸 HouseholdBalance — computed properties', () {
-    HouseholdBalanceModel makeBalance(double balance) => HouseholdBalanceModel(
+    HouseholdBalance makeBalance(double balance) => HouseholdBalance(
           userId: 'u1',
           balance: balance,
         );
 
     test('isSettled when balance is ~0', () {
       expect(makeBalance(0.0).isSettled, isTrue);
-      expect(makeBalance(0.005).isSettled, isTrue); // < 0.01 threshold
+      expect(makeBalance(0.005).isSettled, isTrue);  // < 0.01 threshold
       expect(makeBalance(-0.005).isSettled, isTrue);
     });
 
@@ -510,7 +471,7 @@ void main() {
     });
 
     test('displayName uses full name first', () {
-      const b = HouseholdBalanceModel(
+      const b = HouseholdBalance(
         userId: 'u1',
         balance: 0,
         userFullName: 'Blas Oroná',
@@ -520,7 +481,7 @@ void main() {
     });
 
     test('displayName falls back to email prefix', () {
-      const b = HouseholdBalanceModel(
+      const b = HouseholdBalance(
         userId: 'u1',
         balance: 0,
         userEmail: 'blas@email.com',
@@ -549,7 +510,7 @@ void main() {
         'created_at': '2026-01-01T00:00:00.000Z',
       };
 
-      final goal = SavingsGoalModel.fromJson(json);
+      final goal = SavingsGoal.fromJson(json);
       expect(goal.id, equals('goal-1'));
       expect(goal.title, equals('Vacaciones'));
       expect(goal.targetAmount, closeTo(100000.0, 0.01));
@@ -559,49 +520,33 @@ void main() {
     });
 
     test('progress is 0.0 when nothing saved', () {
-      final goal = SavingsGoalModel(
-        id: 'g',
-        householdId: 'h',
-        title: 'Test',
-        targetAmount: 1000.0,
-        currentAmount: 0.0,
-        createdAt: DateTime(2026),
+      final goal = SavingsGoal(
+        id: 'g', householdId: 'h', title: 'Test',
+        targetAmount: 1000.0, currentAmount: 0.0, createdAt: DateTime(2026),
       );
       expect(goal.progress, equals(0.0));
     });
 
     test('progress is 0.25 when 25% saved', () {
-      final goal = SavingsGoalModel(
-        id: 'g',
-        householdId: 'h',
-        title: 'Test',
-        targetAmount: 1000.0,
-        currentAmount: 250.0,
-        createdAt: DateTime(2026),
+      final goal = SavingsGoal(
+        id: 'g', householdId: 'h', title: 'Test',
+        targetAmount: 1000.0, currentAmount: 250.0, createdAt: DateTime(2026),
       );
       expect(goal.progress, closeTo(0.25, 0.001));
     });
 
     test('progress is 1.0 when fully funded', () {
-      final goal = SavingsGoalModel(
-        id: 'g',
-        householdId: 'h',
-        title: 'Test',
-        targetAmount: 1000.0,
-        currentAmount: 1000.0,
-        createdAt: DateTime(2026),
+      final goal = SavingsGoal(
+        id: 'g', householdId: 'h', title: 'Test',
+        targetAmount: 1000.0, currentAmount: 1000.0, createdAt: DateTime(2026),
       );
       expect(goal.progress, closeTo(1.0, 0.001));
     });
 
     test('progress can exceed 1.0 when overfunded', () {
-      final goal = SavingsGoalModel(
-        id: 'g',
-        householdId: 'h',
-        title: 'Test',
-        targetAmount: 1000.0,
-        currentAmount: 1200.0,
-        createdAt: DateTime(2026),
+      final goal = SavingsGoal(
+        id: 'g', householdId: 'h', title: 'Test',
+        targetAmount: 1000.0, currentAmount: 1200.0, createdAt: DateTime(2026),
       );
       expect(goal.progress, greaterThan(1.0));
     });
@@ -616,7 +561,7 @@ void main() {
         'created_at': '2026-01-01T00:00:00.000Z',
         // no 'color' or 'icon'
       };
-      final goal = SavingsGoalModel.fromJson(json);
+      final goal = SavingsGoal.fromJson(json);
       expect(goal.color, equals('#FF7E67'));
       expect(goal.icon, equals('💰'));
     });
@@ -631,13 +576,10 @@ void main() {
         'amount': 5000.0,
         'note': 'Mi parte del mes',
         'created_at': '2026-02-15T10:00:00.000Z',
-        'user': {
-          'full_name': 'Blas Oroná',
-          'avatar_url': 'https://example.com/avatar.png'
-        },
+        'user': {'full_name': 'Blas Oroná', 'avatar_url': 'https://example.com/avatar.png'},
       };
 
-      final contrib = SavingsContributionModel.fromJson(json);
+      final contrib = SavingsContribution.fromJson(json);
       expect(contrib.id, equals('contrib-1'));
       expect(contrib.amount, closeTo(5000.0, 0.01));
       expect(contrib.note, equals('Mi parte del mes'));
@@ -654,136 +596,10 @@ void main() {
         'created_at': '2026-02-15T10:00:00.000Z',
         // no 'user' key
       };
-      expect(() => SavingsContributionModel.fromJson(json), returnsNormally);
-      final contrib = SavingsContributionModel.fromJson(json);
+      expect(() => SavingsContribution.fromJson(json), returnsNormally);
+      final contrib = SavingsContribution.fromJson(json);
       expect(contrib.userName, isNull);
       expect(contrib.userAvatar, isNull);
-    });
-  });
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // USER MODEL
-  // ───────────────────────────────────────────────────────────────────────────
-  group('👤 UserModel — fromJson() & displayName', () {
-    test('Parses complete JSON correctly', () {
-      final json = {
-        'id': 'u1',
-        'email': 'test@example.com',
-        'full_name': 'Juan Perez',
-        'avatar_url': '🚀',
-        'mercadopago_alias': 'juan.mp',
-      };
-      final user = UserModel.fromJson(json);
-      expect(user.id, equals('u1'));
-      expect(user.email, equals('test@example.com'));
-      expect(user.fullName, equals('Juan Perez'));
-      expect(user.displayName, equals('Juan Perez'));
-      expect(user.avatarUrl, equals('🚀'));
-    });
-
-    test('displayName falls back to email prefix if full_name is null', () {
-      const user = UserModel(id: 'u2', email: 'pepe@gmail.com');
-      expect(user.displayName, equals('pepe'));
-    });
-  });
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // REWARD MODEL
-  // ───────────────────────────────────────────────────────────────────────────
-  group('🎁 RewardModel — fromJson() & equality', () {
-    test('Parses complete JSON correctly', () {
-      final json = {
-        'id': 'r1',
-        'household_id': 'h1',
-        'title': 'Masaje',
-        'cost': 500,
-        'icon': '💆‍♂️',
-        'is_approved': true,
-        'is_active': true,
-      };
-      final reward = RewardModel.fromJson(json);
-      expect(reward.id, equals('r1'));
-      expect(reward.cost, equals(500));
-      expect(reward.isApproved, isTrue);
-    });
-
-    test('Defaults icon and status if not in JSON', () {
-      final json = {
-        'id': 'r2',
-        'household_id': 'h1',
-        'title': 'Test',
-      };
-      final reward = RewardModel.fromJson(json);
-      expect(reward.icon, equals('🎁'));
-      expect(reward.isApproved, isFalse);
-      expect(reward.isActive, isTrue);
-    });
-  });
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // SHOPPING MODEL
-  // ───────────────────────────────────────────────────────────────────────────
-  group('🛒 ShoppingItemModel — fromJson() & helpers', () {
-    test('Parses correctly with user nested data', () {
-      final json = {
-        'id': 's1',
-        'household_id': 'h1',
-        'name': 'Leche',
-        'quantity': '2',
-        'unit': 'unidades',
-        'added_by_user': {'full_name': 'Blas Oroná'},
-        'completed': true,
-        'completed_by_user': {'full_name': 'María García'},
-        'created_at': '2026-01-01T00:00:00Z',
-      };
-      final item = ShoppingItemModel.fromJson(json);
-      expect(item.name, equals('Leche'));
-      expect(item.displayQuantity, equals('2 unidades'));
-      expect(item.addedByDisplay, equals('Blas'));
-      expect(item.completedByDisplay, equals('María'));
-    });
-
-    test('displayQuantity is empty if both null', () {
-      final item = ShoppingItemModel(
-        id: 's',
-        householdId: 'h',
-        name: 'N',
-        createdAt: DateTime.now(),
-      );
-      expect(item.displayQuantity, equals(''));
-    });
-  });
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // HOUSEHOLD MODEL
-  // ───────────────────────────────────────────────────────────────────────────
-  group('🏠 HouseholdModel — fromJson()', () {
-    test('Parses correctly', () {
-      final json = {
-        'id': 'h1',
-        'name': 'Nuestra Casa',
-        'household_type': 'couple',
-      };
-      final h = HouseholdModel.fromJson(json);
-      expect(h.name, equals('Nuestra Casa'));
-      expect(h.householdType, equals('couple'));
-    });
-  });
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // CATEGORY MODEL
-  // ───────────────────────────────────────────────────────────────────────────
-  group('🛡️ CategoryModel — fromMap()', () {
-    test('Parses correctly', () {
-      final map = {
-        'id': 'kitchen',
-        'name': 'Cocina',
-        'icon': '🍳',
-        'color': '#FF0000',
-      };
-      final cat = CategoryModel.fromMap(map);
-      expect(cat.name, equals('Cocina'));
-      expect(cat.icon, equals('🍳'));
     });
   });
 }

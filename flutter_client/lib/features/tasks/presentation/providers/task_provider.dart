@@ -85,20 +85,16 @@ class Tasks extends _$Tasks {
     _setupRealtime(householdId);
 
     final useCase = ref.watch(getTasksUseCaseProvider);
-    final result = await useCase(householdId, limit: _pageSize, offset: 0);
-
-    return result.fold(
-      (failure) {
-        log.e('Error loading tasks: ${failure.message}');
-        throw Exception(failure.message);
-      },
-      (tasks) {
-        if (tasks.length < _pageSize) {
-          _hasMore = false;
-        }
-        return tasks;
-      },
-    );
+    try {
+      final tasks = await useCase(householdId, limit: _pageSize, offset: 0);
+      if (tasks.length < _pageSize) {
+        _hasMore = false;
+      }
+      return tasks;
+    } catch (e) {
+      log.e('Error loading tasks: $e');
+      throw Exception('Error al cargar tareas: $e');
+    }
   }
 
   void _setupRealtime(String householdId) {
@@ -145,21 +141,20 @@ class Tasks extends _$Tasks {
     if (householdId == null) return;
 
     final useCase = ref.read(getTasksUseCaseProvider);
-    final result = await useCase(
-      householdId,
-      limit: _pageSize,
-      offset: currentTasks.length,
-    );
+    try {
+      final nextTasks = await useCase(
+        householdId,
+        limit: _pageSize,
+        offset: currentTasks.length,
+      );
 
-    result.fold(
-      (failure) => log.w('Error loading more tasks: ${failure.message}'),
-      (nextTasks) {
-        if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
-          _hasMore = false;
-        }
-        state = AsyncValue.data([...currentTasks, ...nextTasks]);
-      },
-    );
+      if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
+        _hasMore = false;
+      }
+      state = AsyncValue.data([...currentTasks, ...nextTasks]);
+    } catch (e) {
+      log.w('Error loading more tasks: $e');
+    }
   }
 
   Future<Map<String, dynamic>?> completeTask(TaskModel task, {List<String>? userIds}) async {
@@ -179,19 +174,15 @@ class Tasks extends _$Tasks {
       );
     }
 
-    final useCase = ref.read(completeTaskUseCaseProvider);
-    final result = await useCase(task, userIds: performers);
-
-    return result.fold(
-      (failure) {
-        log.w('Complete task failure: ${failure.message}');
-        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
-        return null;
-      },
-      (data) async {
-        return data;
-      },
-    );
+    try {
+      final useCase = ref.read(completeTaskUseCaseProvider);
+      final result = await useCase(task);
+      return result;
+    } catch (e) {
+      log.w('Complete task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      return null;
+    }
   }
 
   Future<void> verifyTask(TaskModel task) async {
@@ -208,16 +199,13 @@ class Tasks extends _$Tasks {
       );
     }
 
-    final repo = ref.read(taskRepositoryProvider);
-    final result = await repo.verifyTask(task.id, userId);
-
-    result.fold(
-      (failure) {
-        log.w('Verify task failure: ${failure.message}');
-        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
-      },
-      (_) => null,
-    );
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.verifyTask(task.id, userId);
+    } catch (e) {
+      log.w('Verify task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+    }
   }
 
   Future<void> objectTask(TaskModel task) async {
@@ -234,16 +222,13 @@ class Tasks extends _$Tasks {
       );
     }
 
-    final repo = ref.read(taskRepositoryProvider);
-    final result = await repo.objectTask(task.id, userId);
-
-    result.fold(
-      (failure) {
-        log.w('Object task failure: ${failure.message}');
-        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
-      },
-      (_) => null,
-    );
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.objectTask(task.id, userId);
+    } catch (e) {
+      log.w('Object task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+    }
   }
 
   Future<void> deleteTask(TaskModel task) async {
@@ -254,57 +239,55 @@ class Tasks extends _$Tasks {
       );
     }
 
-    final repo = ref.read(taskRepositoryProvider);
-    final result = await repo.deleteTask(task.id);
-
-    result.fold(
-      (failure) {
-        log.w('Delete task failure: ${failure.message}');
-        if (oldState != null) state = AsyncValue.data(oldState); // Rollback
-      },
-      (_) => null,
-    );
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.deleteTask(task.id);
+    } catch (e) {
+      log.w('Delete task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+    }
   }
 
   Future<void> updateSchedule(TaskModel task, String? recurrenceType) async {
-    final repo = ref.read(taskRepositoryProvider);
-    final result = await repo.updateSchedule(task.id, recurrenceType);
-
-    result.fold(
-      (failure) => log.w('Update schedule failure: ${failure.message}'),
-      (_) => refresh(),
-    );
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.updateSchedule(task.id, recurrenceType);
+      refresh();
+    } catch (e) {
+      log.w('Update schedule failure: $e');
+    }
   }
 
   Future<void> createTask(Map<String, dynamic> taskData) async {
-    final useCase = ref.read(createTaskUseCaseProvider);
-    final result = await useCase(
-      title: taskData['title'] as String,
-      description: taskData['description'] as String?,
-      category: taskData['category'] as String,
-      difficulty: taskData['difficulty'] as String,
-      xpReward: taskData['xpReward'] as int,
-      coinReward: taskData['coinReward'] as int,
-      assignedTo: taskData['assignedTo'] as String?,
-      recurrenceType: taskData['recurrenceType'] as String?,
-    );
-
-    result.fold(
-      (failure) => log.w('Create task failure: ${failure.message}'),
-      (_) => silentRefresh(),
-    );
+    try {
+      final useCase = ref.read(createTaskUseCaseProvider);
+      await useCase(
+        title: taskData['title'] as String,
+        description: taskData['description'] as String?,
+        category: taskData['category'] as String,
+        difficulty: taskData['difficulty'] as String,
+        xpReward: taskData['xpReward'] as int,
+        coinReward: taskData['coinReward'] as int,
+        assignedTo: taskData['assignedTo'] as String?,
+        recurrenceType: taskData['recurrenceType'] as String?,
+      );
+      silentRefresh();
+    } catch (e) {
+      log.w('Create task failure: $e');
+    }
   }
 
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
-    final repo = ref.read(taskRepositoryProvider);
-    final result = await repo.editTask(taskId, updates);
-
-    result.fold(
-      (failure) => log.w('Edit task failure: ${failure.message}'),
-      (_) => refresh(),
-    );
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.editTask(taskId, updates);
+      refresh();
+    } catch (e) {
+      log.w('Edit task failure: $e');
+    }
   }
 }
+
 
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
@@ -362,6 +345,9 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       // 3. Visibility check:
       // - Already due today?
       if (task.isDueToday) return true;
+
+      // - Is it a daily recurring task? (These always show unless completed)
+      if (task.recurrenceType == 'daily') return true;
 
       // - Is it overdue? (Due in the past but still active)
       if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {

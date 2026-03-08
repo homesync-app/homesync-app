@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:confetti/confetti.dart';
-import 'dart:math' as math;
 import 'package:timeago/timeago.dart' as timeago;
 // ignore: implementation_imports
 import 'package:timeago/src/messages/es_messages.dart';
@@ -12,16 +10,15 @@ import 'package:homesync_client/features/tasks/domain/models/category_model.dart
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-// legacy services removed — access via providers
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
-import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
-    show ScheduleDialog, TaskRepeatMode;
+import 'package:homesync_client/shared/widgets/schedule_dialog.dart' show ScheduleDialog, TaskRepeatMode;
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 
@@ -30,7 +27,10 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 class TasksScreen extends ConsumerStatefulWidget {
-  const TasksScreen({super.key});
+  final SupabaseAuthService auth;
+  final SupabaseRpcService rpc;
+
+  const TasksScreen({super.key, required this.auth, required this.rpc});
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -38,20 +38,17 @@ class TasksScreen extends ConsumerStatefulWidget {
 
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   RealtimeChannel? _tasksChannel;
-  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('es', EsMessages());
     _setupRealtime();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
   }
 
   @override
   void dispose() {
     _tasksChannel?.unsubscribe();
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -60,8 +57,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null || !mounted) return;
 
-    final client = ref.read(supabaseClientProvider);
-    _tasksChannel = client
+    _tasksChannel = Supabase.instance.client
         .channel('tasks_screen:$householdId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -85,7 +81,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   void _showScheduleDialog(TaskModel task) {
     final members = ref
-        .read(householdMembersNotifierProvider)
+        .read(householdMembersProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
     showDialog(
@@ -162,7 +158,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   void _showCreateTaskDialog() async {
     final members = ref
-        .read(householdMembersNotifierProvider)
+        .read(householdMembersProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
     final result = await AddTaskOptionsSheet.show(context, members);
@@ -177,7 +173,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => EditTaskSheet(task: task),
+      builder: (context) => EditTaskSheet(task : task),
     );
 
     if (result == true) {
@@ -189,21 +185,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     try {
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
       if (mounted && result != null) {
-        HapticFeedback.vibrate();
-        
-        final xp = result['xp_earned'] ?? task.xpReward;
-        final coins = result['coins_earned'] ?? task.coinReward;
-        
+        final data = result['data'] as Map<String, dynamic>? ?? result;
+        final xp = data['xp_earned'] ?? task.xpReward;
+        final coins = data['coins_earned'] ?? task.coinReward;
         _showSnack(
           '⭐ ¡Ganaste $xp XP y $coins coins!',
           AppColors.accentTeal,
         );
-
-        // Si no quedan tareas para hoy, ¡conffetti!
-        final todayTasks = ref.read(todayTasksProvider).value ?? [];
-        if (todayTasks.length <= 1) { // 1 because we just completed one and state might not be updated yet
-           _confettiController.play();
-        }
       }
     } catch (e) {
       if (mounted) _showSnack('Error al completar: $e', AppColors.error);
@@ -246,7 +234,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredAsync = ref.watch(filteredTasksProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isCalendarMode = ref.watch(taskViewModeProvider);
     final currentUserId = ref.read(currentUserIdProvider);
@@ -257,12 +245,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       orElse: () => <MemberModel>[],
     );
 
+
+
     final categoriesAsync = ref.watch(categoriesProvider);
 
-    return Stack(
-      children: [
-        Scaffold(
-          floatingActionButton: Padding(
+    return Scaffold(
+      floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: FloatingActionButton.extended(
           heroTag: null,
@@ -301,8 +289,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                       'Calendario',
                       Icons.calendar_month_rounded,
                       isCalendarMode,
-                      () =>
-                          ref.read(taskViewModeProvider.notifier).setCalendar(),
+                      () => ref.read(taskViewModeProvider.notifier).setCalendar(),
                     ),
                   ),
                 ],
@@ -312,24 +299,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           // ── Content ──────────────────────────────────────────────────────
           Expanded(
             child: isCalendarMode
-                ? CalendarScreen(
-                    onEdit: _showEditDialog,
-                    onSchedule: _showScheduleDialog,
-                  )
+                ? const CalendarScreen()
                 : filteredAsync.when(
-                    loading: () => ListView.separated(
-                      padding: const EdgeInsets.all(24),
-                      itemCount: 4,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (_, __) => ShimmerLoading(
-                        child: Container(
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                        ),
-                      ),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
                     ),
                     error: (e, _) => Center(
                       child: Column(
@@ -364,32 +337,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                               child: Consumer(
                                 builder: (context, ref, _) {
                                   return TextField(
-                                    onChanged: (val) => ref
-                                        .read(taskSearchQueryProvider.notifier)
-                                        .setQuery(val),
+                                    onChanged: (val) => ref.read(taskSearchQueryProvider.notifier).setQuery(val),
                                     decoration: InputDecoration(
                                       hintText: 'Buscar tarea...',
-                                      hintStyle: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withValues(alpha: 0.5)),
-                                      prefixIcon: Icon(Icons.search,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withValues(alpha: 0.5)),
+                                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+                                      prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                                       filled: true,
-                                      fillColor: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
+                                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(16),
                                         borderSide: BorderSide.none,
                                       ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 0, horizontal: 16),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                                     ),
                                   );
                                 },
@@ -409,19 +368,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                         // Filter DB categories to only those with tasks
                                         final visibleCats = catList
                                             .where((c) => activeCats.contains(
-                                                AppColors.normaliseCategory(
-                                                    c.id)))
+                                                  AppColors.normaliseCategory(c.id)))
                                             .toList();
-
+                                        
                                         return ListView(
                                           scrollDirection: Axis.horizontal,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 20),
+                                          padding: const EdgeInsets.symmetric(horizontal: 20),
                                           children: [
-                                            _buildCategoryChip(null, 'Todas',
-                                                '📋', AppColors.textSecondary),
-                                            ...visibleCats.map((c) =>
-                                                _buildCategoryChip(
+                                            _buildCategoryChip(
+                                                null, 'Todas', '📋', AppColors.textSecondary),
+                                            ...visibleCats.map((c) => _buildCategoryChip(
                                                   c.id,
                                                   c.name,
                                                   c.icon,
@@ -433,11 +389,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                       loading: () => const SizedBox(),
                                       error: (_, __) => ListView(
                                         scrollDirection: Axis.horizontal,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20),
+                                        padding: const EdgeInsets.symmetric(horizontal: 20),
                                         children: [
-                                          _buildCategoryChip(null, 'Todas',
-                                              '📋', AppColors.textSecondary),
+                                          _buildCategoryChip(
+                                              null, 'Todas', '📋', AppColors.textSecondary),
                                         ],
                                       ),
                                     );
@@ -451,19 +406,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                           // Tasks list
                           SliverPadding(
                             padding: EdgeInsets.only(
-                              bottom:
-                                  ref.read(tasksProvider.notifier).hasMore &&
-                                          tasks.isNotEmpty &&
-                                          selectedCategories.isEmpty
-                                      ? 20
-                                      : 140,
+                              bottom: ref.read(tasksProvider.notifier).hasMore &&
+                                      tasks.isNotEmpty &&
+                                      selectedCategories.isEmpty
+                                  ? 20
+                                  : 140,
                             ),
                             sliver: SliverList(
                               delegate: SliverChildListDelegate([
                                 if (tasks.isEmpty)
-                                  _buildEmptyState(selectedCategories.isEmpty
-                                      ? null
-                                      : 'filtered'),
+                                  _buildEmptyState(selectedCategories.isEmpty ? null : 'filtered'),
                                 ..._buildGroupedTasks(
                                   tasks,
                                   categoriesAsync.maybeWhen(
@@ -482,13 +434,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                               selectedCategories.isEmpty)
                             SliverToBoxAdapter(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
                                 child: Center(
                                   child: OutlinedButton.icon(
-                                    onPressed: () => ref
-                                        .read(tasksProvider.notifier)
-                                        .loadMore(),
+                                    onPressed: () =>
+                                        ref.read(tasksProvider.notifier).loadMore(),
                                     icon: const Icon(Icons.add_rounded),
                                     label: const Text('Cargar más tareas',
                                         style: TextStyle(
@@ -514,54 +464,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
         ],
       ),
-    ),
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              Colors.green,
-              Colors.blue,
-              Colors.pink,
-              Colors.orange,
-              Colors.purple,
-              AppColors.primary,
-            ],
-            createParticlePath: _drawStar,
-          ),
-        ),
-      ],
     );
-  }
 
-  Path _drawStar(Size size) {
-    // Media star shape path for confetti
-    double degToRad(double deg) => deg * (math.pi / 180.0);
-    const numberOfPoints = 5;
-    final halfWidth = size.width / 2;
-    final externalRadius = halfWidth;
-    final internalRadius = halfWidth / 2.5;
-    final degreesPerStep = degToRad(360 / numberOfPoints);
-    final halfDegreesPerStep = degreesPerStep / 2;
-    final path = Path();
-    final fullAngle = degToRad(-90);
-    path.moveTo(size.width, halfWidth + externalRadius * math.sin(fullAngle));
-    for (double step = 0; step < 360; step += 360 / numberOfPoints) {
-      path.lineTo(
-          halfWidth + externalRadius * math.cos(degToRad(step) + fullAngle),
-          halfWidth + externalRadius * math.sin(degToRad(step) + fullAngle));
-      path.lineTo(
-          halfWidth +
-              internalRadius *
-                  math.cos(degToRad(step) + halfDegreesPerStep + fullAngle),
-          halfWidth +
-              internalRadius *
-                  math.sin(degToRad(step) + halfDegreesPerStep + fullAngle));
-    }
-    path.close();
-    return path;
   }
 
   // ── Widgets ────────────────────────────────────────────────────────────────
@@ -603,9 +507,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 fontSize: 14,
               ),
@@ -618,18 +520,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   Widget _buildCategoryChip(String? id, String name, String icon, Color color) {
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
-    final isSelected = id == null
-        ? selectedCategories.isEmpty
-        : selectedCategories.contains(AppColors.normaliseCategory(id));
+    final isSelected = id == null ? selectedCategories.isEmpty : selectedCategories.contains(AppColors.normaliseCategory(id));
 
     return GestureDetector(
       onTap: () {
         if (id == null) {
           ref.read(taskCategoryFilterProvider.notifier).clear();
         } else {
-          ref
-              .read(taskCategoryFilterProvider.notifier)
-              .toggle(AppColors.normaliseCategory(id));
+          ref.read(taskCategoryFilterProvider.notifier).toggle(AppColors.normaliseCategory(id));
         }
       },
       child: AnimatedContainer(
@@ -638,8 +536,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         margin: const EdgeInsets.only(right: 18),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              isSelected ? color.withValues(alpha: 0.15) : AppColors.cardLight,
+          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.cardLight,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? color : const Color(0xFFF1F5F9),
@@ -684,6 +581,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     );
   }
 
+
   Widget _buildEmptyState(String? filterStatus) {
     return Padding(
       padding: const EdgeInsets.all(60),
@@ -696,8 +594,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              filterStatus == null
-                  ? Icons.task_alt_rounded
+              filterStatus == null 
+                  ? Icons.task_alt_rounded 
                   : Icons.filter_list_off_rounded,
               size: 64,
               color: AppColors.primary.withValues(alpha: 0.5),
@@ -741,12 +639,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Set<String> selectedCategories,
   ) {
     // 1. Group by marginalised category
-    // We show all tasks now so they can be edited even if completed
-    final filteredTasks = tasks; 
-
+    final activeTasks = tasks.where((t) => t.isActive).toList();
+    
     // Deduplicate by title+normalised-category
     final uniqueMap = <String, TaskModel>{};
-    for (final t in filteredTasks) {
+    for (final t in activeTasks) {
       final normCat = AppColors.normaliseCategory(t.category);
       final key = '${t.title.toLowerCase().trim()}_$normCat';
       final existing = uniqueMap[key];
@@ -794,13 +691,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final widgets = <Widget>[];
     for (final normCat in displayCats) {
       final catTasks = grouped[normCat]!;
-      final catInfo = catLookup[normCat] ??
-          CategoryModel(
-              id: normCat,
-              name:
-                  normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
-              icon: '🏠',
-              color: '#94A3B8');
+      final catInfo = catLookup[normCat] ?? CategoryModel(
+        id: normCat,
+        name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+        icon: '🏠',
+        color: '#94A3B8'
+      );
 
       widgets.add(_SectionHeader(
         icon: AppColors.getCategoryMaterialIcon(normCat),
@@ -809,32 +705,22 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         color: AppColors.fromHex(catInfo.color),
       ));
 
-      widgets.addAll(
-          catTasks.asMap().entries.map((entry) => TweenAnimationBuilder<double>(
-                duration: Duration(milliseconds: 300 + (entry.key * 50)),
-                tween: Tween(begin: 0.0, end: 1.0),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, 20 * (1 - value)),
-                      child: child,
-                    ),
-                  );
-                },
-                child: _TaskCard(
-                  task: entry.value,
-                  members: members,
-                  currentUserId: currentUserId,
-                  onSchedule: () => _showScheduleDialog(entry.value),
-                  onEdit: () => _showEditDialog(entry.value),
-                  onDelete: () => _deleteTask(entry.value),
-                  onComplete: () => _completeTask(entry.value),
-                  onVerify: () => _verifyTask(entry.value),
-                  onObject: () => _objectTask(entry.value),
-                ),
-              )));
+      widgets.addAll(catTasks.asMap().entries.map((entry) {
+        final index = entry.key;
+        final task = entry.value;
+        return _TaskCard(
+          key: ValueKey(task.id),
+          task: task,
+          currentUserId: currentUserId,
+          members: members,
+          onSchedule: () => _showScheduleDialog(task),
+          onEdit: () => _showEditDialog(task),
+          onDelete: () => _deleteTask(task),
+          onComplete: () => _completeTask(task),
+          onVerify: () => _verifyTask(task),
+          onObject: () => _objectTask(task),
+        ).animateStaggered(index);
+      }));
     }
 
     return widgets;
@@ -861,7 +747,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeColor = color ?? AppColors.primary;
-
+    
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
       child: Row(
@@ -928,6 +814,7 @@ class _TaskCard extends ConsumerStatefulWidget {
   final VoidCallback onObject;
 
   const _TaskCard({
+    super.key,
     required this.task,
     required this.currentUserId,
     required this.members,
@@ -989,11 +876,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           ),
         ],
         border: Border.all(
-          color: _isExpanded
+          color: _isExpanded 
               ? categoryColor.withValues(alpha: 0.3)
-              : (task.isOverdue
-                  ? AppColors.accentRed.withValues(alpha: 0.3)
-                  : const Color(0xFFF1F5F9)),
+              : (task.isOverdue ? AppColors.accentRed.withValues(alpha: 0.3) : const Color(0xFFF1F5F9)),
           width: 1.5,
         ),
       ),
@@ -1030,8 +915,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                               const SizedBox(width: 8),
                             ],
                             if (task.lastCompletedAt != null) ...[
-                              _buildLastCompletedAvatar(
-                                  widget.members, task.completedBy),
+                              _buildLastCompletedAvatar(widget.members, task.completedBy),
                               const SizedBox(width: 8),
                             ],
                             const Icon(Icons.history_rounded,
@@ -1065,7 +949,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
               ClipRect(
                 child: AnimatedAlign(
                   duration: const Duration(milliseconds: 350),
-                  curve: Curves.easeOutCubic,
+                  curve: Curves.easeOutBack,
                   alignment: Alignment.topCenter,
                   heightFactor: _isExpanded ? 1.0 : 0.0,
                   child: Padding(
@@ -1074,23 +958,23 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       children: [
                         const Divider(color: Color(0xFFF1F5F9), height: 1),
                         const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildActionTilePremium(
-                                icon: Icons.edit_rounded,
-                                label: 'Editar',
-                                color: AppColors.primary,
-                                onTap: widget.onEdit,
-                              ),
-                              _buildActionTilePremium(
-                                icon: Icons.calendar_month_rounded,
-                                label: 'Programar',
-                                color: AppColors.accentGold,
-                                onTap: widget.onSchedule,
-                              ),
-                            ],
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildActionTilePremium(
+                              icon: Icons.edit_rounded,
+                              label: 'Editar',
+                              color: AppColors.accentGold,
+                              onTap: widget.onEdit,
+                            ),
+                            _buildActionTilePremium(
+                              icon: Icons.calendar_month_rounded,
+                              label: 'Calendario',
+                              color: AppColors.primary,
+                              onTap: widget.onSchedule,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -1111,13 +995,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }) {
     return InkWell(
       onTap: () {
-        HapticFeedback.lightImpact();
         setState(() => _isExpanded = false);
         onTap();
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.22,
+        width: MediaQuery.of(context).size.width * 0.35,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
@@ -1177,7 +1060,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
   Widget _buildLastCompletedAvatar(List<MemberModel> members, String? userId) {
     if (userId == null) return const SizedBox.shrink();
-
+    
     final member = members.firstWhere(
       (m) => m.userId == userId,
       orElse: () => members.firstWhere(

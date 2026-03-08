@@ -450,3 +450,182 @@ class _CelebrationDialog extends StatelessWidget {
     );
   }
 }
+
+extension AppAnimationsExtension on Widget {
+  Widget animateEntrance({int delay = 0}) {
+    return _AnimatedEntrance(
+      delay: Duration(milliseconds: delay),
+      child: this,
+    );
+  }
+
+  Widget animateScaleIn({int delay = 0}) {
+    return _AnimatedScaleIn(
+      delay: Duration(milliseconds: delay),
+      child: this,
+    );
+  }
+
+  Widget animateStaggered(int index) {
+    return _AnimatedEntrance(
+      delay: Duration(milliseconds: index * 100),
+      child: this,
+    );
+  }
+
+  Widget animatePulse() {
+    return _AnimatedPulse(child: this);
+  }
+}
+
+class _AnimatedEntrance extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _AnimatedEntrance({required this.child, required this.delay});
+
+  @override
+  State<_AnimatedEntrance> createState() => _AnimatedEntranceState();
+}
+
+class _AnimatedEntranceState extends State<_AnimatedEntrance>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.65, curve: Curves.easeOut)),
+    );
+
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 1.0, curve: Curves.easeOutCubic)),
+    );
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _AnimatedScaleIn extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+
+  const _AnimatedScaleIn({required this.child, required this.delay});
+
+  @override
+  State<_AnimatedScaleIn> createState() => _AnimatedScaleInState();
+}
+
+class _AnimatedScaleInState extends State<_AnimatedScaleIn>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    Future.delayed(widget.delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _AnimatedPulse extends StatefulWidget {
+  final Widget child;
+
+  const _AnimatedPulse({required this.child});
+
+  @override
+  State<_AnimatedPulse> createState() => _AnimatedPulseState();
+}
+
+class _AnimatedPulseState extends State<_AnimatedPulse>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: widget.child,
+    );
+  }
+}

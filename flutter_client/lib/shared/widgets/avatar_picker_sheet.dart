@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'user_avatar.dart';
@@ -21,7 +21,12 @@ class AvatarPickerSheet extends ConsumerWidget {
   Future<void> _updateAvatar(
       BuildContext context, WidgetRef ref, String emoji) async {
     try {
-      await ref.read(updateAvatarUseCaseProvider).execute(emoji);
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) throw Exception('No autenticado');
+
+      await Supabase.instance.client
+          .from('users')
+          .update({'avatar_url': emoji}).eq('id', user.id);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(recentActivityProvider);
@@ -88,10 +93,7 @@ class AvatarPickerSheet extends ConsumerWidget {
             'Elegí un avatar de la colección o creá el tuyo propio',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurfaceVariant
-                  .withValues(alpha: 0.7),
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
@@ -112,8 +114,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                         emoji: animal['emoji'],
                         color: animal['color'],
                         isSelected: isSelected,
-                        onTap: () =>
-                            _updateAvatar(context, ref, animal['emoji']),
+                        onTap: () => _updateAvatar(context, ref, animal['emoji']),
                       );
                     }).toList(),
                   ),
@@ -123,13 +124,11 @@ class AvatarPickerSheet extends ConsumerWidget {
                     children: [
                       const Text(
                         'Personajes 3D',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 20),
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -158,60 +157,51 @@ class AvatarPickerSheet extends ConsumerWidget {
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 20),
-                          child: GestureDetector(
-                            onTap: () =>
-                                _updateAvatar(context, ref, premiumUrl),
-                            behavior: HitTestBehavior.opaque,
-                            child: Column(
-                              children: [
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutCubic,
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? char['color'].withValues(alpha: 0.15)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(28),
-                                    border: isSelected
-                                        ? Border.all(
-                                            color: AppColors.primary,
-                                            width: 3,
+                          child: Column(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? char['color'].withValues(alpha: 0.15)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: AppColors.primary,
+                                          width: 3,
+                                        )
+                                      : null,
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: AppColors.primary.withValues(alpha: 0.25),
+                                            blurRadius: 20,
+                                            offset: const Offset(0, 6),
                                           )
-                                        : null,
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 6),
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: CustomUserAvatar(
-                                    avatarUrl: premiumUrl,
-                                    radius: 40,
-                                    isAnimated: true,
-                                    isPriority: isSelected,
-                                  ),
+                                        ]
+                                      : null,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  char['name'] ?? '',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w800
-                                        : FontWeight.w600,
-                                    color: isSelected
-                                        ? AppColors.primary
-                                        : AppColors.textSecondary,
-                                  ),
+                                child: CustomUserAvatar(
+                                  avatarUrl: premiumUrl,
+                                  radius: 40,
+                                  isAnimated: true,
+                                  isPriority: isSelected,
+                                  onTap: () => _updateAvatar(context, ref, premiumUrl),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                char['name'] ?? '',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),

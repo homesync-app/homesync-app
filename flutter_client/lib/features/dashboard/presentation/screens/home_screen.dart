@@ -1,157 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
-import 'package:confetti/confetti.dart';
-
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
-import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
-import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
-import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
+import 'package:confetti/confetti.dart';
+import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final SupabaseAuthService auth;
+  final SupabaseRpcService rpc;
+  final SharedPreferences? prefs;
+
+  const HomeScreen({
+    super.key,
+    required this.auth,
+    required this.rpc,
+    this.prefs,
+  });
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  RealtimeChannel? _tasksChannel;
-  RealtimeChannel? _expensesChannel;
-  RealtimeChannel? _splitsChannel;
-  RealtimeChannel? _membersChannel;
   late ConfettiController _confettiController;
   final Set<String> _completedTaskIds = {};
 
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _setupRealtime());
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
   }
 
   @override
   void dispose() {
-    _tasksChannel?.unsubscribe();
-    _expensesChannel?.unsubscribe();
-    _splitsChannel?.unsubscribe();
-    _membersChannel?.unsubscribe();
     _confettiController.dispose();
     super.dispose();
   }
 
-  Future<void> _setupRealtime() async {
-    final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null || !mounted) return;
-
-    final client = Supabase.instance.client;
-
-    _tasksChannel = client
-        .channel('home_tasks:$householdId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'tasks',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'household_id',
-            value: householdId,
-          ),
-          callback: (_) => _refreshAll(),
-        )
-        .subscribe();
-
-    _expensesChannel = client
-        .channel('home_expenses:$householdId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'expenses',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'household_id',
-            value: householdId,
-          ),
-          callback: (_) => _refreshFinancials(),
-        )
-        .subscribe();
-
-    _splitsChannel = client
-        .channel('home_splits:$householdId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'expense_splits',
-          callback: (_) => _refreshFinancials(),
-        )
-        .subscribe();
-
-    _membersChannel = client
-        .channel('home_members:$householdId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'household_members',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'household_id',
-            value: householdId,
-          ),
-          callback: (_) {
-            ref.invalidate(householdMembersNotifierProvider);
-            _refreshFinancials();
-          },
-        )
-        .subscribe();
-  }
-
-  void _refreshAll() {
-    if (!mounted) return;
-    ref.invalidate(tasksProvider);
-    ref.invalidate(recentActivityProvider);
-    ref.invalidate(userBalanceProvider);
-  }
-
-  void _refreshFinancials() {
-    if (!mounted) return;
-    ref.invalidate(expenseBalancesProvider);
-    ref.invalidate(recentActivityProvider);
-  }
-
-  void _refreshHome() {
-    ref.invalidate(tasksProvider);
-    ref.invalidate(recentActivityProvider);
-    ref.invalidate(userBalanceProvider);
-    ref.invalidate(expenseBalancesProvider);
-  }
 
   @override
   Widget build(BuildContext context) {
-    _setupTaskCompletionListener();
+    _setupTaskCompletionListener(ref);
     final householdAsync = ref.watch(householdIdProvider);
 
     return householdAsync.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.background,
-        body:
-            Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.background,
@@ -159,13 +70,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       data: (householdId) {
         if (householdId == null) {
-          return Scaffold(
+          return const Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(
-              child: Text('No pertenecés a un hogar aún.',
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            ),
+            body: Center(child: Text('No pertenecés a un hogar aún.')),
           );
         }
         return Stack(
@@ -194,13 +101,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _setupTaskCompletionListener() {
+  void _setupTaskCompletionListener(WidgetRef ref) {
     ref.listen(todayTasksProvider, (previous, next) {
-      if (previous?.asData?.value.isNotEmpty == true && 
+      if (previous?.asData?.value.isNotEmpty == true &&
           next.asData?.value.isEmpty == true &&
           !next.isLoading &&
           !next.hasError) {
-        // Trigger confetti!
         _confettiController.play();
         HapticFeedback.heavyImpact();
       }
@@ -219,8 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onRefresh: () async => _refreshHome(),
                 color: AppColors.primary,
                 child: ListView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   children: [
                     _buildHeader(),
                     const SizedBox(height: 28),
@@ -238,7 +143,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        heroTag: null,
         onPressed: () => _showQuickActionMenu(householdId),
         backgroundColor: AppColors.primary,
         elevation: 12,
@@ -254,136 +158,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
+  }
+
+  Future<void> _refreshHome() async {
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(personalFinanceSummaryProvider);
+    ref.invalidate(expenseBalancesProvider);
   }
 
   Widget _buildHeader() {
     final profileAsync = ref.watch(userProfileProvider);
-    final dateFormat = DateFormat('EEEE, d MMM', 'es');
-    final dateStr = dateFormat.format(DateTime.now());
-    final capitalized =
-        dateStr.substring(0, 1).toUpperCase() + dateStr.substring(1);
+    final dateStr = DateFormat('EEEE, d MMM', 'es').format(DateTime.now());
+    final capitalizedDate = dateStr.isEmpty ? '' : dateStr[0].toUpperCase() + dateStr.substring(1);
 
     final displayName = profileAsync.whenOrNull(
-          data: (p) => (p?['full_name'] as String?)?.split(' ').first ?? 'User',
-        ) ??
-        'User';
+          data: (p) => (p?['full_name'] as String?)?.split(' ').first ?? 'Usuario',
+        ) ?? 'Usuario';
 
-    final avatarUrl =
-        profileAsync.whenOrNull(data: (p) => p?['avatar_url'] as String?);
+    final avatarUrl = profileAsync.whenOrNull(data: (p) => p?['avatar_url'] as String?);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Left Side: Greeting
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '¡Hola, $displayName! 👋',
-                style: const TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.8,
-                ),
-              ).animateEntrance(),
-              const SizedBox(height: 4),
-              Text(
-                capitalized,
-                style: const TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hola, $displayName 👋',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.8,
               ),
-            ],
-          ),
+            ).animateEntrance(),
+            const SizedBox(height: 4),
+            Text(
+              capitalizedDate,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-
-        // Right Side: Avatar
         _buildCircularAvatar(displayName, avatarUrl).animateScaleIn(delay: 150),
       ],
     );
   }
 
   Widget _buildCircularAvatar(String displayName, String? avatarUrl) {
-    final bool isPremium = avatarUrl?.startsWith('premium://') == true;
     return AnimatedPress(
       onTap: () => AvatarPickerSheet.show(context),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          if (isPremium)
-            CustomUserAvatar(
-              name: displayName,
-              avatarUrl: avatarUrl,
-              radius: 36,
-              isAnimated: false,
-              isPriority: false,
-            )
-          else
-            CustomUserAvatar(
-              name: displayName,
-              avatarUrl: avatarUrl,
-              radius: 28,
-              showBorder: true,
-              isAnimated: false,
-            ),
-          if (!isPremium)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: AppColors.accentGreen,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.background, width: 2),
-                ),
-              ),
-            ),
-        ],
+      child: CustomUserAvatar(
+        name: displayName,
+        avatarUrl: avatarUrl,
+        radius: 28,
+        showBorder: true,
       ),
     );
   }
 
   Widget _buildFinancialSummary(String householdId) {
+    final summaryAsync = ref.watch(personalFinanceSummaryProvider);
     final balanceAsync = ref.watch(userBalanceProvider);
-    final expensesAsync = ref.watch(expenseBalancesProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
-    final coins =
-        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
+    final coins = balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
     double myBalance = 0;
-    expensesAsync.whenOrNull(
-      data: (balances) {
-        try {
-          final myBal = balances.where((b) => b.userId == currentUserId).firstOrNull;
-          if (myBal != null) {
-            myBalance = myBal.balance;
-          }
-        } catch (_) {}
-      },
-    );
+    summaryAsync.whenData((s) => myBalance = (s['balance'] ?? 0).toDouble());
 
-    // Find partner info for settlement
     final partner = membersAsync.whenOrNull(
-      data: (members) =>
-          members.where((m) => m.userId != currentUserId).firstOrNull,
+      data: (members) => members.where((m) => m.userId != currentUserId).firstOrNull,
     );
 
     return BalanceCard(
       coins: coins,
       xp: xp,
       userBalance: myBalance,
-      onSettle: partner != null && myBalance.abs() > 1.0
+      partnerName: partner?.displayName,
+      onSettle: partner != null && myBalance.abs() > 10.0
           ? () => _showSettlementDialog(
                 householdId: householdId,
                 partnerId: partner.userId,
@@ -393,7 +253,262 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 alias: partner.mercadopagoAlias,
               )
           : null,
-      isDark: false,
+    ).animateEntrance(delay: 100);
+  }
+
+  Widget _buildTasksSection() {
+    final tasksAsync = ref.watch(todayTasksProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Tareas de hoy',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            TextButton(
+              onPressed: () => ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+              child: const Text('Ver todas'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        tasksAsync.when(
+          loading: () => _buildTasksShimmer(),
+          error: (e, _) => Text('Error: $e'),
+          data: (tasks) {
+            final visibleTasks = tasks.where((t) => !t.isCompleted && !_completedTaskIds.contains(t.id)).toList();
+            if (visibleTasks.isEmpty) return _buildEmptyState('¡Todo listo por hoy!');
+            
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: visibleTasks.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => _buildTaskCard(visibleTasks[index]).animateStaggered(index),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskCard(TaskModel task) {
+    final categoryColor = AppColors.getCategoryColor(task.category);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: categoryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(AppColors.getCategoryMaterialIcon(task.category), color: categoryColor),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+                Text(
+                  AppColors.categoryNames[task.category?.toLowerCase()] ?? task.category ?? 'General',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => _completeTask(task),
+            icon: const Icon(Icons.check_circle_outline_rounded, color: AppColors.primary, size: 28),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _completeTask(TaskModel task) async {
+    HapticFeedback.mediumImpact();
+    setState(() => _completedTaskIds.add(task.id));
+    
+    try {
+      await ref.read(tasksProvider.notifier).completeTask(task);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Widget _buildActivitySection() {
+    final activityAsync = ref.watch(recentActivityProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Actividad reciente',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        activityAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('Error al cargar actividad: $e'),
+          data: (activities) {
+            if (activities.isEmpty) return _buildEmptyState('No hay actividad aún');
+            return _buildActivityTimeline(activities);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivityTimeline(List<Map<String, dynamic>> activities) {
+    return Column(
+      children: List.generate(activities.length, (index) {
+        final activity = activities[index];
+        final id = activity['id'] ?? index.toString();
+        return _buildActivityItem(activity, key: ValueKey(id)).animateStaggered(index);
+      }),
+    );
+  }
+
+  Widget _buildActivityItem(Map<String, dynamic> activity, {Key? key}) {
+    final type = activity['type'] as String;
+    final data = activity['data'] as Map<String, dynamic>;
+    final time = DateTime.tryParse(activity['created_at'] ?? '') ?? DateTime.now();
+    final timeStr = DateFormat('HH:mm').format(time);
+
+    IconData icon;
+    Color color;
+    String title;
+
+    if (type == 'task') {
+      icon = Icons.check_circle_rounded;
+      color = AppColors.success;
+      title = '${data['user_name']} completó "${data['task_title']}"';
+    } else if (type == 'expense') {
+      icon = Icons.shopping_bag_rounded;
+      color = AppColors.accentOrange;
+      title = '${data['user_name']} cargó un gasto: \$${data['amount']}';
+    } else {
+      icon = Icons.info_rounded;
+      color = AppColors.textSecondary;
+      title = 'Evento desconocido';
+    }
+
+    return Container(
+      key: key,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: Icon(icon, color: color, size: 16),
+                ),
+                Expanded(child: Container(width: 2, color: AppColors.divider.withValues(alpha: 0.5))),
+              ],
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                    Text(timeStr, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTasksShimmer() {
+    return Column(
+      children: List.generate(2, (_) => ShimmerLoading(
+        child: Container(
+          height: 80,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+        ),
+      )),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Text(message, style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+      ),
+    );
+  }
+
+  void _showQuickActionMenu(String householdId) {
+    // Basic implementation of the quick action menu
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Acciones Rápidas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            // Actions like "Cargar Gasto", "Nueva Tarea", etc.
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context), 
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -405,932 +520,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required bool isOwedByMe,
     String? alias,
   }) {
+    // Basic settlement dialog implementation
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('Equilibrar'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '¿Registrar equilibración por \$${NumberFormat.decimalPattern('es_AR').format(amount.round())}?',
-              style: const TextStyle(fontSize: 16),
-            ),
-            if (isOwedByMe && alias != null) ...[
-              const SizedBox(height: 20),
-              const Text(
-                '¿Querés transferir ahora por Mercado Pago?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ],
-        ),
+        title: Text(isOwedByMe ? 'Pagar a $partnerName' : 'Cobrar a $partnerName'),
+        content: Text('Monto: \$${amount.toStringAsFixed(2)}'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          if (isOwedByMe && alias != null)
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _handleSettle(alias, amount);
-                // Optionally show another dialog later to confirm registration
-              },
-              icon: const Icon(Icons.account_balance_wallet_rounded, size: 18),
-              label: const Text('Transferir'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              await _registerSettlementInDB(
-                  householdId, partnerId, amount, isOwedByMe);
+              await ref.read(expenseControllerProvider.notifier).settleDebt(
+                toUserId: partnerId,
+                amount: amount,
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
             child: const Text('Confirmar'),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _registerSettlementInDB(
-    String householdId,
-    String partnerId,
-    double amount,
-    bool isOwedByMe,
-  ) async {
-    try {
-      final repo = ref.read(expenseRepositoryProvider);
-      // We need to ensure we have a version of settleDebt that takes the payerId or use the RPC
-      // The repository currently uses the authenticated user as the payer.
-      // If I am recording that partner paid me, I might need a different call or the repo needs to allow specifying payer.
-
-      // For now, let's use the repo settleDebt which uses current user as payer (Settling my own debt)
-      if (isOwedByMe) {
-        await repo.settleDebt(
-          householdId: householdId,
-          toUserId: partnerId,
-          amount: amount,
-        );
-      } else {
-        // Recording partner's payment to me.
-        // We can simulate this by saving a special expense paid by partner where I am the beneficiary 100%
-        await repo.saveExpense(
-          householdId: householdId,
-          title: 'Liquidación recibida',
-          amount: amount,
-          category: 'other',
-          paidBy: partnerId,
-          paidAt: DateTime.now(),
-          splitType: SplitType
-              .gift, // In our logic, gift usually means payer pays for others
-          type: 'expense',
-          description: 'Saldado por pareja',
-          splits: [
-            {'user_id': ref.read(currentUserIdProvider)!, 'amount': amount}
-          ],
-        );
-      }
-
-      // Refresh data
-      ref.invalidate(expenseBalancesProvider);
-      ref.invalidate(personalFinanceSummaryProvider);
-      ref.invalidate(filteredExpensesProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Deuda saldada correctamente 🎉')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al saldar: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _handleSettle(String alias, double amount) async {
-    final url = 'https://link.mercadopago.com.ar/transfer/alias/$alias';
-    final uri = Uri.parse(url);
-
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir Mercado Pago')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al abrir link: $e')),
-      );
-    }
-  }
-
-  Widget _buildTasksSection() {
-    final todayTasksAsync = ref.watch(todayTasksProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Tareas de hoy',
-              style: TextStyle(
-                color: Color(0xFF0F172A),
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                ref.read(bottomNavIndexProvider.notifier).setIndex(1);
-                ref.read(taskViewModeProvider.notifier).setCalendar();
-              },
-              child: const Text(
-                'Ver semana',
-                style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        todayTasksAsync.when(
-          loading: () => Column(
-            children: List.generate(
-                2,
-                (_) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ShimmerLoading(
-                        child: Container(
-                          height: 100,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                        ),
-                      ),
-                    )),
-          ),
-          error: (e, _) =>
-              Text('Error: $e', style: const TextStyle(color: AppColors.error)),
-          data: (tasks) {
-            // Filtrar tareas que ya se completaron localmente o que ya están marcadas como completas
-            final visibleTasks = tasks.where((t) => 
-              !t.isCompleted && !_completedTaskIds.contains(t.id)
-            ).toList();
-
-            if (visibleTasks.isEmpty) return _buildEmptyTasksState();
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: visibleTasks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildTaskCard(visibleTasks[index]).animateStaggered(index);
-              },
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyTasksState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.sage.withValues(alpha: 0.1),
-            ),
-            child: const Center(
-              child: Text('✨', style: TextStyle(fontSize: 40)),
-            ).animatePulse(),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            '¡Día libre!',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'No hay tareas pendientes. Disfruten el tiempo juntos.',
-            textAlign: TextAlign.center,
-            style:
-                TextStyle(color: Color(0xFF64748B), fontSize: 14, height: 1.4),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTaskCard(TaskModel task) {
-    final category = task.category ?? 'general';
-    final title = task.title;
-    final xp = task.xpReward;
-    final isCompleted = task.isCompleted;
-
-    // Resolve dynamic category data
-    final categoriesAsync = ref.watch(categoriesProvider);
-    final categoryData = categoriesAsync.maybeWhen(
-      data: (list) {
-        try {
-          return list.firstWhere((c) => c.id == task.category);
-        } catch (_) {
-          return null;
-        }
-      },
-      orElse: () => null,
-    );
-
-    final categoryColor = categoryData != null
-        ? AppColors.fromHex(categoryData.color)
-        : AppColors.getCategoryColor(category);
-    final categoryIcon =
-        categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
-
-    return AnimatedPress(
-      onTap: () {
-        if (!isCompleted) {
-          _handleCompleteFromCard(task);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: isCompleted
-                ? AppColors.accentGreen.withValues(alpha: 0.1)
-                : const Color(0xFFF1F5F9),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(categoryIcon, style: const TextStyle(fontSize: 28)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: isCompleted
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF1E293B),
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildCategoryChip(category),
-                      const SizedBox(width: 8),
-                      _buildRewardChip('+$xp XP', const Color(0xFFFDA4AF)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCompleted ? AppColors.accentGreen : Colors.white,
-                border: Border.all(
-                  color: isCompleted
-                      ? AppColors.accentGreen
-                      : const Color(0xFFE2E8F0),
-                  width: 2.5,
-                ),
-              ),
-              child: isCompleted
-                  ? const Center(
-                      child: Icon(Icons.check_rounded,
-                          color: Colors.white, size: 20),
-                    )
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(String category) {
-    final cat = AppColors.normaliseCategory(category);
-    final color = AppColors.getCategoryColor(cat);
-    final name = AppColors.categoryNames[cat] ?? cat;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        name.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: color,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRewardChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: color,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleCompleteFromCard(TaskModel task) async {
-    final xpReward = task.xpReward;
-    final coinReward = task.coinReward;
-
-    try {
-      // Optimistic Update: Ocultar inmediatamente
-      setState(() {
-        _completedTaskIds.add(task.id);
-      });
-
-      final completeTaskLogic = ref.read(completeTaskUseCaseProvider);
-      final eitherResult = await completeTaskLogic(task);
-
-      if (!mounted) return;
-
-      eitherResult.fold(
-        (failure) {
-          if (!mounted) return;
-          _showSnack('Error: ${failure.message}', AppColors.accentRed);
-        },
-        (data) {
-          final xp = data['xp_earned'] ?? xpReward;
-          final coins = data['coins_earned'] ?? coinReward;
-          HapticFeedback.heavyImpact();
-          if (!mounted) return;
-          _showSnack(
-              '¡Ganaste $xp XP y $coins coins! 🎉', AppColors.accentTeal);
-          _refreshAll();
-        },
-      );
-    } catch (e) {
-      if (!mounted) return;
-      _showSnack('Error: $e', AppColors.accentRed);
-    }
-  }
-
-  Widget _buildActivitySection() {
-    final activityAsync = ref.watch(recentActivityProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Historial de Actividad',
-              style: TextStyle(
-                color: Color(0xFF0F172A),
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                ref.read(bottomNavIndexProvider.notifier).setIndex(4);
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text(
-                'Ver historial',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        activityAsync.when(
-          loading: () => Column(
-            children: List.generate(
-                3,
-                (_) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ShimmerLoading(
-                        child: Container(
-                          height: 70,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                      ),
-                    )),
-          ),
-          error: (e, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Column(
-                children: [
-                  const Text('😔', style: TextStyle(fontSize: 32)),
-                  const SizedBox(height: 8),
-                  Text('No pudimos cargar el historial',
-                      style: TextStyle(
-                          color: Colors.red.shade700,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-          ),
-          data: (activities) {
-            if (activities.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.history_rounded,
-                          size: 48, color: Colors.grey.shade200),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Todavía no hay actividad.\n¡Empezá haciendo alguna tarea!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 14,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return _buildActivityTimeline(activities);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityTimeline(List<Map<String, dynamic>> activities) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    final todayActs = activities
-        .where((a) =>
-            (a['time'] as DateTime).isAfter(today) ||
-            (a['time'] as DateTime).isAtSameMomentAs(today))
-        .toList();
-
-    if (todayActs.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 48),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(Icons.history_rounded,
-                  size: 48, color: Colors.grey.shade200),
-              const SizedBox(height: 16),
-              const Text(
-                'Sin actividad registrada hoy.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12, top: 4),
-          child: Text(
-            'HOY',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF94A3B8),
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        ...todayActs.asMap().entries.map((entry) {
-          final activity = entry.value;
-          final id = activity['data']?['id']?.toString() ?? entry.key.toString();
-          return _buildActivityItem(activity, key: ValueKey('activity_$id'))
-              .animateStaggered(entry.key);
-        }),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem(Map<String, dynamic> activity, {Key? key}) {
-    final type = activity['type'] as String;
-    final data = activity['data'] as Map<String, dynamic>;
-    final time = activity['time'] as DateTime;
-    final timeStr = DateFormat('HH:mm').format(time);
-
-    final userData = data['user'] as Map<String, dynamic>?;
-    final String userName =
-        (userData?['full_name'] as String? ?? 'Alguien').split(' ').first;
-    final String? avatarUrl = userData?['avatar_url'] as String?;
-    final String rawCategory = data['category'] as String? ?? 'general';
-    final String category = AppColors.normaliseCategory(rawCategory);
-
-    final Color activityColor = AppColors.getCategoryColor(category);
-    final String title = data['title'] as String? ??
-        data['description'] as String? ??
-        (type == 'TaskModel' ? 'Tarea' : 'Gasto');
-
-    return Container(
-      key: key,
-      margin: const EdgeInsets.only(bottom: 4),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Timeline strip
-          Column(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                margin: const EdgeInsets.only(top: 18),
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: activityColor,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: activityColor.withValues(alpha: 0.3),
-                          blurRadius: 4),
-                    ]),
-              ),
-              Expanded(
-                child: Container(
-                  width: 2,
-                  color: const Color(0xFFF1F5F9),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          // Content Card
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: AnimatedPress(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  if (type == 'TaskModel') {
-                    TaskDetailSheet.show(context, data, onChanged: _refreshAll);
-                  } else {
-                    // For expenses, we could open a detail view if available
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Stack(
-                        children: [
-                          CustomUserAvatar(
-                              name: userName, avatarUrl: avatarUrl, radius: 18),
-                          Positioned(
-                            right: -2,
-                            bottom: -2,
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                  color: Colors.white, shape: BoxShape.circle),
-                              child: Icon(
-                                AppColors.getCategoryMaterialIcon(category),
-                                size: 10,
-                                color: AppColors.getCategoryColor(category),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            RichText(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              text: TextSpan(
-                                style: const TextStyle(
-                                    fontSize: 13, color: Color(0xFF1E293B)),
-                                children: [
-                                  TextSpan(
-                                      text: userName,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w700)),
-                                  TextSpan(
-                                    text: type == 'TaskModel'
-                                        ? ' completó '
-                                        : ' compró ',
-                                    style: const TextStyle(
-                                        color: Color(0xFF64748B)),
-                                  ),
-                                  TextSpan(
-                                      text: title,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text(
-                                  timeStr,
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Color(0xFF94A3B8),
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                    width: 3,
-                                    height: 3,
-                                    decoration: const BoxDecoration(
-                                        color: Color(0xFFCBD5E1),
-                                        shape: BoxShape.circle)),
-                                const SizedBox(width: 8),
-                                if (type == 'TaskModel') ...[
-                                  const Icon(Icons.stars_rounded,
-                                      size: 12, color: AppColors.accentGold),
-                                  const SizedBox(width: 4),
-                                  Text('${data['xp_reward'] ?? 0} XP',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.accentGold,
-                                          fontWeight: FontWeight.w700)),
-                                ] else ...[
-                                  Text('\$${data['amount'] ?? 0}',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.sage,
-                                          fontWeight: FontWeight.w700)),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right_rounded,
-                          size: 18, color: Color(0xFFCBD5E1)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showQuickActionMenu(String householdId) {
-    HapticFeedback.lightImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '¿Qué querés hacer?',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildQuickActionItem(
-                      icon: Icons.task_alt_rounded,
-                      label: 'Completar Tarea',
-                      color: AppColors.primary,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => DraggableScrollableSheet(
-                            initialChildSize: 0.9,
-                            minChildSize: 0.5,
-                            maxChildSize: 0.95,
-                            builder: (_, controller) => CompleteTaskSheet(
-                              onTasksCompleted: _refreshAll,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildQuickActionItem(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'Cargar un Gasto',
-                      color: AppColors.accentPeach,
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) => const ExpenseFormSheet(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(icon, color: color, size: 32),
-          ),
-          const SizedBox(height: 8),
-          Text(label,
-              style:
-                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  void _showSnack(String message, Color color) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message,
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, color: Colors.white)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        margin:
-            const EdgeInsets.fromLTRB(20, 0, 20, 100), // Above FAB/Bottom bar
-        duration: const Duration(seconds: 3),
       ),
     );
   }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/reward_provider.dart';
+import '../providers/rewards_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+
 
 import '../../domain/models/reward_model.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -23,57 +24,29 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(rewardsProvider);
-          ref.invalidate(userBalanceProvider);
-        },
-        color: AppColors.primary,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics()),
-          slivers: [
-            _buildSliverAppBar(userBalanceAsync),
-            SliverToBoxAdapter(
-              child: rewardsAsync.when(
-                data: (rewards) => _buildBody(
-                    rewards.map((r) => RewardModel.fromJson(r)).toList(),
-                    currentUserId),
-                loading: () => Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.78,
-                    ),
-                    itemCount: 4,
-                    itemBuilder: (context, index) => ShimmerLoading(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                      ),
-                    ),
-                  ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildSliverAppBar(userBalanceAsync),
+          SliverToBoxAdapter(
+            child: rewardsAsync.when(
+              data: (rewards) => _buildBody(rewards.map((r) => RewardModel.fromJson(r)).toList(), currentUserId),
+              loading: () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
                 ),
-                error: (e, _) => Center(child: Text('Error: $e')),
               ),
+              error: (e, _) => Center(child: Text('Error: $e')),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSliverAppBar(AsyncValue<Map<String, dynamic>?> balanceAsync) {
-    final coins =
-        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
+    final coins = balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
 
     return SliverAppBar(
       expandedHeight: 280,
@@ -110,22 +83,18 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                   ),
                 ),
               ),
-
+              
               // Tarjeta principal Premium
               SafeArea(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(40),
-                        border: Border.all(
-                            color: AppColors.accentGold.withValues(alpha: 0.15),
-                            width: 1),
+                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.15), width: 1),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.accentGold.withValues(alpha: 0.08),
@@ -145,10 +114,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.stars_rounded,
-                                  color: AppColors.accentGold
-                                      .withValues(alpha: 0.5),
-                                  size: 18),
+                              Icon(Icons.stars_rounded, color: AppColors.accentGold.withValues(alpha: 0.5), size: 18),
                               const SizedBox(width: 8),
                               const Text(
                                 'MI BILLETERA',
@@ -160,10 +126,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Icon(Icons.stars_rounded,
-                                  color: AppColors.accentGold
-                                      .withValues(alpha: 0.5),
-                                  size: 18),
+                              Icon(Icons.stars_rounded, color: AppColors.accentGold.withValues(alpha: 0.5), size: 18),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -198,8 +161,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                           ),
                           const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               color: AppColors.background,
                               borderRadius: BorderRadius.circular(20),
@@ -236,35 +198,24 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (suggestions.isNotEmpty) ...[
-            _buildSectionHeader('💡 Sugerencias del otro',
-                action: Text('${suggestions.length} pendientes',
-                    style: const TextStyle(
-                        color: AppColors.primary, fontSize: 12))),
+            _buildSectionHeader('💡 Sugerencias del otro', 
+                action: Text('${suggestions.length} pendientes', style: const TextStyle(color: AppColors.primary, fontSize: 12))),
             const SizedBox(height: 16),
             _buildSuggestionsList(suggestions, currentUserId),
             const SizedBox(height: 32),
           ],
-          _buildSectionHeader('🛍️ Boutique de la Casa',
-              action: Row(
-                children: [
-                  IconButton(
-                    tooltip: 'Cargar predeterminados',
-                    icon: const Icon(Icons.auto_awesome_motion_rounded,
-                        color: AppColors.textSecondary, size: 20),
-                    onPressed: _cloneTemplates,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline,
-                        color: AppColors.primary),
-                    onPressed: _showCreateRewardSheet,
-                  ),
-                ],
+
+          _buildSectionHeader('🛍️ Boutique de la Casa', 
+              action: IconButton(
+                icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                onPressed: _showCreateRewardSheet,
               )),
           const SizedBox(height: 16),
           if (approvedRewards.isEmpty)
             _buildEmptyState()
           else
             _buildRewardsGrid(approvedRewards),
+          
           const SizedBox(height: 40),
           _buildActionButtons(),
           const SizedBox(height: 100),
@@ -291,8 +242,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     );
   }
 
-  Widget _buildSuggestionsList(
-      List<RewardModel> suggestions, String? currentUserId) {
+  Widget _buildSuggestionsList(List<RewardModel> suggestions, String? currentUserId) {
     return SizedBox(
       height: 180,
       child: ListView.builder(
@@ -303,177 +253,99 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
           final s = suggestions[index];
           final isMine = s.createdBy == currentUserId;
 
-          return TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 300 + (index * 100)),
-            tween: Tween(begin: 0.0, end: 1.0),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(30 * (1 - value), 0),
-                  child: child,
+          return Container(
+            width: 300,
+            margin: const EdgeInsets.only(right: 16, bottom: 8),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: isMine ? AppColors.divider : const Color(0xFFDDD6FE).withValues(alpha: 0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
-              );
-            },
-            child: Container(
-              width: 300,
-              margin: const EdgeInsets.only(right: 16, bottom: 8),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                    color: isMine
-                        ? AppColors.divider
-                        : const Color(0xFFDDD6FE).withValues(alpha: 0.5),
-                    width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (isMine ? AppColors.primary : const Color(0xFF8B5CF6)).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(s.icon, style: const TextStyle(fontSize: 24)),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.title,
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.textPrimary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${s.cost} coins',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                if (isMine)
+                   Center(
+                     child: Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                       decoration: BoxDecoration(
+                         color: AppColors.surfaceVariant,
+                         borderRadius: BorderRadius.circular(20),
+                       ),
+                       child: const Text('Pendiente de aprobación', 
+                         style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                     ),
+                   )
+                else
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: (isMine
-                                  ? AppColors.primary
-                                  : const Color(0xFF8B5CF6))
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child:
-                            Text(s.icon, style: const TextStyle(fontSize: 24)),
-                      ),
-                      const SizedBox(width: 16),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              s.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                                color: AppColors.textPrimary,
-                                height: 1.1,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              '${s.cost} coins',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary),
-                            ),
-                          ],
+                        child: OutlinedButton(
+                          onPressed: () => ref.read(rewardsProvider.notifier).deleteReward(s.id),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.error, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text('Rechazar', style: TextStyle(color: AppColors.error, fontSize: 13, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => ref.read(rewardsProvider.notifier).approveReward(s.id),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6), // Royal Purple for approvals
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('¡Añadir!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900)),
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  if (isMine)
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text('Pendiente de aprobación',
-                            style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                    )
-                  else
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final result = await ref
-                                  .read(rewardsProvider.notifier)
-                                  .deleteReward(s.id);
-
-                              if (!context.mounted) return;
-
-                              result.fold(
-                                (failure) =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Error: ${failure.message}'),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                ),
-                                (_) => null,
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                  color: AppColors.error, width: 1.5),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text('Rechazar',
-                                style: TextStyle(
-                                    color: AppColors.error,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final result = await ref
-                                  .read(rewardsProvider.notifier)
-                                  .approveReward(s.id);
-
-                              if (!context.mounted) return;
-
-                              result.fold(
-                                (failure) =>
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Error: ${failure.message}'),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                ),
-                                (_) => null,
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                  0xFF8B5CF6), // Royal Purple for approvals
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                            ),
-                            child: const Text('¡Añadir!',
-                                style: TextStyle(
-                                    fontSize: 13, fontWeight: FontWeight.w900)),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+              ],
             ),
           );
         },
@@ -489,26 +361,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 0.78, // Taller for mobile to fit more text
+        childAspectRatio: 0.90, // Un poco más alto que ancho para dejar más espacio al texto enorme
       ),
       itemCount: rewards.length,
       itemBuilder: (context, index) {
         final r = rewards[index];
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 400 + (index * 50)),
-          tween: Tween(begin: 0.0, end: 1.0),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 30 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: _buildRewardCard(r),
-        );
+        return _buildRewardCard(r);
       },
     );
   }
@@ -518,31 +376,29 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     final cost = reward.cost;
     final canAfford = userBalance >= cost;
 
-    return AnimatedPress(
-      onTap: () => _confirmRedeem(reward, canAfford),
-      onLongPress: () => _confirmDelete(reward),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: canAfford
-                ? AppColors.accentGold.withValues(alpha: 0.3)
-                : AppColors.divider.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: canAfford ? AppColors.accentGold.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
+          width: 1.5,
         ),
-        child: Material(
-          color: Colors.transparent,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _confirmRedeem(reward, canAfford),
+          borderRadius: BorderRadius.circular(28),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -553,10 +409,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                       width: 65,
                       height: 65,
                       decoration: BoxDecoration(
-                        color: (canAfford
-                                ? AppColors.primary
-                                : AppColors.textMuted)
-                            .withValues(alpha: 0.08),
+                        color: (canAfford ? AppColors.primary : AppColors.textMuted).withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -571,48 +424,37 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 14, // Slightly smaller for better fit
+                        fontSize: 15,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.2,
-                        height: 1.1,
+                        height: 1.15,
                       ),
-                      maxLines: 3,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: canAfford
-                        ? AppColors.accentGold.withValues(alpha: 0.12)
-                        : AppColors.surfaceVariant,
+                    color: canAfford ? AppColors.accentGold.withValues(alpha: 0.12) : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: canAfford
-                          ? AppColors.accentGold.withValues(alpha: 0.2)
-                          : Colors.transparent,
+                      color: canAfford ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.stars_rounded,
-                          size: 16,
-                          color: canAfford
-                              ? AppColors.accentGold
-                              : AppColors.textMuted),
+                      Icon(Icons.stars_rounded, size: 16, color: canAfford ? AppColors.accentGold : AppColors.textMuted),
                       const SizedBox(width: 6),
                       Text(
                         '$cost',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
-                          color: canAfford
-                              ? const Color(0xFFB45309)
-                              : AppColors.textMuted,
+                          color: canAfford ? const Color(0xFFB45309) : AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -628,96 +470,22 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 40),
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
-      ),
       child: Column(
         children: [
-          const Text('🏚️', style: TextStyle(fontSize: 64)),
-          const SizedBox(height: 24),
+          const Text('🏚️', style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 16),
           const Text(
             'Boutique vacía',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 22,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Personalizá tu tienda añadiendo premios que ambos puedan canjear.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _cloneTemplates,
-              icon: const Icon(Icons.auto_awesome_motion_rounded),
-              label: const Text('CARGAR PREMIOS POR DEFECTO'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextButton(
             onPressed: _showCreateRewardSheet,
-            child: const Text(
-              'O crear uno desde cero',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
-              ),
-            ),
+            child: const Text('Crear primer premio'),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _cloneTemplates() async {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      ),
-    );
-
-    final result = await ref.read(rewardsProvider.notifier).cloneTemplates();
-
-    if (!mounted) return;
-    Navigator.pop(context); // Remove loading dialog
-
-    result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${failure.message}'),
-          backgroundColor: AppColors.error,
-        ),
-      ),
-      (count) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('¡$count premios añadidos con éxito! ✨'),
-          backgroundColor: Colors.green,
-        ),
       ),
     );
   }
@@ -740,15 +508,13 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         icon: const Icon(Icons.auto_awesome_rounded, size: 28),
         label: const Text(
           'PROPONER UN DESEO',
-          style: TextStyle(
-              fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
         ),
       ),
     );
@@ -757,8 +523,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   void _confirmRedeem(RewardModel reward, bool canAfford) {
     if (!canAfford) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Coins insuficientes 😅 ¡A completar tareas!')),
+        const SnackBar(content: Text('Coins insuficientes 😅 ¡A completar tareas!')),
       );
       return;
     }
@@ -781,77 +546,25 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancelar')),
           ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(dialogCtx);
-
-              final result =
-                  await ref.read(rewardsProvider.notifier).redeem(reward.id);
-
-              if (!context.mounted) return;
-
-              result.fold(
-                (failure) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${failure.message}'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                  ref.invalidate(userBalanceProvider);
-                },
-                (_) {
-                  ref.invalidate(userBalanceProvider);
-                  _showSuccessAnim(reward);
-                },
-              );
+            onPressed: () {
+              Navigator.pop(dialogCtx); // Close dialog immediately
+              
+              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
+                 // Invalidate immediately so next build fetches correct amount
+                 ref.invalidate(userBalanceProvider);
+                 _showSuccessAnim(reward);
+              }).catchError((e) {
+                 final errStr = e.toString().replaceFirst('Exception: ', '');
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(content: Text('Error: $errStr'), backgroundColor: AppColors.error),
+                 );
+                 ref.invalidate(userBalanceProvider);
+              });
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
             child: const Text('Canjear'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(RewardModel reward) {
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('¿Eliminar este premio?'),
-        content: Text(
-            'Esta acción quitará "${reward.title}" de la boutique permanentemente.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogCtx);
-              final result = await ref
-                  .read(rewardsProvider.notifier)
-                  .deleteReward(reward.id);
-
-              if (!context.mounted) return;
-
-              result.fold(
-                (failure) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: ${failure.message}'),
-                    backgroundColor: AppColors.error,
-                  ),
-                ),
-                (_) => null, // Success handled by provider refresh
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -862,8 +575,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     SuccessCelebration.show(
       context,
       title: '¡Premio Canjeado! 🎉',
-      message:
-          'Disfrutá de "${reward.title}". El amor está en los pequeños detalles.',
+      message: 'Disfrutá de "${reward.title}". El amor está en los pequeños detalles.',
       icon: reward.icon,
     );
   }
@@ -914,28 +626,18 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
               ),
               Text(
                 isSuggestion ? 'Proponer un Deseo' : 'Nuevo Premio de la Casa',
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                isSuggestion
-                    ? 'Envía una idea para que tu pareja la apruebe'
-                    : 'Añade una recompensa directamente a la tienda',
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary),
+                isSuggestion ? 'Envía una idea para que tu pareja la apruebe' : 'Añade una recompensa directamente a la tienda',
+                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              const Text('¿QUÉ TENÉS EN MENTE?',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.2)),
+              
+              const Text('¿QUÉ TENÉS EN MENTE?', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.2)),
               const SizedBox(height: 12),
               TextField(
                 controller: titleController,
@@ -944,92 +646,62 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                   hintText: 'Ej: Masaje de 20 min...',
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(20),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('VALOR DEL CAPRICHO',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.2)),
+              
+              const Text('VALOR DEL CAPRICHO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.2)),
               const SizedBox(height: 12),
               TextField(
                 controller: costController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
                 decoration: InputDecoration(
                   hintText: 'Costo en coins',
-                  prefixIcon: const Icon(Icons.stars_rounded,
-                      color: AppColors.accentGold),
+                  prefixIcon: const Icon(Icons.stars_rounded, color: AppColors.accentGold),
                   filled: true,
                   fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.all(20),
                 ),
               ),
               const SizedBox(height: 32),
-              const Text('ELEGÍ UN ÍCONO',
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.2)),
+              
+              const Text('ELEGÍ UN ÍCONO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.2)),
               const SizedBox(height: 16),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: [
-                    '🎁',
-                    '🍕',
-                    '🎬',
-                    '💆',
-                    '🍳',
-                    '🍦',
-                    '🥂',
-                    '🎮',
-                    '🛀',
-                    '🚗'
-                  ].map((icon) {
+                  children: ['🎁', '🍕', '🎬', '💆', '🍳', '🍦', '🥂', '🎮', '🛀', '🚗'].map((icon) {
                     final isSelected = selectedIcon == icon;
                     return GestureDetector(
-                      onTap: () => setModalState(() => selectedIcon = icon),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.1)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : Colors.transparent,
-                              width: 2),
-                          boxShadow: [
-                            if (!isSelected)
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                          ],
-                        ),
-                        child: Text(icon, style: const TextStyle(fontSize: 32)),
-                      ),
+                       onTap: () => setModalState(() => selectedIcon = icon),
+                       child: Container(
+                         margin: const EdgeInsets.only(right: 12),
+                         padding: const EdgeInsets.all(16),
+                         decoration: BoxDecoration(
+                           color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.white,
+                           borderRadius: BorderRadius.circular(20),
+                           border: Border.all(color: isSelected ? AppColors.primary : Colors.transparent, width: 2),
+                           boxShadow: [
+                             if (!isSelected)
+                               BoxShadow(
+                                 color: Colors.black.withValues(alpha: 0.03),
+                                 blurRadius: 10,
+                                 offset: const Offset(0, 4),
+                               ),
+                           ],
+                         ),
+                         child: Text(icon, style: const TextStyle(fontSize: 32)),
+                       ),
                     );
                   }).toList(),
                 ),
               ),
               const SizedBox(height: 40),
+              
               Container(
                 decoration: BoxDecoration(
                   boxShadow: [
@@ -1041,47 +713,28 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () async {
+                  onPressed: () {
                     final cost = int.tryParse(costController.text) ?? 0;
                     if (titleController.text.isNotEmpty && cost > 0) {
-                      final result = await ref
-                          .read(rewardsProvider.notifier)
-                          .suggestReward(
-                            title: titleController.text,
-                            cost: cost,
-                            icon: selectedIcon,
-                          );
-
-                      if (!context.mounted) return;
-
-                      result.fold(
-                        (failure) => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: ${failure.message}'),
-                            backgroundColor: AppColors.error,
-                          ),
-                        ),
-                        (_) {
-                          Navigator.pop(context);
-                          _showSentToast(isSuggestion);
-                        },
+                      ref.read(rewardsProvider.notifier).suggestReward(
+                        title: titleController.text,
+                        cost: cost,
+                        icon: selectedIcon,
                       );
+                      Navigator.pop(context);
+                      _showSentToast(isSuggestion);
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                     elevation: 0,
                   ),
                   child: Text(
                     isSuggestion ? 'ENVIAR PROPUESTA' : 'CREAR PREMIO',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        letterSpacing: 1),
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
                   ),
                 ),
               ),
@@ -1095,9 +748,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   void _showSentToast(bool isSuggestion) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isSuggestion
-            ? '🚀 ¡Propuesta enviada!'
-            : '✅ Premio creado con éxito'),
+        content: Text(isSuggestion ? '🚀 ¡Propuesta enviada!' : '✅ Premio creado con éxito'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
