@@ -7,6 +7,7 @@ import 'package:homesync_client/core/services/repository_error_handler.dart';
 import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import '../../../../core/errors/failures.dart';
 
 part 'supabase_reward_repository.g.dart';

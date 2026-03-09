@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:developer' as dev;
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
-import 'package:homesync_client/core/services/expense_service.dart';
 
 class BottomNavNotifier extends Notifier<int> {
   @override
@@ -31,10 +30,6 @@ final authServiceProvider = Provider<SupabaseAuthService>((ref) {
 
 final rpcServiceProvider = Provider<SupabaseRpcService>((ref) {
   throw UnimplementedError('rpcServiceProvider must be overridden in ProviderScope.');
-});
-
-final expenseServiceProvider = Provider<ExpenseService>((ref) {
-  return ExpenseService();
 });
 
 // ── Current user convenience providers ────────────────────────────────────────

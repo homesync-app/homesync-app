@@ -8,6 +8,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
@@ -22,16 +23,7 @@ import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
-  final SharedPreferences? prefs;
-
-  const HomeScreen({
-    super.key,
-    required this.auth,
-    required this.rpc,
-    this.prefs,
-  });
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -486,28 +478,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showQuickActionMenu(String householdId) {
-    // Basic implementation of the quick action menu
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Acciones Rápidas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            // Actions like "Cargar Gasto", "Nueva Tarea", etc.
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context), 
-              child: const Text('Cerrar'),
+            const Text(
+              '¿Qué deseás hacer?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5),
             ),
+            const SizedBox(height: 32),
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 3,
+              mainAxisSpacing: 24,
+              crossAxisSpacing: 20,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildQuickActionItem(
+                  icon: Icons.shopping_bag_rounded,
+                  label: 'Gasto',
+                  color: AppColors.accentOrange,
+                  onTap: () {
+                    Navigator.pop(context);
+                    ExpenseFormSheet.show(context);
+                  },
+                ),
+                _buildQuickActionItem(
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'Ingreso',
+                  color: AppColors.success,
+                  onTap: () {
+                    Navigator.pop(context);
+                    ExpenseFormSheet.show(context); // It now has the toggle
+                  },
+                ),
+                _buildQuickActionItem(
+                  icon: Icons.task_alt_rounded,
+                  label: 'Tarea',
+                  color: AppColors.primary,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Open Task creation (if exists) or navigate to tasks
+                    ref.read(bottomNavIndexProvider.notifier).state = 1; 
+                  },
+                ),
+                _buildQuickActionItem(
+                  icon: Icons.shopping_cart_rounded,
+                  label: 'Lista',
+                  color: AppColors.accentGold,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to shopping (not in main bottom bar, but can open sheet)
+                  },
+                ),
+                _buildQuickActionItem(
+                  icon: Icons.savings_rounded,
+                  label: 'Ahorro',
+                  color: AppColors.accentTeal,
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to savings
+                  },
+                ),
+                _buildQuickActionItem(
+                  icon: Icons.stars_rounded,
+                  label: 'Premio',
+                  color: const Color(0xFF9575CD),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Navigate to rewards
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

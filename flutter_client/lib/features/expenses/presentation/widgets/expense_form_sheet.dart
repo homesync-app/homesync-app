@@ -37,6 +37,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   bool _isLoading = false;
+  bool _isIncome = false;
   Map<String, dynamic>? _selectedCategory;
 
   // Form fields
@@ -73,6 +74,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     
     if (widget.expense != null) {
       _loadExpenseData(widget.expense!);
+      _isIncome = widget.expense!.type == 'income';
     }
   }
 
@@ -219,6 +221,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         paidAt: _selectedDate,
         description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
         splitType: _splitMode,
+        type: _isIncome ? 'income' : 'expense',
         splits: splits,
       );
 
@@ -297,6 +300,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 16),
+                      _buildTypeToggle(),
+                      const SizedBox(height: 24),
                       _buildAmountField(),
                       const SizedBox(height: 32),
                       _buildTitleField(),
@@ -398,6 +403,65 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         selection: TextSelection.collapsed(offset: formatted.length),
       );
     }
+  }
+
+  Widget _buildTypeToggle() {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTypeOption(
+              label: 'Gasto',
+              isSelected: !_isIncome,
+              onTap: () => setState(() => _isIncome = false),
+            ),
+          ),
+          Expanded(
+            child: _buildTypeOption(
+              label: 'Ingreso',
+              isSelected: _isIncome,
+              onTap: () => setState(() => _isIncome = true),
+              activeColor: AppColors.success,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeOption({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    Color activeColor = AppColors.primary,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              fontSize: 15,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAmountField() {
@@ -851,7 +915,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ),
         child: _isLoading 
           ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) 
-          : const Text('Guardar Gasto', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+          : Text(_isIncome ? 'Guardar Ingreso' : 'Guardar Gasto', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
       ),
     );
   }

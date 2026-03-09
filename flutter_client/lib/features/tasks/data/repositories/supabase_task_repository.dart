@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';

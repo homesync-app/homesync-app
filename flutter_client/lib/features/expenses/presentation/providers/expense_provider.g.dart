@@ -6,11 +6,12 @@ part of 'expense_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$expenseRepositoryHash() => r'224ce47b4a38579fc9e5508a4b3080f8ca97ba8e';
+String _$expenseRepositoryHash() => r'6d92aaef781ff86e8e47d1be96a701ed3e446f26';
 
 /// See also [expenseRepository].
 @ProviderFor(expenseRepository)
-final expenseRepositoryProvider = Provider<ExpenseRepository>.internal(
+final expenseRepositoryProvider =
+    AutoDisposeProvider<ExpenseRepository>.internal(
   expenseRepository,
   name: r'expenseRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -22,7 +23,7 @@ final expenseRepositoryProvider = Provider<ExpenseRepository>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef ExpenseRepositoryRef = ProviderRef<ExpenseRepository>;
+typedef ExpenseRepositoryRef = AutoDisposeProviderRef<ExpenseRepository>;
 String _$getExpensesUseCaseHash() =>
     r'864fdc75d0cbce04736a7903af97835895dabef5';
 
@@ -61,91 +62,34 @@ final getBalancesUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetBalancesUseCaseRef = AutoDisposeProviderRef<GetBalancesUseCase>;
-String _$saveExpenseUseCaseHash() =>
-    r'8a89ce3d55fa2a496c4618888370a3074a78b699';
+String _$getPersonalFinanceSummaryUseCaseHash() =>
+    r'3a26bd4131d499ed6860cfd13e7343874ccc40b0';
 
-/// See also [saveExpenseUseCase].
-@ProviderFor(saveExpenseUseCase)
-final saveExpenseUseCaseProvider =
-    AutoDisposeProvider<SaveExpenseUseCase>.internal(
-  saveExpenseUseCase,
-  name: r'saveExpenseUseCaseProvider',
+/// See also [getPersonalFinanceSummaryUseCase].
+@ProviderFor(getPersonalFinanceSummaryUseCase)
+final getPersonalFinanceSummaryUseCaseProvider =
+    AutoDisposeProvider<GetPersonalFinanceSummaryUseCase>.internal(
+  getPersonalFinanceSummaryUseCase,
+  name: r'getPersonalFinanceSummaryUseCaseProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$saveExpenseUseCaseHash,
+      : _$getPersonalFinanceSummaryUseCaseHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef SaveExpenseUseCaseRef = AutoDisposeProviderRef<SaveExpenseUseCase>;
-String _$deleteExpenseUseCaseHash() =>
-    r'ebf8fa44afd87d1a7e32a28a9bb5bdc46e642e9a';
-
-/// See also [deleteExpenseUseCase].
-@ProviderFor(deleteExpenseUseCase)
-final deleteExpenseUseCaseProvider =
-    AutoDisposeProvider<DeleteExpenseUseCase>.internal(
-  deleteExpenseUseCase,
-  name: r'deleteExpenseUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$deleteExpenseUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DeleteExpenseUseCaseRef = AutoDisposeProviderRef<DeleteExpenseUseCase>;
-String _$settleDebtUseCaseHash() => r'c8a8eb882d39ae8609a0626b67834c251711e1a7';
-
-/// See also [settleDebtUseCase].
-@ProviderFor(settleDebtUseCase)
-final settleDebtUseCaseProvider =
-    AutoDisposeProvider<SettleDebtUseCase>.internal(
-  settleDebtUseCase,
-  name: r'settleDebtUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$settleDebtUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SettleDebtUseCaseRef = AutoDisposeProviderRef<SettleDebtUseCase>;
-String _$expensesAndBalancesHash() =>
-    r'bace7b32ae1100d6233f93f6a650e931b104e258';
-
-/// Provides the combined expenses and balances state stream
-///
-/// Copied from [expensesAndBalances].
-@ProviderFor(expensesAndBalances)
-final expensesAndBalancesProvider =
-    StreamProvider<Map<String, dynamic>>.internal(
-  expensesAndBalances,
-  name: r'expensesAndBalancesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expensesAndBalancesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ExpensesAndBalancesRef = StreamProviderRef<Map<String, dynamic>>;
+typedef GetPersonalFinanceSummaryUseCaseRef
+    = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
 String _$personalFinanceSummaryHash() =>
-    r'c13c2cdad67ca4059632d360e44eb842ee50f14d';
+    r'34100303376c4e3a3a6039b6b1bf3bd20875b6a5';
 
-/// See also [personalFinanceSummary].
-@ProviderFor(personalFinanceSummary)
-final personalFinanceSummaryProvider =
-    AutoDisposeFutureProvider<Map<String, dynamic>>.internal(
-  personalFinanceSummary,
+/// See also [PersonalFinanceSummary].
+@ProviderFor(PersonalFinanceSummary)
+final personalFinanceSummaryProvider = AutoDisposeAsyncNotifierProvider<
+    PersonalFinanceSummary, Map<String, dynamic>>.internal(
+  PersonalFinanceSummary.new,
   name: r'personalFinanceSummaryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
@@ -154,35 +98,15 @@ final personalFinanceSummaryProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef PersonalFinanceSummaryRef
-    = AutoDisposeFutureProviderRef<Map<String, dynamic>>;
-String _$filteredExpensesHash() => r'845660b3072d322382039fa920892c125bdf2537';
+typedef _$PersonalFinanceSummary
+    = AutoDisposeAsyncNotifier<Map<String, dynamic>>;
+String _$expenseBalancesHash() => r'ff3cf4266841e1f70ce794b2910fbdbc6608cb21';
 
-/// See also [filteredExpenses].
-@ProviderFor(filteredExpenses)
-final filteredExpensesProvider =
-    AutoDisposeFutureProvider<List<ExpenseModel>>.internal(
-  filteredExpenses,
-  name: r'filteredExpensesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$filteredExpensesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FilteredExpensesRef = AutoDisposeFutureProviderRef<List<ExpenseModel>>;
-String _$expenseBalancesHash() => r'2ea9f731b6c16a29db9c56550ac4e1d5e82bcc3f';
-
-/// See also [expenseBalances].
-@ProviderFor(expenseBalances)
-final expenseBalancesProvider =
-    AutoDisposeFutureProvider<List<HouseholdBalanceModel>>.internal(
-  expenseBalances,
+/// See also [ExpenseBalances].
+@ProviderFor(ExpenseBalances)
+final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
+    ExpenseBalances, List<HouseholdBalanceModel>>.internal(
+  ExpenseBalances.new,
   name: r'expenseBalancesProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
@@ -191,16 +115,14 @@ final expenseBalancesProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ExpenseBalancesRef
-    = AutoDisposeFutureProviderRef<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'05b7c24f7d8b4a7b8285c6259611814d38ff7ee0';
+typedef _$ExpenseBalances
+    = AutoDisposeAsyncNotifier<List<HouseholdBalanceModel>>;
+String _$expenseControllerHash() => r'783a69aa53b2a2ba14527dd8b60dfe8537ba7ac2';
 
 /// See also [ExpenseController].
 @ProviderFor(ExpenseController)
-final expenseControllerProvider =
-    AsyncNotifierProvider<ExpenseController, List<ExpenseModel>>.internal(
+final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
+    ExpenseController, List<ExpenseModel>>.internal(
   ExpenseController.new,
   name: r'expenseControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -210,14 +132,14 @@ final expenseControllerProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$ExpenseController = AsyncNotifier<List<ExpenseModel>>;
+typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$expenseFiltersNotifierHash() =>
-    r'48a00c2ba2569a8cdc05d40e32c3dc98f73d42c2';
+    r'668f4d76d09978368ddf7e1f5aac78c322f4982f';
 
 /// See also [ExpenseFiltersNotifier].
 @ProviderFor(ExpenseFiltersNotifier)
 final expenseFiltersNotifierProvider = AutoDisposeNotifierProvider<
-    ExpenseFiltersNotifier, ExpenseFilters>.internal(
+    ExpenseFiltersNotifier, Map<String, dynamic>>.internal(
   ExpenseFiltersNotifier.new,
   name: r'expenseFiltersNotifierProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -227,6 +149,24 @@ final expenseFiltersNotifierProvider = AutoDisposeNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$ExpenseFiltersNotifier = AutoDisposeNotifier<ExpenseFilters>;
+typedef _$ExpenseFiltersNotifier = AutoDisposeNotifier<Map<String, dynamic>>;
+String _$mercadopagoMovementsHash() =>
+    r'04581643c0618bcfa24e58ac6275b1e95178d3ef';
+
+/// See also [MercadopagoMovements].
+@ProviderFor(MercadopagoMovements)
+final mercadopagoMovementsProvider = AutoDisposeAsyncNotifierProvider<
+    MercadopagoMovements, List<Map<String, dynamic>>>.internal(
+  MercadopagoMovements.new,
+  name: r'mercadopagoMovementsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$mercadopagoMovementsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$MercadopagoMovements
+    = AutoDisposeAsyncNotifier<List<Map<String, dynamic>>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

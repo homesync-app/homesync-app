@@ -12,6 +12,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import '../../../../core/services/notification_service.dart';
 
 import '../../../household/presentation/screens/setup_screen.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import '../../../dashboard/presentation/screens/home_screen.dart';
 import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';

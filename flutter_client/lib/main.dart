@@ -6,10 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/app_environment.dart';
 import 'core/services/supabase_auth_service.dart';
 import 'core/services/supabase_rpc_service.dart';
-import 'core/services/expense_service.dart';
 import 'core/services/notification_service.dart';
-import 'theme/app_colors.dart';
-import 'theme/app_theme.dart';
+import 'core/theme/app_colors.dart';
+import 'core/theme/app_theme.dart';
 import 'core/utils/app_animations.dart';
 import 'features/dashboard/presentation/screens/home_screen.dart';
 import 'features/tasks/presentation/screens/tasks_screen.dart';
@@ -18,7 +17,7 @@ import 'features/rewards/presentation/screens/rewards_screen.dart';
 import 'features/stats/presentation/screens/stats_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/household/presentation/screens/setup_screen.dart';
-import 'features/tasks/presentation/screens/weekly_winner_screen.dart';
+import 'features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'features/settings/presentation/screens/settings_screen.dart';
 import 'features/notifications/presentation/screens/notifications_screen.dart';
 import 'features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -96,8 +95,6 @@ void main() async {
         rpcServiceProvider.overrideWithValue(rpc),
       ],
       child: MyApp(
-        auth: auth,
-        rpc: rpc,
         prefs: prefs,
       ),
     ),
@@ -121,14 +118,10 @@ class _ThemeInit extends ConsumerWidget {
 }
 
 class MyApp extends ConsumerWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
   final SharedPreferences prefs;
 
   const MyApp({
     super.key,
-    required this.auth,
-    required this.rpc,
     required this.prefs,
   });
 
@@ -148,14 +141,14 @@ class MyApp extends ConsumerWidget {
         home: authState.when(
           data: (state) {
             if (state.session != null) {
-              return MainScreen(auth: auth, rpc: rpc, prefs: prefs);
+              return MainScreen(prefs: prefs);
             }
-            return LoginScreen(auth: auth, rpc: rpc, prefs: prefs);
+            return LoginScreen(prefs: prefs);
           },
           loading: () => const _SplashScreen(),
           error: (e, stack) {
             debugPrint('Auth error: $e');
-            return LoginScreen(auth: auth, rpc: rpc, prefs: prefs);
+            return LoginScreen(prefs: prefs);
           },
         ),
       ),
@@ -213,14 +206,10 @@ class _SplashScreen extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class MainScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
   final SharedPreferences prefs;
 
   const MainScreen({
     super.key,
-    required this.auth,
-    required this.rpc,
     required this.prefs,
   });
 
@@ -232,7 +221,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool _isLoading = true;
   bool _needsSetup = false;
   bool _showWeeklyWinner = false;
-  late ExpenseService _expenseService;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -243,7 +231,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _expenseService = ExpenseService();
     _checkSetup();
     _initNotifications();
     _initDeepLinks();
@@ -325,7 +312,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   // ── Setup checks ──────────────────────────────────────────────────────────
 
   Future<void> _checkSetup() async {
-    final user = widget.auth.currentUser;
+    final user = ref.read(authServiceProvider).currentUser;
     if (user == null) {
       setState(() {
         _isLoading = false;
@@ -368,9 +355,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (alreadyShown) return;
 
     try {
-      final isProcessed = await widget.rpc.isWeekProcessed();
+      final rpc = ref.read(rpcServiceProvider);
+      final isProcessed = await rpc.isWeekProcessed();
       if (!isProcessed) {
-        final ranking = await widget.rpc.getWeeklyRanking();
+        final ranking = await rpc.getWeeklyRanking();
         if (ranking.isNotEmpty && (ranking.first['xp_earned'] ?? 0) > 0) {
           setState(() => _showWeeklyWinner = true);
         }
@@ -405,9 +393,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     if (_needsSetup) {
       return SetupScreen(
-        auth: widget.auth,
-        rpc: widget.rpc,
-        prefs: widget.prefs,
         onComplete: () async {
           await widget.prefs.setBool('setup_completed', true);
           setState(() {
@@ -421,7 +406,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     if (_showWeeklyWinner) {
       return WeeklyWinnerScreen(
-        rpc: widget.rpc,
         onClose: _markWinnerShown,
       );
     }
@@ -429,11 +413,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
     final screens = [
-      HomeScreen(auth: widget.auth, rpc: widget.rpc, prefs: widget.prefs),
-      TasksScreen(auth: widget.auth, rpc: widget.rpc),
+      const HomeScreen(),
+      const TasksScreen(),
       const ExpensesScreen(),
       const RewardsScreen(),
-      StatsScreen(rpc: widget.rpc),
+      const StatsScreen(),
       const ShoppingListScreen(),
     ];
 
@@ -451,7 +435,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         title: Text(titles[currentIndex]),
         toolbarHeight: 80,
         actions: [
-          _NotificationBell(auth: widget.auth),
+          const _NotificationBell(),
           IconButton(
             icon: const Icon(
               Icons.settings_outlined,
@@ -485,12 +469,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       context,
       AppTransitions.slideUp(
         SettingsScreen(
-          auth: widget.auth,
-          rpc: widget.rpc,
           onLogout: () {
             _notifService.dispose();
             // Auth changes will be handled by authStateProvider
-            widget.auth.signOut();
+            ref.read(authServiceProvider).signOut();
           },
         ),
       ),
@@ -583,15 +565,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 // Notification Bell with unread badge
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _NotificationBell extends StatefulWidget {
-  final SupabaseAuthService auth;
-  const _NotificationBell({required this.auth});
+class _NotificationBell extends ConsumerStatefulWidget {
+  const _NotificationBell();
 
   @override
-  State<_NotificationBell> createState() => _NotificationBellState();
+  ConsumerState<_NotificationBell> createState() => _NotificationBellState();
 }
 
-class _NotificationBellState extends State<_NotificationBell>
+class _NotificationBellState extends ConsumerState<_NotificationBell>
     with SingleTickerProviderStateMixin {
   int _unreadCount = 0;
   late AnimationController _shakeController;
@@ -623,7 +604,7 @@ class _NotificationBellState extends State<_NotificationBell>
 
   Future<void> _loadUnreadCount() async {
     try {
-      final user = widget.auth.currentUser;
+      final user = ref.read(authServiceProvider).currentUser;
       if (user == null) return;
       final data = await Supabase.instance.client
           .from('notifications')

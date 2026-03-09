@@ -24,3 +24,13 @@ UpdateAvatarUseCase updateAvatarUseCase(UpdateAvatarUseCaseRef ref) {
   final repository = ref.read(settingsRepositoryProvider);
   return UpdateAvatarUseCase(repository);
 }
+
+@riverpod
+class NotificationEnabled extends _$NotificationEnabled {
+  @override
+  bool build() => true;
+
+  void toggle(bool value) {
+    state = value;
+  }
+}

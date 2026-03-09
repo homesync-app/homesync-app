@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/features/stats/data/repositories/supabase_stats_repository.dart';
 import 'package:homesync_client/features/stats/domain/repositories/stats_repository.dart';
 

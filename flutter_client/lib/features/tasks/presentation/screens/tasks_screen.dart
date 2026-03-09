@@ -14,7 +14,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
@@ -27,10 +27,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 class TasksScreen extends ConsumerStatefulWidget {
-  final SupabaseAuthService auth;
-  final SupabaseRpcService rpc;
-
-  const TasksScreen({super.key, required this.auth, required this.rpc});
+  const TasksScreen({super.key});
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -299,7 +296,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           // ── Content ──────────────────────────────────────────────────────
           Expanded(
             child: isCalendarMode
-                ? const CalendarScreen()
+                ? CalendarScreen(
+                    onEdit: (task) => _showEditDialog(task),
+                    onSchedule: (task) => _showScheduleDialog(task),
+                  )
                 : filteredAsync.when(
                     loading: () => const Center(
                       child: CircularProgressIndicator(color: AppColors.primary),

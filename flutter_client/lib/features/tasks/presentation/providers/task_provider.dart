@@ -85,16 +85,16 @@ class Tasks extends _$Tasks {
     _setupRealtime(householdId);
 
     final useCase = ref.watch(getTasksUseCaseProvider);
-    try {
-      final tasks = await useCase(householdId, limit: _pageSize, offset: 0);
-      if (tasks.length < _pageSize) {
-        _hasMore = false;
-      }
-      return tasks;
-    } catch (e) {
-      log.e('Error loading tasks: $e');
-      throw Exception('Error al cargar tareas: $e');
-    }
+    final result = await useCase(householdId, limit: _pageSize, offset: 0);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (tasks) {
+        if (tasks.length < _pageSize) {
+          _hasMore = false;
+        }
+        return tasks;
+      },
+    );
   }
 
   void _setupRealtime(String householdId) {
@@ -142,16 +142,21 @@ class Tasks extends _$Tasks {
 
     final useCase = ref.read(getTasksUseCaseProvider);
     try {
-      final nextTasks = await useCase(
+      final result = await useCase(
         householdId,
         limit: _pageSize,
         offset: currentTasks.length,
       );
 
-      if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
-        _hasMore = false;
-      }
-      state = AsyncValue.data([...currentTasks, ...nextTasks]);
+      result.fold(
+        (failure) => log.w('Error loading more tasks: ${failure.message}'),
+        (nextTasks) {
+          if (nextTasks.isEmpty || nextTasks.length < _pageSize) {
+            _hasMore = false;
+          }
+          state = AsyncValue.data([...currentTasks, ...nextTasks]);
+        },
+      );
     } catch (e) {
       log.w('Error loading more tasks: $e');
     }
@@ -177,7 +182,13 @@ class Tasks extends _$Tasks {
     try {
       final useCase = ref.read(completeTaskUseCaseProvider);
       final result = await useCase(task);
-      return result;
+      return result.fold(
+        (failure) {
+          state = AsyncValue.data(oldState!);
+          return null;
+        },
+        (data) => data,
+      );
     } catch (e) {
       log.w('Complete task failure: $e');
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback

@@ -14,7 +14,7 @@ part 'savings_provider.g.dart';
 
 @riverpod
 SavingsRepository savingsRepository(SavingsRepositoryRef ref) {
-  return SupabaseSavingsRepository();
+  return SupabaseSavingsRepository(ref: ref);
 }
 
 @riverpod
@@ -45,7 +45,11 @@ DeleteSavingsGoalUseCase deleteSavingsGoalUseCase(DeleteSavingsGoalUseCaseRef re
 @riverpod
 Future<List<SavingsContributionModel>> goalContributions(GoalContributionsRef ref, String goalId) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
-  return await getGoalContributions.execute(goalId);
+  final result = await getGoalContributions.execute(goalId);
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (items) => items,
+  );
 }
 
 @riverpod
@@ -56,7 +60,11 @@ class SavingsGoals extends _$SavingsGoals {
     if (householdId == null) return [];
     
     final getSavingsGoals = ref.watch(getSavingsGoalsUseCaseProvider);
-    return await getSavingsGoals.execute(householdId);
+    final result = await getSavingsGoals.execute(householdId);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (goals) => goals,
+    );
   }
 
   Future<void> addGoal(String title, double targetAmount, String color, String icon) async {
@@ -73,7 +81,11 @@ class SavingsGoals extends _$SavingsGoals {
         icon: icon,
       );
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 
@@ -95,7 +107,11 @@ class SavingsGoals extends _$SavingsGoals {
       ref.invalidate(personalFinanceSummaryProvider); // This affects balance
       
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 
@@ -107,7 +123,11 @@ class SavingsGoals extends _$SavingsGoals {
     state = await AsyncValue.guard(() async {
       await ref.read(deleteSavingsGoalUseCaseProvider).execute(goalId);
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
-      return await getSavingsGoals.execute(householdId);
+      final result = await getSavingsGoals.execute(householdId);
+      return result.fold(
+        (failure) => throw Exception(failure.message),
+        (goals) => goals,
+      );
     });
   }
 }

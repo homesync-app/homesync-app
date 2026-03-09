@@ -1,9 +1,10 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/shared/widgets/faceoff_widget.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,8 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
-  final SupabaseRpcService rpc;
-  const StatsScreen({super.key, required this.rpc});
+  const StatsScreen({super.key});
 
   @override
   ConsumerState<StatsScreen> createState() => _StatsScreenState();
@@ -50,13 +50,14 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   Future<void> _loadStats() async {
     setState(() => _isLoading = true);
     try {
+      final rpc = ref.read(rpcServiceProvider);
       final results = await Future.wait([
-        widget.rpc.getTaskStatsByCategory(),
-        widget.rpc.getMemberActivityStats(),
-        widget.rpc.getWeeklyRanking(),
-        widget.rpc.getXpHistory(),
-        widget.rpc.getCoinHistory(),
-        widget.rpc.getWeeklyDuelHistory(),
+        rpc.getTaskStatsByCategory(),
+        rpc.getMemberActivityStats(),
+        rpc.getWeeklyRanking(),
+        rpc.getXpHistory(),
+        rpc.getCoinHistory(),
+        rpc.getWeeklyDuelHistory(),
       ]);
 
       if (mounted) {

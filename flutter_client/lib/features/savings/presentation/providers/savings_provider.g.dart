@@ -124,7 +124,7 @@ final deleteSavingsGoalUseCaseProvider =
 // ignore: unused_element
 typedef DeleteSavingsGoalUseCaseRef
     = AutoDisposeProviderRef<DeleteSavingsGoalUseCase>;
-String _$goalContributionsHash() => r'02a3fd4adf704201e3f9dddec857cb35944d1146';
+String _$goalContributionsHash() => r'97f44cc05c82e51f929fea3732a5fdd64d0acaca';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -282,7 +282,7 @@ class _GoalContributionsProviderElement
   String get goalId => (origin as GoalContributionsProvider).goalId;
 }
 
-String _$savingsGoalsHash() => r'5e4acc8f5724e00249c7cea1c2488afe021548be';
+String _$savingsGoalsHash() => r'626434fcd67ea804040ac9007b53af52aa7b9b0f';
 
 /// See also [SavingsGoals].
 @ProviderFor(SavingsGoals)

@@ -15,6 +15,7 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {

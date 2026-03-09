@@ -63,5 +63,22 @@ final updateAvatarUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UpdateAvatarUseCaseRef = AutoDisposeProviderRef<UpdateAvatarUseCase>;
+String _$notificationEnabledHash() =>
+    r'ee6e9c6286cbf1305c5e370a85d4ebc6252b2fd2';
+
+/// See also [NotificationEnabled].
+@ProviderFor(NotificationEnabled)
+final notificationEnabledProvider =
+    AutoDisposeNotifierProvider<NotificationEnabled, bool>.internal(
+  NotificationEnabled.new,
+  name: r'notificationEnabledProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$notificationEnabledHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$NotificationEnabled = AutoDisposeNotifier<bool>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

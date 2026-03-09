@@ -15,7 +15,7 @@ part 'expense_provider.g.dart';
 @riverpod
 ExpenseRepository expenseRepository(ExpenseRepositoryRef ref) {
   final client = ref.watch(supabaseClientProvider);
-  return SupabaseExpenseRepository(client);
+  return SupabaseExpenseRepository(client, ref);
 }
 
 @riverpod
@@ -57,7 +57,11 @@ class ExpenseBalances extends _$ExpenseBalances {
     if (householdId == null) return [];
 
     final useCase = ref.watch(getBalancesUseCaseProvider);
-    return useCase(householdId);
+    final result = await useCase(householdId);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (balances) => balances,
+    );
   }
 }
 
@@ -69,7 +73,11 @@ class ExpenseController extends _$ExpenseController {
     if (householdId == null) return [];
 
     final useCase = ref.watch(getExpensesUseCaseProvider);
-    return useCase(householdId);
+    final result = await useCase(householdId);
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (expenses) => expenses,
+    );
   }
 
   Future<void> saveExpense({
@@ -81,6 +89,7 @@ class ExpenseController extends _$ExpenseController {
     required DateTime paidAt,
     String? description,
     required SplitType splitType,
+    String type = 'expense',
     List<Map<String, dynamic>>? splits,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
@@ -97,6 +106,7 @@ class ExpenseController extends _$ExpenseController {
       paidAt: paidAt,
       description: description,
       splitType: splitType,
+      type: type,
       splits: splits,
     );
     
