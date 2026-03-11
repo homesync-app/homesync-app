@@ -576,12 +576,12 @@ class FakeUser {
   FakeUser({required this.id, this.householdId});
 }
 
-class _JoinResult {
+class JoinResult {
   final bool success;
   final String? householdId;
   final bool oldHouseholdDeleted;
   final String? errorMessage;
-  _JoinResult({
+  JoinResult({
     required this.success,
     this.householdId,
     this.oldHouseholdDeleted = false,
@@ -590,22 +590,22 @@ class _JoinResult {
 }
 
 class HouseholdJoinSimulator {
-  static _JoinResult join({
+  static JoinResult join({
     required FakeUser user,
     required String code,
     required String? targetHouseholdId,
   }) {
     if (!InviteCodeValidator.isValid(code)) {
-      return _JoinResult(success: false, errorMessage: 'Código inválido');
+      return JoinResult(success: false, errorMessage: 'Código inválido');
     }
     if (targetHouseholdId == null) {
-      return _JoinResult(success: false, errorMessage: 'Código no encontrado');
+      return JoinResult(success: false, errorMessage: 'Código no encontrado');
     }
     if (user.householdId == targetHouseholdId) {
-      return _JoinResult(
+      return JoinResult(
           success: false, errorMessage: 'ya perteneces a este hogar');
     }
-    return _JoinResult(
+    return JoinResult(
       success: true,
       householdId: targetHouseholdId,
       oldHouseholdDeleted: true,

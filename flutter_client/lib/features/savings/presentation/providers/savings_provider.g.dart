@@ -282,7 +282,25 @@ class _GoalContributionsProviderElement
   String get goalId => (origin as GoalContributionsProvider).goalId;
 }
 
-String _$savingsGoalsHash() => r'626434fcd67ea804040ac9007b53af52aa7b9b0f';
+String _$savingsSuggesterHash() => r'e5bf3e56a43098d9fb51e735d445a59db263337e';
+
+/// See also [savingsSuggester].
+@ProviderFor(savingsSuggester)
+final savingsSuggesterProvider =
+    AutoDisposeFutureProvider<SavingsSuggestion?>.internal(
+  savingsSuggester,
+  name: r'savingsSuggesterProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$savingsSuggesterHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SavingsSuggesterRef = AutoDisposeFutureProviderRef<SavingsSuggestion?>;
+String _$savingsGoalsHash() => r'2af0c3eeb2f4085733808d31a3f6d64d03b0204b';
 
 /// See also [SavingsGoals].
 @ProviderFor(SavingsGoals)

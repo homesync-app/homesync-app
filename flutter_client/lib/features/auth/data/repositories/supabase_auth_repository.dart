@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import '../../../../core/providers/supabase_provider.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';

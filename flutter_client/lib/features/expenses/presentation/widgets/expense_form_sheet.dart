@@ -13,6 +13,7 @@ import 'package:homesync_client/features/shopping/presentation/providers/shoppin
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
@@ -45,7 +46,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   String _paidByUserId = '';
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
-  final _notesController = TextEditingController();
 
   // Shopping items integration
   final Set<ShoppingItemModel> _selectedShoppingItems = {};
@@ -55,26 +55,41 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Set<String> _selectedMembersForSplit = {}; // For 'equal'
   final Map<String, double> _fixedSplitAmounts = {}; // For 'fixed'
 
-  final List<Map<String, dynamic>> _categories = [
+  final List<Map<String, dynamic>> _expenseCategories = [
     {'id': 'supermarket', 'name': 'Supermercado', 'icon': '🛒', 'color': AppColors.accentGold},
     {'id': 'utilities', 'name': 'Servicios', 'icon': '💡', 'color': AppColors.accentTeal},
     {'id': 'rent', 'name': 'Alquiler', 'icon': '🏠', 'color': AppColors.primary},
     {'id': 'restaurants', 'name': 'Restaurantes', 'icon': '🍽️', 'color': const Color(0xFFF06292)},
-    {'id': 'transport', 'name': 'Transporte', 'icon': '🚗', 'color': const Color(0xFF4DB6AC)},
+    {'id': 'transport', 'name': 'Transporte', 'icon': '🚙', 'color': const Color(0xFF4DB6AC)},
     {'id': 'entertainment', 'name': 'Entretenimiento', 'icon': '🎬', 'color': const Color(0xFF9575CD)},
     {'id': 'health', 'name': 'Salud', 'icon': '💊', 'color': AppColors.accentRed},
-    {'id': 'other', 'name': 'Otros', 'icon': '📦', 'color': AppColors.textSecondary},
+    {'id': 'finanzas', 'name': 'Ahorro / Inversión', 'icon': '🏦', 'color': AppColors.accentTeal},
+    {'id': 'settlement', 'name': 'Liquidación', 'icon': '🤝', 'color': AppColors.primary},
+    {'id': 'other', 'name': 'Otros Gastos', 'icon': '📦', 'color': AppColors.textSecondary},
   ];
+
+  final List<Map<String, dynamic>> _incomeCategories = [
+    {'id': 'salary', 'name': 'Sueldo', 'icon': '💰', 'color': AppColors.success},
+    {'id': 'freelance', 'name': 'Freelance', 'icon': '💻', 'color': AppColors.accentBlue},
+    {'id': 'ventas', 'name': 'Ventas', 'icon': '📊', 'color': AppColors.accentTeal},
+    {'id': 'bonus', 'name': 'Bono / Premio', 'icon': '🎊', 'color': AppColors.accentPurple},
+    {'id': 'reembolso', 'name': 'Reembolso', 'icon': '🔙', 'color': AppColors.sage},
+    {'id': 'gift', 'name': 'Regalo', 'icon': '🎁', 'color': const Color(0xFFFF8A65)},
+    {'id': 'investment', 'name': 'Rendimiento', 'icon': '📈', 'color': const Color(0xFF4CAF50)},
+    {'id': 'other', 'name': 'Otros Ingresos', 'icon': '💵', 'color': AppColors.success},
+  ];
+
+  List<Map<String, dynamic>> get _currentCategories => _isIncome ? _incomeCategories : _expenseCategories;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = _categories.first;
+    _selectedCategory = _expenseCategories.first;
     _titleController.addListener(_onTitleChanged);
     
     if (widget.expense != null) {
-      _loadExpenseData(widget.expense!);
       _isIncome = widget.expense!.type == 'income';
+      _loadExpenseData(widget.expense!);
     }
   }
 
@@ -94,16 +109,46 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     String? matchedId;
     if (t.contains('supermercado') || t.contains('coto') || t.contains('carrefour') || t.contains('despensa') || t.contains('comida') || t.contains('alimento')) {
       matchedId = 'supermarket';
-    } else if (t.contains('luz') || t.contains('agua') || t.contains('gas') || t.contains('internet') || t.contains('wifi') || t.contains('servicio')) matchedId = 'utilities';
-    else if (t.contains('alquiler') || t.contains('expensas') || t.contains('renta')) matchedId = 'rent';
-    else if (t.contains('restaurante') || t.contains('cena') || t.contains('pedidosya') || t.contains('delivery') || t.contains('mc') || t.contains('pizza')) matchedId = 'restaurants';
-    else if (t.contains('transporte') || t.contains('uber') || t.contains('cabify') || t.contains('nafta') || t.contains('gasolina') || t.contains('sube') || t.contains('taxi') || t.contains('cole')) matchedId = 'transport';
-    else if (t.contains('cine') || t.contains('teatro') || t.contains('juego') || t.contains('fiesta') || t.contains('salida')) matchedId = 'entertainment';
-    else if (t.contains('farmacia') || t.contains('medico') || t.contains('salud') || t.contains('pastillas') || t.contains('remedio')) matchedId = 'health';
+    } else if (t.contains('luz') || t.contains('agua') || t.contains('gas') || t.contains('internet') || t.contains('wifi') || t.contains('servicio')) {
+      matchedId = 'utilities';
+    } else if (t.contains('alquiler') || t.contains('expensas') || t.contains('renta')) {
+      matchedId = 'rent';
+    } else if (t.contains('restaurante') || t.contains('cena') || t.contains('pedidosya') || t.contains('delivery') || t.contains('mc') || t.contains('pizza')) {
+      matchedId = 'restaurants';
+    } else if (t.contains('liquidación') || t.contains('liquidacion') || t.contains('saldar') || t.contains('deuda') || t.contains('pareja')) {
+      matchedId = 'settlement';
+    } else if (t.contains('ahorro') || t.contains('banco') || t.contains('finanzas')) {
+      matchedId = 'finanzas';
+    } else if (t.contains('sueldo') || t.contains('nomina') || t.contains('salario') || t.contains('cobro')) {
+      matchedId = 'salary';
+    } else if (t.contains('freelance') || t.contains('venta') || t.contains('mercadopago') || t.contains('transferencia')) {
+      matchedId = 'freelance';
+    } else if (t.contains('regalo') || t.contains('premio') || t.contains('sorpresa')) {
+      matchedId = 'gift';
+    } else if (t.contains('inversion') || t.contains('plazo fijo') || t.contains('bono') || t.contains('bit') || t.contains('crypto')) {
+      matchedId = 'investment';
+    } else if (t.contains('transporte') || t.contains('uber') || t.contains('cabify') || t.contains('nafta') || t.contains('gasolina') || t.contains('sube') || t.contains('taxi') || t.contains('cole')) {
+      matchedId = 'transport';
+    } else if (t.contains('cine') || t.contains('teatro') || t.contains('juego') || t.contains('fiesta') || t.contains('salida')) {
+      matchedId = 'entertainment';
+    } else if (t.contains('farmacia') || t.contains('medico') || t.contains('salud') || t.contains('pastillas') || t.contains('remedio')) {
+      matchedId = 'health';
+    }
     
-    if (matchedId != null && _selectedCategory?['id'] != matchedId) {
+    if (matchedId != null) {
+      final isIncomeMatch = _incomeCategories.any((c) => c['id'] == matchedId);
+      final isExpenseMatch = _expenseCategories.any((c) => c['id'] == matchedId);
+      
       setState(() {
-        _selectedCategory = _categories.firstWhere((c) => c['id'] == matchedId, orElse: () => _categories.first);
+        if (isIncomeMatch && !_isIncome) {
+          _isIncome = true;
+          _selectedCategory = _incomeCategories.firstWhere((c) => c['id'] == matchedId);
+        } else if (isExpenseMatch && _isIncome) {
+          _isIncome = false;
+          _selectedCategory = _expenseCategories.firstWhere((c) => c['id'] == matchedId);
+        } else if (_selectedCategory?['id'] != matchedId) {
+          _selectedCategory = _currentCategories.firstWhere((c) => c['id'] == matchedId, orElse: () => _currentCategories.first);
+        }
       });
     }
   }
@@ -111,11 +156,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _loadExpenseData(ExpenseModel exp) {
     _titleController.text = exp.title;
     _amountController.text = exp.amount.toString();
-    _notesController.text = exp.description ?? '';
+    // _notesController.text = exp.description ?? ''; // Removed redundant notes field
     if (exp.category != null) {
-      _selectedCategory = _categories.firstWhere(
+      _selectedCategory = _currentCategories.firstWhere(
         (c) => c['id'] == exp.category,
-        orElse: () => _categories.last,
+        orElse: () => _currentCategories.last,
       );
     }
     _selectedDate = exp.paidAt;
@@ -176,8 +221,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       String computedTitle = _titleController.text.trim();
       if (computedTitle.isEmpty) {
         if (_selectedShoppingItems.isNotEmpty) {
-          final itemNames = _selectedShoppingItems.map((e) => e.name).take(3).join(', ');
-          computedTitle = _selectedShoppingItems.length > 3 ? 'Compras: $itemNames...' : 'Compras: $itemNames';
+          computedTitle = 'Compras del Supermercado';
         } else {
           computedTitle = _selectedCategory!['name'];
         }
@@ -211,6 +255,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         splits = [{'user_id': _paidByUserId, 'amount': amountParsed}];
       }
 
+      String description = ''; // Removed redundant notes field, using title for primary info
+      if (_selectedShoppingItems.isNotEmpty) {
+        final itemsStr = _selectedShoppingItems.map((e) => "- ${e.emoji} ${e.name}").join("\n");
+        description = "Lista de compras:\n$itemsStr";
+      }
+
       await repo.saveExpense(
         id: widget.expense?.id,
         householdId: householdId,
@@ -219,7 +269,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         category: _selectedCategory!['id'],
         paidBy: _paidByUserId,
         paidAt: _selectedDate,
-        description: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+        description: description.isEmpty ? null : description,
         splitType: _splitMode,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
@@ -236,6 +286,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
         ref.invalidate(shoppingItemsProvider);
       }
+      
+      // Invalidate providers to forcefully refresh UI
+      ref.invalidate(expenseControllerProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(recentActivityProvider);
 
       if (mounted) {
         HapticFeedback.mediumImpact();
@@ -313,7 +368,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       _buildCategorySelector(context),
                       const SizedBox(height: 32),
                       _buildSplitConfiguration(context, members),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 32),
+                      // _buildNotesField(), // Removed redundant field
+                      const SizedBox(height: 48),
                       _buildSaveButton(),
                       const SizedBox(height: 40),
                     ],
@@ -419,14 +476,28 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             child: _buildTypeOption(
               label: 'Gasto',
               isSelected: !_isIncome,
-              onTap: () => setState(() => _isIncome = false),
+              onTap: () {
+                if (_isIncome) {
+                  setState(() {
+                    _isIncome = false;
+                    _selectedCategory = _expenseCategories.first;
+                  });
+                }
+              },
             ),
           ),
           Expanded(
             child: _buildTypeOption(
               label: 'Ingreso',
               isSelected: _isIncome,
-              onTap: () => setState(() => _isIncome = true),
+              onTap: () {
+                if (!_isIncome) {
+                  setState(() {
+                    _isIncome = true;
+                    _selectedCategory = _incomeCategories.first;
+                  });
+                }
+              },
               activeColor: AppColors.success,
             ),
           ),
@@ -471,6 +542,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           const Text('Monto total', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           TextField(
+            autofocus: true,
             controller: _amountController,
             onChanged: _onAmountChanged,
             textAlign: TextAlign.center,
@@ -646,9 +718,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: _categories.length,
+                  itemCount: _currentCategories.length,
                   itemBuilder: (context, index) {
-                    final cat = _categories[index];
+                    final cat = _currentCategories[index];
                     final isSelected = _selectedCategory!['id'] == cat['id'];
                     return ListTile(
                       leading: Container(
@@ -673,9 +745,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
+
   Widget _buildShoppingIntegration(BuildContext context, AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
     return shoppingItemsAsync.when(
-      data: (items) {
+      data: (allItems) {
+        final items = allItems.where((i) => !i.completed).toList();
         if (items.isEmpty) return const SizedBox.shrink();
         return GestureDetector(
           onTap: () => _showShoppingItemsSelector(context, items),
@@ -751,10 +825,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                 _selectedShoppingItems.remove(item);
                               } else {
                                 _selectedShoppingItems.add(item);
-                                _matchAndSetCategory(item.name);
                               }
                             });
-                            setState(() {});
+                            // Update parent UI for item count and potential category change
+                            if (!isSelected) {
+                               _matchAndSetCategory(item.name);
+                            } else {
+                               setState(() {}); 
+                            }
                           },
                         );
                       },

@@ -29,7 +29,7 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
-      {String? userId}) async {
+      {List<String>? userIds}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }

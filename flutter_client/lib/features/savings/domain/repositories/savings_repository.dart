@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import '../models/savings_model.dart';
 
 abstract class SavingsRepository {

@@ -1,0 +1,11 @@
+.class interface abstract Lcom/google/android/gms/internal/firebase-auth-api/zzanp;
+.super Ljava/lang/Object;
+.source "com.google.firebase:firebase-auth@@24.0.1"
+
+
+# virtual methods
+.method public abstract zza(I)B
+.end method
+
+.method public abstract zza()I
+.end method

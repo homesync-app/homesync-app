@@ -7,6 +7,8 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 
+final _fmt = NumberFormat.decimalPattern('es_AR');
+
 class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
 
@@ -150,8 +152,12 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(36),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF8F2), Color(0xFFFFF3E8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0A4A4443),
@@ -163,15 +169,15 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       child: Column(
         children: [
           const Text(
-            'Ahorro Total',
+            'Ahorro Total 🏦',
             style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
-                fontWeight: FontWeight.w500),
+                fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
-            '\$${total.toStringAsFixed(0)}',
+            '\$${_fmt.format(total.round())}',
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 42,
@@ -186,12 +192,12 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               _buildSimpleStat(
                   label: 'Metas',
                   value: goals.length.toString(),
-                  color: AppColors.accentTeal),
+                  color: AppColors.sage),
               const SizedBox(width: 40),
               _buildSimpleStat(
                   label: 'Cumplidas',
                   value: goals.where((g) => g.progress >= 1).length.toString(),
-                  color: AppColors.accentGold),
+                  color: AppColors.primary),
             ],
           ),
         ],
@@ -246,7 +252,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   fontSize: 16,
                   color: AppColors.textPrimary)),
           subtitle: Text(
-              '\$${goal.currentAmount.toStringAsFixed(0)} de \$${goal.targetAmount.toStringAsFixed(0)}',
+              '\$${_fmt.format(goal.currentAmount.round())} de \$${_fmt.format(goal.targetAmount.round())}',
               style: const TextStyle(
                   color: AppColors.textSecondary, fontSize: 13)),
           trailing: Text('${(progress * 100).toStringAsFixed(0)}%',
@@ -439,7 +445,11 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               onPressed: () {
                 final amount = double.tryParse(controller.text);
                 if (amount != null && amount > 0) {
-                  ref.read(savingsGoalsProvider.notifier).contribute(goal.id, amount);
+                  ref.read(savingsGoalsProvider.notifier).contribute(
+                    goal.id, 
+                    amount,
+                    goalTitle: goal.title,
+                  );
                   Navigator.pop(context);
                 }
               },

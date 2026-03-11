@@ -47,7 +47,7 @@ class CustomBottomNav extends StatelessWidget {
           _NavItem(
             icon: Icons.account_balance_wallet_outlined,
             selectedIcon: Icons.account_balance_wallet_rounded,
-            label: 'Gastos',
+            label: 'Finanzas',
             isSelected: currentIndex == 2,
             onTap: () => onTap(2),
           ),

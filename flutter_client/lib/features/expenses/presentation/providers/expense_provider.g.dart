@@ -43,6 +43,26 @@ final getExpensesUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetExpensesUseCaseRef = AutoDisposeProviderRef<GetExpensesUseCase>;
+String _$getCombinedFeedUseCaseHash() =>
+    r'776c80d0c32014624001d544abea6cb6ded9e42f';
+
+/// See also [getCombinedFeedUseCase].
+@ProviderFor(getCombinedFeedUseCase)
+final getCombinedFeedUseCaseProvider =
+    AutoDisposeProvider<GetCombinedFeedUseCase>.internal(
+  getCombinedFeedUseCase,
+  name: r'getCombinedFeedUseCaseProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$getCombinedFeedUseCaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetCombinedFeedUseCaseRef
+    = AutoDisposeProviderRef<GetCombinedFeedUseCase>;
 String _$getBalancesUseCaseHash() =>
     r'2986fd5ba6e460ac4c7e16b76d572d70f9924cee';
 
@@ -82,8 +102,27 @@ final getPersonalFinanceSummaryUseCaseProvider =
 // ignore: unused_element
 typedef GetPersonalFinanceSummaryUseCaseRef
     = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
+String _$monthlyProjectionHash() => r'375638a6684f9c6abf9ed0c8da46932ee815a8c1';
+
+/// See also [monthlyProjection].
+@ProviderFor(monthlyProjection)
+final monthlyProjectionProvider =
+    AutoDisposeFutureProvider<MonthlyProjectionData>.internal(
+  monthlyProjection,
+  name: r'monthlyProjectionProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$monthlyProjectionHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MonthlyProjectionRef
+    = AutoDisposeFutureProviderRef<MonthlyProjectionData>;
 String _$personalFinanceSummaryHash() =>
-    r'34100303376c4e3a3a6039b6b1bf3bd20875b6a5';
+    r'2b6717cfa01cd64c9ed11ba7b106b1c9355bb5a7';
 
 /// See also [PersonalFinanceSummary].
 @ProviderFor(PersonalFinanceSummary)
@@ -117,7 +156,7 @@ final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseBalances
     = AutoDisposeAsyncNotifier<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'db8f1922c9d6d8e6226b9133ab1a2e64425d66fd';
+String _$expenseControllerHash() => r'166cf5302179cb004f0b2eeb2cdf9096e554ba93';
 
 /// See also [ExpenseController].
 @ProviderFor(ExpenseController)
@@ -133,6 +172,42 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
+String _$combinedFeedControllerHash() =>
+    r'0058d0de45116d030afae9337efa02b6d8f763c2';
+
+/// See also [CombinedFeedController].
+@ProviderFor(CombinedFeedController)
+final combinedFeedControllerProvider = AutoDisposeAsyncNotifierProvider<
+    CombinedFeedController, List<FeedItemModel>>.internal(
+  CombinedFeedController.new,
+  name: r'combinedFeedControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$combinedFeedControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$CombinedFeedController
+    = AutoDisposeAsyncNotifier<List<FeedItemModel>>;
+String _$expenseTemplateControllerHash() =>
+    r'97e1a610d35e342979f43ef12734da6f49aef712';
+
+/// See also [ExpenseTemplateController].
+@ProviderFor(ExpenseTemplateController)
+final expenseTemplateControllerProvider = AutoDisposeAsyncNotifierProvider<
+    ExpenseTemplateController, List<ExpenseTemplateModel>>.internal(
+  ExpenseTemplateController.new,
+  name: r'expenseTemplateControllerProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$expenseTemplateControllerHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$ExpenseTemplateController
+    = AutoDisposeAsyncNotifier<List<ExpenseTemplateModel>>;
 String _$expenseFiltersNotifierHash() =>
     r'668f4d76d09978368ddf7e1f5aac78c322f4982f';
 

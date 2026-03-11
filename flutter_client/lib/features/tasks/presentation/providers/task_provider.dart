@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -181,7 +183,15 @@ class Tasks extends _$Tasks {
 
     try {
       final useCase = ref.read(completeTaskUseCaseProvider);
-      final result = await useCase(task);
+      final result = await useCase(task, userIds: performers);
+      
+      if (result.isRight()) {
+        // Success: Trigger UI refresh for state consistency
+        silentRefresh();
+        ref.invalidate(userBalanceProvider);
+        ref.invalidate(recentActivityProvider);
+      }
+      
       return result.fold(
         (failure) {
           state = AsyncValue.data(oldState!);

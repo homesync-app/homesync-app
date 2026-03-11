@@ -120,26 +120,25 @@
 
 ### 3. Tareas (Tasks Screen) - Gestión
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │  TAREAS                                    ⚙️ Settings       │
 ├──────────────────────────────────────────────────────────────┤
+│  [ Tus Tareas (Activo) ]  [ Semana ]                         │
 │                                                              │
-│  ─── TAREAS ACTIVAS (5) ───                                 │
+│  ─── LISTA DE TAREAS (Tus Tareas) ───                       │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ 🧹 Barrer el piso                                    │    │
 │  │    General | ⭐5 💰3                                 │    │
-│  │    [🕐 Programar] [🗑️]                              │    │
+│  │    [✏️ Editar] [🕐 Programar]                       │    │
 │  ├─────────────────────────────────────────────────────┤    │
 │  │ 🚿 Limpiar baño                     [🔄 Diario]     │    │
 │  │    Baño | ⭐20 💰10                                  │    │
-│  │    [🕐 Programar] [🗑️]                              │    │
+│  │    [✏️ Editar] [🕐 Programar]                       │    │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                              │
-│  ─── COMPLETADAS RECIENTEMENTE ───                          │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ ✅ Hacer la cama                        Completada   │    │
-│  └─────────────────────────────────────────────────────┘    │
+│  *Nota: Las tareas no se completan desde aquí. Esta pestaña  │
+│   es solo para administrar tu lista (editar y programar).    │
 │                                                              │
 │         ┌────────────────────────────────┐                  │
 │         │  ➕ NUEVA TAREA                │ ← FAB            │

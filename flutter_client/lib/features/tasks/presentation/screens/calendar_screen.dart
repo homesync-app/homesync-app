@@ -5,6 +5,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   final Function(TaskModel) onEdit;
@@ -78,7 +79,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final tasksAsync = ref.watch(tasksProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       body: tasksAsync.when(
         loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.primary)),
@@ -96,23 +97,19 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             backgroundColor: AppColors.surface,
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 8),
-                  child: _buildWeekHeader(),
-                ),
+                _buildWeekHeader(),
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 24)
-                        .copyWith(bottom: 100),
-                    physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics()),
+                        .copyWith(bottom: 120),
+                    physics: const BouncingScrollPhysics(),
                     itemCount: 7,
                     itemBuilder: (context, index) {
                       final dayDate = _weekStart.add(Duration(days: index));
                       final isToday = isSameDay(DateTime.now(), dayDate);
                       final tasksForDay = scheduledTasks[dayDate] ?? [];
 
-                      return _buildDaySection(dayDate, tasksForDay, isToday);
+                      return _buildDaySection(dayDate, tasksForDay, isToday).animateEntrance(delay: index * 50);
                     },
                   ),
                 ),
@@ -129,33 +126,63 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final startMonth = monthFormat.format(_weekStart);
     final monthYear = startMonth[0].toUpperCase() + startMonth.substring(1);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            monthYear,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.5,
-            ),
-          ),
-          Row(
-            children: [
-              _buildArrowButton(
-                icon: Icons.chevron_left_rounded,
-                onTap: _previousWeek,
-              ),
-              const SizedBox(width: 8),
-              _buildArrowButton(
-                icon: Icons.chevron_right_rounded,
-                onTap: _nextWeek,
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           )
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Semana de',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textMuted,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    monthYear,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.8,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildArrowButton(
+                    icon: Icons.chevron_left_rounded,
+                    onTap: _previousWeek,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildArrowButton(
+                    icon: Icons.chevron_right_rounded,
+                    onTap: _nextWeek,
+                  ),
+                ],
+              )
+            ],
+          ),
         ],
       ),
     );
@@ -163,22 +190,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildArrowButton(
       {required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
+    return AnimatedPress(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            )
-          ],
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
         ),
-        child: Icon(icon, color: const Color(0xFF64748B), size: 22),
+        child: Icon(icon, color: AppColors.textPrimary, size: 20),
       ),
     );
   }
@@ -191,77 +212,59 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 24, bottom: 16),
+          padding: const EdgeInsets.only(top: 32, bottom: 16),
           child: Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                    color: isToday ? AppColors.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: isToday
-                        ? null
-                        : Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: isToday
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            )
-                          ]
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            )
-                          ]),
-                child: Text(
-                  '$dayName ${date.day}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: isToday ? Colors.white : const Color(0xFF475569),
+              Text(
+                isToday ? 'Hoy, $dayName' : dayName,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: isToday ? AppColors.primary : AppColors.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.divider.withValues(alpha: 1),
+                        AppColors.divider.withValues(alpha: 0),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Container(
-                  height: 1.5,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFE2E8F0),
-                      const Color(0xFFE2E8F0).withValues(alpha: 0),
-                    ],
-                  )),
-                ),
-              )
             ],
           ),
         ),
         if (tasks.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
+            ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF1F5F9),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.nightlight_round,
-                      color: Color(0xFF94A3B8), size: 14),
+                  child: const Icon(Icons.wb_sunny_rounded,
+                      color: AppColors.textMuted, size: 18),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 const Text(
-                  'Día libre',
+                  'Sin tareas programadas',
                   style: TextStyle(
-                    color: Color(0xFF94A3B8),
+                    color: AppColors.textMuted,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -309,7 +312,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
         try {
-          return list.firstWhere((c) => c.id == category);
+          return list.firstWhere((c) => AppColors.normaliseCategory(c.id) == AppColors.normaliseCategory(category));
         } catch (_) {
           return null;
         }
@@ -335,7 +338,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
               ? categoryColor.withValues(alpha: 0.3)
               : (isCompleted
                   ? AppColors.accentGreen.withValues(alpha: 0.1)
-                  : const Color(0xFFF1F5F9)),
+                  : AppColors.divider.withValues(alpha: 0.5)),
           width: 1.5,
         ),
         boxShadow: [
@@ -359,15 +362,15 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
               Row(
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
                       child: Text(categoryIcon,
-                          style: const TextStyle(fontSize: 24)),
+                          style: const TextStyle(fontSize: 22)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -381,73 +384,48 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: isCompleted
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF1E293B),
+                                ? AppColors.textMuted
+                                : AppColors.textPrimary,
                             decoration:
                                 isCompleted ? TextDecoration.lineThrough : null,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.accentGold.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '+$xp XP',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.accentGold,
-                                  letterSpacing: 0.5,
-                                ),
+                            Text(
+                              '+$xp XP',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.accentGold,
                               ),
                             ),
-                            if (isCompleted) ...[
-                              const SizedBox(width: 8),
+                            const SizedBox(width: 8),
+                            if (task.recurrenceType != null)
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGreen
-                                      .withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
+                                  color: AppColors.accentTeal.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  'COMPLETADA',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.accentGreen,
-                                    letterSpacing: 0.5,
+                                child: Text(
+                                  task.recurrenceType!.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.accentTeal,
                                   ),
                                 ),
                               ),
-                            ]
                           ],
                         ),
                       ],
                     ),
                   ),
                   if (isCompleted && !_isExpanded)
-                    Container(
-                      margin: const EdgeInsets.only(left: 12),
-                      width: 28,
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.accentGreen,
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.check_rounded,
-                            color: Colors.white, size: 16),
-                      ),
-                    ),
+                    const Icon(Icons.check_circle_rounded,
+                        color: AppColors.accentGreen, size: 24),
                 ],
               ),
               ClipRect(
@@ -460,22 +438,26 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
-                        const Divider(color: Color(0xFFF1F5F9), height: 1),
+                        const Divider(height: 1),
                         const SizedBox(height: 16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildActionTile(
-                              icon: Icons.edit_rounded,
-                              label: 'Editar',
-                              color: AppColors.primary,
-                              onTap: widget.onEdit,
+                            Expanded(
+                              child: _buildActionTile(
+                                icon: Icons.edit_rounded,
+                                label: 'Editar',
+                                color: AppColors.primary,
+                                onTap: widget.onEdit,
+                              ),
                             ),
-                            _buildActionTile(
-                              icon: Icons.calendar_month_rounded,
-                              label: 'Programar',
-                              color: AppColors.accentGold,
-                              onTap: widget.onSchedule,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildActionTile(
+                                icon: Icons.schedule_rounded,
+                                label: 'Programar',
+                                color: AppColors.accentGold,
+                                onTap: widget.onSchedule,
+                              ),
                             ),
                           ],
                         ),
@@ -497,28 +479,27 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return AnimatedPress(
       onTap: () {
         setState(() => _isExpanded = false);
         onTap();
       },
-      borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.3,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
-        child: Column(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 4),
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: FontWeight.w800,
                 color: color,
               ),

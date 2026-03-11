@@ -480,28 +480,6 @@ class _PremiumCharacterAvatar extends StatelessWidget {
   }
 }
 
-class _GlowingBacklight extends StatelessWidget {
-  final double radius;
-  const _GlowingBacklight({required this.radius});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radius * 2.5,
-      height: radius * 2.5,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.2),
-            blurRadius: 40,
-            spreadRadius: 10,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Gentle up-down float animation — no zoom/scale, pure vertical drift
 class _FloatingAnimation extends StatefulWidget {

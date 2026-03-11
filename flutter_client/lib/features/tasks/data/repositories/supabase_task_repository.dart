@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
@@ -11,7 +10,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 
 part 'supabase_task_repository.g.dart';
 

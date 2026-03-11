@@ -1,9 +1,11 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/models/expense_model.dart';
+import '../../domain/models/feed_item_model.dart';
+import '../../domain/models/expense_template_model.dart';
 import '../../domain/repositories/expense_repository.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,7 +56,7 @@ class SupabaseExpenseRepository
             type,
             description,
             users!expenses_paid_by_fkey(email, full_name, avatar_url),
-            expense_splits(*)
+            expense_splits(*, users(email, full_name, avatar_url))
           ''')
           .eq('household_id', householdId)
           .order('paid_at', ascending: false)
@@ -67,12 +69,27 @@ class SupabaseExpenseRepository
   }
 
   @override
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
+      String householdId) async {
+    return executeWithHandling(() async {
+      final response = await _client.rpc(
+        'get_combined_feed',
+        params: {'p_household_id': householdId},
+      );
+
+      return (response as List<dynamic>)
+          .map((e) => FeedItemModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }, context: 'SupabaseExpenseRepository.getCombinedFeed', isOnline: _isOnline);
+  }
+
+  @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
       String expenseId) async {
     return executeWithHandling(() async {
       return await _client.from('expenses').select('''
             *,
-            expense_splits(*)
+            expense_splits(*, users(email, full_name, avatar_url))
           ''').eq('id', expenseId).single();
     }, context: 'SupabaseExpenseRepository.getExpenseWithSplits', isOnline: _isOnline);
   }
@@ -139,20 +156,28 @@ class SupabaseExpenseRepository
   @override
   Future<Either<Failure, void>> settleDebt({
     required String householdId,
+    required String fromUserId,
     required String toUserId,
     required double amount,
   }) async {
     return executeWithHandling(() async {
-      final user = _client.auth.currentUser;
-      if (user == null) throw const AuthFailure();
-
       await _client.rpc(
-        'settle_debt',
+        'save_expense_v4',
         params: {
-          'p_user_id': user.id,
+          'p_id': null,
           'p_household_id': householdId,
-          'p_to_user_id': toUserId,
+          'p_title': 'Liquidación de pareja',
           'p_amount': amount,
+          'p_category': 'other',
+          'p_paid_by': fromUserId,
+          'p_paid_at': DateTime.now().toIso8601String(),
+          'p_description': 'Saldar balance acumulado',
+          'p_split_type': 'fixed',
+          'p_is_shared': true,
+          'p_type': 'settlement',
+          'p_splits': [
+            {'user_id': toUserId, 'amount': amount}
+          ],
         },
       );
     }, context: 'SupabaseExpenseRepository.settleDebt', isOnline: _isOnline);
@@ -168,5 +193,61 @@ class SupabaseExpenseRepository
       },
     );
     return Map<String, dynamic>.from(response);
+  }
+
+  @override
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+    return executeWithHandling(() async {
+      final response = await _client
+          .from('expense_templates')
+          .select()
+          .eq('household_id', householdId)
+          .eq('is_active', true)
+          .order('day_of_month');
+      
+      return (response as List<dynamic>)
+          .map((json) => ExpenseTemplateModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }, context: 'SupabaseExpenseRepository.getTemplates', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+    return executeWithHandling(() async {
+      await _client.from('expense_templates').upsert(template.toJson());
+      return unit;
+    }, context: 'SupabaseExpenseRepository.saveTemplate', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> toggleTemplateActivity(String id, bool active) async {
+    return executeWithHandling(() async {
+      await _client
+          .from('expense_templates')
+          .update({'is_active': active})
+          .eq('id', id);
+      return unit;
+    }, context: 'SupabaseExpenseRepository.toggleTemplateActivity', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, String>> payPlannedExpense({
+    required String plannedId,
+    required double amount,
+    required DateTime paidAt,
+    required String paidBy,
+  }) async {
+    return executeWithHandling(() async {
+      final response = await _client.rpc(
+        'pay_planned_expense',
+        params: {
+          'p_planned_id': plannedId,
+          'p_amount': amount,
+          'p_paid_at': paidAt.toIso8601String(),
+          'p_paid_by': paidBy,
+        },
+      );
+      return response as String;
+    }, context: 'SupabaseExpenseRepository.payPlannedExpense', isOnline: _isOnline);
   }
 }

@@ -36,8 +36,15 @@ class ExpenseModel {
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> map) {
-    final payerMap = map['payer'] as Map<String, dynamic>? ??
-        map['users'] as Map<String, dynamic>?;
+    // Robustly handle joined user data (could be map or list with one element)
+    Map<String, dynamic>? payerMap;
+    final rawPayer = map['users'] ?? map['payer'];
+    
+    if (rawPayer is Map<String, dynamic>) {
+      payerMap = rawPayer;
+    } else if (rawPayer is List && rawPayer.isNotEmpty) {
+      payerMap = rawPayer.first as Map<String, dynamic>?;
+    }
 
     return ExpenseModel(
       id: map['id'] as String? ?? '',
@@ -82,6 +89,7 @@ class ExpenseModel {
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
+  bool get isSettlement => type == 'settlement';
 
   String get payerDisplayName {
     if (payerFullName != null && payerFullName!.isNotEmpty) {

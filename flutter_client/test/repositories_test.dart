@@ -8,6 +8,8 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 
@@ -104,11 +106,52 @@ class MockExpenseRepository implements ExpenseRepository {
   @override
   Future<Either<Failure, void>> settleDebt({
     required String householdId,
+    required String fromUserId,
     required String toUserId,
     required double amount,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(
+      String userId, String householdId) async {
+    return {
+      'total_balance': 0.0,
+      'pending_tasks': 0,
+      'active_savings': 0,
+    };
+  }
+
+  @override
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(String householdId) async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> toggleTemplateActivity(String templateId, bool isActive) async {
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, String>> payPlannedExpense({
+    required String plannedId,
+    required double amount,
+    required DateTime paidAt,
+    required String paidBy,
+  }) async {
+    return const Right('expense-id');
   }
 }
 
@@ -125,7 +168,7 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
-      {String? userId}) async {
+      {List<String>? userIds}) async {
     if (shouldFail) return const Left(ServerFailure('Mock error'));
     return right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
   }
@@ -304,7 +347,7 @@ void main() {
 
       final tasksResult = await repo.getTasks('household-1');
       final tasks = tasksResult.getOrElse((_) => []);
-      final result = await repo.completeTask(tasks.first, userId: 'user-1');
+      final result = await repo.completeTask(tasks.first, userIds: ['user-1']);
       final data = result.getOrElse((_) => {});
 
       expect(data['xp_earned'], equals(50));

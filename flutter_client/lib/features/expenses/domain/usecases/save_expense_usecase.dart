@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
 class SaveExpenseUseCase {

@@ -8,9 +8,13 @@
 -- COMPLETE TASK TRANSACTION
 -- ============================================
 
+-- ============================================
+-- COMPLETE TASK TRANSACTION
+-- ============================================
+
 CREATE OR REPLACE FUNCTION public.complete_task_transaction(
   p_request_id TEXT,
-  p_user_id UUID,
+  p_user_ids UUID[],
   p_task_id UUID,
   p_household_id UUID,
   p_xp_reward INTEGER,
@@ -19,211 +23,99 @@ CREATE OR REPLACE FUNCTION public.complete_task_transaction(
 )
 RETURNS JSONB
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 DECLARE
   v_rows_affected INTEGER;
+  v_user_id UUID;
+  v_activity_id UUID;
   v_start_time TIMESTAMPTZ := NOW();
   v_result JSONB := '{"success": true, "message": "Task completed"}'::jsonb;
+  v_task_desc TEXT;
+  v_task_cat TEXT;
 BEGIN
-  -- Log start of operation
-  INSERT INTO public.system_events (
-    request_id,
-    user_id,
-    event_type,
-    entity_type,
-    entity_id,
-    household_id,
-    operation,
-    result,
-    source,
+  -- 1. Verify task existence and state
+  SELECT description, category INTO v_task_desc, v_task_cat
+  FROM public.tasks 
+  WHERE id = p_task_id AND household_id = p_household_id
+  AND status IN ('assigned', 'active', 'in_progress', 'objected')
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    -- Check if already pending_verification (maybe simultaneous update)
+    IF EXISTS (SELECT 1 FROM public.tasks WHERE id = p_task_id AND status = 'pending_verification') THEN
+       RETURN jsonb_build_object(
+        'success', true,
+        'message', 'Task already marked as completed',
+        'status', 'skipped'
+      );
+    END IF;
+
+    RETURN jsonb_build_object(
+      'success', false,
+      'message', 'Task not found or not in completable state',
+      'status', 'skipped'
+    );
+  END IF;
+
+  -- 2. CREATE PERMANENT ACTIVITY RECORD (This identifies this specific completion)
+  INSERT INTO public.household_activities (
+    household_id, 
+    user_id, 
+    event_type, 
+    title, 
+    description, 
     metadata
   ) VALUES (
-    p_request_id,
-    p_user_id,
-    'task_completion_start',
-    'task',
-    p_task_id,
-    p_household_id,
-    'complete_task_transaction',
-    'success',
-    'rpc',
+    p_household_id, 
+    p_user_ids[1], -- Primary performer
+    'task_completed', 
+    p_task_title, 
+    v_task_desc,
     jsonb_build_object(
-      'xp_reward', p_xp_reward,
-      'coin_reward', p_coin_reward,
-      'title', p_task_title
+      'task_id', p_task_id,
+      'xp_per_user', p_xp_reward,
+      'coins_per_user', p_coin_reward,
+      'performers', p_user_ids,
+      'category', v_task_cat
     )
-  );
+  ) RETURNING id INTO v_activity_id;
 
-  -- Update task with CONDITIONAL update AND verify rows affected
+  -- 3. Update task status
   UPDATE public.tasks
   SET 
     status = 'pending_verification',
     completed_at = NOW(),
-    completed_by = p_user_id,
+    completed_by = p_user_ids[1],
     last_completed_at = NOW(),
     updated_at = NOW()
-  WHERE id = p_task_id
-  AND status IN ('assigned', 'active', 'in_progress');
+  WHERE id = p_task_id;
 
-  GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
+  -- 4. AWARD REWARDS using Activity ID as reference (avoiding ID conflicts on recurring tasks)
+  FOREACH v_user_id IN ARRAY p_user_ids
+  LOOP
+    -- Award XP
+    IF p_xp_reward > 0 THEN
+      INSERT INTO public.ledger_entries (
+        id, household_id, user_id, type, amount, currency, reference_id, reference_type, description, source, created_by
+      ) VALUES (
+        gen_random_uuid(), p_household_id, v_user_id, 'xp_earned', p_xp_reward, 'XP', v_activity_id::TEXT, 'activity', 'XP: ' || p_task_title, 'rpc', v_user_id::TEXT
+      ) ON CONFLICT (user_id, type, reference_id) DO NOTHING;
+    END IF;
 
-  -- If 0 rows affected, task was not in completable state
-  IF v_rows_affected = 0 THEN
-    v_result := jsonb_build_object(
-      'success', false,
-      'message', 'Task already completed or not in completable state',
-      'status', 'skipped'
-    );
-    
-    INSERT INTO public.system_events (
-      request_id,
-      user_id,
-      event_type,
-      entity_type,
-      entity_id,
-      household_id,
-      operation,
-      result,
-      duration_ms,
-      source,
-      metadata
-    ) VALUES (
-      p_request_id,
-      p_user_id,
-      'task_completion_skipped',
-      'task',
-      p_task_id,
-      p_household_id,
-      'complete_task_transaction',
-      'skipped',
-      EXTRACT(MILLISECONDS FROM (NOW() - v_start_time))::INTEGER,
-      'rpc',
-      jsonb_build_object('reason', 'task_not_in_completable_state')
-    );
+    -- Award Coins
+    IF p_coin_reward > 0 THEN
+      INSERT INTO public.ledger_entries (
+        id, household_id, user_id, type, amount, currency, reference_id, reference_type, description, source, created_by
+      ) VALUES (
+        gen_random_uuid(), p_household_id, v_user_id, 'coins_earned', p_coin_reward, 'COIN', v_activity_id::TEXT, 'activity', 'Coins: ' || p_task_title, 'rpc', v_user_id::TEXT
+      ) ON CONFLICT (user_id, type, reference_id) DO NOTHING;
+    END IF;
+  END LOOP;
 
-    RETURN v_result;
-  END IF;
-
-  -- Create XP entry (if reward > 0)
-  IF p_xp_reward > 0 THEN
-    INSERT INTO public.ledger_entries (
-      id,
-      household_id,
-      user_id,
-      type,
-      amount,
-      currency,
-      reference_id,
-      reference_type,
-      description,
-      created_at,
-      created_by,
-      source
-    ) VALUES (
-      gen_random_uuid(),
-      p_household_id,
-      p_user_id,
-      'xp_earned',
-      p_xp_reward,
-      'XP',
-      p_task_id::TEXT,
-      'task_completion',
-      'XP earned for task: ' || p_task_title,
-      NOW(),
-      p_user_id::TEXT,
-      'rpc'
-    )
-    ON CONFLICT (reference_id, type, user_id) DO NOTHING;
-  END IF;
-
-  -- Create Coins entry (if reward > 0)
-  IF p_coin_reward > 0 THEN
-    INSERT INTO public.ledger_entries (
-      id,
-      household_id,
-      user_id,
-      type,
-      amount,
-      currency,
-      reference_id,
-      reference_type,
-      description,
-      created_at,
-      created_by,
-      source
-    ) VALUES (
-      gen_random_uuid(),
-      p_household_id,
-      p_user_id,
-      'coins_earned',
-      p_coin_reward,
-      'COIN',
-      p_task_id::TEXT,
-      'task_completion',
-      'Coins earned for task: ' || p_task_title,
-      NOW(),
-      p_user_id::TEXT,
-      'rpc'
-    )
-    ON CONFLICT (reference_id, type, user_id) DO NOTHING;
-  END IF;
-
-  -- Log successful completion
-  INSERT INTO public.system_events (
-    request_id,
-    user_id,
-    event_type,
-    entity_type,
-    entity_id,
-    household_id,
-    operation,
-    result,
-    duration_ms,
-    source,
-    metadata
-  ) VALUES (
-    p_request_id,
-    p_user_id,
-    'task_completion_success',
-    'task',
-    p_task_id,
-    p_household_id,
-    'complete_task_transaction',
-    'success',
-    EXTRACT(MILLISECONDS FROM (NOW() - v_start_time))::INTEGER,
-    'rpc',
-    jsonb_build_object(
-      'xp_reward', p_xp_reward,
-      'coin_reward', p_coin_reward
-    )
-  );
-
-  -- Create audit log
-  INSERT INTO public.audit_logs (
-    request_id,
-    user_id,
-    household_id,
-    action,
-    entity_type,
-    entity_id,
-    new_value,
-    reason,
-    source
-  ) VALUES (
-    p_request_id,
-    p_user_id,
-    p_household_id,
-    'complete_task',
-    'task',
-    p_task_id,
-    jsonb_build_object(
-      'status', 'pending_verification',
-      'xp_reward', p_xp_reward,
-      'coin_reward', p_coin_reward
-    ),
-    'Task completed by user',
-    'rpc'
-  );
+  -- 5. Audit Logging
+  INSERT INTO public.audit_logs (request_id, user_id, household_id, action, entity_type, entity_id, new_value, reason, source)
+  VALUES (p_request_id, p_user_ids[1], p_household_id, 'complete_task', 'task', p_task_id, jsonb_build_object('status', 'pending_verification', 'activity_id', v_activity_id, 'performers', p_user_ids), 'Completed', 'rpc');
 
   RETURN v_result;
 END;

@@ -31,8 +31,12 @@ class BalanceCard extends ConsumerWidget {
     final bool isBalanced = !isPositive && !isNegative;
 
     final statusColor = isNegative
-        ? AppColors.accentOrange
-        : (isBalanced ? const Color(0xFF94A3B8) : AppColors.sage);
+        ? AppColors.accentOrange // Using orange instead of aggressive red
+        : (isBalanced ? AppColors.sage : AppColors.sage);
+
+    final String balanceMessage = isBalanced
+        ? '¡Todo en orden! El amor es lo único que cuenta hoy 💕'
+        : (isNegative ? 'Debes' : 'Te deben');
 
     return Container(
       width: double.infinity,
@@ -40,14 +44,14 @@ class BalanceCard extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: statusColor.withValues(alpha: 0.2),
+          color: const Color(0xFFF1F5F9), // Subtle grey border instead of colored
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.04), // Very subtle shadow
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -63,42 +67,31 @@ class BalanceCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isBalanced
-                            ? '¡Equilibrio perfecto! 🤍'
-                            : 'Balance de Pareja',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
+                        balanceMessage,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 10),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            isPositive ? '+' : (isNegative ? '-' : ''),
+                            isBalanced ? '\$ ' : (isNegative ? '- \$ ' : '+ \$ '),
                             style: TextStyle(
-                              color: statusColor,
-                              fontSize: 24,
+                              color: isBalanced ? const Color(0xFF1E293B) : statusColor,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            '\$',
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              height: 1.5,
                             ),
                           ),
                           _AnimatedDigitCounter(
                             value: balance.abs(),
                             style: TextStyle(
-                              color: statusColor,
-                              fontSize: 36,
+                              color: isBalanced ? const Color(0xFF1E293B) : statusColor,
+                              fontSize: 38,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -1.0,
                             ),
@@ -112,71 +105,73 @@ class BalanceCard extends ConsumerWidget {
                   AnimatedPress(
                     onTap: onSettle!,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.15),
+                          width: 1.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
+                            color: statusColor.withValues(alpha: 0.08),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Icon(Icons.payment_rounded, color: statusColor, size: 16),
+                          const SizedBox(width: 8),
                           Text(
-                            'Equilibrar',
+                            'Saldar',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: statusColor,
                               fontWeight: FontWeight.w800,
-                              fontSize: 13,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
                             ),
                           ),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward_rounded,
-                              color: Colors.white, size: 16),
                         ],
                       ),
                     ),
                   ).animatePulse()
                 else if (isBalanced)
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppColors.sage, size: 32).animateScaleIn()
+                  const Icon(Icons.check_circle_rounded, color: AppColors.sage, size: 36).animateScaleIn()
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
+            Container(height: 1, color: AppColors.divider.withValues(alpha: 0.4)),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: AnimatedPress(
                     onTap: () =>
                         ref.read(bottomNavIndexProvider.notifier).setIndex(4),
-                    child: _buildMetricCard(
+                    child: _buildCleanMetric(
                       context,
-                      label: 'XP',
-                      value: xp,
+                      label: 'Experiencia',
+                      value: '$xp XP',
                       icon: Icons.star_rounded,
-                      iconBg: const Color(0xFFFEF3C7),
-                      iconColor: const Color(0xFFFBBF24),
+                      color: const Color(0xFFE8943A),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                Container(width: 1, height: 32, color: AppColors.divider.withValues(alpha: 0.4)),
                 Expanded(
                   child: AnimatedPress(
                     onTap: () =>
                         ref.read(bottomNavIndexProvider.notifier).setIndex(3),
-                    child: _buildMetricCard(
+                    child: _buildCleanMetric(
                       context,
-                      label: 'Coins',
-                      value: coins,
+                      label: 'Monedas',
+                      value: coins.toString(),
                       icon: Icons.monetization_on_rounded,
-                      iconBg: AppColors.primary.withValues(alpha: 0.12),
-                      iconColor: AppColors.primary,
+                      color: AppColors.sage,
                     ),
                   ),
                 ),
@@ -188,65 +183,53 @@ class BalanceCard extends ConsumerWidget {
     ).animateEntrance(delay: 200);
   }
 
-  Widget _buildMetricCard(
+  Widget _buildCleanMetric(
     BuildContext context, {
     required String label,
-    required int value,
+    required String value,
     required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
+    required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      color: Colors.transparent, // allows the entire area to be tap-able
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                _AnimatedDigitCounter(
-                  value: value.toDouble(),
-                  style: TextStyle(
-                    color: iconColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 16,
-            color: Color(0xFFCBD5E1),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(width: 8),
+          Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
         ],
       ),
     );

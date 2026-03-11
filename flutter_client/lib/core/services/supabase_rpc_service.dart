@@ -5,7 +5,6 @@ import 'rpc/task_rpc_service.dart';
 import 'rpc/stats_rpc_service.dart';
 import 'rpc/balance_rpc_service.dart';
 import 'rpc/household_rpc_service.dart';
-import 'rpc/reward_rpc_service.dart';
 
 /// One-stop-shop for access to all legacy RPC functionality
 /// while the app transitions to the new split services.
@@ -17,7 +16,7 @@ class SupabaseRpcService {
   late final StatsRpcService _stats;
   late final BalanceRpcService _balance;
   late final HouseholdRpcService _household;
-  late final RewardRpcService _reward;
+
 
   SupabaseRpcService({SupabaseClient? clientOverride})
       : _client = clientOverride ?? Supabase.instance.client {
@@ -26,7 +25,7 @@ class SupabaseRpcService {
     _stats = StatsRpcService(clientOverride: _client);
     _balance = BalanceRpcService(clientOverride: _client);
     _household = HouseholdRpcService(clientOverride: _client);
-    _reward = RewardRpcService(clientOverride: _client);
+
   }
 
   Future<void> initialize() async {

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/providers/connectivity_provider.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/savings_model.dart';

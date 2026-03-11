@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
 class SettleDebtUseCase {
@@ -9,6 +9,7 @@ class SettleDebtUseCase {
 
   Future<Either<Failure, void>> call({
     required String householdId,
+    required String fromUserId,
     required String toUserId,
     required double amount,
   }) async {
@@ -24,6 +25,7 @@ class SettleDebtUseCase {
 
     return await _repository.settleDebt(
       householdId: householdId,
+      fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
     );

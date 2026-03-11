@@ -6,7 +6,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
@@ -89,7 +89,7 @@ void main() {
         .thenAnswer((_) async => Right([testTask]));
 
     // For completion
-    when(mockTaskRepo.completeTask(any, userId: anyNamed('userId')))
+    when(mockTaskRepo.completeTask(any, userIds: anyNamed('userIds')))
         .thenAnswer((_) async => const Right({'xp_earned': 10, 'coins_earned': 5}));
 
     // 2. Build Widget with Overrides
@@ -100,7 +100,7 @@ void main() {
         householdIdProvider.overrideWith((ref) => 'h1'),
         currentUserIdProvider.overrideWithValue('u1'),
         categoriesProvider.overrideWith((ref) => [testCategory]),
-        householdMembersNotifierProvider.overrideWith((ref) => Stream.value([
+        householdMembersProvider.overrideWith(() => MockHouseholdMembers([
               MemberModel(
                 id: 'm1',
                 userId: 'u1',
@@ -134,9 +134,17 @@ void main() {
     await tester.pumpAndSettle();
 
     // 6. Verify Repository Call
-    verify(mockTaskRepo.completeTask(any, userId: 'u1')).called(1);
+    verify(mockTaskRepo.completeTask(any, userIds: argThat(contains('u1'), named: 'userIds'))).called(1);
 
     // 7. Verify Snackbar
     expect(find.textContaining('¡Ganaste 10 XP y 5 coins!'), findsOneWidget);
   });
+}
+
+class MockHouseholdMembers extends HouseholdMembers {
+  final List<MemberModel> members;
+  MockHouseholdMembers(this.members);
+
+  @override
+  Future<List<MemberModel>> build() async => members;
 }

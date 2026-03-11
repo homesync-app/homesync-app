@@ -56,70 +56,133 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 420),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 32,
+              offset: const Offset(0, 16),
+            ),
+          ],
+        ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.5)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.schedule_rounded, color: AppColors.primary, size: 28),
                     ),
-                    child: const Icon(Icons.schedule_rounded,
-                        color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    'Programar tarea',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Repetir',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              _buildRepeatOptions(),
-              if (_selectedMode == TaskRepeatMode.custom) ...[
-                const SizedBox(height: 20),
-                _buildCustomRecurrenceMenu(),
-              ],
-              const SizedBox(height: 24),
-              const Text(
-                'Asignar a',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              _buildMemberSelector(),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
+                    const SizedBox(width: 18),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Programar Tarea',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          Text(
+                            'Configura la repetición y responsables',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
+                      icon: const Icon(Icons.close_rounded, color: AppColors.textMuted),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _handleSave,
-                      child: const Text('Guardar'),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('REPETIR ESCALA'),
+                    const SizedBox(height: 12),
+                    _buildRepeatOptions(),
+                    
+                    if (_selectedMode == TaskRepeatMode.custom) ...[
+                      const SizedBox(height: 24),
+                      _buildCustomRecurrenceMenu(),
+                    ],
+
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('ASIGNAR RESPONSABLES'),
+                    const SizedBox(height: 12),
+                    _buildMemberSelector(),
+
+                    const SizedBox(height: 40),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w700, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: _handleSave,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              elevation: 8,
+                              shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ),
+                            child: const Text(
+                              'Confirmar',
+                              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -128,41 +191,69 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textMuted,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
   Widget _buildRepeatOptions() {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        _buildModeChip('Sin repetir', TaskRepeatMode.none),
-        _buildModeChip('Diario', TaskRepeatMode.daily),
-        _buildModeChip('Semanal', TaskRepeatMode.weekly),
-        _buildModeChip('Mensual', TaskRepeatMode.monthly),
-        _buildModeChip('Personalizado', TaskRepeatMode.custom),
+        _buildModeChip('Ninguna', TaskRepeatMode.none, Icons.block_rounded),
+        _buildModeChip('Diario', TaskRepeatMode.daily, Icons.today_rounded),
+        _buildModeChip('Semanal', TaskRepeatMode.weekly, Icons.date_range_rounded),
+        _buildModeChip('Mensual', TaskRepeatMode.monthly, Icons.calendar_today_rounded),
+        _buildModeChip('Personalizado', TaskRepeatMode.custom, Icons.settings_rounded),
       ],
     );
   }
 
-  Widget _buildModeChip(String label, TaskRepeatMode mode) {
+  Widget _buildModeChip(String label, TaskRepeatMode mode, IconData icon) {
     final isSelected = _selectedMode == mode;
     return GestureDetector(
       onTap: () => setState(() => _selectedMode = mode),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+            width: 1.5,
           ),
+          boxShadow: isSelected 
+              ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))]
+              : [],
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -170,27 +261,32 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
   Widget _buildCustomRecurrenceMenu() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildCustomModeTab('Por día', 'weekdays'),
+              _buildCustomModeTab('Días', 'weekdays'),
               _buildCustomModeTab('Intervalo', 'interval'),
               _buildCustomModeTab('Fecha', 'month_days'),
             ],
           ),
-          const SizedBox(height: 16),
-          if (_customRecurrenceMode == 'weekdays') _buildDaySelector(),
-          if (_customRecurrenceMode == 'interval') _buildIntervalSelector(),
-          if (_customRecurrenceMode == 'month_days') _buildMonthDaySelector(),
+          const SizedBox(height: 20),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _customRecurrenceMode == 'weekdays' 
+                ? _buildDaySelector()
+                : _customRecurrenceMode == 'interval'
+                    ? _buildIntervalSelector()
+                    : _buildMonthDaySelector(),
+          ),
         ],
       ),
     );
@@ -206,15 +302,15 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             label,
             style: TextStyle(
               fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: FontWeight.w800,
               color: isSelected ? AppColors.primary : AppColors.textMuted,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 250),
             height: 3,
-            width: 24,
+            width: 20,
             decoration: BoxDecoration(
               color: isSelected ? AppColors.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(2),
@@ -227,8 +323,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
   Widget _buildDaySelector() {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       alignment: WrapAlignment.center,
       children: List.generate(7, (index) {
         final dayNum = index + 1;
@@ -245,21 +341,21 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: isSelected ? AppColors.primary : Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
-                width: 1,
+                color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                width: 1.5,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       )
                     ]
                   : [],
@@ -268,8 +364,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               child: Text(
                 _dayNames[index],
                 style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w900,
                   fontSize: 14,
                 ),
               ),
@@ -281,177 +377,145 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildIntervalSelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('Repetir cada',
-            style: TextStyle(color: AppColors.textSecondary)),
-        const SizedBox(width: 12),
-        Container(
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.remove,
-                    size: 20, color: AppColors.textSecondary),
-                onPressed: () {
-                  if (_recurrenceInterval > 1) {
-                    setState(() => _recurrenceInterval--);
-                  }
-                },
-              ),
-              Container(
-                alignment: Alignment.center,
-                width: 30,
-                child: Text(
-                  _recurrenceInterval.toString(),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Cada', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4)],
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (_recurrenceInterval > 1) setState(() => _recurrenceInterval--);
+                  },
+                  icon: const Icon(Icons.remove_rounded, size: 20, color: AppColors.primary),
                 ),
-              ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.add,
-                    size: 20, color: AppColors.textSecondary),
-                onPressed: () {
-                  if (_recurrenceInterval < 365) {
-                    setState(() => _recurrenceInterval++);
-                  }
-                },
-              ),
-            ],
+                SizedBox(
+                  width: 30,
+                  child: Text(
+                    _recurrenceInterval.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.textPrimary),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (_recurrenceInterval < 365) setState(() => _recurrenceInterval++);
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 20, color: AppColors.primary),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        const Text('días', style: TextStyle(color: AppColors.textSecondary)),
-      ],
+          const SizedBox(width: 16),
+          const Text('días', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 
   Widget _buildMonthDaySelector() {
-    return Column(
-      children: [
-        const Text('Elige los días del mes',
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          alignment: WrapAlignment.center,
-          children: List.generate(31, (index) {
-            final day = index + 1;
-            final isSelected = _selectedMonthDays.contains(day);
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedMonthDays.remove(day);
-                  } else {
-                    _selectedMonthDays.add(day);
-                  }
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accentGreen : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color:
-                        isSelected ? AppColors.accentGreen : AppColors.border,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  day.toString(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
-                  ),
-                ),
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      alignment: WrapAlignment.center,
+      children: List.generate(31, (index) {
+        final day = index + 1;
+        final isSelected = _selectedMonthDays.contains(day);
+        return GestureDetector(
+          onTap: () => setState(() => isSelected ? _selectedMonthDays.remove(day) : _selectedMonthDays.add(day)),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.accentGreen : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isSelected ? AppColors.accentGreen : const Color(0xFFE2E8F0)),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              day.toString(),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
               ),
-            );
-          }),
-        ),
-      ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
   Widget _buildMemberSelector() {
-    if (widget.members.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Text(
-          'No hay otros miembros en el equipo',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-      );
-    }
+    if (widget.members.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: widget.members.map((m) {
         final userId = m['user_id'] ?? '';
-        final name =
-            m['users']?['full_name'] ?? m['users']?['email'] ?? 'Miembro';
+        final name = (m['users']?['full_name'] as String?)?.split(' ').first ?? 'Miembro';
         final isSelected = _selectedMembers.contains(userId);
 
         return GestureDetector(
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                _selectedMembers.remove(userId);
-              } else {
-                _selectedMembers.add(userId);
-              }
-            });
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
+          onTap: () => setState(() => isSelected ? _selectedMembers.remove(userId) : _selectedMembers.add(userId)),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.1)
-                  : AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(12),
+              color: isSelected ? Colors.white : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected ? AppColors.primary : Colors.transparent,
+                width: 1.5,
               ),
+              boxShadow: isSelected 
+                  ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))]
+                  : [],
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor:
-                      isSelected ? AppColors.primary : AppColors.textMuted,
-                  child: Text(
-                    name[0].toUpperCase(),
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      name[0].toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     name,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
                   ),
                 ),
-                if (isSelected)
-                  const Icon(Icons.check_circle,
-                      color: AppColors.primary, size: 22),
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (val) => setState(() => val! ? _selectedMembers.add(userId) : _selectedMembers.remove(userId)),
+                  activeColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
               ],
             ),
           ),
@@ -461,10 +525,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   void _handleSave() {
-    final customDays =
-        _selectedMode == TaskRepeatMode.custom ? _selectedDays.toList() : null;
+    final customDays = _selectedMode == TaskRepeatMode.custom ? _selectedDays.toList() : null;
     final assignedMembers = _selectedMembers.toList();
-
     widget.onSave(_selectedMode, customDays, assignedMembers);
     Navigator.pop(context);
   }

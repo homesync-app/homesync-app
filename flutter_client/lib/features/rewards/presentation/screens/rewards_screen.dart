@@ -552,10 +552,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
               Navigator.pop(dialogCtx); // Close dialog immediately
               
               ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
+                 if (!mounted) return;
                  // Invalidate immediately so next build fetches correct amount
                  ref.invalidate(userBalanceProvider);
                  _showSuccessAnim(reward);
               }).catchError((e) {
+                 if (!mounted) return;
                  final errStr = e.toString().replaceFirst('Exception: ', '');
                  ScaffoldMessenger.of(context).showSnackBar(
                    SnackBar(content: Text('Error: $errStr'), backgroundColor: AppColors.error),

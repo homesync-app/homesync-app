@@ -8,6 +8,8 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 
 class ExpenseFlowSimulator {
   final ExpenseRepository repository;
@@ -49,6 +51,7 @@ class ExpenseFlowSimulator {
       String fromUserId, String toUserId, double amount) async {
     await repository.settleDebt(
       householdId: 'household-1',
+      fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
     );
@@ -110,7 +113,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String paidBy,
     required DateTime paidAt,
     String?
-        id_v2, // Compatibility with previous param if needed, or just follow interface
+        idV2, // Compatibility with previous param if needed, or just follow interface
     String? description,
     required SplitType splitType,
     String type = 'expense',
@@ -139,10 +142,50 @@ class MockExpenseRepository implements ExpenseRepository {
   @override
   Future<Either<Failure, void>> settleDebt({
     required String householdId,
+    required String fromUserId,
     required String toUserId,
     required double amount,
   }) async {
     return const Right(null);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(
+      String userId, String householdId) async {
+    return {
+      'total_spent': 0.0,
+      'personal_balance': 0.0,
+    };
+  }
+
+  @override
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(String householdId) async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> toggleTemplateActivity(String templateId, bool isActive) async {
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, String>> payPlannedExpense({
+    required String plannedId,
+    required double amount,
+    required DateTime paidAt,
+    required String paidBy,
+  }) async {
+    return const Right('expense-id');
   }
 }
 

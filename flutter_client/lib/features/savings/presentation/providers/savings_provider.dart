@@ -1,14 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import '../../domain/models/savings_model.dart';
-import '../../domain/repositories/savings_repository.dart';
-import '../../domain/usecases/get_savings_goals_usecase.dart';
-import '../../domain/usecases/get_goal_contributions_usecase.dart';
-import '../../domain/usecases/create_savings_goal_usecase.dart';
-import '../../domain/usecases/add_contribution_usecase.dart';
-import '../../domain/usecases/delete_savings_goal_usecase.dart';
-import '../../data/repositories/supabase_savings_repository.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
+import 'package:homesync_client/features/savings/domain/usecases/get_savings_goals_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/get_goal_contributions_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/add_contribution_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/delete_savings_goal_usecase.dart';
+import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
 
 part 'savings_provider.g.dart';
 
@@ -89,22 +91,43 @@ class SavingsGoals extends _$SavingsGoals {
     });
   }
 
-  Future<void> contribute(String goalId, double amount, {String? note}) async {
+  Future<void> contribute(String goalId, double amount, {String? note, required String goalTitle}) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
     if (userId == null || householdId == null) return;
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
+      // 1. Add the contribution to the savings goal
       await ref.read(addContributionUseCaseProvider).execute(
         goalId: goalId,
         userId: userId,
         amount: amount,
         note: note,
       );
+
+      // 2. Create a corresponding PERSONAL expense to reflect in global balance
+      try {
+        final expenseRepo = ref.read(expenseRepositoryProvider);
+        await expenseRepo.saveExpense(
+          householdId: householdId,
+          title: 'Ahorro: $goalTitle',
+          amount: amount,
+          category: 'finanzas',
+          paidBy: userId,
+          paidAt: DateTime.now(),
+          description: note ?? 'Aportación a meta de ahorro',
+          splitType: SplitType.personal,
+          type: 'expense',
+        );
+      } catch (e) {
+        // Log error but don't fail the whole operation if ledger failed
+        debugPrint('Error creating expense for contribution: $e');
+      }
       
       ref.invalidate(goalContributionsProvider(goalId));
-      ref.invalidate(personalFinanceSummaryProvider); // This affects balance
+      ref.invalidate(personalFinanceSummaryProvider); 
+      ref.invalidate(expenseControllerProvider);
       
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
@@ -130,4 +153,48 @@ class SavingsGoals extends _$SavingsGoals {
       );
     });
   }
+}
+
+class SavingsSuggestion {
+  final String message;
+  final SavingsGoalModel? goal;
+  final double surplus;
+  
+  SavingsSuggestion({required this.message, this.goal, required this.surplus});
+}
+
+@riverpod
+Future<SavingsSuggestion?> savingsSuggester(SavingsSuggesterRef ref) async {
+  final summary = await ref.watch(personalFinanceSummaryProvider.future);
+  final projection = await ref.watch(monthlyProjectionProvider.future);
+  final goals = await ref.watch(savingsGoalsProvider.future);
+  
+  if (goals.isEmpty) return null;
+  
+  final income = (summary['income'] as num?)?.toDouble() ?? 0.0;
+  final totalExpectedSpend = projection.total;
+  
+  // If income is not registered, we can't calculate surplus accurately
+  if (income <= 0) return null;
+  
+  final surplus = income - totalExpectedSpend;
+  
+  if (surplus > 1000) { // Only suggest if surplus is relevant (e.g. > $1000 ARS)
+    // Find the goal with the highest progress but not yet completed
+    final eligibleGoals = goals.where((g) => g.currentAmount < g.targetAmount).toList();
+    if (eligibleGoals.isEmpty) return null;
+    
+    eligibleGoals.sort((a, b) => b.progress.compareTo(a.progress));
+    final targetGoal = eligibleGoals.first;
+    
+    final percentageBoost = (surplus / targetGoal.targetAmount) * 100;
+    
+    return SavingsSuggestion(
+      message: 'Basado en tu plan, podrías ahorrar \$${surplus.toStringAsFixed(0)} extra este mes. ¡Eso adelantaría un ${percentageBoost.toStringAsFixed(1)}% tu meta de "${targetGoal.title}"!',
+      goal: targetGoal,
+      surplus: surplus,
+    );
+  }
+  
+  return null;
 }

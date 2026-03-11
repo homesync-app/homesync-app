@@ -6,7 +6,7 @@ import '../../../../core/providers/connectivity_provider.dart';
 import '../../domain/models/household_model.dart';
 import '../../domain/repositories/household_repository.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
 
 final householdRepositoryProvider = Provider<HouseholdRepository>((ref) {

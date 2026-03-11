@@ -202,9 +202,18 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     : _buildTemplateList(filtered),
           ),
           // ── Bottom actions ────────────────────────────────────────────
-          const Divider(height: 1),
-          Padding(
+          Container(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, -5),
+                )
+              ],
+            ),
             child: Row(
               children: [
                 Expanded(

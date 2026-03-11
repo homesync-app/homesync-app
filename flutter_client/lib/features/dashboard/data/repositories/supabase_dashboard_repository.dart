@@ -8,111 +8,79 @@ class SupabaseDashboardRepository implements DashboardRepository {
   SupabaseDashboardRepository(this._client);
 
   @override
-  Future<List<Map<String, dynamic>>> getRecentActivity(
-      String householdId) async {
-    final activities = <Map<String, dynamic>>[];
-    final now = DateTime.now();
-    // Only show activities from the current day (today at 00:00:00)
-    final since = DateTime(now.year, now.month, now.day);
-
-    // 1. Fetch Completed Tasks (joined with user info)
+  Future<List<Map<String, dynamic>>> getRecentActivity(String householdId) async {
     try {
-      final tasksResponse = await _client
-          .from('tasks')
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
+      
+      final response = await _client
+          .from('household_activities')
           .select('''
-            id, title, category, xp_reward, coin_reward, completed_at, status, updated_at, created_at, objection_reason,
-            user:users!tasks_completed_by_fkey(id, full_name, avatar_url),
-            completed_user:users!tasks_completed_by_fkey(id, full_name, avatar_url)
+            id, event_type, title, description, metadata, created_at,
+            user:users!household_activities_user_id_fkey(id, full_name, avatar_url)
           ''')
           .eq('household_id', householdId)
-          .not('completed_at', 'is', null)
-          .gte('updated_at', since.toIso8601String())
-          .order('updated_at', ascending: false)
-          .limit(20);
-
-      for (final t in tasksResponse) {
-        final timeStr = t['completed_at'] ?? t['updated_at'] ?? t['created_at'];
-        activities.add({
-          'type': 'TaskModel',
-          'data': t,
-          'time': DateTime.parse(timeStr as String),
-        });
-      }
-    } catch (e) {
-      dev.log('Error fetching TaskModel history with join: $e');
-      // Fallback: Fetch without JOIN if the FK name is wrong or schema changed
-      try {
-        final fallbackTasks = await _client
-            .from('tasks')
-            .select('*')
-            .eq('household_id', householdId)
-            .not('completed_at', 'is', null)
-            .gte('completed_at', since.toIso8601String())
-            .order('updated_at', ascending: false)
-            .limit(20);
-
-        for (final t in fallbackTasks) {
-          final timeStr =
-              t['completed_at'] ?? t['updated_at'] ?? t['created_at'];
-          activities.add({
-            'type': 'TaskModel',
-            'data': t,
-            'time': DateTime.parse(timeStr as String),
-          });
-        }
-      } catch (e2) {
-        dev.log('Fallback TaskModel fetch failed: $e2');
-      }
-    }
-
-    // 2. Fetch Expenses (joined with user info)
-    try {
-      final expensesResponse = await _client
-          .from('expenses')
-          .select('''
-            id, amount, title, category, split_type, is_shared, created_at, paid_at, paid_by,
-            user:users!expenses_paid_by_fkey(id, full_name, avatar_url)
-          ''')
-          .eq('household_id', householdId)
-          .gte('created_at', since.toIso8601String())
+          .gte('created_at', startOfDay) // Only today's activity
           .order('created_at', ascending: false)
-          .limit(20);
+          .limit(30);
 
-      for (final e in expensesResponse) {
-        final timeStr = e['paid_at'] ?? e['created_at'];
-        activities.add({
-          'type': 'expense',
-          'data': e,
-          'time': DateTime.parse(timeStr as String),
-        });
-      }
-    } catch (e) {
-      dev.log('Error fetching expense history with join: $e');
-      // Fallback ExpenseModel Fetch
-      try {
-        final fallbackExpenses = await _client
-            .from('expenses')
-            .select('*')
-            .eq('household_id', householdId)
-            .gte('created_at', since.toIso8601String())
-            .order('created_at', ascending: false)
-            .limit(20);
+      final activities = (response as List).map((item) {
+        final eventType = item['event_type'] as String;
+        final user = item['user'] as Map<String, dynamic>?;
+        final userName = user?['full_name'] ?? 'Alguien';
+        final userAvatar = user?['avatar_url'];
+        final metadata = Map<String, dynamic>.from(item['metadata'] ?? {});
+        
+        String uiType = 'unknown';
+        final data = <String, dynamic>{
+          'user_name': userName,
+          'avatar_url': userAvatar,
+          'title': item['title'],
+          ...metadata,
+        };
 
-        for (final e in fallbackExpenses) {
-          final timeStr = e['paid_at'] ?? e['created_at'];
-          activities.add({
-            'type': 'expense',
-            'data': e,
-            'time': DateTime.parse(timeStr as String),
-          });
+        if (eventType == 'task_completed') {
+          uiType = 'task';
+          data['task_title'] = item['title'];
+          data['xp_reward'] = metadata['xp_reward'] ?? metadata['xpReward'] ?? metadata['p_xp_reward'] ?? metadata['score_impact'] ?? metadata['xp'] ?? metadata['reward'];
+        } else if (eventType == 'expense_added') {
+          uiType = 'expense';
+          data['amount'] = metadata['amount'] ?? 0;
+          data['description'] = item['description']; // Include description for detail check
+          data['expense_id'] = metadata['expense_id'] ?? metadata['id']; 
+        } else if (eventType == 'reward_redeemed') {
+          uiType = 'task'; // Denotes productivity/rewards
+          data['task_title'] = 'Canjeó premio: ${item['title']}';
         }
-      } catch (_) {}
+
+        return {
+          'id': item['id'], // Important for keys
+          'type': uiType,
+          'data': data,
+          'created_at': item['created_at'],
+        };
+      }).where((activity) {
+        final data = activity['data'] as Map<String, dynamic>;
+        final type = activity['type'] as String;
+        
+        if (type == 'expense') {
+          final isIncome = data['type'] == 'income' || data['type'] == 'ingreso';
+          if (isIncome) return false;
+
+          // If metadata explicitly says it's not shared or it's personal, hide it
+          if (data['is_shared'] == false) return false;
+          if (data['split_type'] == 'personal') return false;
+          
+          // Otherwise, assume it's a shared expense/activity
+        }
+        
+        return true;
+      }).toList();
+
+      return activities;
+    } catch (e) {
+      dev.log('Error fetching activities from household_activities: $e');
+      return [];
     }
-
-    // 3. Final cleanup and sorting
-    activities.sort(
-        (a, b) => (b['time'] as DateTime).compareTo(a['time'] as DateTime));
-
-    return activities.take(30).toList();
   }
 }

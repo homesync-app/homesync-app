@@ -3,24 +3,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:confetti/confetti.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -138,7 +135,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onPressed: () => _showQuickActionMenu(householdId),
         backgroundColor: AppColors.primary,
         elevation: 12,
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
         label: const Text(
           'Nueva Acción',
           style: TextStyle(
@@ -149,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      ),
+      ).animateScaleIn(delay: 600),
     );
   }
 
@@ -158,6 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(recentActivityProvider);
     ref.invalidate(personalFinanceSummaryProvider);
     ref.invalidate(expenseBalancesProvider);
+    ref.invalidate(expenseControllerProvider);
   }
 
   Widget _buildHeader() {
@@ -194,7 +191,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
-            ),
+            ).animateEntrance(delay: 50),
           ],
         ),
         _buildCircularAvatar(displayName, avatarUrl).animateScaleIn(delay: 150),
@@ -215,16 +212,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildFinancialSummary(String householdId) {
-    final summaryAsync = ref.watch(personalFinanceSummaryProvider);
     final balanceAsync = ref.watch(userBalanceProvider);
     final membersAsync = ref.watch(householdMembersProvider);
+    final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
     final coins = balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
-    double myBalance = 0;
-    summaryAsync.whenData((s) => myBalance = (s['balance'] ?? 0).toDouble());
+    double myExpenseBalance = 0;
+    expenseBalancesAsync.whenData((balances) {
+      final myBalanceModel = balances.where((b) => b.userId == currentUserId).firstOrNull;
+      if (myBalanceModel != null) {
+        myExpenseBalance = myBalanceModel.balance;
+      }
+    });
 
     final partner = membersAsync.whenOrNull(
       data: (members) => members.where((m) => m.userId != currentUserId).firstOrNull,
@@ -233,15 +235,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return BalanceCard(
       coins: coins,
       xp: xp,
-      userBalance: myBalance,
+      userBalance: myExpenseBalance,
       partnerName: partner?.displayName,
-      onSettle: partner != null && myBalance.abs() > 10.0
+      onSettle: partner != null && myExpenseBalance.abs() > 10.0
           ? () => _showSettlementDialog(
                 householdId: householdId,
                 partnerId: partner.userId,
                 partnerName: partner.displayName,
-                amount: myBalance.abs(),
-                isOwedByMe: myBalance < 0,
+                amount: myExpenseBalance.abs(),
+                isOwedByMe: myExpenseBalance < 0,
                 alias: partner.mercadopagoAlias,
               )
           : null,
@@ -258,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Tareas de hoy',
+              'Programación de hoy',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
@@ -267,8 +269,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             TextButton(
-              onPressed: () => ref.read(bottomNavIndexProvider.notifier).setIndex(1),
-              child: const Text('Ver todas'),
+              onPressed: () {
+                ref.read(taskViewModeProvider.notifier).setCalendar();
+                ref.read(bottomNavIndexProvider.notifier).setIndex(1);
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Ver Semana',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ],
         ),
@@ -284,7 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: visibleTasks.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) => _buildTaskCard(visibleTasks[index]).animateStaggered(index),
             );
           },
@@ -295,51 +312,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildTaskCard(TaskModel task) {
     final categoryColor = AppColors.getCategoryColor(task.category);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: categoryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
+    final categoryEmoji = AppColors.categoryIcons[task.category?.toLowerCase()] ?? '🏠';
+
+    return AnimatedPress(
+      onTap: () => _completeTask(task),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
-            child: Icon(AppColors.getCategoryMaterialIcon(task.category), color: categoryColor),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                ),
-                Text(
-                  AppColors.categoryNames[task.category?.toLowerCase()] ?? task.category ?? 'General',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-              ],
+          ],
+        ),
+        child: Row(
+          children: [
+            // Category icon with subtle background
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: categoryColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(categoryEmoji, style: const TextStyle(fontSize: 22)),
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () => _completeTask(task),
-            icon: const Icon(Icons.check_circle_outline_rounded, color: AppColors.primary, size: 28),
-          ),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          AppColors.categoryNames[task.category?.toLowerCase()] ?? task.category ?? 'General',
+                          style: TextStyle(
+                            color: categoryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '⭐ ${task.xpReward} XP',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_rounded, color: AppColors.primary, size: 20),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -349,7 +408,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _completedTaskIds.add(task.id));
     
     try {
-      await ref.read(tasksProvider.notifier).completeTask(task);
+      final result = await ref.read(tasksProvider.notifier).completeTask(task);
+      if (result == null && mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al completar la tarea. Intenta de nuevo.'))
+        );
+      } else {
+        // Success
+        _confettiController.play();
+        HapticFeedback.heavyImpact();
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('⭐ ¡Ganaste ${task.xpReward} XP y ${task.coinReward} coins!'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _completedTaskIds.remove(task.id));
@@ -364,90 +444,366 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Actividad reciente',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Actividad reciente',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Ver todo',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         activityAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => _buildActivityShimmer(),
           error: (e, _) => Text('Error al cargar actividad: $e'),
           data: (activities) {
             if (activities.isEmpty) return _buildEmptyState('No hay actividad aún');
-            return _buildActivityTimeline(activities);
+            return _buildActivityCards(activities);
           },
         ),
       ],
     );
   }
 
-  Widget _buildActivityTimeline(List<Map<String, dynamic>> activities) {
+  Widget _buildActivityShimmer() {
+    return Column(
+      children: List.generate(3, (_) => ShimmerLoading(
+        child: Container(
+          height: 88,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      )),
+    );
+  }
+
+  Widget _buildActivityCards(List<Map<String, dynamic>> activities) {
     return Column(
       children: List.generate(activities.length, (index) {
         final activity = activities[index];
         final id = activity['id'] ?? index.toString();
-        return _buildActivityItem(activity, key: ValueKey(id)).animateStaggered(index);
+        return _buildActivityCard(
+          activity, 
+          isFirst: index == 0,
+          isLast: index == activities.length - 1,
+          key: ValueKey(id),
+        ).animateStaggered(index);
       }),
     );
   }
 
-  Widget _buildActivityItem(Map<String, dynamic> activity, {Key? key}) {
+  Widget _buildActivityCard(Map<String, dynamic> activity, {bool isFirst = false, bool isLast = false, Key? key}) {
     final type = activity['type'] as String;
     final data = activity['data'] as Map<String, dynamic>;
     final time = DateTime.tryParse(activity['created_at'] ?? '') ?? DateTime.now();
-    final timeStr = DateFormat('HH:mm').format(time);
+    final now = DateTime.now();
+    final isToday = time.year == now.year && time.month == now.month && time.day == now.day;
+    final timeStr = isToday ? DateFormat('HH:mm').format(time) : DateFormat('d MMM', 'es').format(time);
 
-    IconData icon;
-    Color color;
-    String title;
+    Color accentColor;
+    String actionVerb;
+    String itemLabel;
+    String? amountStr;
+    String? categoryEmoji;
 
     if (type == 'task') {
-      icon = Icons.check_circle_rounded;
-      color = AppColors.success;
-      title = '${data['user_name']} completó "${data['task_title']}"';
+      accentColor = AppColors.sage;
+      actionVerb = 'completó';
+      itemLabel = data['task_title'] ?? data['title'] ?? 'Tarea';
+      final category = (data['category'] as String?)?.toLowerCase();
+      categoryEmoji = AppColors.categoryIcons[category] ?? '✅';
     } else if (type == 'expense') {
-      icon = Icons.shopping_bag_rounded;
-      color = AppColors.accentOrange;
-      title = '${data['user_name']} cargó un gasto: \$${data['amount']}';
+      final isIncome = data['type'] == 'income' || data['type'] == 'ingreso';
+      accentColor = isIncome ? AppColors.sage : AppColors.primary;
+      actionVerb = isIncome ? 'registró ingreso' : 'cargó gasto';
+      final rawCategory = (data['category'] as String?)?.toLowerCase();
+      itemLabel = AppColors.categoryNames[rawCategory] ?? data['category'] ?? 'Gasto';
+      categoryEmoji = AppColors.categoryIcons[rawCategory] ?? '💰';
+      final amount = data['amount'];
+      if (amount != null) {
+        final formatted = NumberFormat.decimalPattern('es_AR').format(
+          (amount is num ? amount : double.tryParse(amount.toString()) ?? 0).round(),
+        );
+        amountStr = '\$$formatted';
+      }
     } else {
-      icon = Icons.info_rounded;
-      color = AppColors.textSecondary;
-      title = 'Evento desconocido';
+      accentColor = AppColors.textSecondary;
+      actionVerb = '';
+      itemLabel = data['title'] ?? 'Evento';
+      categoryEmoji = '📌';
     }
 
-    return Container(
+    final userName = data['user_name'] as String? ?? 'Usuario';
+    final avatarUrl = data['avatar_url'] as String?;
+    final description = data['description'] as String?;
+    final xpReward = data['xp_reward'] ?? data['score_impact']; // Task XP
+    final hasDetail = description != null && description.trim().isNotEmpty;
+    final isShoppingList = hasDetail && (description.toLowerCase().contains('lista') || description.contains('\n') || description.contains('- '));
+    final isClickable = type == 'expense' || hasDetail;
+
+    return IntrinsicHeight(
       key: key,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Timeline indicator
+          SizedBox(
+            width: 20,
+            child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 16),
+                  width: 2,
+                  height: 20,
+                  color: isFirst ? Colors.transparent : AppColors.divider.withValues(alpha: 0.5),
                 ),
-                Expanded(child: Container(width: 2, color: AppColors.divider.withValues(alpha: 0.5))),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isLast ? Colors.transparent : AppColors.divider.withValues(alpha: 0.5),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                    Text(timeStr, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  ],
+          ),
+          const SizedBox(width: 8),
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: AnimatedPress(
+                onTap: isClickable ? () => _handleActivityTap(activity, itemLabel, description, accentColor) : null,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.015),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomUserAvatar(
+                        name: userName,
+                        avatarUrl: avatarUrl,
+                        radius: 16,
+                        showBorder: false,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Top Row: User + Action + Category + Info Icon
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    runSpacing: 4,
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary),
+                                      ),
+                                      if (actionVerb.isNotEmpty)
+                                        Text(
+                                          actionVerb,
+                                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: accentColor.withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '$categoryEmoji $itemLabel',
+                                          style: TextStyle(color: accentColor, fontWeight: FontWeight.w700, fontSize: 10),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (hasDetail)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Icon(isShoppingList ? Icons.receipt_long_rounded : Icons.info_outline_rounded, size: 16, color: AppColors.textMuted),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            // Bottom Row: Time and Amount/XP
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textMuted),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      timeStr,
+                                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                if (amountStr != null)
+                                  Text(
+                                    amountStr,
+                                    style: TextStyle(color: accentColor, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.3),
+                                  ),
+                                if (xpReward != null && type == 'task')
+                                  Text(
+                                    '+$xpReward XP',
+                                    style: const TextStyle(color: AppColors.sage, fontWeight: FontWeight.w900, fontSize: 11),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleActivityTap(Map<String, dynamic> activity, String itemLabel, String? description, Color accentColor) {
+    final type = activity['type'] as String;
+    final data = activity['data'] as Map<String, dynamic>;
+
+    if (type == 'expense') {
+      final expenseId = data['expense_id'] ?? data['id'];
+      final expenses = ref.read(expenseControllerProvider).valueOrNull;
+      if (expenses != null && expenseId != null) {
+        final expense = expenses.where((e) => e.id == expenseId).firstOrNull;
+        if (expense != null) {
+          ExpenseDetailSheet.show(context, expense);
+          return;
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aún cargando detalles del gasto...')),
+      );
+      return;
+    }
+
+    if (description == null || description.isEmpty) return;
+
+    final isShoppingList = description.toLowerCase().contains('lista') || description.contains('\n') || description.contains('- ');
+    final items = description
+        .split(RegExp(r'\n'))
+        .map((e) => e.trim().replaceAll(RegExp(r'^[\-\*•]\s*'), ''))
+        .where((e) => e.isNotEmpty && !e.toLowerCase().contains('lista'))
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        contentPadding: EdgeInsets.zero,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: Icon(isShoppingList ? Icons.shopping_cart_rounded : Icons.info_outline_rounded, color: accentColor),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(isShoppingList ? 'Lista de Compras' : 'Detalles', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                        Text(itemLabel, style: TextStyle(color: accentColor, fontWeight: FontWeight.w700, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: isShoppingList 
+                  ? Column(
+                      children: items.map((item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.sage),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                item,
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                    )
+                  : Text(description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.5)),
               ),
             ),
           ],
@@ -469,10 +825,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildEmptyState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Text(message, style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: const Text('🐾', style: TextStyle(fontSize: 32)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '¡El amor es el mejor plan hoy! ✨',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -500,64 +891,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 32),
             GridView.count(
               shrinkWrap: true,
-              crossAxisCount: 3,
+              crossAxisCount: 2,
               mainAxisSpacing: 24,
               crossAxisSpacing: 20,
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildQuickActionItem(
-                  icon: Icons.shopping_bag_rounded,
-                  label: 'Gasto',
-                  color: AppColors.accentOrange,
+                  icon: Icons.add_shopping_cart_rounded,
+                  label: 'Cargar Gasto',
+                  color: AppColors.primary,
                   onTap: () {
                     Navigator.pop(context);
                     ExpenseFormSheet.show(context);
                   },
                 ),
                 _buildQuickActionItem(
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: 'Ingreso',
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Completar Actividad',
                   color: AppColors.success,
                   onTap: () {
                     Navigator.pop(context);
-                    ExpenseFormSheet.show(context); // It now has the toggle
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.task_alt_rounded,
-                  label: 'Tarea',
-                  color: AppColors.primary,
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Open Task creation (if exists) or navigate to tasks
-                    ref.read(bottomNavIndexProvider.notifier).state = 1; 
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.shopping_cart_rounded,
-                  label: 'Lista',
-                  color: AppColors.accentGold,
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to shopping (not in main bottom bar, but can open sheet)
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.savings_rounded,
-                  label: 'Ahorro',
-                  color: AppColors.accentTeal,
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to savings
-                  },
-                ),
-                _buildQuickActionItem(
-                  icon: Icons.stars_rounded,
-                  label: 'Premio',
-                  color: const Color(0xFF9575CD),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // Navigate to rewards
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => CompleteTaskSheet(onTasksCompleted: () {}),
+                    );
                   },
                 ),
               ],
@@ -610,25 +969,130 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required bool isOwedByMe,
     String? alias,
   }) {
-    // Basic settlement dialog implementation
-    showDialog(
+    // Only the debtor (the one who owes) sees the settle button in BalanceCard,
+    // so we simplify the message to reflect their confirmation of payment.
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isOwedByMe ? 'Pagar a $partnerName' : 'Cobrar a $partnerName'),
-        content: Text('Monto: \$${amount.toStringAsFixed(2)}'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(expenseControllerProvider.notifier).settleDebt(
-                toUserId: partnerId,
-                amount: amount,
-              );
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.fromLTRB(28, 12, 28, 40),
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.accentOrange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.volunteer_activism_rounded,
+                color: AppColors.accentOrange,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '¿Saldar deuda con $partnerName?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '¿Confirmas que ya realizaste la transferencia de \$${amount.toStringAsFixed(2)} a $partnerName? Esto equilibrará el balance de la pareja a 0 nuevamente.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Aún no',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      Navigator.pop(context);
+                      final currentUserId = ref.read(currentUserIdProvider);
+                      await ref
+                           .read(expenseControllerProvider.notifier)
+                           .settleDebt(
+                             fromUserId: isOwedByMe ? (currentUserId ?? '') : partnerId,
+                             toUserId: isOwedByMe ? partnerId : (currentUserId ?? ''),
+                             amount: amount,
+                           );
+
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: const Text('¡Balance equilibrado! Todo listo. ✨'),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Si, ¡saldar!',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
