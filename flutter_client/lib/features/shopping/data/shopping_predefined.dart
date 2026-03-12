@@ -16,7 +16,12 @@ class ShoppingPredefined {
       {'name': 'Morrón', 'emoji': '🫑'},
       {'name': 'Zapallo', 'emoji': '🎃'},
       {'name': 'Batata', 'emoji': '🍠'},
+      {'name': 'Boniato', 'emoji': '🍠'},
+      {'name': 'Brocoli', 'emoji': '🥦'},
       {'name': 'Berenjena', 'emoji': '🍆'},
+      {'name': 'Champiñones', 'emoji': '🍄'},
+      {'name': 'Rúcula', 'emoji': '🥬'},
+      {'name': 'Choclo', 'emoji': '🌽'},
       {'name': 'Uvas', 'emoji': '🍇'},
       {'name': 'Sandía', 'emoji': '🍉'},
     ],
@@ -40,6 +45,8 @@ class ShoppingPredefined {
       {'name': 'Huevos', 'emoji': '🥚'},
       {'name': 'Crema', 'emoji': '🥛'},
       {'name': 'Dulce de leche', 'emoji': '🍯'},
+      {'name': 'Queso crema', 'emoji': '🥣'},
+      {'name': 'Leche vegetal', 'emoji': '🥛'},
     ],
     'bakery': [
       {'name': 'Pan', 'emoji': '🥖'},
@@ -121,7 +128,10 @@ class ShoppingPredefined {
       {'name': 'Mayonesa', 'emoji': '🍯'},
       {'name': 'Polenta', 'emoji': '🌽'},
       {'name': 'Lentejas', 'emoji': '🍛'},
+      {'name': 'Garbanzo', 'emoji': '🫘'},
       {'name': 'Avena', 'emoji': '🌾'},
+      {'name': 'Condimentos', 'emoji': '🧂'},
+      {'name': 'Mermelada', 'emoji': '🍯'},
     ],
   };
 }

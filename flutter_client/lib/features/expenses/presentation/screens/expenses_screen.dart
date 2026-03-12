@@ -210,14 +210,27 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(24, 40, 24, 12),
-                        child: Text(
-                          'MOVIMIENTOS',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                            color: AppColors.textSecondary.withValues(alpha: 0.7),
-                            letterSpacing: 1.2,
-                          ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.textSecondary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.history_rounded, size: 12, color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'MOVIMIENTOS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -351,8 +364,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             color: AppColors.primary.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.auto_awesome_motion_rounded,
-                              size: 64, color: AppColors.primary),
+                          child: const Icon(Icons.update_rounded,
+                              size: 64, color: AppColors.primary).animatePulse(),
                         ),
                         const SizedBox(height: 24),
                         const Text(
@@ -360,7 +373,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary),
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5),
                         ),
                         const SizedBox(height: 8),
                         const Padding(
@@ -706,14 +720,27 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   
                   if (pendingItems.isNotEmpty) ...[
                     const SizedBox(height: 48),
-                    const Text(
-                      'DETALLE DE PENDIENTES',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.pending_actions_rounded, size: 12, color: AppColors.primary),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'DETALLE DE PENDIENTES',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     ...pendingItems.map((item) => Padding(
@@ -1029,14 +1056,27 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 
                 const SizedBox(height: 32),
-                const Text(
-                  'MOVIMIENTOS',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.list_alt_rounded, size: 12, color: accentColor),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'MOVIMIENTOS',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 content,
@@ -1215,13 +1255,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         color: AppColors.textMuted.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        '🔁 PRÓXIMO',
-                        style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textMuted,
-                            letterSpacing: 0.5),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.access_time_rounded, size: 9, color: AppColors.textMuted.withValues(alpha: 0.8)),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'PRÓXIMO',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.textMuted,
+                                letterSpacing: 0.5),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -1513,7 +1560,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (goals) {
-        if (goals.isEmpty) return _buildEmptyState('No hay metas de ahorro');
+        if (goals.isEmpty) return _buildEmptyState('No hay metas activas aún', icon: '🎯');
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(savingsGoalsProvider),
@@ -1644,23 +1691,43 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return NumberFormat('#,###', 'es_AR').format(amount).replaceAll(',', '.');
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, {String icon = '📉'}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('📉', style: TextStyle(fontSize: 64)),
-          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Text(icon, style: const TextStyle(fontSize: 48)).animatePulse(),
+          ),
+          const SizedBox(height: 24),
           Text(
             message,
             style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 16,
-                fontWeight: FontWeight.w600),
+                color: AppColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 48),
+            child: Text(
+              'Empezá hoy mismo a organizar tus finanzas en pareja.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
-    );
+    ).animateEntrance();
   }
 
   void _showExpenseSheet({ExpenseModel? expense}) {

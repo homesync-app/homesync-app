@@ -124,24 +124,40 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40),
       width: double.infinity,
-      child: const Column(
+      child: Column(
         children: [
-          Text('🎯', style: TextStyle(fontSize: 60)),
-          SizedBox(height: 16),
-          Text(
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Text('🎯', style: TextStyle(fontSize: 48)).animatePulse(),
+          ),
+          const SizedBox(height: 24),
+          const Text(
             '¡Empiecen su primera meta!',
             style: TextStyle(
-                fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5),
           ),
-          SizedBox(height: 8),
-          Text(
-            'Viajes, ahorros, compras... ¡ustedes eligen!',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            textAlign: TextAlign.center,
+          const SizedBox(height: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 48),
+            child: Text(
+              'Viajes, ahorros, compras... ¡ustedes eligen para qué empezar a ahorrar juntos!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
-    );
+    ).animateEntrance();
   }
 
   Widget _buildTotalSavingsCard(List<SavingsGoalModel> goals) {
