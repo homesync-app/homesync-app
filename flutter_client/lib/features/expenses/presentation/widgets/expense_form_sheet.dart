@@ -162,7 +162,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _loadExpenseData(ExpenseModel exp) {
     _titleController.text = exp.title;
     _amountController.text = exp.amount.toString();
-    // _notesController.text = exp.description ?? ''; // Removed redundant notes field
     if (exp.category != null) {
       _selectedCategory = _currentCategories.firstWhere(
         (c) => c['id'] == exp.category,
@@ -261,7 +260,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         splits = [{'user_id': _paidByUserId, 'amount': amountParsed}];
       }
 
-      String description = ''; // Removed redundant notes field, using title for primary info
+      String description = ''; 
       if (_selectedShoppingItems.isNotEmpty) {
         final itemsStr = _selectedShoppingItems.map((e) => "- ${e.emoji} ${e.name}").join("\n");
         description = "Lista de compras:\n$itemsStr";
@@ -293,7 +292,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ref.invalidate(shoppingItemsProvider);
       }
       
-      // Invalidate providers to forcefully refresh UI
       ref.invalidate(expenseControllerProvider);
       ref.invalidate(combinedFeedControllerProvider);
       ref.invalidate(personalFinanceSummaryProvider);
@@ -376,7 +374,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       const SizedBox(height: 32),
                       _buildSplitConfiguration(context, members),
                       const SizedBox(height: 32),
-                      // _buildNotesField(), // Removed redundant field
                       const SizedBox(height: 48),
                       _buildSaveButton(),
                       const SizedBox(height: 40),
@@ -782,14 +779,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
-
   Widget _buildShoppingIntegration(BuildContext context, AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
     if (_isIncome) return const SizedBox.shrink();
     
     return shoppingItemsAsync.when(
       data: (allItems) {
         final items = allItems.where((i) => !i.completed).toList();
-        // Even if empty, we might want to show it if we have selected items from a previous list
         if (items.isEmpty && _selectedShoppingItems.isEmpty) return const SizedBox.shrink();
         return GestureDetector(
           onTap: () => _showShoppingItemsSelector(context, items),
@@ -848,156 +843,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             }
           });
         },
-      ),
-    );
-  }
-}
-
-class _ShoppingItemsSelector extends StatefulWidget {
-  final List<ShoppingItemModel> items;
-  final Set<ShoppingItemModel> initialSelected;
-  final Function(Set<ShoppingItemModel>) onItemsSelected;
-
-  const _ShoppingItemsSelector({
-    required this.items,
-    required this.initialSelected,
-    required this.onItemsSelected,
-  });
-
-  @override
-  State<_ShoppingItemsSelector> createState() => _ShoppingItemsSelectorState();
-}
-
-class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
-  String _searchQuery = '';
-  final Set<ShoppingItemModel> _currentSelection = {};
-  late List<ShoppingItemModel> _availableItems;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentSelection.addAll(widget.initialSelected);
-    _availableItems = List.from(widget.items);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredItems = _availableItems.where((item) => 
-      item.name.toLowerCase().contains(_searchQuery.toLowerCase())
-    ).toList();
-
-    final showAddOption = _searchQuery.isNotEmpty && 
-      !_availableItems.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase()) &&
-      !_currentSelection.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase());
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75,
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  child: Text('Artículos de la Lista', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-                ),
-                
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar o agregar producto...',
-                        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
-                        icon: Icon(Icons.search, size: 20, color: AppColors.textSecondary),
-                        border: InputBorder.none,
-                      ),
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                    ),
-                  ),
-                ),
-
-                if (showAddOption)
-                  ListTile(
-                    leading: const Text('➕', style: TextStyle(fontSize: 24)),
-                    title: Text('Agregar "${_searchQuery.trim()}"', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
-                    subtitle: const Text('Producto no encontrado en la lista actual', style: TextStyle(fontSize: 12)),
-                    onTap: () {
-                      final newItem = ShoppingItemModel(
-                        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-                        name: _searchQuery.trim(),
-                        householdId: '',
-                        createdAt: DateTime.now(),
-                        emoji: '🏷️',
-                      );
-                      setState(() {
-                        _currentSelection.add(newItem);
-                        _availableItems.insert(0, newItem);
-                        _searchQuery = '';
-                      });
-                      widget.onItemsSelected(_currentSelection);
-                    },
-                  ),
-
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      final isSelected = _currentSelection.contains(item);
-                      return ListTile(
-                        leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
-                        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                        trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              _currentSelection.remove(item);
-                            } else {
-                              _currentSelection.add(item);
-                            }
-                          });
-                          widget.onItemsSelected(_currentSelection);
-                        },
-                      );
-                    },
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary, 
-                        foregroundColor: Colors.white,
-                        shape: const StadiumBorder(), 
-                        elevation: 0
-                      ),
-                      child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -1137,6 +982,155 @@ class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
         child: _isLoading 
           ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) 
           : Text(_isIncome ? 'Guardar Ingreso' : 'Guardar Gasto', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+      ),
+    );
+  }
+}
+
+class _ShoppingItemsSelector extends StatefulWidget {
+  final List<ShoppingItemModel> items;
+  final Set<ShoppingItemModel> initialSelected;
+  final Function(Set<ShoppingItemModel>) onItemsSelected;
+
+  const _ShoppingItemsSelector({
+    required this.items,
+    required this.initialSelected,
+    required this.onItemsSelected,
+  });
+
+  @override
+  State<_ShoppingItemsSelector> createState() => _ShoppingItemsSelectorState();
+}
+
+class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
+  String _searchQuery = '';
+  final Set<ShoppingItemModel> _currentSelection = {};
+  late List<ShoppingItemModel> _availableItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSelection.addAll(widget.initialSelected);
+    _availableItems = List.from(widget.items);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = _availableItems.where((item) => 
+      item.name.toLowerCase().contains(_searchQuery.toLowerCase())
+    ).toList();
+
+    final showAddOption = _searchQuery.isNotEmpty && 
+      !_availableItems.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase()) &&
+      !_currentSelection.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase());
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.75,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Text('Artículos de la Lista', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                ),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.divider),
+                    ),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar o agregar producto...',
+                        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                        icon: Icon(Icons.search, size: 20, color: AppColors.textSecondary),
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                    ),
+                  ),
+                ),
+
+                if (showAddOption)
+                  ListTile(
+                    leading: const Text('➕', style: TextStyle(fontSize: 24)),
+                    title: Text('Agregar "${_searchQuery.trim()}"', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    subtitle: const Text('Producto no encontrado en la lista actual', style: TextStyle(fontSize: 12)),
+                    onTap: () {
+                      final newItem = ShoppingItemModel(
+                        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                        name: _searchQuery.trim(),
+                        householdId: '',
+                        createdAt: DateTime.now(),
+                        emoji: '🏷️',
+                      );
+                      setState(() {
+                        _currentSelection.add(newItem);
+                        _availableItems.insert(0, newItem);
+                        _searchQuery = '';
+                      });
+                      widget.onItemsSelected(_currentSelection);
+                    },
+                  ),
+
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      final isSelected = _currentSelection.contains(item);
+                      return ListTile(
+                        leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
+                        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _currentSelection.remove(item);
+                            } else {
+                              _currentSelection.add(item);
+                            }
+                          });
+                          widget.onItemsSelected(_currentSelection);
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary, 
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(), 
+                        elevation: 0
+                      ),
+                      child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
