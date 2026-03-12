@@ -8,7 +8,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
   SupabaseDashboardRepository(this._client);
 
   @override
-  Future<List<Map<String, dynamic>>> getRecentActivity(String householdId) async {
+  Future<List<Map<String, dynamic>>> getRecentActivity(String householdId, String userId) async {
     try {
       final today = DateTime.now();
       final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
@@ -16,7 +16,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
       final response = await _client
           .from('household_activities')
           .select('''
-            id, event_type, title, description, metadata, created_at,
+            id, event_type, title, description, metadata, created_at, user_id,
             user:users!household_activities_user_id_fkey(id, full_name, avatar_url)
           ''')
           .eq('household_id', householdId)
@@ -27,6 +27,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
       final activities = (response as List).map((item) {
         final eventType = item['event_type'] as String;
         final user = item['user'] as Map<String, dynamic>?;
+        final creatorId = item['user_id'] as String?;
         final userName = user?['full_name'] ?? 'Alguien';
         final userAvatar = user?['avatar_url'];
         final metadata = Map<String, dynamic>.from(item['metadata'] ?? {});
@@ -54,24 +55,27 @@ class SupabaseDashboardRepository implements DashboardRepository {
         }
 
         return {
-          'id': item['id'], // Important for keys
+          'id': item['id'],
           'type': uiType,
           'data': data,
           'created_at': item['created_at'],
+          'creator_id': creatorId,
         };
       }).where((activity) {
         final data = activity['data'] as Map<String, dynamic>;
         final type = activity['type'] as String;
+        final creatorId = activity['creator_id'] as String?;
         
         if (type == 'expense') {
           final isIncome = data['type'] == 'income' || data['type'] == 'ingreso';
           if (isIncome) return false;
 
-          // If metadata explicitly says it's not shared or it's personal, hide it
-          if (data['is_shared'] == false) return false;
-          if (data['split_type'] == 'personal') return false;
+          // IF personal, ONLY the creator sees it.
+          final isShared = data['is_shared'] != false && data['split_type'] != 'personal';
           
-          // Otherwise, assume it's a shared expense/activity
+          if (!isShared && creatorId != userId) {
+            return false;
+          }
         }
         
         return true;

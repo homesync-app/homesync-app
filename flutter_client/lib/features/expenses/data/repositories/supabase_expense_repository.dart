@@ -41,27 +41,17 @@ class SupabaseExpenseRepository
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
       String householdId) async {
     return executeWithHandling(() async {
-      final response = await _client
-          .from('expenses')
-          .select('''
-            id,
-            title,
-            amount,
-            category,
-            paid_at,
-            created_at,
-            paid_by,
-            split_type,
-            is_shared,
-            type,
-            description,
-            users!expenses_paid_by_fkey(email, full_name, avatar_url),
-            expense_splits(*, users(email, full_name, avatar_url))
-          ''')
-          .eq('household_id', householdId)
-          .order('paid_at', ascending: false)
-          .limit(30);
-
+      final response = await _client.rpc(
+        'get_filtered_expenses',
+        params: {
+          'p_household_id': householdId,
+          'p_type': 'all',
+          'p_sharing': 'all',
+          'p_limit': 30,
+          'p_offset': 0,
+        },
+      );
+      
       return (response as List<dynamic>)
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -231,7 +221,7 @@ class SupabaseExpenseRepository
   }
 
   @override
-  Future<Either<Failure, String>> payPlannedExpense({
+  Future<Either<Failure, Map<String, dynamic>>> payPlannedExpense({
     required String plannedId,
     required double amount,
     required DateTime paidAt,
@@ -247,7 +237,24 @@ class SupabaseExpenseRepository
           'p_paid_by': paidBy,
         },
       );
-      return response as String;
+      
+      final result = Map<String, dynamic>.from(response as Map);
+      if (result['success'] == true) {
+        return result;
+      } else {
+        throw ServerFailure(result['message'] as String? ?? 'Error al pagar gasto planeado');
+      }
     }, context: 'SupabaseExpenseRepository.payPlannedExpense', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+    return executeWithHandling(() async {
+      await _client.rpc(
+        'process_recurring_expenses',
+        params: {'p_household_id': householdId},
+      );
+      return unit;
+    }, context: 'SupabaseExpenseRepository.processRecurringExpenses', isOnline: _isOnline);
   }
 }

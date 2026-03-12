@@ -153,6 +153,11 @@ class MockExpenseRepository implements ExpenseRepository {
   }) async {
     return const Right('expense-id');
   }
+
+  @override
+  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+    return const Right(unit);
+  }
 }
 
 class MockTaskRepository implements TaskRepository {

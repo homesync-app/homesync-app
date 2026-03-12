@@ -539,11 +539,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       categoryEmoji = AppColors.categoryIcons[category] ?? '✅';
     } else if (type == 'expense') {
       final isIncome = data['type'] == 'income' || data['type'] == 'ingreso';
-      accentColor = isIncome ? AppColors.sage : AppColors.primary;
-      actionVerb = isIncome ? 'registró ingreso' : 'cargó gasto';
+      final isGift = data['split_type'] == 'gift';
       final rawCategory = (data['category'] as String?)?.toLowerCase();
+      
       itemLabel = AppColors.categoryNames[rawCategory] ?? data['category'] ?? 'Gasto';
       categoryEmoji = AppColors.categoryIcons[rawCategory] ?? '💰';
+
+      if (isGift) {
+        accentColor = Colors.pinkAccent;
+        actionVerb = 'dio un regalo';
+        itemLabel = 'Regalo';
+        categoryEmoji = '🎁';
+      } else if (data['type'] == 'settlement') {
+        accentColor = AppColors.success;
+        actionVerb = 'saldó la deuda';
+        itemLabel = 'Cuentas claras';
+        categoryEmoji = '🤝';
+      } else if (isIncome) {
+        accentColor = AppColors.sage;
+        actionVerb = 'recibió';
+      } else {
+        accentColor = AppColors.primary;
+        // Natural language logic
+        final cat = rawCategory ?? '';
+        if (cat.contains('supermarket') || cat.contains('mercado') || cat.contains('ropa')) {
+          actionVerb = 'compró en';
+        } else if (cat.contains('comida') || cat.contains('ocio') || cat.contains('entertainment')) {
+          actionVerb = 'disfrutó de';
+        } else if (cat.contains('alquiler') || cat.contains('finanzas') || cat.contains('rent') || cat.contains('factura')) {
+          actionVerb = 'pagó';
+        } else {
+          actionVerb = 'gastó en';
+        }
+      }
+
       final amount = data['amount'];
       if (amount != null) {
         final formatted = NumberFormat.decimalPattern('es_AR').format(
@@ -553,7 +582,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     } else {
       accentColor = AppColors.textSecondary;
-      actionVerb = '';
+      actionVerb = 'registró';
       itemLabel = data['title'] ?? 'Evento';
       categoryEmoji = '📌';
     }
@@ -566,33 +595,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isShoppingList = hasDetail && (description.toLowerCase().contains('lista') || description.contains('\n') || description.contains('- '));
     final isClickable = type == 'expense' || hasDetail;
 
-    return IntrinsicHeight(
+    return Container(
       key: key,
+      margin: const EdgeInsets.only(bottom: 2),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Timeline indicator
-          SizedBox(
+          Container(
             width: 20,
-            child: Column(
+            constraints: const BoxConstraints(minHeight: 60),
+            child: Stack(
+              alignment: Alignment.topCenter,
               children: [
+                if (!isLast)
+                  Positioned(
+                    top: 24,
+                    bottom: 0,
+                    child: Container(
+                      width: 2,
+                      decoration: BoxDecoration(
+                        color: AppColors.divider.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
+                if (!isFirst)
+                  Positioned(
+                    top: 0,
+                    height: 18,
+                    child: Container(
+                      width: 2,
+                      decoration: BoxDecoration(
+                        color: AppColors.divider.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
                 Container(
-                  width: 2,
-                  height: 20,
-                  color: isFirst ? Colors.transparent : AppColors.divider.withValues(alpha: 0.5),
-                ),
-                Container(
-                  width: 8,
-                  height: 8,
+                  margin: const EdgeInsets.only(top: 18),
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
-                    color: accentColor,
+                    color: accentColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isLast ? Colors.transparent : AppColors.divider.withValues(alpha: 0.5),
+                  child: Center(
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -632,72 +688,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Top Row: User + Action + Category + Info Icon
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            // Top Row: User + Action + Category Chip
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
+                              runSpacing: 4,
                               children: [
-                                Expanded(
-                                  child: Wrap(
-                                    crossAxisAlignment: WrapCrossAlignment.center,
-                                    spacing: 4,
-                                    runSpacing: 4,
-                                    children: [
-                                      Text(
-                                        userName,
-                                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary),
-                                      ),
-                                      if (actionVerb.isNotEmpty)
-                                        Text(
-                                          actionVerb,
-                                          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                        ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: accentColor.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          '$categoryEmoji $itemLabel',
-                                          style: TextStyle(color: accentColor, fontWeight: FontWeight.w700, fontSize: 10),
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  userName,
+                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.textPrimary),
+                                ),
+                                if (actionVerb.isNotEmpty)
+                                  Text(
+                                    actionVerb,
+                                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                  ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '$categoryEmoji $itemLabel',
+                                    style: TextStyle(color: accentColor, fontWeight: FontWeight.w800, fontSize: 11),
                                   ),
                                 ),
-                                if (hasDetail)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: Icon(isShoppingList ? Icons.receipt_long_rounded : Icons.info_outline_rounded, size: 16, color: AppColors.textMuted),
-                                  ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            // Bottom Row: Time and Amount/XP
+                            const SizedBox(height: 6),
+                            // Bottom Row: Time, XP, Coins (Left/Center) and Amount (Right)
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.access_time_rounded, size: 12, color: AppColors.textMuted),
+                                Icon(Icons.access_time_rounded, size: 12, color: AppColors.textMuted.withValues(alpha: 0.6)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  timeStr,
+                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w700),
+                                ),
+                                if (type == 'task') ...[
+                                  const SizedBox(width: 12),
+                                  if (data['xp_per_user'] != null || data['xp_reward'] != null) ...[
+                                    const Icon(Icons.star_rounded, size: 14, color: AppColors.accentGold),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '${_formatNumber(data['xp_per_user'] ?? data['xp_reward'])} XP',
+                                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w900, fontSize: 13),
+                                    ),
+                                    const SizedBox(width: 10),
+                                  ],
+                                  if (data['coins_per_user'] != null || data['coin_reward'] != null) ...[
+                                    Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.accentGold,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const Text('\$', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      timeStr,
-                                      style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
+                                      _formatNumber(data['coins_per_user'] ?? data['coin_reward']),
+                                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w900, fontSize: 13),
                                     ),
                                   ],
-                                ),
+                                ],
+                                const Spacer(),
                                 if (amountStr != null)
                                   Text(
                                     amountStr,
-                                    style: TextStyle(color: accentColor, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.3),
-                                  ),
-                                if (xpReward != null && type == 'task')
-                                  Text(
-                                    '+$xpReward XP',
-                                    style: const TextStyle(color: AppColors.sage, fontWeight: FontWeight.w900, fontSize: 11),
+                                    style: TextStyle(
+                                      color: accentColor, 
+                                      fontWeight: FontWeight.w900, 
+                                      fontSize: 16, 
+                                      letterSpacing: -0.5,
+                                    ),
                                   ),
                               ],
                             ),
@@ -1095,5 +1165,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+  }
+  String _formatNumber(dynamic value) {
+    if (value == null) return '0';
+    return NumberFormat('#,###', 'es_AR').format(value).replaceAll(',', '.');
   }
 }

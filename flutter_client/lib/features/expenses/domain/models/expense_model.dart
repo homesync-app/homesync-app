@@ -1,5 +1,37 @@
 import 'package:homesync_client/core/theme/app_colors.dart';
 
+class ExpenseSplitModel {
+  final String userId;
+  final double amount;
+  final String? fullName;
+  final String? avatarUrl;
+
+  const ExpenseSplitModel({
+    required this.userId,
+    required this.amount,
+    this.fullName,
+    this.avatarUrl,
+  });
+
+  factory ExpenseSplitModel.fromJson(Map<String, dynamic> map) {
+    // Supabase join structure for users
+    final userData = map['users'];
+    Map<String, dynamic>? userMap;
+    if (userData is Map<String, dynamic>) {
+      userMap = userData;
+    } else if (userData is List && userData.isNotEmpty) {
+      userMap = userData.first as Map<String, dynamic>?;
+    }
+
+    return ExpenseSplitModel(
+      userId: map['user_id'] as String? ?? '',
+      amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      fullName: userMap?['full_name'] as String?,
+      avatarUrl: userMap?['avatar_url'] as String?,
+    );
+  }
+}
+
 class ExpenseModel {
   final String id;
   final String title;
@@ -11,11 +43,12 @@ class ExpenseModel {
   final DateTime createdAt;
   final String? payerEmail;
   final String? payerFullName;
+  final String? payerAvatarUrl;
   final bool isShared;
   final String? splitType;
   final String? description;
   final String type; // 'expense' or 'income'
-  final List<Map<String, dynamic>>? expenseSplits;
+  final List<ExpenseSplitModel>? splits;
 
   const ExpenseModel({
     required this.id,
@@ -28,15 +61,16 @@ class ExpenseModel {
     required this.createdAt,
     this.payerEmail,
     this.payerFullName,
+    this.payerAvatarUrl,
     this.isShared = true,
     this.type = 'expense',
     this.splitType,
     this.description,
-    this.expenseSplits,
+    this.splits,
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> map) {
-    // Robustly handle joined user data (could be map or list with one element)
+    // Robustly handle joined user data
     Map<String, dynamic>? payerMap;
     final rawPayer = map['users'] ?? map['payer'];
     
@@ -60,12 +94,13 @@ class ExpenseModel {
           DateTime.now(),
       payerEmail: payerMap?['email'] as String?,
       payerFullName: payerMap?['full_name'] as String?,
+      payerAvatarUrl: payerMap?['avatar_url'] as String?,
       isShared: map['is_shared'] as bool? ?? true,
       type: map['type'] as String? ?? 'expense',
       splitType: map['split_type'] as String?,
       description: map['description'] as String?,
-      expenseSplits: (map['expense_splits'] as List<dynamic>?)
-          ?.map((e) => e as Map<String, dynamic>)
+      splits: (map['expense_splits'] as List<dynamic>?)
+          ?.map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -121,6 +156,7 @@ class ExpenseModel {
   @override
   String toString() => 'ExpenseModel(id: $id, title: $title, amount: $amount)';
 }
+
 
 /// Represents a member's financial balance within the household
 class HouseholdBalanceModel {

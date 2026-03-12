@@ -124,6 +124,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         // Only show the banner if the widget is still mounted
         if (mounted) {
           _bannerKey.currentState?.show(title: title, body: body);
+          
+          // Real-time refresh for dashboard data
+          ref.invalidate(userBalanceProvider);
+          ref.invalidate(expenseBalancesProvider);
+          ref.invalidate(recentActivityProvider);
+          ref.invalidate(expenseControllerProvider);
         }
       },
     );
@@ -132,32 +138,49 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   // ── Setup checks ──────────────────────────────────────────────────────────
 
   Future<void> _checkSetup() async {
-    final user = ref.read(authServiceProvider).currentUser;
-    if (user == null) {
-      setState(() {
-        _isLoading = false;
-        _needsSetup = true;
-      });
-      return;
+    try {
+      final user = ref.read(authServiceProvider).currentUser;
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _needsSetup = true;
+          });
+        }
+        return;
+      }
+
+      // Add a timeout to the household check (5 seconds is plenty)
+      final hasHousehold = await Supabase.instance.client
+          .from('household_members')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 5));
+
+      if (hasHousehold == null) {
+        if (mounted) {
+          setState(() {
+            _needsSetup = true;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      await widget.prefs.setBool('setup_completed', true);
+      
+      // ✅ Don't await non-essential checks (weekly winner popup)
+      _checkWeeklyWinner();
+    } catch (e) {
+      debugPrint('Initialization error in MainScreen: $e');
+      // If we failed after 5 seconds, let's just let the app continue 
+      // Individual providers will handle errors gracefully with retry logic
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-
-    final hasHousehold = await Supabase.instance.client
-        .from('household_members')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (hasHousehold == null) {
-      setState(() {
-        _needsSetup = true;
-        _isLoading = false;
-      });
-      return;
-    }
-
-    await widget.prefs.setBool('setup_completed', true);
-    await _checkWeeklyWinner();
-    setState(() => _isLoading = false);
   }
 
   Future<void> _checkWeeklyWinner() async {

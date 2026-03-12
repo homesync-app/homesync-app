@@ -35,8 +35,26 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
   @override
   void initState() {
     super.initState();
-    _amountController.text = (widget.plannedExpense.amount.toInt()).toString();
+    // Formatear el monto inicial con puntos
+    final initialAmount = widget.plannedExpense.amount.toInt();
+    _amountController.text = NumberFormat.decimalPattern('es_ES').format(initialAmount);
     _paidBy = widget.plannedExpense.payerId;
+  }
+
+  void _onAmountChanged(String val) {
+    String clean = val.replaceAll('.', '').replaceAll(',', '');
+    if (clean.isEmpty) {
+      _amountController.text = '';
+      return;
+    }
+    int? parsed = int.tryParse(clean);
+    if (parsed != null) {
+      String formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
+      _amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
   }
 
   Future<void> _confirmPayment() async {
@@ -44,8 +62,8 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
 
     setState(() => _isLoading = true);
     try {
-      final amount = double.parse(_amountController.text.replaceAll('.', ''));
-      await ref.read(combinedFeedControllerProvider.notifier).payPlannedExpense(
+      final amount = double.parse(_amountController.text.replaceAll('.', '').replaceAll(',', ''));
+      final result = await ref.read(combinedFeedControllerProvider.notifier).payPlannedExpense(
             plannedId: widget.plannedExpense.id,
             amount: amount,
             paidAt: _paidAt,
@@ -53,16 +71,114 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
           );
 
       if (mounted) {
+        final templateUpdated = result['template_updated'] == true;
+        
+        // Primero cerramos el bottom sheet
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago confirmado correctamente'), backgroundColor: AppColors.success),
-        );
+        
+        // Usamos el root navigator para mostrar el diálogo DESPUÉS de que el sheet se haya cerrado
+        // para evitar conflictos de contextos y asegurar que el diálogo sea visible.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // Buscamos un contexto válido que siga vivo después de cerrar el sheet (el de la app principal)
+          // Si estamos usando Navigator.rootNavigator, usualmente se puede obtener del ScaffoldMessenger
+          // o simplemente usando el context original si el widget padre sigue montado.
+          _showSuccessDialog(templateUpdated);
+        });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showSuccessDialog(bool templateUpdated) {
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                '¡Pago Registrado!',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Se ha registrado el pago de "${widget.plannedExpense.title}" correctamente.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary, height: 1.4, fontWeight: FontWeight.w500),
+              ),
+              if (templateUpdated) ...[
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'He actualizado el monto de tu suscripción para los próximos meses.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary.withValues(alpha: 0.9),
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Cerrar diálogo únicamente
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.textPrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: const Text('ENTENDIDO', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -83,30 +199,32 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
             _paidBy = members.first.userId;
           }
 
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)))),
-              const SizedBox(height: 16),
-              const Text(
-                'Confirmar Pago',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Vas a marcar "${widget.plannedExpense.title}" como pagado.',
-                style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 24),
-              _buildAmountField(),
-              const SizedBox(height: 20),
-              _buildDatePicker(context),
-              const SizedBox(height: 20),
-              _buildPayerSelector(members),
-              const SizedBox(height: 32),
-              _buildConfirmButton(),
-            ],
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2)))),
+                const SizedBox(height: 16),
+                const Text(
+                  'Confirmar Pago',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Vas a marcar "${widget.plannedExpense.title}" como pagado.',
+                  style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 24),
+                _buildAmountField(),
+                const SizedBox(height: 20),
+                _buildDatePicker(context),
+                const SizedBox(height: 20),
+                _buildPayerSelector(members),
+                const SizedBox(height: 32),
+                _buildConfirmButton(),
+              ],
+            ),
           );
         },
       ),
@@ -120,9 +238,10 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
         const Text('MONTO EFECTIVO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textMuted, letterSpacing: 1)),
         const SizedBox(height: 8),
         TextField(
+          autofocus: true,
           controller: _amountController,
+          onChanged: _onAmountChanged,
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
           decoration: InputDecoration(
             prefixText: '\$ ',
@@ -182,34 +301,33 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
       children: [
         const Text('¿QUIÉN PAGÓ?', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textMuted, letterSpacing: 1)),
         const SizedBox(height: 8),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: members.map((m) {
             final isSelected = _paidBy == m.userId;
-            return Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: GestureDetector(
-                onTap: () => setState(() => _paidBy = m.userId),
-                child: Column(
-                  children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (isSelected)
-                          Container(width: 56, height: 56, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary)),
-                        CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 24),
-                      ],
+            return GestureDetector(
+              onTap: () => setState(() => _paidBy = m.userId),
+              child: Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (isSelected)
+                        Container(width: 56, height: 56, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.primary)),
+                      CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 24),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    m.displayName.split(' ')[0],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      m.displayName.split(' ')[0],
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }).toList(),
@@ -225,7 +343,7 @@ class _PlannedExpensePaymentSheetState extends ConsumerState<PlannedExpensePayme
       child: ElevatedButton(
         onPressed: _isLoading ? null : _confirmPayment,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.textPrimary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,

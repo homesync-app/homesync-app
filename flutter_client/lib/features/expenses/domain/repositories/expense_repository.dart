@@ -51,10 +51,12 @@ abstract class ExpenseRepository {
   Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template);
   Future<Either<Failure, Unit>> toggleTemplateActivity(String id, bool active);
 
-  Future<Either<Failure, String>> payPlannedExpense({
+  Future<Either<Failure, Map<String, dynamic>>> payPlannedExpense({
     required String plannedId,
     required double amount,
     required DateTime paidAt,
     required String paidBy,
   });
+
+  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId);
 }

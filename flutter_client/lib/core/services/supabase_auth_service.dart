@@ -22,12 +22,13 @@ class SupabaseAuthService {
     // Inicializar GoogleSignIn con el Web Client ID (serverClientId)
     // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
     try {
+      // Add a timeout to GoogleSignIn initialization as it can hang on some devices
       await GoogleSignIn.instance.initialize(
         clientId: kIsWeb ? '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com' : null,
         serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
-      );
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('Error inicializando GoogleSignIn: $e');
+      debugPrint('Error o timeout inicializando GoogleSignIn: $e');
     }
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
@@ -117,6 +118,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: FloatingActionButton.extended(
+            heroTag: 'expenses_fab',
             onPressed: onPressed,
             backgroundColor: AppColors.primary,
             elevation: 8,
@@ -199,25 +201,34 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             error: (e, _) => SliverFillRemaining(
                 hasScrollBody: false, child: Center(child: Text('Error: $e'))),
             data: (feedItems) {
-              final pastItems = feedItems
-                  .where((i) => i.isRealExpense || i.status == 'paid')
-                  .toList()
+              final sortedItems = List<FeedItemModel>.from(feedItems)
                 ..sort((a, b) => b.date.compareTo(a.date));
-              final futureItems = feedItems
-                  .where((i) => !i.isRealExpense && i.status == 'pending')
-                  .toList()
-                ..sort((a, b) => a.date.compareTo(b.date));
 
               return SliverMainAxisGroup(
                 slivers: [
-                  if (pastItems.isNotEmpty)
+                  if (sortedItems.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 40, 24, 12),
+                        child: Text(
+                          'MOVIMIENTOS',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            color: AppColors.textSecondary.withValues(alpha: 0.7),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (sortedItems.isNotEmpty)
                     SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final item = pastItems[index];
+                          final item = sortedItems[index];
                           final isFirstOfDate = index == 0 ||
                               _formatFeedDate(item.date) !=
-                                  _formatFeedDate(pastItems[index - 1].date);
+                                  _formatFeedDate(sortedItems[index - 1].date);
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +236,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               if (isFirstOfDate)
                                 Padding(
                                   padding:
-                                      const EdgeInsets.fromLTRB(24, 32, 24, 12),
+                                      const EdgeInsets.fromLTRB(24, 24, 24, 12),
                                   child: Text(
                                     _formatFeedDate(item.date),
                                     style: const TextStyle(
@@ -245,51 +256,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             ],
                           );
                         },
-                        childCount: pastItems.length,
+                        childCount: sortedItems.length,
                       ),
                     ),
-                  if (pastItems.isEmpty)
+                  if (sortedItems.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 40),
                         child: _buildEmptyState('No hay movimientos recientes'),
-                      ),
-                    ),
-                  if (futureItems.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 40, 24, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Divider(color: AppColors.divider, height: 1),
-                            const SizedBox(height: 32),
-                            const Text(
-                              'PRÓXIMOS GASTOS',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13,
-                                color: AppColors.primary,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (futureItems.isNotEmpty)
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = futureItems[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 6),
-                            child: _buildFeedItemCard(item)
-                                .animateStaggered(index),
-                          );
-                        },
-                        childCount: futureItems.length,
                       ),
                     ),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -317,28 +291,32 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     }
   }
 
-  Widget _buildProjectionStat(String label, double amount, Color color,
-      {bool isBold = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-              color: AppColors.textMuted,
-              fontSize: 11,
-              fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '\$ ${_formatCurrency(amount)}',
-          style: TextStyle(
-            color: color,
-            fontSize: 16,
-            fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+  Widget _buildProjectionStat(String label, num amount, Color color,
+      {bool isBold = false, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600),
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            '\$ ${_formatCurrency(amount)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -522,7 +500,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildUnifiedSummaryCard(
-      double balance, double income, double expense, double projectedPending) {
+      num balance, num income, num expense, num projectedPending) {
     final projectedBalance = balance - projectedPending;
 
     return Container(
@@ -530,43 +508,55 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Upper section (Balance, Income, Expense)
+          // Premium Header & Balance Section
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Resumen mensual',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.0,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.auto_graph_rounded, color: AppColors.primary, size: 20),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
                 const Text(
-                  'Resumen del mes',
+                  'BALANCE ACTUAL',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
+                    color: AppColors.textMuted,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
+                    letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Balance actual',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
@@ -574,75 +564,69 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     '\$ ${_formatCurrency(balance)}',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 34,
+                      fontSize: 48,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -1.0,
+                      letterSpacing: -2.0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                        color: AppColors.divider.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildMiniStats(
-                          'Ingresos',
-                          income,
-                          Icons.arrow_upward_rounded,
-                          AppColors.success,
-                        ),
+                
+                const SizedBox(height: 40),
+                
+                // Income & Expenses Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPremiumStatTile(
+                        'Ingresos', 
+                        income, 
+                        AppColors.success, 
+                        Icons.trending_up_rounded,
+                        onTap: () => _showIncomeBreakdownSheet(income),
                       ),
-                      Container(width: 1, height: 24, color: AppColors.divider),
-                      Expanded(
-                        child: _buildMiniStats(
-                          'Gastos',
-                          expense,
-                          Icons.arrow_downward_rounded,
-                          AppColors
-                              .primary, // Changed from error red to primary for a kinder feel
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                        ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildPremiumStatTile(
+                        'Gastos', 
+                        expense, 
+                        AppColors.primary, 
+                        Icons.trending_down_rounded,
+                        onTap: () => _showExpensesBreakdownSheet(expense),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
 
-          // Lower section (Projection)
-          const Divider(height: 1, color: AppColors.divider),
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Projection Footer (Clean Integration)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: BoxDecoration(
+              color: AppColors.background.withValues(alpha: 0.6),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+              border: Border(top: BorderSide(color: AppColors.divider.withValues(alpha: 0.5))),
+            ),
+            child: Row(
               children: [
-                const Text(
-                  'Proyección del mes',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+                Expanded(
+                  child: _buildProjectionStat('Gastos pendientes', projectedPending, AppColors.textSecondary,
+                    onTap: () => _showPendingBreakdownSheet(projectedPending),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildProjectionStat('Gastos pendientes', projectedPending,
-                        AppColors.textSecondary),
-                    _buildProjectionStat('Balance estimado', projectedBalance,
-                        AppColors.textPrimary,
-                        isBold: true),
-                  ],
+                Container(
+                  height: 32,
+                  width: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  color: AppColors.divider,
+                ),
+                Expanded(
+                  child: _buildProjectionStat('Balance estimado', projectedBalance, AppColors.textPrimary, 
+                    isBold: true,
+                    onTap: () => _showProjectionBreakdownSheet(balance, projectedPending, projectedBalance),
+                  ),
                 ),
               ],
             ),
@@ -652,8 +636,469 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     ).animateEntrance(delay: 100);
   }
 
+  void _showProjectionBreakdownSheet(num balance, num pendingTotal, num estimated) {
+    final feedAsync = ref.read(combinedFeedControllerProvider).valueOrNull ?? [];
+    final userId = ref.read(currentUserIdProvider);
+    final now = DateTime.now();
+    
+    final pendingItems = feedAsync.where((item) => 
+      item.isPlanned && 
+      item.status == 'pending' && 
+      item.payerId == userId &&
+      item.date.month == now.month && 
+      item.date.year == now.year
+    ).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.divider,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Cálculo de Proyección',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Así llegamos a tu balance estimado para fin de mes.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Equation Section
+                  _buildBreakdownRow('Balance actual', balance, AppColors.textPrimary),
+                  const SizedBox(height: 16),
+                  _buildBreakdownRow('Gastos pendientes', -pendingTotal, AppColors.primary),
+                  const Divider(height: 40, thickness: 1, color: AppColors.divider),
+                  _buildBreakdownRow('Balance estimado', estimated, AppColors.accentTeal, isFinal: true),
+                  
+                  if (pendingItems.isNotEmpty) ...[
+                    const SizedBox(height: 48),
+                    const Text(
+                      'DETALLE DE PENDIENTES',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...pendingItems.map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(item.categoryIcon, style: const TextStyle(fontSize: 16)),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              item.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '\$ ${_formatCurrency(item.amount)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                  ],
+                  
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.textPrimary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Entendido', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBreakdownRow(String label, num amount, Color color, {bool isFinal = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: isFinal ? AppColors.textPrimary : AppColors.textSecondary,
+            fontSize: isFinal ? 18 : 16,
+            fontWeight: isFinal ? FontWeight.w900 : FontWeight.w600,
+          ),
+        ),
+        Text(
+          '${amount > 0 ? "+" : ""}\$ ${_formatCurrency(amount.abs())}',
+          style: TextStyle(
+            color: amount < 0 ? AppColors.primary : (isFinal ? AppColors.accentTeal : color),
+            fontSize: isFinal ? 22 : 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPremiumStatTile(String label, num amount, Color color, IconData icon, {VoidCallback? onTap}) {
+    return AnimatedPress(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 14, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  label.toUpperCase(),
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '\$ ${_formatCurrency(amount)}',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIncomeBreakdownSheet(num total) {
+    final expenses = ref.read(expenseControllerProvider).valueOrNull ?? [];
+    final userId = ref.read(currentUserIdProvider);
+    final now = DateTime.now();
+
+    final items = expenses.where((e) {
+      if (e.paidAt.month != now.month || e.paidAt.year != now.year) return false;
+      if (e.isIncome && e.paidBy == userId) return true;
+      if (e.isSettlement && e.paidBy != userId) return true; // Partner paid me
+      return false;
+    }).toList();
+
+    _showGenericBreakdownSheet('Detalle de Ingresos', 'Tus ingresos registrados este mes.', total, items, AppColors.success);
+  }
+
+  void _showExpensesBreakdownSheet(num total) {
+    final expenses = ref.read(expenseControllerProvider).valueOrNull ?? [];
+    final userId = ref.read(currentUserIdProvider);
+    final now = DateTime.now();
+
+    final items = expenses.where((e) {
+      if (e.paidAt.month != now.month || e.paidAt.year != now.year) return false;
+      if (e.type == 'expense' && e.paidBy == userId) return true;
+      if (e.isSettlement && e.paidBy == userId) return true; // I paid partner
+      return false;
+    }).toList();
+
+    _showGenericBreakdownSheet('Detalle de Gastos', 'Tus gastos pagados este mes.', total, items, AppColors.primary);
+  }
+
+  void _showPendingBreakdownSheet(num total) {
+    final feedAsync = ref.read(combinedFeedControllerProvider).valueOrNull ?? [];
+    final userId = ref.read(currentUserIdProvider);
+    final now = DateTime.now();
+
+    final items = feedAsync.where((item) =>
+      item.isPlanned &&
+      item.status == 'pending' &&
+      item.payerId == userId &&
+      item.date.month == now.month &&
+      item.date.year == now.year
+    ).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildBreakdownBaseContainer(
+        title: 'Gastos Pendientes',
+        subtitle: 'Lo que tenés programado pagar antes de fin de mes.',
+        total: total,
+        totalLabel: 'Total pendiente',
+        accentColor: AppColors.textSecondary,
+        content: Column(
+          children: items.map((item) => _buildMovementDetailRow(
+            title: item.title,
+            amount: item.amount,
+            date: item.date,
+            icon: item.categoryIcon,
+            color: AppColors.primary,
+          )).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showGenericBreakdownSheet(String title, String subtitle, num total, List<ExpenseModel> items, Color accentColor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildBreakdownBaseContainer(
+        title: title,
+        subtitle: subtitle,
+        total: total,
+        totalLabel: 'Total del mes',
+        accentColor: accentColor,
+        content: Column(
+          children: items.isEmpty 
+            ? [const Padding(padding: EdgeInsets.symmetric(vertical: 32), child: Text('No hay movimientos registrados', style: TextStyle(color: AppColors.textMuted)))]
+            : items.map((e) => _buildMovementDetailRow(
+                title: e.title,
+                amount: e.amount,
+                date: e.paidAt,
+                icon: e.categoryIcon.isNotEmpty ? e.categoryIcon : (e.isIncome ? '📈' : '📦'),
+                color: accentColor,
+              )).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBreakdownBaseContainer({
+    required String title,
+    required String subtitle,
+    required num total,
+    required String totalLabel,
+    required Color accentColor,
+    required Widget content,
+  }) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.divider,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: accentColor.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        totalLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '\$ ${_formatCurrency(total)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 24,
+                          color: accentColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                const Text(
+                  'MOVIMIENTOS',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                content,
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.textPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Entendido', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMovementDetailRow({
+    required String title,
+    required num amount,
+    required DateTime date,
+    required String icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+            child: Text(icon, style: const TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.textPrimary)),
+                Text(DateFormat('d MMM', 'es').format(date), style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          Text('\$ ${_formatCurrency(amount)}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.textPrimary)),
+        ],
+      ),
+    );
+  }
+
+
+
   Widget _buildMiniStats(
-      String label, double amount, IconData icon, Color color,
+      String label, num amount, IconData icon, Color color,
       {CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start}) {
     return Column(
       crossAxisAlignment: crossAxisAlignment,
@@ -771,7 +1216,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text(
-                        'PRÓXIMO',
+                        '🔁 PRÓXIMO',
                         style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w900,
@@ -972,9 +1417,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  _buildTypeBadge(isShared ? 'Compartido' : 'Personal',
-                      isShared ? AppColors.sage : AppColors.textMuted,
-                      isSmall: true),
+                  _buildTypeBadge(
+                    expense.splitType == 'gift' 
+                        ? 'Regalo' 
+                        : (isShared ? 'Compartido' : 'Personal'),
+                    expense.splitType == 'gift' 
+                        ? Colors.pinkAccent 
+                        : (isShared ? AppColors.sage : AppColors.textMuted),
+                    isSmall: true,
+                  ),
                 ],
               ),
             ],
@@ -1189,8 +1640,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   // --- Helpers ---
 
-  String _formatCurrency(double amount) {
-    return NumberFormat.decimalPattern('es_AR').format(amount.round());
+  String _formatCurrency(num amount) {
+    return NumberFormat('#,###', 'es_AR').format(amount).replaceAll(',', '.');
   }
 
   Widget _buildEmptyState(String message) {
@@ -1213,11 +1664,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showExpenseSheet({ExpenseModel? expense}) {
-    ExpenseFormSheet.show(context, expense: expense);
+    ExpenseFormSheet.show(context, expense: expense, defaultOnlyMe: true);
   }
 
-  void _showExpenseDetailSheet(ExpenseModel expense) {
-    ExpenseDetailSheet.show(context, expense);
+  void _showExpenseDetailSheet(ExpenseModel expense) async {
+    // If expense splits are missing (common for feed items), fetch the full expense
+    if (expense.splits == null || expense.splits!.isEmpty) {
+      ref.read(expenseRepositoryProvider).getExpenseWithSplits(expense.id).then((result) {
+        result.fold(
+          (failure) => ExpenseDetailSheet.show(context, expense), // Show partial as fallback
+          (fullData) => ExpenseDetailSheet.show(context, ExpenseModel.fromJson(fullData)),
+        );
+      });
+    } else {
+      ExpenseDetailSheet.show(context, expense);
+    }
   }
 
   void _showTemplateForm(BuildContext context,

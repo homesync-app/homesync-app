@@ -149,18 +149,20 @@ class ExpenseController extends _$ExpenseController {
       splits: splits,
     );
     
-    ref.invalidateSelf();
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(personalFinanceSummaryProvider);
+    ref.invalidate(combinedFeedControllerProvider);
+    ref.invalidate(recentActivityProvider);
   }
 
   Future<void> deleteExpense(String id) async {
     final repo = ref.read(expenseRepositoryProvider);
     await repo.deleteExpense(id);
     
-    ref.invalidateSelf();
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(personalFinanceSummaryProvider);
+    ref.invalidate(combinedFeedControllerProvider);
+    ref.invalidate(recentActivityProvider);
   }
 
   Future<void> settleDebt({
@@ -179,10 +181,10 @@ class ExpenseController extends _$ExpenseController {
       amount: amount,
     );
     
-    ref.invalidateSelf();
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(personalFinanceSummaryProvider);
     ref.invalidate(combinedFeedControllerProvider);
+    // Note: Do not invalidateSelf() here to avoid CircularDependencyError if this is called from within the same family or branch of providers
   }
 }
 
@@ -193,6 +195,13 @@ class CombinedFeedController extends _$CombinedFeedController {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
+    final repo = ref.watch(expenseRepositoryProvider);
+    try {
+      await repo.processRecurringExpenses(householdId);
+    } catch (e) {
+      // Ignore background processing errors to not block the feed
+    }
+
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
@@ -201,7 +210,7 @@ class CombinedFeedController extends _$CombinedFeedController {
     );
   }
 
-  Future<void> payPlannedExpense({
+  Future<Map<String, dynamic>> payPlannedExpense({
     required String plannedId,
     required double amount,
     required DateTime paidAt,
@@ -215,7 +224,7 @@ class CombinedFeedController extends _$CombinedFeedController {
       paidBy: paidBy,
     );
 
-    result.fold(
+    return result.fold(
       (l) => throw Exception(l.message),
       (r) {
         ref.invalidateSelf();
@@ -223,6 +232,7 @@ class CombinedFeedController extends _$CombinedFeedController {
         ref.invalidate(monthlyProjectionProvider);
         ref.invalidate(personalFinanceSummaryProvider);
         ref.invalidate(recentActivityProvider);
+        return r;
       },
     );
   }

@@ -27,8 +27,9 @@ GetRecentActivityUseCase getRecentActivityUseCase(
 @riverpod
 Future<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
-  if (householdId == null) return [];
+  final userId = ref.watch(currentUserIdProvider);
+  if (householdId == null || userId == null) return [];
 
   final useCase = ref.watch(getRecentActivityUseCaseProvider);
-  return useCase.execute(householdId);
+  return useCase.execute(householdId, userId);
 }

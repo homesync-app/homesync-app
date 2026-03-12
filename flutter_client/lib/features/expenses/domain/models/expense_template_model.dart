@@ -11,6 +11,7 @@ class ExpenseTemplateModel {
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final DateTime? nextExecutionDate;
 
   const ExpenseTemplateModel({
     required this.id,
@@ -25,6 +26,7 @@ class ExpenseTemplateModel {
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
+    this.nextExecutionDate,
   });
 
   factory ExpenseTemplateModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class ExpenseTemplateModel {
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      nextExecutionDate: json['next_execution_date'] != null ? DateTime.parse(json['next_execution_date'] as String) : null,
     );
   }
 
@@ -56,6 +59,7 @@ class ExpenseTemplateModel {
       'split_type': splitType,
       'payer_default': payerDefault,
       'is_active': isActive,
+      if (nextExecutionDate != null) 'next_execution_date': nextExecutionDate!.toIso8601String(),
     };
   }
 
@@ -72,6 +76,7 @@ class ExpenseTemplateModel {
     bool? isActive,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? nextExecutionDate,
   }) {
     return ExpenseTemplateModel(
       id: id ?? this.id,
@@ -86,6 +91,7 @@ class ExpenseTemplateModel {
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      nextExecutionDate: nextExecutionDate ?? this.nextExecutionDate,
     );
   }
 }

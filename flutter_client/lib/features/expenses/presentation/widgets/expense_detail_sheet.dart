@@ -9,6 +9,10 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_f
 
 class ExpenseDetailSheet {
   static void show(BuildContext context, ExpenseModel expense) {
+    bool isShoppingList = expense.title.toLowerCase().contains('compra') || 
+                         (expense.description?.toLowerCase().contains('lista') ?? false) ||
+                         expense.category == 'shopping';
+
     final String displayTitle = expense.title.startsWith('Compras:') 
         ? expense.categoryLabel 
         : expense.title;
@@ -16,14 +20,15 @@ class ExpenseDetailSheet {
     final bool hasSimpleDescription = expense.description != null && 
                                       expense.description!.isNotEmpty && 
                                       !expense.description!.contains('\n') && 
-                                      !expense.description!.contains('- ');
+                                      !expense.description!.contains('- ') &&
+                                      !isShoppingList;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.70, // Reducido para que ocupe mucho menos espacio base
+        height: MediaQuery.of(context).size.height * 0.75,
         decoration: const BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -74,7 +79,7 @@ class ExpenseDetailSheet {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Resumen Principal (Mucho más compacto)
+                    // Resumen Principal
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -114,7 +119,7 @@ class ExpenseDetailSheet {
                             style: TextStyle(
                               fontSize: 32, 
                               fontWeight: FontWeight.w900, 
-                              color: expense.isIncome ? AppColors.success : const Color(0xFF1E3A8A), // Navy blue
+                              color: expense.isIncome ? AppColors.success : const Color(0xFF1E3A8A),
                               letterSpacing: -1.0,
                             ),
                           ).animateScaleIn(delay: 300),
@@ -130,9 +135,9 @@ class ExpenseDetailSheet {
                                   (expense.splitType == 'fixed' ? 'División Personalizada' : 'Gasto Personal'),
                                   AppColors.getCategoryColor(expense.category),
                                   isSmall: true
-                               ),
-                               if (expense.payerDisplayName != null)
-                                  _buildTypeBadge('Pagó ${expense.payerDisplayName!.split(' ').first}', AppColors.accentBlue, isSmall: true),
+                                ),
+                               if (expense.payerDisplayName != 'Alguien')
+                                  _buildTypeBadge('Pagó ${expense.payerDisplayName}', AppColors.accentBlue, isSmall: true),
                              ],
                            ).animateEntrance(delay: 350),
                         ],
@@ -155,20 +160,28 @@ class ExpenseDetailSheet {
                       const SizedBox(height: 24),
                     ],
 
-                    if (expense.description != null && (expense.description!.contains('\n') || expense.title.startsWith('Compras:'))) ...[
+                    if (isShoppingList && expense.description != null) ...[
                       const Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('Detalle del Gasto', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        child: Text('Ítems Comprados', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildReceiptView(expense.description!),
+                      const SizedBox(height: 24),
+                    ] else if (expense.description != null && expense.description!.contains('\n')) ...[
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Detalle', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                       ),
                       const SizedBox(height: 8),
                       _buildReceiptView(expense.description!),
                       const SizedBox(height: 24),
                     ],
 
-                    if (expense.expenseSplits != null && expense.expenseSplits!.isNotEmpty && expense.splitType != 'personal') ...[
+                    if (expense.splits != null && expense.splits!.isNotEmpty && expense.splitType != 'personal') ...[
                       const Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('División del Gasto', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        child: Text('División', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                       ),
                       const SizedBox(height: 12),
                       Container(
@@ -178,21 +191,24 @@ class ExpenseDetailSheet {
                           border: Border.all(color: AppColors.divider),
                         ),
                         child: Column(
-                          children: expense.expenseSplits!.map((split) {
-                            final isPayer = split['user_id'] == expense.paidBy;
+                          children: expense.splits!.map((split) {
+                            final isPayer = split.userId == expense.paidBy;
                             return ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                               leading: CustomUserAvatar(
-                                avatarUrl: split['users']?['avatar_url'],
-                                name: split['users']?['full_name'] ?? 'Usuario',
+                                avatarUrl: split.avatarUrl,
+                                name: split.fullName ?? 'Usuario',
                                 radius: 20,
                               ),
-                              title: Text((split['users']?['full_name'] ?? 'Usuario').toString().split(' ').first, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                              title: Text(
+                                (split.fullName ?? 'Usuario').split(' ').first, 
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)
+                              ),
                               subtitle: isPayer 
                                 ? Text('Pagó', style: TextStyle(color: AppColors.getCategoryColor(expense.category), fontSize: 12, fontWeight: FontWeight.w600))
-                                : null,
+                                : Text('Su parte', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                               trailing: Text(
-                                '\$ ${_formatCurrency(split['amount'])}',
+                                '\$ ${_formatCurrency(split.amount)}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900, 
                                   fontSize: 16, 
@@ -204,7 +220,7 @@ class ExpenseDetailSheet {
                         ),
                       ).animateEntrance(delay: 400),
                     ],
-                    const SizedBox(height: 48), // Padding bottom
+                    const SizedBox(height: 48),
                   ],
                 ),
               ),
@@ -215,8 +231,8 @@ class ExpenseDetailSheet {
     );
   }
 
-  static String _formatCurrency(double amount) {
-    return NumberFormat.decimalPattern('es_AR').format(amount.round());
+  static String _formatCurrency(num amount) {
+    return NumberFormat.decimalPattern('es_AR').format(amount);
   }
 
   static Widget _buildTypeBadge(String label, Color color, {bool isSmall = false}) {
@@ -238,16 +254,25 @@ class ExpenseDetailSheet {
   }
 
   static Widget _buildReceiptView(String text) {
-    final items = text.split(RegExp(r'\n'))
+    final lines = text.split(RegExp(r'\n'));
+    final items = lines
                 .map((e) => e.trim().replaceAll(RegExp(r'^[\-\*•]\s*'), ''))
-                .where((e) => e.isNotEmpty && !e.toLowerCase().contains('lista'))
+                .where((e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'))
                 .toList();
                 
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) {
+        // Fallback for non-newline but comma separated or single item
+        if (text.isNotEmpty && !text.toLowerCase().contains('lista')) {
+            items.add(text);
+        } else {
+            return const SizedBox.shrink();
+        }
+    }
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC), // Slight blueish tint like receipt paper
+        color: const Color(0xFFF8FAFC), 
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
         boxShadow: [
@@ -269,7 +294,12 @@ class ExpenseDetailSheet {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 18, height: 1.0)),
+                   Container(
+                     margin: const EdgeInsets.only(top: 4),
+                     width: 6,
+                     height: 6,
+                     decoration: const BoxDecoration(color: AppColors.divider, shape: BoxShape.circle),
+                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -287,8 +317,8 @@ class ExpenseDetailSheet {
               if (!isLast) ...[
                 const SizedBox(height: 8),
                 Divider(color: AppColors.divider.withValues(alpha: 0.5), height: 1),
-                const SizedBox(height: 8),
-              ]
+                const SizedBox(height: 12),
+              ],
             ],
           );
         }).toList(),

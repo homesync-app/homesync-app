@@ -17,21 +17,23 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
+  final bool defaultOnlyMe;
 
   const ExpenseFormSheet({
     super.key,
     this.expense,
+    this.defaultOnlyMe = false,
   });
 
   @override
   ConsumerState<ExpenseFormSheet> createState() => _ExpenseFormSheetState();
 
-  static Future<void> show(BuildContext context, {ExpenseModel? expense}) {
+  static Future<void> show(BuildContext context, {ExpenseModel? expense, bool defaultOnlyMe = false}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ExpenseFormSheet(expense: expense),
+      builder: (context) => ExpenseFormSheet(expense: expense, defaultOnlyMe: defaultOnlyMe),
     );
   }
 }
@@ -90,6 +92,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (widget.expense != null) {
       _isIncome = widget.expense!.type == 'income';
       _loadExpenseData(widget.expense!);
+    } else if (widget.defaultOnlyMe) {
+      _splitMode = SplitType.personal;
     }
   }
 
@@ -105,6 +109,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   void _matchAndSetCategory(String t) {
+    setState(() => _internalMatchCategory(t));
+  }
+
+  void _internalMatchCategory(String t) {
     t = t.toLowerCase();
     String? matchedId;
     if (t.contains('supermercado') || t.contains('coto') || t.contains('carrefour') || t.contains('despensa') || t.contains('comida') || t.contains('alimento')) {
@@ -139,17 +147,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final isIncomeMatch = _incomeCategories.any((c) => c['id'] == matchedId);
       final isExpenseMatch = _expenseCategories.any((c) => c['id'] == matchedId);
       
-      setState(() {
-        if (isIncomeMatch && !_isIncome) {
-          _isIncome = true;
-          _selectedCategory = _incomeCategories.firstWhere((c) => c['id'] == matchedId);
-        } else if (isExpenseMatch && _isIncome) {
-          _isIncome = false;
-          _selectedCategory = _expenseCategories.firstWhere((c) => c['id'] == matchedId);
-        } else if (_selectedCategory?['id'] != matchedId) {
-          _selectedCategory = _currentCategories.firstWhere((c) => c['id'] == matchedId, orElse: () => _currentCategories.first);
-        }
-      });
+      if (isIncomeMatch && !_isIncome) {
+        _isIncome = true;
+        _selectedCategory = _incomeCategories.firstWhere((c) => c['id'] == matchedId);
+      } else if (isExpenseMatch && _isIncome) {
+        _isIncome = false;
+        _selectedCategory = _expenseCategories.firstWhere((c) => c['id'] == matchedId);
+      } else if (_selectedCategory?['id'] != matchedId) {
+        _selectedCategory = _currentCategories.firstWhere((c) => c['id'] == matchedId, orElse: () => _currentCategories.first);
+      }
     }
   }
 
@@ -173,13 +179,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     }
     
-    if (exp.expenseSplits != null) {
-      final splits = exp.expenseSplits!;
+    if (exp.splits != null) {
+      final splits = exp.splits!;
       if (_splitMode == SplitType.equal) {
-        _selectedMembersForSplit = splits.map((s) => s['user_id'] as String).toSet();
+        _selectedMembersForSplit = splits.map((s) => s.userId).toSet();
       } else if (_splitMode == SplitType.fixed) {
         for (final s in splits) {
-          _fixedSplitAmounts[s['user_id']] = (s['amount'] as num).toDouble();
+          _fixedSplitAmounts[s.userId] = s.amount;
         }
       }
     }
@@ -289,6 +295,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       
       // Invalidate providers to forcefully refresh UI
       ref.invalidate(expenseControllerProvider);
+      ref.invalidate(combinedFeedControllerProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(recentActivityProvider);
 
@@ -464,42 +471,75 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildTypeToggle() {
     return Container(
-      padding: const EdgeInsets.all(6),
+      width: double.infinity,
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.divider),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: _buildTypeOption(
-              label: 'Gasto',
-              isSelected: !_isIncome,
-              onTap: () {
-                if (_isIncome) {
-                  setState(() {
-                    _isIncome = false;
-                    _selectedCategory = _expenseCategories.first;
-                  });
-                }
-              },
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.elasticOut,
+            alignment: _isIncome ? Alignment.centerRight : Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: _isIncome ? AppColors.success : AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_isIncome ? AppColors.success : AppColors.primary).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          Expanded(
-            child: _buildTypeOption(
-              label: 'Ingreso',
-              isSelected: _isIncome,
-              onTap: () {
-                if (!_isIncome) {
-                  setState(() {
-                    _isIncome = true;
-                    _selectedCategory = _incomeCategories.first;
-                  });
-                }
-              },
-              activeColor: AppColors.success,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTypeOption(
+                  label: 'Gasto',
+                  isSelected: !_isIncome,
+                  onTap: () {
+                    if (_isIncome) {
+                      setState(() {
+                        _isIncome = false;
+                        _selectedCategory = _expenseCategories.first;
+                      });
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                child: _buildTypeOption(
+                  label: 'Ingreso',
+                  isSelected: _isIncome,
+                  onTap: () {
+                    if (!_isIncome) {
+                      setState(() {
+                        _isIncome = true;
+                        _selectedCategory = _incomeCategories.first;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -510,25 +550,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
-    Color activeColor = AppColors.primary,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 52,
         child: Center(
-          child: Text(
-            label,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
             style: TextStyle(
               color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 15,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+              fontSize: 16,
+              letterSpacing: isSelected ? -0.2 : 0,
             ),
+            child: Text(label),
           ),
         ),
       ),
@@ -573,11 +610,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       child: TextField(
         controller: _titleController,
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
-        decoration: const InputDecoration(
-          hintText: '¿Qué compraste? (Opcional)',
-          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: _isIncome ? '¿De qué es el ingreso? (Opcional)' : '¿Qué compraste? (Opcional)',
+          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 16),
           border: InputBorder.none,
-          icon: Icon(Icons.shopping_bag_outlined, color: AppColors.textSecondary),
+          icon: Icon(_isIncome ? Icons.account_balance_wallet_outlined : Icons.shopping_bag_outlined, color: AppColors.textSecondary),
         ),
       ),
     );
@@ -747,10 +784,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
 
   Widget _buildShoppingIntegration(BuildContext context, AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
+    if (_isIncome) return const SizedBox.shrink();
+    
     return shoppingItemsAsync.when(
       data: (allItems) {
         final items = allItems.where((i) => !i.completed).toList();
-        if (items.isEmpty) return const SizedBox.shrink();
+        // Even if empty, we might want to show it if we have selected items from a previous list
+        if (items.isEmpty && _selectedShoppingItems.isEmpty) return const SizedBox.shrink();
         return GestureDetector(
           onTap: () => _showShoppingItemsSelector(context, items),
           child: Container(
@@ -795,67 +835,170 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      builder: (context) {
-        return StatefulBuilder(builder: (context, setModalState) {
-          return SafeArea(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.7,
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('Artículos de la Lista', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        final isSelected = _selectedShoppingItems.contains(item);
-                        return ListTile(
-                          leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
-                          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                          trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
-                          onTap: () {
-                            setModalState(() {
-                              if (isSelected) {
-                                _selectedShoppingItems.remove(item);
-                              } else {
-                                _selectedShoppingItems.add(item);
-                              }
-                            });
-                            // Update parent UI for item count and potential category change
-                            if (!isSelected) {
-                               _matchAndSetCategory(item.name);
-                            } else {
-                               setState(() {}); 
-                            }
-                          },
-                        );
-                      },
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ShoppingItemsSelector(
+        items: items,
+        initialSelected: _selectedShoppingItems,
+        onItemsSelected: (selected) {
+          setState(() {
+            _selectedShoppingItems.clear();
+            _selectedShoppingItems.addAll(selected);
+            if (selected.isNotEmpty) {
+              _internalMatchCategory(selected.last.name);
+            }
+          });
+        },
+      ),
+    );
+  }
+}
+
+class _ShoppingItemsSelector extends StatefulWidget {
+  final List<ShoppingItemModel> items;
+  final Set<ShoppingItemModel> initialSelected;
+  final Function(Set<ShoppingItemModel>) onItemsSelected;
+
+  const _ShoppingItemsSelector({
+    required this.items,
+    required this.initialSelected,
+    required this.onItemsSelected,
+  });
+
+  @override
+  State<_ShoppingItemsSelector> createState() => _ShoppingItemsSelectorState();
+}
+
+class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
+  String _searchQuery = '';
+  final Set<ShoppingItemModel> _currentSelection = {};
+  late List<ShoppingItemModel> _availableItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSelection.addAll(widget.initialSelected);
+    _availableItems = List.from(widget.items);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredItems = _availableItems.where((item) => 
+      item.name.toLowerCase().contains(_searchQuery.toLowerCase())
+    ).toList();
+
+    final showAddOption = _searchQuery.isNotEmpty && 
+      !_availableItems.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase()) &&
+      !_currentSelection.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase());
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.75,
+            child: Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Text('Artículos de la Lista', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                ),
+                
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.divider),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: const StadiumBorder(), elevation: 0),
-                        child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar o agregar producto...',
+                        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                        icon: Icon(Icons.search, size: 20, color: AppColors.textSecondary),
+                        border: InputBorder.none,
                       ),
+                      onChanged: (val) => setState(() => _searchQuery = val),
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                if (showAddOption)
+                  ListTile(
+                    leading: const Text('➕', style: TextStyle(fontSize: 24)),
+                    title: Text('Agregar "${_searchQuery.trim()}"', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    subtitle: const Text('Producto no encontrado en la lista actual', style: TextStyle(fontSize: 12)),
+                    onTap: () {
+                      final newItem = ShoppingItemModel(
+                        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                        name: _searchQuery.trim(),
+                        householdId: '',
+                        createdAt: DateTime.now(),
+                        emoji: '🏷️',
+                      );
+                      setState(() {
+                        _currentSelection.add(newItem);
+                        _availableItems.insert(0, newItem);
+                        _searchQuery = '';
+                      });
+                      widget.onItemsSelected(_currentSelection);
+                    },
+                  ),
+
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      final isSelected = _currentSelection.contains(item);
+                      return ListTile(
+                        leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
+                        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _currentSelection.remove(item);
+                            } else {
+                              _currentSelection.add(item);
+                            }
+                          });
+                          widget.onItemsSelected(_currentSelection);
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary, 
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(), 
+                        elevation: 0
+                      ),
+                      child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          );
-        });
-      },
+          ),
+        ),
+      ),
     );
   }
 

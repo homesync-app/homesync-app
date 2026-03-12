@@ -155,7 +155,7 @@ class BalanceCard extends ConsumerWidget {
                     child: _buildCleanMetric(
                       context,
                       label: 'Experiencia',
-                      value: '$xp XP',
+                      value: '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
                       icon: Icons.star_rounded,
                       color: const Color(0xFFE8943A),
                     ),
@@ -169,7 +169,7 @@ class BalanceCard extends ConsumerWidget {
                     child: _buildCleanMetric(
                       context,
                       label: 'Monedas',
-                      value: coins.toString(),
+                      value: NumberFormat.decimalPattern('es_AR').format(coins),
                       icon: Icons.monetization_on_rounded,
                       color: AppColors.sage,
                     ),

@@ -282,7 +282,7 @@ class Tasks extends _$Tasks {
   Future<void> createTask(Map<String, dynamic> taskData) async {
     try {
       final useCase = ref.read(createTaskUseCaseProvider);
-      await useCase(
+      final result = await useCase(
         title: taskData['title'] as String,
         description: taskData['description'] as String?,
         category: taskData['category'] as String,
@@ -292,9 +292,17 @@ class Tasks extends _$Tasks {
         assignedTo: taskData['assignedTo'] as String?,
         recurrenceType: taskData['recurrenceType'] as String?,
       );
-      silentRefresh();
+      
+      result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) {
+          silentRefresh();
+          ref.invalidate(recentActivityProvider);
+        },
+      );
     } catch (e) {
       log.w('Create task failure: $e');
+      rethrow;
     }
   }
 

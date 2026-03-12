@@ -44,11 +44,40 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
     super.initState();
     if (widget.template != null) {
       _titleController.text = widget.template!.title;
-      _amountController.text = widget.template!.defaultAmount.toInt().toString();
+      _amountController.text = NumberFormat.decimalPattern('es_ES').format(widget.template!.defaultAmount.toInt());
       _dayOfMonth = widget.template!.dayOfMonth;
       _category = widget.template!.category;
       _splitType = widget.template!.splitType;
       _payerDefault = widget.template!.payerDefault;
+    }
+  }
+
+  void _onAmountChanged(String val) {
+    String clean = val.replaceAll('.', '').replaceAll(',', '');
+    if (clean.isEmpty) {
+      _amountController.text = '';
+      return;
+    }
+    int? parsed = int.tryParse(clean);
+    if (parsed != null) {
+      String formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
+      _amountController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
+  }
+
+  DateTime _calculateNextExecutionDate(int day) {
+    final now = DateTime.now();
+    if (day >= now.day) {
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      final actualDay = day > daysInMonth ? daysInMonth : day;
+      return DateTime(now.year, now.month, actualDay);
+    } else {
+      final daysInNextMonth = DateTime(now.year, now.month + 2, 0).day;
+      final actualDay = day > daysInNextMonth ? daysInNextMonth : day;
+      return DateTime(now.year, now.month + 1, actualDay);
     }
   }
 
@@ -63,16 +92,18 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
 
     setState(() => _isLoading = true);
     try {
+      final currentUserId = ref.read(currentUserIdProvider);
       final template = ExpenseTemplateModel(
         id: widget.template?.id ?? const Uuid().v4(),
         householdId: householdId as String,
         title: _titleController.text.trim(),
-        defaultAmount: double.parse(_amountController.text.replaceAll('.', '')),
+        defaultAmount: double.parse(_amountController.text.replaceAll('.', '').replaceAll(',', '')),
         category: _category,
         dayOfMonth: _dayOfMonth,
         splitType: _splitType,
-        payerDefault: _payerDefault,
+        payerDefault: _splitType == 'personal' ? (currentUserId ?? _payerDefault) : _payerDefault,
         isActive: true,
+        nextExecutionDate: _calculateNextExecutionDate(_dayOfMonth),
       );
 
       await ref.read(expenseTemplateControllerProvider.notifier).saveTemplate(template);
@@ -120,8 +151,10 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
                 _buildCategorySelector(),
                 const SizedBox(height: 24),
                 _buildSplitTypeSelector(),
-                const SizedBox(height: 24),
-                _buildPayerSelector(members),
+                if (_splitType != 'personal') ...[
+                  const SizedBox(height: 24),
+                  _buildPayerSelector(members),
+                ],
                 const SizedBox(height: 32),
                 _buildSaveButton(),
               ],
@@ -184,8 +217,8 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
   Widget _buildAmountField() {
     return TextField(
       controller: _amountController,
+      onChanged: _onAmountChanged,
       keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       decoration: InputDecoration(
         labelText: 'Monto por defecto',
         prefixText: '\$ ',
@@ -320,22 +353,21 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
       children: [
         const Text('Pagador habitual:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textSecondary)),
         const SizedBox(height: 12),
-        Row(
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: members.map((m) {
             final isSelected = _payerDefault == m.userId;
-            return Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: GestureDetector(
-                onTap: () => setState(() => _payerDefault = m.userId),
-                child: Opacity(
-                  opacity: isSelected ? 1.0 : 0.5,
-                  child: Container(
-                    decoration: isSelected ? BoxDecoration(
-                      border: Border.all(color: AppColors.primary, width: 2),
-                      shape: BoxShape.circle,
-                    ) : null,
-                    child: CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 24),
-                  ),
+            return GestureDetector(
+              onTap: () => setState(() => _payerDefault = m.userId),
+              child: Opacity(
+                opacity: isSelected ? 1.0 : 0.5,
+                child: Container(
+                  decoration: isSelected ? BoxDecoration(
+                    border: Border.all(color: AppColors.primary, width: 2),
+                    shape: BoxShape.circle,
+                  ) : null,
+                  child: CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 24),
                 ),
               ),
             );
@@ -352,9 +384,10 @@ class _RecurringExpenseFormSheetState extends ConsumerState<RecurringExpenseForm
       child: ElevatedButton(
         onPressed: _isLoading ? null : _save,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.textPrimary,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 0,
         ),
         child: _isLoading 
           ? const CircularProgressIndicator(color: Colors.white) 
