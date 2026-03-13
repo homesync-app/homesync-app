@@ -115,10 +115,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final val = name.trim();
     if (val.isEmpty) return;
 
-    _inputController.clear();
-    _lastQuery = '';
-    _suggestionsVal.value = [];
-    _inputFocus.unfocus();
+    // No borramos el buscador ni quitamos el foco para permitir agregar múltiples productos seguidos
+    // _inputController.clear();
+    // _lastQuery = '';
+    // _suggestionsVal.value = [];
+    // _inputFocus.unfocus();
 
     // Find if already exists in pending
     final existing = pending

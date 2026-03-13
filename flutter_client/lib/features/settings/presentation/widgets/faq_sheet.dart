@@ -112,17 +112,25 @@ class FAQSheet extends StatelessWidget {
                   context,
                   icon: Icons.account_balance_wallet_rounded,
                   color: AppColors.accentGreen,
-                  question: '¿Cómo funcionan los Gastos?',
+                  question: '¿Cómo funcionan las Finanzas?',
                   answer:
-                      'Pueden anotar los gastos diarios y elegir si se dividen 50/50 o si uno pagó por el otro. La app lleva el balance de quién le debe a quién automáticamente.',
+                      'HomeSync permite llevar un control total de los gastos compartidos. Al anotar un gasto, puedes indicar si lo pagaron entre los dos (50/50), si uno pagó por el otro, o si es un gasto individual. La app calcula automáticamente el saldo para que siempre sepan quién debe poner la próxima vez.',
                 ),
                 _buildFAQItem(
                   context,
-                  icon: Icons.stars_rounded,
-                  color: AppColors.primary,
-                  question: '¿Cómo consigo Avatares Premium?',
+                  icon: Icons.auto_awesome_rounded,
+                  color: const Color(0xFF8B5CF6),
+                  question: '¿Qué son los Eventos Especiales?',
                   answer:
-                      'Los Avatares 3D Premium se desbloquean con una suscripción o logros especiales. Estos avatares son animados y le dan un toque único a tu perfil.',
+                      'Cada semana aparece un "Desafío de Pareja" en la tienda. Son actividades diseñadas para fortalecer la relación, como recrear su primera cita. Al completarlos, ambos reciben una gran cantidad de Coins y desbloquean medallas exclusivas en su perfil de Logros.',
+                ),
+                _buildFAQItem(
+                  context,
+                  icon: Icons.trending_up_rounded,
+                  color: AppColors.primary,
+                  question: '¿Niveles y Logros?',
+                  answer:
+                      'A medida que ganan XP, subirán de nivel. En la pestaña de estadísticas pueden ver sus "Logros", que son medallas por hitos alcanzados (como completar 50 tareas) o por superar los desafíos semanales. ¡Conviértanse en una pareja de nivel Leyenda!',
                 ),
               ],
             ),
