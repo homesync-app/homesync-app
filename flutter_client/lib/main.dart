@@ -14,9 +14,13 @@ import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Force use of bundled assets for fonts to prevent network errors
+  GoogleFonts.config.allowRuntimeFetching = false;
   
   // 1. Initialize Firebase
   try {
