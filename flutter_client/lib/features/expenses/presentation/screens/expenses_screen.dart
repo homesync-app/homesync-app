@@ -581,11 +581,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
           // Projection Footer (Clean Integration)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.6),
+              color: AppColors.background.withValues(alpha: 0.4),
               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-              border: Border(top: BorderSide(color: AppColors.divider.withValues(alpha: 0.5))),
+              border: Border(top: BorderSide(color: AppColors.divider.withValues(alpha: 0.3))),
             ),
             child: Row(
               children: [
@@ -595,10 +595,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                 ),
                 Container(
-                  height: 32,
+                  height: 24,
                   width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  color: AppColors.divider,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  color: AppColors.divider.withValues(alpha: 0.5),
                 ),
                 Expanded(
                   child: _buildProjectionStat('Balance estimado', projectedBalance, AppColors.textPrimary, 
@@ -795,14 +795,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return AnimatedPress(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: color.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
