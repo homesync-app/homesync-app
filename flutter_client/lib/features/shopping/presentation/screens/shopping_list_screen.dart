@@ -504,21 +504,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         ],
 
                         if (pending.isEmpty && done.isEmpty)
-                          const SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Center(
-                              child: Column(
+                          SliverToBoxAdapter(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 40),
+                              child: const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text('🍏', style: TextStyle(fontSize: 64)),
-                                  SizedBox(height: 16),
+                                  Text('🍏', style: TextStyle(fontSize: 48)),
+                                  SizedBox(height: 12),
                                   Text(
                                     'La heladera está llena.\n¿Necesitás algo?',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: AppColors.textMuted,
-                                      fontSize: 16,
-                                      height: 1.5,
+                                      fontSize: 14,
+                                      height: 1.4,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],

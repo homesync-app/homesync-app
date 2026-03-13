@@ -508,9 +508,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.90, // Un poco más alto que ancho para dejar más espacio al texto enorme
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.82, // Más alto para que entre el texto
       ),
       itemCount: rewards.length,
       itemBuilder: (context, index) {
@@ -547,7 +547,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
           onTap: () => _confirmRedeem(reward, canAfford),
           borderRadius: BorderRadius.circular(28),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            padding: const EdgeInsets.fromLTRB(10, 16, 10, 12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -565,7 +565,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                     Text(reward.icon, style: const TextStyle(fontSize: 34)),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 Expanded(
                   child: Center(
                     child: Text(
@@ -619,20 +619,46 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: const EdgeInsets.all(32),
       width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+      ),
       child: Column(
         children: [
           const Text('🏚️', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           const Text(
             'Boutique vacía',
-            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
+          const Text(
+            'Aún no hay premios configurados en esta casa.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              // Clonar plantillas predeterminadas
+              ref.read(rewardsProvider.notifier).cloneTemplates();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text('✨ CARGAR TAREAS PREDETERMINADAS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+          ),
+          const SizedBox(height: 12),
           TextButton(
             onPressed: _showCreateRewardSheet,
-            child: const Text('Crear primer premio'),
+            child: const Text('O crear un premio personalizado', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
           ),
         ],
       ),

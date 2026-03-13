@@ -142,7 +142,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             tabs: const [
               Tab(text: 'Duelo'),
               Tab(text: 'Evolución'),
-              Tab(text: 'Categorías'),
+              Tab(text: 'Logros'),
             ],
           ),
         ),
@@ -170,7 +170,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                       memberStats: _memberStats,
                       onRefresh: _loadStats,
                     ),
-                    CategoriesTab(
+                    AchievementsTab(
+                      memberStats: _memberStats,
                       taskStats: _taskStats,
                       onRefresh: _loadStats,
                     ),
