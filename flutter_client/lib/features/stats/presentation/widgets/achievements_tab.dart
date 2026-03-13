@@ -126,11 +126,13 @@ class AchievementsTab extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(
-                icon,
-                style: TextStyle(
-                  fontSize: 28,
-                  opacity: isUnlocked ? 1.0 : 0.4,
+              child: Opacity(
+                opacity: isUnlocked ? 1.0 : 0.4,
+                child: Text(
+                  icon,
+                  style: const TextStyle(
+                    fontSize: 28,
+                  ),
                 ),
               ),
             ),
