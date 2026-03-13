@@ -942,7 +942,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
         decoration: const BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
@@ -950,46 +950,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 24),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
             const Text(
               '¿Qué deseás hacer?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
             ),
-            const SizedBox(height: 32),
-            GridView.count(
-              shrinkWrap: true,
-              crossAxisCount: 2,
-              mainAxisSpacing: 24,
-              crossAxisSpacing: 20,
-              physics: const NeverScrollableScrollPhysics(),
+            const SizedBox(height: 16),
+            Row(
               children: [
-                _buildQuickActionItem(
-                  icon: Icons.add_shopping_cart_rounded,
-                  label: 'Cargar Gasto',
-                  color: AppColors.primary,
-                  onTap: () {
-                    Navigator.pop(context);
-                    ExpenseFormSheet.show(context);
-                  },
+                Expanded(
+                  child: _buildQuickActionItem(
+                    icon: Icons.add_shopping_cart_rounded,
+                    label: 'Cargar Gasto',
+                    color: AppColors.primary,
+                    onTap: () {
+                      Navigator.pop(context);
+                      ExpenseFormSheet.show(context);
+                    },
+                  ),
                 ),
-                _buildQuickActionItem(
-                  icon: Icons.calendar_today_rounded,
-                  label: 'Completar Actividad',
-                  color: AppColors.success,
-                  onTap: () {
-                    Navigator.pop(context);
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => CompleteTaskSheet(onTasksCompleted: () {}),
-                    );
-                  },
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildQuickActionItem(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Completar Tarea',
+                    color: AppColors.success,
+                    onTap: () {
+                      Navigator.pop(context);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => CompleteTaskSheet(onTasksCompleted: () {}),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 32),
           ],
         ),
       ),

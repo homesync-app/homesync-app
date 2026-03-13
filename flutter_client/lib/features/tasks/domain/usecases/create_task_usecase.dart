@@ -17,6 +17,7 @@ class CreateTaskUseCase {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) async {
     if (title.trim().isEmpty) {
       return left(const ValidationFailure(
@@ -35,6 +36,7 @@ class CreateTaskUseCase {
       coinReward: coinReward,
       assignedTo: assignedTo,
       recurrenceType: recurrenceType,
+      status: status,
     );
   }
 }

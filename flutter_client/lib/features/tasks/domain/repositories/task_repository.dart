@@ -39,6 +39,7 @@ abstract class TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   });
 
   /// Edit an existing TaskModel's fields.

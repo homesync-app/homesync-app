@@ -1,12 +1,13 @@
 enum TaskStatus {
   active,
   assigned,
-  pending,
+  pendingApproval,
   pendingVerification,
   verified,
   objected;
 
   static TaskStatus fromString(String? value) {
+    if (value == 'pending_approval') return TaskStatus.pendingApproval;
     if (value == 'pending_verification') return TaskStatus.pendingVerification;
     return TaskStatus.values.firstWhere(
       (e) => e.name == value,
@@ -14,8 +15,16 @@ enum TaskStatus {
     );
   }
 
-  String get dbValue =>
-      this == TaskStatus.pendingVerification ? 'pending_verification' : name;
+  String get dbValue {
+    switch (this) {
+      case TaskStatus.pendingApproval:
+        return 'pending_approval';
+      case TaskStatus.pendingVerification:
+        return 'pending_verification';
+      default:
+        return name;
+    }
+  }
 }
 
 enum TaskPriority {
@@ -84,6 +93,7 @@ class TaskModel {
   final TaskPriority priority;
   final TaskType type;
   final TaskDifficulty difficulty;
+  final String? createdById;
 
   const TaskModel({
     required this.id,
@@ -109,6 +119,7 @@ class TaskModel {
     this.priority = TaskPriority.medium,
     this.type = TaskType.oneTime,
     this.difficulty = TaskDifficulty.medium,
+    this.createdById,
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
@@ -136,6 +147,7 @@ class TaskModel {
       priority: TaskPriority.fromString(map['priority'] as String?),
       type: TaskType.fromString(map['type'] as String?),
       difficulty: TaskDifficulty.fromString(map['difficulty'] as String?),
+      createdById: map['created_by_id'] as String?,
     );
   }
 
@@ -163,6 +175,7 @@ class TaskModel {
         'priority': priority.name,
         'type': type.dbValue,
         'difficulty': difficulty.name,
+        'created_by_id': createdById,
       };
 
   // ── Computed helpers ───────────────────────────────────────────────────────
@@ -171,7 +184,7 @@ class TaskModel {
       status == TaskStatus.active ||
       status == TaskStatus.assigned ||
       status == TaskStatus.objected;
-  bool get isPending => status == TaskStatus.pending;
+  bool get isPendingApproval => status == TaskStatus.pendingApproval;
   bool get isPendingVerification => status == TaskStatus.pendingVerification;
   bool get isCompleted =>
       isPendingVerification || status == TaskStatus.verified;
@@ -227,6 +240,7 @@ class TaskModel {
     TaskPriority? priority,
     TaskType? type,
     TaskDifficulty? difficulty,
+    String? createdById,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -252,6 +266,7 @@ class TaskModel {
       priority: priority ?? this.priority,
       type: type ?? this.type,
       difficulty: difficulty ?? this.difficulty,
+      createdById: createdById ?? this.createdById,
     );
   }
 

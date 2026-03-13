@@ -45,43 +45,29 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _buildMovimientosTab(),
-          _buildRecurrentesTab(),
-          _buildSavingsTab(),
+          _buildTabBar(),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildMovimientosTab(),
+                _buildRecurrentesTab(),
+                _buildSavingsTab(),
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: _buildFab(),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text(
-        'Finanzas',
-        style: TextStyle(
-            fontWeight: FontWeight.w900, fontSize: 22, letterSpacing: -0.5),
-      ),
-      centerTitle: false,
-      elevation: 0,
-      backgroundColor: AppColors.background,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none_rounded,
-              color: AppColors.textPrimary),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon:
-              const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
-          onPressed: () {},
-        ),
-        const SizedBox(width: 8),
-      ],
-      bottom: TabBar(
+  Widget _buildTabBar() {
+    return Container(
+      color: AppColors.background,
+      child: TabBar(
         controller: _tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
@@ -90,6 +76,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         indicatorColor: AppColors.primary,
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
         tabs: const [
           Tab(text: 'Movimientos'),
@@ -160,7 +147,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           // 1. SUMMARY WIDGET WITH PROJECTION
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: summaryAsync.when(
                 loading: () => const Center(
                     child: Padding(
@@ -209,7 +196,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   if (sortedItems.isNotEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 40, 24, 12),
+                        padding: const EdgeInsets.fromLTRB(24, 30, 24, 8),
                         child: Row(
                           children: [
                             Container(
@@ -534,33 +521,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         children: [
           // Premium Header & Balance Section
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Resumen mensual',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.auto_graph_rounded, color: AppColors.primary, size: 20),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
                 const Text(
                   'BALANCE ACTUAL',
                   style: TextStyle(
@@ -570,7 +534,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
@@ -578,14 +542,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     '\$ ${_formatCurrency(balance)}',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
-                      fontSize: 48,
+                      fontSize: 42,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -2.0,
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
                 
                 // Income & Expenses Row
                 Row(

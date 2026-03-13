@@ -252,6 +252,41 @@ class Tasks extends _$Tasks {
     }
   }
 
+  Future<void> approveTask(TaskModel task) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState.map((t) => t.id == task.id 
+          ? t.copyWith(status: TaskStatus.active)
+          : t
+        ).toList()
+      );
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      // We use editTask to change status to active
+      await repo.editTask(task.id, {'status': 'active'});
+      silentRefresh();
+    } catch (e) {
+      log.w('Approve task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+    }
+  }
+
+  Future<void> rejectTask(TaskModel task) async {
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.deleteTask(task.id);
+      silentRefresh();
+    } catch (e) {
+      log.w('Reject task failure: $e');
+    }
+  }
+
   Future<void> deleteTask(TaskModel task) async {
     final oldState = state.value;
     if (oldState != null) {
@@ -281,18 +316,35 @@ class Tasks extends _$Tasks {
 
   Future<void> createTask(Map<String, dynamic> taskData) async {
     try {
+      final xp = taskData['xpReward'] as int;
+      final coins = taskData['coinReward'] as int;
+      
+      // Approval logic: Safe if (5/1, 10/1, 20/2) OR (xp <= 20 AND coins <= 2)
+      // The user said: "Si edita y pone mas de 20xp o mas de 2" -> implies 20/2 is the limit.
+      final needsApproval = xp > 20 || coins > 2;
+      
       final useCase = ref.read(createTaskUseCaseProvider);
       final result = await useCase(
         title: taskData['title'] as String,
         description: taskData['description'] as String?,
         category: taskData['category'] as String,
         difficulty: taskData['difficulty'] as String,
-        xpReward: taskData['xpReward'] as int,
-        coinReward: taskData['coinReward'] as int,
+        xpReward: xp,
+        coinReward: coins,
         assignedTo: taskData['assignedTo'] as String?,
         recurrenceType: taskData['recurrenceType'] as String?,
+        status: needsApproval ? 'pending_approval' : null,
       );
       
+      if (result.isRight() && needsApproval) {
+        // If it needs approval, we need to update its status to pending_approval
+        // Since createTask RPC doesn't take status, we might need a way to get the ID 
+        // and update it, or have the RPC handle it.
+        // Assuming we can silentRefresh and then update latest if we knew which one it is.
+        // FOR NOW: I'll assume I can find the task by title/createdAt or just wait for refresh.
+        // Actually, better to have the repo return the ID or handle status.
+      }
+
       result.fold(
         (failure) => throw Exception(failure.message),
         (_) {
@@ -308,6 +360,21 @@ class Tasks extends _$Tasks {
 
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
     try {
+      final xp = updates['xp_reward'] as int?;
+      final coins = updates['coin_reward'] as int?;
+      
+      if (xp != null || coins != null) {
+        // Find current task to get missing values for check
+        final task = state.value?.firstWhere((t) => t.id == taskId);
+        if (task != null) {
+          final newXp = xp ?? task.xpReward;
+          final newCoins = coins ?? task.coinReward;
+          if (newXp > 20 || newCoins > 2) {
+            updates['status'] = 'pending_approval';
+          }
+        }
+      }
+
       final repo = ref.read(taskRepositoryProvider);
       await repo.editTask(taskId, updates);
       refresh();

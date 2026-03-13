@@ -1,6 +1,6 @@
 class ShoppingCategories {
   static const List<Map<String, dynamic>> all = [
-    {'id': 'general', 'name': 'General', 'emoji': '🛒', 'color': 0xFF6366F1},
+    {'id': 'general', 'name': 'Frecuentes', 'emoji': '🛒', 'color': 0xFF6366F1},
     {
       'id': 'fruits',
       'name': 'Frutas y verd.',

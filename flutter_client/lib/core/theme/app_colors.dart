@@ -148,13 +148,20 @@ class AppColors {
         return accentPurple;
       case 'sala':
       case 'sala / espacios comunes':
+      case 'espacios comunes':
         return const Color(0xFFFB923C); // Orange
       case 'mantenimiento':
+      case 'mantenimiento del hogar':
       case 'bricolaje':
         return textSecondary;
       case 'niños':
       case 'ninos':
+      case 'niños / cuidado':
         return accentOrange;
+      case 'administracion':
+      case 'administración':
+      case 'administración del hogar':
+        return const Color(0xFF8B5CF6);
       default:
         return textSecondary;
     }
@@ -223,10 +230,16 @@ class AppColors {
       case 'sala / espacios comunes':
         return Icons.weekend_rounded;
       case 'mantenimiento':
+      case 'mantenimiento del hogar':
         return Icons.build_rounded;
       case 'niños':
       case 'ninos':
+      case 'niños / cuidado':
         return Icons.child_care_rounded;
+      case 'administracion':
+      case 'administración':
+      case 'administración del hogar':
+        return Icons.assignment_rounded;
       default:
         return Icons.home_work_rounded;
     }
@@ -248,19 +261,26 @@ class AppColors {
     'hogar': '🏠',
     'pets': '🐾',
     'mascotas': '🐾',
-    'outdoor': '🌱',
-    'exterior': '🌱',
-    'garden': '🌱',
-    'jardin': '🌱',
-    'jardín': '🌱',
-    'supermarket': '🛒',
+    'exterior': '🌿',
+    'exterior / jardín': '🌿',
+    'jardin': '🌿',
+    'jardín': '🌿',
+    'garden': '🌿',
     'compras': '🛒',
+    'compras / organización': '🛒',
+    'supermarket': '🛒',
     'ropa': '👕',
     'residuos': '🗑️',
-    'sala': '🧹',
-    'estudio': '📚',
+    'basura': '🗑️',
+    'basura / reciclaje': '🗑️',
+    'sala': '🛋️',
+    'espacios comunes': '🛋️',
     'mantenimiento': '🔧',
+    'mantenimiento del hogar': '🔧',
     'niños': '👶',
+    'niños / cuidado': '👶',
+    'administracion': '📋',
+    'administración del hogar': '📋',
     'urgente': '🚨',
     'finanzas': '💰',
     'savings': '🏦',
@@ -313,13 +333,17 @@ class AppColors {
     'supermarket': 'Supermercado',
     'compras': 'Compras',
     'ropa': 'Ropa',
-    'residuos': 'Residuos',
-    'sala': 'Sala / Espacios comunes',
-    'estudio': 'Estudio / Educación',
-    'mantenimiento': 'Mantenimiento',
-    'niños': 'Niños',
-    'urgente': 'Urgente',
-    'bano': 'Baño',
+    'residuos': 'Basura / Reciclaje',
+    'basura': 'Basura / Reciclaje',
+    'basura / reciclaje': 'Basura / Reciclaje',
+    'sala': 'Espacios Comunes',
+    'espacios comunes': 'Espacios Comunes',
+    'mantenimiento': 'Mantenimiento del Hogar',
+    'mantenimiento del hogar': 'Mantenimiento del Hogar',
+    'niños': 'Niños / Cuidado',
+    'niños / cuidado': 'Niños / Cuidado',
+    'administracion': 'Administración del Hogar',
+    'administración del hogar': 'Administración del Hogar',
     'finanzas': 'Finanzas',
     'savings': 'Ahorro',
     'income': 'Ingreso',

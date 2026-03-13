@@ -528,7 +528,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
-                              'Utilizados recientemente', 'recent',
+                              'Utilizados anteriormente', 'recent',
                               emoji: '🕒'),
                           if (_expandedSections.contains('recent'))
                             SliverPadding(

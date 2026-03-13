@@ -134,9 +134,10 @@ class SupabaseTaskRepository
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) async {
     return executeWithHandling(() async {
-      await _rpc.createTask(
+      final taskId = await _rpc.createTask(
         title: title,
         description: description,
         category: category,
@@ -146,6 +147,17 @@ class SupabaseTaskRepository
         assignedTo: assignedTo,
         recurrenceType: recurrenceType,
       );
+
+      final Map<String, dynamic> updates = {};
+      if (status != null) updates['status'] = status;
+      
+      // If the RPC doesn't set created_by_id, we set it here
+      final userId = _client.auth.currentUser?.id;
+      if (userId != null) updates['created_by_id'] = userId;
+
+      if (updates.isNotEmpty) {
+        await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
+      }
     }, context: 'SupabaseTaskRepository.createTask', isOnline: _isOnline);
   }
 

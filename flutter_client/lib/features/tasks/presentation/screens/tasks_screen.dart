@@ -912,6 +912,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                               _badge('Vencida', AppColors.accentRed),
                               const SizedBox(width: 8),
                             ],
+                            if (task.isPendingApproval) ...[
+                              _badge('Pendiente de aprobación', AppColors.accentGold),
+                              const SizedBox(width: 8),
+                            ],
                             if (task.lastCompletedAt != null) ...[
                               _buildLastCompletedAvatar(widget.members, task.completedBy),
                               const SizedBox(width: 8),
@@ -962,19 +966,56 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                            _buildActionTilePremium(
-                              icon: Icons.edit_rounded,
-                              label: 'Editar',
-                              color: AppColors.accentGold,
-                              onTap: widget.onEdit,
-                            ),
-                            _buildActionTilePremium(
-                              icon: Icons.schedule_rounded,
-                              label: 'Programar',
-                              color: AppColors.primary,
-                              onTap: widget.onSchedule,
-                            ),
-                          ],
+                              if (task.isPendingApproval) ...[
+                                if (task.createdById == widget.currentUserId)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    child: Text(
+                                      'Esperando confirmación de tu pareja ⏳',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontStyle: FontStyle.italic,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  )
+                                else ...[
+                                  _buildActionTilePremium(
+                                    icon: Icons.check_circle_rounded,
+                                    label: 'Aprobar',
+                                    color: AppColors.accentGreen,
+                                    onTap: () => ref
+                                        .read(tasksProvider.notifier)
+                                        .approveTask(task),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildActionTilePremium(
+                                    icon: Icons.cancel_rounded,
+                                    label: 'Rechazar',
+                                    color: AppColors.error,
+                                    onTap: () => ref
+                                        .read(tasksProvider.notifier)
+                                        .rejectTask(task),
+                                  ),
+                                ],
+                              ] else ...[
+                                _buildActionTilePremium(
+                                  icon: Icons.edit_rounded,
+                                  label: 'Editar',
+                                  color: AppColors.accentGold,
+                                  onTap: widget.onEdit,
+                                ),
+                                const SizedBox(width: 8),
+                                _buildActionTilePremium(
+                                  icon: Icons.schedule_rounded,
+                                  label: 'Programar',
+                                  color: AppColors.primary,
+                                  onTap: widget.onSchedule,
+                                ),
+                              ],
+                            ],
                         ),
                       ),
                     ],
