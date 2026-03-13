@@ -183,4 +183,16 @@ class SupabaseHouseholdRepository
       return result;
     }, context: 'SupabaseHouseholdRepository.resetAndClearHousehold', isOnline: _isOnline);
   }
+
+  @override
+  Future<Either<Failure, void>> updateDefaultSplitRatio(
+      String householdId, double ratio) async {
+    return executeWithHandling(() async {
+      await _client
+          .from(AppConstants.tableHouseholds)
+          .update({'default_split_ratio': ratio}).eq('id', householdId);
+    },
+        context: 'SupabaseHouseholdRepository.updateDefaultSplitRatio',
+        isOnline: _isOnline);
+  }
 }

@@ -156,7 +156,7 @@ final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseBalances
     = AutoDisposeAsyncNotifier<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'166cf5302179cb004f0b2eeb2cdf9096e554ba93';
+String _$expenseControllerHash() => r'472af9ca93d186f8b0c1953db7eb0ec64e40acab';
 
 /// See also [ExpenseController].
 @ProviderFor(ExpenseController)
@@ -173,7 +173,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'0058d0de45116d030afae9337efa02b6d8f763c2';
+    r'c7bebb6643534c4a4574b9707b0fc17fd01404fc';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)

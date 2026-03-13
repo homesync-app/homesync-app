@@ -1,0 +1,28 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Configurar Split Proporcional en Gastos",
+      "description": "Agregar SplitType.ratio y lógica de cálculo basada en household.defaultSplitRatio",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 2,
+      "title": "Actualizar Pantallas de Configuración",
+      "description": "Mejorar SetupScreen y Settings para permitir configurar el ratio predeterminado",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 3,
+      "title": "Refinar Lista de Compras",
+      "description": "Agregar alimentos faltantes (Brócoli, Boniato, Leche vegetal, Garbanzos, etc.)",
+      "status": "COMPLETED"
+    },
+    {
+      "id": 4,
+      "title": "Auditoría de Pantallas Premium",
+      "description": "Analizar y pulir pantallas iniciales para que se vean state-of-the-art",
+      "status": "COMPLETED"
+    }
+  ]
+}

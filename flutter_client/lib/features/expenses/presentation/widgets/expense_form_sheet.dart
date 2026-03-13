@@ -235,12 +235,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       List<Map<String, dynamic>> splits = [];
 
       if (_splitMode == SplitType.equal) {
-        if (_selectedMembersForSplit.isEmpty) {
-          throw Exception("Debes seleccionar al menos un miembro para dividir.");
-        }
-        final splitAmount = amountParsed / _selectedMembersForSplit.length;
-        for (final memId in _selectedMembersForSplit) {
-          splits.add({'user_id': memId, 'amount': splitAmount});
+        final household = ref.read(currentHouseholdProvider).valueOrNull;
+        final defaultRatio = household?.defaultSplitRatio ?? 0.5;
+
+        if (members.length == 2 && defaultRatio != 0.5) {
+          final currentUserId = ref.read(currentUserIdProvider);
+          for (final mem in members) {
+            final isMe = mem.userId == currentUserId;
+            final memRatio = isMe ? defaultRatio : (1.0 - defaultRatio);
+            splits.add({'user_id': mem.userId, 'amount': amountParsed * memRatio});
+          }
+        } else {
+          if (_selectedMembersForSplit.isEmpty) {
+            throw Exception("Debes seleccionar al menos un miembro para dividir.");
+          }
+          final splitAmount = amountParsed / _selectedMembersForSplit.length;
+          for (final memId in _selectedMembersForSplit) {
+            splits.add({'user_id': memId, 'amount': splitAmount});
+          }
         }
       } else if (_splitMode == SplitType.fixed) {
         double totalFixed = 0;
@@ -860,12 +872,27 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             final isSelected = _splitMode == mode;
             String label = '';
             IconData icon = Icons.help_outline;
+            
+            final householdAsync = ref.watch(currentHouseholdProvider);
+            final household = householdAsync.value;
+
             switch (mode) {
-              case SplitType.equal: label = '50/50'; icon = Icons.balance_rounded; break;
+              case SplitType.equal: 
+                final ratio = household?.defaultSplitRatio ?? 0.5;
+                if (members.length == 2 && ratio != 0.5) {
+                  label = '${(ratio * 100).toInt()}/${(100 - (ratio * 100)).toInt()}';
+                  icon = Icons.pie_chart_rounded;
+                } else {
+                  label = '50/50'; 
+                  icon = Icons.balance_rounded;
+                }
+                break;
               case SplitType.fixed: label = 'Fijo'; icon = Icons.calculate_rounded; break;
               case SplitType.gift: label = 'Regalo'; icon = Icons.redeem_rounded; break;
               case SplitType.personal: label = 'Solo yo'; icon = Icons.person_rounded; break;
             }
+            if (label.isEmpty) return const SizedBox.shrink();
+
             return ChoiceChip(
               label: Text(label),
               selected: isSelected,
@@ -894,40 +921,38 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildSplitDetails(List<MemberModel> members) {
     if (_splitMode == SplitType.equal) {
-      return Wrap(
-        spacing: 8,
-        children: members.map((m) {
-          final isSelected = _selectedMembersForSplit.contains(m.userId);
-          return FilterChip(
-            label: Text(m.displayName),
-            selected: isSelected,
-            onSelected: (val) {
-              setState(() {
-                if (val) {
-                  _selectedMembersForSplit.add(m.userId);
-                } else if (_selectedMembersForSplit.length > 1) {
-                  _selectedMembersForSplit.remove(m.userId);
-                }
-              });
-            },
-            selectedColor: AppColors.primary.withValues(alpha: 0.15),
-            checkmarkColor: AppColors.primary,
-            shape: const StadiumBorder(),
-            side: BorderSide(color: isSelected ? AppColors.primary : AppColors.divider),
-            labelStyle: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500),
-          );
-        }).toList(),
-      );
+      final household = ref.watch(currentHouseholdProvider).valueOrNull;
+      final defaultRatio = household?.defaultSplitRatio ?? 0.5;
+
+      if (members.length == 2 && defaultRatio != 0.5) {
+        final currentUserId = ref.read(currentUserIdProvider);
+        return Column(
+          children: members.map((m) {
+            final isMe = m.userId == currentUserId;
+            final memRatio = isMe ? defaultRatio : (1.0 - defaultRatio);
+            return ListTile(
+              dense: true,
+              leading: CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 14),
+              title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
+              trailing: Text('${(memRatio * 100).toInt()}%',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+            );
+          }).toList(),
+        );
+      }
+      return _buildEqualSelection(members);
     } else if (_splitMode == SplitType.fixed) {
       return Column(
         children: members.map((m) {
-          final controller = TextEditingController(text: _fixedSplitAmounts[m.userId]?.toStringAsFixed(2) ?? '');
+          final controller =
+              TextEditingController(text: _fixedSplitAmounts[m.userId]?.toStringAsFixed(2) ?? '');
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.divider)),
+            decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.divider)),
             child: Row(
               children: [
                 CustomUserAvatar(avatarUrl: m.avatarUrl, name: m.displayName, radius: 16),
@@ -983,6 +1008,35 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2) 
           : Text(_isIncome ? 'Guardar Ingreso' : 'Guardar Gasto', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
       ),
+    );
+  }
+
+  Widget _buildEqualSelection(List<MemberModel> members) {
+    return Wrap(
+      spacing: 8,
+      children: members.map((m) {
+        final isSelected = _selectedMembersForSplit.contains(m.userId);
+        return FilterChip(
+          label: Text(m.displayName),
+          selected: isSelected,
+          onSelected: (val) {
+            setState(() {
+              if (val) {
+                _selectedMembersForSplit.add(m.userId);
+              } else if (_selectedMembersForSplit.length > 1) {
+                _selectedMembersForSplit.remove(m.userId);
+              }
+            });
+          },
+          selectedColor: AppColors.primary.withValues(alpha: 0.15),
+          checkmarkColor: AppColors.primary,
+          shape: const StadiumBorder(),
+          side: BorderSide(color: isSelected ? AppColors.primary : AppColors.divider),
+          labelStyle: TextStyle(
+              color: isSelected ? AppColors.primary : AppColors.textPrimary,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500),
+        );
+      }).toList(),
     );
   }
 }
@@ -1135,3 +1189,4 @@ class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
     );
   }
 }
+

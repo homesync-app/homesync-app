@@ -45,7 +45,7 @@ final getRecentActivityUseCaseProvider =
 // ignore: unused_element
 typedef GetRecentActivityUseCaseRef
     = AutoDisposeProviderRef<GetRecentActivityUseCase>;
-String _$recentActivityHash() => r'9834acfe6884cc153289fba47c377946e46ae8d5';
+String _$recentActivityHash() => r'3e0cc022f3569251f0d2f5023bb920a8dc957180';
 
 /// See also [recentActivity].
 @ProviderFor(recentActivity)

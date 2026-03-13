@@ -24,6 +24,8 @@ class ShoppingPredefined {
       {'name': 'Choclo', 'emoji': '🌽'},
       {'name': 'Uvas', 'emoji': '🍇'},
       {'name': 'Sandía', 'emoji': '🍉'},
+      {'name': 'Pimiento', 'emoji': '🫑'},
+      {'name': 'Cebolla de verdeo', 'emoji': '🌱'},
     ],
     'meat': [
       {'name': 'Carne picada', 'emoji': '🥩'},
@@ -47,6 +49,8 @@ class ShoppingPredefined {
       {'name': 'Dulce de leche', 'emoji': '🍯'},
       {'name': 'Queso crema', 'emoji': '🥣'},
       {'name': 'Leche vegetal', 'emoji': '🥛'},
+      {'name': 'Tofu', 'emoji': '🧊'},
+      {'name': 'Hummus', 'emoji': '🥣'},
     ],
     'bakery': [
       {'name': 'Pan', 'emoji': '🥖'},
@@ -85,6 +89,8 @@ class ShoppingPredefined {
       {'name': 'Maní', 'emoji': '🥜'},
       {'name': 'Caramelos', 'emoji': '🍬'},
       {'name': 'Gomitas', 'emoji': '🧸'},
+      {'name': 'Almendras', 'emoji': '🥜'},
+      {'name': 'Nueces', 'emoji': '🥜'},
     ],
     'pharmacy': [
       {'name': 'Ibuprofeno', 'emoji': '💊'},

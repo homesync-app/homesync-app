@@ -30,4 +30,7 @@ abstract class HouseholdRepository {
 
   /// Resets user account and removes them from the household
   Future<Either<Failure, Map<String, dynamic>>> resetAndClearHousehold();
+
+  /// Updates the default split ratio for the household
+  Future<Either<Failure, void>> updateDefaultSplitRatio(String householdId, double ratio);
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1032,6 +1033,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _showInvitationCodeSheet();
                 },
               ),
+              if (_householdType == 'couple')
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentTeal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.balance_rounded,
+                        color: AppColors.accentTeal),
+                  ),
+                  title: const Text('División de gastos'),
+                  subtitle: const Text('Ajustar porcentaje de pareja'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CoupleSplitStrategyScreen(),
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 8),
             ],
           ),

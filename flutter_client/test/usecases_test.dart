@@ -138,13 +138,13 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, String>> payPlannedExpense({
+  Future<Either<Failure, Map<String, dynamic>>> payPlannedExpense({
     required String plannedId,
     required double amount,
     required DateTime paidAt,
     required String paidBy,
   }) async {
-    return const Right('expense-id');
+    return const Right({'id': 'expense-id'});
   }
 
   @override

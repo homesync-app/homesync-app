@@ -27,7 +27,7 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen>
     with TickerProviderStateMixin {
-  // Steps: 0=Welcome, 1=mode, 2=teamOptions, 3=creating(code display), 4=taskSelection
+  // Steps: 0=Welcome, 1=mode, 2=teamOptions, 3=creating(code display), 4=splitStrategy, 5=taskSelection
   int _currentStep = 0;
   String? _selectedMode;
   bool _createNew = true;
@@ -123,7 +123,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   void _onModeSelected() {
     HapticFeedback.mediumImpact();
     if (_selectedMode == 'solo') {
-      setState(() => _currentStep = 4);
+      setState(() => _currentStep = 5);
     } else {
       setState(() => _currentStep = 2);
     }
@@ -157,7 +157,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             setState(() {
               _myInviteCode = code;
               _isGeneratingCode = false;
-              _currentStep = 3; // Solo avanzar si tuvimos éxito
+              _currentStep = 3; // Mostrar código
             });
           },
         );
@@ -209,7 +209,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         );
         setState(() {
           _isJoining = false;
-          _currentStep = 4;
+          _currentStep = _selectedMode == 'couple' ? 4 : 5;
         });
       }
     } catch (e) {
@@ -358,7 +358,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                         1 => _buildModeSelection(),
                         2 => _buildTeamOptions(),
                         3 => _buildInviteCodeStep(),
-                        4 => _buildTaskSelection(),
+                        4 => _buildSplitStep(),
+                        5 => _buildTaskSelection(),
                         _ => _buildWelcomeStep(),
                       },
                     ),
@@ -376,7 +377,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
-        children: List.generate(5, (index) {
+        children: List.generate(6, (index) {
           final isActive = index <= _currentStep;
           final isCurrent = index == _currentStep;
 
@@ -876,140 +877,282 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   // ── Step 2: Show invite code ──────────────────────────
 
+  // ── Step 2: Show invite code ──────────────────────────
+
   Widget _buildInviteCodeStep() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              _buildHeading(
+                '¡Hogar creado!',
+                'Invita a quien quieras compartiendo este código.',
+              ),
+              const SizedBox(height: 40),
+
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 320),
+                  child: AspectRatio(
+                    aspectRatio: 1.6,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: AppColors.primaryGradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(32),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: -20,
+                              right: -20,
+                              child: Icon(
+                                Icons.home_rounded,
+                                size: 150,
+                                color: Colors.white.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'CÓDIGO DE INVITACIÓN',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 12,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  if (_isGeneratingCode)
+                                    const CircularProgressIndicator(
+                                        color: Colors.white)
+                                  else
+                                    FittedBox(
+                                      child: Text(
+                                        _myInviteCode ?? '------',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 56,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 8,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSecondaryButton(
+                      text: 'Copiar',
+                      icon: Icons.copy_rounded,
+                      onTap: _copyCode,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildSecondaryButton(
+                      text: 'Compartir',
+                      icon: Icons.share_rounded,
+                      onTap: _shareViaWhatsApp,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: _buildPrimaryButton(
+            text: 'Continuar',
+            onPressed: () {
+              setState(() {
+                _currentStep = _selectedMode == 'couple' ? 4 : 5;
+              });
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => setState(() => _currentStep = 2),
+          child: const Text('Volver'),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  double _tempRatio = 0.5;
+
+  Widget _buildSplitStep() {
     return Padding(
-      key: const ValueKey('invite'),
+      key: const ValueKey('split'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
           _buildHeading(
-            '¡Hogar creado!',
-            'Invita a quien quieras compartiendo este código.',
+            'División de Gastos',
+            'Configuremos cómo se dividirán los gastos de pareja.',
           ),
-          const SizedBox(height: 40),
-
-          // Premium Code Card
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 320),
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: AppColors.primaryGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          const SizedBox(height: 32),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentTeal.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: Stack(
+                    child: const Row(
                       children: [
-                        Positioned(
-                          top: -20,
-                          right: -20,
-                          child: Icon(
-                            Icons.home_rounded,
-                            size: 150,
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(32),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'CÓDIGO DE INVITACIÓN',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                              if (_isGeneratingCode)
-                                const CircularProgressIndicator(
-                                    color: Colors.white)
-                              else
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    _myInviteCode ?? '------',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 48,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 8,
-                                    ),
-                                  ),
-                                ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: _shareViaWhatsApp,
-                                    icon: const Icon(Icons.send_rounded,
-                                        size: 18),
-                                    label: const Text('WhatsApp',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: AppColors.primary,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      elevation: 0,
-                                      minimumSize: const Size(120,
-                                          48), // Overrides global infinite width
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton.filledTonal(
-                                    onPressed: _copyCode,
-                                    icon: const Icon(Icons.copy_rounded),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Colors.white24,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Text('💡', style: TextStyle(fontSize: 24)),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Pueden cambiar esto luego en configuración. Por defecto usamos 50/50.',
+                            style: TextStyle(fontSize: 13, height: 1.4),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 40),
+                  const Text('VOS : PAREJA',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2)),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('${(_tempRatio * 100).toInt()}%',
+                          style: const TextStyle(
+                              fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                      const Text(' / ',
+                          style: TextStyle(
+                              fontSize: 32, fontWeight: FontWeight.w300)),
+                      Text('${(100 - (_tempRatio * 100)).toInt()}%',
+                          style: const TextStyle(
+                              fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.error)),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: AppColors.primary,
+                      inactiveTrackColor: AppColors.primary.withValues(alpha: 0.1),
+                      thumbColor: AppColors.primary,
+                      overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                      trackHeight: 12,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 18),
+                    ),
+                    child: Slider(
+                      value: _tempRatio,
+                      min: 0,
+                      max: 1,
+                      divisions: 20,
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _tempRatio = v);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  _buildStrategyTip('Igualitario (50/50)', '👫 Ideal para ingresos similares.', _tempRatio == 0.5),
+                  _buildStrategyTip('Proporcional', '📈 Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
+                ],
               ),
             ),
           ),
-
-          const SizedBox(height: 40),
-          _buildInfoBox(
-            'El código es válido por 7 días. Tu pareja solo tiene que ingresarlo al registrarse para compartir el hogar contigo.',
-          ),
-
-          const Spacer(),
+          const SizedBox(height: 24),
           _buildPrimaryButton(
-            text: 'Ir a seleccionar tareas',
-            onPressed: () => setState(() => _currentStep = 4),
+            text: 'Guardar y Continuar',
+            onPressed: () async {
+              try {
+                final householdId = ref.read(householdIdProvider).valueOrNull;
+                if (householdId != null) {
+                  await ref.read(householdRepositoryProvider).updateDefaultSplitRatio(householdId, _tempRatio);
+                }
+              } catch (e) {
+                // Ignore error
+              }
+              setState(() => _currentStep = 5);
+            },
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _currentStep = 5),
+              child: const Text('Configurar luego'),
+            ),
           ),
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStrategyTip(String title, String desc, bool active) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: active ? AppColors.primary.withValues(alpha: 0.05) : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: active ? AppColors.primary : AppColors.cardBorder),
+      ),
+      child: Row(
+        children: [
+          Icon(active ? Icons.check_circle_rounded : Icons.circle_outlined, color: active ? AppColors.primary : AppColors.textMuted),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: active ? AppColors.primary : null)),
+                Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -1227,38 +1370,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  Widget _buildInfoBox(String message) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-          width: 1,
+  Widget _buildSecondaryButton({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 20),
+      label: Text(text),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.primary,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: AppColors.primary.withValues(alpha: 0.7),
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

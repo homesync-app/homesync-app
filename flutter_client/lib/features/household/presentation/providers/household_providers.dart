@@ -1,5 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/domain/models/household_model.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 part 'household_providers.g.dart';
@@ -24,4 +27,16 @@ class HouseholdMembers extends _$HouseholdMembers {
       return raw.map((m) => MemberModel.fromMap(m)).toList();
     });
   }
+}
+@riverpod
+Future<HouseholdModel?> currentHousehold(Ref ref) async {
+  final householdId = await ref.watch(householdIdProvider.future);
+  if (householdId == null) return null;
+
+  final repo = ref.read(householdRepositoryProvider);
+  final result = await repo.getHousehold(householdId);
+  return result.fold(
+    (l) => null,
+    (r) => r,
+  );
 }

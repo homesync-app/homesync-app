@@ -590,9 +590,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userName = data['user_name'] as String? ?? 'Usuario';
     final avatarUrl = data['avatar_url'] as String?;
     final description = data['description'] as String?;
-    final xpReward = data['xp_reward'] ?? data['score_impact']; // Task XP
     final hasDetail = description != null && description.trim().isNotEmpty;
-    final isShoppingList = hasDetail && (description.toLowerCase().contains('lista') || description.contains('\n') || description.contains('- '));
     final isClickable = type == 'expense' || hasDetail;
 
     return Container(

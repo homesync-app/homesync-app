@@ -1,0 +1,53 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Investigar formas de dividir gastos en pareja",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Investigador",
+      "dependencies": []
+    },
+    {
+      "id": 2,
+      "title": "Definir esquema de DB para default_split_ratio",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Arquitecto",
+      "dependencies": []
+    },
+    {
+      "id": 3,
+      "title": "Implementar cambios en Supabase para default_split",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Especialista DB",
+      "dependencies": [2]
+    },
+    {
+      "id": 4,
+      "title": "Diseño premium de pantalla 'Estrategia de División'",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Marketer",
+      "dependencies": [1]
+    },
+    {
+      "id": 5,
+      "title": "Implementar pantalla de división y slider de configuración",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Especialista Frontend",
+      "dependencies": [3, 4]
+    },
+    {
+      "id": 6,
+      "title": "Auditoría y pulido de pantallas iniciales",
+      "status": "PENDING",
+      "plan_approved": false,
+      "assigned_to": "Revisor",
+      "dependencies": []
+    }
+  ],
+  "members": []
+}
