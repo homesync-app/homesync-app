@@ -274,7 +274,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: currentIndex == 3 ? null : AppBar(
         title: Text(titles[currentIndex]),
         toolbarHeight: 80,
         actions: [

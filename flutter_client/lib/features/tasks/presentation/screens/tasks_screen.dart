@@ -32,19 +32,39 @@ class TasksScreen extends ConsumerStatefulWidget {
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends ConsumerState<TasksScreen> {
+class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProviderStateMixin {
   RealtimeChannel? _tasksChannel;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('es', EsMessages());
+    _tabController = TabController(length: 2, vsync: this);
+    
+    // Sync tab controller with provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isCalendar = ref.read(taskViewModeProvider);
+      if (isCalendar) _tabController.index = 1;
+    });
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        if (_tabController.index == 0) {
+          ref.read(taskViewModeProvider.notifier).setList();
+        } else {
+          ref.read(taskViewModeProvider.notifier).setCalendar();
+        }
+      }
+    });
+
     _setupRealtime();
   }
 
   @override
   void dispose() {
     _tasksChannel?.unsubscribe();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -232,7 +252,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final filteredAsync = ref.watch(filteredTasksProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
-    final isCalendarMode = ref.watch(taskViewModeProvider);
     final currentUserId = ref.read(currentUserIdProvider);
     final activeCatsAsync = ref.watch(activeCategoriesProvider);
 
@@ -260,261 +279,255 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       ),
       body: Column(
         children: [
-          // ── View mode toggle ─────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(32),
+          // Premium Tab Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.divider.withValues(alpha: 0.1),
+                  width: 1,
+                ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildModeToggleButton(
-                      'Tus Tareas',
-                      Icons.today_rounded,
-                      !isCalendarMode,
-                      () => ref.read(taskViewModeProvider.notifier).setList(),
-                    ),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              dividerColor: Colors.transparent,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary.withValues(alpha: 0.6),
+              indicatorSize: TabBarIndicatorSize.label,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              indicator: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.primary,
+                    width: 3.5,
                   ),
-                  Expanded(
-                    child: _buildModeToggleButton(
-                      'Semana',
-                      Icons.calendar_view_week_rounded,
-                      isCalendarMode,
-                      () => ref.read(taskViewModeProvider.notifier).setCalendar(),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ).animateScaleIn(),
+              labelPadding: const EdgeInsets.only(top: 12, bottom: 8),
+              indicatorPadding: const EdgeInsets.symmetric(horizontal: 16),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                letterSpacing: -0.4,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+              tabs: const [
+                Tab(text: 'Tus Tareas'),
+                Tab(text: 'Semana'),
+              ],
+            ),
           ),
+
           // ── Content ──────────────────────────────────────────────────────
           Expanded(
-            child: isCalendarMode
-                ? CalendarScreen(
-                    onEdit: (task) => _showEditDialog(task),
-                    onSchedule: (task) => _showScheduleDialog(task),
-                  )
-                : filteredAsync.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // TASK LIST TAB
+                filteredAsync.when(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                  error: (e, _) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 48, color: AppColors.error),
+                        const SizedBox(height: 16),
+                        const Text('Error al cargar tareas',
+                            style: TextStyle(color: AppColors.textSecondary)),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () => ref.invalidate(tasksProvider),
+                          child: const Text('Reintentar'),
+                        ),
+                      ],
                     ),
-                    error: (e, _) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline,
-                              size: 48, color: AppColors.error),
-                          const SizedBox(height: 16),
-                          const Text('Error al cargar tareas',
-                              style: TextStyle(color: AppColors.textSecondary)),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () => ref.invalidate(tasksProvider),
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    data: (tasks) => RefreshIndicator(
-                      onRefresh: () async {
-                        ref.invalidate(tasksProvider);
-                        ref.invalidate(categoriesProvider);
-                      },
-                      color: AppColors.accentGold,
-                      child: CustomScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        slivers: [
-                          // Search bar
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                              child: Consumer(
-                                builder: (context, ref, _) {
-                                  return TextField(
-                                    onChanged: (val) => ref.read(taskSearchQueryProvider.notifier).setQuery(val),
-                                    decoration: InputDecoration(
-                                      hintText: 'Buscar tarea...',
-                                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                      prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
-                                      filled: true,
-                                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  ),
+                  data: (tasks) => RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(tasksProvider);
+                      ref.invalidate(categoriesProvider);
+                    },
+                    color: AppColors.accentGold,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        // Search bar
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                return TextField(
+                                  onChanged: (val) => ref
+                                      .read(taskSearchQueryProvider.notifier)
+                                      .setQuery(val),
+                                  decoration: InputDecoration(
+                                    hintText: 'Buscar tarea...',
+                                    hintStyle: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5)),
+                                    prefixIcon: Icon(Icons.search,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.5)),
+                                    filled: true,
+                                    fillColor: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 0, horizontal: 16),
+                                  ),
+                                );
+                              },
+                            ),
+                          ).animateEntrance(delay: 100),
+                        ),
+                        // Category chips
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 4, bottom: 8),
+                            child: SizedBox(
+                              height: 50,
+                              child: activeCatsAsync.when(
+                                data: (activeCats) {
+                                  return categoriesAsync.when(
+                                    data: (catList) {
+                                      final visibleCats = catList
+                                          .where((c) => activeCats.contains(
+                                              AppColors.normaliseCategory(c.id)))
+                                          .toList();
+
+                                      return ListView(
+                                        scrollDirection: Axis.horizontal,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        children: [
+                                          _buildCategoryChip(null, 'Todas', '📋',
+                                                  AppColors.textSecondary)
+                                              .animateStaggered(0),
+                                          ...visibleCats
+                                              .asMap()
+                                              .entries
+                                              .map((e) => _buildCategoryChip(
+                                                    e.value.id,
+                                                    e.value.name,
+                                                    e.value.icon,
+                                                    AppColors.fromHex(
+                                                        e.value.color),
+                                                  ).animateStaggered(e.key + 1)),
+                                        ],
+                                      );
+                                    },
+                                    loading: () => const SizedBox(),
+                                    error: (_, __) => ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      children: [
+                                        _buildCategoryChip(null, 'Todas', '📋',
+                                            AppColors.textSecondary),
+                                      ],
                                     ),
                                   );
                                 },
+                                loading: () => const SizedBox(),
+                                error: (_, __) => const SizedBox(),
                               ),
-                            ).animateEntrance(delay: 100),
+                            ),
                           ),
-                          // Category chips — only show cats that have tasks
+                        ),
+                        // Tasks list
+                        SliverPadding(
+                          padding: EdgeInsets.only(
+                            bottom: ref.read(tasksProvider.notifier).hasMore &&
+                                    tasks.isNotEmpty &&
+                                    selectedCategories.isEmpty
+                                ? 20
+                                : 140,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              if (tasks.isEmpty)
+                                _buildEmptyState(selectedCategories.isEmpty
+                                    ? null
+                                    : 'filtered'),
+                              ..._buildGroupedTasks(
+                                tasks,
+                                categoriesAsync.maybeWhen(
+                                  data: (list) => list,
+                                  orElse: () => [],
+                                ),
+                                members,
+                                currentUserId,
+                                selectedCategories,
+                              ),
+                            ]),
+                          ),
+                        ),
+                        if (ref.read(tasksProvider.notifier).hasMore &&
+                            tasks.isNotEmpty &&
+                            selectedCategories.isEmpty)
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 4, bottom: 8),
-                              child: SizedBox(
-                                height: 50,
-                                child: activeCatsAsync.when(
-                                  data: (activeCats) {
-                                    return categoriesAsync.when(
-                                      data: (catList) {
-                                        // Filter DB categories to only those with tasks
-                                        final visibleCats = catList
-                                            .where((c) => activeCats.contains(
-                                                  AppColors.normaliseCategory(c.id)))
-                                            .toList();
-                                        
-                                        return ListView(
-                                          scrollDirection: Axis.horizontal,
-                                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                                          children: [
-                                            _buildCategoryChip(
-                                                null, 'Todas', '📋', AppColors.textSecondary).animateStaggered(0),
-                                            ...visibleCats.asMap().entries.map((e) => _buildCategoryChip(
-                                                  e.value.id,
-                                                  e.value.name,
-                                                  e.value.icon,
-                                                  AppColors.fromHex(e.value.color),
-                                                ).animateStaggered(e.key + 1)),
-                                          ],
-                                        );
-                                      },
-                                      loading: () => const SizedBox(),
-                                      error: (_, __) => ListView(
-                                        scrollDirection: Axis.horizontal,
-                                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                                        children: [
-                                          _buildCategoryChip(
-                                              null, 'Todas', '📋', AppColors.textSecondary),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  loading: () => const SizedBox(),
-                                  error: (_, __) => const SizedBox(),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Tasks list
-                          SliverPadding(
-                            padding: EdgeInsets.only(
-                              bottom: ref.read(tasksProvider.notifier).hasMore &&
-                                      tasks.isNotEmpty &&
-                                      selectedCategories.isEmpty
-                                  ? 20
-                                  : 140,
-                            ),
-                            sliver: SliverList(
-                              delegate: SliverChildListDelegate([
-                                if (tasks.isEmpty)
-                                  _buildEmptyState(selectedCategories.isEmpty ? null : 'filtered'),
-                                ..._buildGroupedTasks(
-                                  tasks,
-                                  categoriesAsync.maybeWhen(
-                                    data: (list) => list,
-                                    orElse: () => [],
-                                  ),
-                                  members,
-                                  currentUserId,
-                                  selectedCategories,
-                                ),
-                              ]),
-                            ),
-                          ),
-                          if (ref.read(tasksProvider.notifier).hasMore &&
-                              tasks.isNotEmpty &&
-                              selectedCategories.isEmpty)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                                child: Center(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () =>
-                                        ref.read(tasksProvider.notifier).loadMore(),
-                                    icon: const Icon(Icons.add_rounded),
-                                    label: const Text('Cargar más tareas',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w700)),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.primary,
-                                      side: const BorderSide(
-                                          color: AppColors.primary, width: 1.5),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 32, vertical: 16),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(24)),
-                                    ),
+                              padding:
+                                  const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                              child: Center(
+                                child: OutlinedButton.icon(
+                                  onPressed: () =>
+                                      ref.read(tasksProvider.notifier).loadMore(),
+                                  icon: const Icon(Icons.add_rounded),
+                                  label: const Text('Cargar más tareas',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w700)),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: const BorderSide(
+                                        color: AppColors.primary, width: 1.5),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 32, vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(24)),
                                   ),
                                 ),
                               ),
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
+                ),
+                // CALENDAR TAB
+                CalendarScreen(
+                  onEdit: (task) => _showEditDialog(task),
+                  onSchedule: (task) => _showScheduleDialog(task),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
-
   }
 
   // ── Widgets ────────────────────────────────────────────────────────────────
 
-  Widget _buildModeToggleButton(
-    String label,
-    IconData icon,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildCategoryChip(String? id, String name, String icon, Color color) {
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
@@ -637,20 +650,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Set<String> selectedCategories,
   ) {
     // 1. Group by marginalised category
-    final activeTasks = tasks.where((t) => t.isActive).toList();
-    
-    // Deduplicate by title+normalised-category
-    final uniqueMap = <String, TaskModel>{};
-    for (final t in activeTasks) {
-      final normCat = AppColors.normaliseCategory(t.category);
-      final key = '${t.title.toLowerCase().trim()}_$normCat';
-      final existing = uniqueMap[key];
-      // Keep most rewarding one
-      if (existing == null || t.xpReward > existing.xpReward) {
-        uniqueMap[key] = t;
-      }
-    }
-    final deduped = uniqueMap.values.toList();
+    // Include all tasks that are not yet "verified" (fully finished)
+    final activeTasks = tasks.where((t) => !t.isVerified).toList();
+    final deduped = activeTasks;
 
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};

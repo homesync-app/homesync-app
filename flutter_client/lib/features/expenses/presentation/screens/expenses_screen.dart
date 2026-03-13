@@ -66,18 +66,45 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildTabBar() {
     return Container(
-      color: AppColors.background,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.divider.withValues(alpha: 0.1),
+            width: 1,
+          ),
+        ),
+      ),
       child: TabBar(
         controller: _tabController,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        labelColor: AppColors.primary,
-        unselectedLabelColor: AppColors.textMuted,
-        indicatorColor: AppColors.primary,
-        indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondary.withValues(alpha: 0.5),
+        indicatorSize: TabBarIndicatorSize.label,
+        // Remove the grey square hover effect
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        indicator: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.primary,
+              width: 3.5,
+            ),
+          ),
+        ),
+        // Use padding to control distance between text and bar
+        labelPadding: const EdgeInsets.only(top: 12, bottom: 8),
+        indicatorPadding: const EdgeInsets.symmetric(horizontal: 8),
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 16,
+          letterSpacing: -0.4,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+        ),
         tabs: const [
           Tab(text: 'Movimientos'),
           Tab(text: 'Recurrentes'),

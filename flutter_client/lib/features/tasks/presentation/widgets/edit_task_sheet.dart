@@ -287,7 +287,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   controller: _coinController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'Monedas',
+                    labelText: 'Coins',
                     labelStyle: const TextStyle(color: AppColors.textSecondary),
                     filled: true,
                     fillColor: AppColors.surfaceVariant.withValues(alpha: 0.3),
@@ -296,7 +296,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       borderSide: BorderSide.none,
                     ),
                     prefixIcon: const Icon(Icons.monetization_on_rounded,
-                        color: AppColors.success),
+                        color: AppColors.sage),
                   ),
                 ),
               ),

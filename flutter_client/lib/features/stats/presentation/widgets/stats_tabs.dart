@@ -39,40 +39,40 @@ class WeeklyTab extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
-          SectionLabel(label: 'Duelo Semanal ($weekRange)', icon: '⚔️'),
+          const SectionLabel(label: 'Duelo de la semana', icon: '⚔️'),
           const SizedBox(height: 16),
-
+          
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
           ],
 
           // ── Summary row (Global context) ──────────────────────────────────
-          const SectionLabel(label: 'Contexto del hogar', icon: '🏠'),
+          const SectionLabel(label: 'Resumen del hogar', icon: '🏠'),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: MiniStatCard(
-                  icon: '✅',
+                  icon: '🔥',
                   value: '$totalTasks',
                   label: 'Tareas',
-                  color: AppColors.primary.withValues(alpha: 0.7),
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: MiniStatCard(
-                  icon: '⭐',
+                  icon: '✨',
                   value: '$totalXp',
-                  label: 'Total XP',
+                  label: 'XP',
                   color: AppColors.accentGold,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: MiniStatCard(
-                  icon: '🪙',
+                  icon: '💰',
                   value: '$totalCoins',
                   label: 'Coins',
                   color: AppColors.accentTeal,
@@ -80,33 +80,52 @@ class WeeklyTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 32),
 
           // ── Duel History ─────────────────────────────────────────────────
           if (duelHistory.isNotEmpty) ...[
-            const SectionLabel(label: 'Historial de duelos', icon: '🏆'),
+            const SectionLabel(label: 'Historial de victorias', icon: '🏆'),
             const SizedBox(height: 16),
             DuelHistoryWidget(duelHistory: duelHistory),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
           ],
 
-          // ── Activity History (Home-like) ──────────────────────────────
-          const SectionLabel(label: 'Actividad reciente', icon: '🕒'),
+          // ── Activity Placeholder ──────────────────────────────────────────
+          const SectionLabel(label: 'Detalles del hogar', icon: '🕒'),
           const SizedBox(height: 16),
           Container(
-             padding: const EdgeInsets.all(20),
-             decoration: BoxDecoration(
-               color: Colors.white,
-               borderRadius: BorderRadius.circular(24),
-               border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-             ),
-             child: const Center(
-               child: Text(
-                 'Revisá el muro para ver la actividad detallada',
-                 style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-               ),
-             ),
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.auto_awesome_outlined, color: AppColors.primary.withValues(alpha: 0.3), size: 32),
+                const SizedBox(height: 12),
+                const Text(
+                  'Revisá el muro para ver la\nactividad detallada minuto a minuto.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 24),
+          const PrivacyBadge(text: 'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
         ],
       ),
     );
@@ -188,18 +207,19 @@ class _ProgressTabState extends State<ProgressTab> {
 
           // ── Chart ──────────────────────────────────────────────────────
           Container(
-            height: 220,
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+            height: 240,
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(32),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 20,
-                  offset: const Offset(0, 4),
+                  offset: const Offset(0, 10),
                 ),
               ],
+              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
                 ? const Center(
@@ -214,6 +234,7 @@ class _ProgressTabState extends State<ProgressTab> {
                           style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -226,13 +247,15 @@ class _ProgressTabState extends State<ProgressTab> {
                       lineTouchData: LineTouchData(
                         touchTooltipData: LineTouchTooltipData(
                           getTooltipColor: (_) => AppColors.textPrimary,
+                          tooltipBorderRadius: BorderRadius.circular(12),
                           getTooltipItems: (touchedSpots) {
                             return touchedSpots.map((s) {
                               return LineTooltipItem(
                                 '${s.y.toInt()} ${_showXp ? 'XP' : 'Coins'}',
                                 const TextStyle(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
                                 ),
                               );
                             }).toList();
@@ -243,7 +266,7 @@ class _ProgressTabState extends State<ProgressTab> {
                         show: true,
                         drawVerticalLine: false,
                         getDrawingHorizontalLine: (value) => FlLine(
-                          color: AppColors.border.withValues(alpha: 0.3),
+                          color: Colors.black.withValues(alpha: 0.03),
                           strokeWidth: 1,
                         ),
                       ),
@@ -258,15 +281,24 @@ class _ProgressTabState extends State<ProgressTab> {
                         LineChartBarData(
                           spots: spots,
                           isCurved: true,
+                          curveSmoothness: 0.35,
                           color: color,
-                          barWidth: 6,
+                          barWidth: 5,
                           isStrokeCapRound: true,
-                          dotData: const FlDotData(show: true),
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                              radius: 4,
+                              color: Colors.white,
+                              strokeWidth: 3,
+                              strokeColor: color,
+                            ),
+                          ),
                           belowBarData: BarAreaData(
                             show: true,
                             gradient: LinearGradient(
                               colors: [
-                                color.withValues(alpha: 0.25),
+                                color.withValues(alpha: 0.15),
                                 color.withValues(alpha: 0.0),
                               ],
                               begin: Alignment.topCenter,
@@ -333,21 +365,35 @@ class CategoriesTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('📋', style: TextStyle(fontSize: 60)),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: const Text('📊', style: TextStyle(fontSize: 48)),
+            ),
+            const SizedBox(height: 24),
             const Text(
-              'Sin datos de categorías',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              'Todavía no hay datos',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Completá tareas para ver estadísticas',
-              style: TextStyle(color: AppColors.textSecondary),
+              'Completá algunas tareas para ver\ntus áreas de dominio.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             ElevatedButton(
               onPressed: onRefresh,
-              child: const Text('Actualizar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Actualizar datos'),
             ),
           ],
         ),
@@ -360,37 +406,57 @@ class CategoriesTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
-          // ── Header ───────────────────────────────────────────────────────
-          const SectionLabel(label: 'Tus preferencias', icon: '🏷️'),
-          const SizedBox(height: 16),
+          // ── Premium Dominance Header ─────────────────────────────────────
+          const SectionLabel(label: 'Dominio de Categorías', icon: '💎'),
+          const SizedBox(height: 20),
 
-          // ── Horizontal bar chart ─────────────────────────────────────────
+          // ── Horizontal bar chart (Modernized) ────────────────────────────
           CategoryBarChart(taskStats: taskStats),
           const SizedBox(height: 32),
 
-          // ── Detailed list ────────────────────────────────────────────────
-          const SectionLabel(label: 'Desglose por categoría', icon: '📋'),
+          // ── Elegant breakdown list ───────────────────────────────────────
+          const SectionLabel(label: 'Desglose detallado', icon: '✨'),
           const SizedBox(height: 16),
           ...taskStats.map((stat) => CategoryDetailCard(stat: stat)),
           
           const SizedBox(height: 24),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.05),
+                  AppColors.primary.withValues(alpha: 0.02),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Text('💡', style: TextStyle(fontSize: 20)),
-                SizedBox(width: 14),
-                Expanded(
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: const Text('💡', style: TextStyle(fontSize: 20)),
+                ),
+                const SizedBox(width: 18),
+                const Expanded(
                   child: Text(
-                    'Podés ver qué categorías dominás más para equilibrar las tareas del hogar.',
+                    'Balancear las categorías ayuda a mantener un hogar más armonioso y divertido.',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      fontStyle: FontStyle.italic,
+                      fontSize: 13,
+                      height: 1.5,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),

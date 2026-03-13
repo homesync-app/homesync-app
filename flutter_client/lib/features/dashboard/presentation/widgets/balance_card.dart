@@ -168,7 +168,7 @@ class BalanceCard extends ConsumerWidget {
                         ref.read(bottomNavIndexProvider.notifier).setIndex(3),
                     child: _buildCleanMetric(
                       context,
-                      label: 'Monedas',
+                      label: 'Coins',
                       value: NumberFormat.decimalPattern('es_AR').format(coins),
                       icon: Icons.monetization_on_rounded,
                       color: AppColors.sage,

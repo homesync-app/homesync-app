@@ -24,13 +24,28 @@ class Rewards extends _$Rewards {
 
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.getRewards(householdId);
-
+    
     return result.fold(
       (failure) {
         log.e('Error loading rewards: ${failure.message}');
         throw Exception(failure.message);
       },
-      (rewards) => rewards,
+      (rewards) async {
+        // If the store is empty, automatically clone templates to provide immediate content
+        if (rewards.isEmpty) {
+          log.i('Reward store empty, auto-cloning templates...');
+          final cloneResult = await repo.cloneTemplates();
+          return cloneResult.fold(
+            (l) => [], // If clone fails, return empty
+            (r) async {
+              // Fetch again after cloning
+              final secondTry = await repo.getRewards(householdId);
+              return secondTry.getOrElse((_) => []);
+            },
+          );
+        }
+        return rewards;
+      },
     );
   }
 
@@ -71,6 +86,7 @@ class Rewards extends _$Rewards {
     String? description,
     required int cost,
     String icon = '🎁',
+    String? category,
   }) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
@@ -87,6 +103,7 @@ class Rewards extends _$Rewards {
       description: description,
       cost: cost,
       icon: icon,
+      category: category,
       createdBy: userId,
     );
 

@@ -6,6 +6,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
@@ -36,9 +37,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _members = [];
   final List<Map<String, dynamic>> _difficulties = [
-    {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'coins': 1},
-    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'coins': 1},
-    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'coins': 2},
+    {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'Coins': 1},
+    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'Coins': 1},
+    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'Coins': 2},
   ];
 
   final List<Map<String, String>> _recurrenceOptions = [
@@ -66,7 +67,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   void _updateRewardControllers() {
     final diff = _currentDifficulty;
     _xpController.text = diff['xp'].toString();
-    _coinController.text = diff['coins'].toString();
+    _coinController.text = diff['Coins'].toString();
   }
 
   Future<void> _loadMembers() async {
@@ -93,9 +94,28 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
     setState(() => _isLoading = true);
 
+    final title = _titleController.text.trim();
+    final tasks = ref.read(tasksProvider).value ?? [];
+    final isDuplicate = tasks.any((t) => 
+      !t.isVerified && 
+      t.title.toLowerCase().trim() == title.toLowerCase());
+
+    if (isDuplicate) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ya existe una tarea activa con ese nombre'),
+            backgroundColor: AppColors.accentOrange,
+          ),
+        );
+      }
+      setState(() => _isLoading = false);
+      return;
+    }
+
     try {
       await ref.read(tasksProvider.notifier).createTask({
-        'title': _titleController.text.trim(),
+        'title': title,
         'description': _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
@@ -758,14 +778,25 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        '${d['xp']} XP / ${d['coins']} 💰',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textMuted,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${d['xp']} XP / ${d['Coins']}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.monetization_on_rounded,
+                            size: 11,
+                            color: isSelected ? AppColors.primary : AppColors.sage,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -856,7 +887,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   decoration: const InputDecoration(
                     labelText: 'Coins',
                     prefixIcon: Icon(Icons.monetization_on_rounded,
-                        color: AppColors.success, size: 20),
+                        color: AppColors.sage, size: 20),
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),

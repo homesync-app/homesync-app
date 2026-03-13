@@ -102,26 +102,46 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
     return Column(
       children: [
-        // Tab bar
         Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            border: Border(
+              bottom: BorderSide(
+                color: AppColors.divider.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+          ),
           child: TabBar(
             controller: _tabController,
+            dividerColor: Colors.transparent,
             labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textMuted,
-            indicatorColor: AppColors.primary,
-            indicatorWeight: 3,
+            unselectedLabelColor: AppColors.textSecondary.withValues(alpha: 0.5),
+            indicatorSize: TabBarIndicatorSize.label,
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
+            indicator: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.primary,
+                  width: 3.5,
+                ),
+              ),
+            ),
+            labelPadding: const EdgeInsets.only(top: 12, bottom: 8),
+            indicatorPadding: const EdgeInsets.symmetric(horizontal: 16),
             labelStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              letterSpacing: -0.4,
             ),
             unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
             ),
             tabs: const [
-              Tab(text: 'Semana'),
-              Tab(text: 'Progreso'),
+              Tab(text: 'Duelo'),
+              Tab(text: 'Evolución'),
               Tab(text: 'Categorías'),
             ],
           ),

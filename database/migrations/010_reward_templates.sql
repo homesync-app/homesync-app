@@ -24,18 +24,19 @@ CREATE POLICY "Reward Templates are readable by all"
   USING (true);
 
 -- Insert reward templates
-INSERT INTO public.reward_templates (title, description, cost, icon, is_popular, sort_order) VALUES
-  ('Masaje Relajante', 'Un masaje de 15 minutos para desestresarse', 50, '💆', true, 1),
-  ('Elegir Película', 'Tienes el control total del control remoto hoy', 30, '🎬', true, 2),
-  ('Desayuno en la Cama', 'Desayuno completo preparado y servido donde estés', 80, '🥞', false, 3),
-  ('Cena Especial', 'Tu comida favorita preparada con amor', 100, '🍽️', false, 4),
-  ('Organizar una Cita', 'Una salida planeada de principio a fin', 150, '✨', true, 5),
-  ('Helado de tu elección', 'Un postre frío para celebrar tus logros', 15, '🍦', true, 6),
-  ('Vale por un Chocolate', 'Un antojo dulce de tu elección', 15, '🍫', false, 7),
-  ('Día Libre de Tareas', 'Hoy no tienes que lavar platos ni limpiar nada', 200, '🏠', true, 7),
-  ('Elegir Música una Semana', 'Control total de la playlist en el auto y la casa', 45, '🎵', false, 8),
-  ('Café de Especialidad', 'Un café preparado con arte', 20, '☕', false, 9),
-  ('Siesta Ininterrumpida', '1 hora de silencio absoluto para dormir', 40, '😴', false, 10)
+INSERT INTO public.reward_templates (title, description, cost, icon, is_popular, sort_order, category) VALUES
+  ('Masaje Relajante', 'Un mimo relajante para desconectar', 50, '💆', true, 1, 'caricias'),
+  ('Masaje de pies', 'Relajación total después de un día largo', 40, '🦶', true, 2, 'caricias'),
+  ('Elegir Película', 'Tienes el control total del control remoto hoy', 30, '🎬', true, 3, 'favores'),
+  ('Desayuno en la Cama', 'Desayuno completo preparado y servido donde estés', 80, '🥞', false, 4, 'caricias'),
+  ('Cena Especial', 'Tu comida favorita preparada con amor', 100, '🍽️', false, 5, 'favores'),
+  ('Organizar una Cita', 'Una salida planeada de principio a fin', 150, '✨', true, 6, 'momentos'),
+  ('Helado de tu elección', 'Un postre frío para celebrar tus logros', 15, '🍦', true, 7, 'otros'),
+  ('Vale por un Chocolate', 'Un antojo dulce de tu elección', 15, '🍫', false, 8, 'otros'),
+  ('Día Libre de Tareas', 'Hoy no tienes que lavar platos ni limpiar nada', 200, '🏠', true, 9, 'momentos'),
+  ('Elegir Música una Semana', 'Control total de la playlist en el auto y la casa', 45, '🎵', false, 10, 'favores'),
+  ('Café de Especialidad', 'Un café preparado con arte', 20, '☕', false, 11, 'caricias'),
+  ('Siesta Ininterrumpida', '1 hora de silencio absoluto para dormir', 40, '😴', false, 12, 'momentos')
 ON CONFLICT DO NOTHING;
 
 -- ============================================

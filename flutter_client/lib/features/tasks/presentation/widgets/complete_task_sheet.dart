@@ -141,7 +141,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '⭐ $verb $totalXp XP y $totalCoins coins!',
+              '⭐ $verb $totalXp XP y $totalCoins Coins!',
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             backgroundColor: AppColors.primary,

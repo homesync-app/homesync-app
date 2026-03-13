@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'create_task_dialog.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 
 class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   final List<MemberModel> members;
@@ -71,6 +72,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'description': null,
         'assignedTo': null,
         'recurrenceType': null,
+        'isTemplate': true,
       });
       if (!mounted) return;
       // Task successfully added to server (and silentRefresh called in notifier)
@@ -108,8 +110,16 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         );
     _categories = dbCategories; // expose to helpers
 
-    // Templates - Show all templates as requested
-    final availableTemplates = _templates.toList();
+    // Templates - Filter out tasks that are already active in the household
+    final currentTasks = ref.watch(tasksProvider).value ?? [];
+    final activeTitles = currentTasks
+        .where((t) => !t.isVerified) // verified means done/archived
+        .map((t) => t.title.toLowerCase().trim())
+        .toSet();
+
+    final availableTemplates = _templates.where((t) {
+      return !activeTitles.contains(t.title.toLowerCase().trim());
+    }).toList();
 
     // Which categories actually have available templates? (preserves DB sort order)
     final activeCatIds = availableTemplates.map((t) => t.categoryId).toSet();

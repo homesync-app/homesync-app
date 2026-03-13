@@ -260,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Programación de hoy',
+              'Tareas de hoy',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,

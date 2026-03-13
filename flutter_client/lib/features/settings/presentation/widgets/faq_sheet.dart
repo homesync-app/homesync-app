@@ -88,9 +88,9 @@ class FAQSheet extends StatelessWidget {
                   context,
                   icon: Icons.monetization_on_rounded,
                   color: AppColors.accentGold,
-                  question: '¿Para qué sirven las monedas?',
+                  question: '¿Para qué sirven los Coins?',
                   answer:
-                      'Las monedas (Coins) son la recompensa por completar tareas. Puedes usarlas en la sección de "Recompensas" para canjear vales creados por tu pareja, como "Cena romántica" o "Día de relax".',
+                      'Los Coins son la recompensa por completar tareas. Puedes usarlas en la sección de "Recompensas" para canjear vales creados por tu pareja, como "Cena romántica" o "Día de relax".',
                 ),
                 _buildFAQItem(
                   context,

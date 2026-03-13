@@ -318,10 +318,12 @@ class Tasks extends _$Tasks {
     try {
       final xp = taskData['xpReward'] as int;
       final coins = taskData['coinReward'] as int;
+      final isTemplate = taskData['isTemplate'] as bool? ?? false;
       
-      // Approval logic: Safe if (5/1, 10/1, 20/2) OR (xp <= 20 AND coins <= 2)
-      // The user said: "Si edita y pone mas de 20xp o mas de 2" -> implies 20/2 is the limit.
-      final needsApproval = xp > 20 || coins > 2;
+      // Approval logic: 
+      // 1. Default templates are always trusted (isTemplate: true)
+      // 2. Custom tasks need approval ONLY if coins > 2
+      final needsApproval = !isTemplate && coins > 2;
       
       final useCase = ref.read(createTaskUseCaseProvider);
       final result = await useCase(
@@ -363,13 +365,17 @@ class Tasks extends _$Tasks {
       final xp = updates['xp_reward'] as int?;
       final coins = updates['coin_reward'] as int?;
       
-      if (xp != null || coins != null) {
+      if (coins != null || xp != null) {
         // Find current task to get missing values for check
         final task = state.value?.firstWhere((t) => t.id == taskId);
         if (task != null) {
-          final newXp = xp ?? task.xpReward;
           final newCoins = coins ?? task.coinReward;
-          if (newXp > 20 || newCoins > 2) {
+          final newXp = xp ?? task.xpReward;
+
+          // Approval logic based on user request:
+          // "pendientes de acreditacion es cuando edita una y cambia los coins a mas de lo que habia"
+          // We also keep a sanity check for XP > 50 if they inflate it too much.
+          if (newCoins > task.coinReward || newXp > 50) {
             updates['status'] = 'pending_approval';
           }
         }

@@ -53,6 +53,7 @@ class SupabaseRewardRepository
     String? description,
     required int cost,
     required String icon,
+    String? category,
     required String createdBy,
   }) async {
     return executeWithHandling(() async {
@@ -62,6 +63,7 @@ class SupabaseRewardRepository
         'description': description,
         'cost': cost,
         'icon': icon,
+        'category': category,
         'created_by': createdBy,
         'is_approved': false,
       });

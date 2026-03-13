@@ -14,6 +14,7 @@ abstract class RewardRepository {
     String? description,
     required int cost,
     required String icon,
+    String? category,
     required String createdBy,
   });
 

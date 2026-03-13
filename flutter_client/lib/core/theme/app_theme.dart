@@ -8,7 +8,8 @@ class AppTheme {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      fontFamily: GoogleFonts.outfit().fontFamily,
+      fontFamily: 'Outfit',
+      fontFamilyFallback: const ['sans-serif'],
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.accentGold,
@@ -22,14 +23,14 @@ class AppTheme {
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.outfitTextTheme(baseTheme.textTheme),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        titleTextStyle: GoogleFonts.outfit(
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        titleTextStyle: TextStyle(
+          fontFamily: 'Outfit',
           color: AppColors.textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.w800,
@@ -56,7 +57,8 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 16,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -72,7 +74,8 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          textStyle: GoogleFonts.outfit(
+          textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -81,7 +84,8 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.outfit(
+          textStyle: const TextStyle(
+            fontFamily: 'Outfit',
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -106,9 +110,9 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.accentRed, width: 1.5),
         ),
-        labelStyle: GoogleFonts.outfit(
-            color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-        hintStyle: GoogleFonts.outfit(color: AppColors.textMuted),
+        labelStyle: const TextStyle(
+            fontFamily: 'Outfit', color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+        hintStyle: const TextStyle(fontFamily: 'Outfit', color: AppColors.textMuted),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
@@ -123,9 +127,9 @@ class AppTheme {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,
         selectedLabelStyle:
-            GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12),
+            const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w700, fontSize: 12),
         unselectedLabelStyle:
-            GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12),
+            const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600, fontSize: 12),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
@@ -145,7 +149,8 @@ class AppTheme {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: GoogleFonts.outfit().fontFamily,
+      fontFamily: 'Outfit',
+      fontFamilyFallback: const ['sans-serif'],
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.accentGold,
@@ -159,14 +164,14 @@ class AppTheme {
     );
 
     return baseTheme.copyWith(
-      textTheme: GoogleFonts.outfitTextTheme(baseTheme.textTheme),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: darkText),
-        titleTextStyle: GoogleFonts.outfit(
+        iconTheme: IconThemeData(color: darkText),
+        titleTextStyle: TextStyle(
+          fontFamily: 'Outfit',
           color: darkText,
           fontSize: 24,
           fontWeight: FontWeight.w800,
@@ -193,7 +198,7 @@ class AppTheme {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           textStyle:
-              GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+              const TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -205,14 +210,14 @@ class AppTheme {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           textStyle:
-              GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+              const TextStyle(fontFamily: 'Outfit', fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           textStyle:
-              GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700),
+              const TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.w700),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -235,8 +240,8 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.accentRed, width: 1.5),
         ),
         labelStyle:
-            GoogleFonts.outfit(color: darkSubtext, fontWeight: FontWeight.w500),
-        hintStyle: GoogleFonts.outfit(color: darkMuted),
+            const TextStyle(fontFamily: 'Outfit', color: darkSubtext, fontWeight: FontWeight.w500),
+        hintStyle: const TextStyle(fontFamily: 'Outfit', color: darkMuted),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
@@ -251,9 +256,9 @@ class AppTheme {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: darkMuted,
         selectedLabelStyle:
-            GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12),
+            const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w700, fontSize: 12),
         unselectedLabelStyle:
-            GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12),
+            const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600, fontSize: 12),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),

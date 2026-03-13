@@ -56,76 +56,64 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
     final totalXp = p1Xp + p2Xp;
     final p1Pct = totalXp == 0 ? 0.5 : p1Xp / totalXp;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeOutQuart,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    '⚔️ DUELO SEMANAL',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
+        ],
+        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                _buildCompetitor(p1),
-                _buildVSIndicator(),
-                _buildCompetitor(p2),
-              ],
-            ),
-            const SizedBox(height: 32),
-            _buildMysteryBar(p1Pct),
-            const SizedBox(height: 24),
-            _buildWeeklyTrack(),
-            const SizedBox(height: 24),
-            _buildSimulationButton(context),
-          ],
-        ),
+                child: Row(
+                  children: [
+                    const Text('⚔️', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'DUELO DE PODER',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary.withValues(alpha: 0.8),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              _buildCompetitor(p1),
+              _buildVSIndicator(),
+              _buildCompetitor(p2),
+            ],
+          ),
+          const SizedBox(height: 36),
+          _buildMysteryBar(p1Pct),
+          const SizedBox(height: 32),
+          _buildWeeklyTrack(),
+          const SizedBox(height: 28),
+          _buildSimulationButton(context),
+        ],
       ),
     );
   }

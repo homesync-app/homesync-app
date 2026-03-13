@@ -7,6 +7,12 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 
 import '../../domain/models/reward_model.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import '../../domain/models/couple_challenge.dart';
+import '../widgets/couple_challenge_card.dart';
+import '../../../household/presentation/providers/household_provider.dart';
+import '../../../tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 
 class RewardsScreen extends ConsumerStatefulWidget {
   const RewardsScreen({super.key});
@@ -67,7 +73,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                   height: 250,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.accentGold.withValues(alpha: 0.08),
+                    color: AppColors.sage.withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -94,10 +100,10 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(40),
-                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.15), width: 1),
+                        border: Border.all(color: AppColors.sage.withValues(alpha: 0.15), width: 1),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accentGold.withValues(alpha: 0.08),
+                            color: AppColors.sage.withValues(alpha: 0.08),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),
@@ -114,7 +120,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.stars_rounded, color: AppColors.accentGold.withValues(alpha: 0.5), size: 18),
+                              Icon(Icons.monetization_on_rounded, color: AppColors.sage.withValues(alpha: 0.5), size: 18),
                               const SizedBox(width: 8),
                               const Text(
                                 'MI BILLETERA',
@@ -126,7 +132,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Icon(Icons.stars_rounded, color: AppColors.accentGold.withValues(alpha: 0.5), size: 18),
+                              Icon(Icons.monetization_on_rounded, color: AppColors.sage.withValues(alpha: 0.5), size: 18),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -149,9 +155,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                               const Padding(
                                 padding: EdgeInsets.only(bottom: 8.0),
                                 child: Text(
-                                  'coins',
+                                  'Coins',
                                   style: TextStyle(
-                                    color: AppColors.accentGold,
+                                    color: AppColors.sage,
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -167,7 +173,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
-                              'Canjeá por caricias y favores ✨',
+                              'Canjeá tus Coins por caricias, favores y pequeñas decisiones del día a día.',
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 13,
@@ -191,12 +197,16 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   Widget _buildBody(List<RewardModel> rewards, String? currentUserId) {
     final approvedRewards = rewards.where((r) => r.isApproved == true).toList();
     final suggestions = rewards.where((r) => r.isApproved == false).toList();
+    final householdId = ref.watch(householdIdProvider).value;
 
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildChallengeSection(householdId),
+          const SizedBox(height: 32),
+          
           if (suggestions.isNotEmpty) ...[
             _buildSectionHeader('💡 Sugerencias del otro', 
                 action: Text('${suggestions.length} pendientes', style: const TextStyle(color: AppColors.primary, fontSize: 12))),
@@ -222,6 +232,145 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         ],
       ),
     );
+  }
+  Widget _buildChallengeSection(String? householdId) {
+    if (householdId == null) return const SizedBox.shrink();
+    
+    final challenge = CoupleChallenge.currentWeeklyChallenge;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('🌟 Evento Especial', 
+            action: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('SOLO ESTA SEMANA', 
+                style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
+            )),
+        const SizedBox(height: 16),
+        CoupleChallengeCard(
+          challenge: challenge,
+          onComplete: () => _handleChallengeCompletion(challenge, householdId),
+        ),
+      ],
+    );
+  }
+
+  void _handleChallengeCompletion(CoupleChallenge challenge, String householdId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('¿Completaron el desafío?'),
+        content: Text('¡Qué alegría! Al confirmar, ambos recibirán ${challenge.coinReward} coins.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Aún no', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B5CF6),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('¡Sí, lo hicimos!'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      _executeChallengeCompletion(challenge, householdId);
+    }
+  }
+
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.primary, size: 20),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+            Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _executeChallengeCompletion(CoupleChallenge challenge, String householdId) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final members = ref.read(householdMembersNotifierProvider).value ?? [];
+      final userIds = members.map((m) => m.userId).toList();
+      
+      if (userIds.isEmpty) {
+        final currentUserId = ref.read(currentUserIdProvider);
+        if (currentUserId != null) userIds.add(currentUserId);
+      }
+
+      final taskRpc = TaskRpcService(); 
+      final newTaskId = await taskRpc.createTask(
+        title: 'Desafío: ${challenge.title}',
+        description: challenge.description,
+        category: 'Conexión',
+        coinReward: challenge.coinReward,
+        xpReward: 10,
+        type: 'one_time',
+      );
+
+      final rpc = ref.read(rpcServiceProvider);
+      await rpc.completeTaskTransaction(
+        taskId: newTaskId,
+        taskTitle: 'Desafío: ${challenge.title}',
+        xpReward: 10,
+        coinReward: challenge.coinReward,
+        householdId: householdId,
+        userIds: userIds,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        
+        SuccessCelebration.show(
+          context,
+          title: '¡Desafío Completado! ❤️',
+          message: 'Han ganado ${challenge.coinReward} coins cada uno. ¡Sigan cultivando su conexión!',
+          icon: '✨',
+        );
+        
+        ref.invalidate(userBalanceProvider);
+        ref.invalidate(tasksProvider);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al completar: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 
   Widget _buildSectionHeader(String title, {Widget? action}) {
@@ -294,7 +443,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            '${s.cost} coins',
+                            '${s.cost} Coins',
                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
                           ),
                         ],
@@ -381,7 +530,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: canAfford ? AppColors.accentGold.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
+          color: canAfford ? AppColors.sage.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
@@ -438,16 +587,16 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: canAfford ? AppColors.accentGold.withValues(alpha: 0.12) : AppColors.surfaceVariant,
+                    color: canAfford ? AppColors.sage.withValues(alpha: 0.12) : AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: canAfford ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent,
+                      color: canAfford ? AppColors.sage.withValues(alpha: 0.2) : Colors.transparent,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.stars_rounded, size: 16, color: canAfford ? AppColors.accentGold : AppColors.textMuted),
+                      Icon(Icons.monetization_on_rounded, size: 16, color: canAfford ? AppColors.sage : AppColors.textMuted),
                       const SizedBox(width: 6),
                       Text(
                         '$cost',
@@ -661,8 +810,8 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                 keyboardType: TextInputType.number,
                 style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFB45309)),
                 decoration: InputDecoration(
-                  hintText: 'Costo en coins',
-                  prefixIcon: const Icon(Icons.stars_rounded, color: AppColors.accentGold),
+                  hintText: 'Costo en Coins',
+                  prefixIcon: const Icon(Icons.monetization_on_rounded, color: AppColors.sage),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
@@ -758,3 +907,5 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     );
   }
 }
+
+
