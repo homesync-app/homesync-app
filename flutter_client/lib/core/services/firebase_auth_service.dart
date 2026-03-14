@@ -18,16 +18,15 @@ class FirebaseAuthService {
   fa.FirebaseAuth get auth => _auth;
 
   Future<void> _ensureInitialized() async {
-    if (_googleSignIn == null) {
-      log.i('FirebaseAuthService: Initializing GoogleSignIn.instance...');
+    // Only initialize GoogleSignIn on Mobile.
+    // On Web, we use Firebase SDK's signInWithPopup which doesn't need this package.
+    if (!kIsWeb && _googleSignIn == null) {
+      log.i('FirebaseAuthService: Initializing GoogleSignIn.instance for Mobile...');
       _googleSignIn = GoogleSignIn.instance;
       
       await _googleSignIn!.initialize(
-        // On Android, we should not pass clientId, it's automatically picked from google-services.json.
-        // Hardcoding it here might cause failures if the signature doesn't match the one tied to this ID.
-        clientId: kIsWeb ? AppEnvironment.firebaseOptions.appId : null,
         serverClientId: '105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com',
-      );
+      ).timeout(const Duration(seconds: 5));
       log.i('FirebaseAuthService: GoogleSignIn initialized.');
     }
   }
@@ -36,15 +35,24 @@ class FirebaseAuthService {
     try {
       await _ensureInitialized();
       
-      // For web, use OAuth flow through Supabase directly (recommended for web)
+      // Real Firebase Google Sign-In for Web
       if (kIsWeb) {
-        log.i('Firebase Auth: Delegating Google login to Supabase for web');
-        final supabaseClient = Supabase.instance.client;
-        await supabaseClient.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: kIsWeb ? Uri.base.origin : null,
-        );
-        return true;
+        log.i('Firebase Auth: Starting Google Sign-In with Firebase Popup for Web');
+        final googleProvider = fa.GoogleAuthProvider();
+        final userCredential = await _auth.signInWithPopup(googleProvider);
+        final user = userCredential.user;
+        
+        if (user != null) {
+          log.i('Firebase Auth Web: User logged in: ${user.email}');
+          final idToken = await user.getIdToken();
+          
+          if (idToken != null) {
+            await _syncSupabaseSessionWithFirebase(idToken: idToken);
+            await _createUserProfileIfNeeded();
+            return true;
+          }
+        }
+        return false;
       }
       
       // For mobile, use native authenticate() (replaces signIn() in v7)
@@ -262,6 +270,30 @@ class FirebaseAuthService {
       log.i('Sesión cerrada globalmente (Firebase + Supabase)');
     } catch (e) {
       log.e('Error signing out: $e', error: e);
+    }
+  }
+
+  Future<void> ensureHouseholdExists() async {
+    try {
+      final supabaseClient = Supabase.instance.client;
+      final supabaseUser = supabaseClient.auth.currentUser;
+      if (supabaseUser == null) {
+        log.w('ensureHouseholdExists: No session in Supabase yet.');
+        return;
+      }
+
+      final existing = await supabaseClient
+          .from('household_members')
+          .select('id')
+          .eq('user_id', supabaseUser.id)
+          .maybeSingle();
+
+      if (existing != null) return;
+
+      log.i('ensureHouseholdExists: Creating profile and household...');
+      await _createUserProfileIfNeeded();
+    } catch (e) {
+      log.e('Error in ensureHouseholdExists: $e');
     }
   }
 

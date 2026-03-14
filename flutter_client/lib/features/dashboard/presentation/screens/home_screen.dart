@@ -123,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _buildTasksSection(),
                     const SizedBox(height: 32),
                     _buildActivitySection(),
-                    const SizedBox(height: 120),
+                    const SizedBox(height: 140),
                   ],
                 ),
               ),
@@ -131,21 +131,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showQuickActionMenu(householdId),
-        backgroundColor: AppColors.primary,
-        elevation: 12,
-        label: const Text(
-          'Nueva Acción',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-            letterSpacing: -0.2,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showQuickActionMenu(householdId),
+          backgroundColor: AppColors.primary,
+          elevation: 12,
+          label: const Text(
+            'Nueva Acción',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 15,
+              letterSpacing: -0.2,
+            ),
           ),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      ).animateScaleIn(delay: 600),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        ).animateScaleIn(delay: 600),
+      ),
     );
   }
 
@@ -941,66 +945,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(28, 12, 28, 20),
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '¿Qué deseás hacer?',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildQuickActionItem(
-                    icon: Icons.add_shopping_cart_rounded,
-                    label: 'Cargar Gasto',
-                    color: AppColors.primary,
-                    onTap: () {
-                      Navigator.pop(context);
-                      ExpenseFormSheet.show(context);
-                    },
-                  ),
+      builder: (context) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildQuickActionItem(
-                    icon: Icons.calendar_today_rounded,
-                    label: 'Completar Tarea',
-                    color: AppColors.success,
-                    onTap: () {
-                      Navigator.pop(context);
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => CompleteTaskSheet(onTasksCompleted: () {}),
-                      );
-                    },
-                  ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                '¿Qué deseás hacer?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickActionItem(
+                      icon: Icons.add_shopping_cart_rounded,
+                      label: 'Cargar Gasto',
+                      color: AppColors.primary,
+                      onTap: () {
+                        Navigator.pop(context);
+                        ExpenseFormSheet.show(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildQuickActionItem(
+                      icon: Icons.calendar_today_rounded,
+                      label: 'Completar Tarea',
+                      color: AppColors.success,
+                      onTap: () {
+                        Navigator.pop(context);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => CompleteTaskSheet(onTasksCompleted: () {}),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1053,123 +1059,125 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(28, 12, 28, 40),
-        decoration: const BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(2),
+      builder: (context) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(28, 12, 28, 36),
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.accentOrange.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.volunteer_activism_rounded,
+                  color: AppColors.accentOrange,
+                  size: 40,
+                ),
               ),
-              child: const Icon(
-                Icons.volunteer_activism_rounded,
-                color: AppColors.accentOrange,
-                size: 40,
+              const SizedBox(height: 24),
+              Text(
+                '¿Saldar deuda con $partnerName?',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '¿Saldar deuda con $partnerName?',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
+              const SizedBox(height: 16),
+              Text(
+                '¿Confirmas que ya realizaste la transferencia de \$${amount.toStringAsFixed(2)} a $partnerName? Esto equilibrará el balance de la pareja a 0 nuevamente.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 15,
+                  height: 1.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '¿Confirmas que ya realizaste la transferencia de \$${amount.toStringAsFixed(2)} a $partnerName? Esto equilibrará el balance de la pareja a 0 nuevamente.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 15,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Aún no',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
+                      child: const Text(
+                        'Aún no',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      Navigator.pop(context);
-                      final currentUserId = ref.read(currentUserIdProvider);
-                      await ref
-                           .read(expenseControllerProvider.notifier)
-                           .settleDebt(
-                             fromUserId: isOwedByMe ? (currentUserId ?? '') : partnerId,
-                             toUserId: isOwedByMe ? partnerId : (currentUserId ?? ''),
-                             amount: amount,
-                           );
-
-                      if (mounted) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: const Text('¡Balance equilibrado! Todo listo. ✨'),
-                            backgroundColor: AppColors.success,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        Navigator.pop(context);
+                        final currentUserId = ref.read(currentUserIdProvider);
+                        await ref
+                             .read(expenseControllerProvider.notifier)
+                             .settleDebt(
+                               fromUserId: isOwedByMe ? (currentUserId ?? '') : partnerId,
+                               toUserId: isOwedByMe ? partnerId : (currentUserId ?? ''),
+                               amount: amount,
+                             );
+  
+                        if (mounted) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: const Text('¡Balance equilibrado! Todo listo. ✨'),
+                              backgroundColor: AppColors.success,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Si, ¡saldar!',
+                        style: TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
-                    child: const Text(
-                      'Si, ¡saldar!',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

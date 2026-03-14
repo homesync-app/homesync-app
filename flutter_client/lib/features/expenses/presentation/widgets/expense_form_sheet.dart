@@ -360,40 +360,43 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             color: AppColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
-              _buildHeader(context),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
-                      _buildTypeToggle(),
-                      const SizedBox(height: 24),
-                      _buildAmountField(),
-                      const SizedBox(height: 32),
-                      _buildTitleField(),
-                      const SizedBox(height: 24),
-                      _buildDateAndPayerRow(context, payer, members),
-                      const SizedBox(height: 24),
-                      _buildShoppingIntegration(context, shoppingItemsAsync),
-                      const SizedBox(height: 32),
-                      _buildCategorySelector(context),
-                      const SizedBox(height: 32),
-                      _buildSplitConfiguration(context, members),
-                      const SizedBox(height: 32),
-                      const SizedBox(height: 48),
-                      _buildSaveButton(),
-                      const SizedBox(height: 40),
-                    ],
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
+                _buildHeader(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
+                        _buildTypeToggle(),
+                        const SizedBox(height: 24),
+                        _buildAmountField(),
+                        const SizedBox(height: 32),
+                        _buildTitleField(),
+                        const SizedBox(height: 24),
+                        _buildDateAndPayerRow(context, payer, members),
+                        const SizedBox(height: 24),
+                        _buildShoppingIntegration(context, shoppingItemsAsync),
+                        const SizedBox(height: 32),
+                        _buildCategorySelector(context),
+                        const SizedBox(height: 32),
+                        _buildSplitConfiguration(context, members),
+                        const SizedBox(height: 32),
+                        const SizedBox(height: 48),
+                        _buildSaveButton(),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

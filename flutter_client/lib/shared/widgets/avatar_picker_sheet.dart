@@ -68,154 +68,157 @@ class AvatarPickerSheet extends ConsumerWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
       ),
       padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 40),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(10),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
-          const SizedBox(height: 28),
-          const Text(
-            'Tu Identidad Visual',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
+            const SizedBox(height: 28),
+            const Text(
+              'Tu Identidad Visual',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Elegí un avatar de la colección o creá el tuyo propio',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 12),
+            Text(
+              'Elegí un avatar de la colección o creá el tuyo propio',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                children: [
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    alignment: WrapAlignment.center,
-                    children: UserAvatar.defaultAvatars.map((animal) {
-                      final isSelected = currentAvatar == animal['emoji'];
-                      return _AvatarOption(
-                        emoji: animal['emoji'],
-                        color: animal['color'],
-                        isSelected: isSelected,
-                        onTap: () => _updateAvatar(context, ref, animal['emoji']),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 32),
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      const Text(
-                        'Personajes 3D',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'PREMIUM',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    clipBehavior: Clip.none,
-                    child: Row(
-                      children: UserAvatar.premiumAvatars.map((char) {
-                        final premiumUrl = 'premium://${char['url']}';
-                        final isSelected = currentAvatar == premiumUrl;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 20),
-                          child: Column(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? char['color'].withValues(alpha: 0.15)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(28),
-                                  border: isSelected
-                                      ? Border.all(
-                                          color: AppColors.primary,
-                                          width: 3,
-                                        )
-                                      : null,
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.primary.withValues(alpha: 0.25),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 6),
-                                          )
-                                        ]
-                                      : null,
-                                ),
-                                child: CustomUserAvatar(
-                                  avatarUrl: premiumUrl,
-                                  radius: 40,
-                                  isAnimated: true,
-                                  isPriority: isSelected,
-                                  onTap: () => _updateAvatar(context, ref, premiumUrl),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                char['name'] ?? '',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
+            const SizedBox(height: 32),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  children: [
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      alignment: WrapAlignment.center,
+                      children: UserAvatar.defaultAvatars.map((animal) {
+                        final isSelected = currentAvatar == animal['emoji'];
+                        return _AvatarOption(
+                          emoji: animal['emoji'],
+                          color: animal['color'],
+                          isSelected: isSelected,
+                          onTap: () => _updateAvatar(context, ref, animal['emoji']),
                         );
                       }).toList(),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  _CustomEmojiSection(
-                    onSelected: (emoji) => _updateAvatar(context, ref, emoji),
-                  ),
-                ],
+                    const SizedBox(height: 32),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        const Text(
+                          'Personajes 3D',
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'PREMIUM',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      clipBehavior: Clip.none,
+                      child: Row(
+                        children: UserAvatar.premiumAvatars.map((char) {
+                          final premiumUrl = 'premium://${char['url']}';
+                          final isSelected = currentAvatar == premiumUrl;
+        
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: Column(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? char['color'].withValues(alpha: 0.15)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(28),
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: AppColors.primary,
+                                            width: 3,
+                                          )
+                                        : null,
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppColors.primary.withValues(alpha: 0.25),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 6),
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: CustomUserAvatar(
+                                    avatarUrl: premiumUrl,
+                                    radius: 40,
+                                    isAnimated: true,
+                                    isPriority: isSelected,
+                                    onTap: () => _updateAvatar(context, ref, premiumUrl),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  char['name'] ?? '',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    _CustomEmojiSection(
+                      onSelected: (emoji) => _updateAvatar(context, ref, emoji),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

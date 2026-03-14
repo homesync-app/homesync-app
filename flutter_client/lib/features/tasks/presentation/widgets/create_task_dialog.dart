@@ -96,15 +96,18 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
     final title = _titleController.text.trim();
     final tasks = ref.read(tasksProvider).value ?? [];
-    final isDuplicate = tasks.any((t) => 
-      !t.isVerified && 
-      t.title.toLowerCase().trim() == title.toLowerCase());
+    final isDuplicate = tasks.any((t) {
+      final sameTitle = t.title.toLowerCase().trim() == title.toLowerCase();
+      final sameCategory = t.category == _selectedCategory;
+      final sameAssignee = t.assignedTo == _selectedMemberId;
+      return !t.isVerified && sameTitle && sameCategory && sameAssignee;
+    });
 
     if (isDuplicate) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Ya existe una tarea activa con ese nombre'),
+            content: Text('Ya existe una tarea idéntica activa'),
             backgroundColor: AppColors.accentOrange,
           ),
         );

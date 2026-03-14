@@ -257,4 +257,12 @@ class SupabaseExpenseRepository
       return unit;
     }, context: 'SupabaseExpenseRepository.processRecurringExpenses', isOnline: _isOnline);
   }
+
+  @override
+  Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
+    return executeWithHandling(() async {
+      await _client.from('planned_expenses').delete().eq('id', id);
+      return unit;
+    }, context: 'SupabaseExpenseRepository.deletePlannedExpense', isOnline: _isOnline);
+  }
 }

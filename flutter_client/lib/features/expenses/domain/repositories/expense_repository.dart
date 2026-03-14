@@ -59,4 +59,5 @@ abstract class ExpenseRepository {
   });
 
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId);
+  Future<Either<Failure, Unit>> deletePlannedExpense(String id);
 }

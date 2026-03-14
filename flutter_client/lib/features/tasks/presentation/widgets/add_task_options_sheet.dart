@@ -103,22 +103,27 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final tasksAsync = ref.watch(tasksProvider);
+    final dbCategoriesAsync = ref.watch(categoriesProvider);
+
     // Categories from DB via Riverpod — single source of truth
-    final dbCategories = ref.watch(categoriesProvider).maybeWhen(
+    final dbCategories = dbCategoriesAsync.maybeWhen(
           data: (list) => list,
           orElse: () => <CategoryModel>[],
         );
     _categories = dbCategories; // expose to helpers
 
     // Templates - Filter out tasks that are already active in the household
-    final currentTasks = ref.watch(tasksProvider).value ?? [];
-    final activeTitles = currentTasks
+    // We must wait for tasks to be loaded to accurately filter
+    final currentTasks = tasksAsync.value ?? [];
+    final activeKeys = currentTasks
         .where((t) => !t.isVerified) // verified means done/archived
-        .map((t) => t.title.toLowerCase().trim())
+        .map((t) => "${t.title.toLowerCase().trim()}|${(t.category ?? 'none').toLowerCase().trim()}")
         .toSet();
 
     final availableTemplates = _templates.where((t) {
-      return !activeTitles.contains(t.title.toLowerCase().trim());
+      final key = "${t.title.toLowerCase().trim()}|${t.categoryId.toLowerCase().trim()}";
+      return !activeKeys.contains(key);
     }).toList();
 
     // Which categories actually have available templates? (preserves DB sort order)
@@ -202,9 +207,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               ),
             ),
           const SizedBox(height: 12),
-          // ── Template list ─────────────────────────────────────────────
           Expanded(
-            child: _isLoading
+            child: (_isLoading || tasksAsync.isLoading)
                 ? const Center(
                     child: CircularProgressIndicator(color: AppColors.primary))
                 : filtered.isEmpty

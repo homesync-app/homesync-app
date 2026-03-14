@@ -215,7 +215,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             error: (e, _) => SliverFillRemaining(
                 hasScrollBody: false, child: Center(child: Text('Error: $e'))),
             data: (feedItems) {
-              final sortedItems = List<FeedItemModel>.from(feedItems)
+              final filteredItems = feedItems.where(_shouldShowFeedItem).toList();
+              final sortedItems = List<FeedItemModel>.from(filteredItems)
                 ..sort((a, b) => b.date.compareTo(a.date));
 
               return SliverMainAxisGroup(
@@ -1239,29 +1240,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.textMuted.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.access_time_rounded, size: 9, color: AppColors.textMuted.withValues(alpha: 0.8)),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'PRÓXIMO',
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.textMuted,
-                                letterSpacing: 0.5),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildPlannedStatusBadge(item),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -1306,11 +1285,80 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     style:
                         TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
               ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => ref.read(combinedFeedControllerProvider.notifier).discardPlannedExpense(item.id),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textMuted,
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Omitir', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPlannedStatusBadge(FeedItemModel item) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDate = DateTime(item.date.year, item.date.month, item.date.day);
+    final diff = dueDate.difference(today).inDays;
+
+    String label = 'PRÓXIMO';
+    Color badgeColor = AppColors.textMuted;
+    IconData icon = Icons.access_time_rounded;
+
+    if (diff < 0) {
+      label = 'PENDIENTE';
+      badgeColor = AppColors.accentRed;
+      icon = Icons.priority_high_rounded;
+    } else if (diff <= 2) {
+      label = 'VENCE PRONTO';
+      badgeColor = AppColors.accentGold;
+      icon = Icons.notification_important_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: badgeColor.withValues(alpha: 0.8)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                color: badgeColor,
+                letterSpacing: 0.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _shouldShowFeedItem(FeedItemModel item) {
+    if (!item.isPlanned) return true;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDate = DateTime(item.date.year, item.date.month, item.date.day);
+
+    // Show if it's today, in the past (overdue), or within the next 2 days
+    if (dueDate.isBefore(today) || dueDate.isAtSameMomentAs(today)) return true;
+
+    final difference = dueDate.difference(today).inDays;
+    return difference <= 2;
   }
 
   Widget _buildExpenseCard(ExpenseModel expense) {

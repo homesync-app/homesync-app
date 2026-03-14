@@ -33,199 +33,202 @@ class ExpenseDetailSheet {
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        expense.isIncome ? 'Detalle de Ingreso' : 'Detalle de Gasto',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        DateFormat('EEEE, d \'de\' MMMM', 'es').format(expense.paidAt),
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ).animateEntrance(),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ExpenseFormSheet.show(context, expense: expense);
-                      },
-                    ),
-                  ).animateScaleIn(delay: 100),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.divider, borderRadius: BorderRadius.circular(2))),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Resumen Principal
+                     Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          expense.isIncome ? 'Detalle de Ingreso' : 'Detalle de Gasto',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          DateFormat('EEEE, d \'de\' MMMM', 'es').format(expense.paidAt),
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                      ],
+                    ).animateEntrance(),
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 8)),
-                        ],
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.divider),
                       ),
-                      child: Column(
-                        children: [
-                           Row(
-                             mainAxisAlignment: MainAxisAlignment.center,
-                             children: [
-                               Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.getCategoryColor(expense.category).withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(expense.categoryIcon, style: const TextStyle(fontSize: 28)),
-                              ).animateScaleIn(delay: 200),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  displayTitle,
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.3),
-                                ).animateEntrance(delay: 250),
-                              ),
-                             ],
-                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '\$ ${_formatCurrency(expense.amount)}',
-                            style: TextStyle(
-                              fontSize: 32, 
-                              fontWeight: FontWeight.w900, 
-                              color: expense.isIncome ? AppColors.success : const Color(0xFF1E3A8A),
-                              letterSpacing: -1.0,
-                            ),
-                          ).animateScaleIn(delay: 300),
-                          const SizedBox(height: 6),
-                           // Badges compactos
-                           Wrap(
-                             alignment: WrapAlignment.center,
-                             spacing: 8,
-                             runSpacing: 8,
-                             children: [
-                               _buildTypeBadge(
-                                  expense.splitType == 'equal' ? 'Dividido Equitativamente' : 
-                                  (expense.splitType == 'fixed' ? 'División Personalizada' : 'Gasto Personal'),
-                                  AppColors.getCategoryColor(expense.category),
-                                  isSmall: true
-                                ),
-                               if (expense.payerDisplayName != 'Alguien')
-                                  _buildTypeBadge('Pagó ${expense.payerDisplayName}', AppColors.accentBlue, isSmall: true),
-                             ],
-                           ).animateEntrance(delay: 350),
-                        ],
+                      child: IconButton(
+                        icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ExpenseFormSheet.show(context, expense: expense);
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    if (hasSimpleDescription) ...[
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('Nota:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.divider)),
-                        child: Text(expense.description!, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    if (isShoppingList && expense.description != null) ...[
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('Ítems Comprados', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildReceiptView(expense.description!),
-                      const SizedBox(height: 24),
-                    ] else if (expense.description != null && expense.description!.contains('\n')) ...[
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('Detalle', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildReceiptView(expense.description!),
-                      const SizedBox(height: 24),
-                    ],
-
-                    if (expense.splits != null && expense.splits!.isNotEmpty && expense.splitType != 'personal') ...[
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text('División', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.divider),
-                        ),
-                        child: Column(
-                          children: expense.splits!.map((split) {
-                            final isPayer = split.userId == expense.paidBy;
-                            return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                              leading: CustomUserAvatar(
-                                avatarUrl: split.avatarUrl,
-                                name: split.fullName ?? 'Usuario',
-                                radius: 20,
-                              ),
-                              title: Text(
-                                (split.fullName ?? 'Usuario').split(' ').first, 
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)
-                              ),
-                              subtitle: isPayer 
-                                ? Text('Pagó', style: TextStyle(color: AppColors.getCategoryColor(expense.category), fontSize: 12, fontWeight: FontWeight.w600))
-                                : Text('Su parte', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                              trailing: Text(
-                                '\$ ${_formatCurrency(split.amount)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900, 
-                                  fontSize: 16, 
-                                  color: isPayer ? AppColors.textPrimary : const Color(0xFFF97316),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ).animateEntrance(delay: 400),
-                    ],
-                    const SizedBox(height: 48),
+                    ).animateScaleIn(delay: 100),
                   ],
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Resumen Principal
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 8)),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                             Row(
+                               mainAxisAlignment: MainAxisAlignment.center,
+                               children: [
+                                 Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.getCategoryColor(expense.category).withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(expense.categoryIcon, style: const TextStyle(fontSize: 28)),
+                                ).animateScaleIn(delay: 200),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    displayTitle,
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary, letterSpacing: -0.3),
+                                  ).animateEntrance(delay: 250),
+                                ),
+                               ],
+                             ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '\$ ${_formatCurrency(expense.amount)}',
+                              style: TextStyle(
+                                fontSize: 32, 
+                                fontWeight: FontWeight.w900, 
+                                color: expense.isIncome ? AppColors.success : const Color(0xFF1E3A8A),
+                                letterSpacing: -1.0,
+                              ),
+                            ).animateScaleIn(delay: 300),
+                            const SizedBox(height: 6),
+                             // Badges compactos
+                             Wrap(
+                               alignment: WrapAlignment.center,
+                               spacing: 8,
+                               runSpacing: 8,
+                               children: [
+                                 _buildTypeBadge(
+                                    expense.splitType == 'equal' ? 'Dividido Equitativamente' : 
+                                    (expense.splitType == 'fixed' ? 'División Personalizada' : 'Gasto Personal'),
+                                    AppColors.getCategoryColor(expense.category),
+                                    isSmall: true
+                                  ),
+                                 if (expense.payerDisplayName != 'Alguien')
+                                    _buildTypeBadge('Pagó ${expense.payerDisplayName}', AppColors.accentBlue, isSmall: true),
+                               ],
+                             ).animateEntrance(delay: 350),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      if (hasSimpleDescription) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Nota:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.divider)),
+                          child: Text(expense.description!, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+        
+                      if (isShoppingList && expense.description != null) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Ítems Comprados', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildReceiptView(expense.description!),
+                        const SizedBox(height: 24),
+                      ] else if (expense.description != null && expense.description!.contains('\n')) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Detalle', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildReceiptView(expense.description!),
+                        const SizedBox(height: 24),
+                      ],
+        
+                      if (expense.splits != null && expense.splits!.isNotEmpty && expense.splitType != 'personal') ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('División', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: AppColors.divider),
+                          ),
+                          child: Column(
+                            children: expense.splits!.map((split) {
+                              final isPayer = split.userId == expense.paidBy;
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                leading: CustomUserAvatar(
+                                  avatarUrl: split.avatarUrl,
+                                  name: split.fullName ?? 'Usuario',
+                                  radius: 20,
+                                ),
+                                title: Text(
+                                  (split.fullName ?? 'Usuario').split(' ').first, 
+                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)
+                                ),
+                                subtitle: isPayer 
+                                  ? Text('Pagó', style: TextStyle(color: AppColors.getCategoryColor(expense.category), fontSize: 12, fontWeight: FontWeight.w600))
+                                  : Text('Su parte', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                trailing: Text(
+                                  '\$ ${_formatCurrency(split.amount)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900, 
+                                    fontSize: 16, 
+                                    color: isPayer ? AppColors.textPrimary : const Color(0xFFF97316),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ).animateEntrance(delay: 400),
+                      ],
+                      const SizedBox(height: 48),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

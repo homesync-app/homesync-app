@@ -32,8 +32,50 @@
   <title>homesync_client</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Google Sign-In Client ID for Web -->
-  <meta name="google-signin-client_id" content="105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com">
+  <style>
+    /* 
+      Manual font loading to bypass Flutter Web's assets/assets pathing bug.
+    */
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-ExtraBold.ttf') format('truetype');
+      font-weight: 800;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Outfit';
+      src: url('assets/fonts/outfit/Outfit-Black.ttf') format('truetype');
+      font-weight: 900;
+      font-style: normal;
+    }
+    body {
+      font-family: 'Outfit', sans-serif !important;
+    }
+  </style>
 </head>
 <body>
   <!--

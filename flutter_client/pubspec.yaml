@@ -1,7 +1,7 @@
 name: homesync_client
 description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
 publish_to: "none"
-version: 1.0.0+35
+version: 1.0.0+36
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -87,19 +87,19 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/google_fonts/
+    - assets/fonts/outfit/
 
   fonts:
     - family: Outfit
       fonts:
-        - asset: assets/google_fonts/Outfit-Regular.ttf
-        - asset: assets/google_fonts/Outfit-Medium.ttf
+        - asset: assets/fonts/outfit/Outfit-Regular.ttf
+        - asset: assets/fonts/outfit/Outfit-Medium.ttf
           weight: 500
-        - asset: assets/google_fonts/Outfit-SemiBold.ttf
+        - asset: assets/fonts/outfit/Outfit-SemiBold.ttf
           weight: 600
-        - asset: assets/google_fonts/Outfit-Bold.ttf
+        - asset: assets/fonts/outfit/Outfit-Bold.ttf
           weight: 700
-        - asset: assets/google_fonts/Outfit-ExtraBold.ttf
+        - asset: assets/fonts/outfit/Outfit-ExtraBold.ttf
           weight: 800
-        - asset: assets/google_fonts/Outfit-Black.ttf
+        - asset: assets/fonts/outfit/Outfit-Black.ttf
           weight: 900

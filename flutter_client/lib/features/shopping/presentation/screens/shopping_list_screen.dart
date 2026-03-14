@@ -464,8 +464,64 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics()),
                       slivers: [
-                        // ── PENDING ITEMS ──────────────────────────────────
-                        if (pending.isNotEmpty) ...[
+                        // ── EMPTY STATE / PENDING LIST HEADER ────────────────────────
+                        if (pending.isEmpty)
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: TweenAnimationBuilder<double>(
+                                duration: const Duration(seconds: 1),
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                builder: (context, value, child) => Opacity(
+                                  opacity: value,
+                                  child: Transform.scale(
+                                    scale: 0.8 + (0.2 * value),
+                                    child: child,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(32),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceVariant.withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Text('🍏', style: TextStyle(fontSize: 80)),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      done.isEmpty 
+                                        ? '¡Heladera lista!\n¿Necesitás algo hoy?'
+                                        : '¡Todo comprado!\n¿Querés anotar algo más?',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: AppColors.textPrimary.withValues(alpha: 0.8),
+                                        fontSize: 20,
+                                        height: 1.3,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Agregá productos usando las categorías\no el buscador de abajo.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: AppColors.textMuted,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 40),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        else ...[
+                          // Mostramos la grilla de pendientes si NO está vacío
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                             sliver: SliverGrid(
@@ -503,30 +559,6 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             ),
                           ),
                         ],
-
-                        if (pending.isEmpty && done.isEmpty)
-                          SliverToBoxAdapter(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 40),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('🍏', style: TextStyle(fontSize: 48)),
-                                  SizedBox(height: 12),
-                                  Text(
-                                    'La heladera está llena.\n¿Necesitás algo?',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 14,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
 
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
@@ -747,20 +779,28 @@ class _ShoppingItemTile extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
           color: isCompleted
-              ? AppColors.surfaceVariant.withValues(alpha: 0.5)
-              : catColor.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: isCompleted
-              ? null
-              : Border.all(color: catColor.withValues(alpha: 0.5), width: 2.0),
+              ? AppColors.surfaceVariant.withValues(alpha: 0.4)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isCompleted
+                ? AppColors.divider.withValues(alpha: 0.5)
+                : catColor.withValues(alpha: 0.3),
+            width: isCompleted ? 1.0 : 2.0,
+          ),
           boxShadow: isCompleted
               ? []
               : [
                   BoxShadow(
-                    color: catColor.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
+                    color: catColor.withValues(alpha: 0.12),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
         ),
         child: Stack(

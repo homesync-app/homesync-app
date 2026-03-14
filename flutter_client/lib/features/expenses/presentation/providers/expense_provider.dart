@@ -237,6 +237,17 @@ class CombinedFeedController extends _$CombinedFeedController {
     );
   }
 
+  Future<void> discardPlannedExpense(String id) async {
+    final repo = ref.read(expenseRepositoryProvider);
+    final result = await repo.deletePlannedExpense(id);
+    result.fold(
+      (l) => throw Exception(l.message),
+      (r) {
+        ref.invalidateSelf();
+      },
+    );
+  }
+
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
