@@ -273,37 +273,48 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       'Compras'
     ];
 
-    return Scaffold(
-      appBar: currentIndex == 3 ? null : AppBar(
-        title: Text(titles[currentIndex]),
-        toolbarHeight: 80,
-        actions: [
-          const NotificationBell(),
-          IconButton(
-            icon: const Icon(
-              Icons.settings_outlined,
-              color: AppColors.textSecondary,
+    return PopScope(
+      canPop: currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        
+        // If not on the first tab, go to it
+        if (currentIndex != 0) {
+          ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+        }
+      },
+      child: Scaffold(
+        appBar: currentIndex == 3 ? null : AppBar(
+          title: Text(titles[currentIndex]),
+          toolbarHeight: 80,
+          actions: [
+            const NotificationBell(),
+            IconButton(
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: AppColors.textSecondary,
+              ),
+              onPressed: () => _openSettings(context),
             ),
-            onPressed: () => _openSettings(context),
-          ),
-          const SizedBox(width: 8),
-        ],
+            const SizedBox(width: 8),
+          ],
+        ),
+        // ✅ Stack puts the banner ABOVE everything else in the screen
+        body: Stack(
+          children: [
+            FadeIndexedStack(
+              index: currentIndex,
+              children: screens,
+            ),
+            // In-app notification banner (slides from top)
+            InAppNotificationBanner(
+              key: _bannerKey,
+              onTap: () => _goToNotifications(context),
+            ),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomNav(),
       ),
-      // ✅ Stack puts the banner ABOVE everything else in the screen
-      body: Stack(
-        children: [
-          FadeIndexedStack(
-            index: currentIndex,
-            children: screens,
-          ),
-          // In-app notification banner (slides from top)
-          InAppNotificationBanner(
-            key: _bannerKey,
-            onTap: () => _goToNotifications(context),
-          ),
-        ],
-      ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 

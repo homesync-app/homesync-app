@@ -47,15 +47,15 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = 38
+        versionName = "1.0.0"
     }
 
     buildTypes {
         release {
-            // Disable shrinking/obfuscation temporarily to debug Login issues
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // Enable shrinking/obfuscation to reduce app size and provide mapping files
+            isMinifyEnabled = true
+            isShrinkResources = true
             
             // FORCE the release keystore. If it's missing, the build SHOULD fail
             // instead of using the debug key (which causes the SHA1 mismatch)

@@ -300,74 +300,83 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Container(
-        decoration: AppTheme.backgroundGradientBox,
-        child: Stack(
-          children: [
-            // Background decor
-            Positioned(
-              top: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -50,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.accentTeal.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-
-            SafeArea(
-              child: Column(
-                children: [
-                  _buildProgressIndicator(),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      switchInCurve: Curves.easeOutQuart,
-                      switchOutCurve: Curves.easeInQuart,
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.05),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: switch (_currentStep) {
-                        0 => _buildWelcomeStep(),
-                        1 => _buildModeSelection(),
-                        2 => _buildTeamOptions(),
-                        3 => _buildInviteCodeStep(),
-                        4 => _buildSplitStep(),
-                        5 => _buildTaskSelection(),
-                        _ => _buildWelcomeStep(),
-                      },
-                    ),
+    return PopScope(
+      canPop: _currentStep == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_currentStep > 0) {
+          setState(() => _currentStep--);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Container(
+          decoration: AppTheme.backgroundGradientBox,
+          child: Stack(
+            children: [
+              // Background decor
+              Positioned(
+                top: -100,
+                right: -100,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary.withValues(alpha: 0.05),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+              Positioned(
+                bottom: -50,
+                left: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.accentTeal.withValues(alpha: 0.05),
+                  ),
+                ),
+              ),
+
+              SafeArea(
+                child: Column(
+                  children: [
+                    _buildProgressIndicator(),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        switchInCurve: Curves.easeOutQuart,
+                        switchOutCurve: Curves.easeInQuart,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.05),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: switch (_currentStep) {
+                          0 => _buildWelcomeStep(),
+                          1 => _buildModeSelection(),
+                          2 => _buildTeamOptions(),
+                          3 => _buildInviteCodeStep(),
+                          4 => _buildSplitStep(),
+                          5 => _buildTaskSelection(),
+                          _ => _buildWelcomeStep(),
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

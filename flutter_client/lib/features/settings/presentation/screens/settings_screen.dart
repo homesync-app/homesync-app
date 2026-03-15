@@ -335,116 +335,126 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        
+        // Go to home tab and pop
+        ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+        Navigator.pop(context);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 3,
+                ),
+              )
+            : RefreshIndicator(
+                onRefresh: _loadData,
                 color: AppColors.primary,
-                strokeWidth: 3,
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: AppColors.primary,
-              backgroundColor: AppColors.surface,
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics()),
-                slivers: [
-                  SliverAppBar(
-                    expandedHeight: 140,
-                    floating: false,
-                    pinned: true,
-                    elevation: 0,
-                    stretch: true,
-                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                    flexibleSpace: FlexibleSpaceBar(
-                      centerTitle: false,
-                      titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
-                      title: Text(
-                        'Configuración',
-                        style: TextStyle(
-                          color:
-                              Theme.of(context).textTheme.headlineMedium?.color,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 26,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.05),
-                              Theme.of(context).scaffoldBackgroundColor,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                backgroundColor: AppColors.surface,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics()),
+                  slivers: [
+                    SliverAppBar(
+                      expandedHeight: 140,
+                      floating: false,
+                      pinned: true,
+                      elevation: 0,
+                      stretch: true,
+                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                      flexibleSpace: FlexibleSpaceBar(
+                        centerTitle: false,
+                        titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
+                        title: Text(
+                          'Configuración',
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).textTheme.headlineMedium?.color,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 26,
+                            letterSpacing: -0.5,
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildProfileCard(),
-                          const SizedBox(height: 24),
-                          if (_householdId != null) ...[
-                            _buildCombinedHouseholdCard(),
-                          ] else ...[
-                            _buildNoHouseholdCard(),
-                          ],
-                          const SizedBox(height: 24),
-                          const MercadoPagoSettingsCard(),
-                          const SizedBox(height: 24),
-                          _buildAppearanceCard(),
-                          const SizedBox(height: 24),
-                          _buildNotificationsCard(),
-                          const SizedBox(height: 24),
-                          _buildFAQButton(),
-                          const SizedBox(height: 48),
-                          _buildLogoutButton(),
-                          const SizedBox(height: 32),
-                          _buildResetAccountButton(),
-                          const SizedBox(height: 48),
-                          Opacity(
-                            opacity: 0.4,
-                            child: Column(
-                              children: [
-                                const Text(
-                                  'HOMESYNC',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Versión 1.0.0 (Building with ❤️)',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.color,
-                                  ),
-                                ),
+                        background: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primary.withValues(alpha: 0.05),
+                                Theme.of(context).scaffoldBackgroundColor,
                               ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildProfileCard(),
+                            const SizedBox(height: 24),
+                            if (_householdId != null) ...[
+                              _buildCombinedHouseholdCard(),
+                            ] else ...[
+                              _buildNoHouseholdCard(),
+                            ],
+                            const SizedBox(height: 24),
+                            const MercadoPagoSettingsCard(),
+                            const SizedBox(height: 24),
+                            _buildAppearanceCard(),
+                            const SizedBox(height: 24),
+                            _buildNotificationsCard(),
+                            const SizedBox(height: 24),
+                            _buildFAQButton(),
+                            const SizedBox(height: 48),
+                            _buildLogoutButton(),
+                            const SizedBox(height: 32),
+                            _buildResetAccountButton(),
+                            const SizedBox(height: 48),
+                            Opacity(
+                              opacity: 0.4,
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    'HOMESYNC',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Versión 1.0.0 (Building with ❤️)',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.color,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 

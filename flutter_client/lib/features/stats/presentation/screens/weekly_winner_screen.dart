@@ -81,24 +81,31 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
       _loadData();
     });
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            colors: [
-              const Color(0xFF1E1B4B).withValues(alpha: 0.95),
-              Colors.black.withValues(alpha: 0.9),
-            ],
-            radius: 1.2,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        widget.onClose();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                const Color(0xFF1E1B4B).withValues(alpha: 0.95),
+                Colors.black.withValues(alpha: 0.9),
+              ],
+              radius: 1.2,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-              : _buildContent(),
+          child: SafeArea(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  )
+                : _buildContent(),
+          ),
         ),
       ),
     );
