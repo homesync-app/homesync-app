@@ -69,16 +69,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     }
 
     final List<Map<String, String>> matches = [];
-    for (final catList in ShoppingPredefined.itemsPerCategory.values) {
+    
+    // Buscar por nombre de item y por nombre de categoría
+    ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
+      final catName = ShoppingCategories.nameFor(catId).toLowerCase();
+      final catMatchesQuery = catName.contains(query);
+      
       for (final item in catList) {
-        if (item['name']!.toLowerCase().contains(query)) {
+        if (item['name']!.toLowerCase().contains(query) || catMatchesQuery) {
           if (!matches.any((m) => m['name'] == item['name'])) {
             matches.add(item);
           }
         }
       }
-    }
-    _suggestionsVal.value = matches.take(5).toList();
+    });
+    
+    _suggestionsVal.value = matches.take(query.length < 2 ? 5 : 10).toList();
   }
 
   // ── Actions ──────────────────────────────────────────────────────────────
@@ -153,11 +159,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       }
     }
 
-    ShoppingItemSheet.show(
-      context,
-      initialName: val,
-      initialCategory: categoryId,
-      initialEmoji: finalEmoji,
+    ref.read(shoppingItemsProvider.notifier).addItem(
+      name: val,
+      category: categoryId,
+      emoji: finalEmoji,
     );
   }
 

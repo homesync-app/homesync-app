@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import '../providers/shopping_provider.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/models/shopping_categories.dart';
@@ -50,7 +48,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   late TextEditingController _quantityController;
   late String _category;
   late String _emoji;
-  late bool _shouldSync;
 
   @override
   void initState() {
@@ -63,7 +60,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
     );
     _category = widget.item?.category ?? widget.initialCategory ?? 'general';
     _emoji = widget.item?.emoji ?? widget.initialEmoji ?? '🛒';
-    _shouldSync = widget.item?.shouldSync ?? true;
   }
 
   @override
@@ -75,7 +71,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isPremium = ref.watch(premiumProvider);
 
     return Container(
       padding: EdgeInsets.only(
@@ -184,75 +179,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
           ),
           const SizedBox(height: 32),
           
-          // PREMIUM FEATURE: Gated Toggle
-          const Text(
-            'Automatización',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isPremium 
-                  ? AppColors.primary.withValues(alpha: 0.05)
-                  : Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isPremium 
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : Colors.transparent,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isPremium ? AppColors.primary : Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isPremium ? Icons.sync_rounded : Icons.lock_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Vincular con Finanzas',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        'Crea un gasto automáticamente al comprar.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch.adaptive(
-                  value: _shouldSync,
-                  onChanged: isPremium 
-                      ? (val) => setState(() => _shouldSync = val)
-                      : (val) => PremiumPaywall.show(context),
-                  activeColor: AppColors.primary,
-                ),
-              ],
-            ),
-          ),
           
           const SizedBox(height: 40),
           SizedBox(
@@ -287,7 +213,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
         name: _nameController.text.trim(),
         category: _category,
         emoji: _emoji,
-        shouldSync: _shouldSync,
       );
     } else {
       // For now, edit is handled by delete/add or we could implement updateItem

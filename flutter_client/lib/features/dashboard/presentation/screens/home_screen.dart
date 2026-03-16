@@ -745,29 +745,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             // Top Row: User + Action + Category Chip
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 6,
-                              runSpacing: 4,
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Text(
                                   userName,
                                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.textPrimary),
                                 ),
+                                const SizedBox(width: 4),
                                 if (actionVerb.isNotEmpty)
                                   Text(
                                     actionVerb,
                                     style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                                   ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: accentColor.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '$categoryEmoji $itemLabel',
-                                    style: TextStyle(color: accentColor, fontWeight: FontWeight.w800, fontSize: 11),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: accentColor.withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '${itemLabel.length > 20 ? "" : (categoryEmoji != null ? "$categoryEmoji " : "")}$itemLabel',
+                                      style: TextStyle(color: accentColor, fontWeight: FontWeight.w800, fontSize: 11),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -854,7 +858,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aún cargando detalles del gasto...')),
+        const SnackBar(content: Text('Este gasto ya no está disponible o fue eliminado')),
       );
       return;
     }

@@ -133,9 +133,10 @@ class ExpenseDetailSheet {
                                runSpacing: 8,
                                children: [
                                  _buildTypeBadge(
-                                    expense.splitType == 'equal' ? 'Dividido Equitativamente' : 
-                                    (expense.splitType == 'fixed' ? 'División Personalizada' : 'Gasto Personal'),
-                                    AppColors.getCategoryColor(expense.category),
+                                    expense.splitType == 'gift' ? 'Regalo' : 
+                                    (expense.splitType == 'equal' ? 'Dividido Equitativamente' : 
+                                    (expense.splitType == 'fixed' ? 'División Personalizada' : 'Gasto Personal')),
+                                    expense.splitType == 'gift' ? Colors.pinkAccent : AppColors.getCategoryColor(expense.category),
                                     isSmall: true
                                   ),
                                  if (expense.payerDisplayName != 'Alguien')

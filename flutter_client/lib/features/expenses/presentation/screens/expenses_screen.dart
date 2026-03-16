@@ -1373,7 +1373,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     if (expense.isSettlement) return _buildSettlementCard(expense);
 
     final isIncome = expense.isIncome;
-    final isShared = expense.isShared;
+    final isShared = expense.isShared || expense.splitType == 'gift';
     final color = isIncome
         ? AppColors.success
         : AppColors.getCategoryColor(expense.category);

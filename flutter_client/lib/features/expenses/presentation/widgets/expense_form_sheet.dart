@@ -9,9 +9,11 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
+import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
@@ -296,12 +298,34 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       if (_selectedShoppingItems.isNotEmpty) {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
+        final userId = ref.read(currentUserIdProvider);
         for (final item in _selectedShoppingItems) {
+          if (item.id.startsWith('temp_')) {
+            final result = await shoppingRepo.addItem(
+              name: item.name,
+              category: (item.category != 'general') 
+                  ? item.category! 
+                  : (_selectedCategory?['id'] ?? 'general'),
+              emoji: item.emoji,
+              userId: userId ?? '',
+              householdId: householdId,
+            );
+
+            await result.fold(
+              (l) async => null,
+              (newItem) async => await shoppingRepo.toggleItem(
+                itemId: newItem.id,
+                completed: true,
+                userId: userId,
+              ),
+            );
+          } else {
             await shoppingRepo.toggleItem(
               itemId: item.id,
               completed: true,
-              userId: null,
+              userId: userId,
             );
+          }
         }
         ref.invalidate(shoppingItemsProvider);
       }
@@ -802,63 +826,72 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return shoppingItemsAsync.when(
       data: (allItems) {
         final items = allItems.where((i) => !i.completed).toList();
-        if (items.isEmpty && _selectedShoppingItems.isEmpty) return const SizedBox.shrink();
+        // Eliminamos el early return para que siempre sea visible
         final isPremium = ref.watch(premiumProvider);
         
-        return GestureDetector(
-          onTap: isPremium 
-              ? () => _showShoppingItemsSelector(context, items)
+        return Opacity(
+          opacity: isPremium ? 1.0 : 0.6,
+          child: InkWell(
+            onTap: isPremium 
+              ? () => _showShoppingItemsSelector(context)
               : () => PremiumPaywall.show(context),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isPremium 
-                  ? AppColors.primary.withValues(alpha: 0.06)
-                  : Colors.grey[100],
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
                 color: isPremium 
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : Colors.transparent,
+                    ? AppColors.primary.withValues(alpha: 0.05)
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isPremium 
+                      ? AppColors.primary.withValues(alpha: 0.2)
+                      : AppColors.divider,
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isPremium 
-                        ? AppColors.primary.withValues(alpha: 0.1)
-                        : Colors.grey[300],
-                    shape: BoxShape.circle,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isPremium 
+                          ? AppColors.primary.withValues(alpha: 0.1)
+                          : Colors.grey[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPremium ? Icons.shopping_cart_outlined : Icons.lock_rounded,
+                      color: isPremium ? AppColors.primary : AppColors.textMuted,
+                      size: 20,
+                    ),
                   ),
-                  child: Icon(
-                    isPremium ? Icons.shopping_cart_outlined : Icons.lock_rounded,
-                    color: isPremium ? AppColors.primary : Colors.white,
-                    size: 20,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedShoppingItems.isEmpty ? 'Vincular con la lista' : '${_selectedShoppingItems.length} artículos vinculados',
+                          style: TextStyle(
+                              color: isPremium ? AppColors.primary : AppColors.textSecondary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15),
+                        ),
+                        Text(
+                          isPremium 
+                            ? 'Marca artículos como comprados' 
+                            : 'Función Premium de HomeSync', 
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedShoppingItems.isEmpty ? 'Vincular con la lista' : '${_selectedShoppingItems.length} artículos vinculados',
-                        style: TextStyle(
-                            color: isPremium ? AppColors.primary : AppColors.textSecondary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15),
-                      ),
-                      const Text('Marca artículos como comprados', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                    ],
+                  Icon(
+                    isPremium ? Icons.add_circle_outline_rounded : Icons.chevron_right_rounded,
+                    color: isPremium ? AppColors.primary : AppColors.textMuted,
                   ),
-                ),
-                Icon(
-                  isPremium ? Icons.add_circle_outline_rounded : Icons.chevron_right_rounded,
-                  color: isPremium ? AppColors.primary : AppColors.textMuted,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -868,13 +901,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
-  void _showShoppingItemsSelector(BuildContext context, List<ShoppingItemModel> items) {
+  void _showShoppingItemsSelector(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _ShoppingItemsSelector(
-        items: items,
         initialSelected: _selectedShoppingItems,
         onItemsSelected: (selected) {
           setState(() {
@@ -1071,42 +1103,66 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 }
 
-class _ShoppingItemsSelector extends StatefulWidget {
-  final List<ShoppingItemModel> items;
+class _ShoppingItemsSelector extends ConsumerStatefulWidget {
   final Set<ShoppingItemModel> initialSelected;
   final Function(Set<ShoppingItemModel>) onItemsSelected;
 
   const _ShoppingItemsSelector({
-    required this.items,
+    super.key,
     required this.initialSelected,
     required this.onItemsSelected,
   });
 
   @override
-  State<_ShoppingItemsSelector> createState() => _ShoppingItemsSelectorState();
+  ConsumerState<_ShoppingItemsSelector> createState() => _ShoppingItemsSelectorState();
 }
 
-class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
+class _ShoppingItemsSelectorState extends ConsumerState<_ShoppingItemsSelector> {
   String _searchQuery = '';
   final Set<ShoppingItemModel> _currentSelection = {};
-  late List<ShoppingItemModel> _availableItems;
 
   @override
   void initState() {
     super.initState();
     _currentSelection.addAll(widget.initialSelected);
-    _availableItems = List.from(widget.items);
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredItems = _availableItems.where((item) => 
-      item.name.toLowerCase().contains(_searchQuery.toLowerCase())
+    final query = _searchQuery.toLowerCase().trim();
+    final householdItems = ref.watch(shoppingItemsProvider).value ?? [];
+    
+    // 1. Items de la casa que coinciden
+    final filteredHouseholdItems = householdItems.where((item) => 
+      item.name.toLowerCase().contains(query)
     ).toList();
 
-    final showAddOption = _searchQuery.isNotEmpty && 
-      !_availableItems.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase()) &&
-      !_currentSelection.any((item) => item.name.toLowerCase() == _searchQuery.toLowerCase());
+    // 2. Sugerencias globales (predefinidos) que NO están en los de la casa
+    final List<Map<String, String>> predefinedMatches = [];
+    if (query.isNotEmpty) {
+      ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
+        final catName = ShoppingCategories.nameFor(catId).toLowerCase();
+        final catMatchesQuery = catName.contains(query);
+        
+        for (final item in catList) {
+          final itemName = item['name']!;
+          if (itemName.toLowerCase().contains(query) || catMatchesQuery) {
+            // Solo si no existe ya en los de la casa ni en la selección actual
+            final existsInHousehold = householdItems.any((ai) => ai.name.toLowerCase() == itemName.toLowerCase());
+            final existsInSelection = _currentSelection.any((cs) => cs.name.toLowerCase() == itemName.toLowerCase());
+            
+            if (!existsInHousehold && !existsInSelection && !predefinedMatches.any((pm) => pm['name']!.toLowerCase() == itemName.toLowerCase())) {
+              predefinedMatches.add({...item, 'categoryId': catId});
+            }
+          }
+        }
+      });
+    }
+
+    final showAddOption = query.isNotEmpty && 
+      !filteredHouseholdItems.any((item) => item.name.toLowerCase() == query) &&
+      !predefinedMatches.any((item) => item['name']!.toLowerCase() == query) &&
+      !_currentSelection.any((item) => item.name.toLowerCase() == query);
 
     return Container(
       decoration: const BoxDecoration(
@@ -1146,51 +1202,101 @@ class _ShoppingItemsSelectorState extends State<_ShoppingItemsSelector> {
                   ),
                 ),
 
-                if (showAddOption)
-                  ListTile(
-                    leading: const Text('➕', style: TextStyle(fontSize: 24)),
-                    title: Text('Agregar "${_searchQuery.trim()}"', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
-                    subtitle: const Text('Producto no encontrado en la lista actual', style: TextStyle(fontSize: 12)),
-                    onTap: () {
-                      final newItem = ShoppingItemModel(
-                        id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-                        name: _searchQuery.trim(),
-                        householdId: '',
-                        createdAt: DateTime.now(),
-                        emoji: '🏷️',
-                      );
-                      setState(() {
-                        _currentSelection.add(newItem);
-                        _availableItems.insert(0, newItem);
-                        _searchQuery = '';
-                      });
-                      widget.onItemsSelected(_currentSelection);
-                    },
-                  ),
-
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      final isSelected = _currentSelection.contains(item);
-                      return ListTile(
-                        leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
-                        title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                        trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              _currentSelection.remove(item);
-                            } else {
-                              _currentSelection.add(item);
-                            }
-                          });
-                          widget.onItemsSelected(_currentSelection);
-                        },
-                      );
-                    },
+                    children: [
+                      if (showAddOption)
+                         ListTile(
+                          leading: const Text('➕', style: TextStyle(fontSize: 24)),
+                          title: Text('Agregar "$_searchQuery"', style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          subtitle: const Text('Producto personalizado', style: TextStyle(fontSize: 12)),
+                          onTap: () async {
+                            final queryToSave = _searchQuery.trim();
+                            setState(() => _searchQuery = '');
+                            
+                            // 1. Add to household DB
+                            await ref.read(shoppingItemsProvider.notifier).addItem(
+                              name: queryToSave,
+                              category: 'general',
+                              emoji: '🏷️',
+                            );
+                            
+                            // 2. Hack for immediate selection
+                            final temp = ShoppingItemModel(
+                                id: 'selection_sync_${queryToSave}',
+                                name: queryToSave,
+                                householdId: '',
+                                createdAt: DateTime.now(),
+                                emoji: '🏷️',
+                                category: 'general',
+                            );
+                            setState(() => _currentSelection.add(temp));
+                            widget.onItemsSelected(_currentSelection);
+                          },
+                        ),
+
+                      // Resultados de la casa
+                      ...filteredHouseholdItems.map((item) {
+                        final isSelected = _currentSelection.contains(item);
+                        return ListTile(
+                          leading: Text(item.emoji, style: const TextStyle(fontSize: 24)),
+                          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                          trailing: Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : AppColors.divider),
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                _currentSelection.remove(item);
+                              } else {
+                                _currentSelection.add(item);
+                              }
+                            });
+                            widget.onItemsSelected(_currentSelection);
+                          },
+                        );
+                      }),
+
+                      // Sugerencias globales
+                      if (predefinedMatches.isNotEmpty) ...[
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                          child: Text('Sugerencias globales', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textMuted, letterSpacing: 1)),
+                        ),
+                         ...predefinedMatches.take(25).map((item) {
+                          return ListTile(
+                            leading: Text(item['emoji']!, style: const TextStyle(fontSize: 22)),
+                            title: Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                            trailing: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 24),
+                            onTap: () async {
+                              final name = item['name']!;
+                              final cat = item['categoryId']!;
+                              final emoji = item['emoji']!;
+                              
+                              setState(() => _searchQuery = '');
+                              
+                              // Add to DB
+                              await ref.read(shoppingItemsProvider.notifier).addItem(
+                                name: name,
+                                category: cat,
+                                emoji: emoji,
+                              );
+                              
+                              // Hack: add a temporary item to selection with same name
+                              final temp = ShoppingItemModel(
+                                id: 'selection_sync_${name}',
+                                name: name,
+                                householdId: '',
+                                createdAt: DateTime.now(),
+                                emoji: emoji,
+                                category: cat,
+                              );
+                              setState(() => _currentSelection.add(temp));
+                              widget.onItemsSelected(_currentSelection);
+                            },
+                          );
+                        }),
+                      ],
+                    ],
                   ),
                 ),
 

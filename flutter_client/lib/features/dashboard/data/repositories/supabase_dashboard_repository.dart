@@ -47,10 +47,13 @@ class SupabaseDashboardRepository implements DashboardRepository {
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
           data['amount'] = metadata['amount'] ?? 0;
-          data['description'] = item['description']; // Include description for detail check
+          data['description'] = item['description'];
           data['expense_id'] = metadata['expense_id'] ?? metadata['id']; 
+          // Preserve these for filtering
+          data['is_shared'] = metadata['is_shared'];
+          data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
-          uiType = 'task'; // Denotes productivity/rewards
+          uiType = 'task';
           data['task_title'] = 'Canjeó premio: ${item['title']}';
         }
 
@@ -67,23 +70,27 @@ class SupabaseDashboardRepository implements DashboardRepository {
         final creatorId = activity['creator_id'] as String?;
         
         if (type == 'expense') {
-          final isIncome = data['type'] == 'income' || data['type'] == 'ingreso';
+          final isIncome = data['type'] == 'income' || data['type'] == 'ingreso' || data['category'] == 'salary';
           if (isIncome) return false;
 
-          // IF personal, ONLY the creator sees it.
-          final isShared = data['is_shared'] != false && data['split_type'] != 'personal';
+          final isShared = data['is_shared'] == true;
+          final splitType = (data['split_type'] as String?)?.toLowerCase();
+          final isGift = splitType == 'gift' || splitType == 'regalo';
           
-          if (!isShared && creatorId != userId) {
-            return false;
-          }
+          final shouldShow = isShared || isGift || creatorId == userId;
+          
+          dev.log('Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow');
+          
+          return shouldShow;
         }
         
         return true;
       }).toList();
 
+      dev.log('SupabaseDashboardRepository: Fetched ${activities.length} activities');
       return activities;
     } catch (e) {
-      dev.log('Error fetching activities from household_activities: $e');
+      dev.log('Error fetching activities: $e');
       return [];
     }
   }
