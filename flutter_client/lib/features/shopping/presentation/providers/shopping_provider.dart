@@ -4,7 +4,10 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/repositories/shopping_repository.dart';
 import '../../domain/usecases/get_shopping_items_usecase.dart';
@@ -130,6 +133,7 @@ class ShoppingItems extends _$ShoppingItems {
     String category = 'general',
     String emoji = '🛒',
     String? note,
+    bool shouldSync = true,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
     final userId = ref.read(currentUserIdProvider);
@@ -153,6 +157,7 @@ class ShoppingItems extends _$ShoppingItems {
       addedBy: userId,
       createdAt: DateTime.now(),
       completed: false,
+      shouldSync: shouldSync,
     );
 
     // Update state immediately
@@ -168,6 +173,7 @@ class ShoppingItems extends _$ShoppingItems {
             category: category,
             emoji: emoji,
             note: note,
+            shouldSync: shouldSync,
           );
       
       result.fold(
@@ -220,10 +226,38 @@ class ShoppingItems extends _$ShoppingItems {
       if (result.isLeft()) {
         log.e('Failed to toggle item');
         state = AsyncValue.data(oldState); // Rollback
+      } else if (completed && ref.read(premiumProvider)) {
+        final item = newState.firstWhere((i) => i.id == itemId);
+        if (item.shouldSync) {
+          // 🔥 PREMIUM FEATURE: Sync with Finance
+          _syncToFinance(itemId, newState);
+        }
       }
     } catch (e) {
       log.e('Error in toggleItem: $e');
       state = AsyncValue.data(oldState);
+    }
+  }
+
+  Future<void> _syncToFinance(String itemId, List<ShoppingItemModel> items) async {
+    try {
+      final item = items.firstWhere((i) => i.id == itemId);
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null) return;
+
+      await ref.read(expenseControllerProvider.notifier).saveExpense(
+            title: '[🛒] ${item.name}',
+            amount: 0, // Se crea con 0 para que el usuario luego asigne el precio real
+            category: item.category,
+            paidBy: userId,
+            paidAt: DateTime.now(),
+            description: 'Sincronizado automáticamente de la lista de compras.',
+            splitType: SplitType.equal, // Por defecto 50/50
+          );
+      
+      log.i('Premium: Smart sync created expense for ${item.name}');
+    } catch (e) {
+      log.e('Error syncing to finance: $e');
     }
   }
 

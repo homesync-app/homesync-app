@@ -67,15 +67,18 @@ class CoupleChallengeCard extends StatelessWidget {
             ),
             
             Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
@@ -84,15 +87,15 @@ class CoupleChallengeCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
+                            const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                            const SizedBox(width: 6),
                             Text(
                               'DESAFÍO EXCLUSIVO',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.95),
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
+                                letterSpacing: 1.2,
                               ),
                             ),
                           ],
@@ -111,6 +114,7 @@ class CoupleChallengeCard extends StatelessWidget {
                           ],
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.monetization_on_rounded, color: Colors.white, size: 18),
                             const SizedBox(width: 6),

@@ -15,6 +15,7 @@ abstract class ShoppingRepository {
     String category = 'general',
     String emoji = '🛒',
     String? note,
+    bool shouldSync = true,
   });
 
   Future<Either<Failure, void>> toggleItem({

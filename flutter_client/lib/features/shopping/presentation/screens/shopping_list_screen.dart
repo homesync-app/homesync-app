@@ -9,6 +9,7 @@ import '../../domain/models/shopping_categories.dart';
 import '../providers/shopping_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import '../widgets/shopping_item_sheet.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ShoppingListScreen — Lista de compras interactiva (Estilo Bring!)
@@ -152,18 +153,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       }
     }
 
-    try {
-      await ref.read(shoppingItemsProvider.notifier).addItem(
-            name: val,
-            quantity: '',
-            unit: '',
-            category: categoryId,
-            emoji: finalEmoji,
-            note: '',
-          );
-    } catch (e) {
-      if (mounted) _showSnack('Error: $e', AppColors.error);
-    }
+    ShoppingItemSheet.show(
+      context,
+      initialName: val,
+      initialCategory: categoryId,
+      initialEmoji: finalEmoji,
+    );
   }
 
   void _showSnack(String msg, Color color) {
@@ -747,33 +742,7 @@ class _ShoppingItemTile extends StatelessWidget {
         onToggle();
       },
       onLongPress: () {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: AppColors.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('¿Eliminar ${item.name}?',
-                style: const TextStyle(color: AppColors.textPrimary)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar',
-                    style: TextStyle(color: AppColors.textSecondary)),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  onDelete();
-                },
-                style:
-                    ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                child: const Text('Eliminar',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
+        ShoppingItemSheet.show(context, item: item);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),

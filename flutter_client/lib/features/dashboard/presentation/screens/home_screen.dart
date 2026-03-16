@@ -14,6 +14,11 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -122,6 +127,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 32),
                     _buildTasksSection(),
                     const SizedBox(height: 32),
+                    // _buildLoveNotesSection(),
+                    const SizedBox(height: 32),
                     _buildActivitySection(),
                     const SizedBox(height: 140),
                   ],
@@ -204,13 +211,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildCircularAvatar(String displayName, String? avatarUrl) {
+    final membersAsync = ref.watch(householdMembersProvider);
+    final currentUserId = ref.read(currentUserIdProvider);
+    final partner = membersAsync.whenOrNull(
+      data: (members) =>
+          members.where((m) => m.userId != currentUserId).firstOrNull,
+    );
+    final isPartner = partner != null && avatarUrl == partner.avatarUrl;
+
     return AnimatedPress(
       onTap: () => AvatarPickerSheet.show(context),
-      child: CustomUserAvatar(
-        name: displayName,
-        avatarUrl: avatarUrl,
-        radius: 28,
-        showBorder: true,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CustomUserAvatar(
+            name: displayName,
+            avatarUrl: avatarUrl,
+            radius: 28,
+            showBorder: true,
+          ),
+/*          if (isPartner &&
+              ref.watch(incomingLoveNotesProvider).isNotEmpty &&
+              ref.watch(premiumProvider))
+            Positioned(
+              top: -12,
+              right: -12,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.mail_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                )
+                    .animate(onPlay: (c) => c.repeat())
+                    .shimmer(duration: 2.seconds)
+                    .shake(hz: 2, curve: Curves.easeInOut),
+              ),
+            ),*/
+        ],
       ),
     );
   }
@@ -1182,6 +1234,252 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildLoveNotesSection() {
+    final isPremium = ref.watch(premiumProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Notas de Amor',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (isPremium) _buildNotesList(),
+        AnimatedPress(
+          onTap: () {
+            if (!isPremium) {
+              PremiumPaywall.show(context);
+            } else {
+              _showLoveNoteDialog();
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isPremium
+                    ? [const Color(0xFFFEE2E2), Colors.white]
+                    : [Colors.grey[100]!, Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isPremium
+                    ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
+                    : Colors.grey[300]!,
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isPremium ? const Color(0xFFF87171) : Colors.black)
+                      .withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPremium
+                        ? const Color(0xFFFECACA)
+                        : Colors.grey[200],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPremium ? Icons.favorite_rounded : Icons.lock_rounded,
+                    color: isPremium ? const Color(0xFFEF4444) : Colors.grey[400],
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isPremium
+                            ? 'Deja un mensaje especial'
+                            : 'Función Premium',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: isPremium
+                              ? const Color(0xFF991B1B)
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        isPremium
+                            ? 'Sorprende a tu pareja hoy ✨'
+                            : 'Suscríbete para enviar notas de amor.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isPremium
+                              ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isPremium)
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 16, color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showLoveNoteDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Row(
+          children: [
+            Icon(Icons.favorite, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Nueva Nota de Amor', style: TextStyle(fontWeight: FontWeight.w900)),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Escribe algo tierno...',
+            filled: true,
+            fillColor: Colors.red.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final content = controller.text.trim();
+              if (content.isNotEmpty) {
+                ref.read(loveNotesProvider.notifier).sendNote(
+                  content,
+                  ref.read(currentUserIdProvider) ?? 'me',
+                  'partner',
+                );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('💖 Nota enviada exitosamente'),
+                    backgroundColor: Colors.pink,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesList() {
+    final notes = ref.watch(loveNotesProvider);
+    if (notes.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      height: 100,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: notes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final note = notes[index];
+          return GestureDetector(
+            onTap: () {
+              ref.read(loveNotesProvider.notifier).markAsRead(note.id);
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                  title: const Text('De mi pareja 💖', style: TextStyle(fontWeight: FontWeight.w900)),
+                  content: Text(note.content, style: const TextStyle(fontSize: 18)),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
+                  ],
+                ),
+              );
+            },
+            child: Container(
+              width: 160,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: note.isRead ? Colors.white : const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: note.isRead ? AppColors.divider : const Color(0xFFFCA5A5),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      note.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: note.isRead ? FontWeight.w500 : FontWeight.w800,
+                        color: note.isRead ? AppColors.textPrimary : const Color(0xFF991B1B),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Hace momento',
+                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   String _formatNumber(dynamic value) {
     if (value == null) return '0';
     return NumberFormat('#,###', 'es_AR').format(value).replaceAll(',', '.');

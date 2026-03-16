@@ -178,7 +178,7 @@ final taskViewModeProvider =
 );
 
 typedef _$TaskViewMode = AutoDisposeNotifier<bool>;
-String _$tasksHash() => r'f16789aaf4d8d3c0c22fc6d09da4a192bf0b2565';
+String _$tasksHash() => r'470e07458da5b7b3f0372ff6dfdce69f9872e6d5';
 
 /// See also [Tasks].
 @ProviderFor(Tasks)

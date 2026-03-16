@@ -12,8 +12,9 @@ class ShoppingItemModel {
   final bool completed;
   final String? completedBy;
   final String? completedByName;
-  final DateTime? completedAt;
   final DateTime createdAt;
+  final DateTime? completedAt;
+  final bool shouldSync;
 
   const ShoppingItemModel({
     required this.id,
@@ -31,6 +32,7 @@ class ShoppingItemModel {
     this.completedByName,
     this.completedAt,
     required this.createdAt,
+    this.shouldSync = true,
   });
 
   factory ShoppingItemModel.fromJson(Map<String, dynamic> map) {
@@ -55,6 +57,7 @@ class ShoppingItemModel {
           : null,
       createdAt: DateTime.tryParse(map['created_at'] as String? ?? '') ??
           DateTime.now(),
+      shouldSync: map['should_sync'] as bool? ?? true,
     );
   }
 
@@ -73,6 +76,7 @@ class ShoppingItemModel {
       'completed_by': completedBy,
       'completed_at': completedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
+      'should_sync': shouldSync,
     };
   }
 
@@ -93,7 +97,7 @@ class ShoppingItemModel {
   }
 
   ShoppingItemModel copyWith(
-      {bool? completed, String? completedBy, DateTime? completedAt}) {
+      {bool? completed, String? completedBy, DateTime? completedAt, bool? shouldSync}) {
     return ShoppingItemModel(
       id: id,
       householdId: householdId,
@@ -110,6 +114,7 @@ class ShoppingItemModel {
       completedByName: completedByName,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt,
+      shouldSync: shouldSync ?? this.shouldSync,
     );
   }
 

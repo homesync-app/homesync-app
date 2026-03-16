@@ -14,6 +14,8 @@ import 'package:homesync_client/features/expenses/domain/repositories/expense_re
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
@@ -801,21 +803,40 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       data: (allItems) {
         final items = allItems.where((i) => !i.completed).toList();
         if (items.isEmpty && _selectedShoppingItems.isEmpty) return const SizedBox.shrink();
+        final isPremium = ref.watch(premiumProvider);
+        
         return GestureDetector(
-          onTap: () => _showShoppingItemsSelector(context, items),
+          onTap: isPremium 
+              ? () => _showShoppingItemsSelector(context, items)
+              : () => PremiumPaywall.show(context),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.06),
+              color: isPremium 
+                  ? AppColors.primary.withValues(alpha: 0.06)
+                  : Colors.grey[100],
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: isPremium 
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : Colors.transparent,
+              ),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
-                  child: const Icon(Icons.shopping_cart_outlined, color: AppColors.primary, size: 20),
+                  decoration: BoxDecoration(
+                    color: isPremium 
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : Colors.grey[300],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPremium ? Icons.shopping_cart_outlined : Icons.lock_rounded,
+                    color: isPremium ? AppColors.primary : Colors.white,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -824,13 +845,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     children: [
                       Text(
                         _selectedShoppingItems.isEmpty ? 'Vincular con la lista' : '${_selectedShoppingItems.length} artículos vinculados',
-                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 15),
+                        style: TextStyle(
+                            color: isPremium ? AppColors.primary : AppColors.textSecondary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15),
                       ),
                       const Text('Marca artículos como comprados', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                     ],
                   ),
                 ),
-                const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary),
+                Icon(
+                  isPremium ? Icons.add_circle_outline_rounded : Icons.chevron_right_rounded,
+                  color: isPremium ? AppColors.primary : AppColors.textMuted,
+                ),
               ],
             ),
           ),

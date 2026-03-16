@@ -5,6 +5,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'user_avatar.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class AvatarPickerSheet extends ConsumerWidget {
   const AvatarPickerSheet({super.key});
@@ -191,7 +193,14 @@ class AvatarPickerSheet extends ConsumerWidget {
                                     radius: 40,
                                     isAnimated: true,
                                     isPriority: isSelected,
-                                    onTap: () => _updateAvatar(context, ref, premiumUrl),
+                                    onTap: () {
+                                      final isPremium = ref.read(premiumProvider);
+                                      if (isPremium) {
+                                        _updateAvatar(context, ref, premiumUrl);
+                                      } else {
+                                        PremiumPaywall.show(context);
+                                      }
+                                    },
                                   ),
                                 ),
                                 const SizedBox(height: 8),

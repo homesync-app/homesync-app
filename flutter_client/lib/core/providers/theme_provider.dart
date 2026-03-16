@@ -43,3 +43,31 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PrimaryColorNotifier — custom app color (Premium feature)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _kPrimaryColorKey = 'app_primary_color';
+
+class PrimaryColorNotifier extends Notifier<Color> {
+  @override
+  Color build() => const Color(0xFF6366F1); // Indigo default
+
+  Future<void> init(SharedPreferences prefs) async {
+    final saved = prefs.getInt(_kPrimaryColorKey);
+    if (saved != null) {
+      state = Color(saved);
+    }
+  }
+
+  Future<void> setColor(Color color) async {
+    state = color;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kPrimaryColorKey, color.value);
+  }
+}
+
+final primaryColorProvider = NotifierProvider<PrimaryColorNotifier, Color>(
+  PrimaryColorNotifier.new,
+);

@@ -15,6 +15,8 @@ import '../widgets/expense_form_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -122,8 +124,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
+          final isPremium = ref.watch(premiumProvider);
           label = 'Nueva Suscripción';
-          onPressed = () => _showTemplateForm(context);
+          onPressed = isPremium 
+              ? () => _showTemplateForm(context)
+              : () => PremiumPaywall.show(context);
         } else if (_tabController.index == 2) {
           label = 'Nueva Meta';
           onPressed = () => _showGoalSheet();
@@ -351,6 +356,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   // --- Recurrentes Tab ---
 
   Widget _buildRecurrentesTab() {
+    final isPremium = ref.watch(premiumProvider);
+    if (!isPremium) return _buildPremiumLockedRecurrentes();
+
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
 
     return templatesAsync.when(
@@ -2201,6 +2209,71 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPremiumLockedRecurrentes() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.stars_rounded,
+                size: 80,
+                color: Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Pagos Recurrentes',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Gestiona tus suscripciones, alquileres y servicios de forma automática con HomeSync Premium.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () => PremiumPaywall.show(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'SABER MÁS',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

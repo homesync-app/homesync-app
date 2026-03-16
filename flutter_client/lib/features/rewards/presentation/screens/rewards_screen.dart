@@ -10,9 +10,10 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../widgets/couple_challenge_card.dart';
 import '../../../household/presentation/providers/household_provider.dart';
+import '../../../household/domain/models/household_model.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
-import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+// Removed unused SupabaseRpcService
 
 class RewardsScreen extends ConsumerStatefulWidget {
   const RewardsScreen({super.key});
@@ -236,27 +237,34 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   Widget _buildChallengeSection(String? householdId) {
     if (householdId == null) return const SizedBox.shrink();
     
-    final challenge = CoupleChallenge.currentWeeklyChallenge;
+    final householdAsync = ref.watch(householdProvider);
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('🌟 Evento Especial', 
-            action: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text('SOLO ESTA SEMANA', 
-                style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
-            )),
-        const SizedBox(height: 16),
-        CoupleChallengeCard(
-          challenge: challenge,
-          onComplete: () => _handleChallengeCompletion(challenge, householdId),
-        ),
-      ],
+    return householdAsync.when(
+      data: (h) {
+        final challenge = CoupleChallenge.currentWeeklyChallenge(h?.createdAt);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionHeader('🌟 Evento Especial', 
+                action: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text('SOLO ESTA SEMANA', 
+                    style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
+                )),
+            const SizedBox(height: 16),
+            CoupleChallengeCard(
+              challenge: challenge,
+              onComplete: () => _handleChallengeCompletion(challenge, householdId),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => const SizedBox.shrink(),
     );
   }
 

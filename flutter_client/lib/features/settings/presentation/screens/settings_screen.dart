@@ -4,8 +4,10 @@ import 'package:homesync_client/features/household/presentation/screens/couple_s
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -18,6 +20,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -408,6 +411,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ] else ...[
                               _buildNoHouseholdCard(),
                             ],
+                            const SizedBox(height: 24),
+                            _buildPremiumCard(),
                             const SizedBox(height: 24),
                             const MercadoPagoSettingsCard(),
                             const SizedBox(height: 24),
@@ -1226,6 +1231,101 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildColorPicker(WidgetRef ref) {
+    final isPremium = ref.watch(premiumProvider);
+    final currentColor = ref.watch(primaryColorProvider);
+    
+    final List<Color> themeColors = [
+      const Color(0xFFEE652B), // Original
+      const Color(0xFF6366F1), // Indigo
+      const Color(0xFFF43F5E), // Rose
+      const Color(0xFF10B981), // Emerald
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFF8B5CF6), // Violet
+      const Color(0xFF06B6D4), // Cyan
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Color del Tema',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 8),
+            if (!isPremium)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lock_rounded, size: 10, color: AppColors.accentGold),
+                    SizedBox(width: 4),
+                    Text('PREMIUM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.accentGold)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 44,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: themeColors.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final color = themeColors[index];
+              final isSelected = currentColor.value == color.value;
+              
+              return GestureDetector(
+                onTap: () {
+                  if (!isPremium) {
+                    PremiumPaywall.show(context);
+                  } else {
+                    HapticFeedback.lightImpact();
+                    ref.read(primaryColorProvider.notifier).setColor(color);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: isSelected 
+                      ? Border.all(color: Colors.white, width: 3)
+                      : null,
+                    boxShadow: [
+                      if (isSelected)
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                    ],
+                  ),
+                  child: isSelected 
+                    ? const Icon(Icons.check, color: Colors.white, size: 20)
+                    : (!isPremium && index > 0) 
+                      ? Icon(Icons.lock_outline_rounded, color: Colors.white.withValues(alpha: 0.5), size: 18)
+                      : null,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _showRenameDialog(String currentName) async {
     final ctrl = TextEditingController(text: currentName);
     final newName = await showDialog<String>(
@@ -1438,6 +1538,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Icons.settings_suggest_rounded, themeMode),
             ],
           ),
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.divider),
+          const SizedBox(height: 16),
+          _buildColorPicker(ref),
         ],
       ),
     );
@@ -1811,5 +1915,153 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (mounted) setState(() => _isLoading = false);
       }
     }
+  }
+
+  // ── Premium Card ──────────────────────────────────────────────────────────
+
+  Widget _buildPremiumCard() {
+    final isPremium = ref.watch(premiumProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isPremium
+              ? [
+                  const Color(0xFFFDE68A),
+                  const Color(0xFFF59E0B).withValues(alpha: 0.1)
+                ]
+              : [
+                  AppColors.primary.withValues(alpha: 0.05),
+                  Theme.of(context).cardColor
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isPremium
+              ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isPremium ? const Color(0xFFF59E0B) : Colors.black)
+                .withValues(alpha: 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isPremium
+                      ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                      : AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isPremium
+                      ? Icons.auto_awesome_rounded
+                      : Icons.star_outline_rounded,
+                  color: isPremium ? const Color(0xFFB45309) : AppColors.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'HOMESYNC PREMIUM',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      'Modo simulador para testing',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: isPremium,
+                activeColor: const Color(0xFFF59E0B),
+                onChanged: (value) async {
+                  await ref.read(premiumProvider.notifier).setPremium(value);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(value
+                            ? '✨ Modo Premium activado (Simulado)'
+                            : '🕊️ Modo Premium desactivado'),
+                        backgroundColor: value
+                            ? const Color(0xFFB45309)
+                            : AppColors.textPrimary,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          if (isPremium) ...[
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+            const Text(
+              'Funciones habilitadas:',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFB45309),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildPremiumFeatureItem('Sincronización Shopping ➔ Finanzas'),
+            _buildPremiumFeatureItem('Pagos Recurrentes (Suscripciones)'),
+            _buildPremiumFeatureItem('Notas de Amor en Dashboard'),
+            _buildPremiumFeatureItem('Avatares Exclusivos'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumFeatureItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_outline_rounded,
+              size: 14, color: Color(0xFFB45309)),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF92400E),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

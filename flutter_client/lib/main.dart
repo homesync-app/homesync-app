@@ -96,8 +96,9 @@ class _ThemeInit extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Init once on first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(themeModeProvider.notifier).init(prefs);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(themeModeProvider.notifier).init(prefs);
+      await ref.read(primaryColorProvider.notifier).init(prefs);
     });
     return child;
   }
@@ -114,15 +115,17 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final customPrimary = ref.watch(primaryColorProvider);
     final authState = ref.watch(authStateProvider);
 
     return _ThemeInit(
       prefs: prefs,
       child: MaterialApp(
+        key: ValueKey(authState.asData?.value.session != null),
         title: 'HomeSync',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme(customPrimary: customPrimary),
+        darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
         themeMode: themeMode,
         home: authState.when(
           data: (state) {

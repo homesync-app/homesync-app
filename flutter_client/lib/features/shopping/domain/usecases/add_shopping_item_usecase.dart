@@ -17,6 +17,7 @@ class AddShoppingItemUseCase {
     String category = 'general',
     String emoji = '🛒',
     String? note,
+    bool shouldSync = true,
   }) {
     if (householdId.isEmpty) {
       return Future.value(const Left(ValidationFailure('householdId is required')));
@@ -37,6 +38,7 @@ class AddShoppingItemUseCase {
       category: category,
       emoji: emoji,
       note: note,
+      shouldSync: shouldSync,
     );
   }
 }

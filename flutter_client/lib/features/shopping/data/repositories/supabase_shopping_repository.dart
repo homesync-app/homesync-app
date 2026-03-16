@@ -46,6 +46,7 @@ class SupabaseShoppingRepository
     String category = 'general',
     String emoji = '🛒',
     String? note,
+    bool shouldSync = true,
   }) async {
     return executeWithHandling(() async {
       final response = await _client

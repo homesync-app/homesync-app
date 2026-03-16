@@ -6,6 +6,22 @@ part of 'household_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$householdHash() => r'aa777f3da76f5e435388ac2a449f4ceefe40e064';
+
+/// See also [household].
+@ProviderFor(household)
+final householdProvider = FutureProvider<HouseholdModel?>.internal(
+  household,
+  name: r'householdProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$householdHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef HouseholdRef = FutureProviderRef<HouseholdModel?>;
 String _$householdMembersNotifierHash() =>
     r'c5a292fbb553957ffca7346f5199532300a4a982';
 

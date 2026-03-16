@@ -194,6 +194,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
     required int? coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -208,6 +209,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             #coinReward: coinReward,
             #assignedTo: assignedTo,
             #recurrenceType: recurrenceType,
+            #status: status,
           },
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
@@ -225,6 +227,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
               #coinReward: coinReward,
               #assignedTo: assignedTo,
               #recurrenceType: recurrenceType,
+              #status: status,
             },
           ),
         )),

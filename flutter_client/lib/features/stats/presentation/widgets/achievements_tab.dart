@@ -17,14 +17,18 @@ class AchievementsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Definimos algunos logros predeterminados basados en las estadísticas
-    final totalTasks = taskStats.fold<int>(0, (sum, item) => sum + ((item['completed_count'] as num?)?.toInt() ?? 0));
-    final totalXp = memberStats.fold<int>(0, (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0));
-    
-    // Buscar si hay tareas de "Desafío" completadas
-    // Esto es heurístico basado en el título que pusimos en rewards_screen.dart
-    // "Desafío: "
-    // En un sistema real, esto vendría de una tabla de logros.
-    
+    final totalTasks = taskStats.fold<int>(
+        0,
+        (sum, item) =>
+            sum + ((item['completed_count'] as num?)?.toInt() ?? 0));
+    final totalXp = memberStats.fold<int>(
+        0, (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0));
+
+    // Contar desafíos de conexión
+    final connectionTasks = taskStats.firstWhere(
+        (e) => e['category'] == 'Conexión',
+        orElse: () => {'completed_count': 0})['completed_count'] as int;
+
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
@@ -33,7 +37,6 @@ class AchievementsTab extends StatelessWidget {
         children: [
           const SectionLabel(label: 'Tus Medallas', icon: '🏅'),
           const SizedBox(height: 20),
-          
           _buildAchievementCard(
             title: 'Primeros Pasos',
             description: 'Completaste tu primera tarea en pareja.',
@@ -42,7 +45,6 @@ class AchievementsTab extends StatelessWidget {
             progress: totalTasks >= 1 ? 1.0 : 0.0,
             progressText: totalTasks >= 1 ? '1/1' : '0/1',
           ),
-          
           _buildAchievementCard(
             title: 'Equipo Imparable',
             description: 'Completaron 50 tareas juntos.',
@@ -51,7 +53,6 @@ class AchievementsTab extends StatelessWidget {
             progress: (totalTasks / 50).clamp(0.0, 1.0),
             progressText: '$totalTasks/50',
           ),
-
           _buildAchievementCard(
             title: 'Maestros del Hogar',
             description: 'Llegaron a los 5000 XP acumulados.',
@@ -60,28 +61,59 @@ class AchievementsTab extends StatelessWidget {
             progress: (totalXp / 5000).clamp(0.0, 1.0),
             progressText: '$totalXp/5000',
           ),
-          
           const SizedBox(height: 32),
-          const SectionLabel(label: 'Desafíos Exclusivos', icon: '✨'),
+          const SectionLabel(label: 'Desafíos de Pareja', icon: '💖'),
           const SizedBox(height: 16),
-          
+          _buildAchievementCard(
+            title: 'Coleccionista de Citas',
+            description: 'Completaron 7 desafíos especiales.',
+            icon: '📸',
+            isUnlocked: connectionTasks >= 7,
+            progress: (connectionTasks / 7).clamp(0.0, 1.0),
+            progressText: '$connectionTasks/7',
+          ),
+          _buildAchievementCard(
+            title: 'Amor en Movimiento',
+            description: 'Completaron 15 desafíos especiales.',
+            icon: '💃',
+            isUnlocked: connectionTasks >= 15,
+            progress: (connectionTasks / 15).clamp(0.0, 1.0),
+            progressText: '$connectionTasks/15',
+          ),
+          _buildAchievementCard(
+            title: 'Conexión Profunda',
+            description: 'Completaron 30 desafíos especiales.',
+            icon: '♾️',
+            isUnlocked: connectionTasks >= 30,
+            progress: (connectionTasks / 30).clamp(0.0, 1.0),
+            progressText: '$connectionTasks/30',
+          ),
+          _buildAchievementCard(
+            title: 'Leyendas del Romance',
+            description: '¡Completaron los 50 desafíos del año!',
+            icon: '🏆',
+            isUnlocked: connectionTasks >= 50,
+            progress: (connectionTasks / 50).clamp(0.0, 1.0),
+            progressText: '$connectionTasks/50',
+          ),
+          const SizedBox(height: 32),
+          const SectionLabel(label: 'Momentos Icónicos', icon: '✨'),
+          const SizedBox(height: 16),
           _buildChallengeAchievement(
             title: 'Raíces del Amor',
-            description: 'Completaron el desafío de recrear su primera cita.',
+            description: 'Recrearon su primera cita.',
             icon: '❤️',
-            isUnlocked: true, // Ejemplo de desbloqueado
+            isUnlocked: connectionTasks >= 1, // Heurístico
           ),
-          
           _buildChallengeAchievement(
-            title: 'Cena Romántica',
-            description: 'Completaron el desafío de la cena a la luz de las velas.',
+            title: 'Cita a Ciegas',
+            description: 'Completaron una cena a ciegas o sensorial.',
             icon: '🕯️',
             isUnlocked: false,
           ),
-
           _buildChallengeAchievement(
             title: 'Arquitectos de Sueños',
-            description: 'Completaron el desafío de la lista de sueños.',
+            description: 'Diseñaron su lista de metas compartidas.',
             icon: '✨',
             isUnlocked: false,
           ),
