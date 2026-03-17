@@ -16,6 +16,7 @@ class AppThemeColors {
   Color get onPrimaryContainer => Theme.of(context).colorScheme.onPrimaryContainer;
 
   Color get surface => Theme.of(context).colorScheme.surface;
+  Color get surfaceVariant => isDarkMode ? AppColors.surfaceDark : AppColors.surfaceVariant;
   Color get background => Theme.of(context).scaffoldBackgroundColor;
 
   Color get textPrimary => Theme.of(context).colorScheme.onSurface;

@@ -13,6 +13,8 @@ import '../../../household/presentation/providers/household_provider.dart';
 import '../../../household/domain/models/household_model.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 // Removed unused SupabaseRpcService
 
 class RewardsScreen extends ConsumerStatefulWidget {
@@ -201,7 +203,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     final householdId = ref.watch(householdIdProvider).value;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
