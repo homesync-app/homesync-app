@@ -239,15 +239,15 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   }
 
   Widget _buildGroupedRewards(List<RewardModel> rewards) {
-    // Grouping logic
+    // Grouping logic with normalization to avoid multiple "Otros"
     final Map<String, List<RewardModel>> grouped = {};
     for (var r in rewards) {
-      final cat = r.category?.toLowerCase() ?? 'otros';
-      grouped.putIfAbsent(cat, () => []).add(r);
+      final normalizedCat = _getNormalizedCategory(r.category);
+      grouped.putIfAbsent(normalizedCat, () => []).add(r);
     }
 
     // Sort order for categories
-    final categoryOrder = ['mimos', 'momentos juntos', 'momentos', 'libertades', 'experiencias más grandes', 'experiencias'];
+    final categoryOrder = ['mimos', 'momentos', 'libertades', 'experiencias', 'otros'];
     final sortedCategories = grouped.keys.toList()
       ..sort((a, b) {
         final indexA = categoryOrder.indexOf(a);
@@ -286,15 +286,22 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
   }
 
   String _getCategoryDisplayTitle(String cat) {
-    switch (cat.toLowerCase()) {
+    switch (cat) {
       case 'mimos': return '✨ MIMOS';
-      case 'momentos juntos':
       case 'momentos': return '💑 MOMENTOS JUNTOS';
       case 'libertades': return '🔓 LIBERTADES';
-      case 'experiencias más grandes':
       case 'experiencias': return '🌈 EXPERIENCIAS MÁS GRANDES';
       default: return '🌈 OTROS';
     }
+  }
+
+  String _getNormalizedCategory(String? cat) {
+    final lower = cat?.toLowerCase().trim() ?? 'otros';
+    if (lower == 'mimos' || lower == 'caricias') return 'mimos';
+    if (lower == 'momentos' || lower == 'momentos juntos' || lower == 'ocio') return 'momentos';
+    if (lower == 'libertades' || lower == 'favores' || lower == 'comodidades') return 'libertades';
+    if (lower == 'experiencias' || lower == 'experiencias más grandes') return 'experiencias';
+    return 'otros';
   }
   Widget _buildChallengeSection(String? householdId) {
     if (householdId == null) return const SizedBox.shrink();
