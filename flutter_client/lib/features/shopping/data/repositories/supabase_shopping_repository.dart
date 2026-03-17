@@ -2,20 +2,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import '../../../../core/providers/connectivity_provider.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/repositories/shopping_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class SupabaseShoppingRepository
     with RepositoryErrorHandler
     implements ShoppingRepository {
   final SupabaseClient _client = Supabase.instance.client;
   final Ref _ref;
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
+  static final Uuid _uuid = Uuid();
 
   SupabaseShoppingRepository({required Ref ref}) : _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<void> _queueAction(OfflineAction action) async {
+    await _offlineQueue.enqueueAction(
+      actionType: action.type,
+      payload: action.toMap(),
+    );
+  }
 
   @override
   Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
@@ -41,6 +53,7 @@ class SupabaseShoppingRepository
     required String householdId,
     required String name,
     required String userId,
+    String? clientId,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -49,9 +62,11 @@ class SupabaseShoppingRepository
     bool shouldSync = true,
   }) async {
     return executeWithHandling(() async {
+      final itemId = clientId ?? _uuid.v4();
       final response = await _client
           .from('shopping_items')
           .insert({
+            'id': itemId,
             'household_id': householdId,
             'name': name.trim(),
             'quantity':
@@ -68,7 +83,45 @@ class SupabaseShoppingRepository
           .single();
 
       return ShoppingItemModel.fromJson(Map<String, dynamic>.from(response));
-    }, context: 'SupabaseShoppingRepository.addItem', isOnline: _isOnline);
+    },
+        context: 'SupabaseShoppingRepository.addItem',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final itemId = clientId ?? _uuid.v4();
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableInsert,
+              target: 'shopping_items',
+              values: {
+                'id': itemId,
+                'household_id': householdId,
+                'name': name.trim(),
+                'quantity':
+                    quantity?.trim().isEmpty == true ? null : quantity?.trim(),
+                'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
+                'category': category,
+                'emoji': emoji,
+                'note': note?.trim().isEmpty == true ? null : note?.trim(),
+                'added_by': userId,
+                'completed': false,
+              },
+            ),
+          );
+          return ShoppingItemModel(
+            id: itemId,
+            householdId: householdId,
+            name: name,
+            quantity: quantity,
+            unit: unit,
+            category: category,
+            emoji: emoji,
+            note: note,
+            addedBy: userId,
+            completed: false,
+            createdAt: DateTime.now(),
+            shouldSync: true,
+          );
+        });
   }
 
   @override
@@ -83,14 +136,41 @@ class SupabaseShoppingRepository
         'completed_by': completed ? userId : null,
         'completed_at': completed ? DateTime.now().toIso8601String() : null,
       }).eq('id', itemId);
-    }, context: 'SupabaseShoppingRepository.toggleItem', isOnline: _isOnline);
+    },
+        context: 'SupabaseShoppingRepository.toggleItem',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: 'shopping_items',
+              values: {
+                'completed': completed,
+                'completed_by': completed ? userId : null,
+                'completed_at': completed ? DateTime.now().toIso8601String() : null,
+              },
+              filters: [OfflineFilter(column: 'id', value: itemId)],
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> deleteItem(String itemId) async {
     return executeWithHandling(() async {
       await _client.from('shopping_items').delete().eq('id', itemId);
-    }, context: 'SupabaseShoppingRepository.deleteItem', isOnline: _isOnline);
+    },
+        context: 'SupabaseShoppingRepository.deleteItem',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'shopping_items',
+              filters: [OfflineFilter(column: 'id', value: itemId)],
+            ),
+          );
+        });
   }
 
   @override
@@ -101,7 +181,21 @@ class SupabaseShoppingRepository
           .delete()
           .eq('household_id', householdId)
           .eq('completed', true);
-    }, context: 'SupabaseShoppingRepository.clearCompleted', isOnline: _isOnline);
+    },
+        context: 'SupabaseShoppingRepository.clearCompleted',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'shopping_items',
+              filters: [
+                OfflineFilter(column: 'household_id', value: householdId),
+                const OfflineFilter(column: 'completed', value: true),
+              ],
+            ),
+          );
+        });
   }
 
   @override
@@ -116,6 +210,25 @@ class SupabaseShoppingRepository
           })
           .eq('household_id', householdId)
           .eq('completed', true);
-    }, context: 'SupabaseShoppingRepository.uncompleteAll', isOnline: _isOnline);
+    },
+        context: 'SupabaseShoppingRepository.uncompleteAll',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: 'shopping_items',
+              values: {
+                'completed': false,
+                'completed_by': null,
+                'completed_at': null,
+              },
+              filters: [
+                OfflineFilter(column: 'household_id', value: householdId),
+                const OfflineFilter(column: 'completed', value: true),
+              ],
+            ),
+          );
+        });
   }
 }

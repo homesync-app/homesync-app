@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import '../../../../core/providers/connectivity_provider.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/savings_model.dart';
@@ -12,10 +14,18 @@ class SupabaseSavingsRepository
     implements SavingsRepository {
   final SupabaseClient _client = Supabase.instance.client;
   final Ref _ref;
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseSavingsRepository({required Ref ref}) : _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<void> _queueAction(OfflineAction action) async {
+    await _offlineQueue.enqueueAction(
+      actionType: action.type,
+      payload: action.toMap(),
+    );
+  }
 
   @override
   Future<Either<Failure, List<SavingsGoalModel>>> getGoals(
@@ -65,7 +75,24 @@ class SupabaseSavingsRepository
         'color': color,
         'icon': icon,
       });
-    }, context: 'SupabaseSavingsRepository.createGoal', isOnline: _isOnline);
+    },
+        context: 'SupabaseSavingsRepository.createGoal',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableInsert,
+              target: 'savings_goals',
+              values: {
+                'household_id': householdId,
+                'title': title,
+                'target_amount': targetAmount,
+                'color': color,
+                'icon': icon,
+              },
+            ),
+          );
+        });
   }
 
   @override
@@ -82,13 +109,40 @@ class SupabaseSavingsRepository
         'amount': amount,
         'note': note,
       });
-    }, context: 'SupabaseSavingsRepository.addContribution', isOnline: _isOnline);
+    },
+        context: 'SupabaseSavingsRepository.addContribution',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableInsert,
+              target: 'savings_contributions',
+              values: {
+                'goal_id': goalId,
+                'user_id': userId,
+                'amount': amount,
+                'note': note,
+              },
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> deleteGoal({required String goalId}) async {
     return executeWithHandling(() async {
       await _client.from('savings_goals').delete().eq('id', goalId);
-    }, context: 'SupabaseSavingsRepository.deleteGoal', isOnline: _isOnline);
+    },
+        context: 'SupabaseSavingsRepository.deleteGoal',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'savings_goals',
+              filters: [OfflineFilter(column: 'id', value: goalId)],
+            ),
+          );
+        });
   }
 }

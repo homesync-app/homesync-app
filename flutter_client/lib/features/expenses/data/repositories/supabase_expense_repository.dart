@@ -7,6 +7,8 @@ import '../../domain/repositories/expense_repository.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/connectivity_provider.dart';
@@ -16,10 +18,18 @@ class SupabaseExpenseRepository
     implements ExpenseRepository {
   final SupabaseClient _client;
   final Ref _ref;
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseExpenseRepository(this._client, this._ref);
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<void> _queueAction(OfflineAction action) async {
+    await _offlineQueue.enqueueAction(
+      actionType: action.type,
+      payload: action.toMap(),
+    );
+  }
 
   @override
   Future<Either<Failure, String>> getHouseholdId(String userId) async {
@@ -133,14 +143,50 @@ class SupabaseExpenseRepository
           'p_splits': splits,
         },
       );
-    }, context: 'SupabaseExpenseRepository.saveExpense', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.saveExpense',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'save_expense_v4',
+              params: {
+                'p_id': id,
+                'p_household_id': householdId,
+                'p_title': title,
+                'p_amount': amount,
+                'p_category': category,
+                'p_paid_by': paidBy,
+                'p_paid_at': paidAt.toIso8601String(),
+                'p_description': description,
+                'p_split_type': splitType.name,
+                'p_is_shared':
+                    splitType != SplitType.personal && splitType != SplitType.gift,
+                'p_type': type,
+                'p_splits': splits,
+              },
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
     return executeWithHandling(() async {
       await _client.from('expenses').delete().eq('id', id);
-    }, context: 'SupabaseExpenseRepository.deleteExpense', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.deleteExpense',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'expenses',
+              filters: [OfflineFilter(column: 'id', value: id)],
+            ),
+          );
+        });
   }
 
   @override
@@ -170,7 +216,33 @@ class SupabaseExpenseRepository
           ],
         },
       );
-    }, context: 'SupabaseExpenseRepository.settleDebt', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.settleDebt',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'save_expense_v4',
+              params: {
+                'p_id': null,
+                'p_household_id': householdId,
+                'p_title': 'LiquidaciÃ³n de pareja',
+                'p_amount': amount,
+                'p_category': 'other',
+                'p_paid_by': fromUserId,
+                'p_paid_at': DateTime.now().toIso8601String(),
+                'p_description': 'Saldar balance acumulado',
+                'p_split_type': 'fixed',
+                'p_is_shared': true,
+                'p_type': 'settlement',
+                'p_splits': [
+                  {'user_id': toUserId, 'amount': amount}
+                ],
+              },
+            ),
+          );
+        });
   }
 
   @override
@@ -206,7 +278,19 @@ class SupabaseExpenseRepository
     return executeWithHandling(() async {
       await _client.from('expense_templates').upsert(template.toJson());
       return unit;
-    }, context: 'SupabaseExpenseRepository.saveTemplate', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.saveTemplate',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpsert,
+              target: 'expense_templates',
+              values: template.toJson(),
+            ),
+          );
+          return unit;
+        });
   }
 
   @override
@@ -217,7 +301,20 @@ class SupabaseExpenseRepository
           .update({'is_active': active})
           .eq('id', id);
       return unit;
-    }, context: 'SupabaseExpenseRepository.toggleTemplateActivity', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.toggleTemplateActivity',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: 'expense_templates',
+              values: {'is_active': active},
+              filters: [OfflineFilter(column: 'id', value: id)],
+            ),
+          );
+          return unit;
+        });
   }
 
   @override
@@ -244,7 +341,24 @@ class SupabaseExpenseRepository
       } else {
         throw ServerFailure(result['message'] as String? ?? 'Error al pagar gasto planeado');
       }
-    }, context: 'SupabaseExpenseRepository.payPlannedExpense', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.payPlannedExpense',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'pay_planned_expense',
+              params: {
+                'p_planned_id': plannedId,
+                'p_amount': amount,
+                'p_paid_at': paidAt.toIso8601String(),
+                'p_paid_by': paidBy,
+              },
+            ),
+          );
+          return {'success': true, 'queued': true};
+        });
   }
 
   @override
@@ -255,7 +369,19 @@ class SupabaseExpenseRepository
         params: {'p_household_id': householdId},
       );
       return unit;
-    }, context: 'SupabaseExpenseRepository.processRecurringExpenses', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.processRecurringExpenses',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'process_recurring_expenses',
+              params: {'p_household_id': householdId},
+            ),
+          );
+          return unit;
+        });
   }
 
   @override
@@ -263,6 +389,18 @@ class SupabaseExpenseRepository
     return executeWithHandling(() async {
       await _client.from('planned_expenses').delete().eq('id', id);
       return unit;
-    }, context: 'SupabaseExpenseRepository.deletePlannedExpense', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.deletePlannedExpense',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'planned_expenses',
+              filters: [OfflineFilter(column: 'id', value: id)],
+            ),
+          );
+          return unit;
+        });
   }
 }

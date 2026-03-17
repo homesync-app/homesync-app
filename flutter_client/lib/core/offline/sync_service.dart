@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/offline/offline_action_processor.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 
 class SyncResult {
@@ -20,6 +21,7 @@ class SyncResult {
 class SyncService {
   final OfflineQueueService _queueService = OfflineQueueService();
   bool _isSyncing = false;
+  static const int _maxRetries = 3;
 
   bool get isSyncing => _isSyncing;
 
@@ -55,7 +57,15 @@ class SyncService {
           await _queueService.markCompleted(request.id!);
           successful++;
         } catch (e) {
-          await _queueService.incrementRetry(request.id!);
+          final retryCount =
+              await _queueService.incrementRetryAndGet(request.id!);
+          if (retryCount >= _maxRetries) {
+            await _queueService.markFailed(
+              request.id!,
+              e.toString(),
+              retryCount: retryCount,
+            );
+          }
           failed++;
           errors.add('Request ${request.id} failed: $e');
         }
@@ -139,7 +149,9 @@ class SyncNotifier extends StateNotifier<SyncState> {
     state = state.copyWith(isSyncing: true, lastError: null);
 
     try {
-      final result = await _syncService.sync(processRequest: processRequest);
+      final processor =
+          processRequest ?? _ref.read(offlineActionProcessorProvider);
+      final result = await _syncService.sync(processRequest: processor);
       state = state.copyWith(
         isSyncing: false,
         lastSync: DateTime.now(),

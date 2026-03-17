@@ -6,37 +6,40 @@ class AppTheme {
   // ── Light Theme ────────────────────────────────────────────────────────────
   static ThemeData lightTheme({Color? customPrimary}) {
     final primary = customPrimary ?? AppColors.primary;
-    final base = ThemeData(
+    final secondary = customPrimary ?? AppColors.primary;
+    
+    return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       fontFamily: 'Outfit',
       fontFamilyFallback: const ['sans-serif', 'Arial'],
       colorScheme: ColorScheme.light(
         primary: primary,
-        secondary: primary, // Using primary as secondary for cohesion
-        surface: AppColors.surface,
-        error: AppColors.error,
         onPrimary: Colors.white,
+        primaryContainer: primary.withValues(alpha: 0.1),
+        onPrimaryContainer: primary,
+        secondary: secondary,
         onSecondary: Colors.white,
+        secondaryContainer: secondary.withValues(alpha: 0.1),
+        onSecondaryContainer: secondary,
+        surface: AppColors.background,
         onSurface: AppColors.textPrimary,
-        primaryContainer: Color(0xFFE0E7FF),
-        secondaryContainer: Color(0xFFF3F4F6),
+        error: AppColors.error,
+        onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.background,
-    );
-
-    return base.copyWith(
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 24),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontSize: 26,
           fontWeight: FontWeight.w900,
+          fontFamily: 'Outfit',
           letterSpacing: -1.0,
         ),
       ),
@@ -53,8 +56,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: primary.withValues(alpha: 0.25),
+          elevation: 0,
           minimumSize: const Size(double.infinity, 58),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
@@ -70,7 +72,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: BorderSide(color: primary, width: 2.0),
+          side: BorderSide(color: primary.withValues(alpha: 0.5), width: 2.0),
           minimumSize: const Size(double.infinity, 58),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
@@ -129,15 +131,15 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         selectedItemColor: primary,
         unselectedItemColor: AppColors.textMuted,
-        selectedLabelStyle: TextStyle(
+        selectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
           fontWeight: FontWeight.w800,
           fontSize: 12,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
           fontWeight: FontWeight.w600,
           fontSize: 12,
@@ -150,7 +152,9 @@ class AppTheme {
 
   // ── Dark Theme ─────────────────────────────────────────────────────────────
   static ThemeData darkTheme({Color? customPrimary}) {
-    final primary = customPrimary ?? AppColors.primary;
+    final primary = customPrimary ?? const Color(0xFF6366F1); // Indigo as default for dark
+    
+    // Premium deep dark palette
     const darkBg = Color(0xFF0F0E1A);
     const darkSurface = Color(0xFF1C1A2E);
     const darkSurface2 = Color(0xFF252338);
@@ -159,26 +163,26 @@ class AppTheme {
     const darkSubtext = Color(0xFF9D98B8);
     const darkMuted = Color(0xFF5E5A7A);
 
-    final base = ThemeData(
+    return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       fontFamily: 'Outfit',
       fontFamilyFallback: const ['sans-serif', 'Arial'],
       colorScheme: ColorScheme.dark(
         primary: primary,
-        secondary: primary,
-        surface: darkSurface,
-        error: AppColors.error,
         onPrimary: Colors.white,
+        primaryContainer: primary.withValues(alpha: 0.15),
+        onPrimaryContainer: primary,
+        secondary: primary,
         onSecondary: Colors.white,
+        secondaryContainer: primary.withValues(alpha: 0.1),
+        onSecondaryContainer: primary,
+        surface: darkSurface,
         onSurface: darkText,
-        primaryContainer: Color(0xFF312E81),
-        secondaryContainer: Color(0xFF1E1B4B),
+        error: AppColors.error,
+        onError: Colors.white,
       ),
       scaffoldBackgroundColor: darkBg,
-    );
-
-    return base.copyWith(
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: darkText,
@@ -207,8 +211,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: Colors.white,
-          elevation: 4,
-          shadowColor: primary.withValues(alpha: 0.3),
+          elevation: 0,
           minimumSize: const Size(double.infinity, 58),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
@@ -224,7 +227,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: BorderSide(color: primary, width: 2.0),
+          side: BorderSide(color: primary.withValues(alpha: 0.5), width: 2.0),
           minimumSize: const Size(double.infinity, 58),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
@@ -283,15 +286,15 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: darkSurface,
+        backgroundColor: darkBg,
         selectedItemColor: primary,
         unselectedItemColor: darkMuted,
-        selectedLabelStyle: TextStyle(
+        selectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
           fontWeight: FontWeight.w800,
           fontSize: 12,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontFamily: 'Outfit',
           fontWeight: FontWeight.w600,
           fontSize: 12,
@@ -308,6 +311,7 @@ class AppTheme {
       ),
     );
   }
+
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 

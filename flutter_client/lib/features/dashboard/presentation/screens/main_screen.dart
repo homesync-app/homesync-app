@@ -8,6 +8,7 @@ import 'package:app_links/app_links.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/utils/app_animations.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
@@ -76,15 +77,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final message = uri.queryParameters['message'];
         
         if (status == 'success') {
-          _showToast('✅ Mercado Pago conectado con éxito', AppColors.success);
+          _showToast('✅ Mercado Pago conectado con éxito', context.theme.success);
         } else if (status == 'error') {
-          _showToast('❌ Error al conectar: ${message ?? "Desconocido"}', AppColors.error);
+          _showToast('❌ Error al conectar: ${message ?? "Desconocido"}', context.theme.error);
         }
       }
 
       // 2. Mercado Pago Payment callbacks
       if (uri.host == 'payment-success' || uri.path.contains('payment-success')) {
-        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.', AppColors.success);
+        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.', context.theme.success);
         
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
@@ -94,7 +95,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       }
       
       if (uri.host == 'payment-failure' || uri.path.contains('payment-failure')) {
-        _showToast('❌ El pago fue rechazado. Reintentá luego.', AppColors.error);
+        _showToast('❌ El pago fue rechazado. Reintentá luego.', context.theme.error);
       }
 
       if (uri.host == 'payment-pending' || uri.path.contains('payment-pending')) {
@@ -105,9 +106,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void _showToast(String message, Color color) {
     if (!mounted) return;
+    final theme = context.theme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -227,9 +229,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: CircularProgressIndicator(color: context.theme.primary),
         ),
       );
     }
@@ -290,9 +292,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           actions: [
             const NotificationBell(),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.settings_outlined,
-                color: AppColors.textSecondary,
+                color: context.theme.textSecondary,
               ),
               onPressed: () => _openSettings(context),
             ),
@@ -342,6 +344,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   Widget _buildBottomNav() {
     final currentIndex = ref.watch(bottomNavIndexProvider);
+    final theme = context.theme;
 
     // Only 4 items in the navigation bar now
     final navItems = [
@@ -354,12 +357,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: const [
+        color: theme.surface,
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: theme.shadow.withValues(alpha: 0.1),
             blurRadius: 20,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -383,14 +386,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.12)
+                          ? theme.primary.withValues(alpha: 0.12)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       item.icon,
                       color:
-                          isSelected ? AppColors.primary : AppColors.textMuted,
+                          isSelected ? theme.primary : theme.textMuted,
                       size: 22,
                     ),
                   ),
@@ -402,7 +405,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
                       color:
-                          isSelected ? AppColors.primary : AppColors.textMuted,
+                          isSelected ? theme.primary : theme.textMuted,
                     ),
                   ),
                 ],

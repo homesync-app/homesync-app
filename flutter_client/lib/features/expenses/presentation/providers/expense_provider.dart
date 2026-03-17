@@ -12,6 +12,7 @@ import '../../domain/models/expense_template_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 
 part 'expense_provider.g.dart';
 
@@ -149,20 +150,24 @@ class ExpenseController extends _$ExpenseController {
       splits: splits,
     );
     
-    ref.invalidate(expenseBalancesProvider);
-    ref.invalidate(personalFinanceSummaryProvider);
-    ref.invalidate(combinedFeedControllerProvider);
-    ref.invalidate(recentActivityProvider);
+    if (ref.read(isOnlineProvider)) {
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(combinedFeedControllerProvider);
+      ref.invalidate(recentActivityProvider);
+    }
   }
 
   Future<void> deleteExpense(String id) async {
     final repo = ref.read(expenseRepositoryProvider);
     await repo.deleteExpense(id);
     
-    ref.invalidate(expenseBalancesProvider);
-    ref.invalidate(personalFinanceSummaryProvider);
-    ref.invalidate(combinedFeedControllerProvider);
-    ref.invalidate(recentActivityProvider);
+    if (ref.read(isOnlineProvider)) {
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(combinedFeedControllerProvider);
+      ref.invalidate(recentActivityProvider);
+    }
   }
 
   Future<void> settleDebt({
@@ -181,9 +186,11 @@ class ExpenseController extends _$ExpenseController {
       amount: amount,
     );
     
-    ref.invalidate(expenseBalancesProvider);
-    ref.invalidate(personalFinanceSummaryProvider);
-    ref.invalidate(combinedFeedControllerProvider);
+    if (ref.read(isOnlineProvider)) {
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(combinedFeedControllerProvider);
+    }
     // Note: Do not invalidateSelf() here to avoid CircularDependencyError if this is called from within the same family or branch of providers
   }
 }
@@ -227,11 +234,13 @@ class CombinedFeedController extends _$CombinedFeedController {
     return result.fold(
       (l) => throw Exception(l.message),
       (r) {
-        ref.invalidateSelf();
-        ref.invalidate(combinedFeedControllerProvider);
-        ref.invalidate(monthlyProjectionProvider);
-        ref.invalidate(personalFinanceSummaryProvider);
-        ref.invalidate(recentActivityProvider);
+        if (ref.read(isOnlineProvider)) {
+          ref.invalidateSelf();
+          ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyProjectionProvider);
+          ref.invalidate(personalFinanceSummaryProvider);
+          ref.invalidate(recentActivityProvider);
+        }
         return r;
       },
     );
@@ -243,7 +252,9 @@ class CombinedFeedController extends _$CombinedFeedController {
     result.fold(
       (l) => throw Exception(l.message),
       (r) {
-        ref.invalidateSelf();
+        if (ref.read(isOnlineProvider)) {
+          ref.invalidateSelf();
+        }
       },
     );
   }
@@ -276,10 +287,12 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     result.fold(
       (l) => throw Exception(l.message),
       (r) {
-        ref.invalidateSelf();
-        // Generar feed de nuevo porque puede afectar proyecciones
-        ref.invalidate(combinedFeedControllerProvider);
-        ref.invalidate(monthlyProjectionProvider);
+        if (ref.read(isOnlineProvider)) {
+          ref.invalidateSelf();
+          // Generar feed de nuevo porque puede afectar proyecciones
+          ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyProjectionProvider);
+        }
       },
     );
   }
@@ -291,9 +304,11 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     result.fold(
       (l) => throw Exception(l.message),
       (r) {
-        ref.invalidateSelf();
-        ref.invalidate(combinedFeedControllerProvider);
-        ref.invalidate(monthlyProjectionProvider);
+        if (ref.read(isOnlineProvider)) {
+          ref.invalidateSelf();
+          ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyProjectionProvider);
+        }
       },
     );
   }

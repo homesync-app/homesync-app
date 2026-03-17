@@ -8,6 +8,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
 
 part 'supabase_reward_repository.g.dart';
 
@@ -24,6 +26,7 @@ class SupabaseRewardRepository
   final SupabaseClient _client;
   final dynamic _rpc; // rewardRpcServiceProvider type
   final Ref _ref;
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseRewardRepository(
       {required SupabaseClient client, required dynamic rpc, required Ref ref})
@@ -32,6 +35,13 @@ class SupabaseRewardRepository
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<void> _queueAction(OfflineAction action) async {
+    await _offlineQueue.enqueueAction(
+      actionType: action.type,
+      payload: action.toMap(),
+    );
+  }
 
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
@@ -67,7 +77,27 @@ class SupabaseRewardRepository
         'created_by': createdBy,
         'is_approved': false,
       });
-    }, context: 'SupabaseRewardRepository.suggestReward', isOnline: _isOnline);
+    },
+        context: 'SupabaseRewardRepository.suggestReward',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableInsert,
+              target: 'rewards',
+              values: {
+                'household_id': householdId,
+                'title': title,
+                'description': description,
+                'cost': cost,
+                'icon': icon,
+                'category': category,
+                'created_by': createdBy,
+                'is_approved': false,
+              },
+            ),
+          );
+        });
   }
 
   @override
@@ -76,21 +106,59 @@ class SupabaseRewardRepository
       await _client
           .from('rewards')
           .update({'is_approved': true}).eq('id', rewardId);
-    }, context: 'SupabaseRewardRepository.approveReward', isOnline: _isOnline);
+    },
+        context: 'SupabaseRewardRepository.approveReward',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: 'rewards',
+              values: {'is_approved': true},
+              filters: [OfflineFilter(column: 'id', value: rewardId)],
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> redeemReward(String rewardId) async {
     return executeWithHandling(() async {
       await _rpc.redeemReward(rewardId);
-    }, context: 'SupabaseRewardRepository.redeemReward', isOnline: _isOnline);
+    },
+        context: 'SupabaseRewardRepository.redeemReward',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final userId = _client.auth.currentUser?.id;
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'redeem_reward',
+              params: {
+                'p_reward_id': rewardId,
+                if (userId != null) 'p_user_id': userId,
+              },
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> deleteReward(String rewardId) async {
     return executeWithHandling(() async {
       await _client.from('rewards').delete().eq('id', rewardId);
-    }, context: 'SupabaseRewardRepository.deleteReward', isOnline: _isOnline);
+    },
+        context: 'SupabaseRewardRepository.deleteReward',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: 'rewards',
+              filters: [OfflineFilter(column: 'id', value: rewardId)],
+            ),
+          );
+        });
   }
 
   @override

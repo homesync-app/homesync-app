@@ -1,7 +1,7 @@
-import 'dart:math';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/services/retry/retry_service.dart';
 
 class RetryConfig {
   final int maxRetries;
@@ -63,66 +63,18 @@ class NetworkClient {
     if (!_isOnline) {
       throw const OfflineException('No internet connection');
     }
-
-    int retryCount = 0;
-    Duration delay = config.initialDelay;
-
-    while (true) {
-      try {
-        return await request();
-      } on RateLimitException catch (e) {
-        retryCount++;
-        if (retryCount >= config.maxRetries) rethrow;
-
-        Duration waitTime = e.timeUntilReset ?? delay;
-        if (config.exponentialBackoff) {
-          int multiplier = pow(2, retryCount - 1).toInt();
-          delay = Duration(
-            milliseconds: (waitTime.inMilliseconds * multiplier).clamp(
-              0,
-              config.maxDelay.inMilliseconds,
-            ),
-          );
-        }
-
-        await Future.delayed(delay);
-      } on NetworkException {
-        retryCount++;
-        if (retryCount >= config.maxRetries) rethrow;
-
-        if (config.exponentialBackoff) {
-          delay = Duration(
-            milliseconds: (delay.inMilliseconds * 2).clamp(
-              0,
-              config.maxDelay.inMilliseconds,
-            ),
-          );
-        } else {
-          delay = delay + config.initialDelay;
-        }
-
-        await Future.delayed(delay);
-      } catch (e) {
-        if (e is OfflineException) rethrow;
-
-        retryCount++;
-        if (retryCount >= config.maxRetries) {
-          throw NetworkException(
-              'Operation failed after $retryCount attempts: $e');
-        }
-
-        if (config.exponentialBackoff) {
-          delay = Duration(
-            milliseconds: (delay.inMilliseconds * 2).clamp(
-              0,
-              config.maxDelay.inMilliseconds,
-            ),
-          );
-        }
-
-        await Future.delayed(delay);
-      }
-    }
+    final retryService = RetryService();
+    return retryService.executeWithRetry(
+      request: request,
+      policy: RetryPolicy(
+        maxRetries: config.maxRetries,
+        initialDelay: config.initialDelay,
+        maxDelay: config.maxDelay,
+        exponentialBackoff: config.exponentialBackoff,
+        jitterRatio: 0.3,
+      ),
+      shouldRetry: (e) => e is RateLimitException || e is NetworkException,
+    );
   }
 }
 

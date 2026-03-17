@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
@@ -186,10 +187,16 @@ class Tasks extends _$Tasks {
       final result = await useCase(task, userIds: performers);
       
       if (result.isRight()) {
-        // Success: Trigger UI refresh for state consistency
-        silentRefresh();
-        ref.invalidate(userBalanceProvider);
-        ref.invalidate(recentActivityProvider);
+        final isOnline = ref.read(isOnlineProvider);
+        final queued = result.fold(
+          (_) => false,
+          (data) => data['queued'] == true,
+        );
+        if (isOnline && !queued) {
+          silentRefresh();
+          ref.invalidate(userBalanceProvider);
+          ref.invalidate(recentActivityProvider);
+        }
       }
       
       return result.fold(
@@ -308,7 +315,9 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.updateSchedule(task.id, recurrenceType);
-      refresh();
+      if (ref.read(isOnlineProvider)) {
+        refresh();
+      }
     } catch (e) {
       log.w('Update schedule failure: $e');
     }
@@ -350,8 +359,11 @@ class Tasks extends _$Tasks {
       result.fold(
         (failure) => throw Exception(failure.message),
         (_) {
-          silentRefresh();
-          ref.invalidate(recentActivityProvider);
+          final isOnline = ref.read(isOnlineProvider);
+          if (isOnline) {
+            silentRefresh();
+            ref.invalidate(recentActivityProvider);
+          }
         },
       );
     } catch (e) {
@@ -383,7 +395,9 @@ class Tasks extends _$Tasks {
 
       final repo = ref.read(taskRepositoryProvider);
       await repo.editTask(taskId, updates);
-      refresh();
+      if (ref.read(isOnlineProvider)) {
+        refresh();
+      }
     } catch (e) {
       log.w('Edit task failure: $e');
     }

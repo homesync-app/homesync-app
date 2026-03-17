@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
@@ -52,34 +53,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     _setupTaskCompletionListener(ref);
     final householdAsync = ref.watch(householdIdProvider);
+    final theme = context.theme;
 
     return householdAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      loading: () => Scaffold(
+        backgroundColor: theme.background,
+        body: Center(child: CircularProgressIndicator(color: theme.primary)),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(child: Text('Error: $e')),
+        backgroundColor: theme.background,
+        body: Center(child: Text('Error: $e', style: TextStyle(color: theme.textPrimary))),
       ),
       data: (householdId) {
         if (householdId == null) {
-          return const Scaffold(
-            backgroundColor: AppColors.background,
-            body: Center(child: Text('No pertenecés a un hogar aún.')),
+          return Scaffold(
+            backgroundColor: theme.background,
+            body: Center(
+              child: Text(
+                'No pertenecés a un hogar aún.',
+                style: TextStyle(color: theme.textPrimary),
+              ),
+            ),
           );
         }
         return Stack(
           children: [
-            _buildMainContent(householdId),
+            _buildMainContent(householdId, theme),
             Align(
               alignment: Alignment.topCenter,
               child: ConfettiWidget(
                 confettiController: _confettiController,
                 blastDirectionality: BlastDirectionality.explosive,
                 shouldLoop: false,
-                colors: const [
-                  AppColors.primary,
+                colors: [
+                  theme.primary,
                   AppColors.success,
                   AppColors.accentOrange,
                   Colors.blue,
@@ -107,9 +114,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  Widget _buildMainContent(String householdId) {
+  Widget _buildMainContent(String householdId, AppThemeColors theme) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.background,
       body: Column(
         children: [
           const OfflineIndicator(),
@@ -117,19 +124,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: SafeArea(
               child: RefreshIndicator(
                 onRefresh: () async => _refreshHome(),
-                color: AppColors.primary,
+                color: theme.primary,
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   children: [
-                    _buildHeader(),
+                    _buildHeader(theme),
                     const SizedBox(height: 28),
                     _buildFinancialSummary(householdId),
                     const SizedBox(height: 32),
-                    _buildTasksSection(),
+                    _buildTasksSection(theme),
+                    // const SizedBox(height: 32),
+                    // _buildLoveNotesSection(theme),
                     const SizedBox(height: 32),
-                    // _buildLoveNotesSection(),
-                    const SizedBox(height: 32),
-                    _buildActivitySection(),
+                    _buildActivitySection(theme),
                     const SizedBox(height: 140),
                   ],
                 ),
@@ -143,7 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.only(bottom: 12),
         child: FloatingActionButton.extended(
           onPressed: () => _showQuickActionMenu(householdId),
-          backgroundColor: AppColors.primary,
+          backgroundColor: theme.primary,
           elevation: 12,
           label: const Text(
             'Nueva Acción',
@@ -168,7 +175,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(expenseControllerProvider);
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppThemeColors theme) {
     final profileAsync = ref.watch(userProfileProvider);
     final dateStr = DateFormat('EEEE, d MMM', 'es').format(DateTime.now());
     final capitalizedDate = dateStr.isEmpty ? '' : dateStr[0].toUpperCase() + dateStr.substring(1);
@@ -187,8 +194,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             Text(
               'Hola, $displayName 👋',
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: theme.textPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.8,
@@ -197,8 +204,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               capitalizedDate,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: theme.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -209,6 +216,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
+
 
   Widget _buildCircularAvatar(String displayName, String? avatarUrl) {
     final membersAsync = ref.watch(householdMembersProvider);
@@ -306,7 +314,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ).animateEntrance(delay: 100);
   }
 
-  Widget _buildTasksSection() {
+
+  Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
 
     return Column(
@@ -315,12 +324,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Tareas de hoy',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+                color: theme.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -334,10 +343,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
+              child: Text(
                 'Ver Semana',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: theme.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -347,18 +356,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 12),
         tasksAsync.when(
-          loading: () => _buildTasksShimmer(),
-          error: (e, _) => Text('Error: $e'),
+          loading: () => _buildTasksShimmer(theme),
+          error: (e, _) => Text('Error: $e', style: TextStyle(color: theme.textPrimary)),
           data: (tasks) {
             final visibleTasks = tasks.where((t) => !t.isCompleted && !_completedTaskIds.contains(t.id)).toList();
-            if (visibleTasks.isEmpty) return _buildEmptyState('¡Todo listo por hoy!');
+            if (visibleTasks.isEmpty) return _buildEmptyState('¡Todo listo por hoy!', theme);
             
             return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: visibleTasks.length,
               separatorBuilder: (context, index) => const SizedBox(height: 10),
-              itemBuilder: (context, index) => _buildTaskCard(visibleTasks[index]).animateStaggered(index),
+              itemBuilder: (context, index) => _buildTaskCard(visibleTasks[index], theme).animateStaggered(index),
             );
           },
         ),
@@ -366,7 +375,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildTaskCard(TaskModel task) {
+  Widget _buildTaskCard(TaskModel task, AppThemeColors theme) {
     final categoryColor = AppColors.getCategoryColor(task.category);
     final categoryEmoji = AppColors.categoryIcons[task.category?.toLowerCase()] ?? '🏠';
 
@@ -375,11 +384,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(20),
+          border: theme.isDarkMode ? Border.all(color: theme.border, width: 1.2) : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: theme.shadow.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 3),
             ),
@@ -406,10 +416,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     task.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
-                      color: AppColors.textPrimary,
+                      color: theme.textPrimary,
                       letterSpacing: -0.2,
                     ),
                   ),
@@ -434,8 +444,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(width: 8),
                       Text(
                         '⭐ ${task.xpReward} XP',
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
+                        style: TextStyle(
+                          color: theme.textMuted,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -448,10 +458,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
+                color: theme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_rounded, color: AppColors.primary, size: 20),
+              child: Icon(Icons.check_rounded, color: theme.primary, size: 20),
             ),
           ],
         ),
@@ -494,7 +504,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Widget _buildActivitySection() {
+  Widget _buildActivitySection(AppThemeColors theme) {
     final activityAsync = ref.watch(recentActivityProvider);
 
     return Column(
@@ -503,12 +513,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Actividad reciente',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
+                color: theme.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -519,10 +529,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
+              child: Text(
                 'Ver todo',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: theme.primary,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -532,25 +542,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         const SizedBox(height: 14),
         activityAsync.when(
-          loading: () => _buildActivityShimmer(),
-          error: (e, _) => Text('Error al cargar actividad: $e'),
+          loading: () => _buildActivityShimmer(theme),
+          error: (e, _) => Text('Error al cargar actividad: $e', style: TextStyle(color: theme.textPrimary)),
           data: (activities) {
-            if (activities.isEmpty) return _buildEmptyState('No hay actividad aún');
-            return _buildActivityCards(activities);
+            if (activities.isEmpty) return _buildEmptyState('No hay actividad aún', theme);
+            return _buildActivityCards(activities, theme);
           },
         ),
       ],
     );
   }
 
-  Widget _buildActivityShimmer() {
+  Widget _buildActivityShimmer(AppThemeColors theme) {
     return Column(
       children: List.generate(3, (_) => ShimmerLoading(
         child: Container(
           height: 88,
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(20),
           ),
         ),
@@ -558,13 +568,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildActivityCards(List<Map<String, dynamic>> activities) {
+  Widget _buildActivityCards(List<Map<String, dynamic>> activities, AppThemeColors theme) {
     return Column(
       children: List.generate(activities.length, (index) {
         final activity = activities[index];
         final id = activity['id'] ?? index.toString();
         return _buildActivityCard(
           activity, 
+          theme,
           isFirst: index == 0,
           isLast: index == activities.length - 1,
           key: ValueKey(id),
@@ -573,7 +584,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildActivityCard(Map<String, dynamic> activity, {bool isFirst = false, bool isLast = false, Key? key}) {
+  Widget _buildActivityCard(Map<String, dynamic> activity, AppThemeColors theme, {bool isFirst = false, bool isLast = false, Key? key}) {
     final type = activity['type'] as String;
     final data = activity['data'] as Map<String, dynamic>;
     final time = DateTime.tryParse(activity['created_at'] ?? '') ?? DateTime.now();
@@ -615,7 +626,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         accentColor = AppColors.sage;
         actionVerb = 'recibió';
       } else {
-        accentColor = AppColors.primary;
+        accentColor = theme.primary;
         // Natural language logic
         final cat = rawCategory ?? '';
         if (cat.contains('supermarket') || cat.contains('mercado') || cat.contains('ropa')) {
@@ -637,7 +648,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         amountStr = '\$$formatted';
       }
     } else {
-      accentColor = AppColors.textSecondary;
+      accentColor = theme.textSecondary;
       actionVerb = 'registró';
       itemLabel = data['title'] ?? 'Evento';
       categoryEmoji = '📌';
@@ -669,7 +680,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Container(
                       width: 2,
                       decoration: BoxDecoration(
-                        color: AppColors.divider.withValues(alpha: 0.3),
+                        color: theme.border.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(1),
                       ),
                     ),
@@ -681,7 +692,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Container(
                       width: 2,
                       decoration: BoxDecoration(
-                        color: AppColors.divider.withValues(alpha: 0.3),
+                        color: theme.border.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(1),
                       ),
                     ),
@@ -718,12 +729,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
+                    border: Border.all(color: theme.border.withValues(alpha: 0.3)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.015),
+                        color: theme.shadow.withValues(alpha: 0.015),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -750,13 +761,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               children: [
                                 Text(
                                   userName,
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.textPrimary),
+                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: theme.textPrimary),
                                 ),
                                 const SizedBox(width: 4),
                                 if (actionVerb.isNotEmpty)
                                   Text(
                                     actionVerb,
-                                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 14, color: theme.textSecondary, fontWeight: FontWeight.w500),
                                   ),
                                 const SizedBox(width: 6),
                                 Flexible(
@@ -781,24 +792,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Icon(Icons.access_time_rounded, size: 12, color: AppColors.textMuted.withValues(alpha: 0.6)),
+                                Icon(Icons.access_time_rounded, size: 12, color: theme.textMuted.withValues(alpha: 0.6)),
                                 const SizedBox(width: 4),
                                 Text(
                                   timeStr,
-                                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w700),
+                                  style: TextStyle(color: theme.textMuted, fontSize: 13, fontWeight: FontWeight.w700),
                                 ),
                                 if (type == 'task') ...[
-                                  const SizedBox(width: 12),
-                                  if (data['xp_per_user'] != null || data['xp_reward'] != null) ...[
-                                    const Icon(Icons.star_rounded, size: 14, color: AppColors.accentGold),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      '${_formatNumber(data['xp_per_user'] ?? data['xp_reward'])} XP',
-                                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w900, fontSize: 13),
-                                    ),
-                                    const SizedBox(width: 10),
-                                  ],
-                                  if (data['coins_per_user'] != null || data['coin_reward'] != null) ...[
+                                                          if (data['coins_per_user'] != null || data['coin_reward'] != null) ...[
                                     Container(
                                       width: 14,
                                       height: 14,
@@ -846,6 +847,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _handleActivityTap(Map<String, dynamic> activity, String itemLabel, String? description, Color accentColor) {
     final type = activity['type'] as String;
     final data = activity['data'] as Map<String, dynamic>;
+    final theme = context.theme;
 
     if (type == 'expense') {
       final expenseId = data['expense_id'] ?? data['id'];
@@ -858,7 +860,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Este gasto ya no está disponible o fue eliminado')),
+        const SnackBar(content: Text('Este gasto ya no está disponible o fue eliminado'))
       );
       return;
     }
@@ -876,6 +878,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: theme.surface,
+        surfaceTintColor: Colors.transparent,
         contentPadding: EdgeInsets.zero,
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -890,7 +894,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: theme.surface, shape: BoxShape.circle),
                     child: Icon(isShoppingList ? Icons.shopping_cart_rounded : Icons.info_outline_rounded, color: accentColor),
                   ),
                   const SizedBox(width: 16),
@@ -898,14 +902,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(isShoppingList ? 'Lista de Compras' : 'Detalles', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-                        Text(itemLabel, style: TextStyle(color: accentColor, fontWeight: FontWeight.w700, fontSize: 13)),
+                        Text(
+                          isShoppingList ? 'Lista de Compras' : 'Detalles', 
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: theme.textPrimary),
+                        ),
+                        Text(
+                          itemLabel, 
+                          style: TextStyle(color: accentColor, fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
                       ],
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icon(Icons.close_rounded, color: theme.textPrimary),
                   ),
                 ],
               ),
@@ -924,14 +934,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Expanded(
                               child: Text(
                                 item,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textPrimary),
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: theme.textPrimary),
                               ),
                             ),
                           ],
                         ),
                       )).toList(),
                     )
-                  : Text(description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.5)),
+                  : Text(description, style: TextStyle(color: theme.textSecondary, fontSize: 15, height: 1.5)),
               ),
             ),
           ],
@@ -940,33 +950,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildTasksShimmer() {
+  Widget _buildTasksShimmer(AppThemeColors theme) {
     return Column(
       children: List.generate(2, (_) => ShimmerLoading(
         child: Container(
           height: 80,
           margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+          decoration: BoxDecoration(color: theme.surface, borderRadius: BorderRadius.circular(24)),
         ),
       )),
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  Widget _buildEmptyState(String message, AppThemeColors theme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
+              color: theme.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Text('🐾', style: TextStyle(fontSize: 32)),
@@ -975,18 +985,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: theme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '¡El amor es el mejor plan hoy! ✨',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -997,6 +1007,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showQuickActionMenu(String householdId) {
+    final theme = context.theme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1004,9 +1015,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(28, 12, 28, 32),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1015,17 +1026,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.divider,
+                  color: theme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 '¿Qué deseás hacer?',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
+                  color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 32),
@@ -1035,7 +1047,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: _buildQuickActionItem(
                       icon: Icons.add_shopping_cart_rounded,
                       label: 'Cargar Gasto',
-                      color: AppColors.primary,
+                      color: theme.primary,
+                      theme: theme,
                       onTap: () {
                         Navigator.pop(context);
                         ExpenseFormSheet.show(context);
@@ -1048,6 +1061,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       icon: Icons.calendar_today_rounded,
                       label: 'Completar Tarea',
                       color: AppColors.success,
+                      theme: theme,
                       onTap: () {
                         Navigator.pop(context);
                         showModalBottomSheet(
@@ -1072,6 +1086,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required IconData icon,
     required String label,
     required Color color,
+    required AppThemeColors theme,
     required VoidCallback onTap,
   }) {
     return AnimatedPress(
@@ -1090,10 +1105,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
             ),
           ),
         ],
@@ -1109,8 +1124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required bool isOwedByMe,
     String? alias,
   }) {
-    // Only the debtor (the one who owes) sees the settle button in BalanceCard,
-    // so we simplify the message to reflect their confirmation of payment.
+    final theme = context.theme;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1118,9 +1132,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(28, 12, 28, 36),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1129,7 +1143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.divider,
+                  color: theme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1150,18 +1164,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Text(
                 '¿Saldar deuda con $partnerName?',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
+                  color: theme.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 '¿Confirmas que ya realizaste la transferencia de \$${amount.toStringAsFixed(2)} a $partnerName? Esto equilibrará el balance de la pareja a 0 nuevamente.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: theme.textSecondary,
                   fontSize: 15,
                   height: 1.5,
                 ),
@@ -1178,10 +1193,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Aún no',
                         style: TextStyle(
-                          color: AppColors.textMuted,
+                          color: theme.textMuted,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1216,7 +1231,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: theme.primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
@@ -1239,29 +1254,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildLoveNotesSection() {
+  Widget _buildLoveNotesSection(AppThemeColors theme) {
     final isPremium = ref.watch(premiumProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Notas de Amor',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
-            color: AppColors.textPrimary,
+            color: theme.textPrimary,
             letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 12),
-        if (isPremium) _buildNotesList(),
+        if (isPremium) _buildNotesList(theme),
         AnimatedPress(
           onTap: () {
             if (!isPremium) {
               PremiumPaywall.show(context);
             } else {
-              _showLoveNoteDialog();
+              _showLoveNoteDialog(theme);
             }
           },
           child: Container(
@@ -1270,8 +1285,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isPremium
-                    ? [const Color(0xFFFEE2E2), Colors.white]
-                    : [Colors.grey[100]!, Colors.white],
+                    ? [const Color(0xFFFEE2E2), theme.surface]
+                    : [theme.isDarkMode ? Colors.grey[900]! : Colors.grey[100]!, theme.surface],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -1279,12 +1294,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               border: Border.all(
                 color: isPremium
                     ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
-                    : Colors.grey[300]!,
+                    : theme.border,
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (isPremium ? const Color(0xFFF87171) : Colors.black)
+                  color: (isPremium ? const Color(0xFFF87171) : theme.shadow)
                       .withValues(alpha: 0.05),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
@@ -1298,7 +1313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: BoxDecoration(
                     color: isPremium
                         ? const Color(0xFFFECACA)
-                        : Colors.grey[200],
+                        : (theme.isDarkMode ? Colors.grey[800] : Colors.grey[200]),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -1321,7 +1336,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontWeight: FontWeight.w800,
                           color: isPremium
                               ? const Color(0xFF991B1B)
-                              : AppColors.textPrimary,
+                              : theme.textPrimary,
                         ),
                       ),
                       Text(
@@ -1332,7 +1347,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontSize: 13,
                           color: isPremium
                               ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
-                              : AppColors.textSecondary,
+                              : theme.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1340,8 +1355,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 if (!isPremium)
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 16, color: AppColors.textMuted),
+                  Icon(Icons.arrow_forward_ios_rounded,
+                      size: 16, color: theme.textMuted),
               ],
             ),
           ),
@@ -1350,22 +1365,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showLoveNoteDialog() {
+  void _showLoveNoteDialog(AppThemeColors theme) {
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Row(
+        backgroundColor: theme.surface,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
           children: [
-            Icon(Icons.favorite, color: Colors.red),
-            SizedBox(width: 12),
-            Text('Nueva Nota de Amor', style: TextStyle(fontWeight: FontWeight.w900)),
+            const Icon(Icons.favorite, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(
+              'Nueva Nota de Amor', 
+              style: TextStyle(fontWeight: FontWeight.w900, color: theme.textPrimary),
+            ),
           ],
         ),
         content: TextField(
           controller: controller,
           maxLines: 3,
+          style: TextStyle(color: theme.textPrimary),
           decoration: InputDecoration(
             hintText: 'Escribe algo tierno...',
             filled: true,
@@ -1379,7 +1400,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar', style: TextStyle(color: theme.textMuted)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1411,7 +1432,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildNotesList() {
+  Widget _buildNotesList(AppThemeColors theme) {
     final notes = ref.watch(loveNotesProvider);
     if (notes.isEmpty) return const SizedBox.shrink();
 
@@ -1431,8 +1452,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                  title: const Text('De mi pareja 💖', style: TextStyle(fontWeight: FontWeight.w900)),
-                  content: Text(note.content, style: const TextStyle(fontSize: 18)),
+                  backgroundColor: theme.surface,
+                  surfaceTintColor: Colors.transparent,
+                  title: Text(
+                    'De mi pareja 💖', 
+                    style: TextStyle(fontWeight: FontWeight.w900, color: theme.textPrimary),
+                  ),
+                  content: Text(
+                    note.content, 
+                    style: TextStyle(fontSize: 18, color: theme.textPrimary),
+                  ),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cerrar')),
                   ],
@@ -1443,14 +1472,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: 160,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: note.isRead ? Colors.white : const Color(0xFFFEE2E2),
+                color: note.isRead ? theme.surface : const Color(0xFFFEE2E2),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: note.isRead ? AppColors.divider : const Color(0xFFFCA5A5),
+                  color: note.isRead ? theme.border : const Color(0xFFFCA5A5),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: theme.shadow.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -1467,13 +1496,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: note.isRead ? FontWeight.w500 : FontWeight.w800,
-                        color: note.isRead ? AppColors.textPrimary : const Color(0xFF991B1B),
+                        color: note.isRead ? theme.textPrimary : const Color(0xFF991B1B),
                       ),
                     ),
                   ),
                   Text(
                     'Hace momento',
-                    style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                    style: TextStyle(fontSize: 10, color: theme.textMuted),
                   ),
                 ],
               ),

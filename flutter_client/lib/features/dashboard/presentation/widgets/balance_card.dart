@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:intl/intl.dart';
@@ -29,6 +30,7 @@ class BalanceCard extends ConsumerWidget {
     final bool isPositive = balance > 0.01;
     final bool isNegative = balance < -0.01;
     final bool isBalanced = !isPositive && !isNegative;
+    final theme = context.theme;
 
     final statusColor = isNegative
         ? AppColors.accentOrange // Using orange instead of aggressive red
@@ -41,15 +43,15 @@ class BalanceCard extends ConsumerWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: const Color(0xFFF1F5F9), // Subtle grey border instead of colored
+          color: theme.border.withValues(alpha: 0.5),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04), // Very subtle shadow
+            color: theme.shadow.withValues(alpha: 0.04), // Very subtle shadow
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -82,7 +84,7 @@ class BalanceCard extends ConsumerWidget {
                           Text(
                             isBalanced ? '\$ ' : (isNegative ? '- \$ ' : '+ \$ '),
                             style: TextStyle(
-                              color: isBalanced ? const Color(0xFF1E293B) : statusColor,
+                              color: isBalanced ? theme.textPrimary : statusColor,
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                             ),
@@ -90,7 +92,7 @@ class BalanceCard extends ConsumerWidget {
                           _AnimatedDigitCounter(
                             value: balance.abs(),
                             style: TextStyle(
-                              color: isBalanced ? const Color(0xFF1E293B) : statusColor,
+                              color: isBalanced ? theme.textPrimary : statusColor,
                               fontSize: 38,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -1.0,
@@ -107,7 +109,7 @@ class BalanceCard extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: theme.surface,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.15),
@@ -144,7 +146,7 @@ class BalanceCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 20),
-            Container(height: 1, color: AppColors.divider.withValues(alpha: 0.4)),
+            Container(height: 1, color: theme.border.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -161,7 +163,7 @@ class BalanceCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Container(width: 1, height: 32, color: AppColors.divider.withValues(alpha: 0.4)),
+                Container(width: 1, height: 32, color: theme.border.withValues(alpha: 0.4)),
                 Expanded(
                   child: AnimatedPress(
                     onTap: () =>
@@ -190,6 +192,7 @@ class BalanceCard extends ConsumerWidget {
     required IconData icon,
     required Color color,
   }) {
+    final theme = context.theme;
     return Container(
       color: Colors.transparent, // allows the entire area to be tap-able
       child: Row(
@@ -209,8 +212,8 @@ class BalanceCard extends ConsumerWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: theme.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.2,
@@ -219,8 +222,8 @@ class BalanceCard extends ConsumerWidget {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: theme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
@@ -229,11 +232,12 @@ class BalanceCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(width: 8),
-          Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+          Icon(Icons.chevron_right_rounded, size: 16, color: theme.textMuted.withValues(alpha: 0.5)),
         ],
       ),
     );
   }
+
 }
 
 class _AnimatedDigitCounter extends StatelessWidget {

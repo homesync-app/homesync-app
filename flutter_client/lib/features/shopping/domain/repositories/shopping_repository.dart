@@ -10,6 +10,7 @@ abstract class ShoppingRepository {
     required String householdId,
     required String name,
     required String userId,
+    String? clientId,
     String? quantity,
     String? unit,
     String category = 'general',

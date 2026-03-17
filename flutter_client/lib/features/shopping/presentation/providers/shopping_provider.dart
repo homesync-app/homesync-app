@@ -13,6 +13,7 @@ import '../../domain/usecases/delete_shopping_item_usecase.dart';
 import '../../domain/usecases/clear_completed_shopping_items_usecase.dart';
 import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
 import '../../data/repositories/supabase_shopping_repository.dart';
+import 'package:uuid/uuid.dart';
 
 part 'shopping_provider.g.dart';
 
@@ -58,6 +59,7 @@ UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(UncompleteAl
 @Riverpod(keepAlive: true)
 class ShoppingItems extends _$ShoppingItems {
   RealtimeChannel? _channel;
+  static final Uuid _uuid = Uuid();
 
   @override
   Future<List<ShoppingItemModel>> build() async {
@@ -139,9 +141,10 @@ class ShoppingItems extends _$ShoppingItems {
 
     final oldState = state.value ?? [];
     
+    final clientId = _uuid.v4();
     // Create optimistic temporary item
     final tempItem = ShoppingItemModel(
-      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      id: clientId,
       householdId: householdId,
       name: name,
       quantity: quantity,
@@ -163,6 +166,7 @@ class ShoppingItems extends _$ShoppingItems {
             householdId: householdId,
             name: name,
             userId: userId,
+            clientId: clientId,
             quantity: quantity,
             unit: unit,
             category: category,

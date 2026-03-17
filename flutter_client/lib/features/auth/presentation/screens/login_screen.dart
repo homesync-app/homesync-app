@@ -376,8 +376,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ],
           ),
-          child: const Center(
-            child: Text('🏡', style: TextStyle(fontSize: 48)),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.35),
+                    width: 1.2,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.home_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
+              Positioned(
+                right: 18,
+                bottom: 18,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.favorite_rounded,
+                      size: 12,
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 24),

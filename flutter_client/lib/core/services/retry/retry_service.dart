@@ -1,6 +1,22 @@
 import 'dart:math';
 import 'package:homesync_client/core/errors/failures.dart';
 
+class RetryPolicy {
+  final int maxRetries;
+  final Duration initialDelay;
+  final Duration maxDelay;
+  final bool exponentialBackoff;
+  final double jitterRatio;
+
+  const RetryPolicy({
+    this.maxRetries = 3,
+    this.initialDelay = const Duration(seconds: 1),
+    this.maxDelay = const Duration(seconds: 30),
+    this.exponentialBackoff = true,
+    this.jitterRatio = 0.3,
+  });
+}
+
 class RetryService {
   static final RetryService _instance = RetryService._internal();
   factory RetryService() => _instance;
@@ -8,35 +24,47 @@ class RetryService {
 
   Future<T> executeWithRetry<T>({
     required Future<T> Function() request,
-    int maxRetries = 3,
-    Duration initialDelay = const Duration(seconds: 1),
+    RetryPolicy policy = const RetryPolicy(),
     bool Function(Exception)? shouldRetry,
   }) async {
     int retryCount = 0;
-    Duration delay = initialDelay;
+    Duration delay = policy.initialDelay;
 
-    while (retryCount < maxRetries) {
+    while (retryCount < policy.maxRetries) {
       try {
         return await request();
       } on RateLimitException catch (e) {
         retryCount++;
-        if (retryCount >= maxRetries) rethrow;
+        if (retryCount >= policy.maxRetries) rethrow;
 
         Duration waitTime = e.timeUntilReset ?? delay;
-        int multiplier = pow(2, retryCount - 1).toInt();
-        delay = Duration(milliseconds: waitTime.inMilliseconds * multiplier);
+        delay = _nextDelay(
+          waitTime,
+          retryCount: retryCount,
+          policy: policy,
+        );
 
         await Future.delayed(delay);
       } on NetworkException {
         retryCount++;
-        if (retryCount >= maxRetries) rethrow;
+        if (retryCount >= policy.maxRetries) rethrow;
 
-        await Future.delayed(delay * retryCount);
+        delay = _nextDelay(
+          delay,
+          retryCount: retryCount,
+          policy: policy,
+        );
+        await Future.delayed(delay);
       } catch (e) {
         if (shouldRetry != null && shouldRetry(e as Exception)) {
           retryCount++;
-          if (retryCount >= maxRetries) rethrow;
-          await Future.delayed(delay * retryCount);
+          if (retryCount >= policy.maxRetries) rethrow;
+          delay = _nextDelay(
+            delay,
+            retryCount: retryCount,
+            policy: policy,
+          );
+          await Future.delayed(delay);
         } else {
           rethrow;
         }
@@ -50,6 +78,30 @@ class RetryService {
     return e is RateLimitException ||
         e is NetworkException ||
         e is OfflineException;
+  }
+
+  Duration _nextDelay(
+    Duration baseDelay, {
+    required int retryCount,
+    required RetryPolicy policy,
+  }) {
+    final multiplier =
+        policy.exponentialBackoff ? pow(2, retryCount - 1).toInt() : retryCount;
+    final rawDelay = Duration(
+      milliseconds: (baseDelay.inMilliseconds * multiplier).clamp(
+        0,
+        policy.maxDelay.inMilliseconds,
+      ),
+    );
+    return _applyJitter(rawDelay, policy.jitterRatio);
+  }
+
+  Duration _applyJitter(Duration delay, double jitterRatio) {
+    if (jitterRatio <= 0) return delay;
+    final jitter = (Random().nextDouble() * 2 - 1) * jitterRatio;
+    final adjusted =
+        (delay.inMilliseconds * (1 + jitter)).clamp(0, delay.inMilliseconds * 2);
+    return Duration(milliseconds: adjusted.toInt());
   }
 }
 
@@ -67,7 +119,7 @@ class OfflineRetryService {
 
     return _retryService.executeWithRetry(
       request: request,
-      maxRetries: maxRetries,
+      policy: RetryPolicy(maxRetries: maxRetries),
       shouldRetry: (e) => _retryService.isRetryable(e),
     );
   }

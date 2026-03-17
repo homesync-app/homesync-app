@@ -144,6 +144,20 @@ class OfflineQueueService {
     });
   }
 
+  Future<int> enqueueAction({
+    required String actionType,
+    required Map<String, dynamic> payload,
+    Map<String, String>? headers,
+  }) async {
+    final request = QueuedRequest(
+      method: 'ACTION',
+      endpoint: actionType,
+      body: payload,
+      headers: headers,
+    );
+    return enqueue(request);
+  }
+
   Future<List<QueuedRequest>> getPending() async {
     final db = await database;
     final results = await db.query(
@@ -212,6 +226,23 @@ class OfflineQueueService {
       'UPDATE request_queue SET retry_count = retry_count + 1, status = ? WHERE id = ?',
       [QueueStatus.pending.name, id],
     );
+  }
+
+  Future<int> incrementRetryAndGet(int id) async {
+    final db = await database;
+    await db.rawUpdate(
+      'UPDATE request_queue SET retry_count = retry_count + 1, status = ? WHERE id = ?',
+      [QueueStatus.pending.name, id],
+    );
+    final rows = await db.query(
+      'request_queue',
+      columns: ['retry_count'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return 0;
+    return rows.first['retry_count'] as int? ?? 0;
   }
 
   Future<void> remove(int id) async {

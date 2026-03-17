@@ -11,9 +11,15 @@ mixin RepositoryErrorHandler {
     Future<T> Function() action, {
     String context = 'Repository',
     bool? isOnline,
+    Future<T> Function()? onOffline,
   }) async {
     // 1. Pre-fetch connectivity guard (Connectivity Guard rule)
     if (isOnline == false) {
+      if (onOffline != null) {
+        log.i('$context: Offline queueing action');
+        final offlineResult = await onOffline();
+        return right(offlineResult);
+      }
       log.w('$context: Offline Guard - Refusing request while disconnected');
       return left(const NetworkFailure('Sin conexión a internet. Verificá tu red.'));
     }
@@ -37,6 +43,11 @@ mixin RepositoryErrorHandler {
       log.w('$context: DB Error - ${e.message}', error: e, stackTrace: stack);
       return left(ServerFailure('Error en la base de datos: ${e.message}'));
     } on OfflineException {
+      if (onOffline != null) {
+        log.i('$context: Offline exception queued');
+        final offlineResult = await onOffline();
+        return right(offlineResult);
+      }
       log.w('$context: Offline requested');
       return left(const NetworkFailure('No hay conexión a internet.'));
     } on NetworkException catch (e) {

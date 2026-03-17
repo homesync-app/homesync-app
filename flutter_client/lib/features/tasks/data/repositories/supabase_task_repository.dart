@@ -11,6 +11,8 @@ import 'package:homesync_client/features/tasks/domain/repositories/task_reposito
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
 
 part 'supabase_task_repository.g.dart';
 
@@ -29,6 +31,7 @@ class SupabaseTaskRepository
   final SupabaseClient _client;
   final TaskRpcService _rpc;
   final Ref _ref;
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseTaskRepository({
     required SupabaseClient client,
@@ -39,6 +42,13 @@ class SupabaseTaskRepository
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<void> _queueAction(OfflineAction action) async {
+    await _offlineQueue.enqueueAction(
+      actionType: action.type,
+      payload: action.toMap(),
+    );
+  }
 
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
@@ -63,39 +73,116 @@ class SupabaseTaskRepository
         householdId: task.householdId,
         userIds: userIds,
       );
-    }, context: 'SupabaseTaskRepository.completeTask', isOnline: _isOnline);
+    },
+        context: 'SupabaseTaskRepository.completeTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final requestId = generateOfflineRequestId();
+          final currentUserId = _client.auth.currentUser?.id;
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'complete_task_transaction',
+              params: {
+                'p_request_id': requestId,
+                'p_user_ids': userIds ?? (currentUserId != null ? [currentUserId] : []),
+                'p_task_id': task.id,
+                'p_household_id': task.householdId,
+                'p_xp_reward': task.xpReward,
+                'p_coin_reward': task.coinReward,
+                'p_task_title': task.title,
+              },
+              meta: {'queued': true},
+            ),
+          );
+          return {
+            'success': true,
+            'queued': true,
+            'message': 'Queued while offline',
+            'request_id': requestId,
+          };
+        });
   }
 
   @override
   Future<Either<Failure, void>> verifyTask(
       String taskId, String verifiedByUserId) async {
     return executeWithHandling(() async {
-      await _client.from(AppConstants.tableTasks).update({
+      final updates = {
         'status': TaskStatus.verified.name,
         'last_verified_by': verifiedByUserId,
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.verifyTask', isOnline: _isOnline);
+      };
+      await _client
+          .from(AppConstants.tableTasks)
+          .update(updates)
+          .eq('id', taskId);
+    },
+        context: 'SupabaseTaskRepository.verifyTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: AppConstants.tableTasks,
+              values: {
+                'status': TaskStatus.verified.name,
+                'last_verified_by': verifiedByUserId,
+                'updated_at': DateTime.now().toIso8601String(),
+              },
+              filters: [OfflineFilter(column: 'id', value: taskId)],
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> objectTask(
       String taskId, String objectedByUserId) async {
     return executeWithHandling(() async {
-      await _client.from(AppConstants.tableTasks).update({
+      final updates = {
         'status': TaskStatus.objected.name,
         'objected_by': objectedByUserId,
         'objected_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.objectTask', isOnline: _isOnline);
+      };
+      await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
+    },
+        context: 'SupabaseTaskRepository.objectTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: AppConstants.tableTasks,
+              values: {
+                'status': TaskStatus.objected.name,
+                'objected_by': objectedByUserId,
+                'objected_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTime.now().toIso8601String(),
+              },
+              filters: [OfflineFilter(column: 'id', value: taskId)],
+            ),
+          );
+        });
   }
 
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async {
     return executeWithHandling(() async {
       await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.deleteTask', isOnline: _isOnline);
+    },
+        context: 'SupabaseTaskRepository.deleteTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableDelete,
+              target: AppConstants.tableTasks,
+              filters: [OfflineFilter(column: 'id', value: taskId)],
+            ),
+          );
+        });
   }
 
   @override
@@ -121,7 +208,36 @@ class SupabaseTaskRepository
       }
 
       await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.updateSchedule', isOnline: _isOnline);
+    },
+        context: 'SupabaseTaskRepository.updateSchedule',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final now = DateTime.now().toIso8601String();
+          final Map<String, dynamic> queuedUpdates = {
+            'recurrence_type': recurrenceType,
+            'updated_at': now,
+          };
+
+          if (recurrenceType != null) {
+            queuedUpdates['due_at'] = now;
+            queuedUpdates['status'] = TaskStatus.active.name;
+            queuedUpdates['completed_at'] = null;
+            queuedUpdates['completed_by'] = null;
+            queuedUpdates['last_completed_at'] = null;
+            queuedUpdates['last_verified_by'] = null;
+            queuedUpdates['objected_at'] = null;
+            queuedUpdates['objected_by'] = null;
+          }
+
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: AppConstants.tableTasks,
+              values: queuedUpdates,
+              filters: [OfflineFilter(column: 'id', value: taskId)],
+            ),
+          );
+        });
   }
 
   @override
@@ -158,7 +274,35 @@ class SupabaseTaskRepository
       if (updates.isNotEmpty) {
         await _client.from(AppConstants.tableTasks).update(updates).eq('id', taskId);
       }
-    }, context: 'SupabaseTaskRepository.createTask', isOnline: _isOnline);
+    },
+        context: 'SupabaseTaskRepository.createTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final userId = _client.auth.currentUser?.id;
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.taskCreate,
+              target: 'create_task',
+              params: {
+                'title': title,
+                'description': description,
+                'category': category,
+                'assignedTo': assignedTo,
+                'type': 'one_time',
+                'difficulty': difficulty,
+                'xpReward': xpReward,
+                'coinReward': coinReward,
+                'priority': 'medium',
+                'recurrenceType': recurrenceType,
+                'recurrenceInterval': 1,
+              },
+              meta: {
+                if (userId != null) 'created_by_id': userId,
+                if (status != null) 'status': status,
+              },
+            ),
+          );
+        });
   }
 
   @override
@@ -170,6 +314,20 @@ class SupabaseTaskRepository
           .from(AppConstants.tableTasks)
           .update(updates)
           .eq('id', taskId);
-    }, context: 'SupabaseTaskRepository.editTask', isOnline: _isOnline);
+    },
+        context: 'SupabaseTaskRepository.editTask',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final queuedUpdates = Map<String, dynamic>.from(updates)
+            ..['updated_at'] = DateTime.now().toIso8601String();
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.tableUpdate,
+              target: AppConstants.tableTasks,
+              values: queuedUpdates,
+              filters: [OfflineFilter(column: 'id', value: taskId)],
+            ),
+          );
+        });
   }
 }

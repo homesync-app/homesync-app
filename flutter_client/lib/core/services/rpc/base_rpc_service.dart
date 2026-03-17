@@ -1,6 +1,6 @@
-import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../errors/failures.dart';
+import 'package:homesync_client/core/services/retry/retry_service.dart';
 
 /// Base class for all RPC services.
 /// Provides retry logic and rate limit handling.
@@ -18,46 +18,30 @@ abstract class BaseRpcService {
     Future<T> Function() request, {
     String operation = 'RPC',
   }) async {
-    int retryCount = 0;
-    Duration delay = _initialDelay;
-
-    while (true) {
-      try {
-        return await request();
-      } on PostgrestException catch (e) {
-        if (_isRateLimitError(e)) {
-          retryCount++;
-          if (retryCount >= _maxRetries) {
+    final retryService = RetryService();
+    return retryService.executeWithRetry(
+      request: () async {
+        try {
+          return await request();
+        } on PostgrestException catch (e) {
+          if (_isRateLimitError(e)) {
             throw RateLimitException(
-              'Rate limit exceeded after $retryCount attempts',
+              'Rate limit exceeded after $_maxRetries attempts',
               timeUntilReset: _extractRetryAfter(e),
             );
           }
-
-          await Future.delayed(delay);
-          if (delay.inSeconds < _maxDelay.inSeconds) {
-            delay = Duration(
-                seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
-          }
-        } else {
           rethrow;
         }
-      } catch (e) {
-        if (e is RateLimitException) rethrow;
-
-        retryCount++;
-        if (retryCount >= _maxRetries) {
-          throw NetworkException(
-              'Operation failed after $_maxRetries attempts: $e');
-        }
-
-        await Future.delayed(delay);
-        if (delay.inSeconds < _maxDelay.inSeconds) {
-          delay =
-              Duration(seconds: min(delay.inSeconds * 2, _maxDelay.inSeconds));
-        }
-      }
-    }
+      },
+      policy: const RetryPolicy(
+        maxRetries: _maxRetries,
+        initialDelay: _initialDelay,
+        maxDelay: _maxDelay,
+        exponentialBackoff: true,
+        jitterRatio: 0.3,
+      ),
+      shouldRetry: (_) => true,
+    );
   }
 
   bool _isRateLimitError(PostgrestException e) {
