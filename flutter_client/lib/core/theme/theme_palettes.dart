@@ -21,6 +21,12 @@ class ThemePalette {
       gradient: [Color(0xFFEE652B), Color(0xFFFF8A65)],
     ),
     ThemePalette(
+      name: 'Oscuro',
+      primary: Color(0xFF111827),
+      secondary: Color(0xFF1F2937),
+      gradient: [Color(0xFF111827), Color(0xFF1F2937)],
+    ),
+    ThemePalette(
       name: 'Índigo',
       primary: Color(0xFF6366F1),
       secondary: Color(0xFF818CF8),

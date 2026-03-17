@@ -201,7 +201,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     final householdId = ref.watch(householdIdProvider).value;
 
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -222,17 +222,77 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                 onPressed: _showCreateRewardSheet,
               )),
           const SizedBox(height: 16),
+          
           if (approvedRewards.isEmpty)
             _buildEmptyState()
           else
-            _buildRewardsGrid(approvedRewards),
+            _buildGroupedRewards(approvedRewards),
           
           const SizedBox(height: 40),
           _buildActionButtons(),
-          const SizedBox(height: 100),
+          const SizedBox(height: 120),
         ],
       ),
     );
+  }
+
+  Widget _buildGroupedRewards(List<RewardModel> rewards) {
+    // Grouping logic
+    final Map<String, List<RewardModel>> grouped = {};
+    for (var r in rewards) {
+      final cat = r.category?.toLowerCase() ?? 'otros';
+      grouped.putIfAbsent(cat, () => []).add(r);
+    }
+
+    // Sort order for categories
+    final categoryOrder = ['mimos', 'momentos juntos', 'momentos', 'libertades', 'experiencias más grandes', 'experiencias'];
+    final sortedCategories = grouped.keys.toList()
+      ..sort((a, b) {
+        final indexA = categoryOrder.indexOf(a);
+        final indexB = categoryOrder.indexOf(b);
+        if (indexA != -1 && indexB != -1) return indexA.compareTo(indexB);
+        if (indexA != -1) return -1;
+        if (indexB != -1) return 1;
+        return a.compareTo(b);
+      });
+
+    return Column(
+      children: sortedCategories.map((cat) {
+        final catRewards = grouped[cat]!;
+        String displayTitle = _getCategoryDisplayTitle(cat);
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 16, bottom: 12),
+              child: Text(
+                displayTitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ),
+            _buildRewardsGrid(catRewards),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  String _getCategoryDisplayTitle(String cat) {
+    switch (cat.toLowerCase()) {
+      case 'mimos': return '✨ MIMOS';
+      case 'momentos juntos':
+      case 'momentos': return '💑 MOMENTOS JUNTOS';
+      case 'libertades': return '🔓 LIBERTADES';
+      case 'experiencias más grandes':
+      case 'experiencias': return '🌈 EXPERIENCIAS MÁS GRANDES';
+      default: return '🌈 OTROS';
+    }
   }
   Widget _buildChallengeSection(String? householdId) {
     if (householdId == null) return const SizedBox.shrink();

@@ -52,7 +52,7 @@ const _kPrimaryColorKey = 'app_primary_color';
 
 class PrimaryColorNotifier extends Notifier<Color> {
   @override
-  Color build() => const Color(0xFF6366F1); // Indigo default
+  Color build() => const Color(0xFFEE652B); // Orange default
 
   Future<void> init(SharedPreferences prefs) async {
     final saved = prefs.getInt(_kPrimaryColorKey);

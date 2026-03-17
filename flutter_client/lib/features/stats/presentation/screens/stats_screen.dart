@@ -73,11 +73,25 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
   // ── Computed values ──────────────────────────────────────────────────────
 
-  int get _totalTasksCompleted => _taskStats.fold(
-      0, (s, e) => s + ((e['completed_count'] as num?)?.toInt() ?? 0));
+  int get _totalTasksCompleted {
+    final fromTasks = _taskStats.fold(
+        0, (s, e) => s + ((e['completed_count'] as num?)?.toInt() ?? 0));
+    if (fromTasks > 0) return fromTasks;
 
-  int get _totalXpEarned =>
-      _taskStats.fold(0, (s, e) => s + ((e['total_xp'] as num?)?.toInt() ?? 0));
+    final fromMembers = _memberStats.fold(
+        0, (s, e) => s + ((e['tasks_completed'] as num?)?.toInt() ?? 0));
+    return fromMembers;
+  }
+
+  int get _totalXpEarned {
+    final fromTasks =
+        _taskStats.fold(0, (s, e) => s + ((e['total_xp'] as num?)?.toInt() ?? 0));
+    if (fromTasks > 0) return fromTasks;
+
+    final fromMembers = _memberStats.fold(
+        0, (s, e) => s + ((e['xp_earned'] as num?)?.toInt() ?? 0));
+    return fromMembers;
+  }
 
   int get _totalCoinsEarned => _memberStats.fold(
       0, (s, e) => s + ((e['coins_earned'] as num?)?.toInt() ?? 0));

@@ -3,6 +3,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
@@ -28,7 +29,7 @@ class SupabaseAuthService {
         serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
       ).timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('Error o timeout inicializando GoogleSignIn: $e');
+      log.w('Error o timeout inicializando GoogleSignIn: $e', error: e);
     }
   }
 
@@ -130,7 +131,7 @@ class SupabaseAuthService {
       }
     
       // Fallback a OAuth
-      debugPrint('Usando fallback de OAuth para Google Sign-In');
+      log.w('Usando fallback de OAuth para Google Sign-In');
       
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
@@ -141,7 +142,7 @@ class SupabaseAuthService {
       // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
     } catch (e) {
-      debugPrint('Error en Google Sign-In: $e');
+      log.e('Error en Google Sign-In: $e', error: e);
       return false;
     }
   }

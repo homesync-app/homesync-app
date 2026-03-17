@@ -1,16 +1,22 @@
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'stats_shared_widgets.dart';
 import 'personal_metric_card.dart';
 import 'category_widgets.dart';
 
-class WeeklyTab extends StatelessWidget {
+class WeeklyTab extends ConsumerWidget {
   final List<Map<String, dynamic>> weeklyRanking;
   final List<Map<String, dynamic>> memberStats;
   final List<Map<String, dynamic>> duelHistory;
@@ -32,9 +38,77 @@ class WeeklyTab extends StatelessWidget {
     required this.onRefresh,
   });
 
+  void _showLoveNoteDialog(BuildContext context, WidgetRef ref, AppThemeColors theme) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        backgroundColor: theme.surface,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          children: [
+            const Icon(Icons.favorite, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(
+              'Nueva Nota de Amor',
+              style: TextStyle(fontWeight: FontWeight.w900, color: theme.textPrimary),
+            ),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          style: TextStyle(color: theme.textPrimary),
+          decoration: InputDecoration(
+            hintText: 'Escribe algo tierno...',
+            filled: true,
+            fillColor: Colors.red.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancelar', style: TextStyle(color: theme.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final content = controller.text.trim();
+              if (content.isNotEmpty) {
+                ref.read(loveNotesProvider.notifier).sendNote(
+                  content,
+                  ref.read(currentUserIdProvider) ?? 'me',
+                  'partner',
+                );
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('💖 Nota enviada exitosamente'),
+                    backgroundColor: Colors.pink,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final isPremium = ref.watch(premiumProvider);
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
@@ -51,37 +125,140 @@ class WeeklyTab extends StatelessWidget {
           ],
 
           // ── Summary row (Global context) ──────────────────────────────────
-          const SectionLabel(label: 'Resumen del hogar', icon: '🏠'),
+          Text(
+            'Resumen del hogar',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textPrimary.withValues(alpha: 0.9),
+              letterSpacing: -0.2,
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: MiniStatCard(
-                  icon: '🔥',
-                  value: '$totalTasks',
-                  label: 'Tareas',
-                  color: AppColors.primary,
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+              boxShadow: theme.cardShadow,
+            ),
+            child: Row(
+              children: [
+                    Expanded(
+                      child: SummaryMetric(
+                        icon: '🔥',
+                        value: '$totalTasks',
+                        label: 'Tareas',
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 50,
+                      color: Colors.black.withValues(alpha: 0.06),
+                    ),
+                    Expanded(
+                      child: SummaryMetric(
+                        icon: '✨',
+                        value: '$totalXp',
+                        label: 'XP',
+                        color: AppColors.accentGold,
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 50,
+                      color: Colors.black.withValues(alpha: 0.06),
+                    ),
+                    Expanded(
+                      child: SummaryMetric(
+                        icon: '💰',
+                        value: '$totalCoins',
+                        label: 'Coins',
+                        color: AppColors.accentTeal,
+                      ),
+                    ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          GestureDetector(
+            onTap: () {
+              if (!isPremium) {
+                PremiumPaywall.show(context);
+              } else {
+                HapticFeedback.lightImpact();
+                _showLoveNoteDialog(context, ref, theme);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isPremium
+                      ? [const Color(0xFFFEE2E2), Colors.white]
+                      : [Colors.white, Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: MiniStatCard(
-                  icon: '✨',
-                  value: '$totalXp',
-                  label: 'XP',
-                  color: AppColors.accentGold,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: isPremium
+                      ? const Color(0xFFFCA5A5).withValues(alpha: 0.5)
+                      : Colors.black.withValues(alpha: 0.04),
                 ),
+                boxShadow: theme.cardShadow,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: MiniStatCard(
-                  icon: '💰',
-                  value: '$totalCoins',
-                  label: 'Coins',
-                  color: AppColors.accentTeal,
-                ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isPremium ? const Color(0xFFFECACA) : Colors.black.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPremium ? Icons.favorite_rounded : Icons.lock_rounded,
+                      color: isPremium ? const Color(0xFFEF4444) : AppColors.textMuted,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Enviar mensaje a tu pareja',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: isPremium ? const Color(0xFF991B1B) : AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isPremium
+                              ? 'Sorprendé con una nota especial hoy ✨'
+                              : 'Función Premium. Desbloqueala para enviar notas.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isPremium
+                                ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isPremium)
+                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted),
+                ],
               ),
-            ],
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -94,37 +271,54 @@ class WeeklyTab extends StatelessWidget {
           ],
 
           // ── Activity Placeholder ──────────────────────────────────────────
-          const SectionLabel(label: 'Detalles del hogar', icon: '🕒'),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
-              boxShadow: theme.cardShadow,
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.auto_awesome_outlined, color: AppColors.primary.withValues(alpha: 0.3), size: 32),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  'Revisá el muro para ver la\nactividad detallada minuto a minuto.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
           const PrivacyBadge(text: 'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
         ],
       ),
+    );
+  }
+}
+
+class SummaryMetric extends StatelessWidget {
+  final String icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const SummaryMetric({
+    super.key,
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 18)),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.8,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            color: color.withValues(alpha: 0.8),
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ],
     );
   }
 }

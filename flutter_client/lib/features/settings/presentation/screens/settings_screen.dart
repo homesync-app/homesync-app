@@ -1244,6 +1244,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final theme = context.theme;
     
     final List<ThemePalette> palettes = ThemePalette.all;
+    const Set<String> freePaletteNames = {'Naranja (Original)'};
+    final defaultPalette = palettes.firstWhere(
+      (palette) => palette.name == 'Naranja (Original)',
+      orElse: () => palettes.first,
+    );
+    final selectedPalette = palettes.cast<ThemePalette?>().firstWhere(
+      (palette) => palette?.primary.value == currentColor.value,
+      orElse: () => null,
+    );
+    final isFreeSelected = selectedPalette != null && freePaletteNames.contains(selectedPalette.name);
+
+    if (!isPremium && !isFreeSelected) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(primaryColorProvider.notifier).setColor(defaultPalette.primary);
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1283,10 +1299,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             itemBuilder: (context, index) {
               final palette = palettes[index];
               final isSelected = currentColor.value == palette.primary.value;
+              final isFreePalette = freePaletteNames.contains(palette.name);
+              final isLocked = !isPremium && !isFreePalette;
               
               return GestureDetector(
                 onTap: () {
-                  if (!isPremium && index > 0) {
+                  if (isLocked) {
                     PremiumPaywall.show(context);
                   } else {
                     HapticFeedback.lightImpact();
@@ -1314,7 +1332,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   child: isSelected 
                     ? const Icon(Icons.check, color: Colors.white, size: 20)
-                    : (!isPremium && index > 0) 
+                    : (isLocked) 
                       ? Icon(Icons.lock_outline_rounded, color: Colors.white.withValues(alpha: 0.5), size: 18)
                       : null,
                 ),
@@ -1474,8 +1492,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildAppearanceCard() {
-    final themeMode = ref.watch(themeModeProvider);
-    final isDark = themeMode == ThemeMode.dark;
     final theme = context.theme;
 
     return Container(
@@ -1504,7 +1520,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  Icons.palette_rounded,
                   color: theme.primary,
                   size: 22,
                 ),
@@ -1525,70 +1541,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              _themeBtn(ThemeMode.light, 'Claro', Icons.light_mode_rounded,
-                  themeMode),
-              const SizedBox(width: 8),
-              _themeBtn(ThemeMode.dark, 'Oscuro', Icons.dark_mode_rounded,
-                  themeMode),
-              const SizedBox(width: 8),
-              _themeBtn(ThemeMode.system, 'Sist',
-                  Icons.settings_suggest_rounded, themeMode),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Divider(height: 1, color: theme.border.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           _buildColorPicker(ref),
         ],
-      ),
-    );
-  }
-
-  Widget _themeBtn(
-      ThemeMode mode, String label, IconData icon, ThemeMode current) {
-    final isSelected = current == mode;
-    final theme = context.theme;
-    
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.selectionClick();
-          ref.read(themeModeProvider.notifier).setMode(mode);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? theme.primary.withValues(alpha: 0.12)
-                : theme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected ? theme.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon,
-                  color: isSelected ? theme.primary : theme.textMuted,
-                  size: 22),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color:
-                      isSelected ? theme.primary : theme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

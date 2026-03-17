@@ -10,9 +10,23 @@ import { Economy } from './pages/Economy';
 import { Login } from './pages/Login';
 import { CrashReports } from './pages/CrashReports';
 import { Loader2 } from 'lucide-react';
+import type { Session } from '@supabase/supabase-js';
+
+function ProtectedRoute({
+  session,
+  children,
+}: {
+  session: Session | null;
+  children: React.ReactNode;
+}) {
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
 
 function App() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,30 +52,29 @@ function App() {
     );
   }
 
-  if (!session) {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
-    );
-  }
-
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/templates" element={<TaskTemplates />} />
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/crashes" element={<CrashReports />} />
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/economy" element={<Economy />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute session={session}>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/templates" element={<TaskTemplates />} />
+                  <Route path="/logs" element={<Logs />} />
+                  <Route path="/crashes" element={<CrashReports />} />
+                  <Route path="/users" element={<UserManagement />} />
+                  <Route path="/economy" element={<Economy />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </Router>
   );
 }

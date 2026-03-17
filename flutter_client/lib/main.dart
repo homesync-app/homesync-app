@@ -11,16 +11,115 @@ import 'package:homesync_client/features/auth/presentation/screens/login_screen.
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Force use of bundled assets for fonts to prevent network errors
   GoogleFonts.config.allowRuntimeFetching = false;
+
+  final packageInfo = await PackageInfo.fromPlatform();
+  final deviceInfo = DeviceInfoPlugin();
+  final deviceContext = <String, dynamic>{};
+  try {
+    if (kIsWeb) {
+      final web = await deviceInfo.webBrowserInfo;
+      deviceContext.addAll({
+        'device': 'web',
+        'browser': web.browserName.name,
+        'user_agent': web.userAgent,
+        'platform': web.platform,
+      });
+    } else {
+      switch (defaultTargetPlatform) {
+        case TargetPlatform.android:
+          final info = await deviceInfo.androidInfo;
+          deviceContext.addAll({
+            'device': 'android',
+            'model': info.model,
+            'brand': info.brand,
+            'manufacturer': info.manufacturer,
+            'os_version': info.version.release,
+            'sdk_int': info.version.sdkInt,
+          });
+          break;
+        case TargetPlatform.iOS:
+          final info = await deviceInfo.iosInfo;
+          deviceContext.addAll({
+            'device': 'ios',
+            'model': info.utsname.machine,
+            'name': info.name,
+            'system_version': info.systemVersion,
+          });
+          break;
+        case TargetPlatform.macOS:
+          final info = await deviceInfo.macOsInfo;
+          deviceContext.addAll({
+            'device': 'macos',
+            'model': info.model,
+            'os_version': info.osRelease,
+            'kernel_version': info.kernelVersion,
+          });
+          break;
+        case TargetPlatform.windows:
+          final info = await deviceInfo.windowsInfo;
+          deviceContext.addAll({
+            'device': 'windows',
+            'computer_name': info.computerName,
+            'os_version': info.displayVersion,
+          });
+          break;
+        case TargetPlatform.linux:
+          final info = await deviceInfo.linuxInfo;
+          deviceContext.addAll({
+            'device': 'linux',
+            'name': info.name,
+            'version': info.version,
+          });
+          break;
+        case TargetPlatform.fuchsia:
+          deviceContext.addAll({'device': 'fuchsia'});
+          break;
+      }
+    }
+  } catch (e) {
+    debugPrint('Device info error: $e');
+  }
+
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  final appContext = <String, dynamic>{
+    'environment': AppEnvironment.current.name,
+    'app_version': packageInfo.version,
+    'build_number': packageInfo.buildNumber,
+    'platform': kIsWeb ? 'web' : defaultTargetPlatform.name,
+    'locale': '${locale.languageCode}_${locale.countryCode ?? ''}',
+    'timezone': DateTime.now().timeZoneName,
+  };
+  final richContext = <String, dynamic>{
+    ...appContext,
+    ...deviceContext,
+  };
+
+  log.setCustomKey('environment', appContext['environment']);
+  log.setCustomKey('app_version', appContext['app_version']);
+  log.setCustomKey('build_number', appContext['build_number']);
+  log.setCustomKey('platform', appContext['platform']);
+  log.setCustomKey('locale', appContext['locale']);
+  log.setCustomKey('timezone', appContext['timezone']);
+  if (deviceContext['model'] != null) {
+    log.setCustomKey('device_model', deviceContext['model']);
+  }
+  if (deviceContext['device'] != null) {
+    log.setCustomKey('device_type', deviceContext['device']);
+  }
   
   // 1. Initialize Firebase
   try {
@@ -30,6 +129,18 @@ void main() async {
     // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
     if (!kIsWeb) {
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FirebaseCrashlytics.instance.setCustomKey('environment', appContext['environment'] as String);
+      FirebaseCrashlytics.instance.setCustomKey('app_version', appContext['app_version'] as String);
+      FirebaseCrashlytics.instance.setCustomKey('build_number', appContext['build_number'] as String);
+      FirebaseCrashlytics.instance.setCustomKey('platform', appContext['platform'] as String);
+      FirebaseCrashlytics.instance.setCustomKey('locale', appContext['locale'] as String);
+      FirebaseCrashlytics.instance.setCustomKey('timezone', appContext['timezone'] as String);
+      if (deviceContext['model'] != null) {
+        FirebaseCrashlytics.instance.setCustomKey('device_model', deviceContext['model'] as String);
+      }
+      if (deviceContext['device'] != null) {
+        FirebaseCrashlytics.instance.setCustomKey('device_type', deviceContext['device'] as String);
+      }
     }
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
@@ -37,6 +148,34 @@ void main() async {
 
   final auth = SupabaseAuthService();
   await auth.initialize();
+
+  if (!kIsWeb) {
+    final userId = auth.currentUser?.id;
+    if (userId != null && userId.isNotEmpty) {
+      FirebaseCrashlytics.instance.setUserIdentifier(userId);
+      FirebaseCrashlytics.instance.setCustomKey('user_id', userId);
+    }
+  }
+  final initialUserId = auth.currentUser?.id;
+  if (initialUserId != null && initialUserId.isNotEmpty) {
+    log.setUserId(initialUserId);
+    log.setCustomKey('user_id', initialUserId);
+  }
+
+  Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+    final nextUserId = event.session?.user.id;
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.setUserIdentifier(nextUserId ?? '');
+      FirebaseCrashlytics.instance.setCustomKey('user_id', nextUserId ?? '');
+    }
+    if (nextUserId != null && nextUserId.isNotEmpty) {
+      log.setUserId(nextUserId);
+      log.setCustomKey('user_id', nextUserId);
+    } else {
+      log.setUserId('');
+      log.setCustomKey('user_id', '');
+    }
+  });
 
   final rpc = SupabaseRpcService();
   await rpc.initialize();
@@ -52,7 +191,11 @@ void main() async {
     rpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
-      context: {'library': details.library, 'context': details.context?.toString()},
+      context: {
+        ...richContext,
+        'library': details.library,
+        'context': details.context?.toString(),
+      },
     );
   };
 
@@ -67,6 +210,10 @@ void main() async {
       message: error.toString(),
       stackTrace: stack.toString(),
       level: 'critical',
+      context: {
+        ...richContext,
+        'source': 'platform_dispatcher',
+      },
     );
     return true;
   };

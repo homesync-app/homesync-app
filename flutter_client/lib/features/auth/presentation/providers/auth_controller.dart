@@ -25,6 +25,8 @@ class AuthController extends _$AuthController {
     
     result.fold(
       (failure) {
+        log.setCustomKey('auth_flow', 'email_sign_in');
+        log.setCustomKey('auth_email', email);
         log.e('Login error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
@@ -45,6 +47,8 @@ class AuthController extends _$AuthController {
 
     result.fold(
       (failure) {
+        log.setCustomKey('auth_flow', 'email_sign_up');
+        log.setCustomKey('auth_email', email);
         log.e('Registration error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
@@ -60,6 +64,7 @@ class AuthController extends _$AuthController {
     
     return result.fold(
       (failure) {
+        log.setCustomKey('auth_flow', 'google_sign_in');
         log.e('Google Sign-In error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
         return false;
@@ -82,6 +87,7 @@ class AuthController extends _$AuthController {
     
     result.fold(
       (failure) {
+        log.setCustomKey('auth_flow', 'sign_out');
         log.e('Sign out error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
@@ -95,6 +101,8 @@ class AuthController extends _$AuthController {
     
     result.fold(
       (failure) {
+        log.setCustomKey('auth_flow', 'reset_password');
+        log.setCustomKey('auth_email', email);
         log.e('Reset password error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
