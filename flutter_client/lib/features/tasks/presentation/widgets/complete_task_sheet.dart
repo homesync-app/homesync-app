@@ -529,7 +529,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             child: _buildDateOptionCard(
               title: !_isRightNow
                   ? DateFormat('d/M HH:mm').format(_customDate)
-                  : 'Ahora mismo',
+                  : 'Antes',
               icon: Icons.calendar_today_rounded,
               isSelected: !_isRightNow,
               onTap: _selectCustomDate,
