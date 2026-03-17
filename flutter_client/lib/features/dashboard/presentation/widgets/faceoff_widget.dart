@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -46,6 +47,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
     if (widget.weeklyRanking.length < 2) {
       return const SizedBox.shrink();
     }
+    final theme = context.theme;
 
     final p1 = widget.weeklyRanking[0];
     final p2 = widget.weeklyRanking[1];
@@ -61,45 +63,12 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Text('⚔️', style: TextStyle(fontSize: 14)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'DUELO DE PODER',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary.withValues(alpha: 0.8),
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 8),
           Row(
             children: [
               _buildCompetitor(p1),
@@ -111,125 +80,7 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
           _buildMysteryBar(p1Pct),
           const SizedBox(height: 32),
           _buildWeeklyTrack(),
-          const SizedBox(height: 28),
-          _buildSimulationButton(context),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSimulationButton(BuildContext context) {
-    return Center(
-      child: TextButton.icon(
-        onPressed: () => _simulateFinal(context),
-        icon: const Icon(Icons.science_outlined, size: 16, color: AppColors.primary),
-        label: const Text(
-          'SIMULAR FINAL',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primary,
-            letterSpacing: 1.1,
-          ),
-        ),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          backgroundColor: AppColors.primary.withValues(alpha: 0.05),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      ),
-    );
-  }
-
-  void _simulateFinal(BuildContext context) {
-    final p1 = widget.weeklyRanking[0];
-    final p2 = widget.weeklyRanking[1];
-    
-    final p1Xp = (p1['xp_earned'] as num?)?.toInt() ?? 0;
-    final p2Xp = (p2['xp_earned'] as num?)?.toInt() ?? 0;
-    
-    final winner = p1Xp >= p2Xp ? p1 : p2;
-    final loser = p1Xp >= p2Xp ? p2 : p1;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🏆', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 16),
-            Text(
-              '¡${winner['user_name']} ganaría el duelo!',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Con ${winner['xp_earned']} XP vs ${loser['xp_earned']} XP',
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Premio estimado:',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textMuted,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.accentGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('🪙', style: TextStyle(fontSize: 20)),
-                  SizedBox(width: 8),
-                  Text(
-                    '20 COINS',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.accentGold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'ENTENDIDO',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

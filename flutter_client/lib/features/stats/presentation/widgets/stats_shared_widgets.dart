@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 
 class XPToggleButton extends StatelessWidget {
   final String label;
@@ -17,6 +19,7 @@ class XPToggleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -28,13 +31,7 @@ class XPToggleButton extends StatelessWidget {
             color: isSelected ? Colors.white : Colors.black.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(20),
             boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
+                ? theme.cardShadow
                 : [],
             border: Border.all(
               color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
@@ -63,31 +60,26 @@ class PrivacyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.shield_rounded, color: AppColors.primary, size: 24),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Text(
               text,
@@ -112,26 +104,21 @@ class SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      padding: const EdgeInsets.only(left: AppSpacing.xxs, bottom: AppSpacing.xxs),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: theme.cardShadow,
             ),
             child: Text(icon, style: const TextStyle(fontSize: 18)),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.md),
           Text(
             label.toUpperCase(),
             style: TextStyle(
@@ -163,18 +150,13 @@ class MiniStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg, horizontal: AppSpacing.sm),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Column(
@@ -189,7 +171,7 @@ class MiniStatCard extends StatelessWidget {
               height: 1,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             label.toUpperCase(),
             style: TextStyle(
@@ -199,9 +181,9 @@ class MiniStatCard extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.08),
               shape: BoxShape.circle,
@@ -221,17 +203,12 @@ class DuelHistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
       ),
       child: Column(
         children: duelHistory.asMap().entries.map((entry) {
@@ -255,7 +232,7 @@ class DuelHistoryWidget extends StatelessWidget {
           }
 
           return Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               border: isLast ? null : Border(
                 bottom: BorderSide(
@@ -287,7 +264,7 @@ class DuelHistoryWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +290,7 @@ class DuelHistoryWidget extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xxs),
                       Text(
                         weekLabel,
                         style: const TextStyle(
@@ -325,7 +302,7 @@ class DuelHistoryWidget extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: userResult == 'win'
                         ? AppColors.success.withValues(alpha: 0.1)
@@ -349,7 +326,7 @@ class DuelHistoryWidget extends StatelessWidget {
                                   : AppColors.accentGold,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: AppSpacing.xxs),
                       Text(
                         '$winnerXp - $loserXp',
                         style: TextStyle(

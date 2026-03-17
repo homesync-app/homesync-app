@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class CategoryBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> taskStats;
@@ -8,6 +9,7 @@ class CategoryBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (taskStats.isEmpty) return const SizedBox.shrink();
+    final theme = context.theme;
 
     final totalValue = taskStats.fold<double>(
         0, (sum, item) => sum + ((item['completed_count'] as num?)?.toDouble() ?? 0));
@@ -17,13 +19,7 @@ class CategoryBarChart extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Column(
@@ -149,6 +145,7 @@ class CategoryDetailCard extends StatelessWidget {
     final color = AppColors.getCategoryColor(category);
     final icon = AppColors.categoryIcons[category] ?? '📋';
     final name = AppColors.categoryNames[category] ?? category;
+    final theme = context.theme;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -156,13 +153,7 @@ class CategoryDetailCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
         border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Row(

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
@@ -126,18 +127,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onRefresh: () async => _refreshHome(),
                 color: theme.primary,
                 child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
                   children: [
                     _buildHeader(theme),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildFinancialSummary(householdId),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildTasksSection(theme),
                     // const SizedBox(height: 32),
                     // _buildLoveNotesSection(theme),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xl),
                     _buildActivitySection(theme),
-                    const SizedBox(height: 140),
+                    const SizedBox(height: AppSpacing.jumbo),
                   ],
                 ),
               ),
@@ -201,7 +202,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 letterSpacing: -0.8,
               ),
             ).animateEntrance(),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xxs),
             Text(
               capitalizedDate,
               style: TextStyle(
@@ -339,7 +340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ref.read(bottomNavIndexProvider.notifier).setIndex(1);
               },
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -354,7 +355,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
         tasksAsync.when(
           loading: () => _buildTasksShimmer(theme),
           error: (e, _) => Text('Error: $e', style: TextStyle(color: theme.textPrimary)),
@@ -366,7 +367,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: visibleTasks.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.xs),
               itemBuilder: (context, index) => _buildTaskCard(visibleTasks[index], theme).animateStaggered(index),
             );
           },
@@ -382,18 +383,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return AnimatedPress(
       onTap: () => _completeTask(task),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           color: theme.surface,
           borderRadius: BorderRadius.circular(20),
           border: theme.isDarkMode ? Border.all(color: theme.border, width: 1.2) : null,
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadow.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          boxShadow: theme.cardShadow,
         ),
         child: Row(
           children: [
@@ -423,11 +418,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       letterSpacing: -0.2,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: AppSpacing.xxs),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
                         decoration: BoxDecoration(
                           color: categoryColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(20),
@@ -441,7 +436,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
                         '⭐ ${task.xpReward} XP',
                         style: TextStyle(
@@ -525,7 +520,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             TextButton(
               onPressed: () {},
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -540,7 +535,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.md),
         activityAsync.when(
           loading: () => _buildActivityShimmer(theme),
           error: (e, _) => Text('Error al cargar actividad: $e', style: TextStyle(color: theme.textPrimary)),
@@ -558,7 +553,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: List.generate(3, (_) => ShimmerLoading(
         child: Container(
           height: 88,
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
           decoration: BoxDecoration(
             color: theme.surface,
             borderRadius: BorderRadius.circular(20),
@@ -660,10 +655,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hasDetail = description != null && description.trim().isNotEmpty;
     final isClickable = type == 'expense' || hasDetail;
 
-    return Container(
-      key: key,
-      margin: const EdgeInsets.only(bottom: 2),
-      child: Row(
+        return Container(
+          key: key,
+          margin: const EdgeInsets.only(bottom: AppSpacing.xxs),
+          child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Timeline indicator
@@ -723,7 +718,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // Content
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: AnimatedPress(
                 onTap: isClickable ? () => _handleActivityTap(activity, itemLabel, description, accentColor) : null,
                 child: Container(
@@ -732,13 +727,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: theme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: theme.border.withValues(alpha: 0.3)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.shadow.withValues(alpha: 0.015),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    boxShadow: theme.cardShadow,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +738,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         radius: 16,
                         showBorder: false,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -763,16 +752,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   userName,
                                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: theme.textPrimary),
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: AppSpacing.xxs),
                                 if (actionVerb.isNotEmpty)
                                   Text(
                                     actionVerb,
                                     style: TextStyle(fontSize: 14, color: theme.textSecondary, fontWeight: FontWeight.w500),
                                   ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: AppSpacing.xs),
                                 Flexible(
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
                                     decoration: BoxDecoration(
                                       color: accentColor.withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(8),
@@ -787,19 +776,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: AppSpacing.xs),
                             // Bottom Row: Time, XP, Coins (Left/Center) and Amount (Right)
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Icon(Icons.access_time_rounded, size: 12, color: theme.textMuted.withValues(alpha: 0.6)),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: AppSpacing.xxs),
                                 Text(
                                   timeStr,
                                   style: TextStyle(color: theme.textMuted, fontSize: 13, fontWeight: FontWeight.w700),
                                 ),
                                 if (type == 'task') ...[
-                                                          if (data['coins_per_user'] != null || data['coin_reward'] != null) ...[
+                                  const SizedBox(width: AppSpacing.sm),
+                                  if (data['xp_per_user'] != null || data['xp_reward'] != null || data['xp'] != null) ...[
+                                    const Icon(Icons.star_rounded, size: 14, color: AppColors.accentGold),
+                                    const SizedBox(width: AppSpacing.xxs),
+                                    Text(
+                                      _formatNumber(data['xp_per_user'] ?? data['xp_reward'] ?? data['xp']),
+                                      style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w900, fontSize: 13),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                  ],
+                                  if (data['coins_per_user'] != null || data['coin_reward'] != null) ...[
                                     Container(
                                       width: 14,
                                       height: 14,
@@ -810,24 +809,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       alignment: Alignment.center,
                                       child: const Text('\$', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: AppSpacing.xxs),
                                     Text(
                                       _formatNumber(data['coins_per_user'] ?? data['coin_reward']),
                                       style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.w900, fontSize: 13),
                                     ),
                                   ],
-                                ],
-                                const Spacer(),
-                                if (amountStr != null)
-                                  Text(
-                                    amountStr,
-                                    style: TextStyle(
-                                      color: accentColor, 
-                                      fontWeight: FontWeight.w900, 
-                                      fontSize: 16, 
-                                      letterSpacing: -0.5,
+                                ] else ...[
+                                  const Spacer(),
+                                  if (amountStr != null)
+                                    Text(
+                                      amountStr,
+                                      style: TextStyle(
+                                        color: accentColor, 
+                                        fontWeight: FontWeight.w900, 
+                                        fontSize: 16, 
+                                        letterSpacing: -0.5,
+                                      ),
                                     ),
-                                  ),
+                                ],
                               ],
                             ),
                           ],
@@ -965,7 +965,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildEmptyState(String message, AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl, horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
@@ -973,15 +973,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Text('🐾', style: TextStyle(fontSize: 32)),
             ),
-            child: const Text('🐾', style: TextStyle(fontSize: 32)),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
           Text(
             message,
             textAlign: TextAlign.center,
@@ -990,15 +990,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '¡El amor es el mejor plan hoy! ✨',
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1479,9 +1470,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadow.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    color: theme.shadowBase.withValues(alpha: theme.isDarkMode ? 0.35 : 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),

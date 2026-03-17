@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'stats_shared_widgets.dart';
@@ -32,24 +34,25 @@ class WeeklyTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
           const SectionLabel(label: 'Duelo de la semana', icon: '⚔️'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
           ],
 
           // ── Summary row (Global context) ──────────────────────────────────
           const SectionLabel(label: 'Resumen del hogar', icon: '🏠'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
@@ -60,7 +63,7 @@ class WeeklyTab extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: MiniStatCard(
                   icon: '✨',
@@ -69,7 +72,7 @@ class WeeklyTab extends StatelessWidget {
                   color: AppColors.accentGold,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: MiniStatCard(
                   icon: '💰',
@@ -80,37 +83,31 @@ class WeeklyTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
 
           // ── Duel History ─────────────────────────────────────────────────
           if (duelHistory.isNotEmpty) ...[
             const SectionLabel(label: 'Historial de victorias', icon: '🏆'),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             DuelHistoryWidget(duelHistory: duelHistory),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
           ],
 
           // ── Activity Placeholder ──────────────────────────────────────────
           const SectionLabel(label: 'Detalles del hogar', icon: '🕒'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+              boxShadow: theme.cardShadow,
             ),
             child: Column(
               children: [
                 Icon(Icons.auto_awesome_outlined, color: AppColors.primary.withValues(alpha: 0.3), size: 32),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 const Text(
                   'Revisá el muro para ver la\nactividad detallada minuto a minuto.',
                   textAlign: TextAlign.center,
@@ -124,7 +121,7 @@ class WeeklyTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           const PrivacyBadge(text: 'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
         ],
       ),
@@ -164,6 +161,7 @@ class _ProgressTabState extends State<ProgressTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final spots = _showXp
         ? _buildSpots(widget.xpHistory)
         : _buildSpots(widget.coinHistory);
@@ -179,11 +177,11 @@ class _ProgressTabState extends State<ProgressTab> {
       onRefresh: widget.onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Header ───────────────────────────────────────────────────────
           const SectionLabel(label: 'Tu evolución personal', icon: '📈'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           
           // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
@@ -194,7 +192,7 @@ class _ProgressTabState extends State<ProgressTab> {
                 color: AppColors.accentGold,
                 onTap: () => setState(() => _showXp = true),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.sm),
               XPToggleButton(
                 label: 'Coins',
                 isSelected: !_showXp,
@@ -203,22 +201,16 @@ class _ProgressTabState extends State<ProgressTab> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           // ── Chart ──────────────────────────────────────────────────────
           Container(
             height: 240,
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
+              boxShadow: theme.cardShadow,
               border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
@@ -227,7 +219,7 @@ class _ProgressTabState extends State<ProgressTab> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('🌱', style: TextStyle(fontSize: 32)),
-                        SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.sm),
                         Text(
                           'Empezá a completar tareas\npara ver tu progreso.',
                           textAlign: TextAlign.center,
@@ -310,7 +302,7 @@ class _ProgressTabState extends State<ProgressTab> {
                     ),
                   ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.xl),
 
           // ── Multi-info Cards ─────────────────────────────────────────────
           Row(
@@ -324,7 +316,7 @@ class _ProgressTabState extends State<ProgressTab> {
                   subtitle: '¡Vas con todo!',
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: PersonalMetricCard(
                   icon: '📈',
@@ -336,7 +328,7 @@ class _ProgressTabState extends State<ProgressTab> {
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.xl),
 
           // ── Privacy assurance ───────────────────────────────────────────
           const PrivacyBadge(
@@ -373,24 +365,35 @@ class CategoriesTab extends StatelessWidget {
               ),
               child: const Text('📊', style: TextStyle(fontSize: 48)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.insights_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.favorite_border_rounded, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.auto_graph_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
             const Text(
               'Todavía no hay datos',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             const Text(
               'Completá algunas tareas para ver\ntus áreas de dominio.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: onRefresh,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: const Text('Actualizar datos'),
@@ -404,24 +407,24 @@ class CategoriesTab extends StatelessWidget {
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Premium Dominance Header ─────────────────────────────────────
           const SectionLabel(label: 'Dominio de Categorías', icon: '💎'),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           // ── Horizontal bar chart (Modernized) ────────────────────────────
           CategoryBarChart(taskStats: taskStats),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.xl),
 
           // ── Elegant breakdown list ───────────────────────────────────────
           const SectionLabel(label: 'Desglose detallado', icon: '✨'),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           ...taskStats.map((stat) => CategoryDetailCard(stat: stat)),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -435,7 +438,7 @@ class CategoriesTab extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -448,7 +451,7 @@ class CategoriesTab extends StatelessWidget {
                   ),
                   child: const Text('💡', style: TextStyle(fontSize: 20)),
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: AppSpacing.md),
                 const Expanded(
                   child: Text(
                     'Balancear las categorías ayuda a mantener un hogar más armonioso y divertido.',

@@ -36,6 +36,24 @@ class AppThemeColors {
       ? Colors.black.withValues(alpha: 0.3) 
       : AppColors.shadow;
 
+  Color get shadowBase => isDarkMode ? Colors.black : AppColors.shadowBase;
+
+  List<BoxShadow> get cardShadow => [
+        BoxShadow(
+          color: shadowBase.withValues(alpha: isDarkMode ? 0.35 : 0.08),
+          blurRadius: isDarkMode ? 24 : 18,
+          offset: const Offset(0, 10),
+        ),
+      ];
+
+  List<BoxShadow> get modalShadow => [
+        BoxShadow(
+          color: shadowBase.withValues(alpha: isDarkMode ? 0.5 : 0.12),
+          blurRadius: isDarkMode ? 36 : 30,
+          offset: const Offset(0, 16),
+        ),
+      ];
+
   Color get success => AppColors.success;
   Color get error => AppColors.error;
   Color get warning => AppColors.warning;

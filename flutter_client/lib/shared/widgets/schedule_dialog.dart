@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 enum TaskRepeatMode { none, daily, weekly, monthly, custom }
 
@@ -55,6 +56,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -63,13 +65,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 32,
-              offset: const Offset(0, 16),
-            ),
-          ],
+          boxShadow: theme.modalShadow,
         ),
         child: SingleChildScrollView(
           child: Column(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme_extension.dart';
 import 'stats_shared_widgets.dart';
 
 class AchievementsTab extends StatelessWidget {
@@ -37,7 +38,7 @@ class AchievementsTab extends StatelessWidget {
         children: [
           const SectionLabel(label: 'Tus Medallas', icon: '🏅'),
           const SizedBox(height: 20),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Primeros Pasos',
             description: 'Completaste tu primera tarea en pareja.',
             icon: '🌱',
@@ -45,7 +46,7 @@ class AchievementsTab extends StatelessWidget {
             progress: totalTasks >= 1 ? 1.0 : 0.0,
             progressText: totalTasks >= 1 ? '1/1' : '0/1',
           ),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Equipo Imparable',
             description: 'Completaron 50 tareas juntos.',
             icon: '🚀',
@@ -53,7 +54,7 @@ class AchievementsTab extends StatelessWidget {
             progress: (totalTasks / 50).clamp(0.0, 1.0),
             progressText: '$totalTasks/50',
           ),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Maestros del Hogar',
             description: 'Llegaron a los 5000 XP acumulados.',
             icon: '👑',
@@ -64,7 +65,7 @@ class AchievementsTab extends StatelessWidget {
           const SizedBox(height: 32),
           const SectionLabel(label: 'Desafíos de Pareja', icon: '💖'),
           const SizedBox(height: 16),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Coleccionista de Citas',
             description: 'Completaron 7 desafíos especiales.',
             icon: '📸',
@@ -72,7 +73,7 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 7).clamp(0.0, 1.0),
             progressText: '$connectionTasks/7',
           ),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Amor en Movimiento',
             description: 'Completaron 15 desafíos especiales.',
             icon: '💃',
@@ -80,7 +81,7 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 15).clamp(0.0, 1.0),
             progressText: '$connectionTasks/15',
           ),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Conexión Profunda',
             description: 'Completaron 30 desafíos especiales.',
             icon: '♾️',
@@ -88,7 +89,7 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 30).clamp(0.0, 1.0),
             progressText: '$connectionTasks/30',
           ),
-          _buildAchievementCard(
+          _buildAchievementCard(context, 
             title: 'Leyendas del Romance',
             description: '¡Completaron los 50 desafíos del año!',
             icon: '🏆',
@@ -122,7 +123,8 @@ class AchievementsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildAchievementCard({
+  Widget _buildAchievementCard(
+    BuildContext context, {
     required String title,
     required String description,
     required String icon,
@@ -130,19 +132,14 @@ class AchievementsTab extends StatelessWidget {
     required double progress,
     required String progressText,
   }) {
+    final theme = context.theme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
         border: Border.all(
           color: isUnlocked ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.02),
           width: 1.5,

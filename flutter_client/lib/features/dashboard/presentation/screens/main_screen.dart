@@ -10,6 +10,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/utils/app_animations.dart';
+import '../../../../core/widgets/app_background.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../../expenses/presentation/screens/expenses_screen.dart';
 import '../../../household/presentation/screens/setup_screen.dart';
@@ -255,6 +256,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       );
     }
 
+    final theme = context.theme;
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
     final screens = [
@@ -294,7 +296,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             IconButton(
               icon: Icon(
                 Icons.settings_outlined,
-                color: context.theme.textSecondary,
+                color: theme.textSecondary,
               ),
               onPressed: () => _openSettings(context),
             ),
@@ -304,6 +306,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         // ✅ Stack puts the banner ABOVE everything else in the screen
         body: Stack(
           children: [
+            Positioned.fill(
+              child: AppBackground(isDarkMode: theme.isDarkMode),
+            ),
             FadeIndexedStack(
               index: currentIndex,
               children: screens,

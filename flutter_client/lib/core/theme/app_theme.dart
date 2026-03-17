@@ -34,7 +34,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 22),
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontSize: 26,
@@ -48,7 +48,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: AppColors.divider, width: 1.2),
+          side: const BorderSide(color: AppColors.cardGhostBorderLight, width: 1.0),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       ),
@@ -57,7 +57,7 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 58),
+          minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -73,7 +73,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
           side: BorderSide(color: primary.withValues(alpha: 0.5), width: 2.0),
-          minimumSize: const Size(double.infinity, 58),
+          minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -87,7 +87,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primary,
-          minimumSize: const Size(0, 44),
+          minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
@@ -130,6 +130,7 @@ class AppTheme {
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
+      iconTheme: const IconThemeData(size: 22, color: AppColors.textPrimary),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.background,
         selectedItemColor: primary,
@@ -189,7 +190,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: darkText, size: 24),
+        iconTheme: IconThemeData(color: darkText, size: 22),
         titleTextStyle: TextStyle(
           fontFamily: 'Outfit',
           color: darkText,
@@ -203,7 +204,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: darkBorder, width: 1.2),
+          side: const BorderSide(color: AppColors.cardGhostBorderDark, width: 1.0),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       ),
@@ -212,7 +213,7 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
-          minimumSize: const Size(double.infinity, 58),
+          minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -228,7 +229,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
           side: BorderSide(color: primary.withValues(alpha: 0.5), width: 2.0),
-          minimumSize: const Size(double.infinity, 58),
+          minimumSize: const Size(double.infinity, 48),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -242,7 +243,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primary,
-          minimumSize: const Size(0, 44),
+          minimumSize: const Size(0, 48),
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
@@ -285,6 +286,7 @@ class AppTheme {
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
+      iconTheme: const IconThemeData(size: 22, color: darkText),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: darkBg,
         selectedItemColor: primary,

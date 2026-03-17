@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -13,16 +14,17 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 24),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: theme.shadowBase.withValues(alpha: theme.isDarkMode ? 0.35 : 0.08),
             blurRadius: 20,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),

@@ -36,7 +36,7 @@ class AppColors {
 
   // Neutral Colors
   static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color textSecondary = Color(0xFF7A706D);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textDark = Color(0xFF0F172A);
@@ -61,6 +61,9 @@ class AppColors {
   static const Color inputBorder = border;
   static const Color surfaceVariant = Color(0xFFF1F5F9);
   static const Color shadow = Color(0x0A4A4443);
+  static const Color shadowBase = Color(0xFF4A4443);
+  static const Color cardGhostBorderLight = Color(0x144A4443);
+  static const Color cardGhostBorderDark = Color(0x332E2B45);
 
   static Color get infoLight => info.withValues(alpha: 0.12);
   static Color get successLight => success.withValues(alpha: 0.12);

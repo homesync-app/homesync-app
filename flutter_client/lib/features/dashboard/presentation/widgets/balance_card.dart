@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:intl/intl.dart';
@@ -49,16 +50,10 @@ class BalanceCard extends ConsumerWidget {
           color: theme.border.withValues(alpha: 0.5),
           width: 1.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.04), // Very subtle shadow
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             Row(
@@ -77,7 +72,7 @@ class BalanceCard extends ConsumerWidget {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -107,7 +102,7 @@ class BalanceCard extends ConsumerWidget {
                   AnimatedPress(
                     onTap: onSettle!,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: theme.surface,
                         borderRadius: BorderRadius.circular(20),
@@ -127,7 +122,7 @@ class BalanceCard extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.payment_rounded, color: statusColor, size: 16),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.xs),
                           Text(
                             'Saldar',
                             style: TextStyle(
@@ -145,9 +140,9 @@ class BalanceCard extends ConsumerWidget {
                   const Icon(Icons.check_circle_rounded, color: AppColors.sage, size: 36).animateScaleIn()
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             Container(height: 1, color: theme.border.withValues(alpha: 0.4)),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(
@@ -199,14 +194,14 @@ class BalanceCard extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.sm),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -219,7 +214,7 @@ class BalanceCard extends ConsumerWidget {
                   letterSpacing: 0.2,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
                 value,
                 style: TextStyle(
@@ -231,7 +226,7 @@ class BalanceCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.xs),
           Icon(Icons.chevron_right_rounded, size: 16, color: theme.textMuted.withValues(alpha: 0.5)),
         ],
       ),

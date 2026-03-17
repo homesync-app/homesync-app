@@ -13,6 +13,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
@@ -532,6 +533,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
   Widget _buildCategoryChip(String? id, String name, String icon, Color color) {
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isSelected = id == null ? selectedCategories.isEmpty : selectedCategories.contains(AppColors.normaliseCategory(id));
+    final theme = context.theme;
 
     return GestureDetector(
       onTap: () {
@@ -561,13 +563,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
                     offset: const Offset(0, 6),
                   )
                 ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
+              : theme.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -843,6 +839,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
+    final theme = context.theme;
 
     // Resolve dynamic category data
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -868,13 +865,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       decoration: BoxDecoration(
         color: AppColors.cardLight,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: _isExpanded ? 0.08 : 0.04),
-            blurRadius: _isExpanded ? 20 : 15,
-            offset: Offset(0, _isExpanded ? 10 : 8),
-          ),
-        ],
+        boxShadow: _isExpanded ? theme.modalShadow : theme.cardShadow,
         border: Border.all(
           color: _isExpanded 
               ? categoryColor.withValues(alpha: 0.3)
@@ -1073,10 +1064,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
   Widget _badge(String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Text(
         label,
