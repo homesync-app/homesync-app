@@ -461,7 +461,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
 
   Widget _buildSuggestionsList(List<RewardModel> suggestions, String? currentUserId) {
     return SizedBox(
-      height: 180,
+      height: 160,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -471,17 +471,17 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
           final isMine = s.createdBy == currentUserId;
 
           return Container(
-            width: 300,
+            width: 260,
             margin: const EdgeInsets.only(right: 16, bottom: 8),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(color: isMine ? AppColors.divider : const Color(0xFFDDD6FE).withValues(alpha: 0.5), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 15,
+                  blurRadius: 12,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -492,12 +492,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: (isMine ? AppColors.primary : const Color(0xFF8B5CF6)).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Text(s.icon, style: const TextStyle(fontSize: 24)),
+                      child: Text(s.icon, style: const TextStyle(fontSize: 22)),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -506,13 +506,13 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
                         children: [
                           Text(
                             s.title,
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.textPrimary),
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: AppColors.textPrimary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             '${s.cost} Coins',
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary),
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColors.textSecondary),
                           ),
                         ],
                       ),
@@ -578,7 +578,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 0.82, // Más alto para que entre el texto
+        childAspectRatio: 1.05,
       ),
       itemCount: rewards.length,
       itemBuilder: (context, index) {
@@ -592,20 +592,21 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
     final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
     final cost = reward.cost;
     final canAfford = userBalance >= cost;
+    final theme = context.theme;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: canAfford ? AppColors.sage.withValues(alpha: 0.3) : AppColors.divider.withValues(alpha: 0.5),
-          width: 1.5,
+          color: canAfford ? theme.primary.withValues(alpha: 0.1) : theme.border.withValues(alpha: 0.5),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -614,75 +615,115 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen> {
         child: InkWell(
           onTap: () => _confirmRedeem(reward, canAfford),
           borderRadius: BorderRadius.circular(28),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 16, 10, 12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 65,
-                      height: 65,
-                      decoration: BoxDecoration(
-                        color: (canAfford ? AppColors.primary : AppColors.textMuted).withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
+                    // Removed circle container as requested
+                    Text(
+                      reward.icon, 
+                      style: const TextStyle(fontSize: 42),
                     ),
-                    Text(reward.icon, style: const TextStyle(fontSize: 34)),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      reward.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                        height: 1.15,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: canAfford ? AppColors.sage.withValues(alpha: 0.12) : AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: canAfford ? AppColors.sage.withValues(alpha: 0.2) : Colors.transparent,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.monetization_on_rounded, size: 16, color: canAfford ? AppColors.sage : AppColors.textMuted),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$cost',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          color: canAfford ? const Color(0xFFB45309) : AppColors.textMuted,
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          reward.title.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 11,
+                            color: theme.textPrimary,
+                            letterSpacing: 0.5,
+                            height: 1.1,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: canAfford ? theme.primary.withValues(alpha: 0.08) : theme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.monetization_on_rounded, 
+                            size: 14, 
+                            color: canAfford ? theme.primary : theme.textMuted
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$cost',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                              color: canAfford ? theme.primary : theme.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton(
+                  onPressed: () => _confirmDeleteReward(reward),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  icon: Icon(
+                    Icons.close_rounded, 
+                    size: 16, 
+                    color: theme.textMuted.withValues(alpha: 0.4)
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteReward(RewardModel reward) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('¿Eliminar canje?'),
+        content: Text('Se eliminará "${reward.title}" de la tienda.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+    }
   }
 
   Widget _buildEmptyState() {
