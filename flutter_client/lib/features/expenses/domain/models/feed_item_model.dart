@@ -2,6 +2,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 
 class FeedItemModel {
   final String recordType; // 'expense' or 'planned'
+  final String transactionType; // 'expense' | 'income' | 'settlement'
   final String id;
   final String title;
   final double amount;
@@ -16,6 +17,7 @@ class FeedItemModel {
 
   const FeedItemModel({
     required this.recordType,
+    required this.transactionType,
     required this.id,
     required this.title,
     required this.amount,
@@ -32,6 +34,7 @@ class FeedItemModel {
   factory FeedItemModel.fromJson(Map<String, dynamic> map) {
     return FeedItemModel(
       recordType: map['record_type'] as String? ?? 'expense',
+      transactionType: map['transaction_type'] as String? ?? 'expense',
       id: map['id'] as String? ?? '',
       title: map['title'] as String? ?? 'Movimiento',
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
@@ -49,6 +52,7 @@ class FeedItemModel {
   bool get isPlanned => recordType == 'planned';
   bool get isRealExpense => recordType == 'expense';
   bool get isPending => status == 'pending';
+  bool get isSettlement => transactionType == 'settlement';
 
   String get payerDisplayName {
     if (payerFullName != null && payerFullName!.isNotEmpty) {

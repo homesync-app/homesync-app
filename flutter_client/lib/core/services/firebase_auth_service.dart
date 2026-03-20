@@ -4,7 +4,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:homesync_client/config/app_environment.dart';
 import 'package:uuid/uuid.dart';
 
 class FirebaseAuthService {
@@ -261,7 +260,7 @@ class FirebaseAuthService {
         }
       }
       
-      // 3. Supabase Sign Out (Vital para limpiar sesión sincronizada)
+      // 3. Supabase Sign Out (vital para limpiar sesión sincronizada)
       await Supabase.instance.client.auth.signOut();
 
       if (!kIsWeb) {
@@ -309,3 +308,4 @@ class FirebaseAuthService {
     return await _auth.currentUser?.getIdToken();
   }
 }
+

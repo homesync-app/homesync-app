@@ -6,7 +6,6 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
@@ -222,7 +221,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // ── Category picker ─────────────────────────────
+                        // -- Category picker -----------------------------
                         const Text('Categoría',
                             style: TextStyle(
                                 fontSize: 13, color: AppColors.textSecondary)),
@@ -908,3 +907,5 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     );
   }
 }
+
+

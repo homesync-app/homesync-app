@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import '../models/task_model.dart';
 import '../repositories/task_repository.dart';
 
@@ -9,7 +10,7 @@ class CompleteTaskUseCase {
   final TaskRepository _repository;
   const CompleteTaskUseCase(this._repository);
 
-  Future<Either<Failure, Map<String, dynamic>>> call(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> call(TaskModel task,
       {List<String>? userIds}) async {
     if (!task.isActive) {
       return left(ValidationFailure(

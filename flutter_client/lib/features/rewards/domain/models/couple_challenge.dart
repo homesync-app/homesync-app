@@ -544,6 +544,11 @@ class CoupleChallenge {
       ];
 
   static CoupleChallenge currentWeeklyChallenge([DateTime? householdCreatedAt]) {
+    final index = currentWeeklyChallengeIndex(householdCreatedAt);
+    return allChallenges[index];
+  }
+
+  static int currentWeeklyChallengeIndex([DateTime? householdCreatedAt]) {
     final now = DateTime.now();
     
     // Si no hay fecha de creación, usamos el lunes de esta semana como referencia 
@@ -554,7 +559,6 @@ class CoupleChallenge {
     // Calculamos semanas transcurridas desde la fecha de referencia
     final difference = now.difference(referenceDate);
     final weekIndex = (difference.inDays / 7).floor();
-
-    return allChallenges[weekIndex % allChallenges.length];
+    return weekIndex % allChallenges.length;
   }
 }

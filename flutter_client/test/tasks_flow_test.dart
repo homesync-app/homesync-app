@@ -15,6 +15,7 @@ import 'package:mockito/annotations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'tasks_flow_test.mocks.dart';
@@ -52,7 +53,9 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 @GenerateMocks([TaskRepository])
 void main() {
   provideDummy<Either<Failure, List<TaskModel>>>(const Right([]));
-  provideDummy<Either<Failure, Map<String, dynamic>>>(const Right({}));
+  provideDummy<Either<Failure, TaskCompletionResult>>(
+    const Right(TaskCompletionResult(success: true, message: 'ok', queued: false)),
+  );
   provideDummy<Either<Failure, void>>(const Right(null));
 
   late MockTaskRepository mockTaskRepo;
@@ -84,13 +87,21 @@ void main() {
   testWidgets('TasksScreen renders tasks and allows completion',
       (WidgetTester tester) async {
     // 1. Mock Repository Responses
-    when(mockTaskRepo.getTasks(any,
+    when(mockTaskRepo.getTasks('h1',
             limit: anyNamed('limit'), offset: anyNamed('offset')))
         .thenAnswer((_) async => Right([testTask]));
 
     // For completion
-    when(mockTaskRepo.completeTask(any, userIds: anyNamed('userIds')))
-        .thenAnswer((_) async => const Right({'xp_earned': 10, 'coins_earned': 5}));
+    when(mockTaskRepo.completeTask(testTask, userIds: anyNamed('userIds')))
+        .thenAnswer((_) async => const Right(
+              TaskCompletionResult(
+                success: true,
+                message: 'ok',
+                queued: false,
+                xpEarned: 10,
+                coinsEarned: 5,
+              ),
+            ));
 
     // 2. Build Widget with Overrides
     await tester.pumpWidget(ProviderScope(
@@ -134,7 +145,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 6. Verify Repository Call
-    verify(mockTaskRepo.completeTask(any, userIds: argThat(contains('u1'), named: 'userIds'))).called(1);
+    verify(mockTaskRepo.completeTask(testTask, userIds: argThat(contains('u1'), named: 'userIds'))).called(1);
 
     // 7. Verify Snackbar
     expect(find.textContaining('¡Ganaste 10 XP y 5 coins!'), findsOneWidget);

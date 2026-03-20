@@ -9,6 +9,8 @@ import { UserManagement } from './pages/UserManagement';
 import { Economy } from './pages/Economy';
 import { Login } from './pages/Login';
 import { CrashReports } from './pages/CrashReports';
+import { RewardTemplates } from './pages/RewardTemplates';
+import { Settings } from './pages/Settings';
 import { Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
@@ -68,6 +70,8 @@ function App() {
                   <Route path="/crashes" element={<CrashReports />} />
                   <Route path="/users" element={<UserManagement />} />
                   <Route path="/economy" element={<Economy />} />
+                  <Route path="/rewards" element={<RewardTemplates />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Layout>

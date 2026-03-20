@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { 
@@ -12,6 +12,7 @@ import {
   Coins,
   Loader2
 } from 'lucide-react';
+import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 
 interface Category {
   id: string;
@@ -34,6 +35,7 @@ export const TaskTemplates = () => {
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modal State
@@ -47,21 +49,31 @@ export const TaskTemplates = () => {
     icon: '📋'
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const [templatesRes, categoriesRes] = await Promise.all([
       supabase.from('task_templates').select('*').order('created_at', { ascending: false }),
       supabase.from('categories').select('*').order('sort_order', { ascending: true })
     ]);
 
+    if (templatesRes.error || categoriesRes.error) {
+      setError('No pudimos cargar plantillas o categorías.');
+      setLoading(false);
+      return;
+    }
+
     if (templatesRes.data) setTemplates(templatesRes.data);
     if (categoriesRes.data) setCategories(categoriesRes.data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchData]);
 
   const handleOpenModal = (template?: TaskTemplate) => {
     if (template) {
@@ -182,12 +194,16 @@ export const TaskTemplates = () => {
           </div>
 
           {loading && !templates.length ? (
-            <div className="h-64 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            </div>
+            <LoadingState title="Cargando plantillas..." />
+          ) : error ? (
+            <ErrorState title="Error al cargar plantillas" description={error} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTemplates.map(template => {
+              {filteredTemplates.length === 0 ? (
+                <div className="md:col-span-2">
+                  <EmptyState title="Sin resultados" description="Ajusta el filtro o crea una plantilla nueva." />
+                </div>
+              ) : filteredTemplates.map(template => {
                 const category = categories.find(c => c.id === template.category_id);
                 return (
                   <div key={template.id} className="glass group p-5 rounded-2xl hover:border-primary/50 transition-all relative overflow-hidden">

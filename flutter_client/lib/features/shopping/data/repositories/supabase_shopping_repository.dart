@@ -16,7 +16,7 @@ class SupabaseShoppingRepository
   final SupabaseClient _client = Supabase.instance.client;
   final Ref _ref;
   final OfflineQueueService _offlineQueue = OfflineQueueService();
-  static final Uuid _uuid = Uuid();
+  static const Uuid _uuid = Uuid();
 
   SupabaseShoppingRepository({required Ref ref}) : _ref = ref;
 

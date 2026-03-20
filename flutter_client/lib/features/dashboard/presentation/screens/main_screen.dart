@@ -7,7 +7,6 @@ import 'package:app_links/app_links.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
 import '../../../../core/utils/app_animations.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -24,8 +23,8 @@ import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 import '../providers/dashboard_provider.dart';
 import '../screens/home_screen.dart';
-import '../widgets/notification_bell.dart';
 import '../widgets/in_app_notification_banner.dart';
+import 'package:intl/intl.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   final SharedPreferences prefs;
@@ -69,48 +68,55 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _appLinks = AppLinks();
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       debugPrint('Deep Link received: $uri');
-      
+
       if (uri.scheme != 'homesync') return;
 
       // 1. Mercado Pago Auth callback
       if (uri.host == 'auth-complete' || uri.path.contains('auth-complete')) {
         final status = uri.queryParameters['status'];
         final message = uri.queryParameters['message'];
-        
+
         if (status == 'success') {
-          _showToast('✅ Mercado Pago conectado con éxito', context.theme.success);
+          _showToast('✅ Mercado Pago conectado con éxito', Colors.green);
         } else if (status == 'error') {
-          _showToast('❌ Error al conectar: ${message ?? "Desconocido"}', context.theme.error);
+          _showToast(
+              '❌ Error al conectar: ${message ?? "Desconocido"}', Colors.red);
         }
       }
 
       // 2. Mercado Pago Payment callbacks
-      if (uri.host == 'payment-success' || uri.path.contains('payment-success')) {
-        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.', context.theme.success);
-        
+      if (uri.host == 'payment-success' ||
+          uri.path.contains('payment-success')) {
+        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
+            Colors.green);
+
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
         ref.invalidate(expenseBalancesProvider);
         ref.invalidate(userBalanceProvider);
         ref.invalidate(recentActivityProvider);
       }
-      
-      if (uri.host == 'payment-failure' || uri.path.contains('payment-failure')) {
-        _showToast('❌ El pago fue rechazado. Reintentá luego.', context.theme.error);
+
+      if (uri.host == 'payment-failure' ||
+          uri.path.contains('payment-failure')) {
+        _showToast('❌ El pago fue rechazado. Reintentá luego.', Colors.red);
       }
 
-      if (uri.host == 'payment-pending' || uri.path.contains('payment-pending')) {
-        _showToast('⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange);
+      if (uri.host == 'payment-pending' ||
+          uri.path.contains('payment-pending')) {
+        _showToast(
+            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange);
       }
     });
   }
 
   void _showToast(String message, Color color) {
     if (!mounted) return;
-    final theme = context.theme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        content: Text(message,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -127,7 +133,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         // Only show the banner if the widget is still mounted
         if (mounted) {
           _bannerKey.currentState?.show(title: title, body: body);
-          
+
           // Real-time refresh for dashboard data
           ref.invalidate(userBalanceProvider);
           ref.invalidate(expenseBalancesProvider);
@@ -172,12 +178,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       }
 
       await widget.prefs.setBool('setup_completed', true);
-      
+
       // ✅ Don't await non-essential checks (weekly winner popup)
       _checkWeeklyWinner();
     } catch (e) {
       debugPrint('Initialization error in MainScreen: $e');
-      // If we failed after 5 seconds, let's just let the app continue 
+      // If we failed after 5 seconds, let's just let the app continue
       // Individual providers will handle errors gracefully with retry logic
     } finally {
       if (mounted) {
@@ -260,7 +266,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
     final screens = [
-      const HomeScreen(),
+      HomeScreen(onAvatarTap: () => _openSettings(context)),
       const TasksScreen(),
       const ExpensesScreen(),
       const RewardsScreen(),
@@ -272,7 +278,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       'Inicio',
       'Tareas',
       'Finanzas',
-      'Tienda',
+      'Pareja',
       'Progreso',
       'Compras'
     ];
@@ -281,28 +287,33 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       canPop: currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        
+
         // If not on the first tab, go to it
         if (currentIndex != 0) {
           ref.read(bottomNavIndexProvider.notifier).setIndex(0);
         }
       },
       child: Scaffold(
-        appBar: currentIndex == 3 ? null : AppBar(
-          title: Text(titles[currentIndex]),
-          toolbarHeight: 80,
-          actions: [
-            const NotificationBell(),
-            IconButton(
-              icon: Icon(
-                Icons.settings_outlined,
-                color: theme.textSecondary,
+        appBar: currentIndex == 0
+            ? null
+            : AppBar(
+                title: _buildAppBarTitle(
+                  title: titles[currentIndex],
+                  currentIndex: currentIndex,
+                  theme: theme,
+                ),
+                toolbarHeight: 86,
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings_outlined,
+                      color: theme.textSecondary,
+                    ),
+                    onPressed: () => _openSettings(context),
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
-              onPressed: () => _openSettings(context),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
         // ✅ Stack puts the banner ABOVE everything else in the screen
         body: Stack(
           children: [
@@ -322,6 +333,48 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
         bottomNavigationBar: _buildBottomNav(),
       ),
+    );
+  }
+
+  Widget _buildAppBarTitle({
+    required String title,
+    required int currentIndex,
+    required AppThemeColors theme,
+  }) {
+    if (currentIndex != 0) {
+      return Text(title);
+    }
+
+    final dateStr = DateFormat('EEEE, d MMM', 'es').format(DateTime.now());
+    final capitalizedDate =
+        dateStr.isEmpty ? '' : dateStr[0].toUpperCase() + dateStr.substring(1);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title),
+        const SizedBox(width: 10),
+        Container(
+          width: 4,
+          height: 4,
+          decoration: BoxDecoration(
+            color: theme.textMuted.withValues(alpha: 0.7),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            capitalizedDate,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -351,69 +404,84 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final theme = context.theme;
 
-    // Only 4 items in the navigation bar now
     final navItems = [
       (icon: Icons.home_rounded, label: 'Inicio', screenIndex: 0),
       (icon: Icons.task_alt_rounded, label: 'Tareas', screenIndex: 1),
-      (icon: Icons.account_balance_wallet_rounded, label: 'Finanzas', screenIndex: 2),
+      (
+        icon: Icons.account_balance_wallet_rounded,
+        label: 'Finanzas',
+        screenIndex: 2
+      ),
+      (icon: Icons.favorite_rounded, label: 'Pareja', screenIndex: 3),
       (icon: Icons.shopping_cart_rounded, label: 'Compras', screenIndex: 5),
     ];
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: theme.navigationSurface
+              .withValues(alpha: theme.isDarkMode ? 0.94 : 0.98),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: theme.border.withValues(alpha: theme.isDarkMode ? 0.5 : 0.8),
           ),
-        ],
-      ),
-      child: SafeArea(
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadow
+                  .withValues(alpha: theme.isDarkMode ? 0.34 : 0.12),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: navItems.map((item) {
-            final isSelected = currentIndex == item.screenIndex || 
-                             (item.screenIndex == 0 && (currentIndex == 3 || currentIndex == 4));
-            return GestureDetector(
-              onTap: () => ref.read(bottomNavIndexProvider.notifier).setIndex(item.screenIndex),
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? theme.primary.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      item.icon,
-                      color:
-                          isSelected ? theme.primary : theme.textMuted,
-                      size: 22,
-                    ),
+            final isSelected = currentIndex == item.screenIndex;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => ref
+                    .read(bottomNavIndexProvider.notifier)
+                    .setIndex(item.screenIndex),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.primary
+                            .withValues(alpha: theme.isDarkMode ? 0.22 : 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color:
-                          isSelected ? theme.primary : theme.textMuted,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        item.icon,
+                        color: isSelected ? theme.primary : theme.textMuted,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight:
+                              isSelected ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected ? theme.primary : theme.textMuted,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             );
           }).toList(),

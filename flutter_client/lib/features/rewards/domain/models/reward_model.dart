@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 @immutable
 class RewardModel {
@@ -29,10 +29,16 @@ class RewardModel {
   });
 
   factory RewardModel.fromJson(Map<String, dynamic> json) {
+    final rawCreatedAt = json['created_at'];
+    DateTime? parsedCreatedAt;
+    if (rawCreatedAt is String && rawCreatedAt.isNotEmpty) {
+      parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
+    }
+
     return RewardModel(
-      id: json['id'] as String,
-      householdId: json['household_id'] as String,
-      title: json['title'] as String,
+      id: (json['id'] as String?) ?? '',
+      householdId: (json['household_id'] as String?) ?? '',
+      title: (json['title'] as String?) ?? 'Premio sin título',
       description: json['description'] as String?,
       cost: (json['cost'] as num?)?.toInt() ?? 0,
       icon: json['icon'] as String? ?? '🎁',
@@ -40,9 +46,7 @@ class RewardModel {
       createdBy: json['created_by'] as String?,
       isApproved: json['is_approved'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
+      createdAt: parsedCreatedAt,
     );
   }
 

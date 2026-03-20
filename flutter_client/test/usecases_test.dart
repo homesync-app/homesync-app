@@ -3,6 +3,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/usecases/complete_task_usecase.dart';
 import 'package:homesync_client/features/tasks/domain/usecases/create_task_usecase.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/usecases/save_expense_usecase.dart';
@@ -26,16 +27,22 @@ class MockTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) async {
     createTaskCalled = true;
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
       {List<String>? userIds}) async {
     completeTaskCalled = true;
-    return right({'success': true, 'xp_gained': 20});
+    return right(const TaskCompletionResult(
+      success: true,
+      message: 'ok',
+      queued: false,
+      xpEarned: 20,
+    ));
   }
 
   @override
@@ -60,6 +67,11 @@ class MockTaskRepository implements TaskRepository {
   @override
   Future<Either<Failure, void>> editTask(
           String taskId, Map<String, dynamic> updates) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
+          String activityId) async =>
       throw UnimplementedError();
 }
 
@@ -149,6 +161,11 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+    return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
     return const Right(unit);
   }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { 
@@ -9,6 +9,7 @@ import {
   Coins,
   Loader2
 } from 'lucide-react';
+import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 
 interface RewardTemplate {
   id: string;
@@ -22,6 +23,7 @@ interface RewardTemplate {
 export const RewardTemplates = () => {
   const [templates, setTemplates] = useState<RewardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Modal State
@@ -35,16 +37,25 @@ export const RewardTemplates = () => {
     sort_order: 0
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from('reward_templates').select('*').order('sort_order', { ascending: true });
+    setError(null);
+    const { data, error } = await supabase.from('reward_templates').select('*').order('sort_order', { ascending: true });
+    if (error) {
+      setError('No pudimos cargar los premios.');
+      setLoading(false);
+      return;
+    }
     if (data) setTemplates(data);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void fetchData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchData]);
 
   const handleOpenModal = (template?: RewardTemplate) => {
     if (template) {
@@ -133,12 +144,16 @@ export const RewardTemplates = () => {
         </div>
 
         {loading && !templates.length ? (
-          <div className="h-64 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-          </div>
+          <LoadingState title="Cargando premios..." />
+        ) : error ? (
+          <ErrorState title="Error al cargar premios" description={error} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredTemplates.map(template => (
+            {filteredTemplates.length === 0 ? (
+              <div className="md:col-span-3 lg:col-span-4">
+                <EmptyState title="Sin resultados" description="Prueba otra búsqueda o crea un premio nuevo." />
+              </div>
+            ) : filteredTemplates.map(template => (
               <div key={template.id} className="glass group p-5 rounded-2xl border-amber-500/10 hover:border-amber-500/50 transition-all relative overflow-hidden flex flex-col justify-between h-full">
                 <div>
                   <div className="flex justify-between items-start mb-4">

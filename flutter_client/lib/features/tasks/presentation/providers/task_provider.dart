@@ -8,9 +8,11 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
+import '../../domain/utils/task_completion_utils.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
@@ -165,7 +167,7 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<Map<String, dynamic>?> completeTask(TaskModel task, {List<String>? userIds}) async {
+  Future<TaskCompletionResult?> completeTask(TaskModel task, {List<String>? userIds}) async {
     final currentUserId = ref.read(currentUserIdProvider);
     final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
     final primaryUserId = performers?.first ?? currentUserId;
@@ -176,7 +178,11 @@ class Tasks extends _$Tasks {
     if (oldState != null) {
       state = AsyncValue.data(
         oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.pendingVerification, completedBy: primaryUserId, completedAt: DateTime.now())
+          ? t.copyWith(
+              status: TaskStatus.active,
+              completedBy: primaryUserId,
+              completedAt: DateTime.now(),
+            )
           : t
         ).toList()
       );
@@ -190,7 +196,7 @@ class Tasks extends _$Tasks {
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
           (_) => false,
-          (data) => data['queued'] == true,
+          (data) => data.queued,
         );
         if (isOnline && !queued) {
           silentRefresh();
@@ -327,12 +333,6 @@ class Tasks extends _$Tasks {
     try {
       final xp = taskData['xpReward'] as int;
       final coins = taskData['coinReward'] as int;
-      final isTemplate = taskData['isTemplate'] as bool? ?? false;
-      
-      // Approval logic: 
-      // 1. Default templates are always trusted (isTemplate: true)
-      // 2. Custom tasks need approval ONLY if coins > 2
-      final needsApproval = !isTemplate && coins > 2;
       
       final useCase = ref.read(createTaskUseCaseProvider);
       final result = await useCase(
@@ -344,17 +344,8 @@ class Tasks extends _$Tasks {
         coinReward: coins,
         assignedTo: taskData['assignedTo'] as String?,
         recurrenceType: taskData['recurrenceType'] as String?,
-        status: needsApproval ? 'pending_approval' : null,
+        status: null,
       );
-      
-      if (result.isRight() && needsApproval) {
-        // If it needs approval, we need to update its status to pending_approval
-        // Since createTask RPC doesn't take status, we might need a way to get the ID 
-        // and update it, or have the RPC handle it.
-        // Assuming we can silentRefresh and then update latest if we knew which one it is.
-        // FOR NOW: I'll assume I can find the task by title/createdAt or just wait for refresh.
-        // Actually, better to have the repo return the ID or handle status.
-      }
 
       result.fold(
         (failure) => throw Exception(failure.message),
@@ -374,25 +365,6 @@ class Tasks extends _$Tasks {
 
   Future<void> editTask(String taskId, Map<String, dynamic> updates) async {
     try {
-      final xp = updates['xp_reward'] as int?;
-      final coins = updates['coin_reward'] as int?;
-      
-      if (coins != null || xp != null) {
-        // Find current task to get missing values for check
-        final task = state.value?.firstWhere((t) => t.id == taskId);
-        if (task != null) {
-          final newCoins = coins ?? task.coinReward;
-          final newXp = xp ?? task.xpReward;
-
-          // Approval logic based on user request:
-          // "pendientes de acreditacion es cuando edita una y cambia los coins a mas de lo que habia"
-          // We also keep a sanity check for XP > 50 if they inflate it too much.
-          if (newCoins > task.coinReward || newXp > 50) {
-            updates['status'] = 'pending_approval';
-          }
-        }
-      }
-
       final repo = ref.read(taskRepositoryProvider);
       await repo.editTask(taskId, updates);
       if (ref.read(isOnlineProvider)) {
@@ -449,16 +421,23 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
   final currentUserId = ref.watch(currentUserIdProvider);
 
   return tasksAsync.whenData((tasks) {
+    final now = DateTime.now();
     return tasks.where((task) {
-      // 1. Must be active (includes objected) and NOT completed/verified
-      if (!task.isActive || task.isCompleted) return false;
-
-      // 2. Ownership check
+      // 1. Ownership check
       if (task.assignedTo != null && task.assignedTo != currentUserId) {
         return false;
       }
 
-      // 3. Visibility check:
+      // 2. Completed-today tasks should leave "today" and remain only in activity history.
+      // We keep status=active in the new flow, so date is the source of truth for this list.
+      if (isTaskCompletedOnLocalDate(task, now)) {
+        return false;
+      }
+
+      // 3. Must be active (includes objected)
+      if (!task.isActive) return false;
+
+      // 4. Visibility check:
       // - Already due today?
       if (task.isDueToday) return true;
 

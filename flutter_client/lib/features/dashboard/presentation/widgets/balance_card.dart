@@ -34,21 +34,28 @@ class BalanceCard extends ConsumerWidget {
     final theme = context.theme;
 
     final statusColor = isNegative
-        ? AppColors.accentOrange // Using orange instead of aggressive red
+        ? AppColors.accentOrange
         : (isBalanced ? AppColors.sage : AppColors.sage);
 
     final String balanceMessage = isBalanced
-        ? '¡Todo en orden! El amor es lo único que cuenta hoy 💕'
-        : (isNegative ? 'Debes' : 'Te deben');
+        ? 'Balance en calma'
+        : (isNegative ? 'Hace falta equilibrar' : 'Quedo a tu favor');
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: theme.surface,
+        gradient: LinearGradient(
+          colors: [
+            theme.surface,
+            theme.elevatedSurface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(32),
         border: Border.all(
-          color: theme.border.withValues(alpha: 0.5),
-          width: 1.5,
+          color: theme.border.withValues(alpha: 0.8),
+          width: 1.2,
         ),
         boxShadow: theme.cardShadow,
       ),
@@ -64,12 +71,12 @@ class BalanceCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        balanceMessage,
+                        isBalanced ? 'Balance en calma' : balanceMessage,
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.7,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -77,9 +84,12 @@ class BalanceCard extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            isBalanced ? '\$ ' : (isNegative ? '- \$ ' : '+ \$ '),
+                            isBalanced
+                                ? '\$ '
+                                : (isNegative ? '- \$ ' : '+ \$ '),
                             style: TextStyle(
-                              color: isBalanced ? theme.textPrimary : statusColor,
+                              color:
+                                  isBalanced ? theme.textPrimary : statusColor,
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                             ),
@@ -87,10 +97,11 @@ class BalanceCard extends ConsumerWidget {
                           _AnimatedDigitCounter(
                             value: balance.abs(),
                             style: TextStyle(
-                              color: isBalanced ? theme.textPrimary : statusColor,
-                              fontSize: 38,
+                              color:
+                                  isBalanced ? theme.textPrimary : statusColor,
+                              fontSize: 40,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: -1.0,
+                              letterSpacing: -1.2,
                             ),
                           ),
                         ],
@@ -102,33 +113,35 @@ class BalanceCard extends ConsumerWidget {
                   AnimatedPress(
                     onTap: onSettle!,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md, vertical: 10),
                       decoration: BoxDecoration(
                         color: theme.surface,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: statusColor.withValues(alpha: 0.15),
-                          width: 1.5,
+                          color: statusColor.withValues(alpha: 0.18),
+                          width: 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: statusColor.withValues(alpha: 0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            color: statusColor.withValues(alpha: 0.1),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.payment_rounded, color: statusColor, size: 16),
+                          Icon(Icons.payment_rounded,
+                              color: statusColor, size: 15),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            'Saldar',
+                            'Equilibrar',
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.w800,
-                              fontSize: 14,
+                              fontSize: 13,
                               letterSpacing: -0.2,
                             ),
                           ),
@@ -137,7 +150,9 @@ class BalanceCard extends ConsumerWidget {
                     ),
                   ).animatePulse()
                 else if (isBalanced)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.sage, size: 36).animateScaleIn()
+                  const Icon(Icons.check_circle_rounded,
+                          color: AppColors.sage, size: 36)
+                      .animateScaleIn()
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -147,22 +162,30 @@ class BalanceCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: AnimatedPress(
-                    onTap: () =>
-                        ref.read(bottomNavIndexProvider.notifier).setIndex(4),
+                    onTap: () {
+                      ref.read(parejaTabIndexProvider.notifier).setIndex(0);
+                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                    },
                     child: _buildCleanMetric(
                       context,
                       label: 'Experiencia',
-                      value: '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
+                      value:
+                          '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
                       icon: Icons.star_rounded,
                       color: const Color(0xFFE8943A),
                     ),
                   ),
                 ),
-                Container(width: 1, height: 32, color: theme.border.withValues(alpha: 0.4)),
+                Container(
+                    width: 1,
+                    height: 32,
+                    color: theme.border.withValues(alpha: 0.4)),
                 Expanded(
                   child: AnimatedPress(
-                    onTap: () =>
-                        ref.read(bottomNavIndexProvider.notifier).setIndex(3),
+                    onTap: () {
+                      ref.read(parejaTabIndexProvider.notifier).setIndex(1);
+                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                    },
                     child: _buildCleanMetric(
                       context,
                       label: 'Coins',
@@ -227,12 +250,12 @@ class BalanceCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(width: AppSpacing.xs),
-          Icon(Icons.chevron_right_rounded, size: 16, color: theme.textMuted.withValues(alpha: 0.5)),
+          Icon(Icons.chevron_right_rounded,
+              size: 16, color: theme.textMuted.withValues(alpha: 0.5)),
         ],
       ),
     );
   }
-
 }
 
 class _AnimatedDigitCounter extends StatelessWidget {

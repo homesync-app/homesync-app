@@ -8,11 +8,13 @@ class SupabaseDashboardRepository implements DashboardRepository {
   SupabaseDashboardRepository(this._client);
 
   @override
-  Future<List<Map<String, dynamic>>> getRecentActivity(String householdId, String userId) async {
+  Future<List<Map<String, dynamic>>> getRecentActivity(
+      String householdId, String userId) async {
     try {
       final today = DateTime.now();
-      final startOfDay = DateTime(today.year, today.month, today.day).toIso8601String();
-      
+      final startOfDay =
+          DateTime(today.year, today.month, today.day).toIso8601String();
+
       final response = await _client
           .from('household_activities')
           .select('''
@@ -31,7 +33,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
         final userName = user?['full_name'] ?? 'Alguien';
         final userAvatar = user?['avatar_url'];
         final metadata = Map<String, dynamic>.from(item['metadata'] ?? {});
-        
+
         String uiType = 'unknown';
         final data = <String, dynamic>{
           'user_name': userName,
@@ -43,12 +45,17 @@ class SupabaseDashboardRepository implements DashboardRepository {
         if (eventType == 'task_completed') {
           uiType = 'task';
           data['task_title'] = item['title'];
-          data['xp_reward'] = metadata['xp_reward'] ?? metadata['xpReward'] ?? metadata['p_xp_reward'] ?? metadata['score_impact'] ?? metadata['xp'] ?? metadata['reward'];
+          data['xp_reward'] = metadata['xp_reward'] ??
+              metadata['xpReward'] ??
+              metadata['p_xp_reward'] ??
+              metadata['score_impact'] ??
+              metadata['xp'] ??
+              metadata['reward'];
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
           data['amount'] = metadata['amount'] ?? 0;
           data['description'] = item['description'];
-          data['expense_id'] = metadata['expense_id'] ?? metadata['id']; 
+          data['expense_id'] = metadata['expense_id'] ?? metadata['id'];
           // Preserve these for filtering
           data['is_shared'] = metadata['is_shared'];
           data['split_type'] = metadata['split_type'];
@@ -68,26 +75,30 @@ class SupabaseDashboardRepository implements DashboardRepository {
         final data = activity['data'] as Map<String, dynamic>;
         final type = activity['type'] as String;
         final creatorId = activity['creator_id'] as String?;
-        
+
         if (type == 'expense') {
-          final isIncome = data['type'] == 'income' || data['type'] == 'ingreso' || data['category'] == 'salary';
+          final isIncome = data['type'] == 'income' ||
+              data['type'] == 'ingreso' ||
+              data['category'] == 'salary';
           if (isIncome) return false;
 
           final isShared = data['is_shared'] == true;
           final splitType = (data['split_type'] as String?)?.toLowerCase();
           final isGift = splitType == 'gift' || splitType == 'regalo';
-          
+
           final shouldShow = isShared || isGift || creatorId == userId;
-          
-          dev.log('Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow');
-          
+
+          dev.log(
+              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow');
+
           return shouldShow;
         }
-        
+
         return true;
       }).toList();
 
-      dev.log('SupabaseDashboardRepository: Fetched ${activities.length} activities');
+      dev.log(
+          'SupabaseDashboardRepository: Fetched ${activities.length} activities');
       return activities;
     } catch (e) {
       dev.log('Error fetching activities: $e');

@@ -183,6 +183,7 @@ class TaskModel {
   bool get isActive =>
       status == TaskStatus.active ||
       status == TaskStatus.assigned ||
+      status == TaskStatus.pendingApproval ||
       status == TaskStatus.objected;
   bool get isPendingApproval => status == TaskStatus.pendingApproval;
   bool get isPendingVerification => status == TaskStatus.pendingVerification;

@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
 import '../../domain/models/expense_model.dart';
 import '../../domain/models/feed_item_model.dart';
 import '../../domain/models/expense_template_model.dart';
@@ -7,6 +8,7 @@ import '../../domain/repositories/expense_repository.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import '../../../../core/services/repository_error_handler.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 
@@ -23,6 +25,35 @@ class SupabaseExpenseRepository
   SupabaseExpenseRepository(this._client, this._ref);
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  List<dynamic> _normalizeRpcList(dynamic response) {
+    if (response == null) return const [];
+    if (response is List) return response;
+
+    if (response is Map) {
+      final map = Map<String, dynamic>.from(response as Map);
+      for (final key in const ['data', 'result', 'items', 'rows']) {
+        final value = map[key];
+        if (value is List) return value;
+      }
+      return const [];
+    }
+
+    if (response is String) {
+      final decoded = jsonDecode(response);
+      if (decoded is List) return decoded;
+      if (decoded is Map) {
+        final map = Map<String, dynamic>.from(decoded);
+        for (final key in const ['data', 'result', 'items', 'rows']) {
+          final value = map[key];
+          if (value is List) return value;
+        }
+      }
+      return const [];
+    }
+
+    return const [];
+  }
 
   Future<void> _queueAction(OfflineAction action) async {
     await _offlineQueue.enqueueAction(
@@ -44,13 +75,16 @@ class SupabaseExpenseRepository
         throw const HouseholdFailure('No pertenecés a un hogar');
       }
       return memberData['household_id'] as String;
-    }, context: 'SupabaseExpenseRepository.getHouseholdId', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.getHouseholdId',
+        isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
       String householdId) async {
     return executeWithHandling(() async {
+      final sw = Stopwatch()..start();
       final response = await _client.rpc(
         'get_filtered_expenses',
         params: {
@@ -61,26 +95,47 @@ class SupabaseExpenseRepository
           'p_offset': 0,
         },
       );
-      
-      return (response as List<dynamic>)
+
+      final rows = _normalizeRpcList(response);
+      final expenses = rows
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseExpenseRepository.getRecentExpenses', isOnline: _isOnline);
+      sw.stop();
+      log.i(
+        'Finance RPC get_filtered_expenses ok household=$householdId items=${expenses.length} ms=${sw.elapsedMilliseconds}',
+      );
+      return expenses;
+    },
+        context: 'SupabaseExpenseRepository.getRecentExpenses',
+        isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
       String householdId) async {
     return executeWithHandling(() async {
+      final sw = Stopwatch()..start();
       final response = await _client.rpc(
         'get_combined_feed',
-        params: {'p_household_id': householdId},
+        params: {
+          'p_household_id': householdId,
+          'p_limit': 200,
+          'p_offset': 0,
+        },
       );
 
-      return (response as List<dynamic>)
+      final rows = _normalizeRpcList(response);
+      final feed = rows
           .map((e) => FeedItemModel.fromJson(e as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseExpenseRepository.getCombinedFeed', isOnline: _isOnline);
+      sw.stop();
+      log.i(
+        'Finance RPC get_combined_feed ok household=$householdId items=${feed.length} ms=${sw.elapsedMilliseconds}',
+      );
+      return feed;
+    },
+        context: 'SupabaseExpenseRepository.getCombinedFeed',
+        isOnline: _isOnline);
   }
 
   @override
@@ -91,21 +146,32 @@ class SupabaseExpenseRepository
             *,
             expense_splits(*, users(email, full_name, avatar_url))
           ''').eq('id', expenseId).single();
-    }, context: 'SupabaseExpenseRepository.getExpenseWithSplits', isOnline: _isOnline);
+    },
+        context: 'SupabaseExpenseRepository.getExpenseWithSplits',
+        isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
       String householdId) async {
     return executeWithHandling(() async {
+      final sw = Stopwatch()..start();
       final response = await _client.rpc(
         'get_expense_balance',
         params: {'p_household_id': householdId},
       );
-      return (response as List<dynamic>)
+      final rows = _normalizeRpcList(response);
+      final balances = rows
           .map((e) => HouseholdBalanceModel.fromJson(e as Map<String, dynamic>))
           .toList();
-    }, context: 'SupabaseExpenseRepository.getHouseholdBalances', isOnline: _isOnline);
+      sw.stop();
+      log.i(
+        'Finance RPC get_expense_balance ok household=$householdId items=${balances.length} ms=${sw.elapsedMilliseconds}',
+      );
+      return balances;
+    },
+        context: 'SupabaseExpenseRepository.getHouseholdBalances',
+        isOnline: _isOnline);
   }
 
   @override
@@ -122,28 +188,35 @@ class SupabaseExpenseRepository
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
   }) async {
-    return executeWithHandling(() async {
-      final user = _client.auth.currentUser;
-      if (user == null) throw const AuthFailure();
+    return executeWithHandling(
+        () async {
+          final sw = Stopwatch()..start();
+          final user = _client.auth.currentUser;
+          if (user == null) throw const AuthFailure();
 
-      await _client.rpc(
-        'save_expense_v4',
-        params: {
-          'p_id': id,
-          'p_household_id': householdId,
-          'p_title': title,
-          'p_amount': amount,
-          'p_category': category,
-          'p_paid_by': paidBy,
-          'p_paid_at': paidAt.toIso8601String(),
-          'p_description': description,
-          'p_split_type': splitType.name,
-          'p_is_shared': splitType != SplitType.personal && splitType != SplitType.gift,
-          'p_type': type,
-          'p_splits': splits,
+          await _client.rpc(
+            'save_expense_v4',
+            params: {
+              'p_id': id,
+              'p_household_id': householdId,
+              'p_title': title,
+              'p_amount': amount,
+              'p_category': category,
+              'p_paid_by': paidBy,
+              'p_paid_at': paidAt.toIso8601String(),
+              'p_description': description,
+              'p_split_type': splitType.name,
+              'p_is_shared': splitType != SplitType.personal &&
+                  splitType != SplitType.gift,
+              'p_type': type,
+              'p_splits': splits,
+            },
+          );
+          sw.stop();
+          log.i(
+            'Finance RPC save_expense_v4 ok household=$householdId type=$type split=${splitType.name} amount=$amount ms=${sw.elapsedMilliseconds}',
+          );
         },
-      );
-    },
         context: 'SupabaseExpenseRepository.saveExpense',
         isOnline: _isOnline,
         onOffline: () async {
@@ -161,8 +234,8 @@ class SupabaseExpenseRepository
                 'p_paid_at': paidAt.toIso8601String(),
                 'p_description': description,
                 'p_split_type': splitType.name,
-                'p_is_shared':
-                    splitType != SplitType.personal && splitType != SplitType.gift,
+                'p_is_shared': splitType != SplitType.personal &&
+                    splitType != SplitType.gift,
                 'p_type': type,
                 'p_splits': splits,
               },
@@ -173,9 +246,10 @@ class SupabaseExpenseRepository
 
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
-    return executeWithHandling(() async {
-      await _client.from('expenses').delete().eq('id', id);
-    },
+    return executeWithHandling(
+        () async {
+          await _client.from('expenses').delete().eq('id', id);
+        },
         context: 'SupabaseExpenseRepository.deleteExpense',
         isOnline: _isOnline,
         onOffline: () async {
@@ -196,27 +270,28 @@ class SupabaseExpenseRepository
     required String toUserId,
     required double amount,
   }) async {
-    return executeWithHandling(() async {
-      await _client.rpc(
-        'save_expense_v4',
-        params: {
-          'p_id': null,
-          'p_household_id': householdId,
-          'p_title': 'Liquidación de pareja',
-          'p_amount': amount,
-          'p_category': 'other',
-          'p_paid_by': fromUserId,
-          'p_paid_at': DateTime.now().toIso8601String(),
-          'p_description': 'Saldar balance acumulado',
-          'p_split_type': 'fixed',
-          'p_is_shared': true,
-          'p_type': 'settlement',
-          'p_splits': [
-            {'user_id': toUserId, 'amount': amount}
-          ],
+    return executeWithHandling(
+        () async {
+          await _client.rpc(
+            'save_expense_v4',
+            params: {
+              'p_id': null,
+              'p_household_id': householdId,
+              'p_title': 'Liquidación de pareja',
+              'p_amount': amount,
+              'p_category': 'other',
+              'p_paid_by': fromUserId,
+              'p_paid_at': DateTime.now().toIso8601String(),
+              'p_description': 'Saldar balance acumulado',
+              'p_split_type': 'fixed',
+              'p_is_shared': true,
+              'p_type': 'settlement',
+              'p_splits': [
+                {'user_id': toUserId, 'amount': amount}
+              ],
+            },
+          );
         },
-      );
-    },
         context: 'SupabaseExpenseRepository.settleDebt',
         isOnline: _isOnline,
         onOffline: () async {
@@ -227,7 +302,7 @@ class SupabaseExpenseRepository
               params: {
                 'p_id': null,
                 'p_household_id': householdId,
-                'p_title': 'LiquidaciÃ³n de pareja',
+                'p_title': 'Liquidación de pareja',
                 'p_amount': amount,
                 'p_category': 'other',
                 'p_paid_by': fromUserId,
@@ -246,7 +321,9 @@ class SupabaseExpenseRepository
   }
 
   @override
-  Future<Map<String, dynamic>> getPersonalFinanceSummary(String userId, String householdId) async {
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(
+      String userId, String householdId) async {
+    final sw = Stopwatch()..start();
     final response = await _client.rpc(
       'get_personal_finance_summary',
       params: {
@@ -254,11 +331,17 @@ class SupabaseExpenseRepository
         'p_household_id': householdId,
       },
     );
-    return Map<String, dynamic>.from(response);
+    final summary = Map<String, dynamic>.from(response);
+    sw.stop();
+    log.i(
+      'Finance RPC get_personal_finance_summary ok household=$householdId user=$userId ms=${sw.elapsedMilliseconds}',
+    );
+    return summary;
   }
 
   @override
-  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
+      String householdId) async {
     return executeWithHandling(() async {
       final response = await _client
           .from('expense_templates')
@@ -266,19 +349,22 @@ class SupabaseExpenseRepository
           .eq('household_id', householdId)
           .eq('is_active', true)
           .order('day_of_month');
-      
+
       return (response as List<dynamic>)
-          .map((json) => ExpenseTemplateModel.fromJson(json as Map<String, dynamic>))
+          .map((json) =>
+              ExpenseTemplateModel.fromJson(json as Map<String, dynamic>))
           .toList();
     }, context: 'SupabaseExpenseRepository.getTemplates', isOnline: _isOnline);
   }
 
   @override
-  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
-    return executeWithHandling(() async {
-      await _client.from('expense_templates').upsert(template.toJson());
-      return unit;
-    },
+  Future<Either<Failure, Unit>> saveTemplate(
+      ExpenseTemplateModel template) async {
+    return executeWithHandling(
+        () async {
+          await _client.from('expense_templates').upsert(template.toJson());
+          return unit;
+        },
         context: 'SupabaseExpenseRepository.saveTemplate',
         isOnline: _isOnline,
         onOffline: () async {
@@ -294,14 +380,15 @@ class SupabaseExpenseRepository
   }
 
   @override
-  Future<Either<Failure, Unit>> toggleTemplateActivity(String id, bool active) async {
-    return executeWithHandling(() async {
-      await _client
-          .from('expense_templates')
-          .update({'is_active': active})
-          .eq('id', id);
-      return unit;
-    },
+  Future<Either<Failure, Unit>> toggleTemplateActivity(
+      String id, bool active) async {
+    return executeWithHandling(
+        () async {
+          await _client
+              .from('expense_templates')
+              .update({'is_active': active}).eq('id', id);
+          return unit;
+        },
         context: 'SupabaseExpenseRepository.toggleTemplateActivity',
         isOnline: _isOnline,
         onOffline: () async {
@@ -324,24 +411,45 @@ class SupabaseExpenseRepository
     required DateTime paidAt,
     required String paidBy,
   }) async {
-    return executeWithHandling(() async {
-      final response = await _client.rpc(
-        'pay_planned_expense',
-        params: {
-          'p_planned_id': plannedId,
-          'p_amount': amount,
-          'p_paid_at': paidAt.toIso8601String(),
-          'p_paid_by': paidBy,
+    return executeWithHandling(
+        () async {
+          final sw = Stopwatch()..start();
+          final response = await _client.rpc(
+            'pay_planned_expense',
+            params: {
+              'p_planned_id': plannedId,
+              'p_amount': amount,
+              'p_paid_at': paidAt.toIso8601String(),
+              'p_paid_by': paidBy,
+            },
+          );
+
+          // Backward/forward compatible parsing:
+          // - legacy SQL may return UUID directly
+          // - newer SQL may return { success, expense_id, message }
+          if (response is Map) {
+            final result = Map<String, dynamic>.from(response as Map);
+            if (result['success'] == false) {
+              throw ServerFailure(
+                result['message'] as String? ?? 'Error al pagar gasto planeado',
+              );
+            }
+            sw.stop();
+            log.i(
+              'Finance RPC pay_planned_expense ok planned=$plannedId success=${result['success'] != false} ms=${sw.elapsedMilliseconds}',
+            );
+            return result;
+          }
+
+          sw.stop();
+          log.i(
+            'Finance RPC pay_planned_expense ok planned=$plannedId legacy=true ms=${sw.elapsedMilliseconds}',
+          );
+          return {
+            'success': true,
+            'expense_id': response?.toString(),
+          };
         },
-      );
-      
-      final result = Map<String, dynamic>.from(response as Map);
-      if (result['success'] == true) {
-        return result;
-      } else {
-        throw ServerFailure(result['message'] as String? ?? 'Error al pagar gasto planeado');
-      }
-    },
         context: 'SupabaseExpenseRepository.payPlannedExpense',
         isOnline: _isOnline,
         onOffline: () async {
@@ -362,14 +470,21 @@ class SupabaseExpenseRepository
   }
 
   @override
-  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
-    return executeWithHandling(() async {
-      await _client.rpc(
-        'process_recurring_expenses',
-        params: {'p_household_id': householdId},
-      );
-      return unit;
-    },
+  Future<Either<Failure, Unit>> processRecurringExpenses(
+      String householdId) async {
+    return executeWithHandling(
+        () async {
+          final sw = Stopwatch()..start();
+          await _client.rpc(
+            'process_recurring_expenses',
+            params: {'p_household_id': householdId},
+          );
+          sw.stop();
+          log.i(
+            'Finance RPC process_recurring_expenses ok household=$householdId ms=${sw.elapsedMilliseconds}',
+          );
+          return unit;
+        },
         context: 'SupabaseExpenseRepository.processRecurringExpenses',
         isOnline: _isOnline,
         onOffline: () async {
@@ -386,10 +501,11 @@ class SupabaseExpenseRepository
 
   @override
   Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
-    return executeWithHandling(() async {
-      await _client.from('planned_expenses').delete().eq('id', id);
-      return unit;
-    },
+    return executeWithHandling(
+        () async {
+          await _client.from('planned_expenses').delete().eq('id', id);
+          return unit;
+        },
         context: 'SupabaseExpenseRepository.deletePlannedExpense',
         isOnline: _isOnline,
         onOffline: () async {

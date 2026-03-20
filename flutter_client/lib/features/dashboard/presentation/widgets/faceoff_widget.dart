@@ -4,337 +4,333 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AIFaceoffWidget extends StatefulWidget {
+class AIFaceoffWidget extends StatelessWidget {
   final List<Map<String, dynamic>> weeklyRanking;
 
   const AIFaceoffWidget({super.key, required this.weeklyRanking});
 
   @override
-  State<AIFaceoffWidget> createState() => _AIFaceoffWidgetState();
-}
-
-class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
-    with TickerProviderStateMixin {
-  String? _currentUserId;
-  late AnimationController _vsPulseController;
-  late AnimationController _scanningController;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentUserId = Supabase.instance.client.auth.currentUser?.id;
-
-    _vsPulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _scanningController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _vsPulseController.dispose();
-    _scanningController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.weeklyRanking.length < 2) {
+    if (weeklyRanking.length < 2) {
       return const SizedBox.shrink();
     }
+
     final theme = context.theme;
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final leader = weeklyRanking[0];
+    final challenger = weeklyRanking[1];
 
-    final p1 = widget.weeklyRanking[0];
-    final p2 = widget.weeklyRanking[1];
-
-    final p1Xp = (p1['xp_earned'] as num?)?.toInt() ?? 0;
-    final p2Xp = (p2['xp_earned'] as num?)?.toInt() ?? 0;
-
-    final totalXp = p1Xp + p2Xp;
-    final p1Pct = totalXp == 0 ? 0.5 : p1Xp / totalXp;
+    final leaderXp = (leader['xp_earned'] as num?)?.toInt() ?? 0;
+    final challengerXp = (challenger['xp_earned'] as num?)?.toInt() ?? 0;
+    final currentUserData =
+        leader['user_id'] == currentUserId ? leader : challenger;
+    final partnerData =
+        leader['user_id'] == currentUserId ? challenger : leader;
+    final currentUserXp =
+        leader['user_id'] == currentUserId ? leaderXp : challengerXp;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFFFFBF7),
+            Color(0xFFFFF4EB),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: theme.border.withValues(alpha: 0.55),
+        ),
         boxShadow: theme.cardShadow,
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
           Row(
             children: [
-              _buildCompetitor(p1),
-              _buildVSIndicator(),
-              _buildCompetitor(p2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.sage.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.bolt_rounded,
+                      size: 14,
+                      color: AppColors.iconSage,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'DUELO SEMANAL',
+                      style: TextStyle(
+                        color: AppColors.iconSage,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Text(
+                _daysRemainingLabel(),
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 36),
-          _buildMysteryBar(p1Pct),
-          const SizedBox(height: 32),
-          _buildWeeklyTrack(),
+          const SizedBox(height: 14),
+          Text(
+            'Tu pareja juega con marcador oculto',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 23,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.7,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Vos ves tu propio avance. El resultado real se descubre al cierre de la semana.',
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _competitorCard(
+                  context: context,
+                  player: currentUserData,
+                  xp: currentUserXp,
+                  isLeader: true,
+                  isCurrentUser: true,
+                  showExactXp: true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _competitorCard(
+                  context: context,
+                  player: partnerData,
+                  xp: leader['user_id'] == currentUserId ? challengerXp : leaderXp,
+                  isLeader: false,
+                  isCurrentUser: false,
+                  showExactXp: false,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _buildDuelBar(
+            context: context,
+            currentUserXp: currentUserXp,
+          ),
+          const SizedBox(height: 16),
+          _buildWeekRow(context),
         ],
       ),
     );
   }
 
-  Widget _buildCompetitor(Map<String, dynamic> player) {
-    final name = (player['user_name'] as String? ?? 'Jugador').split(' ').first;
+  Widget _competitorCard({
+    required BuildContext context,
+    required Map<String, dynamic> player,
+    required int xp,
+    required bool showExactXp,
+    required bool isLeader,
+    required bool isCurrentUser,
+  }) {
+    final theme = context.theme;
+    final name = _firstName(player['user_name']);
     final avatarUrl = player['avatar_url'] as String?;
-    final xp = (player['xp_earned'] as num?)?.toInt() ?? 0;
-    final isCurrentUser = _currentUserId == player['user_id'];
+    final accent = isCurrentUser ? AppColors.primary : AppColors.sage;
 
-    return Expanded(
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: accent.withValues(alpha: isLeader ? 0.18 : 0.12),
+        ),
+      ),
       child: Column(
         children: [
           CustomUserAvatar(
             name: name,
             avatarUrl: avatarUrl,
-            radius: 46,
+            radius: 38,
             isAnimated: true,
             showBorder: true,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-              color: isCurrentUser ? AppColors.primary : AppColors.textPrimary,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+              color: theme.textPrimary,
             ),
           ),
-          if (isCurrentUser) ...[
-            const SizedBox(height: 4),
-            Text(
-              '$xp XP',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppColors.accentGold,
-                fontSize: 13,
-              ),
+          const SizedBox(height: 4),
+          Text(
+            isCurrentUser ? 'Vos' : 'Pareja',
+            style: TextStyle(
+              color: isCurrentUser ? accent : theme.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
             ),
-          ] else ...[
-            const SizedBox(height: 4),
-            const Text(
-              '??? XP',
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              showExactXp ? '$xp XP' : 'XP oculta',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
-                fontSize: 13,
+                color: accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVSIndicator() {
-    return ScaleTransition(
-      scale: Tween<double>(begin: 1.0, end: 1.15).animate(
-        CurvedAnimation(parent: _vsPulseController, curve: Curves.easeInOut),
-      ),
-      child: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Text(
-            'VS',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMysteryBar(double p1Pct) {
+  Widget _buildDuelBar({
+    required BuildContext context,
+    required int currentUserXp,
+  }) {
+    final theme = context.theme;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock_outline,
-                size: 14, color: AppColors.textMuted.withValues(alpha: 0.6)),
-            const SizedBox(width: 6),
             Text(
-              'EL RESULTADO SE REVELA EL DOMINGO',
+              'Ventaja semanal',
               style: TextStyle(
-                fontSize: 10,
+                color: theme.textSecondary,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textMuted.withValues(alpha: 0.8),
-                letterSpacing: 0.5,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'Marcador oculto',
+              style: TextStyle(
+                color: theme.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(999),
           child: Container(
-            height: 14,
-            width: double.infinity,
-            color: const Color(0xFFF1F5F9),
-            child: Stack(
-              children: [
-                AnimatedBuilder(
-                  animation: _scanningController,
-                  builder: (context, child) {
-                    return Positioned.fill(
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: 1.0,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.transparent,
-                                AppColors.primary.withValues(alpha: 0.1),
-                                AppColors.primary.withValues(alpha: 0.3),
-                                AppColors.primary.withValues(alpha: 0.1),
-                                Colors.transparent,
-                              ],
-                              stops: [
-                                (_scanningController.value - 0.3)
-                                    .clamp(0.0, 1.0),
-                                (_scanningController.value - 0.1)
-                                    .clamp(0.0, 1.0),
-                                _scanningController.value.clamp(0.0, 1.0),
-                                (_scanningController.value + 0.1)
-                                    .clamp(0.0, 1.0),
-                                (_scanningController.value + 0.3)
-                                    .clamp(0.0, 1.0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Center(
-                      child: Container(
-                        width: 2,
-                        height: double.infinity,
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                      ),
-                    );
-                  },
-                ),
-                Positioned.fill(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(
-                        8,
-                        (_) => Icon(
-                              Icons.help_outline,
-                              size: 8,
-                              color: AppColors.textMuted.withValues(alpha: 0.3),
-                            )),
-                  ),
-                ),
-              ],
+            height: 16,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.18),
+                  AppColors.accentPeach.withValues(alpha: 0.18),
+                  AppColors.sage.withValues(alpha: 0.18),
+                ],
+              ),
             ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Tus $currentUserXp XP ya cuentan. La XP de tu pareja queda oculta hasta el domingo.',
+          style: TextStyle(
+            color: theme.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildWeeklyTrack() {
+  Widget _buildWeekRow(BuildContext context) {
+    final theme = context.theme;
     final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
-    final today = DateTime.now().weekday; // 1-7
+    final today = DateTime.now().weekday;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Text(
-              'RITMO SEMANAL',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textMuted,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '${7 - today} días restantes',
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textMuted,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+        Text(
+          'Ritmo semanal',
+          style: TextStyle(
+            color: theme.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(7, (index) {
-            final dayNum = index + 1;
-            final isToday = dayNum == today;
-            final isPast = dayNum < today;
+            final dayNumber = index + 1;
+            final isToday = dayNumber == today;
+            final isPast = dayNumber < today;
 
             return Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: index == 6 ? 0 : 6),
-                height: 38,
+                height: 34,
                 decoration: BoxDecoration(
                   color: isToday
-                      ? AppColors.primary.withValues(alpha: 0.1)
-                      : (isPast
-                          ? Colors.black.withValues(alpha: 0.03)
-                          : Colors.transparent),
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : isPast
+                          ? theme.surface
+                          : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isToday
-                        ? AppColors.primary.withValues(alpha: 0.4)
-                        : (isPast
-                            ? Colors.black.withValues(alpha: 0.1)
-                            : Colors.black.withValues(alpha: 0.05)),
-                    width: isToday ? 2 : 1.5,
+                        ? AppColors.primary.withValues(alpha: 0.35)
+                        : theme.border.withValues(alpha: 0.55),
+                    width: isToday ? 1.6 : 1,
                   ),
                 ),
                 child: Center(
                   child: Text(
                     days[index],
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: isToday ? FontWeight.w900 : FontWeight.w700,
                       color: isToday
                           ? AppColors.primary
-                          : (isPast
-                              ? AppColors.textSecondary
-                              : AppColors.textMuted),
+                          : isPast
+                              ? theme.textSecondary
+                              : theme.textMuted,
                     ),
                   ),
                 ),
@@ -344,5 +340,19 @@ class _AIFaceoffWidgetState extends State<AIFaceoffWidget>
         ),
       ],
     );
+  }
+
+  String _daysRemainingLabel() {
+    final today = DateTime.now().weekday;
+    final remaining = 7 - today;
+    if (remaining <= 0) return 'Cierra hoy';
+    if (remaining == 1) return '1 dia restante';
+    return '$remaining dias restantes';
+  }
+
+  String _firstName(dynamic rawName) {
+    final name = (rawName as String? ?? 'Jugador').trim();
+    if (name.isEmpty) return 'Jugador';
+    return name.split(' ').first;
   }
 }

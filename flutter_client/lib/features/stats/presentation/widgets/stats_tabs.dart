@@ -255,7 +255,7 @@ class WeeklyTab extends ConsumerWidget {
                     ),
                   ),
                   if (!isPremium)
-                    Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted),
                 ],
               ),
             ),

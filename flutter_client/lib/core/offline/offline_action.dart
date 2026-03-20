@@ -63,7 +63,7 @@ class OfflineAction {
       };
 
   factory OfflineAction.fromMap(Map<String, dynamic> map) {
-    Map<String, dynamic>? _toStringMap(dynamic value) {
+    Map<String, dynamic>? toStringMap(dynamic value) {
       if (value == null) return null;
       return Map<String, dynamic>.from(value as Map);
     }
@@ -71,12 +71,12 @@ class OfflineAction {
     return OfflineAction(
       type: map['type'] as String? ?? map['action'] as String? ?? '',
       target: map['target'] as String? ?? '',
-      values: _toStringMap(map['values']),
+      values: toStringMap(map['values']),
       filters: (map['filters'] as List<dynamic>? ?? [])
           .map((f) => OfflineFilter.fromMap(Map<String, dynamic>.from(f)))
           .toList(),
-      params: _toStringMap(map['params']),
-      meta: _toStringMap(map['meta']),
+      params: toStringMap(map['params']),
+      meta: toStringMap(map['meta']),
     );
   }
 }
@@ -86,3 +86,4 @@ String generateOfflineRequestId() {
   final rand = Random().nextInt(1000);
   return '$now-$rand';
 }
+

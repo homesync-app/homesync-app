@@ -999,6 +999,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  mcp_server:
+    dependency: "direct main"
+    description:
+      name: mcp_server
+      sha256: "31eeef914afb8bc3757e420b3516dbe5e65ba776baca7e5a2af0c59b67af7138"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   meta:
     dependency: transitive
     description:

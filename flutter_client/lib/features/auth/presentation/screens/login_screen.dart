@@ -2,6 +2,7 @@ import 'dart:ui' show ImageFilter;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
@@ -436,7 +437,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'Gestión de hogar para familias modernas',
+          'Gestión del hogar para familias modernas',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.textSecondary.withValues(alpha: 0.8),
@@ -585,13 +586,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(
-              'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-              height: 22,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                  Icons.g_mobiledata,
-                  size: 26,
-                  color: AppColors.primary),
+            const FaIcon(
+              FontAwesomeIcons.google,
+              size: 20,
+              color: Color(0xFFDB4437),
             ),
             const SizedBox(width: 14),
             const Text(

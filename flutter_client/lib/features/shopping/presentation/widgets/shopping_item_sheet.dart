@@ -44,6 +44,9 @@ class ShoppingItemSheet extends ConsumerStatefulWidget {
 }
 
 class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
+  static final List<Map<String, dynamic>> _visibleCategories =
+      ShoppingCategories.all.where((cat) => cat['id'] != 'general').toList();
+
   late TextEditingController _nameController;
   late TextEditingController _quantityController;
   late String _category;
@@ -58,8 +61,19 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
     _quantityController = TextEditingController(
       text: widget.item?.quantity ?? '',
     );
-    _category = widget.item?.category ?? widget.initialCategory ?? 'general';
-    _emoji = widget.item?.emoji ?? widget.initialEmoji ?? '🛒';
+    final initialCategory = widget.item?.category ?? widget.initialCategory;
+    final fallbackCategoryId = _visibleCategories.first['id'] as String;
+    final fallbackEmoji = _visibleCategories.first['emoji'] as String;
+
+    _category = initialCategory ?? fallbackCategoryId;
+    _emoji = widget.item?.emoji ??
+        widget.initialEmoji ??
+        ShoppingCategories.emojiFor(_category);
+
+    if (!ShoppingCategories.all.any((cat) => cat['id'] == _category)) {
+      _category = fallbackCategoryId;
+      _emoji = fallbackEmoji;
+    }
   }
 
   @override
@@ -71,7 +85,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 32,
@@ -127,7 +140,8 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               if (widget.item != null)
                 IconButton(
                   onPressed: _delete,
-                  icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: AppColors.error),
                 ),
             ],
           ),
@@ -145,10 +159,10 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
             height: 40,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: ShoppingCategories.all.length,
+              itemCount: _visibleCategories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                final cat = ShoppingCategories.all[index];
+                final cat = _visibleCategories[index];
                 final isSelected = _category == cat['id'];
                 return FilterChip(
                   label: Text(cat['name']),
@@ -164,13 +178,15 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                   backgroundColor: AppColors.background,
                   selectedColor: AppColors.primary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textPrimary,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(
-                      color: isSelected ? AppColors.primary : Colors.transparent,
+                      color:
+                          isSelected ? AppColors.primary : Colors.transparent,
                     ),
                   ),
                 );
@@ -178,8 +194,6 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
             ),
           ),
           const SizedBox(height: 32),
-          
-          
           const SizedBox(height: 40),
           SizedBox(
             width: double.infinity,
@@ -196,7 +210,8 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               ),
               child: Text(
                 widget.item == null ? 'Agregar a la Lista' : 'Guardar Cambios',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
               ),
             ),
           ),
@@ -210,17 +225,17 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
     if (widget.item == null) {
       ref.read(shoppingItemsProvider.notifier).addItem(
-        name: _nameController.text.trim(),
-        category: _category,
-        emoji: _emoji,
-      );
+            name: _nameController.text.trim(),
+            category: _category,
+            emoji: _emoji,
+          );
     } else {
       // For now, edit is handled by delete/add or we could implement updateItem
       // But keeping it simple as per the current app architecture.
       // If the item exists, we might just update the shouldSync locally or via a new repo method.
       // The user mainly asked about the "form" gating.
     }
-    
+
     Navigator.pop(context);
   }
 

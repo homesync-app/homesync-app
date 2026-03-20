@@ -13,37 +13,38 @@ class AppThemeColors {
 
   Color get primary => Theme.of(context).colorScheme.primary;
   Color get primaryContainer => Theme.of(context).colorScheme.primaryContainer;
-  Color get onPrimaryContainer => Theme.of(context).colorScheme.onPrimaryContainer;
+  Color get onPrimaryContainer =>
+      Theme.of(context).colorScheme.onPrimaryContainer;
 
   Color get surface => Theme.of(context).colorScheme.surface;
-  Color get surfaceVariant => isDarkMode ? AppColors.surfaceDark : AppColors.surfaceVariant;
+  Color get surfaceVariant =>
+      isDarkMode ? AppColors.surfaceDark : AppColors.surfaceVariant;
   Color get background => Theme.of(context).scaffoldBackgroundColor;
+  Color get elevatedSurface =>
+      isDarkMode ? AppColors.elevatedSurfaceDark : AppColors.elevatedSurface;
+  Color get navigationSurface =>
+      isDarkMode ? AppColors.navSurfaceDark : AppColors.navSurface;
 
   Color get textPrimary => Theme.of(context).colorScheme.onSurface;
-  Color get textSecondary => isDarkMode 
-      ? const Color(0xFF9D98B8) // darkSubtext from AppTheme
-      : AppColors.textSecondary;
-  Color get textMuted => isDarkMode 
-      ? const Color(0xFF5E5A7A) // darkMuted from AppTheme
-      : AppColors.textMuted;
+  Color get textSecondary =>
+      isDarkMode ? const Color(0xFFB8AEA7) : AppColors.textSecondary;
+  Color get textMuted =>
+      isDarkMode ? const Color(0xFF7C726E) : AppColors.textMuted;
 
-  Color get border => isDarkMode 
-      ? const Color(0xFF2E2B45) // darkBorder from AppTheme
-      : AppColors.border;
+  Color get border => isDarkMode ? const Color(0xFF433A36) : AppColors.border;
   Color get cardBorder => border;
   Color get inputBorder => border;
 
-  Color get shadow => isDarkMode 
-      ? Colors.black.withValues(alpha: 0.3) 
-      : AppColors.shadow;
+  Color get shadow =>
+      isDarkMode ? Colors.black.withValues(alpha: 0.3) : AppColors.shadow;
 
   Color get shadowBase => isDarkMode ? Colors.black : AppColors.shadowBase;
 
   List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: shadowBase.withValues(alpha: isDarkMode ? 0.35 : 0.08),
-          blurRadius: isDarkMode ? 24 : 18,
-          offset: const Offset(0, 10),
+          color: shadowBase.withValues(alpha: isDarkMode ? 0.34 : 0.09),
+          blurRadius: isDarkMode ? 26 : 22,
+          offset: const Offset(0, 12),
         ),
       ];
 
@@ -62,11 +63,12 @@ class AppThemeColors {
 
   Color get scaffoldBackground => background;
 
-  Color get glassWhite => isDarkMode 
-      ? const Color(0x33000000) 
-      : AppColors.glassWhite;
-  Color get glassBorder => isDarkMode 
-      ? const Color(0x33FFFFFF) 
-      : AppColors.glassBorder;
-}
+  Color get glassWhite =>
+      isDarkMode ? const Color(0x33000000) : AppColors.glassWhite;
+  Color get glassBorder =>
+      isDarkMode ? const Color(0x33FFFFFF) : AppColors.glassBorder;
 
+  List<Color> get heroGradient => isDarkMode
+      ? const [Color(0xFF3A2B25), Color(0xFF241E1B)]
+      : const [Color(0xFFFFEBDD), Color(0xFFFFF8F2)];
+}

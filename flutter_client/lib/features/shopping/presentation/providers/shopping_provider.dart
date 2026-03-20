@@ -59,7 +59,7 @@ UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(UncompleteAl
 @Riverpod(keepAlive: true)
 class ShoppingItems extends _$ShoppingItems {
   RealtimeChannel? _channel;
-  static final Uuid _uuid = Uuid();
+  static const Uuid _uuid = Uuid();
 
   @override
   Future<List<ShoppingItemModel>> build() async {

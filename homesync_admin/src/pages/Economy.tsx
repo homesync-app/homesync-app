@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   BarChart3, 
@@ -6,27 +6,42 @@ import {
   Trophy, 
   TrendingUp, 
   Zap,
-  Activity,
-  Loader2
+  Activity
 } from 'lucide-react';
+import { ErrorState, LoadingState } from '../components/PageState';
 
 export const Economy = () => {
-  const [stats, setStats] = useState<any>(null);
-  const [distribution, setDistribution] = useState<any[]>([]);
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    totalXP: number;
+    totalCoins: number;
+    avgXp: number;
+    avgCoins: number;
+  } | null>(null);
+  const [distribution, setDistribution] = useState<Array<{
+    label: string;
+    count: number;
+    color: string;
+    percentage: number;
+  }>>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
+    setError(null);
     
     // Get all ledger entries and users
     const [ledgerRes, usersRes] = await Promise.all([
       supabase.from('ledger_entries').select('user_id, type, amount'),
       supabase.from('users').select('id')
     ]);
+
+    if (ledgerRes.error || usersRes.error) {
+      setError('No se pudo cargar la economía del sistema.');
+      setLoading(false);
+      return;
+    }
 
     const entries = ledgerRes.data || [];
     const userList = usersRes.data || [];
@@ -70,13 +85,17 @@ export const Economy = () => {
     })));
     
     setLoading(false);
-  };
+  }, []);
 
-  if (loading) return (
-    <div className="h-[60vh] flex items-center justify-center">
-      <Loader2 className="w-10 h-10 text-primary animate-spin" />
-    </div>
-  );
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchStats();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchStats]);
+
+  if (loading) return <LoadingState title="Cargando datos económicos..." />;
+  if (error || !stats) return <ErrorState title="Error en economía" description={error || 'Datos no disponibles.'} />;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

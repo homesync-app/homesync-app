@@ -1,13 +1,11 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// HomeSync — Providers Unit Tests
 // Tests Riverpod providers with mocked dependencies
 // Run with: flutter test test/providers_test.dart
-// ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 
@@ -28,10 +26,16 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
       {List<String>? userIds}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
-    return Right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
+    return Right(TaskCompletionResult(
+      success: true,
+      message: 'ok',
+      queued: false,
+      xpEarned: task.xpReward,
+      coinsEarned: task.coinReward,
+    ));
   }
 
   @override
@@ -72,6 +76,7 @@ class MockTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     _tasks.add(TaskModel(
@@ -95,10 +100,17 @@ class MockTaskRepository implements TaskRepository {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
+      String activityId) async {
+    if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
+    return const Right({'success': true});
+  }
 }
 
 void main() {
-  group('✅ TaskCategoryFilterNotifier', () {
+  group('TaskCategoryFilterNotifier', () {
     test('starts with empty filter', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -139,7 +151,7 @@ void main() {
     });
   });
 
-  group('✅ TaskSearchQueryNotifier', () {
+  group('TaskSearchQueryNotifier', () {
     test('starts with empty query', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -157,7 +169,7 @@ void main() {
     });
   });
 
-  group('✅ TaskViewModeNotifier', () {
+  group('TaskViewModeNotifier', () {
     test('starts in list mode (false)', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -186,7 +198,7 @@ void main() {
     });
   });
 
-  group('✅ filteredTasksProvider', () {
+  group('filteredTasksProvider', () {
     final testTasks = [
       TaskModel(
         id: '1',
@@ -249,7 +261,7 @@ void main() {
     });
   });
 
-  group('✅ taskStatusCountProvider', () {
+  group('taskStatusCountProvider', () {
     test('counts tasks by status correctly', () {
       final tasks = [
         TaskModel(
@@ -315,3 +327,5 @@ class TestCategoryFilterNotifier extends Notifier<Set<String>> {
 
   void clear() => state = {};
 }
+
+

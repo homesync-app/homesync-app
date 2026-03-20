@@ -24,7 +24,7 @@ class Rewards extends _$Rewards {
 
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.getRewards(householdId);
-    
+
     return result.fold(
       (failure) {
         log.e('Error loading rewards: ${failure.message}');

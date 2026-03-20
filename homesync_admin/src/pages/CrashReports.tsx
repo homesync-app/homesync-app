@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Flame
 } from 'lucide-react';
+import { ErrorState } from '../components/PageState';
 
 interface CrashLog {
   id: string;
@@ -37,6 +38,13 @@ interface CrashGroup {
   level: string;
 }
 
+const statToneClass: Record<'rose' | 'orange' | 'amber' | 'violet', string> = {
+  rose: 'text-rose-500',
+  orange: 'text-orange-500',
+  amber: 'text-amber-500',
+  violet: 'text-violet-500',
+};
+
 export const CrashReports = () => {
   const [crashes, setCrashes] = useState<CrashLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +52,11 @@ export const CrashReports = () => {
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState('7d');
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCrashes = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const now = new Date();
     const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : 30;
     const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -59,12 +69,19 @@ export const CrashReports = () => {
       .order('created_at', { ascending: false })
       .limit(200);
 
-    if (!error && data) setCrashes(data);
+    if (error) {
+      setError('No pudimos cargar los reportes de crash.');
+      setLoading(false);
+      return;
+    }
+    if (data) setCrashes(data);
     setLoading(false);
   }, [timeRange]);
 
   useEffect(() => {
-    fetchCrashes();
+    const timeoutId = window.setTimeout(() => {
+      void fetchCrashes();
+    }, 0);
 
     // Real-time: new critical logs appear instantly
     const channel = supabase
@@ -79,7 +96,10 @@ export const CrashReports = () => {
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      window.clearTimeout(timeoutId);
+      supabase.removeChannel(channel);
+    };
   }, [fetchCrashes]);
 
   // Group identical crashes by message prefix (first 80 chars)
@@ -185,7 +205,7 @@ ${JSON.stringify(log.device_info, null, 2)}`.trim();
           { label: 'Affected Users', value: affectedUsers, icon: User, color: 'violet' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="glass-dark rounded-2xl p-5 border border-white/5">
-            <div className={`text-${color}-500 mb-2`}>
+            <div className={`${statToneClass[color as keyof typeof statToneClass]} mb-2`}>
               <Icon className="w-5 h-5" />
             </div>
             <p className="text-2xl font-bold">{loading ? '—' : value}</p>
@@ -196,6 +216,7 @@ ${JSON.stringify(log.device_info, null, 2)}`.trim();
 
       {/* Crash groups */}
       <div className="space-y-3">
+        {error && <ErrorState title="Error en crash reports" description={error} />}
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-rose-500" />

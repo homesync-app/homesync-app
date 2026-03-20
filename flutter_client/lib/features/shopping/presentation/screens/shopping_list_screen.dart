@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +11,9 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import '../widgets/shopping_item_sheet.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ShoppingListScreen — Lista de compras interactiva (Estilo Bring!)
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// ShoppingListScreen - Lista de compras interactiva (Estilo Bring!)
+// -----------------------------------------------------------------------------
 
 class ShoppingListScreen extends ConsumerStatefulWidget {
   const ShoppingListScreen({super.key});
@@ -69,12 +69,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     }
 
     final List<Map<String, String>> matches = [];
-    
-    // Buscar por nombre de item y por nombre de categoría
+
+// Buscar por nombre de item y por nombre de categoria
     ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
       final catName = ShoppingCategories.nameFor(catId).toLowerCase();
       final catMatchesQuery = catName.contains(query);
-      
+
       for (final item in catList) {
         if (item['name']!.toLowerCase().contains(query) || catMatchesQuery) {
           if (!matches.any((m) => m['name'] == item['name'])) {
@@ -83,11 +83,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         }
       }
     });
-    
+
     _suggestionsVal.value = matches.take(query.length < 2 ? 5 : 10).toList();
   }
 
-  // ── Actions ──────────────────────────────────────────────────────────────
+  // -- Actions --------------------------------------------------------------
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
     HapticFeedback.lightImpact();
@@ -122,7 +122,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final val = name.trim();
     if (val.isEmpty) return;
 
-    // No borramos el buscador ni quitamos el foco para permitir agregar múltiples productos seguidos
+    // No borramos el buscador ni quitamos el foco para permitir agregar multiples productos seguidos
     // _inputController.clear();
     // _lastQuery = '';
     // _suggestionsVal.value = [];
@@ -144,7 +144,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     }
 
     String categoryId = category ?? 'general';
-    String finalEmoji = emoji ?? '🛒';
+    String finalEmoji = emoji ?? '';
 
     if (category == null) {
       for (final catKey in ShoppingPredefined.itemsPerCategory.keys) {
@@ -160,83 +160,153 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     }
 
     ref.read(shoppingItemsProvider.notifier).addItem(
-      name: val,
-      category: categoryId,
-      emoji: finalEmoji,
-    );
+          name: val,
+          category: categoryId,
+          emoji: finalEmoji,
+        );
   }
 
-  void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: const TextStyle(fontWeight: FontWeight.w600)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // -- Build -----------------------------------------------------------------
 
   Widget _buildSectionHeader(String title, String sectionId,
-      {bool isAccent = false, String? emoji}) {
+      {bool isAccent = false,
+      String? emoji,
+      int? count,
+      Color? accentColor}) {
     final isExpanded = _expandedSections.contains(sectionId);
+    final highlightColor = accentColor ??
+        (isAccent ? AppColors.accentGreen : AppColors.textPrimary);
+
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
         child: InkWell(
           onTap: () => _toggleSection(sectionId),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isExpanded
-                  ? AppColors.surfaceVariant.withValues(alpha: 0.3)
-                  : AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isExpanded
-                    ? AppColors.accentGreen.withValues(alpha: 0.3)
-                    : Colors.transparent,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
+            child: Column(
               children: [
                 Row(
                   children: [
                     if (emoji != null) ...[
-                      Text(emoji, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 12),
+                      Text(
+                        emoji,
+                        style: TextStyle(
+                          fontSize: isExpanded ? 18 : 17,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                     ],
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: isAccent
-                            ? AppColors.accentGreen
-                            : AppColors.textPrimary,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.25,
+                                color: isExpanded
+                                    ? highlightColor
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (count != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '$count',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: isExpanded
+                                    ? highlightColor.withValues(alpha: 0.72)
+                                    : AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutCubic,
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: isExpanded
+                            ? highlightColor
+                            : AppColors.textSecondary,
+                        size: 20,
                       ),
                     ),
                   ],
                 ),
-                Icon(
-                  isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_right,
-                  color: isAccent
-                      ? AppColors.accentGreen
-                      : AppColors.textSecondary,
-                  size: 20,
+                const SizedBox(height: 10),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 1,
+                  margin: EdgeInsets.only(right: isExpanded ? 0 : 18),
+                  color: (isExpanded ? highlightColor : AppColors.divider)
+                      .withValues(alpha: isExpanded ? 0.22 : 0.18),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStaticSectionTitle(
+    String title, {
+    String? emoji,
+    int? count,
+    Color? accentColor,
+  }) {
+    final color = accentColor ?? AppColors.textPrimary;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+        child: Row(
+          children: [
+            if (emoji != null) ...[
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.4,
+                  color: color,
+                ),
+              ),
+            ),
+            if (count != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -392,54 +462,6 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Lista de Compras',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined,
-                color: AppColors.textSecondary),
-            onPressed: () {
-              // Limpiar completados logic
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: AppColors.surface,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  title: const Text('¿Limpiar completados?',
-                      style: TextStyle(color: AppColors.textPrimary)),
-                  content: const Text(
-                      'Se eliminarán todos los ítems que ya fueron comprados.',
-                      style: TextStyle(color: AppColors.textSecondary)),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancelar',
-                          style: TextStyle(color: AppColors.textSecondary)),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        Navigator.pop(ctx);
-                        ref
-                            .read(shoppingItemsProvider.notifier)
-                            .clearCompleted();
-                      },
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error),
-                      child: const Text('Limpiar',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
       body: shoppingState.when(
         loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
@@ -455,73 +477,121 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 child: GestureDetector(
                   onTap: () => FocusScope.of(context).unfocus(),
                   child: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(shoppingItemsProvider);
-        },
+                    onRefresh: () async {
+                      ref.invalidate(shoppingItemsProvider);
+                    },
                     color: AppColors.primary,
                     child: CustomScrollView(
                       controller: _scrollController,
                       physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics()),
                       slivers: [
-                        // ── EMPTY STATE / PENDING LIST HEADER ────────────────────────
+                        _buildStaticSectionTitle(
+                          'Lista actual',
+                          count: pending.length,
+                          accentColor: AppColors.primary,
+                        ),
+                        // -- EMPTY STATE / PENDING LIST HEADER ------------------------
                         if (pending.isEmpty)
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Center(
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
                               child: TweenAnimationBuilder<double>(
                                 duration: const Duration(seconds: 1),
                                 tween: Tween(begin: 0.0, end: 1.0),
                                 builder: (context, value, child) => Opacity(
                                   opacity: value,
                                   child: Transform.scale(
-                                    scale: 0.8 + (0.2 * value),
+                                    scale: 0.94 + (0.06 * value),
                                     child: child,
                                   ),
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(32),
+                                      padding: const EdgeInsets.all(28),
                                       decoration: BoxDecoration(
-                                        color: AppColors.surfaceVariant.withValues(alpha: 0.1),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            AppColors.primary
+                                                .withValues(alpha: 0.14),
+                                            AppColors.accentGreen
+                                                .withValues(alpha: 0.10),
+                                          ],
+                                        ),
                                         shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.10),
+                                            blurRadius: 24,
+                                            offset: const Offset(0, 10),
+                                          ),
+                                        ],
                                       ),
-                                      child: const Text('🍏', style: TextStyle(fontSize: 80)),
+                                      child: const Icon(
+                                        Icons.shopping_basket_rounded,
+                                        size: 56,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
-                                    const SizedBox(height: 24),
+                                    const SizedBox(height: 22),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
+                                      child: Text(
+                                        done.isEmpty
+                                            ? 'Todo en orden'
+                                            : 'Lista resuelta',
+                                        style: TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.1,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
                                     Text(
-                                      done.isEmpty 
-                                        ? '¡Heladera lista!\n¿Necesitás algo hoy?'
-                                        : '¡Todo comprado!\n¿Querés anotar algo más?',
+                                      done.isEmpty
+                                          ? 'Heladera lista.\nNecesitan algo hoy?'
+                                          : 'Todo comprado.\nQueres anotar algo mas?',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: AppColors.textPrimary.withValues(alpha: 0.8),
-                                        fontSize: 20,
+                                        color: AppColors.textPrimary,
+                                        fontSize: 22,
                                         height: 1.3,
-                                        fontWeight: FontWeight.w800,
+                                        fontWeight: FontWeight.w900,
                                         letterSpacing: -0.5,
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    Text(
-                                      'Agregá productos usando las categorías\no el buscador de abajo.',
+                                    const Text(
+                                      'Agrega productos usando las categorias\no el buscador de abajo.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: AppColors.textMuted,
+                                        color: AppColors.textSecondary,
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.45,
                                       ),
                                     ),
-                                    const SizedBox(height: 40),
                                   ],
                                 ),
                               ),
                             ),
                           )
                         else ...[
-                          // Mostramos la grilla de pendientes si NO está vacío
+                          // Mostramos la grilla de pendientes si no esta vacio.
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                             sliver: SliverGrid(
@@ -562,8 +632,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
-                              'Utilizados anteriormente', 'recent',
-                              emoji: '🕒'),
+                            'Volver a comprar',
+                            'recent',
+                            accentColor: AppColors.accentGreen,
+                          ),
                           if (_expandedSections.contains('recent'))
                             SliverPadding(
                               padding:
@@ -581,10 +653,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                     final item = done[i];
                                     return TweenAnimationBuilder<double>(
                                       key: ValueKey(item.id),
-                                      duration: const Duration(milliseconds: 300),
+                                      duration:
+                                          const Duration(milliseconds: 300),
                                       tween: Tween(begin: 0.0, end: 1.0),
                                       curve: Curves.easeOutCubic,
-                                      builder: (context, value, child) => Opacity(
+                                      builder: (context, value, child) =>
+                                          Opacity(
                                         opacity: value,
                                         child: child,
                                       ),
@@ -602,10 +676,19 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             ),
                         ],
 
-                        // ── CATEGORIES SECTIONS ─────────────────────────────────
-                        for (var cat in ShoppingCategories.all) ...[
+                        _buildStaticSectionTitle(
+                          'Categorias',
+                        ),
+                        // -- CATEGORIES SECTIONS ---------------------------------
+                        for (final cat in ShoppingCategories.all
+                            .where((cat) => cat['id'] != 'general')) ...[
                           _buildSectionHeader(cat['name'], cat['id'],
-                              emoji: cat['emoji']),
+                              emoji: cat['emoji'],
+                              accentColor: Color(cat['color'] as int),
+                              count: (ShoppingPredefined
+                                          .itemsPerCategory[cat['id']] ??
+                                      [])
+                                  .length),
                           if (_expandedSections.contains(cat['id']))
                             _buildPredefinedGrid(cat, pending, done),
                         ],
@@ -646,9 +729,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // Components
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 class _PredefinedItemTile extends StatelessWidget {
   final Map<String, String> item;
@@ -674,15 +757,22 @@ class _PredefinedItemTile extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: isPending
-              ? AppColors.surfaceVariant.withValues(alpha: 0.3)
+              ? AppColors.surfaceVariant.withValues(alpha: 0.22)
               : catColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isPending
-                ? Colors.transparent
-                : catColor.withValues(alpha: 0.2),
-            width: 1.5,
+                ? AppColors.divider.withValues(alpha: 0.28)
+                : catColor.withValues(alpha: 0.18),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.025),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -753,26 +843,26 @@ class _ShoppingItemTile extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
           color: isCompleted
-              ? AppColors.surfaceVariant.withValues(alpha: 0.4)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(24),
+              ? AppColors.surfaceVariant.withValues(alpha: 0.28)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isCompleted
-                ? AppColors.divider.withValues(alpha: 0.5)
-                : catColor.withValues(alpha: 0.3),
-            width: isCompleted ? 1.0 : 2.0,
+                ? AppColors.divider.withValues(alpha: 0.45)
+                : catColor.withValues(alpha: 0.22),
+            width: isCompleted ? 1.0 : 1.4,
           ),
           boxShadow: isCompleted
               ? []
               : [
                   BoxShadow(
-                    color: catColor.withValues(alpha: 0.12),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: catColor.withValues(alpha: 0.08),
+                    blurRadius: 14,
+                    offset: const Offset(0, 7),
                   ),
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 4,
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -835,3 +925,5 @@ class _ShoppingItemTile extends StatelessWidget {
     );
   }
 }
+
+

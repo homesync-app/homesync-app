@@ -10,6 +10,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 
@@ -158,6 +159,11 @@ class MockExpenseRepository implements ExpenseRepository {
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
     return const Right(unit);
   }
+
+  @override
+  Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
+    return const Right(unit);
+  }
 }
 
 class MockTaskRepository implements TaskRepository {
@@ -172,10 +178,16 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
       {List<String>? userIds}) async {
     if (shouldFail) return const Left(ServerFailure('Mock error'));
-    return right({'xp_earned': task.xpReward, 'coins_earned': task.coinReward});
+    return right(TaskCompletionResult(
+      success: true,
+      message: 'ok',
+      queued: false,
+      xpEarned: task.xpReward,
+      coinsEarned: task.coinReward,
+    ));
   }
 
   @override
@@ -209,6 +221,7 @@ class MockTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    String? status,
   }) async {
     _tasks.add(TaskModel(
       id: 'task-${_tasks.length + 1}',
@@ -229,6 +242,11 @@ class MockTaskRepository implements TaskRepository {
   Future<Either<Failure, void>> editTask(
           String taskId, Map<String, dynamic> updates) async =>
       const Right(null);
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
+          String activityId) async =>
+      right({'success': true});
 }
 
 void main() {
@@ -353,10 +371,14 @@ void main() {
       final tasksResult = await repo.getTasks('household-1');
       final tasks = tasksResult.getOrElse((_) => []);
       final result = await repo.completeTask(tasks.first, userIds: ['user-1']);
-      final data = result.getOrElse((_) => {});
+      final data = result.getOrElse((_) => const TaskCompletionResult(
+            success: false,
+            message: '',
+            queued: false,
+          ));
 
-      expect(data['xp_earned'], equals(50));
-      expect(data['coins_earned'], equals(25));
+      expect(data.xpEarned, equals(50));
+      expect(data.coinsEarned, equals(25));
     });
 
     test('deleteTask removes task', () async {

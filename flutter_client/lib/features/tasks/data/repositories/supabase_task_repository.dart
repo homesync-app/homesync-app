@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -62,10 +63,10 @@ class SupabaseTaskRepository
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
       {List<String>? userIds}) async {
     return executeWithHandling(() async {
-      return _rpc.completeTaskTransaction(
+      final result = await _rpc.completeTaskTransaction(
         taskId: task.id,
         taskTitle: task.title,
         xpReward: task.xpReward,
@@ -73,6 +74,7 @@ class SupabaseTaskRepository
         householdId: task.householdId,
         userIds: userIds,
       );
+      return result;
     },
         context: 'SupabaseTaskRepository.completeTask',
         isOnline: _isOnline,
@@ -95,12 +97,7 @@ class SupabaseTaskRepository
               meta: {'queued': true},
             ),
           );
-          return {
-            'success': true,
-            'queued': true,
-            'message': 'Queued while offline',
-            'request_id': requestId,
-          };
+          return TaskCompletionResult.queued(requestId: requestId);
         });
   }
 
@@ -302,6 +299,37 @@ class SupabaseTaskRepository
               },
             ),
           );
+        });
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
+      String activityId) async {
+    return executeWithHandling(() async {
+      return _rpc.undoTaskCompletion(activityId: activityId);
+    },
+        context: 'SupabaseTaskRepository.undoTaskCompletion',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final requestId = generateOfflineRequestId();
+          final currentUserId = _client.auth.currentUser?.id ?? '';
+          await _queueAction(
+            OfflineAction(
+              type: OfflineActionType.rpc,
+              target: 'undo_task_completion',
+              params: {
+                'p_activity_id': activityId,
+                'p_user_id': currentUserId,
+              },
+              meta: {'queued': true},
+            ),
+          );
+          return {
+            'success': true,
+            'queued': true,
+            'message': 'Queued while offline',
+            'request_id': requestId,
+          };
         });
   }
 

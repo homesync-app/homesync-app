@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'rpc/admin_rpc_service.dart';
 import 'rpc/task_rpc_service.dart';
 import 'rpc/stats_rpc_service.dart';
@@ -61,7 +62,7 @@ class SupabaseRpcService {
       _balance.getUserBalance(householdId: householdId);
 
   // --- Task ---
-  Future<Map<String, dynamic>> completeTaskTransaction({
+  Future<TaskCompletionResult> completeTaskTransaction({
     required String taskId,
     required String taskTitle,
     required int xpReward,

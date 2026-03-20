@@ -192,6 +192,11 @@ class MockExpenseRepository implements ExpenseRepository {
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
     return const Right(unit);
   }
+
+  @override
+  Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
+    return const Right(unit);
+  }
 }
 
 void main() {

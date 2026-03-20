@@ -70,6 +70,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       final taskRepo = ref.read(taskRepositoryProvider);
       final result = await taskRepo.getTasks(householdId, limit: 200);
 
+      // In direct-completion flow we show only tasks that can be completed now.
       _allTasks = result.getOrElse((_) => []).where((t) => t.isActive).toList();
 
       final householdRepo = ref.read(householdRepositoryProvider);
@@ -86,7 +87,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     }
   }
 
-  void _toggleTask(String taskId) {
+  void _toggleTask(TaskModel task) {
+    final taskId = task.id;
     setState(() {
       if (_selectedTaskIds.contains(taskId)) {
         _selectedTaskIds.remove(taskId);
@@ -241,17 +243,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return true;
     }).toList();
 
-    // Deduplicate by title+category
-    final uniqueMap = <String, TaskModel>{};
-    for (final t in filteredTasks) {
-      final normCat = AppColors.normaliseCategory(t.category);
-      final key = '${t.title.toLowerCase().trim()}_$normCat';
-      final existing = uniqueMap[key];
-      if (existing == null || t.xpReward > existing.xpReward) {
-        uniqueMap[key] = t;
-      }
-    }
-    final tasksToShow = uniqueMap.values.toList();
+    final tasksToShow = filteredTasks;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -372,7 +364,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     padding: const EdgeInsets.only(bottom: 140),
                     children: [
                       _buildSectionHeader(Icons.people_alt_rounded,
-                          '¿Quién lo hizo?', 'Selecciona quienes ayudaron'),
+                          '¿Quién lo hizo?', 'Selecciona quiénes ayudaron'),
                       _buildMembersSelection(),
                       const SizedBox(height: 32),
                       _buildSectionHeader(Icons.schedule_rounded, '¿Cuándo?',
@@ -794,7 +786,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        _toggleTask(task.id);
+        _toggleTask(task);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
@@ -816,7 +808,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               isSelected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+              color:
+                  isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -826,8 +819,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color:
-                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
+                  color: isSelected
+                      ? AppColors.primary
+                      : const Color(0xFF1E293B),
                 ),
               ),
             ),
@@ -835,9 +829,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               Text(
                 '${task.xpReward} XP',
                 style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textMuted),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textMuted,
+                ),
               ),
           ],
         ),

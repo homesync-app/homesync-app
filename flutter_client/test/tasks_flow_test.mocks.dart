@@ -7,12 +7,12 @@ import 'dart:async' as _i3;
 
 import 'package:fpdart/fpdart.dart' as _i4;
 import 'package:homesync_client/core/errors/failures.dart' as _i5;
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart'
-    as _i6;
+import 'package:homesync_client/core/models/task_completion_result.dart' as _i6;
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart' as _i7;
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart'
     as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
+import 'package:mockito/src/dummies.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -37,8 +37,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
   }
 
   @override
-  _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>> getTasks(
-    String? householdId, {
+  _i3.Future<_i4.Either<_i5.Failure, List<_i7.TaskModel>>> getTasks(
+    String householdId, {
     int? limit = 100,
     int? offset = 0,
   }) =>
@@ -52,8 +52,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           },
         ),
         returnValue:
-            _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>.value(
-                _i7.dummyValue<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>(
+            _i3.Future<_i4.Either<_i5.Failure, List<_i7.TaskModel>>>.value(
+                _i8.dummyValue<_i4.Either<_i5.Failure, List<_i7.TaskModel>>>(
           this,
           Invocation.method(
             #getTasks,
@@ -64,11 +64,11 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             },
           ),
         )),
-      ) as _i3.Future<_i4.Either<_i5.Failure, List<_i6.TaskModel>>>);
+      ) as _i3.Future<_i4.Either<_i5.Failure, List<_i7.TaskModel>>>);
 
   @override
-  _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>> completeTask(
-    _i6.TaskModel? task, {
+  _i3.Future<_i4.Either<_i5.Failure, _i6.TaskCompletionResult>> completeTask(
+    _i7.TaskModel task, {
     List<String>? userIds,
   }) =>
       (super.noSuchMethod(
@@ -78,8 +78,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           {#userIds: userIds},
         ),
         returnValue:
-            _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>.value(
-                _i7.dummyValue<_i4.Either<_i5.Failure, Map<String, dynamic>>>(
+            _i3.Future<_i4.Either<_i5.Failure, _i6.TaskCompletionResult>>.value(
+                _i8.dummyValue<_i4.Either<_i5.Failure, _i6.TaskCompletionResult>>(
           this,
           Invocation.method(
             #completeTask,
@@ -87,7 +87,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             {#userIds: userIds},
           ),
         )),
-      ) as _i3.Future<_i4.Either<_i5.Failure, Map<String, dynamic>>>);
+      ) as _i3.Future<_i4.Either<_i5.Failure, _i6.TaskCompletionResult>>);
 
   @override
   _i3.Future<_i4.Either<_i5.Failure, void>> verifyTask(
@@ -103,7 +103,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           ],
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #verifyTask,
@@ -129,7 +129,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           ],
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #objectTask,
@@ -149,7 +149,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           [taskId],
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #deleteTask,
@@ -172,7 +172,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           ],
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #updateSchedule,
@@ -213,7 +213,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           },
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #createTask,
@@ -247,7 +247,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
           ],
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
-            _i7.dummyValue<_i4.Either<_i5.Failure, void>>(
+            _i8.dummyValue<_i4.Either<_i5.Failure, void>>(
           this,
           Invocation.method(
             #editTask,

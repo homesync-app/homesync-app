@@ -4,11 +4,37 @@
   --color-primary: #7f0df2;
   --color-secondary: #0decf2;
   --color-dark: #0f172a;
+  --color-bg: #0b1120;
+  --color-surface: #111a2d;
+  --color-surface-soft: #1a2742;
+  --color-text-primary: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-border-soft: #ffffff1f;
+}
+
+:root {
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
 }
 
 @layer base {
   body {
-    @apply bg-[#0f172a] text-white font-sans antialiased;
+    @apply bg-bg text-text-primary font-sans antialiased;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
   }
 }
 
@@ -26,4 +52,16 @@
 
 .glow-teal {
   box-shadow: 0 0 20px rgba(13, 236, 242, 0.3);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.surface-card {
+  @apply bg-white/5 border border-white/10 rounded-2xl;
+}
+
+.state-card {
+  @apply glass-dark border border-white/10 rounded-3xl p-8 text-center;
 }

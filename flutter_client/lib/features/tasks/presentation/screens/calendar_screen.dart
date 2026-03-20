@@ -109,7 +109,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       final isToday = isSameDay(DateTime.now(), dayDate);
                       final tasksForDay = scheduledTasks[dayDate] ?? [];
 
-                      return _buildDaySection(dayDate, tasksForDay, isToday).animateEntrance(delay: index * 50);
+                      return _buildDaySection(dayDate, tasksForDay, isToday)
+                          .animateEntrance(delay: index * 50);
                     },
                   ),
                 ),
@@ -247,7 +248,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
+              border:
+                  Border.all(color: AppColors.divider.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -274,10 +276,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           )
         else
           ...tasks.map((task) => _CalendarTaskCard(
-                  task: task,
-                  onEdit: () => widget.onEdit(task),
-                  onSchedule: () => widget.onSchedule(task),
-                )),
+                task: task,
+                onEdit: () => widget.onEdit(task),
+                onSchedule: () => widget.onSchedule(task),
+              )),
       ],
     );
   }
@@ -307,12 +309,15 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final isCompleted = task.isVerified;
     final xp = task.xpReward;
     final category = task.category ?? 'general';
+    final normalizedCategory = AppColors.normaliseCategory(category);
 
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
         try {
-          return list.firstWhere((c) => AppColors.normaliseCategory(c.id) == AppColors.normaliseCategory(category));
+          return list.firstWhere((c) =>
+              AppColors.normaliseCategory(c.id) ==
+              AppColors.normaliseCategory(category));
         } catch (_) {
           return null;
         }
@@ -323,8 +328,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : AppColors.getCategoryColor(category);
-    final categoryIcon =
-        categoryData?.icon ?? AppColors.categoryIcons[category] ?? '📋';
+    final categoryIcon = AppColors.getCategoryMaterialIcon(normalizedCategory);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
@@ -369,8 +373,11 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
-                      child: Text(categoryIcon,
-                          style: const TextStyle(fontSize: 22)),
+                      child: Icon(
+                        categoryIcon,
+                        size: 22,
+                        color: categoryColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -404,9 +411,11 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             const SizedBox(width: 8),
                             if (task.recurrenceType != null)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentTeal.withValues(alpha: 0.1),
+                                  color: AppColors.accentTeal
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(

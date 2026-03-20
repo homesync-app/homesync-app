@@ -64,7 +64,7 @@ class PrimaryColorNotifier extends Notifier<Color> {
   Future<void> setColor(Color color) async {
     state = color;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_kPrimaryColorKey, color.value);
+    await prefs.setInt(_kPrimaryColorKey, color.toARGB32());
   }
 }
 

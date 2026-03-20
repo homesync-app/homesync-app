@@ -17,6 +17,19 @@ final bottomNavIndexProvider = NotifierProvider<BottomNavNotifier, int>(() {
   return BottomNavNotifier();
 });
 
+class ParejaTabNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void setIndex(int index) {
+    state = index.clamp(0, 1);
+  }
+}
+
+final parejaTabIndexProvider = NotifierProvider<ParejaTabNotifier, int>(() {
+  return ParejaTabNotifier();
+});
+
 // ── Auth state provider ──────────────────────────────────────────────────────
 final authStateProvider = StreamProvider<AuthState>((ref) {
   return Supabase.instance.client.auth.onAuthStateChange;

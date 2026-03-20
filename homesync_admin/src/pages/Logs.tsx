@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Terminal, 
@@ -8,11 +8,11 @@ import {
   RotateCcw,
   Smartphone,
   Calendar,
-  Loader2,
   Trash2,
   Copy,
   Check
 } from 'lucide-react';
+import { ErrorState, LoadingState } from '../components/PageState';
 
 interface Log {
   id: string;
@@ -20,8 +20,8 @@ interface Log {
   level: string;
   message: string;
   stack_trace?: string;
-  context?: any;
-  device_info?: any;
+  context?: Record<string, unknown> | null;
+  device_info?: Record<string, unknown> | null;
   user_id?: string;
 }
 
@@ -31,6 +31,7 @@ export const Logs = () => {
   const [filter, setFilter] = useState('all');
   const [selectedLog, setSelectedLog] = useState<Log | null>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const copyForAI = (log: Log) => {
     const text = `
@@ -55,8 +56,28 @@ ${JSON.stringify(log.device_info, null, 2)}
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await supabase
+      .from('application_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('Error fetching logs:', error);
+      setError('No se pudieron cargar los logs.');
+    } else if (data) {
+      setLogs(data);
+    }
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
-    fetchLogs();
+    const timeoutId = window.setTimeout(() => {
+      void fetchLogs();
+    }, 0);
 
     // Enable Real-time subscription for logs
     const channel = supabase
@@ -71,25 +92,10 @@ ${JSON.stringify(log.device_info, null, 2)}
       .subscribe();
 
     return () => {
+      window.clearTimeout(timeoutId);
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  const fetchLogs = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('application_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error) {
-      console.error('Error fetching logs:', error);
-    } else if (data) {
-      setLogs(data);
-    }
-    setLoading(false);
-  };
+  }, [fetchLogs]);
 
   const clearLogs = async () => {
     if (confirm('Are you sure you want to clear all system logs?')) {
@@ -154,7 +160,7 @@ ${JSON.stringify(log.device_info, null, 2)}
             className={`px-4 py-1.5 rounded-full text-sm font-bold capitalize transition-all border ${
               filter === lvl 
                 ? 'bg-secondary/20 border-secondary text-secondary' 
-                : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                : 'bg-white/5 border-white/10 text-gray-200 hover:text-white'
             }`}
           >
             {lvl}
@@ -163,6 +169,11 @@ ${JSON.stringify(log.device_info, null, 2)}
       </div>
 
       <div className="glass-dark rounded-3xl border border-white/10 overflow-hidden">
+        {error && (
+          <div className="p-4 border-b border-white/10">
+            <ErrorState title="Error en diagnósticos" description={error} />
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -178,7 +189,7 @@ ${JSON.stringify(log.device_info, null, 2)}
               {loading ? (
                 <tr>
                   <td colSpan={5} className="py-20 text-center">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
+                    <LoadingState title="Cargando logs..." />
                   </td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
@@ -212,7 +223,7 @@ ${JSON.stringify(log.device_info, null, 2)}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <Smartphone className="w-3 h-3" />
-                        {log.device_info?.platform || 'Unknown'}
+                        {String(log.device_info?.platform ?? 'Unknown')}
                       </div>
                     </td>
                     <td className="px-6 py-4">

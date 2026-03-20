@@ -8,7 +8,6 @@ import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
@@ -17,7 +16,6 @@ import 'package:homesync_client/features/household/data/repositories/supabase_ho
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:homesync_client/shared/widgets/mercadopago_settings_card.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
@@ -117,15 +115,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final result =
           await ref.read(householdRepositoryProvider).generateInvitationCode();
-      
+
       if (mounted) {
         result.fold(
           (failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: ${failure.message}'),
-                backgroundColor: AppColors.error
-              ),
+                  content: Text('Error: ${failure.message}'),
+                  backgroundColor: AppColors.error),
             );
           },
           (code) => setState(() => _invitationCode = code),
@@ -135,7 +132,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Código generado'),
+            content: Text('Codigo generado'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -158,7 +155,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('📋 Código copiado al portapapeles'),
+        content: Text('Codigo copiado al portapapeles'),
         backgroundColor: AppColors.success,
       ),
     );
@@ -167,11 +164,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _shareViaWhatsApp() async {
     if (_invitationCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Genera un código primero')));
+          const SnackBar(content: Text('Genera un codigo primero')));
       return;
     }
     final text =
-        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+        'Hola! Unete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este codigo: *$_invitationCode*\n\nOrganicemos nuestro hogar juntos.';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -187,7 +184,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+                  content: Text('No se pudo abrir WhatsApp. Codigo copiado.')),
             );
           }
         }
@@ -212,7 +209,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final code = codeController.text.trim().toUpperCase();
             if (code.length != 6) {
               setDialogState(
-                  () => errorText = 'El código debe tener 6 caracteres');
+                  () => errorText = 'El codigo debe tener 6 caracteres');
               return;
             }
 
@@ -238,7 +235,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('🎉 ¡Te uniste al hogar exitosamente!'),
+                        content: Text('Te uniste al hogar exitosamente'),
                         backgroundColor: AppColors.success,
                       ),
                     );
@@ -260,7 +257,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
-                Icon(Icons.login_rounded, color: context.theme.primary, size: 22),
+                Icon(Icons.login_rounded,
+                    color: context.theme.primary, size: 22),
                 const SizedBox(width: 10),
                 const Text('Unirse a un hogar'),
               ],
@@ -270,9 +268,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ingresá el código de invitación que te compartió tu pareja:',
-                  style:
-                      TextStyle(color: context.theme.textSecondary, fontSize: 14),
+                  'Ingresa el codigo de invitacion que te compartio tu pareja:',
+                  style: TextStyle(
+                      color: context.theme.textSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -346,7 +344,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        
+
         // Go to home tab and pop
         ref.read(bottomNavIndexProvider.notifier).setIndex(0);
         Navigator.pop(context);
@@ -377,9 +375,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       backgroundColor: theme.scaffoldBackground,
                       flexibleSpace: FlexibleSpaceBar(
                         centerTitle: false,
-                        titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
+                        titlePadding:
+                            const EdgeInsets.only(left: 24, bottom: 20),
                         title: Text(
-                          'Configuración',
+                          'Configuracion',
                           style: TextStyle(
                             color: theme.textPrimary,
                             fontWeight: FontWeight.w900,
@@ -407,17 +406,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            _buildSectionLabel(
+                              eyebrow: 'PERFIL',
+                              title: 'Tu espacio',
+                              subtitle:
+                                  'Avatar, nombre y datos basicos de tu cuenta.',
+                            ),
+                            const SizedBox(height: 14),
                             _buildProfileCard(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 28),
+                            _buildSectionLabel(
+                              eyebrow: 'HOGAR',
+                              title: 'Casa compartida',
+                              subtitle:
+                                  'Miembros, invitaciones y reglas del hogar.',
+                            ),
+                            const SizedBox(height: 14),
                             if (_householdId != null) ...[
                               _buildCombinedHouseholdCard(),
                             ] else ...[
                               _buildNoHouseholdCard(),
                             ],
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 28),
+                            _buildSectionLabel(
+                              eyebrow: 'APP',
+                              title: 'Preferencias',
+                              subtitle:
+                                  'Tema, notificaciones y herramientas de ayuda.',
+                            ),
+                            const SizedBox(height: 14),
                             _buildPremiumCard(),
-                            const SizedBox(height: 24),
-                            const MercadoPagoSettingsCard(),
                             const SizedBox(height: 24),
                             _buildAppearanceCard(),
                             const SizedBox(height: 24),
@@ -425,6 +443,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 24),
                             _buildFAQButton(),
                             const SizedBox(height: 48),
+                            _buildSectionLabel(
+                              eyebrow: 'CUENTA',
+                              title: 'Sesion y seguridad',
+                              subtitle:
+                                  'Salir de la cuenta o reiniciar tus datos si lo necesitas.',
+                            ),
+                            const SizedBox(height: 14),
                             _buildLogoutButton(),
                             const SizedBox(height: 32),
                             _buildResetAccountButton(),
@@ -444,7 +469,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Versión 1.0.0 (Building with ❤️)',
+                                    'Version 1.0.0',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: theme.textSecondary,
@@ -464,7 +489,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // ── Profile Card ──────────────────────────────────────────────────────────
+  // Profile Card
+
+  Widget _buildSectionLabel({
+    required String eyebrow,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = context.theme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eyebrow,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: theme.primary,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: theme.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: theme.textSecondary,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildProfileCard() {
     final profileAsync = ref.watch(userProfileProvider);
@@ -479,8 +549,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
               color: theme.shadow.withValues(alpha: 0.04),
@@ -492,7 +561,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           Row(
             children: [
-              // Avatar (tappable → picker)
+              // Avatar (tappable -> picker)
               GestureDetector(
                 onTap: () => AvatarPickerSheet.show(context),
                 child: Hero(
@@ -532,8 +601,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           decoration: BoxDecoration(
                             color: theme.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                                color: theme.surface, width: 2.5),
+                            border:
+                                Border.all(color: theme.surface, width: 2.5),
                             boxShadow: [
                               BoxShadow(
                                 color: theme.primary.withValues(alpha: 0.3),
@@ -656,8 +725,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: theme.shadow.withValues(alpha: 0.04),
@@ -694,8 +762,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     color: theme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.home_rounded,
-                      color: theme.primary, size: 26),
+                  child:
+                      Icon(Icons.home_rounded, color: theme.primary, size: 26),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -705,7 +773,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Text(
                         _householdName ?? 'Mi hogar',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.w900, color: theme.textPrimary),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: theme.textPrimary),
                       ),
                       const SizedBox(height: 2),
                       Container(
@@ -765,8 +835,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     Text(
                       '$memberCount ${memberCount == 1 ? "miembro" : "miembros"}',
-                      style: TextStyle(
-                          color: theme.textMuted, fontSize: 11),
+                      style: TextStyle(color: theme.textMuted, fontSize: 11),
                     ),
                   ],
                 ),
@@ -811,7 +880,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   ),
                                   if (isCurrentUser) ...[
                                     const SizedBox(width: 6),
-                                    Text(' (Tú)',
+                                    Text(' (Tu)',
                                         style: TextStyle(
                                             color: theme.textMuted,
                                             fontSize: 12)),
@@ -821,8 +890,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               Text(
                                 role == 'owner' ? 'Propietario' : 'Miembro',
                                 style: TextStyle(
-                                    color: theme.textSecondary,
-                                    fontSize: 11),
+                                    color: theme.textSecondary, fontSize: 11),
                               ),
                             ],
                           ),
@@ -1042,11 +1110,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: const Icon(Icons.share_rounded,
                       color: AppColors.accentBlue),
                 ),
-                title: const Text('Código de invitación'),
+                title: const Text('Codigo de invitacion'),
                 subtitle: Text(
                   _invitationCode != null
-                      ? 'Compartir o generar nuevo código'
-                      : 'Generar código para invitar',
+                      ? 'Compartir o generar nuevo codigo'
+                      : 'Generar codigo para invitar',
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -1119,7 +1187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Icon(Icons.share_rounded, color: theme.primary),
                     const SizedBox(width: 12),
                     Text(
-                      'Código de invitación',
+                      'Codigo de invitacion',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
@@ -1130,7 +1198,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Compartí este código para que otros se unan a tu hogar',
+                  'Comparte este codigo para que otros se unan a tu hogar',
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 13,
@@ -1165,14 +1233,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: _shareViaWhatsApp,
-                            icon: const Icon(Icons.send_rounded, size: 18),
-                            label: const Text('WhatsApp',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.primary,
-                              foregroundColor: Colors.white,
+                        ElevatedButton.icon(
+                          onPressed: _shareViaWhatsApp,
+                          icon: const Icon(Icons.send_rounded, size: 18),
+                          label: const Text('WhatsApp',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primary,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                             elevation: 0,
@@ -1181,18 +1249,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                          IconButton(
-                            onPressed: () {
-                              _copyCode();
-                            },
-                            icon: Icon(Icons.copy_rounded,
-                                color: theme.primary),
-                            style: IconButton.styleFrom(
-                              backgroundColor:
-                                  theme.primary.withValues(alpha: 0.1),
-                              padding: const EdgeInsets.all(12),
-                            ),
+                        IconButton(
+                          onPressed: () {
+                            _copyCode();
+                          },
+                          icon: Icon(Icons.copy_rounded, color: theme.primary),
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                theme.primary.withValues(alpha: 0.1),
+                            padding: const EdgeInsets.all(12),
                           ),
+                        ),
                       ],
                     ),
                   )
@@ -1205,7 +1272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        'Sin código activo',
+                        'Sin codigo activo',
                         style: TextStyle(color: theme.textMuted),
                       ),
                     ),
@@ -1221,8 +1288,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     },
                     icon: const Icon(Icons.refresh_rounded),
                     label: Text(_invitationCode == null
-                        ? 'Generar código'
-                        : 'Generar nuevo código'),
+                        ? 'Generar codigo'
+                        : 'Generar nuevo codigo'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: theme.primary,
                       side: BorderSide(color: theme.primary),
@@ -1242,22 +1309,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isPremium = ref.watch(premiumProvider);
     final currentColor = ref.watch(primaryColorProvider);
     final theme = context.theme;
-    
-    final List<ThemePalette> palettes = ThemePalette.all;
+
+    const List<ThemePalette> palettes = ThemePalette.all;
     const Set<String> freePaletteNames = {'Naranja (Original)'};
     final defaultPalette = palettes.firstWhere(
       (palette) => palette.name == 'Naranja (Original)',
       orElse: () => palettes.first,
     );
     final selectedPalette = palettes.cast<ThemePalette?>().firstWhere(
-      (palette) => palette?.primary.value == currentColor.value,
-      orElse: () => null,
-    );
-    final isFreeSelected = selectedPalette != null && freePaletteNames.contains(selectedPalette.name);
+          (palette) => palette?.primary.toARGB32() == currentColor.toARGB32(),
+          orElse: () => null,
+        );
+    final isFreeSelected = selectedPalette != null &&
+        freePaletteNames.contains(selectedPalette.name);
 
     if (!isPremium && !isFreeSelected) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(primaryColorProvider.notifier).setColor(defaultPalette.primary);
+        ref
+            .read(primaryColorProvider.notifier)
+            .setColor(defaultPalette.primary);
       });
     }
 
@@ -1268,7 +1338,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Text(
               'Color del Tema',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: theme.textPrimary),
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary),
             ),
             const SizedBox(width: 8),
             if (!isPremium)
@@ -1281,9 +1354,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock_rounded, size: 10, color: AppColors.accentGold),
+                    Icon(Icons.lock_rounded,
+                        size: 10, color: AppColors.accentGold),
                     SizedBox(width: 4),
-                    Text('PREMIUM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppColors.accentGold)),
+                    Text('PREMIUM',
+                        style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.accentGold)),
                   ],
                 ),
               ),
@@ -1298,17 +1376,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final palette = palettes[index];
-              final isSelected = currentColor.value == palette.primary.value;
+              final isSelected =
+                  currentColor.toARGB32() == palette.primary.toARGB32();
               final isFreePalette = freePaletteNames.contains(palette.name);
               final isLocked = !isPremium && !isFreePalette;
-              
+
               return GestureDetector(
                 onTap: () {
                   if (isLocked) {
                     PremiumPaywall.show(context);
                   } else {
                     HapticFeedback.lightImpact();
-                    ref.read(primaryColorProvider.notifier).setColor(palette.primary);
+                    ref
+                        .read(primaryColorProvider.notifier)
+                        .setColor(palette.primary);
                   }
                 },
                 child: AnimatedContainer(
@@ -1318,9 +1399,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   decoration: BoxDecoration(
                     color: palette.primary,
                     shape: BoxShape.circle,
-                    border: isSelected 
-                      ? Border.all(color: theme.surface, width: 3)
-                      : null,
+                    border: isSelected
+                        ? Border.all(color: theme.surface, width: 3)
+                        : null,
                     boxShadow: [
                       if (isSelected)
                         BoxShadow(
@@ -1330,11 +1411,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                     ],
                   ),
-                  child: isSelected 
-                    ? const Icon(Icons.check, color: Colors.white, size: 20)
-                    : (isLocked) 
-                      ? Icon(Icons.lock_outline_rounded, color: Colors.white.withValues(alpha: 0.5), size: 18)
-                      : null,
+                  child: isSelected
+                      ? const Icon(Icons.check, color: Colors.white, size: 20)
+                      : (isLocked)
+                          ? Icon(Icons.lock_outline_rounded,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              size: 18)
+                          : null,
                 ),
               );
             },
@@ -1428,8 +1511,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
               color: theme.shadow.withValues(alpha: 0.04),
@@ -1445,19 +1527,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               color: theme.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.group_add_rounded,
-                size: 40, color: theme.primary),
+            child:
+                Icon(Icons.group_add_rounded, size: 40, color: theme.primary),
           ),
           const SizedBox(height: 24),
           Text(
             '¡Comienza tu equipo!',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5, color: theme.textPrimary),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+                color: theme.textPrimary),
           ),
           const SizedBox(height: 12),
           Text(
-            'Unite a un equipo existente con un código de invitación para empezar a compartir tareas y gastos.',
+            'Unite a un equipo existente con un codigo de invitacion para empezar a compartir tareas y gastos.',
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 15,
@@ -1481,7 +1566,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Icon(Icons.login_rounded, size: 20),
                 SizedBox(width: 12),
-                Text('Unirse con código',
+                Text('Unirse con codigo',
                     style: TextStyle(fontWeight: FontWeight.w800)),
               ],
             ),
@@ -1499,8 +1584,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
               color: theme.shadow.withValues(alpha: 0.03),
@@ -1532,7 +1616,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text('Apariencia',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700, color: theme.textPrimary)),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: theme.textPrimary)),
                     Text('Elige el tema visual de la app',
                         style: TextStyle(
                             color: theme.textSecondary, fontSize: 12)),
@@ -1557,8 +1643,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
               color: theme.shadow.withValues(alpha: 0.03),
@@ -1590,7 +1675,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text('Notificaciones',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700, color: theme.textPrimary)),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: theme.textPrimary)),
                     Text('Recibe avisos de gastos y tareas',
                         style: TextStyle(
                             color: theme.textSecondary, fontSize: 12)),
@@ -1609,8 +1696,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? '🔔 Notificaciones activadas'
                           : '🔕 Notificaciones desactivadas'),
                       duration: const Duration(seconds: 2),
-                      backgroundColor:
-                          value ? theme.success : theme.textMuted,
+                      backgroundColor: value ? theme.success : theme.textMuted,
                     ),
                   );
                 },
@@ -1628,8 +1714,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: theme.border.withValues(alpha: 0.5)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
               color: theme.shadow.withValues(alpha: 0.03),
@@ -1645,15 +1730,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             color: theme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(Icons.help_outline_rounded,
-              color: theme.primary, size: 22),
+          child:
+              Icon(Icons.help_outline_rounded, color: theme.primary, size: 22),
         ),
         title: Text('Preguntas Frecuentes',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: theme.textPrimary)),
-        subtitle: Text('Aprende cómo funciona HomeSync',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: theme.textPrimary)),
+        subtitle: Text('Aprende como funciona HomeSync',
             style: TextStyle(color: theme.textSecondary, fontSize: 12)),
-        trailing:
-            Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
         onTap: () {
           HapticFeedback.lightImpact();
           FAQSheet.show(context);
@@ -1676,10 +1763,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.surface,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
-              title: const Text('¿Cerrar sesión?',
+              title: const Text('Cerrar sesion?',
                   style: TextStyle(fontWeight: FontWeight.w900)),
               content: const Text(
-                  'Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.'),
+                  'Vas a tener que iniciar sesion de nuevo para acceder a tu hogar.'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
@@ -1696,7 +1783,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12))),
-                    child: const Text('Cerrar sesión',
+                    child: const Text('Cerrar sesion',
                         style: TextStyle(fontWeight: FontWeight.w800)),
                   ),
                 ),
@@ -1710,8 +1797,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }
         },
         style: OutlinedButton.styleFrom(
-          side: BorderSide(
-              color: theme.error.withValues(alpha: 0.2), width: 1.5),
+          side:
+              BorderSide(color: theme.error.withValues(alpha: 0.2), width: 1.5),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           foregroundColor: theme.error,
@@ -1722,7 +1809,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Icon(Icons.logout_rounded, size: 22),
             SizedBox(width: 12),
             Text(
-              'Cerrar Sesión',
+              'Cerrar Sesion',
               style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 16,
@@ -1797,13 +1884,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: theme.error),
             const SizedBox(width: 12),
-            Text('¿Reiniciar todo?',
-                style: TextStyle(
-                    fontWeight: FontWeight.w900, color: theme.error)),
+            Text('Reiniciar todo?',
+                style:
+                    TextStyle(fontWeight: FontWeight.w900, color: theme.error)),
           ],
         ),
         content: const Text(
-            'Esta acción borrará todas tus tareas, gastos y progreso de forma permanente, y te quitará del hogar actual para que puedas configurar uno nuevo o unirte a otro.'),
+            'Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1870,8 +1957,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Error: $e'), backgroundColor: theme.error),
+            SnackBar(content: Text('Error: $e'), backgroundColor: theme.error),
           );
         }
       } finally {
@@ -1880,7 +1966,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  // ── Premium Card ──────────────────────────────────────────────────────────
+  // Premium Card
 
   Widget _buildPremiumCard() {
     final isPremium = ref.watch(premiumProvider);
@@ -1970,7 +2056,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               Switch.adaptive(
                 value: isPremium,
-                activeColor: const Color(0xFFF59E0B),
+                activeThumbColor: const Color(0xFFF59E0B),
+                activeTrackColor: const Color(0xFFF59E0B),
                 onChanged: (value) async {
                   await ref.read(premiumProvider.notifier).setPremium(value);
                   if (mounted) {
@@ -1978,10 +2065,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       SnackBar(
                         content: Text(value
                             ? '✨ Modo Premium activado (Simulado)'
-                            : '🕊️ Modo Premium desactivado'),
-                        backgroundColor: value
-                            ? const Color(0xFFB45309)
-                            : theme.textPrimary,
+                            : '🖊️ Modo Premium desactivado'),
+                        backgroundColor:
+                            value ? const Color(0xFFB45309) : theme.textPrimary,
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -2003,7 +2089,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            _buildPremiumFeatureItem('Sincronización Shopping ➔ Finanzas'),
+            _buildPremiumFeatureItem('Sincronizacion Shopping a Finanzas'),
             _buildPremiumFeatureItem('Pagos Recurrentes (Suscripciones)'),
             _buildPremiumFeatureItem('Notas de Amor en Dashboard'),
             _buildPremiumFeatureItem('Avatares Exclusivos'),

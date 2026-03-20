@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Users as UsersIcon,
@@ -6,9 +6,9 @@ import {
   User,
   Shield,
   Calendar,
-  Loader2,
   Search
 } from 'lucide-react';
+import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 
 interface HouseholdMember {
   id: string;
@@ -21,7 +21,6 @@ interface HouseholdMember {
   };
   user: {
     full_name: string;
-    email: string;
     avatar_url: string;
   };
 }
@@ -30,13 +29,11 @@ export const UserManagement = () => {
   const [members, setMembers] = useState<HouseholdMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     setLoading(true);
+    setError(null);
     // Join with households and users
     const { data } = await supabase
       .from('household_members')
@@ -47,9 +44,21 @@ export const UserManagement = () => {
       `)
       .order('joined_at', { ascending: false });
 
-    if (data) setMembers(data as any);
+    if (!data) {
+      setError('No pudimos cargar miembros del hogar.');
+      setLoading(false);
+      return;
+    }
+    if (data) setMembers(data as HouseholdMember[]);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchMembers();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchMembers]);
 
   const filteredMembers = members.filter(m => 
     m.user?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -80,8 +89,16 @@ export const UserManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {loading ? (
-          <div className="col-span-full py-20 flex justify-center">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <div className="col-span-full">
+            <LoadingState title="Cargando miembros..." />
+          </div>
+        ) : error ? (
+          <div className="col-span-full">
+            <ErrorState title="Error al cargar miembros" description={error} />
+          </div>
+        ) : filteredMembers.length === 0 ? (
+          <div className="col-span-full">
+            <EmptyState title="No hay miembros para mostrar" description="Revisa el filtro o la configuración del hogar." />
           </div>
         ) : filteredMembers.map((member) => (
           <div key={member.id} className="glass p-6 rounded-3xl relative group overflow-hidden">

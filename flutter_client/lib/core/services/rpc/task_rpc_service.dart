@@ -1,4 +1,5 @@
 import 'base_rpc_service.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 
 class TaskRpcService extends BaseRpcService {
   TaskRpcService({super.clientOverride});
@@ -55,7 +56,7 @@ class TaskRpcService extends BaseRpcService {
     });
   }
 
-  Future<Map<String, dynamic>> completeTaskTransaction({
+  Future<TaskCompletionResult> completeTaskTransaction({
     required String taskId,
     required String taskTitle,
     required int xpReward,
@@ -84,11 +85,14 @@ class TaskRpcService extends BaseRpcService {
         },
       );
 
-      return {
-        'success': response['success'] ?? false,
-        'message': response['message'] ?? '',
-        'data': response,
-      };
+      final result = TaskCompletionResult.fromRpcResponse(response);
+      if (!result.success) {
+        throw Exception(result.message.isNotEmpty
+            ? result.message
+            : 'No se pudo completar la tarea');
+      }
+
+      return result;
     });
   }
 
@@ -191,11 +195,30 @@ class TaskRpcService extends BaseRpcService {
     }
 
     final response = await client.rpc(
-      'object_task',
+      'object_task_v2',
       params: {
         'p_task_id': taskId,
         'p_user_id': user.id,
         'p_reason': reason,
+      },
+    );
+
+    return Map<String, dynamic>.from(response);
+  }
+
+  Future<Map<String, dynamic>> undoTaskCompletion({
+    required String activityId,
+  }) async {
+    final user = client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Usuario no autenticado');
+    }
+
+    final response = await client.rpc(
+      'undo_task_completion',
+      params: {
+        'p_activity_id': activityId,
+        'p_user_id': user.id,
       },
     );
 

@@ -7,7 +7,6 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'create_task_dialog.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 
 class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   final List<MemberModel> members;
@@ -39,7 +38,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   @override
   void initState() {
     super.initState();
-    _fetchTemplates(); // only templates — categories come from categoriesProvider
+    _fetchTemplates(); // only templates - categories come from categoriesProvider
   }
 
   Future<void> _fetchTemplates() async {
@@ -106,7 +105,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     final tasksAsync = ref.watch(tasksProvider);
     final dbCategoriesAsync = ref.watch(categoriesProvider);
 
-    // Categories from DB via Riverpod — single source of truth
+    // Categories from DB via Riverpod - single source of truth
     final dbCategories = dbCategoriesAsync.maybeWhen(
           data: (list) => list,
           orElse: () => <CategoryModel>[],
@@ -146,7 +145,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       ),
       child: Column(
         children: [
-          // ── Handle ───────────────────────────────────────────────────────
+          // -- Handle -------------------------------------------------------
           const SizedBox(height: 12),
           Container(
             width: 40,
@@ -156,7 +155,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 20),
-          // ── Header ───────────────────────────────────────────────────────
+          // -- Header -------------------------------------------------------
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
@@ -192,7 +191,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          // ── Category filter chips ─────────────────────────────────────
+          // -- Category filter chips -------------------------------------
           if (!_isLoading && displayCategories.isNotEmpty)
             SizedBox(
               height: 44,
@@ -215,7 +214,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     ? _buildEmpty()
                     : _buildTemplateList(filtered),
           ),
-          // ── Bottom actions ────────────────────────────────────────────
+          // -- Bottom actions --------------------------------------------
           Container(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             decoration: BoxDecoration(
@@ -525,3 +524,5 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     );
   }
 }
+
+

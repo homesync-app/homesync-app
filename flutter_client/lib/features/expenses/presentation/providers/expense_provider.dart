@@ -52,40 +52,19 @@ GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(GetPersonalFin
 class PersonalFinanceSummary extends _$PersonalFinanceSummary {
   @override
   Future<Map<String, dynamic>> build() async {
-    final expenses = await ref.watch(expenseControllerProvider.future);
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) return {'balance': 0.0, 'income': 0.0, 'expense': 0.0, 'variation': 0.0};
-
-    final now = DateTime.now();
-    double income = 0;
-    double expense = 0;
-    
-    for (final e in expenses) {
-      // Filter for current month
-      if (e.paidAt.month != now.month || e.paidAt.year != now.year) continue;
-
-      if (e.type == 'income') {
-        if (e.paidBy == userId) income += e.amount;
-      } else if (e.type == 'expense') {
-        if (e.paidBy == userId) expense += e.amount;
-      } else if (e.type == 'settlement') {
-        if (e.paidBy == userId) {
-          // I paid my partner, money goes OUT
-          expense += e.amount;
-        } else {
-          // Partner paid me, money comes IN (this assumes settlements have splits/info about receiver)
-          // In our settlement logic, if I didn't pay it, I am the one receiving it.
-          income += e.amount;
-        }
-      }
+    final householdId = await ref.watch(householdIdProvider.future);
+    if (userId == null || householdId == null) {
+      return {
+        'balance': 0.0,
+        'income': 0.0,
+        'expense': 0.0,
+        'variation': 0.0,
+      };
     }
 
-    return {
-      'balance': income - expense,
-      'income': income,
-      'expense': expense,
-      'variation': 5.0, // Mock for now, could be calculated vs last month
-    };
+    final useCase = ref.watch(getPersonalFinanceSummaryUseCaseProvider);
+    return await useCase(userId: userId, householdId: householdId);
   }
 }
 
@@ -136,7 +115,7 @@ class ExpenseController extends _$ExpenseController {
     if (householdId == null) return;
 
     final repo = ref.read(expenseRepositoryProvider);
-    await repo.saveExpense(
+    final result = await repo.saveExpense(
       id: id,
       householdId: householdId,
       title: title,
@@ -149,6 +128,11 @@ class ExpenseController extends _$ExpenseController {
       type: type,
       splits: splits,
     );
+
+    result.fold(
+      (failure) => throw Exception(failure.message),
+      (_) {},
+    );
     
     if (ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
@@ -159,8 +143,32 @@ class ExpenseController extends _$ExpenseController {
   }
 
   Future<void> deleteExpense(String id) async {
+    final previousExpenses = state.valueOrNull;
+    final combinedFeedNotifier = ref.read(combinedFeedControllerProvider.notifier);
+    final previousFeed = ref.read(combinedFeedControllerProvider).valueOrNull;
+
+    if (previousExpenses != null) {
+      state = AsyncData(
+        previousExpenses.where((expense) => expense.id != id).toList(),
+      );
+    }
+    combinedFeedNotifier.removeRealExpenseLocally(id);
+
     final repo = ref.read(expenseRepositoryProvider);
-    await repo.deleteExpense(id);
+    final result = await repo.deleteExpense(id);
+
+    result.fold(
+      (failure) {
+        if (previousExpenses != null) {
+          state = AsyncData(previousExpenses);
+        }
+        if (previousFeed != null) {
+          combinedFeedNotifier.replaceLocalFeed(previousFeed);
+        }
+        throw Exception(failure.message);
+      },
+      (_) {},
+    );
     
     if (ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
@@ -179,11 +187,16 @@ class ExpenseController extends _$ExpenseController {
     if (householdId == null) return;
 
     final repo = ref.read(expenseRepositoryProvider);
-    await repo.settleDebt(
+    final result = await repo.settleDebt(
       householdId: householdId,
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+    );
+
+    result.fold(
+      (failure) => throw Exception(failure.message),
+      (_) {},
     );
     
     if (ref.read(isOnlineProvider)) {
@@ -262,6 +275,21 @@ class CombinedFeedController extends _$CombinedFeedController {
   Future<void> refresh() async {
     ref.invalidateSelf();
   }
+
+  void removeRealExpenseLocally(String expenseId) {
+    final currentFeed = state.valueOrNull;
+    if (currentFeed == null) return;
+
+    state = AsyncData(
+      currentFeed
+          .where((item) => !(item.isRealExpense && item.id == expenseId))
+          .toList(),
+    );
+  }
+
+  void replaceLocalFeed(List<FeedItemModel> feed) {
+    state = AsyncData(feed);
+  }
 }
 
 @riverpod
@@ -281,7 +309,7 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
   }
 
   Future<void> saveTemplate(ExpenseTemplateModel template) async {
-    final repo = ref.watch(expenseRepositoryProvider);
+    final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.saveTemplate(template);
     
     result.fold(
@@ -298,7 +326,7 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
   }
 
   Future<void> deleteTemplate(String id) async {
-    final repo = ref.watch(expenseRepositoryProvider);
+    final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.toggleTemplateActivity(id, false);
     
     result.fold(

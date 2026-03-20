@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TaskDetailSheet — Opens from activity history tap
-// • TaskModel author → can UNDO the completion (resets to pending)
-// • Partner → can add an OBJECTION comment
-// No banners, no forced dialogs.
-// ─────────────────────────────────────────────────────────────────────────────
-
-class TaskDetailSheet extends StatefulWidget {
+class TaskDetailSheet extends ConsumerStatefulWidget {
   final Map<String, dynamic> taskData;
   final VoidCallback? onChanged;
 
@@ -33,441 +28,495 @@ class TaskDetailSheet extends StatefulWidget {
   }
 
   @override
-  State<TaskDetailSheet> createState() => _TaskDetailSheetState();
+  ConsumerState<TaskDetailSheet> createState() => _TaskDetailSheetState();
 }
 
-class _TaskDetailSheetState extends State<TaskDetailSheet> {
+class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   bool _isLoading = false;
-  bool _showObjectionInput = false;
-  final _objectionCtrl = TextEditingController();
-  final _focusNode = FocusNode();
-
-  @override
-  void dispose() {
-    _objectionCtrl.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
 
   TaskModel get _task => TaskModel.fromMap(widget.taskData);
-
-  String get _taskId => _task.id;
   TaskStatus get _status => _task.status;
   String get _title => _task.title;
   String get _category => _task.category ?? 'general';
-  int get _xpReward => _task.xpReward;
-  int get _coinReward => _task.coinReward;
-  String? get _objectionReason =>
-      widget.taskData['objection_reason'] as String?;
+  int get _xpReward => _readInt(
+        _task.xpReward,
+        widget.taskData['xp_reward'],
+        widget.taskData['xp_per_user'],
+        widget.taskData['xp'],
+      );
+  int get _coinReward => _readInt(
+        _task.coinReward,
+        widget.taskData['coin_reward'],
+        widget.taskData['coins_per_user'],
+        widget.taskData['coins'],
+      );
+  String? get _activityId => widget.taskData['activity_id'] as String?;
+  String? get _comment => widget.taskData['objection_reason'] as String?;
 
   Map? get _completedUser => widget.taskData['completed_user'] as Map?;
   String get _completedByName =>
       (_completedUser?['full_name'] as String?) ?? 'Alguien';
   String? get _completedByAvatar => _completedUser?['avatar_url'] as String?;
   String? get _completedById => _completedUser?['id'] as String?;
-
   String get _currentUserId =>
       Supabase.instance.client.auth.currentUser?.id ?? '';
   bool get _isAuthor => _completedById == _currentUserId;
+  bool get _hasCompletionRecord =>
+      _activityId != null || widget.taskData['completed_at'] != null;
 
-  String? get _objectedById => widget.taskData['objected_by'] as String?;
-  bool get _iObjected => _objectedById == _currentUserId;
+  int _readInt(dynamic primary,
+      [dynamic fallback1, dynamic fallback2, dynamic fallback3]) {
+    for (final candidate in [primary, fallback1, fallback2, fallback3]) {
+      if (candidate is num && candidate.toInt() > 0) return candidate.toInt();
+      final parsed = int.tryParse(candidate?.toString() ?? '');
+      if (parsed != null && parsed > 0) return parsed;
+    }
+    return 0;
+  }
 
-  // ── Label helpers (friendly language) ──────────────────────────────────────
+  (String, Color, IconData) get _statusInfo {
+    if (_activityId != null) {
+      return ('Completada', AppColors.accentTeal, Icons.check_circle_rounded);
+    }
 
-  (String label, Color color, String emoji) get _statusInfo {
     return switch (_status) {
       TaskStatus.pendingVerification || TaskStatus.verified => (
           'Completada',
           AppColors.accentTeal,
-          '✅'
+          Icons.check_circle_rounded
         ),
-      TaskStatus.objected => ('En disputa', AppColors.accentRed, '⚠️'),
-      _ => ('Pendiente', AppColors.textMuted, '📋'),
+      TaskStatus.objected => (
+          'En disputa',
+          AppColors.accentRed,
+          Icons.warning_amber_rounded
+        ),
+      _ => ('Pendiente', AppColors.textMuted, Icons.schedule_rounded),
     };
   }
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
-
   Future<void> _undoTask() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-    try {
-      await Supabase.instance.client.from('tasks').update({
-        'status': TaskStatus.active.dbValue,
-        'completed_by': null,
-        'completed_at': null,
-        'objection_reason': null,
-        'objected_by': null,
-        'objected_at': null,
-      }).eq('id', _taskId);
-
-      widget.onChanged?.call();
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        _showSnack('No se pudo deshacer: $e', AppColors.error);
-      }
+    if (_activityId == null) {
+      _showSnack(
+          'No se puede deshacer: actividad no encontrada', AppColors.error);
+      return;
     }
-  }
 
-  Future<void> _submitObjection() async {
-    final reason = _objectionCtrl.text.trim();
-    if (reason.isEmpty) return;
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.from('tasks').update({
-        'status': TaskStatus.objected.name,
-        'objection_reason': reason,
-        'objected_by': _currentUserId,
-        'objected_at': DateTime.now().toUtc().toIso8601String(),
-      }).eq('id', _taskId);
-
-      widget.onChanged?.call();
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
+      final repo = ref.read(taskRepositoryProvider);
+      final result = await repo.undoTaskCompletion(_activityId!);
+      result.fold(
+        (failure) => _showSnack('No se pudo deshacer', AppColors.error),
+        (_) {
+          widget.onChanged?.call();
+          if (mounted) Navigator.pop(context);
+        },
+      );
+    } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showSnack('No se pudo enviar: $e', AppColors.error);
-      }
-    }
-  }
-
-  Future<void> _undoObjection() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-    try {
-      await Supabase.instance.client.from('tasks').update({
-        'status': TaskStatus.verified.name,
-        'objection_reason': null,
-        'objected_by': null,
-        'objected_at': null,
-      }).eq('id', _taskId);
-
-      widget.onChanged?.call();
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        _showSnack('No se pudo quitar la objeción: $e', AppColors.error);
+        _showSnack('No se pudo deshacer', AppColors.error);
       }
     }
   }
 
   void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: color,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
   }
-
-  // ── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final (statusLabel, statusColor, statusEmoji) = _statusInfo;
+    final theme = Theme.of(context);
+    final (statusLabel, statusColor, statusIcon) = _statusInfo;
+    final categoryColor = AppColors.getCategoryColor(_category);
+    final categoryIcon = AppColors.getCategoryMaterialIcon(_category);
+    final categoryLabel =
+        AppColors.categoryNames[_category.toLowerCase()] ?? _category;
     final completedAt = widget.taskData['completed_at'];
     final dateStr = completedAt != null
-        ? DateFormat('d MMM · HH:mm', 'es')
+        ? DateFormat("d MMM '·' HH:mm", 'es')
             .format(DateTime.parse(completedAt as String).toLocal())
-        : null;
+        : 'Sin registro';
 
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: AnimatedPadding(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          margin: const EdgeInsets.only(top: 60),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Drag handle ────────────────────────────────────────────
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    return Container(
+      margin: const EdgeInsets.only(top: 56),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.divider,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 24),
-
-              // ── Header: icon + title ───────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: AppColors.getCategoryColor(_category)
-                            .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Center(
-                        child: Text(
-                          AppColors.categoryIcons[_category] ?? '📋',
-                          style: const TextStyle(fontSize: 36),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).colorScheme.onSurface,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Status badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '$statusEmoji  $statusLabel',
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // ── Info row ───────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Who completed it
-                      Expanded(
-                        child: Column(
-                          children: [
-                            CustomUserAvatar(
-                                name: _completedByName,
-                                avatarUrl: _completedByAvatar,
-                                radius: 20),
-                            const SizedBox(height: 8),
-                            Text(
-                              _completedByName.split(' ').first,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 13),
-                            ),
-                            Text(
-                              'Completó la tarea',
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                  fontSize: 11),
-                            ),
-                          ],
+                      Text(
+                        'Detalle de tarea',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      // Divider
-                      Container(
-                          width: 1,
-                          height: 60,
-                          color: Theme.of(context).dividerColor),
-                      // XP reward
-                      Expanded(
-                        child: Column(
-                          children: [
-                            const Text('⭐', style: TextStyle(fontSize: 28)),
-                            const SizedBox(height: 4),
-                            Text('+$_xpReward XP',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15,
-                                    color: AppColors.accentTeal)),
-                            if (_coinReward > 0)
-                              Text('+$_coinReward 🪙',
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary)),
-                          ],
-                        ),
-                      ),
-                      // Divider
-                      Container(
-                          width: 1,
-                          height: 60,
-                          color: Theme.of(context).dividerColor),
-                      // When
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Icon(Icons.schedule_rounded,
-                                size: 28,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant),
-                            const SizedBox(height: 4),
-                            Text(
-                              dateStr ?? '—',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 12),
-                            ),
-                          ],
+                      const SizedBox(height: 2),
+                      Text(
+                        dateStr,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-
-              // ── Objection reason (if exists) ───────────────────────────
-              if (_objectionReason != null && _objectionReason!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.accentRed.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: AppColors.accentRed.withValues(alpha: 0.2)),
+                      color: statusColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Row(children: [
-                          Text('💬', style: TextStyle(fontSize: 14)),
-                          SizedBox(width: 6),
-                          Text(
-                            'Comentario',
-                            style: TextStyle(
-                              color: AppColors.accentRed,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ]),
-                        const SizedBox(height: 8),
+                        Icon(statusIcon, size: 14, color: statusColor),
+                        const SizedBox(width: 6),
                         Text(
-                          _objectionReason!,
+                          statusLabel,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
+                            color: statusColor,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-
-              // ── Objection input ────────────────────────────────────────
-              if (_showObjectionInput)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '¿Qué querés comentar?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 14,
+                ],
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: AppColors.divider.withValues(alpha: 0.5),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: categoryColor.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(categoryIcon,
+                                    size: 26, color: categoryColor),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  _title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildChip(
+                                icon: categoryIcon,
+                                label: categoryLabel,
+                                color: categoryColor,
+                              ),
+                              _buildChip(
+                                icon: _task.isRecurring
+                                    ? Icons.event_repeat_rounded
+                                    : Icons.edit_calendar_rounded,
+                                label: _task.isRecurring
+                                    ? _task.recurrenceLabel
+                                    : 'Sin programar',
+                                color: _task.isRecurring
+                                    ? AppColors.primary
+                                    : AppColors.accentPeach,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: AppColors.divider.withValues(alpha: 0.45),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _objectionCtrl,
-                        focusNode: _focusNode,
-                        maxLines: 3,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: 'Ej: Faltó limpiar debajo del mueble...',
-                          hintStyle: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant),
-                          filled: true,
-                          fillColor: Theme.of(context).cardColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide.none,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatColumn(
+                                  icon: Icons.star_rounded,
+                                  iconColor: AppColors.accentGold,
+                                  value: '+$_xpReward XP',
+                                  label: 'Experiencia',
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 58,
+                                color: AppColors.divider,
+                              ),
+                              Expanded(
+                                child: _buildStatColumn(
+                                  icon: Icons.monetization_on_rounded,
+                                  iconColor: AppColors.accentGreen,
+                                  value: '+$_coinReward coins',
+                                  label: 'Recompensa',
+                                ),
+                              ),
+                            ],
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(
-                                color: AppColors.primary, width: 1.5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submitObjection,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accentRed,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text('Enviar comentario',
-                                  style: TextStyle(
+                          const SizedBox(height: 18),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: Row(
+                              children: [
+                                CustomUserAvatar(
+                                  name: _completedByName,
+                                  avatarUrl: _completedByAvatar,
+                                  radius: 16,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _hasCompletionRecord
+                                            ? 'La completó'
+                                            : 'Responsable',
+                                        style: const TextStyle(
+                                          color: AppColors.textMuted,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _completedByName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (completedAt != null)
+                                  Text(
+                                    DateFormat('HH:mm').format(
+                                        DateTime.parse(completedAt as String)
+                                            .toLocal()),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 15)),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_comment != null && _comment!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentRed.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: AppColors.accentRed.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Comentario',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _comment!,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
+                                fontSize: 14,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 20),
+                    _buildActions(),
+                  ],
                 ),
-
-              // ── Action buttons ─────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-                child: _buildActions(),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatColumn({
+    IconData? icon,
+    Color? iconColor,
+    String? avatarName,
+    String? avatarUrl,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        if (avatarName != null)
+          CustomUserAvatar(
+            name: avatarName,
+            avatarUrl: avatarUrl,
+            radius: 18,
+          )
+        else
+          Icon(icon, size: 24, color: iconColor),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -477,17 +526,16 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           child: CircularProgressIndicator(color: AppColors.primary));
     }
 
-    // The author can undo their own completed TaskModel
-    if (_isAuthor &&
-        (_status == TaskStatus.pendingVerification ||
-            _status == TaskStatus.verified)) {
+    if (_isAuthor && _activityId != null) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: _undoTask,
           icon: const Icon(Icons.undo_rounded, size: 18),
-          label: const Text('Deshacer',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          label: const Text(
+            'Deshacer',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          ),
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
             side: BorderSide(color: Theme.of(context).dividerColor, width: 1.5),
@@ -499,53 +547,6 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       );
     }
 
-    // If it's already objected, and I AM the one who objected, I can undo it
-    if (_status == TaskStatus.objected && _iObjected) {
-      return SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          onPressed: _undoObjection,
-          icon: const Icon(Icons.undo_rounded, size: 18),
-          label: const Text('Quitar comentario',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.accentTeal,
-            side: const BorderSide(color: AppColors.accentTeal, width: 1.5),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-        ),
-      );
-    }
-
-    // The partner can comment/object on pending/verified tasks (not already objected)
-    if (!_isAuthor && _status != TaskStatus.objected) {
-      if (!_showObjectionInput) {
-        return SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              setState(() => _showObjectionInput = true);
-              Future.delayed(const Duration(milliseconds: 100),
-                  () => _focusNode.requestFocus());
-            },
-            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
-            label: const Text('Objetar / Comentar',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accentRed,
-              side: const BorderSide(color: AppColors.accentRed, width: 1.5),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-          ),
-        );
-      }
-    }
-
-    // Already objected or no actions available
     return const SizedBox.shrink();
   }
 }

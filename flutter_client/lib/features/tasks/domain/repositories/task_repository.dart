@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import '../models/task_model.dart';
 
 /// Abstract contract for the tasks data source.
@@ -11,7 +12,7 @@ abstract class TaskRepository {
 
   /// Mark a TaskModel as completed and award XP/coins via RPC.
   /// Returns the result map from the RPC (new balance, etc.)
-  Future<Either<Failure, Map<String, dynamic>>> completeTask(TaskModel task,
+  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
       {List<String>? userIds});
 
   /// Verify a completed TaskModel (done by the other household member).
@@ -45,4 +46,8 @@ abstract class TaskRepository {
   /// Edit an existing TaskModel's fields.
   Future<Either<Failure, void>> editTask(
       String taskId, Map<String, dynamic> updates);
+
+  /// Revert a completed task via activity ID.
+  Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
+      String activityId);
 }

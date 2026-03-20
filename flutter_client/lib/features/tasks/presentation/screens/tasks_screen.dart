@@ -17,14 +17,13 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
-import 'package:homesync_client/shared/widgets/schedule_dialog.dart' show ScheduleDialog, TaskRepeatMode;
+import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
+    show ScheduleDialog, TaskRepeatMode;
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
+import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TasksScreen — Riverpod + Realtime
-// ─────────────────────────────────────────────────────────────────────────────
 
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
@@ -33,16 +32,20 @@ class TasksScreen extends ConsumerStatefulWidget {
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProviderStateMixin {
+class _TasksScreenState extends ConsumerState<TasksScreen>
+    with SingleTickerProviderStateMixin {
   RealtimeChannel? _tasksChannel;
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchOpen = false;
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('es', EsMessages());
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Sync tab controller with provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final isCalendar = ref.read(taskViewModeProvider);
@@ -66,7 +69,25 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
   void dispose() {
     _tasksChannel?.unsubscribe();
     _tabController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    final nextValue = !_isSearchOpen;
+    setState(() => _isSearchOpen = nextValue);
+    if (nextValue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _searchFocusNode.requestFocus();
+        }
+      });
+    } else {
+      _searchController.clear();
+      ref.read(taskSearchQueryProvider.notifier).setQuery('');
+      _searchFocusNode.unfocus();
+    }
   }
 
   Future<void> _setupRealtime() async {
@@ -74,7 +95,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null || !mounted) return;
 
-    _tasksChannel = ref.read(supabaseClientProvider)
+    _tasksChannel = ref
+        .read(supabaseClientProvider)
         .channel('tasks_screen:$householdId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -93,8 +115,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
         )
         .subscribe();
   }
-
-  // ── Actions ────────────────────────────────────────────────────────────────
 
   void _showScheduleDialog(TaskModel task) {
     final members = ref
@@ -130,7 +150,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
                 .read(tasksProvider.notifier)
                 .updateSchedule(task, recurrenceType);
             if (mounted) {
-              _showSnack('Frecuencia actualizada ✓', AppColors.accentGreen);
+              _showSnack('Frecuencia actualizada', AppColors.accentGreen);
             }
           } catch (e) {
             if (mounted) _showSnack('Error: $e', AppColors.error);
@@ -146,8 +166,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Eliminar tarea?'),
-        content: Text('Se eliminará "${task.title}"'),
+        title: const Text('Eliminar tarea?'),
+        content: Text('Se eliminara "${task.title}"'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -190,46 +210,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => EditTaskSheet(task : task),
+      builder: (context) => EditTaskSheet(task: task),
     );
 
     if (result == true) {
       // Updates handled via silentRefresh or state update
-    }
-  }
-
-  Future<void> _completeTask(TaskModel task) async {
-    try {
-      final result = await ref.read(tasksProvider.notifier).completeTask(task);
-      if (mounted && result != null) {
-        final data = result['data'] as Map<String, dynamic>? ?? result;
-        final xp = data['xp_earned'] ?? task.xpReward;
-        final coins = data['coins_earned'] ?? task.coinReward;
-        _showSnack(
-          '⭐ ¡Ganaste $xp XP y $coins coins!',
-          AppColors.accentTeal,
-        );
-      }
-    } catch (e) {
-      if (mounted) _showSnack('Error al completar: $e', AppColors.error);
-    }
-  }
-
-  Future<void> _verifyTask(TaskModel task) async {
-    try {
-      await ref.read(tasksProvider.notifier).verifyTask(task);
-      if (mounted) _showSnack('Tarea verificada ✓', AppColors.accentGreen);
-    } catch (e) {
-      if (mounted) _showSnack('Error: $e', AppColors.error);
-    }
-  }
-
-  Future<void> _objectTask(TaskModel task) async {
-    try {
-      await ref.read(tasksProvider.notifier).objectTask(task);
-      if (mounted) _showSnack('Tarea objetada', AppColors.warning);
-    } catch (e) {
-      if (mounted) _showSnack('Error: $e', AppColors.error);
     }
   }
 
@@ -246,111 +231,74 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     );
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  Widget _buildTabShell() {
+    return AppSegmentedTabs(
+      controller: _tabController,
+      labels: const ['Lista', 'Calendario'],
+      padding: const EdgeInsets.all(6),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(taskViewModeProvider, (previous, isCalendar) {
+      final targetIndex = isCalendar ? 1 : 0;
+      if (_tabController.index != targetIndex) {
+        _tabController.animateTo(targetIndex);
+      }
+    });
+
+    final theme = context.theme;
     final filteredAsync = ref.watch(filteredTasksProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
-    final currentUserId = ref.read(currentUserIdProvider);
     final activeCatsAsync = ref.watch(activeCategoriesProvider);
 
     final members = membersAsync.maybeWhen(
       data: (m) => m,
       orElse: () => <MemberModel>[],
     );
-
-
-
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
+      backgroundColor: theme.background,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.only(bottom: 20),
         child: FloatingActionButton.extended(
           heroTag: null,
           onPressed: _showCreateTaskDialog,
-          backgroundColor: AppColors.primary,
+          backgroundColor: theme.primary,
+          elevation: 4,
+          extendedPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
           label: const Text(
             'Nueva tarea',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15),
           ),
         ).animateScaleIn(delay: 400),
       ),
       body: Column(
         children: [
-          // Premium Tab Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              border: Border(
-                bottom: BorderSide(
-                  color: AppColors.divider.withValues(alpha: 0.1),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              dividerColor: Colors.transparent,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary.withValues(alpha: 0.6),
-              indicatorSize: TabBarIndicatorSize.label,
-              overlayColor: WidgetStateProperty.all(Colors.transparent),
-              indicator: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppColors.primary,
-                    width: 3.5,
-                  ),
-                ),
-              ),
-              labelPadding: const EdgeInsets.only(top: 12, bottom: 8),
-              indicatorPadding: const EdgeInsets.symmetric(horizontal: 16),
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-                letterSpacing: -0.4,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-              ),
-              tabs: const [
-                Tab(text: 'Tus Tareas'),
-                Tab(text: 'Semana'),
-              ],
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: _buildTabShell(),
           ),
-
-          // ── Content ──────────────────────────────────────────────────────
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
                 // TASK LIST TAB
                 filteredAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                  loading: () => const AppLoadingState(
+                    message: 'Cargando tareas...',
                   ),
-                  error: (e, _) => Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline,
-                            size: 48, color: AppColors.error),
-                        const SizedBox(height: 16),
-                        const Text('Error al cargar tareas',
-                            style: TextStyle(color: AppColors.textSecondary)),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () => ref.invalidate(tasksProvider),
-                          child: const Text('Reintentar'),
-                        ),
-                      ],
-                    ),
+                  error: (e, _) => AppErrorState(
+                    message: 'No pudimos cargar las tareas.',
+                    onRetry: () {
+                      ref.invalidate(tasksProvider);
+                      ref.invalidate(categoriesProvider);
+                    },
                   ),
                   data: (tasks) => RefreshIndicator(
                     onRefresh: () async {
@@ -361,97 +309,173 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
                     child: CustomScrollView(
                       physics: const BouncingScrollPhysics(),
                       slivers: [
-                        // Search bar
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                            child: Consumer(
-                              builder: (context, ref, _) {
-                                return TextField(
-                                  onChanged: (val) => ref
-                                      .read(taskSearchQueryProvider.notifier)
-                                      .setQuery(val),
-                                  decoration: InputDecoration(
-                                    hintText: 'Buscar tarea...',
-                                    hintStyle: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.5)),
-                                    prefixIcon: Icon(Icons.search,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withValues(alpha: 0.5)),
-                                    filled: true,
-                                    fillColor: Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 0, horizontal: 16),
+                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
+                            child: activeCatsAsync.when(
+                              data: (activeCats) {
+                                return categoriesAsync.when(
+                                  data: (catList) {
+                                    final visibleCats = catList
+                                        .where((c) => activeCats.contains(
+                                            AppColors.normaliseCategory(c.id)))
+                                        .toList();
+
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(
+                                          height: 42,
+                                          child: ListView(
+                                            scrollDirection: Axis.horizontal,
+                                            children: [
+                                              _buildSearchChip()
+                                                  .animateStaggered(0),
+                                              _buildCategoryChip(
+                                                null,
+                                                'Todas',
+                                                AppColors.textSecondary,
+                                              ).animateStaggered(1),
+                                              ...visibleCats
+                                                  .asMap()
+                                                  .entries
+                                                  .map(
+                                                    (e) => _buildCategoryChip(
+                                                      e.value.id,
+                                                      e.value.name,
+                                                      AppColors.fromHex(
+                                                          e.value.color),
+                                                    ).animateStaggered(
+                                                        e.key + 2),
+                                                  ),
+                                            ],
+                                          ),
+                                        ),
+                                        AnimatedSize(
+                                          duration:
+                                              const Duration(milliseconds: 220),
+                                          curve: Curves.easeOutCubic,
+                                          child: _isSearchOpen
+                                              ? Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 10),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: theme.surface,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      border: Border.all(
+                                                        color: theme.border
+                                                            .withValues(
+                                                                alpha: 0.88),
+                                                      ),
+                                                      boxShadow:
+                                                          theme.cardShadow,
+                                                    ),
+                                                    child: TextField(
+                                                      controller:
+                                                          _searchController,
+                                                      focusNode:
+                                                          _searchFocusNode,
+                                                      textInputAction:
+                                                          TextInputAction
+                                                              .search,
+                                                      onChanged: (val) {
+                                                        ref
+                                                            .read(
+                                                                taskSearchQueryProvider
+                                                                    .notifier)
+                                                            .setQuery(val);
+                                                        setState(() {});
+                                                      },
+                                                      decoration:
+                                                          InputDecoration(
+                                                        hintText:
+                                                            'Buscar tarea o rutina',
+                                                        hintStyle: TextStyle(
+                                                          color:
+                                                              theme.textMuted,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                        prefixIcon: Icon(
+                                                          Icons.search_rounded,
+                                                          color: theme
+                                                              .textSecondary,
+                                                        ),
+                                                        suffixIcon:
+                                                            _searchController
+                                                                    .text
+                                                                    .isNotEmpty
+                                                                ? IconButton(
+                                                                    onPressed:
+                                                                        () {
+                                                                      _searchController
+                                                                          .clear();
+                                                                      ref
+                                                                          .read(taskSearchQueryProvider
+                                                                              .notifier)
+                                                                          .setQuery(
+                                                                              '');
+                                                                      setState(
+                                                                          () {});
+                                                                      _searchFocusNode
+                                                                          .requestFocus();
+                                                                    },
+                                                                    icon: Icon(
+                                                                      Icons
+                                                                          .close_rounded,
+                                                                      color: theme
+                                                                          .textSecondary,
+                                                                    ),
+                                                                  )
+                                                                : null,
+                                                        filled: true,
+                                                        fillColor:
+                                                            Colors.transparent,
+                                                        border:
+                                                            OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(20),
+                                                          borderSide:
+                                                              BorderSide.none,
+                                                        ),
+                                                        contentPadding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          vertical: 14,
+                                                          horizontal: 16,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                              : const SizedBox.shrink(),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                  loading: () => const SizedBox(),
+                                  error: (_, __) => Row(
+                                    children: [
+                                      _buildSearchChip(),
+                                      _buildCategoryChip(
+                                        null,
+                                        'Todas',
+                                        AppColors.textSecondary,
+                                      ),
+                                    ],
                                   ),
                                 );
                               },
+                              loading: () => const SizedBox(),
+                              error: (_, __) => const SizedBox(),
                             ),
                           ).animateEntrance(delay: 100),
-                        ),
-                        // Category chips
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 4, bottom: 8),
-                            child: SizedBox(
-                              height: 50,
-                              child: activeCatsAsync.when(
-                                data: (activeCats) {
-                                  return categoriesAsync.when(
-                                    data: (catList) {
-                                      final visibleCats = catList
-                                          .where((c) => activeCats.contains(
-                                              AppColors.normaliseCategory(c.id)))
-                                          .toList();
-
-                                      return ListView(
-                                        scrollDirection: Axis.horizontal,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 20),
-                                        children: [
-                                          _buildCategoryChip(null, 'Todas', '📋',
-                                                  AppColors.textSecondary)
-                                              .animateStaggered(0),
-                                          ...visibleCats
-                                              .asMap()
-                                              .entries
-                                              .map((e) => _buildCategoryChip(
-                                                    e.value.id,
-                                                    e.value.name,
-                                                    e.value.icon,
-                                                    AppColors.fromHex(
-                                                        e.value.color),
-                                                  ).animateStaggered(e.key + 1)),
-                                        ],
-                                      );
-                                    },
-                                    loading: () => const SizedBox(),
-                                    error: (_, __) => ListView(
-                                      scrollDirection: Axis.horizontal,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20),
-                                      children: [
-                                        _buildCategoryChip(null, 'Todas', '📋',
-                                            AppColors.textSecondary),
-                                      ],
-                                    ),
-                                  );
-                                },
-                                loading: () => const SizedBox(),
-                                error: (_, __) => const SizedBox(),
-                              ),
-                            ),
-                          ),
                         ),
                         // Tasks list
                         SliverPadding(
@@ -475,7 +499,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
                                   orElse: () => [],
                                 ),
                                 members,
-                                currentUserId,
                                 selectedCategories,
                               ),
                             ]),
@@ -490,10 +513,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
                                   const EdgeInsets.fromLTRB(24, 0, 24, 140),
                               child: Center(
                                 child: OutlinedButton.icon(
-                                  onPressed: () =>
-                                      ref.read(tasksProvider.notifier).loadMore(),
+                                  onPressed: () => ref
+                                      .read(tasksProvider.notifier)
+                                      .loadMore(),
                                   icon: const Icon(Icons.add_rounded),
-                                  label: const Text('Cargar más tareas',
+                                  label: const Text('Cargar mas tareas',
                                       style: TextStyle(
                                           fontWeight: FontWeight.w700)),
                                   style: OutlinedButton.styleFrom(
@@ -527,12 +551,67 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     );
   }
 
-  // ── Widgets ────────────────────────────────────────────────────────────────
+  Widget _buildSearchChip() {
+    final theme = context.theme;
+    final hasQuery = _searchController.text.trim().isNotEmpty;
+    final isSelected = _isSearchOpen || hasQuery;
 
+    return GestureDetector(
+      onTap: _toggleSearch,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.primary.withValues(alpha: 0.12)
+              : theme.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected
+                ? theme.primary.withValues(alpha: 0.45)
+                : theme.border,
+            width: isSelected ? 1.4 : 1.1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.primary.withValues(alpha: 0.10),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : theme.cardShadow,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? Icons.close_rounded : Icons.search_rounded,
+              size: 18,
+              color: isSelected ? theme.primary : theme.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              hasQuery ? 'Buscando' : 'Buscar',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: isSelected ? theme.primary : theme.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  Widget _buildCategoryChip(String? id, String name, String icon, Color color) {
+  Widget _buildCategoryChip(String? id, String name, Color color) {
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
-    final isSelected = id == null ? selectedCategories.isEmpty : selectedCategories.contains(AppColors.normaliseCategory(id));
+    final isSelected = id == null
+        ? selectedCategories.isEmpty
+        : selectedCategories.contains(AppColors.normaliseCategory(id));
     final theme = context.theme;
 
     return GestureDetector(
@@ -540,26 +619,28 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
         if (id == null) {
           ref.read(taskCategoryFilterProvider.notifier).clear();
         } else {
-          ref.read(taskCategoryFilterProvider.notifier).toggle(AppColors.normaliseCategory(id));
+          ref
+              .read(taskCategoryFilterProvider.notifier)
+              .toggle(AppColors.normaliseCategory(id));
         }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: 18),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.15) : AppColors.cardLight,
-          borderRadius: BorderRadius.circular(24),
+          color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? color : const Color(0xFFF1F5F9),
-            width: isSelected ? 2.5 : 1.5,
+            color: isSelected ? color.withValues(alpha: 0.45) : theme.border,
+            width: isSelected ? 1.4 : 1.1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 15,
+                    color: color.withValues(alpha: 0.10),
+                    blurRadius: 14,
                     offset: const Offset(0, 6),
                   )
                 ]
@@ -569,17 +650,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              AppColors.getCategoryMaterialIcon(name),
-              color: isSelected ? color : color.withValues(alpha: 0.8),
-              size: 20,
+              AppColors.getCategoryMaterialIcon(id ?? name),
+              color: isSelected ? color : color.withValues(alpha: 0.85),
+              size: 18,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Text(
               name,
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? color : AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                color: isSelected ? color : theme.textPrimary,
               ),
             ),
           ],
@@ -588,53 +669,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     );
   }
 
-
   Widget _buildEmptyState(String? filterStatus) {
-    return Padding(
-      padding: const EdgeInsets.all(60),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              filterStatus == null 
-                  ? Icons.task_alt_rounded 
-                  : Icons.filter_list_off_rounded,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.5),
-            ).animatePulse(),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            filterStatus == null
-                ? '¡Todo despejado!'
-                : 'No hay tareas con estos filtros',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            filterStatus == null
-                ? 'Relájate, no tienes tareas pendientes por ahora.'
-                : 'Prueba a cambiar de categoría o crea una nueva.',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return AppEmptyState(
+      title: filterStatus == null
+          ? 'No hay tareas configuradas'
+          : 'No hay tareas con esos filtros',
+      subtitle: filterStatus == null
+          ? 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.'
+          : 'Proba cambiar la categoria o crear una nueva tarea.',
+      icon: filterStatus == null
+          ? Icons.edit_note_rounded
+          : Icons.filter_list_off_rounded,
     );
   }
 
@@ -642,13 +687,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     List<TaskModel> tasks,
     List<CategoryModel> categories,
     List<MemberModel> members,
-    String? currentUserId,
     Set<String> selectedCategories,
   ) {
-    // 1. Group by marginalised category
-    // Include all tasks that are not yet "verified" (fully finished)
-    final activeTasks = tasks.where((t) => !t.isVerified).toList();
-    final deduped = activeTasks;
+    // 1. Group by category
+    // Show all persisted tasks so users can always edit/program/delete them.
+    final deduped = tasks;
 
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};
@@ -687,12 +730,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
     final widgets = <Widget>[];
     for (final normCat in displayCats) {
       final catTasks = grouped[normCat]!;
-      final catInfo = catLookup[normCat] ?? CategoryModel(
-        id: normCat,
-        name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
-        icon: '🏠',
-        color: '#94A3B8'
-      );
+      final catInfo = catLookup[normCat] ??
+          CategoryModel(
+              id: normCat,
+              name:
+                  normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+              icon: 'home',
+              color: '#94A3B8');
 
       widgets.add(_SectionHeader(
         icon: AppColors.getCategoryMaterialIcon(normCat),
@@ -707,14 +751,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
         return _TaskCard(
           key: ValueKey(task.id),
           task: task,
-          currentUserId: currentUserId,
-          members: members,
           onSchedule: () => _showScheduleDialog(task),
           onEdit: () => _showEditDialog(task),
           onDelete: () => _deleteTask(task),
-          onComplete: () => _completeTask(task),
-          onVerify: () => _verifyTask(task),
-          onObject: () => _objectTask(task),
         ).animateStaggered(index);
       }));
     }
@@ -723,9 +762,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with SingleTickerProv
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Section Header
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final IconData icon;
@@ -743,16 +780,17 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeColor = color ?? AppColors.primary;
-    
+    final theme = context.theme;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 26, 24, 10),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: themeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               icon,
@@ -766,8 +804,8 @@ class _SectionHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary.withValues(alpha: 0.8),
-              letterSpacing: 1.2,
+              color: theme.textPrimary.withValues(alpha: 0.82),
+              letterSpacing: 1.0,
             ),
           ),
           const SizedBox(width: 8),
@@ -794,32 +832,20 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // TaskModel Card (now typed with TaskModel model)
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
-  final String? currentUserId;
-  final List<MemberModel> members;
   final VoidCallback onSchedule;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onComplete;
-  final VoidCallback onVerify;
-  final VoidCallback onObject;
 
   const _TaskCard({
     super.key,
     required this.task,
-    required this.currentUserId,
-    required this.members,
     required this.onSchedule,
     required this.onEdit,
     required this.onDelete,
-    required this.onComplete,
-    required this.onVerify,
-    required this.onObject,
   });
 
   @override
@@ -828,13 +854,6 @@ class _TaskCard extends ConsumerStatefulWidget {
 
 class _TaskCardState extends ConsumerState<_TaskCard> {
   bool _isExpanded = false;
-
-  String _getTimeAgoLabel() {
-    final task = widget.task;
-    if (task.lastCompletedAt == null) return 'Nunca completada';
-    final date = DateTime.tryParse(task.lastCompletedAt!) ?? DateTime.now();
-    return 'Hace ${timeago.format(date, locale: 'es_short')}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -857,20 +876,21 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : AppColors.getCategoryColor(task.category);
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.cardLight,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(22),
         boxShadow: _isExpanded ? theme.modalShadow : theme.cardShadow,
         border: Border.all(
-          color: _isExpanded 
+          color: _isExpanded
               ? categoryColor.withValues(alpha: 0.3)
-              : (task.isOverdue ? AppColors.accentRed.withValues(alpha: 0.3) : const Color(0xFFF1F5F9)),
-          width: 1.5,
+              : (task.isOverdue
+                  ? AppColors.accentRed.withValues(alpha: 0.3)
+                  : theme.border.withValues(alpha: 0.9)),
+          width: _isExpanded ? 1.5 : 1.2,
         ),
       ),
       child: InkWell(
@@ -880,64 +900,77 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           setState(() => _isExpanded = !_isExpanded);
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
                           task.title,
-                          style: const TextStyle(
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            color: theme.textPrimary,
+                            letterSpacing: -0.35,
+                            height: 1.12,
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
+                      ),
+                      if (!_isExpanded && task.xpReward > 0) ...[
+                        const SizedBox(width: 10),
+                        _badge('XP ${task.xpReward}', AppColors.accentGold),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
                           children: [
-                            if (task.isOverdue) ...[
-                              _badge('Vencida', AppColors.accentRed),
-                              const SizedBox(width: 8),
-                            ],
-                            if (task.isPendingApproval) ...[
-                              _badge('Pendiente de aprobación', AppColors.accentGold),
-                              const SizedBox(width: 8),
-                            ],
-                            if (task.lastCompletedAt != null) ...[
-                              _buildLastCompletedAvatar(widget.members, task.completedBy),
-                              const SizedBox(width: 8),
-                            ],
-                            const Icon(Icons.history_rounded,
-                                size: 14, color: AppColors.textMuted),
-                            const SizedBox(width: 4),
-                            Text(
-                              _getTimeAgoLabel(),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            _pill(
+                              icon: task.isRecurring
+                                  ? Icons.event_repeat_rounded
+                                  : Icons.edit_calendar_rounded,
+                              label: task.isRecurring
+                                  ? task.recurrenceLabel
+                                  : 'Sin programar',
+                              color: task.isRecurring
+                                  ? AppColors.primary
+                                  : AppColors.accentPeach,
+                              background: task.isRecurring
+                                  ? AppColors.primary.withValues(alpha: 0.10)
+                                  : AppColors.accentPeach
+                                      .withValues(alpha: 0.12),
                             ),
+                            if (task.isOverdue)
+                              _pill(
+                                icon: Icons.priority_high_rounded,
+                                label: 'Vencida',
+                                color: AppColors.accentRed,
+                                background:
+                                    AppColors.accentRed.withValues(alpha: 0.10),
+                              ),
                           ],
                         ),
+                      ),
+                      if (!_isExpanded && task.coinReward > 0) ...[
+                        const SizedBox(width: 10),
+                        _badge(
+                            'Coins ${task.coinReward}', AppColors.accentGreen),
                       ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Reward badges (fade out when expanded maybe? no, keep it simple)
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: _isExpanded ? 0.0 : 1.0,
-                    child: Visibility(
-                      visible: !_isExpanded,
-                      child: _buildRewardBadges(task),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -948,75 +981,47 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   alignment: Alignment.topCenter,
                   heightFactor: _isExpanded ? 1.0 : 0.0,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
                         const Divider(color: Color(0xFFF1F5F9), height: 1),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (task.isPendingApproval) ...[
-                                if (task.createdById == widget.currentUserId)
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    child: Text(
-                                      'Esperando confirmación de tu pareja ⏳',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontStyle: FontStyle.italic,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  )
-                                else ...[
-                                  _buildActionTilePremium(
-                                    icon: Icons.check_circle_rounded,
-                                    label: 'Aprobar',
-                                    color: AppColors.accentGreen,
-                                    onTap: () => ref
-                                        .read(tasksProvider.notifier)
-                                        .approveTask(task),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _buildActionTilePremium(
-                                    icon: Icons.cancel_rounded,
-                                    label: 'Rechazar',
-                                    color: AppColors.error,
-                                    onTap: () => ref
-                                        .read(tasksProvider.notifier)
-                                        .rejectTask(task),
-                                  ),
-                                ],
-                              ] else ...[
-                                _buildActionTilePremium(
-                                  icon: Icons.edit_rounded,
-                                  label: 'Editar',
-                                  color: AppColors.accentGold,
-                                  onTap: widget.onEdit,
-                                ),
-                                const SizedBox(width: 8),
-                                _buildActionTilePremium(
-                                  icon: Icons.schedule_rounded,
-                                  label: 'Programar',
-                                  color: AppColors.primary,
-                                  onTap: widget.onSchedule,
-                                ),
-                              ],
-                            ],
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildActionTilePremium(
+                                icon: Icons.edit_rounded,
+                                label: 'Editar',
+                                color: AppColors.accentGold,
+                                onTap: widget.onEdit,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildActionTilePremium(
+                                icon: Icons.schedule_rounded,
+                                label: 'Programar',
+                                color: AppColors.primary,
+                                onTap: widget.onSchedule,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildActionTilePremium(
+                                icon: Icons.delete_outline_rounded,
+                                label: 'Eliminar',
+                                color: AppColors.accentRed,
+                                onTap: widget.onDelete,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
@@ -1034,23 +1039,22 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         setState(() => _isExpanded = false);
         onTap();
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.28),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: color,
                 letterSpacing: -0.2,
@@ -1062,71 +1066,51 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     );
   }
 
+  Widget _pill({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color background,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 10,
+              color: color,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _badge(String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           fontSize: 10,
           color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRewardBadges(TaskModel task) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (task.xpReward > 0)
-          _badge('⭐ ${task.xpReward} XP', AppColors.accentGold),
-        if (task.coinReward > 0) ...[
-          const SizedBox(height: 4),
-          _badge('🪙 ${task.coinReward}', AppColors.accentGreen),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildLastCompletedAvatar(List<MemberModel> members, String? userId) {
-    if (userId == null) return const SizedBox.shrink();
-    
-    final member = members.firstWhere(
-      (m) => m.userId == userId,
-      orElse: () => members.firstWhere(
-        (m) => m.id == userId,
-        orElse: () => MemberModel(
-          id: '',
-          userId: userId,
-          householdId: '',
-          role: 'member',
-          joinedAt: DateTime.now(),
-          fullName: 'Usuario',
-        ),
-      ),
-    );
-
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.15),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          member.initial,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
-            color: AppColors.primary,
-          ),
+          letterSpacing: -0.1,
         ),
       ),
     );
