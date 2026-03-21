@@ -84,6 +84,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return AnimatedBuilder(
       animation: _tabController,
       builder: (context, child) {
+        final theme = context.theme;
         String label = 'Nuevo Movimiento';
         VoidCallback onPressed = () => _showExpenseSheet();
 
@@ -100,21 +101,47 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 20),
-          child: FloatingActionButton.extended(
-            heroTag: 'expenses_fab',
-            onPressed: onPressed,
-            backgroundColor: AppColors.primary,
-            elevation: 4,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-            extendedPadding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-            label: Text(
-              label,
-              style: const TextStyle(
-                  color: Colors.white,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowBase.withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: theme.primary.withValues(alpha: 0.07),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: FloatingActionButton.extended(
+              heroTag: 'expenses_fab',
+              onPressed: onPressed,
+              backgroundColor: theme.surface.withValues(alpha: 0.97),
+              foregroundColor: theme.primary,
+              elevation: 0,
+              highlightElevation: 0,
+              splashColor: theme.primary.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(
+                  color: theme.primary.withValues(alpha: 0.14),
+                ),
+              ),
+              extendedPadding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+              label: Text(
+                label,
+                style: TextStyle(
+                  color: theme.primary,
                   fontWeight: FontWeight.w900,
-                  fontSize: 15),
+                  fontSize: 15,
+                  letterSpacing: -0.2,
+                ),
+              ),
             ),
           ).animateEntrance(),
         );
@@ -706,7 +733,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: theme.background,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -1238,45 +1265,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  Widget _buildMiniStats(String label, num amount, IconData icon, Color color,
-      {CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start}) {
-    return Column(
-      crossAxisAlignment: crossAxisAlignment,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (crossAxisAlignment == CrossAxisAlignment.start)
-              Icon(icon, size: 12, color: color),
-            if (crossAxisAlignment == CrossAxisAlignment.start)
-              const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (crossAxisAlignment == CrossAxisAlignment.end)
-              const SizedBox(width: 4),
-            if (crossAxisAlignment == CrossAxisAlignment.end)
-              Icon(icon, size: 12, color: color),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '\$ ${_formatCurrency(amount)}',
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFeedItemCard(FeedItemModel item) {
     if (item.isRealExpense) {
       final expenses = ref.read(expenseControllerProvider).valueOrNull;
@@ -1752,8 +1740,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (goals) {
-        if (goals.isEmpty)
-          return _buildEmptyState('No hay metas activas aún', icon: '🎯');
+        if (goals.isEmpty) {
+          return _buildEmptyState('No hay metas activas aun', icon: '??');
+        }
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(savingsGoalsProvider),
@@ -2429,3 +2418,4 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 }
+
