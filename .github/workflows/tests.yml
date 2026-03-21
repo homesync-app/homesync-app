@@ -20,7 +20,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: "3.27.0"
+          flutter-version: "3.29.0"
           cache: true
 
       - name: Get dependencies
@@ -41,7 +41,7 @@ jobs:
       - name: Analyze code
         run: |
           cd flutter_client
-          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+          flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Build APK (validation only - debug)
         run: |
