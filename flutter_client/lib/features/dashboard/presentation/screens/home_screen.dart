@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -155,25 +156,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showQuickActionMenu(householdId),
-          backgroundColor: theme.primary,
-          elevation: 6,
-          extendedPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-          icon: const Icon(Icons.add_rounded, color: Colors.white, size: 17),
-          label: const Text(
-            'Nueva Accion',
-            style: TextStyle(
-              color: Colors.white,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowBase.withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: theme.primary.withValues(alpha: 0.07),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: FloatingActionButton.extended(
+            onPressed: () => _showQuickActionMenu(householdId),
+            backgroundColor: theme.surface.withValues(alpha: 0.97),
+            foregroundColor: theme.primary,
+            elevation: 0,
+            highlightElevation: 0,
+            splashColor: theme.primary.withValues(alpha: 0.08),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            extendedPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+            icon: Icon(
+              Icons.add_rounded,
+              color: theme.primary,
+              size: 17,
+            ),
+            label: Text(
+              'Nueva Accion',
+              style: TextStyle(
+                color: theme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                letterSpacing: -0.25,
+              ),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: theme.primary.withValues(alpha: 0.14),
+              ),
+            ),
+            extendedTextStyle: TextStyle(
+              color: theme.primary,
               fontWeight: FontWeight.w800,
               fontSize: 14,
               letterSpacing: -0.25,
             ),
           ),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ).animateScaleIn(delay: 600),
+        )
+            .animate(delay: 600.ms)
+            .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)
+            .scale(
+              begin: const Offset(0.96, 0.96),
+              end: const Offset(1, 1),
+              duration: 420.ms,
+              curve: Curves.easeOutBack,
+            ),
       ),
     );
   }
@@ -188,7 +232,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildHeader(AppThemeColors theme) {
     final membersAsync = ref.watch(householdMembersProvider);
-    final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
     final sortedMembers = [...members]..sort((a, b) {
@@ -202,14 +245,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final partnerMember = sortedMembers
         .where((member) => member.userId != currentUserId)
         .firstOrNull;
-    double balance = 0;
-    expenseBalancesAsync.whenData((balances) {
-      final mine = balances.where((b) => b.userId == currentUserId).firstOrNull;
-      if (mine != null) {
-        balance = mine.balance;
-      }
-    });
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(2, 2, 2, 2),
       child: Column(
@@ -242,12 +277,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               _buildProfileAvatar(currentMember).animateScaleIn(delay: 70),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 16),
           _buildHomeWelcome(
             theme: theme,
             partnerMember: partnerMember,
-            balance: balance,
-          ).animateEntrance(delay: 110),
+          ),
         ],
       ),
     );
@@ -256,25 +290,175 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildHomeWelcome({
     required AppThemeColors theme,
     required dynamic partnerMember,
-    required double balance,
   }) {
-    final accentColor = balance < -0.01 ? AppColors.accentOrange : AppColors.sage;
+    final partnerFirstName = _firstName(partnerMember?.displayName);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, right: 78),
-      child: Text.rich(
-        _buildHomeSummarySpan(
-          theme: theme,
-          accentColor: accentColor,
-          partnerName: partnerMember?.displayName,
-        ),
-        style: TextStyle(
-          color: theme.textSecondary,
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          height: 1.34,
-          letterSpacing: -0.2,
-        ),
+    return SizedBox(
+      width: double.infinity,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: -10,
+            top: 6,
+            child: IgnorePointer(
+              child: Container(
+                width: 136,
+                height: 86,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primaryLight.withValues(alpha: 0.22),
+                      AppColors.primaryLight.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 18,
+            top: 10,
+            child: IgnorePointer(
+              child: Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.accentGold.withValues(alpha: 0.12),
+                      AppColors.accentGold.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 2, top: 2, bottom: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Todo lo importante',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.55,
+                    height: 1.02,
+                  ),
+                )
+                    .animate()
+                    .fadeIn(
+                      duration: 360.ms,
+                      delay: 120.ms,
+                      curve: Curves.easeOutCubic,
+                    )
+                    .slideY(
+                      begin: 0.18,
+                      end: 0,
+                      duration: 420.ms,
+                      delay: 120.ms,
+                      curve: Curves.easeOutCubic,
+                    ),
+                const SizedBox(height: 2),
+                Text(
+                  'del hogar',
+                  style: TextStyle(
+                    color: theme.textPrimary.withValues(alpha: 0.72),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.55,
+                    height: 1.02,
+                  ),
+                )
+                    .animate()
+                    .fadeIn(
+                      duration: 360.ms,
+                      delay: 180.ms,
+                      curve: Curves.easeOutCubic,
+                    )
+                    .slideY(
+                      begin: 0.18,
+                      end: 0,
+                      duration: 420.ms,
+                      delay: 180.ms,
+                      curve: Curves.easeOutCubic,
+                    ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 1.5,
+                        decoration: BoxDecoration(
+                          color: theme.primary.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'con',
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.12,
+                        ),
+                      ),
+                      if (partnerFirstName != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          partnerFirstName,
+                          style: TextStyle(
+                            color: theme.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.15,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.favorite_rounded,
+                          size: 11,
+                          color: AppColors.accentOrange.withValues(alpha: 0.84),
+                        ),
+                      ] else ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          'tu pareja',
+                          style: TextStyle(
+                            color: theme.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.15,
+                          ),
+                        ),
+                      ],
+                    ],
+                  )
+                      .animate()
+                      .fadeIn(
+                        duration: 320.ms,
+                        delay: 250.ms,
+                        curve: Curves.easeOutCubic,
+                      )
+                      .slideX(
+                        begin: -0.06,
+                        end: 0,
+                        duration: 360.ms,
+                        delay: 250.ms,
+                        curve: Curves.easeOutCubic,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -310,111 +494,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             color: theme.primary,
             fontWeight: FontWeight.w900,
           ),
-        ),
-      ],
-    );
-  }
-
-  TextSpan _buildHomeSummarySpan({
-    required AppThemeColors theme,
-    required Color accentColor,
-    required String? partnerName,
-  }) {
-    final partnerFirstName = _firstName(partnerName);
-    if (partnerFirstName == null) {
-      return TextSpan(
-        children: [
-          TextSpan(
-            text: 'Aca vive ',
-            style: TextStyle(color: theme.textSecondary),
-          ),
-          TextSpan(
-            text: 'todo lo que hace a tu hogar',
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          TextSpan(
-            text: '.',
-            style: TextStyle(color: theme.textSecondary),
-          ),
-        ],
-      );
-    }
-    return TextSpan(
-      children: [
-        TextSpan(
-          text: 'Aca vive ',
-          style: TextStyle(
-            color: theme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        TextSpan(
-          text: 'lo importante de tu hogar',
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        TextSpan(
-          text: ' con ',
-          style: TextStyle(
-            color: theme.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Container(
-            margin: const EdgeInsets.only(left: 1),
-            padding: const EdgeInsets.fromLTRB(9, 4, 9, 4),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryLight.withValues(alpha: 0.55),
-                  const Color(0xFFFFF2EA).withValues(alpha: 0.92),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  partnerFirstName,
-                  style: TextStyle(
-                    color: theme.primary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.2,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.favorite_rounded,
-                  size: 8,
-                  color: accentColor.withValues(alpha: 0.85),
-                ),
-                Transform.translate(
-                  offset: const Offset(-1.5, -1.5),
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    size: 6.5,
-                    color: AppColors.primary.withValues(alpha: 0.55),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        TextSpan(
-          text: '.',
-          style: TextStyle(color: theme.textSecondary),
         ),
       ],
     );
@@ -477,12 +556,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return trimmed.split(' ').first;
   }
 
+  Widget _buildSectionAction(
+    AppThemeColors theme, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.primary.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+              letterSpacing: -0.1,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.arrow_forward_rounded,
+            size: 13,
+            color: theme.primary.withValues(alpha: 0.82),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
     final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
-
     final coins =
         balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
@@ -529,7 +642,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Lo que necesita la casa hoy',
+              'Hoy en casa',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
@@ -537,25 +650,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 letterSpacing: -0.7,
               ),
             ),
-            TextButton(
-              onPressed: () {
+            _buildSectionAction(
+              theme,
+              label: 'Ver Semana',
+              onTap: () {
                 ref.read(taskViewModeProvider.notifier).setCalendar();
                 ref.read(bottomNavIndexProvider.notifier).setIndex(1);
               },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-                child: Text(
-                  'Ver Semana',
-                  style: TextStyle(
-                    color: theme.primary.withValues(alpha: 0.86),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    letterSpacing: -0.1,
-                  ),
-                ),
             ),
           ],
         ),
@@ -771,22 +872,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 letterSpacing: -0.7,
               ),
             ),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-                child: Text(
-                  'Ver todo',
-                  style: TextStyle(
-                    color: theme.primary.withValues(alpha: 0.86),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    letterSpacing: -0.1,
-                  ),
-                ),
+            _buildSectionAction(
+              theme,
+              label: 'Ver todo',
+              onTap: () {},
             ),
           ],
         ),
@@ -999,7 +1088,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Container(
       key: key,
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      margin: const EdgeInsets.only(bottom: 14),
       child: AnimatedPress(
         onTap: isClickable
             ? () async => _handleActivityTap(
@@ -1011,15 +1100,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 1),
+                  padding: const EdgeInsets.only(top: 2),
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      color: theme.surface,
                       border: Border.all(
-                        color: accentColor.withValues(alpha: 0.22),
+                        color: theme.border.withValues(alpha: 0.32),
                         width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.shadowBase.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: CustomUserAvatar(
                       name: userName,
@@ -1035,8 +1132,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
+                        spacing: 7,
+                        runSpacing: 5,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text.rich(
@@ -1048,16 +1145,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     fontWeight: FontWeight.w900,
                                     fontSize: 15,
                                     color: theme.textPrimary,
-                                    letterSpacing: -0.25,
+                                    letterSpacing: -0.3,
                                     height: 1.1,
                                   ),
                                 ),
                                 TextSpan(
                                   text: ' ${_humanizeActivityVerb(actionVerb)}',
                                   style: TextStyle(
-                                    color: theme.textSecondary,
+                                    color:
+                                        theme.textSecondary.withValues(alpha: 0.86),
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     height: 1.1,
                                   ),
                                 ),
@@ -1074,9 +1172,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 12,
+                        spacing: 14,
                         runSpacing: 5,
                         children: [
                           _activityMetaText(
@@ -1119,11 +1217,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             if (!isLast)
               Padding(
-                padding: const EdgeInsets.only(left: 40, top: 10),
+                padding: const EdgeInsets.only(left: 42, top: 12),
                 child: Container(
                   height: 1,
-                  margin: const EdgeInsets.only(right: 8),
-                  color: theme.border.withValues(alpha: 0.22),
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        accentColor.withValues(alpha: 0.18),
+                        theme.border.withValues(alpha: 0.16),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -1140,14 +1246,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 5),
+        Icon(icon, size: 12, color: color.withValues(alpha: 0.78)),
+        const SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
-            color: color.withValues(alpha: 0.92),
+            color: color.withValues(alpha: 0.84),
             fontSize: 10,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             letterSpacing: 0.0,
           ),
         ),

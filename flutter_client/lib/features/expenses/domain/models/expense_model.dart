@@ -95,7 +95,11 @@ class ExpenseModel {
       payerEmail: payerMap?['email'] as String?,
       payerFullName: payerMap?['full_name'] as String?,
       payerAvatarUrl: payerMap?['avatar_url'] as String?,
-      isShared: map['is_shared'] as bool? ?? true,
+      isShared: (map['is_shared'] as bool?) ??
+          !({
+            'personal',
+            'gift'
+          }.contains((map['split_type'] as String?)?.toLowerCase())),
       type: map['type'] as String? ?? 'expense',
       splitType: map['split_type'] as String?,
       description: map['description'] as String?,

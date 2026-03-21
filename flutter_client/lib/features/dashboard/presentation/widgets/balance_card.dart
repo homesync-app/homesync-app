@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:intl/intl.dart';
 
@@ -40,6 +40,7 @@ class BalanceCard extends ConsumerWidget {
     final String balanceMessage = isBalanced
         ? 'Balance en calma'
         : (isNegative ? 'Hace falta equilibrar' : 'Quedo a tu favor');
+    const String balanceDetail = 'El amor es lo unico que cuenta hoy.';
 
     return Container(
       width: double.infinity,
@@ -75,8 +76,8 @@ class BalanceCard extends ConsumerWidget {
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.7,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.25,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
@@ -155,48 +156,117 @@ class BalanceCard extends ConsumerWidget {
                       .animateScaleIn()
               ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Container(height: 1, color: theme.border.withValues(alpha: 0.4)),
             const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: AnimatedPress(
-                    onTap: () {
-                      ref.read(parejaTabIndexProvider.notifier).setIndex(0);
-                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
-                    },
-                    child: _buildCleanMetric(
-                      context,
-                      label: 'Experiencia',
-                      value:
-                          '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
-                      icon: Icons.star_rounded,
-                      color: const Color(0xFFE8943A),
+            if (isBalanced)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.border.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
-                Container(
-                    width: 1,
-                    height: 32,
-                    color: theme.border.withValues(alpha: 0.4)),
-                Expanded(
-                  child: AnimatedPress(
-                    onTap: () {
-                      ref.read(parejaTabIndexProvider.notifier).setIndex(1);
-                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
-                    },
-                    child: _buildCleanMetric(
-                      context,
-                      label: 'Coins',
-                      value: NumberFormat.decimalPattern('es_AR').format(coins),
-                      icon: Icons.monetization_on_rounded,
-                      color: AppColors.sage,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        balanceDetail,
+                        style: TextStyle(
+                          color: theme.textPrimary.withValues(alpha: 0.78),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.15,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: AppColors.sage.withValues(alpha: 0.55),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.favorite_rounded,
+                          size: 10,
+                          color: AppColors.accentOrange.withValues(alpha: 0.72),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(top: 10),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.border.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AnimatedPress(
+                        onTap: () {
+                          ref.read(parejaTabIndexProvider.notifier).setIndex(0);
+                          ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                        },
+                        child: _buildCleanMetric(
+                          context,
+                          label: 'Experiencia',
+                          value:
+                              '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
+                          icon: Icons.star_rounded,
+                          color: const Color(0xFFE8943A),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: theme.border.withValues(alpha: 0.4),
+                    ),
+                    Expanded(
+                      child: AnimatedPress(
+                        onTap: () {
+                          ref.read(parejaTabIndexProvider.notifier).setIndex(1);
+                          ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                        },
+                        child: _buildCleanMetric(
+                          context,
+                          label: 'Coins',
+                          value: NumberFormat.decimalPattern('es_AR')
+                              .format(coins),
+                          icon: Icons.monetization_on_rounded,
+                          color: AppColors.sage,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -212,7 +282,7 @@ class BalanceCard extends ConsumerWidget {
   }) {
     final theme = context.theme;
     return Container(
-      color: Colors.transparent, // allows the entire area to be tap-able
+      color: Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -250,8 +320,11 @@ class BalanceCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(width: AppSpacing.xs),
-          Icon(Icons.chevron_right_rounded,
-              size: 16, color: theme.textMuted.withValues(alpha: 0.5)),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 16,
+            color: theme.textMuted.withValues(alpha: 0.5),
+          ),
         ],
       ),
     );

@@ -26,12 +26,53 @@ class SupabaseExpenseRepository
 
   bool get _isOnline => _ref.read(isOnlineProvider);
 
+  bool _isPrivateSplitType(String? splitType) {
+    final value = splitType?.toLowerCase();
+    return value == 'personal' || value == 'gift';
+  }
+
+  bool _isVisibleExpenseRowForUser(Map<String, dynamic> row, String? userId) {
+    if (userId == null) return true;
+
+    final rawIsShared = row['is_shared'];
+    final isShared = rawIsShared is bool
+        ? rawIsShared
+        : !_isPrivateSplitType(row['split_type'] as String?);
+
+    if (isShared) return true;
+
+    final paidBy = row['paid_by']?.toString();
+    final createdBy = row['created_by_id']?.toString();
+    return paidBy == userId || createdBy == userId;
+  }
+
+  bool _isVisibleFeedRowForUser(Map<String, dynamic> row, String? userId) {
+    if (userId == null) return true;
+
+    final recordType = row['record_type']?.toString();
+    final splitType = row['split_type']?.toString();
+    final payerId = row['payer_id']?.toString();
+
+    if (_isPrivateSplitType(splitType)) {
+      return payerId == userId;
+    }
+
+    if (recordType == 'expense') {
+      final rawIsShared = row['is_shared'];
+      if (rawIsShared is bool && !rawIsShared) {
+        return payerId == userId;
+      }
+    }
+
+    return true;
+  }
+
   List<dynamic> _normalizeRpcList(dynamic response) {
     if (response == null) return const [];
     if (response is List) return response;
 
     if (response is Map) {
-      final map = Map<String, dynamic>.from(response as Map);
+      final map = Map<String, dynamic>.from(response);
       for (final key in const ['data', 'result', 'items', 'rows']) {
         final value = map[key];
         if (value is List) return value;
@@ -85,6 +126,7 @@ class SupabaseExpenseRepository
       String householdId) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
+      final currentUserId = _client.auth.currentUser?.id;
       final response = await _client.rpc(
         'get_filtered_expenses',
         params: {
@@ -98,7 +140,10 @@ class SupabaseExpenseRepository
 
       final rows = _normalizeRpcList(response);
       final expenses = rows
-          .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .where((row) => _isVisibleExpenseRowForUser(row, currentUserId))
+          .map(ExpenseModel.fromJson)
           .toList();
       sw.stop();
       log.i(
@@ -115,6 +160,7 @@ class SupabaseExpenseRepository
       String householdId) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
+      final currentUserId = _client.auth.currentUser?.id;
       final response = await _client.rpc(
         'get_combined_feed',
         params: {
@@ -126,7 +172,10 @@ class SupabaseExpenseRepository
 
       final rows = _normalizeRpcList(response);
       final feed = rows
-          .map((e) => FeedItemModel.fromJson(e as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .where((row) => _isVisibleFeedRowForUser(row, currentUserId))
+          .map(FeedItemModel.fromJson)
           .toList();
       sw.stop();
       log.i(
@@ -428,7 +477,7 @@ class SupabaseExpenseRepository
           // - legacy SQL may return UUID directly
           // - newer SQL may return { success, expense_id, message }
           if (response is Map) {
-            final result = Map<String, dynamic>.from(response as Map);
+            final result = Map<String, dynamic>.from(response);
             if (result['success'] == false) {
               throw ServerFailure(
                 result['message'] as String? ?? 'Error al pagar gasto planeado',

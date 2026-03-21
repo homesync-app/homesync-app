@@ -16,6 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: SQL Quality Gate
+        run: |
+          python3 scripts/sql_quality_gate.py
+
+      - name: CI Guard
+        run: |
+          python3 scripts/ci_guard.py
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -41,7 +49,7 @@ jobs:
       - name: Analyze code
         run: |
           cd flutter_client
-          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+          flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Build APK (validation only - debug)
         run: |
