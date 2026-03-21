@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -169,10 +169,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   // -- Build -----------------------------------------------------------------
 
   Widget _buildSectionHeader(String title, String sectionId,
-      {bool isAccent = false,
-      String? emoji,
-      int? count,
-      Color? accentColor}) {
+      {bool isAccent = false, String? emoji, int? count, Color? accentColor}) {
     final isExpanded = _expandedSections.contains(sectionId);
     final highlightColor = accentColor ??
         (isAccent ? AppColors.accentGreen : AppColors.textPrimary);
@@ -301,8 +298,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   '$count',
                   style: TextStyle(
                     color: color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -436,16 +433,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 InkWell(
                   onTap: () =>
                       _handleSelection(_inputController.text, pending, done),
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: const BoxDecoration(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
                       color: AppColors.accentGreen,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accentGreen.withValues(alpha: 0.24),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: const Icon(Icons.add_rounded,
-                        color: Colors.white, size: 30),
+                        color: Colors.white, size: 28),
                   ),
                 ),
               ],
@@ -495,7 +499,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         if (pending.isEmpty)
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
+                              padding:
+                                  const EdgeInsets.fromLTRB(24, 10, 24, 28),
                               child: TweenAnimationBuilder<double>(
                                 duration: const Duration(seconds: 1),
                                 tween: Tween(begin: 0.0, end: 1.0),
@@ -546,7 +551,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       decoration: BoxDecoration(
                                         color: AppColors.primary
                                             .withValues(alpha: 0.10),
-                                        borderRadius: BorderRadius.circular(999),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
                                       ),
                                       child: Text(
                                         done.isEmpty
@@ -762,8 +768,8 @@ class _PredefinedItemTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isPending
-                ? AppColors.divider.withValues(alpha: 0.28)
-                : catColor.withValues(alpha: 0.18),
+                ? AppColors.divider.withValues(alpha: 0.40)
+                : catColor.withValues(alpha: 0.28),
             width: 1.2,
           ),
           boxShadow: [
@@ -848,8 +854,8 @@ class _ShoppingItemTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isCompleted
-                ? AppColors.divider.withValues(alpha: 0.45)
-                : catColor.withValues(alpha: 0.22),
+                ? AppColors.divider.withValues(alpha: 0.52)
+                : catColor.withValues(alpha: 0.32),
             width: isCompleted ? 1.0 : 1.4,
           ),
           boxShadow: isCompleted
@@ -925,5 +931,3 @@ class _ShoppingItemTile extends StatelessWidget {
     );
   }
 }
-
-

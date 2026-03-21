@@ -52,7 +52,8 @@ class AIFaceoffWidget extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.sage.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
@@ -106,7 +107,7 @@ class AIFaceoffWidget extends StatelessWidget {
               color: theme.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              height: 1.35,
+              height: 1.45,
             ),
           ),
           const SizedBox(height: 20),
@@ -127,7 +128,9 @@ class AIFaceoffWidget extends StatelessWidget {
                 child: _competitorCard(
                   context: context,
                   player: partnerData,
-                  xp: leader['user_id'] == currentUserId ? challengerXp : leaderXp,
+                  xp: leader['user_id'] == currentUserId
+                      ? challengerXp
+                      : leaderXp,
                   isLeader: false,
                   isCurrentUser: false,
                   showExactXp: false,
@@ -346,8 +349,8 @@ class AIFaceoffWidget extends StatelessWidget {
     final today = DateTime.now().weekday;
     final remaining = 7 - today;
     if (remaining <= 0) return 'Cierra hoy';
-    if (remaining == 1) return '1 dia restante';
-    return '$remaining dias restantes';
+    if (remaining == 1) return '1 día restante';
+    return '$remaining días restantes';
   }
 
   String _firstName(dynamic rawName) {

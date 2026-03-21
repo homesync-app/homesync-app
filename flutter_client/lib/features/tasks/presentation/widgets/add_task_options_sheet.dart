@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'create_task_dialog.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+
+import 'create_task_dialog.dart';
 
 class AddTaskOptionsSheet extends ConsumerStatefulWidget {
   final List<MemberModel> members;
@@ -33,12 +35,14 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   bool _isLoading = true;
   final Set<String> _addingIds = {};
   final Set<String> _addedIds = {};
-  String? _selectedCategory; // null = show all
+  String? _selectedCategory;
+
+  List<CategoryModel> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchTemplates(); // only templates - categories come from categoriesProvider
+    _fetchTemplates();
   }
 
   Future<void> _fetchTemplates() async {
@@ -50,17 +54,19 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _addTemplate(TaskTemplate template) async {
     if (_addingIds.contains(template.title)) return;
+
     setState(() {
       _addingIds.add(template.title);
       _addedIds.add(template.title);
     });
+
     try {
       await ref.read(tasksProvider.notifier).createTask({
         'title': template.title,
@@ -73,16 +79,21 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'recurrenceType': null,
         'isTemplate': true,
       });
+
       if (!mounted) return;
-      // Task successfully added to server (and silentRefresh called in notifier)
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(child: Text('"${template.title}" añadida')),
-          ]),
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text('"${template.title}" anadida')),
+            ],
+          ),
           backgroundColor: AppColors.accentGreen,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
@@ -93,7 +104,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     } finally {
       if (mounted) setState(() => _addingIds.remove(template.title));
@@ -105,83 +119,97 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     final tasksAsync = ref.watch(tasksProvider);
     final dbCategoriesAsync = ref.watch(categoriesProvider);
 
-    // Categories from DB via Riverpod - single source of truth
     final dbCategories = dbCategoriesAsync.maybeWhen(
-          data: (list) => list,
-          orElse: () => <CategoryModel>[],
-        );
-    _categories = dbCategories; // expose to helpers
+      data: (list) => list,
+      orElse: () => <CategoryModel>[],
+    );
+    _categories = dbCategories;
 
-    // Templates - Filter out tasks that are already active in the household
-    // We must wait for tasks to be loaded to accurately filter
     final currentTasks = tasksAsync.value ?? [];
     final activeKeys = currentTasks
-        .where((t) => !t.isVerified) // verified means done/archived
-        .map((t) => "${t.title.toLowerCase().trim()}|${(t.category ?? 'none').toLowerCase().trim()}")
+        .where((task) => !task.isVerified)
+        .map(
+          (task) =>
+              "${task.title.toLowerCase().trim()}|${(task.category ?? 'none').toLowerCase().trim()}",
+        )
         .toSet();
 
-    final availableTemplates = _templates.where((t) {
-      final key = "${t.title.toLowerCase().trim()}|${t.categoryId.toLowerCase().trim()}";
+    final availableTemplates = _templates.where((template) {
+      final key =
+          "${template.title.toLowerCase().trim()}|${template.categoryId.toLowerCase().trim()}";
       return !activeKeys.contains(key);
     }).toList();
 
-    // Which categories actually have available templates? (preserves DB sort order)
-    final activeCatIds = availableTemplates.map((t) => t.categoryId).toSet();
+    final activeCatIds = availableTemplates.map((template) => template.categoryId).toSet();
     final displayCategories =
-        dbCategories.where((c) => activeCatIds.contains(c.id)).toList();
+        dbCategories.where((category) => activeCatIds.contains(category.id)).toList();
 
-    // Filter by selected category
     final filtered = _selectedCategory == null
         ? availableTemplates
         : availableTemplates
-            .where((t) => t.categoryId == _selectedCategory)
+            .where((template) => template.categoryId == _selectedCategory)
             .toList();
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: context.theme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 28,
+            offset: const Offset(0, -8),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          // -- Handle -------------------------------------------------------
           const SizedBox(height: 12),
           Container(
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2)),
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          const SizedBox(height: 20),
-          // -- Header -------------------------------------------------------
+          const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Añadir Tarea',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.w800)),
-                    Text(
-                      _addedIds.isEmpty
-                          ? 'Elige sugerencias o crea una nueva'
-                          : '${_addedIds.length} tarea${_addedIds.length > 1 ? 's' : ''} añadida${_addedIds.length > 1 ? 's' : ''}',
-                      style: TextStyle(
-                        color: _addedIds.isEmpty
-                            ? AppColors.textSecondary
-                            : AppColors.accentGreen,
-                        fontSize: 13,
-                        fontWeight: _addedIds.isEmpty
-                            ? FontWeight.normal
-                            : FontWeight.w600,
-                      ),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.14),
                     ),
-                  ],
+                  ),
+                  child: const Icon(
+                    Icons.playlist_add_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Nueva tarea',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context, _addedIds.isNotEmpty),
@@ -190,41 +218,42 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          // -- Category filter chips -------------------------------------
+          const SizedBox(height: 18),
           if (!_isLoading && displayCategories.isNotEmpty)
             SizedBox(
-              height: 44,
+              height: 46,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   _buildCategoryChip(null, 'Todas', null),
-                  ...displayCategories
-                      .map((c) => _buildCategoryChip(c.id, c.name, c)),
+                  ...displayCategories.map(
+                    (category) =>
+                        _buildCategoryChip(category.id, category.name, category),
+                  ),
                 ],
               ),
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Expanded(
             child: (_isLoading || tasksAsync.isLoading)
                 ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary))
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
                 : filtered.isEmpty
                     ? _buildEmpty()
                     : _buildTemplateList(filtered),
           ),
-          // -- Bottom actions --------------------------------------------
           Container(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.theme.background,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 15,
                   offset: const Offset(0, -5),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -236,21 +265,27 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                         context: context,
                         builder: (context) => CreateTaskDialog(
                           members:
-                              widget.members.map((m) => m.toMap()).toList(),
+                              widget.members.map((member) => member.toMap()).toList(),
                         ),
                       );
                       if (result == true && context.mounted) {
                         Navigator.pop(context, true);
                       }
                     },
-                    icon: const Icon(Icons.edit_rounded, color: Colors.white),
+                    icon: const Icon(Icons.edit_rounded),
                     label: const Text('Personalizada'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
                     ),
                   ),
                 ),
@@ -261,11 +296,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     icon: const Icon(Icons.check_rounded, color: Colors.white),
                     label: Text('Listo (${_addedIds.length})'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentGreen,
+                      backgroundColor: AppColors.textPrimary,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ],
@@ -277,10 +313,12 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     );
   }
 
-  Widget _buildCategoryChip(String? id, String name, CategoryModel? cat) {
+  Widget _buildCategoryChip(String? id, String name, CategoryModel? category) {
     final isSelected = _selectedCategory == id;
-    final color =
-        cat != null ? AppColors.fromHex(cat.color) : AppColors.textSecondary;
+    final color = category != null
+        ? AppColors.fromHex(category.color)
+        : AppColors.textSecondary;
+
     return GestureDetector(
       onTap: () => setState(() => _selectedCategory = id),
       child: AnimatedContainer(
@@ -288,14 +326,21 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         margin: const EdgeInsets.only(right: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.12)
-              : const Color(0xFFF8FAFC),
+          color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? color : const Color(0xFFE2E8F0),
-            width: isSelected ? 2 : 1,
+            color: isSelected
+                ? color
+                : AppColors.divider.withValues(alpha: 0.6),
+            width: isSelected ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isSelected ? 0.03 : 0.015),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -303,7 +348,6 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             Icon(
               id == null
                   ? Icons.format_list_bulleted_rounded
-                  // Use cat.id (canonical) for icon, not name
                   : AppColors.getCategoryMaterialIcon(id),
               size: 16,
               color: isSelected ? color : AppColors.textSecondary,
@@ -328,31 +372,34 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.auto_awesome_rounded,
-              size: 64, color: AppColors.primary.withValues(alpha: 0.2)),
+          Icon(
+            Icons.auto_awesome_rounded,
+            size: 64,
+            color: AppColors.primary.withValues(alpha: 0.2),
+          ),
           const SizedBox(height: 20),
-          const Text('¡Ya tienes todas las sugeridas!',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+          const Text(
+            'Ya tienes todas las sugeridas',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          ),
           const SizedBox(height: 8),
-          const Text('Crea una tarea personalizada abajo.',
-              style: TextStyle(color: AppColors.textSecondary)),
+          const Text(
+            'Crea una tarea personalizada abajo.',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
   }
 
-  // Set in build() so helpers can access the provider categories without extra params
-  List<CategoryModel> _categories = [];
-
   Widget _buildTemplateList(List<TaskTemplate> templates) {
     final grouped = <String, List<TaskTemplate>>{};
-    for (final t in templates) {
-      (grouped[t.categoryId] ??= []).add(t);
+    for (final template in templates) {
+      (grouped[template.categoryId] ??= []).add(template);
     }
 
-    // Order by DB sort_order, then any extras
     final orderedCatIds = _categories
-        .map((c) => c.id)
+        .map((category) => category.id)
         .where((id) => grouped.containsKey(id))
         .toList();
     for (final id in grouped.keys) {
@@ -371,16 +418,17 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildSectionHeader(String catId) {
-    final cat = _categories.firstWhere(
-      (c) => c.id == catId,
+    final category = _categories.firstWhere(
+      (item) => item.id == catId,
       orElse: () => CategoryModel(
         id: catId,
         name: AppColors.categoryNames[catId] ?? catId,
-        icon: '📦',
+        icon: 'box',
         color: '#94A3B8',
       ),
     );
-    final color = AppColors.fromHex(cat.color);
+    final color = AppColors.fromHex(category.color);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
       child: Row(
@@ -394,24 +442,25 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Use cat.id (canonical key) for icon lookup
-                Icon(AppColors.getCategoryMaterialIcon(cat.id),
-                    size: 14, color: color),
+                Icon(
+                  AppColors.getCategoryMaterialIcon(category.id),
+                  size: 14,
+                  color: color,
+                ),
                 const SizedBox(width: 6),
                 Text(
-                  cat.name.toUpperCase(),
+                  category.name,
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
                     color: color,
-                    letterSpacing: 1.2,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Divider(color: color.withValues(alpha: 0.2))),
+          Expanded(child: Divider(color: color.withValues(alpha: 0.18))),
         ],
       ),
     );
@@ -421,35 +470,49 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     final isAdding = _addingIds.contains(template.title);
     final isAdded = _addedIds.contains(template.title);
 
-    final cat = _categories.firstWhere(
-      (c) => c.id == template.categoryId,
+    final category = _categories.firstWhere(
+      (item) => item.id == template.categoryId,
       orElse: () => CategoryModel(
-          id: template.categoryId,
-          name: template.categoryId,
-          icon: '📦',
-          color: '#94A3B8'),
+        id: template.categoryId,
+        name: template.categoryId,
+        icon: 'box',
+        color: '#94A3B8',
+      ),
     );
     final color =
-        isAdded ? AppColors.accentGreen : AppColors.fromHex(cat.color);
+        isAdded ? AppColors.accentGreen : AppColors.fromHex(category.color);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isAdded ? 0.05 : 0.04),
-        borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: color.withValues(alpha: isAdded ? 0.3 : 0.12)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: color.withValues(alpha: isAdded ? 0.24 : 0.12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: Container(
-          width: 44, height: 44,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-          // Use cat.id for icon lookup (canonical key)
-          child: Icon(AppColors.getCategoryMaterialIcon(cat.id),
-              color: color, size: 22),
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            AppColors.getCategoryMaterialIcon(category.id),
+            color: color,
+            size: 22,
+          ),
         ),
         title: Text(
           template.title,
@@ -462,27 +525,35 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ),
         subtitle: Row(
           children: [
-            Icon(Icons.star_rounded,
-                size: 13,
-                color: isAdded ? AppColors.textMuted : AppColors.accentGold),
+            Icon(
+              Icons.star_rounded,
+              size: 13,
+              color: isAdded ? AppColors.textMuted : AppColors.accentGold,
+            ),
             const SizedBox(width: 3),
-            Text('${template.xpReward} XP',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        isAdded ? AppColors.textMuted : AppColors.accentGold)),
+            Text(
+              '${template.xpReward} XP',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isAdded ? AppColors.textMuted : AppColors.accentGold,
+              ),
+            ),
             const SizedBox(width: 10),
-            Icon(Icons.monetization_on_rounded,
-                size: 13,
-                color: isAdded ? AppColors.textMuted : AppColors.accentGreen),
+            Icon(
+              Icons.monetization_on_rounded,
+              size: 13,
+              color: isAdded ? AppColors.textMuted : AppColors.accentGreen,
+            ),
             const SizedBox(width: 3),
-            Text('${template.coinReward}',
-                style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        isAdded ? AppColors.textMuted : AppColors.accentGreen)),
+            Text(
+              '${template.coinReward}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isAdded ? AppColors.textMuted : AppColors.accentGreen,
+              ),
+            ),
           ],
         ),
         trailing: isAdded
@@ -492,8 +563,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   color: AppColors.accentGreen.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded,
-                    color: AppColors.accentGreen, size: 18),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: AppColors.accentGreen,
+                  size: 18,
+                ),
               )
             : Container(
                 decoration: BoxDecoration(
@@ -501,7 +575,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                        color: color.withValues(alpha: 0.15), blurRadius: 6)
+                      color: color.withValues(alpha: 0.15),
+                      blurRadius: 6,
+                    ),
                   ],
                 ),
                 child: isAdding
@@ -511,12 +587,16 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: color),
+                            strokeWidth: 2,
+                            color: color,
+                          ),
                         ),
                       )
                     : IconButton(
-                        icon: Icon(Icons.add_circle_outline_rounded,
-                            color: color),
+                        icon: Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: color,
+                        ),
                         onPressed: () => _addTemplate(template),
                       ),
               ),
@@ -524,5 +604,3 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     );
   }
 }
-
-

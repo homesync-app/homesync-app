@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -38,8 +39,16 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) =>
-          ExpenseFormSheet(expense: expense, defaultOnlyMe: defaultOnlyMe),
+      builder: (context) => Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: 0.92,
+          child: ExpenseFormSheet(
+            expense: expense,
+            defaultOnlyMe: defaultOnlyMe,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -563,9 +572,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
         return Container(
           height: MediaQuery.of(context).size.height * 0.9,
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          decoration: BoxDecoration(
+            color: context.theme.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 28,
+                offset: const Offset(0, -10),
+              ),
+            ],
           ),
           child: SafeArea(
             top: false,
@@ -587,17 +603,51 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       children: [
                         const SizedBox(height: 16),
                         _buildTypeToggle(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
                         _buildAmountField(),
                         const SizedBox(height: 32),
+                        _buildSectionIntro(
+                          eyebrow: 'Detalle',
+                          title: _isIncome
+                              ? '¿De dónde viene?'
+                              : '¿Qué estás registrando?',
+                          subtitle: _isIncome
+                              ? 'Podés dejar un nombre claro para reconocer este ingreso más rápido.'
+                              : 'Dale un nombre simple para ubicar este gasto de un vistazo.',
+                        ),
+                        const SizedBox(height: 14),
                         _buildTitleField(),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: 'Contexto',
+                          title: _isIncome
+                              ? 'Cuándo y quién lo recibió'
+                              : 'Cuándo y quién pagó',
+                          subtitle: 'Estos datos ordenan el movimiento dentro del hogar.',
+                        ),
+                        const SizedBox(height: 14),
                         _buildDateAndPayerRow(context, payer, members),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
                         _buildShoppingIntegration(context, shoppingItemsAsync),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: 'Categoría',
+                          title: _isIncome
+                              ? 'Cómo querés clasificarlo'
+                              : 'Dónde entra este gasto',
+                          subtitle: 'Elegí la categoría para mantener Finanzas más ordenado.',
+                        ),
+                        const SizedBox(height: 14),
                         _buildCategorySelector(context),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        _buildSectionIntro(
+                          eyebrow: 'Reparto',
+                          title: _isIncome
+                              ? 'Cómo se reparte este ingreso'
+                              : 'Cómo se divide este gasto',
+                          subtitle: 'Definí si es compartido, fijo, regalo o personal.',
+                        ),
+                        const SizedBox(height: 14),
                         _buildSplitConfiguration(context, members),
                         const SizedBox(height: 32),
                         const SizedBox(height: 48),
@@ -617,36 +667,76 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildHeader(BuildContext context) {
     final isEditing = widget.expense != null;
+    final theme = context.theme;
     final title = isEditing
         ? (_isIncome ? 'Modificar Ingreso' : 'Modificar Gasto')
         : (_isIncome ? 'Nuevo Ingreso' : 'Nuevo Gasto');
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
-            onPressed: () => Navigator.pop(context),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close_rounded,
+                    color: AppColors.textPrimary),
+                onPressed: () => Navigator.pop(context),
+              ),
+              if (isEditing)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: AppColors.accentRed),
+                  onPressed: () => _confirmDelete(),
+                )
+              else
+                const SizedBox(width: 48),
+            ],
           ),
+          const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: theme.textPrimary,
+              letterSpacing: -0.7,
+            ),
           ),
-          if (isEditing)
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded,
-                  color: AppColors.accentRed),
-              onPressed: () => _confirmDelete(),
-            )
-          else
-            const SizedBox(width: 48),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionIntro({
+    required String eyebrow,
+    required String title,
+    required String subtitle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow.toUpperCase(),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
     );
   }
 
@@ -910,34 +1000,86 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildAmountField() {
-    return Center(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.18),
+          width: 1.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          const Text('Monto total',
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          TextField(
-            autofocus: true,
-            controller: _amountController,
-            onChanged: _onAmountChanged,
-            textAlign: TextAlign.center,
-            keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 56,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -2.0),
-            decoration: const InputDecoration(
-              prefixText: '\$',
-              prefixStyle: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700),
-              hintText: '0',
-              hintStyle: TextStyle(color: AppColors.textMuted),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
+          const Text(
+            'Monto total',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(right: 10, top: 2),
+                child: Text(
+                  '\$',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 92, maxWidth: 220),
+                child: TextField(
+                  autofocus: true,
+                  controller: _amountController,
+                  onChanged: _onAmountChanged,
+                  textAlign: TextAlign.center,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: false),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 50,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.8,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: '0',
+                    hintStyle: TextStyle(
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    border: InputBorder.none,
+                    isCollapsed: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 72,
+            height: 1,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
             ),
           ),
         ],
@@ -951,7 +1093,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: TextField(
         controller: _titleController,
@@ -1053,7 +1202,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1090,7 +1246,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.divider),
+          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -1224,6 +1387,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       ? AppColors.primary.withValues(alpha: 0.2)
                       : AppColors.divider,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -1314,13 +1484,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_isIncome ? 'División del ingreso' : 'División del gasto',
-            style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5)),
-        const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -1512,18 +1675,30 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
           elevation: 0,
+          shadowColor: AppColors.primary.withValues(alpha: 0.22),
         ),
         child: _isLoading
             ? const CircularProgressIndicator(
                 color: Colors.white, strokeWidth: 2)
-            : Text(_isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5)),
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -1828,3 +2003,4 @@ class _ShoppingItemsSelectorState
     );
   }
 }
+

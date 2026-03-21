@@ -296,13 +296,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 FilledButton(
                   onPressed: widget.onComplete,
                   style: FilledButton.styleFrom(
-                    backgroundColor: highlight,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 14,
                     ),
+                    minimumSize: const Size(0, 46),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),

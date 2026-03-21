@@ -267,14 +267,25 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         child: FloatingActionButton.extended(
           heroTag: null,
           onPressed: _showCreateTaskDialog,
-          backgroundColor: theme.primary,
-          elevation: 4,
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.primary,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+            side: BorderSide(
+              color: theme.border.withValues(alpha: 0.7),
+              width: 1,
+            ),
+          ),
           extendedPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-          label: const Text(
+          icon: const Icon(Icons.add_rounded, size: 20),
+          label: Text(
             'Nueva tarea',
             style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15),
+                color: AppColors.primary,
+                fontWeight: FontWeight.w900,
+                fontSize: 15),
           ),
         ).animateScaleIn(delay: 400),
       ),
@@ -950,9 +961,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                   ? AppColors.primary
                                   : AppColors.accentPeach,
                               background: task.isRecurring
-                                  ? AppColors.primary.withValues(alpha: 0.10)
+                                  ? AppColors.primary.withValues(alpha: 0.16)
                                   : AppColors.accentPeach
-                                      .withValues(alpha: 0.12),
+                                      .withValues(alpha: 0.18),
                             ),
                             if (task.isOverdue)
                               _pill(
@@ -960,7 +971,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                 label: 'Vencida',
                                 color: AppColors.accentRed,
                                 background:
-                                    AppColors.accentRed.withValues(alpha: 0.10),
+                                    AppColors.accentRed.withValues(alpha: 0.16),
                               ),
                           ],
                         ),
@@ -1072,23 +1083,29 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required Color color,
     required Color background,
   }) {
+    final readableColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.18),
+      color,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: readableColor),
           const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 10,
-              color: color,
+              color: readableColor,
               letterSpacing: -0.1,
             ),
           ),
