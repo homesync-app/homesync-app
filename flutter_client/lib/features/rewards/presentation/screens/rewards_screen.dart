@@ -646,26 +646,21 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
     final theme = context.theme;
     final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
     final canAfford = userBalance >= reward.cost;
-    final accent = canAfford ? theme.primary : theme.textMuted;
+    final buttonAccent = canAfford ? theme.primary : theme.textMuted;
 
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: canAfford
-              ? [
-                  theme.surface,
-                  AppColors.primary.withValues(alpha: 0.06),
-                ]
-              : [
-                  theme.surface,
-                  AppColors.surfaceVariant,
-                ],
+          colors: [
+            theme.surface,
+            AppColors.surfaceVariant,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: accent.withValues(alpha: canAfford ? 0.18 : 0.14),
+          color: theme.border.withValues(alpha: 0.55),
         ),
         boxShadow: theme.cardShadow,
       ),
@@ -704,8 +699,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       height: 52,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: (canAfford ? theme.primary : AppColors.accentGold)
-                            .withValues(alpha: 0.12),
+                        color: AppColors.accentGold.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: Text(
@@ -746,24 +740,24 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                               : theme.border.withValues(alpha: 0.65),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.monetization_on_rounded,
-                            size: 13,
-                            color: accent,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${reward.cost} coins',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: accent,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.15,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.monetization_on_rounded,
+                              size: 13,
+                              color: buttonAccent,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${reward.cost} coins',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: buttonAccent,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.15,
                             ),
                           ),
                         ],

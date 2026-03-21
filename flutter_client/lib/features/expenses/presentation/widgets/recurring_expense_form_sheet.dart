@@ -7,6 +7,7 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
@@ -47,7 +48,8 @@ class _RecurringExpenseFormSheetState
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
-      _amountController.text = template.defaultAmount.toStringAsFixed(2);
+      _amountController.text =
+          NumberFormat.decimalPattern('es_ES').format(template.defaultAmount.round());
       _dayOfMonth = template.dayOfMonth;
       _category = template.category;
       _splitType = template.splitType;
@@ -66,6 +68,23 @@ class _RecurringExpenseFormSheetState
     final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
     if (normalized.isEmpty) return null;
     return double.tryParse(normalized);
+  }
+
+  void _onAmountChanged(String val) {
+    final clean = val.replaceAll('.', '').replaceAll(',', '');
+    if (clean.isEmpty) {
+      _amountController.text = '';
+      return;
+    }
+
+    final parsed = int.tryParse(clean);
+    if (parsed == null) return;
+
+    final formatted = NumberFormat.decimalPattern('es_ES').format(parsed);
+    _amountController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 
   DateTime _calculateNextExecutionDate(int day) {
@@ -266,6 +285,7 @@ class _RecurringExpenseFormSheetState
     return TextField(
       controller: _amountController,
       keyboardType: TextInputType.number,
+      onChanged: _onAmountChanged,
       decoration: InputDecoration(
         labelText: 'Monto por defecto',
         prefixText: r'$ ',

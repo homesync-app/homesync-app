@@ -475,28 +475,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          color.withValues(alpha: 0.95),
-                                          color.withValues(alpha: 0.75),
-                                        ],
-                                      ),
+                                      color: color.withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: color.withValues(alpha: 0.28),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
                                     ),
                                     child: Icon(
                                       AppColors.getCategoryMaterialIcon(
                                           template.category),
                                       size: 24,
-                                      color: Colors.white,
+                                      color: color,
                                     ),
                                   ),
                                   const SizedBox(width: 14),
@@ -1409,7 +1395,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () => PlannedExpensePaymentSheet.show(context, item),
+                onPressed: () async {
+                  final result = await PlannedExpensePaymentSheet.show(context, item);
+                  if (!mounted || result == null || result['success'] != true) return;
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   foregroundColor: AppColors.primary,
@@ -1462,6 +1451,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       label = 'PENDIENTE';
       badgeColor = AppColors.accentRed;
       icon = Icons.priority_high_rounded;
+    } else if (diff == 0) {
+      label = 'VENCE HOY';
+      badgeColor = AppColors.accentOrange;
+      icon = Icons.today_rounded;
     } else if (diff <= 2) {
       label = 'VENCE PRONTO';
       badgeColor = AppColors.accentGold;
