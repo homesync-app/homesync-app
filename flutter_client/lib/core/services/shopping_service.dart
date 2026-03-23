@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ShoppingItem model
-// ─────────────────────────────────────────────────────────────────────────────
+import 'package:flutter/foundation.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class ShoppingItem {
   final String id;
@@ -31,7 +30,7 @@ class ShoppingItem {
     this.quantity,
     this.unit,
     this.category = 'general',
-    this.emoji = '🛒',
+    this.emoji = '??',
     this.note,
     this.addedBy,
     this.addedByName,
@@ -50,7 +49,7 @@ class ShoppingItem {
       quantity: map['quantity'] as String?,
       unit: map['unit'] as String?,
       category: map['category'] as String? ?? 'general',
-      emoji: map['emoji'] as String? ?? '🛒',
+      emoji: map['emoji'] as String? ?? '??',
       note: map['note'] as String?,
       addedBy: map['added_by'] as String?,
       addedByName: (map['added_by_user'] as Map?)?['full_name'] as String?,
@@ -82,8 +81,11 @@ class ShoppingItem {
     return completedByName!.split(' ').first;
   }
 
-  ShoppingItem copyWith(
-      {bool? completed, String? completedBy, DateTime? completedAt}) {
+  ShoppingItem copyWith({
+    bool? completed,
+    String? completedBy,
+    DateTime? completedAt,
+  }) {
     return ShoppingItem(
       id: id,
       householdId: householdId,
@@ -104,43 +106,45 @@ class ShoppingItem {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ShoppingService
-// ─────────────────────────────────────────────────────────────────────────────
-
 class ShoppingService {
   final _client = Supabase.instance.client;
   RealtimeChannel? _channel;
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  // Local event stream to notify other screens of completion instantly
   static final StreamController<void> _localChanges =
       StreamController<void>.broadcast();
   static Stream<void> get localChanges => _localChanges.stream;
 
+  Future<String?> _getCurrentUserId() async {
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId != null && appUserId.isNotEmpty) {
+      return appUserId;
+    }
+    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
+      return _client.auth.currentUser?.id;
+    }
+    return null;
+  }
+
   Future<String?> _getHouseholdId() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
+    final userId = await _getCurrentUserId();
+    if (userId == null) return null;
     final row = await _client
         .from('household_members')
         .select('household_id')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .maybeSingle();
     return row?['household_id'] as String?;
   }
-
-  // ── CRUD ─────────────────────────────────────────────────────────────────
 
   Future<List<ShoppingItem>> fetchItems() async {
     final householdId = await _getHouseholdId();
     if (householdId == null) return [];
 
-    // Fetch items with user names joined
     final raw = await _client
         .from('shopping_items')
         .select(
-            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+          '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',
+        )
         .eq('household_id', householdId)
         .order('completed', ascending: true)
         .order('created_at', ascending: false);
@@ -155,11 +159,11 @@ class ShoppingService {
     String? quantity,
     String? unit,
     String category = 'general',
-    String emoji = '🛒',
+    String emoji = '??',
     String? note,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) throw Exception('No autenticado');
+    final userId = await _getCurrentUserId();
+    if (userId == null) throw Exception('No autenticado');
 
     final householdId = await _getHouseholdId();
     if (householdId == null) throw Exception('Sin hogar');
@@ -175,23 +179,24 @@ class ShoppingService {
           'category': category,
           'emoji': emoji,
           'note': note?.trim().isEmpty == true ? null : note?.trim(),
-          'added_by': user.id,
+          'added_by': userId,
           'completed': false,
         })
         .select(
-            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+          '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',
+        )
         .single();
 
     return ShoppingItem.fromMap(Map<String, dynamic>.from(raw));
   }
 
   Future<void> toggleItem(String itemId, bool completed) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
+    final userId = await _getCurrentUserId();
+    if (userId == null) return;
 
     await _client.from('shopping_items').update({
       'completed': completed,
-      'completed_by': completed ? user.id : null,
+      'completed_by': completed ? userId : null,
       'completed_at': completed ? DateTime.now().toIso8601String() : null,
     }).eq('id', itemId);
 
@@ -225,8 +230,6 @@ class ShoppingService {
         .eq('completed', true);
   }
 
-  // ── Realtime ─────────────────────────────────────────────────────────────
-
   Future<void> subscribeToChanges({
     required String householdId,
     required VoidCallback onChanged,
@@ -246,49 +249,11 @@ class ShoppingService {
           callback: (_) => onChanged(),
         )
         .subscribe();
-    log.i('ShoppingService: Realtime subscribed for household $householdId');
+    log.i('ShoppingService: realtime subscribed for household $householdId');
   }
 
   void dispose() {
     _channel?.unsubscribe();
     _channel = null;
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Shopping categories
-// ─────────────────────────────────────────────────────────────────────────────
-
-class ShoppingCategories {
-  static const List<Map<String, dynamic>> all = [
-    {'id': 'general', 'name': 'General', 'emoji': '🛒', 'color': 0xFF6366F1},
-    {
-      'id': 'fruits',
-      'name': 'Frutas y verd.',
-      'emoji': '🥦',
-      'color': 0xFF22C55E
-    },
-    {'id': 'meat', 'name': 'Carnes', 'emoji': '🥩', 'color': 0xFFEF4444},
-    {'id': 'dairy', 'name': 'Lácteos', 'emoji': '🥛', 'color': 0xFF3B82F6},
-    {'id': 'bakery', 'name': 'Panadería', 'emoji': '🍞', 'color': 0xFFF59E0B},
-    {'id': 'pantry', 'name': 'Despensa', 'emoji': '🥫', 'color': 0xFFD97706},
-    {'id': 'frozen', 'name': 'Congelados', 'emoji': '🧊', 'color': 0xFF0284C7},
-    {'id': 'cleaning', 'name': 'Limpieza', 'emoji': '🧴', 'color': 0xFF8B5CF6},
-    {'id': 'drinks', 'name': 'Bebidas', 'emoji': '🧃', 'color': 0xFF06B6D4},
-    {'id': 'snacks', 'name': 'Snacks', 'emoji': '🍫', 'color': 0xFFEC4899},
-    {'id': 'pharmacy', 'name': 'Farmacia', 'emoji': '💊', 'color': 0xFF10B981},
-    {'id': 'pets', 'name': 'Mascotas', 'emoji': '🐕', 'color': 0xFFA16207},
-  ];
-
-  static String emojiFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['emoji']
-          as String;
-
-  static String nameFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['name']
-          as String;
-
-  static int colorFor(String id) =>
-      all.firstWhere((c) => c['id'] == id, orElse: () => all.first)['color']
-          as int;
 }

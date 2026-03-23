@@ -54,6 +54,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 }
 
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
+  final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isIncome = false;
   Map<String, dynamic>? _selectedCategory;
@@ -383,10 +384,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _saveExpense() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final cleanAmtStr =
         _amountController.text.replaceAll('.', '').replaceAll(',', '.');
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
+      // This case should ideally be caught by the validator, but as a fallback
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ingresa un monto válido.')));
       return;
@@ -411,9 +415,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       }
 
+      final caps = ref.read(householdCapabilitiesProvider);
+      final showSplit = caps.showExpensesSplit;
+
       List<Map<String, dynamic>> splits = [];
 
-      if (_splitMode == SplitType.equal) {
+      if (!showSplit) {
+        splits = [
+          {'user_id': _paidByUserId, 'amount': amountParsed}
+        ];
+      } else if (_splitMode == SplitType.equal) {
         final household = ref.read(currentHouseholdProvider).valueOrNull;
         final defaultRatio = household?.defaultSplitRatio ?? 0.5;
 
@@ -445,7 +456,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           }
         }
         if ((totalFixed - amountParsed).abs() > 0.01) {
-          throw Exception("Los montos fijos deben sumar el total del gasto.");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'El reparto debe sumar el total (\$${amountParsed.toStringAsFixed(2)})'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          setState(() => _isLoading = false);
+          return;
         }
       } else if (_splitMode == SplitType.gift) {
         splits = [];
@@ -472,7 +491,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         paidBy: _paidByUserId,
         paidAt: _selectedDate,
         description: description.isEmpty ? null : description,
-        splitType: _splitMode,
+        splitType: !caps.showExpensesSplit ? SplitType.personal : _splitMode,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
       );
@@ -555,6 +574,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: $e')),
       data: (members) {
+        final caps = ref.watch(householdCapabilitiesProvider);
+        final showSplit = caps.showExpensesSplit;
+
         if (_paidByUserId.isEmpty) {
           final currentUserId = ref.read(currentUserIdProvider);
           final matchingMember = members.any((m) => m.userId == currentUserId)
@@ -598,62 +620,71 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 16),
-                        _buildTypeToggle(),
-                        const SizedBox(height: 28),
-                        _buildAmountField(),
-                        const SizedBox(height: 32),
-                        _buildSectionIntro(
-                          eyebrow: 'Detalle',
-                          title: _isIncome
-                              ? '¿De dónde viene?'
-                              : '¿Qué estás registrando?',
-                          subtitle: _isIncome
-                              ? 'Podés dejar un nombre claro para reconocer este ingreso más rápido.'
-                              : 'Dale un nombre simple para ubicar este gasto de un vistazo.',
-                        ),
-                        const SizedBox(height: 14),
-                        _buildTitleField(),
-                        const SizedBox(height: 28),
-                        _buildSectionIntro(
-                          eyebrow: 'Contexto',
-                          title: _isIncome
-                              ? 'Cuándo y quién lo recibió'
-                              : 'Cuándo y quién pagó',
-                          subtitle: 'Estos datos ordenan el movimiento dentro del hogar.',
-                        ),
-                        const SizedBox(height: 14),
-                        _buildDateAndPayerRow(context, payer, members),
-                        const SizedBox(height: 28),
-                        _buildShoppingIntegration(context, shoppingItemsAsync),
-                        const SizedBox(height: 28),
-                        _buildSectionIntro(
-                          eyebrow: 'Categoría',
-                          title: _isIncome
-                              ? 'Cómo querés clasificarlo'
-                              : 'Dónde entra este gasto',
-                          subtitle: 'Elegí la categoría para mantener Finanzas más ordenado.',
-                        ),
-                        const SizedBox(height: 14),
-                        _buildCategorySelector(context),
-                        const SizedBox(height: 28),
-                        _buildSectionIntro(
-                          eyebrow: 'Reparto',
-                          title: _isIncome
-                              ? 'Cómo se reparte este ingreso'
-                              : 'Cómo se divide este gasto',
-                          subtitle: 'Definí si es compartido, fijo, regalo o personal.',
-                        ),
-                        const SizedBox(height: 14),
-                        _buildSplitConfiguration(context, members),
-                        const SizedBox(height: 32),
-                        const SizedBox(height: 48),
-                        _buildSaveButton(),
-                        const SizedBox(height: 40),
-                      ],
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 16),
+                          _buildTypeToggle(),
+                          const SizedBox(height: 28),
+                          _buildAmountField(),
+                          const SizedBox(height: 32),
+                          _buildSectionIntro(
+                            eyebrow: 'Detalle',
+                            title: _isIncome
+                                ? '¿De dónde viene?'
+                                : '¿Qué estás registrando?',
+                            subtitle: _isIncome
+                                ? 'Podés dejar un nombre claro para reconocer este ingreso más rápido.'
+                                : 'Dale un nombre simple para ubicar este gasto de un vistazo.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildTitleField(),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'Contexto',
+                            title: _isIncome
+                                ? 'Cuándo y quién lo recibió'
+                                : 'Cuándo y quién pagó',
+                            subtitle:
+                                'Estos datos ordenan el movimiento dentro del hogar.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildDateAndPayerRow(context, payer, members),
+                          const SizedBox(height: 28),
+                          _buildShoppingIntegration(
+                              context, shoppingItemsAsync),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'Categoría',
+                            title: _isIncome
+                                ? 'Cómo querés clasificarlo'
+                                : 'Dónde entra este gasto',
+                            subtitle:
+                                'Elegí la categoría para mantener Finanzas más ordenado.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildCategorySelector(context),
+                          const SizedBox(height: 28),
+                          if (showSplit) ...[
+                            _buildSectionIntro(
+                              eyebrow: 'Reparto',
+                              title: _isIncome
+                                  ? 'Cómo se reparte este ingreso'
+                                  : 'Cómo se divide este gasto',
+                              subtitle:
+                                  'Definí si es compartido, fijo, regalo o personal.',
+                            ),
+                            const SizedBox(height: 14),
+                            _buildSplitConfiguration(context, members),
+                          ],
+                          const SizedBox(height: 32),
+                          const SizedBox(height: 48),
+                          _buildSaveButton(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1046,19 +1077,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
               ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 92, maxWidth: 220),
-                child: TextField(
+                child: TextFormField(
                   autofocus: true,
                   controller: _amountController,
                   onChanged: _onAmountChanged,
-                  textAlign: TextAlign.center,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: false),
+                  keyboardType: TextInputType.number,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 50,
+                    fontSize: 34,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -1.8,
+                    letterSpacing: -1.2,
                   ),
+                  textAlign: TextAlign.start,
                   decoration: const InputDecoration(
                     hintText: '0',
                     hintStyle: TextStyle(
@@ -1126,6 +1156,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildDateAndPayerRow(
       BuildContext context, MemberModel payer, List<MemberModel> members) {
+    final caps = ref.watch(householdCapabilitiesProvider);
+    final showSplit = caps.showExpensesSplit;
+
     return Row(
       children: [
         Expanded(
@@ -1136,15 +1169,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             onTap: _selectDate,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActionTile(
-            icon: Icons.person_outline_rounded,
-            label: 'Pagó',
-            value: payer.displayName,
-            onTap: () => _showMemberSelector(context, members),
+        if (showSplit) ...[
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildActionTile(
+              icon: Icons.person_outline_rounded,
+              label: 'Pagó',
+              value: payer.displayName,
+              onTap: () => _showMemberSelector(context, members),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -1563,6 +1598,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildSplitDetails(List<MemberModel> members) {
+    final caps = ref.watch(householdCapabilitiesProvider);
     if (_splitMode == SplitType.equal) {
       final household = ref.watch(currentHouseholdProvider).valueOrNull;
       final defaultRatio = household?.defaultSplitRatio ?? 0.5;
@@ -1641,7 +1677,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }).toList(),
       );
     } else if (_splitMode == SplitType.gift) {
-      return _buildInfoBox('🎁 Este gasto no afectará el balance de tu pareja.',
+      return _buildInfoBox('🎁 Este gasto no afectará el balance ${caps.actionMemberLabel}.',
           AppColors.primary);
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
@@ -1752,11 +1788,18 @@ class _ShoppingItemsSelectorState
     extends ConsumerState<_ShoppingItemsSelector> {
   String _searchQuery = '';
   final Set<ShoppingItemModel> _currentSelection = {};
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _currentSelection.addAll(widget.initialSelected);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -1766,12 +1809,10 @@ class _ShoppingItemsSelectorState
     final pendingHouseholdItems =
         householdItems.where((item) => !item.completed).toList();
 
-    // 1. Items activos de la lista de compras que coinciden
     final filteredPendingHouseholdItems = pendingHouseholdItems
         .where((item) => item.name.toLowerCase().contains(query))
         .toList();
 
-    // 2. Sugerencias globales (predefinidos) que NO están en los de la casa
     final List<Map<String, String>> predefinedMatches = [];
     if (query.isNotEmpty) {
       ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
@@ -1781,7 +1822,6 @@ class _ShoppingItemsSelectorState
         for (final item in catList) {
           final itemName = item['name']!;
           if (itemName.toLowerCase().contains(query) || catMatchesQuery) {
-            // Solo si no existe ya en los de la casa ni en la selección actual
             final existsInHousehold = pendingHouseholdItems
                 .any((ai) => ai.name.toLowerCase() == itemName.toLowerCase());
             final existsInSelection = _currentSelection
@@ -1837,6 +1877,7 @@ class _ShoppingItemsSelectorState
                       border: Border.all(color: AppColors.divider),
                     ),
                     child: TextField(
+                      controller: _searchController,
                       decoration: const InputDecoration(
                         hintText: 'Buscar o agregar producto...',
                         hintStyle:
@@ -1865,9 +1906,9 @@ class _ShoppingItemsSelectorState
                               style: TextStyle(fontSize: 12)),
                           onTap: () async {
                             final queryToSave = _searchQuery.trim();
+                            _searchController.clear();
                             setState(() => _searchQuery = '');
 
-                            // 1. Add to household DB
                             await ref
                                 .read(shoppingItemsProvider.notifier)
                                 .addItem(
@@ -1876,7 +1917,6 @@ class _ShoppingItemsSelectorState
                                   emoji: '🏷️',
                                 );
 
-                            // 2. Hack for immediate selection
                             final temp = ShoppingItemModel(
                               id: 'selection_sync_$queryToSave',
                               name: queryToSave,
@@ -1889,8 +1929,6 @@ class _ShoppingItemsSelectorState
                             widget.onItemsSelected(_currentSelection);
                           },
                         ),
-
-                      // Resultados de la lista de compras (solo pendientes)
                       ...filteredPendingHouseholdItems.map((item) {
                         final isSelected = _currentSelection.contains(item);
                         return ListTile(
@@ -1908,19 +1946,23 @@ class _ShoppingItemsSelectorState
                                   ? AppColors.primary
                                   : AppColors.divider),
                           onTap: () {
+                            if (_searchQuery.isNotEmpty) {
+                              _searchController.clear();
+                            }
                             setState(() {
                               if (isSelected) {
                                 _currentSelection.remove(item);
                               } else {
                                 _currentSelection.add(item);
                               }
+                              if (_searchQuery.isNotEmpty) {
+                                _searchQuery = '';
+                              }
                             });
                             widget.onItemsSelected(_currentSelection);
                           },
                         );
                       }),
-
-                      // Sugerencias globales
                       if (predefinedMatches.isNotEmpty) ...[
                         const Padding(
                           padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
@@ -1948,9 +1990,9 @@ class _ShoppingItemsSelectorState
                               final cat = item['categoryId']!;
                               final emoji = item['emoji']!;
 
+                              _searchController.clear();
                               setState(() => _searchQuery = '');
 
-                              // Add to DB
                               await ref
                                   .read(shoppingItemsProvider.notifier)
                                   .addItem(
@@ -1959,7 +2001,6 @@ class _ShoppingItemsSelectorState
                                     emoji: emoji,
                                   );
 
-                              // Hack: add a temporary item to selection with same name
                               final temp = ShoppingItemModel(
                                 id: 'selection_sync_$name',
                                 name: name,
@@ -2003,4 +2044,3 @@ class _ShoppingItemsSelectorState
     );
   }
 }
-

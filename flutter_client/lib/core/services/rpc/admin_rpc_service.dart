@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
+
 import 'base_rpc_service.dart';
 
 class AdminRpcService extends BaseRpcService {
@@ -10,16 +12,16 @@ class AdminRpcService extends BaseRpcService {
     String level = 'error',
     Map<String, dynamic>? context,
   }) async {
-    final user = client.auth.currentUser;
     try {
+      final userId = await AppIdentityService.instance.refresh();
       final logData = {
-        'user_id': user?.id,
+        'user_id': userId,
         'level': level,
         'message': message,
         'stack_trace': stackTrace,
         'context': {
           if (context != null) ...context,
-          'email': user?.email,
+          'email': currentAuthEmail(),
         },
         'device_info': {
           'platform': kIsWeb ? 'web' : 'native',
@@ -32,9 +34,7 @@ class AdminRpcService extends BaseRpcService {
 
       await client.from('application_logs').insert(logData);
     } catch (e) {
-      // If logging fails, use stderr directly to avoid an infinite error loop
-      // ignore: avoid_print
-      print('CRITICAL: Failed to log error to Supabase: $e');
+      debugPrint('CRITICAL: Failed to log error to Supabase: $e');
     }
   }
 

@@ -23,6 +23,17 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     required this.onTasksCompleted,
   });
 
+  static Future<void> show(BuildContext context, {VoidCallback? onTasksCompleted}) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CompleteTaskSheet(
+        onTasksCompleted: onTasksCompleted ?? () {},
+      ),
+    );
+  }
+
   @override
   ConsumerState<CompleteTaskSheet> createState() => _CompleteTaskSheetState();
 }
@@ -48,7 +59,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
     _loadData();
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = ref.read(currentUserIdProvider);
     if (currentUserId != null) {
       _selectedMemberIds.add(currentUserId);
     }
@@ -117,21 +128,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       }
 
       final currentUserId = ref.read(currentUserIdProvider);
-      final onlyMe =
-          _selectedMemberIds.length == 1 && _selectedMemberIds.contains(currentUserId);
+      final onlyMe = _selectedMemberIds.length == 1 &&
+          _selectedMemberIds.contains(currentUserId);
 
-      for (var task in selectedTasks) {
-        await ref
-            .read(tasksProvider.notifier)
-            .completeTask(task, userIds: _selectedMemberIds.toList());
-
-        if (!_isRightNow) {
-          await Supabase.instance.client
-              .from('tasks')
-              .update({'completed_at': _customDate.toIso8601String()}).eq(
-                  'id', task.id);
-        }
-      }
+      await ref.read(tasksProvider.notifier).completeTasksBatch(
+        selectedTasks,
+        userIds: _selectedMemberIds.toList(),
+        completedAt: _isRightNow ? null : _customDate,
+      );
 
       if (mounted) {
         _confettiController.play();
@@ -139,7 +143,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         Navigator.pop(context); // Pop the sheet first
 
         final String verb = onlyMe ? "Ganaste" : "Ganaron";
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -148,7 +152,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             ),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             margin: const EdgeInsets.all(16),
             duration: const Duration(seconds: 3),
           ),
@@ -841,8 +846,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               isSelected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color:
-                  isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+              color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -852,9 +856,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.primary
-                      : const Color(0xFF1E293B),
+                  color:
+                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
                 ),
               ),
             ),
@@ -873,6 +876,3 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     );
   }
 }
-
-
-

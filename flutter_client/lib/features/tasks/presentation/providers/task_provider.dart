@@ -167,30 +167,39 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<TaskCompletionResult?> completeTask(TaskModel task, {List<String>? userIds}) async {
+  Future<TaskCompletionResult?> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final performers =
+        userIds ?? (currentUserId != null ? [currentUserId] : null);
     final primaryUserId = performers?.first ?? currentUserId;
-    
+    final effectiveCompletedAt = completedAt ?? DateTime.now();
+
     final oldState = state.value;
-    
+
     // Optimistic update
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(
-              status: TaskStatus.active,
-              completedBy: primaryUserId,
-              completedAt: DateTime.now(),
-            )
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: primaryUserId,
+                  completedAt: effectiveCompletedAt,
+                )
+              : t)
+          .toList());
     }
 
     try {
       final useCase = ref.read(completeTaskUseCaseProvider);
-      final result = await useCase(task, userIds: performers);
+      final result = await useCase(
+        task,
+        userIds: performers,
+        completedAt: completedAt,
+      );
       
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
@@ -215,6 +224,62 @@ class Tasks extends _$Tasks {
     } catch (e) {
       log.w('Complete task failure: $e');
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> completeTasksBatch(
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final primaryUserId = performers?.first ?? currentUserId;
+    final effectiveCompletedAt = completedAt ?? DateTime.now();
+    final taskIds = tasks.map((t) => t.id).toSet();
+
+    final oldState = state.value;
+
+    if (oldState != null) {
+      state = AsyncValue.data(oldState
+          .map((t) => taskIds.contains(t.id)
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: primaryUserId,
+                  completedAt: effectiveCompletedAt,
+                )
+              : t)
+          .toList());
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      final result = await repo.completeTasksBatch(
+        tasks,
+        userIds: performers,
+        completedAt: completedAt,
+      );
+      
+      if (result.isRight()) {
+        final isOnline = ref.read(isOnlineProvider);
+        if (isOnline) {
+          silentRefresh();
+          ref.invalidate(userBalanceProvider);
+          ref.invalidate(recentActivityProvider);
+        }
+      }
+      
+      return result.fold(
+        (failure) {
+          if (oldState != null) state = AsyncValue.data(oldState);
+          return null;
+        },
+        (data) => data,
+      );
+    } catch (e) {
+      log.w('Complete tasks batch failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
       return null;
     }
   }
@@ -333,7 +398,7 @@ class Tasks extends _$Tasks {
     try {
       final xp = taskData['xpReward'] as int;
       final coins = taskData['coinReward'] as int;
-      
+
       final useCase = ref.read(createTaskUseCaseProvider);
       final result = await useCase(
         title: taskData['title'] as String,
@@ -344,6 +409,9 @@ class Tasks extends _$Tasks {
         coinReward: coins,
         assignedTo: taskData['assignedTo'] as String?,
         recurrenceType: taskData['recurrenceType'] as String?,
+        recurrenceInterval: taskData['recurrenceInterval'] as int?,
+        recurrenceWeekdays: taskData['recurrenceWeekdays'] as List<int>?,
+        recurrenceMonthDays: taskData['recurrenceMonthDays'] as List<int>?,
         status: null,
       );
 

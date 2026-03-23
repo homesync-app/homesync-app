@@ -24,7 +24,7 @@ class AppColors {
   static const Color accentTeal = sage;
   static const Color accentRed = Color(0xFFE57373);
   static const Color accentGreen = Color(0xFF22C55E);
-  static const Color accentBlue = Color(0xFF3B82F6);
+  static const Color accentBlue = Color(0xFF5A94E1); // Pastel blue for less harsh tasks
   static const Color accentPurple = Color(0xFF9575CD);
   static const Color accentPeach = Color(0xFFE88D67);
   static const Color accentOrange = Color(0xFFFF8A65);
@@ -67,6 +67,7 @@ class AppColors {
   static const Color shadowBase = Color(0xFF4A4443);
   static const Color cardGhostBorderLight = Color(0x144A4443);
   static const Color cardGhostBorderDark = Color(0x332E2B45);
+  static const Color surfaceVariantDark = Color(0xFF2E2927);
 
   static Color get infoLight => info.withValues(alpha: 0.12);
   static Color get successLight => success.withValues(alpha: 0.12);

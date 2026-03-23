@@ -29,6 +29,9 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     String? status,
   }) async {
     _task = TaskModel(
@@ -62,6 +65,7 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
   Future<Either<Failure, TaskCompletionResult>> completeTask(
     TaskModel task, {
     List<String>? userIds,
+    DateTime? completedAt,
   }) async {
     if (_task == null) {
       return const Left(ServerFailure('Task not found'));
@@ -160,9 +164,20 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
   @override
   Future<Either<Failure, void>> updateSchedule(
     String taskId,
-    String? recurrenceType,
-  ) async =>
+    String? recurrenceType, {
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+  }) async =>
       const Right(null);
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
+      List<TaskModel> tasks, {
+      List<String>? userIds,
+      DateTime? completedAt,
+  }) async =>
+      const Right({'success': true});
 }
 
 void main() {

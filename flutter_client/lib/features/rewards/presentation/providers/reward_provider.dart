@@ -87,6 +87,7 @@ class Rewards extends _$Rewards {
     required int cost,
     String icon = '🎁',
     String? category,
+    bool isApproved = false,
   }) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
@@ -105,6 +106,7 @@ class Rewards extends _$Rewards {
       icon: icon,
       category: category,
       createdBy: userId,
+      isApproved: isApproved,
     );
 
     return result.fold(

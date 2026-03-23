@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
@@ -12,6 +14,7 @@ class SupabaseAuthService {
   SupabaseAuthService._internal();
 
   late final SupabaseClient _client;
+  final fa.FirebaseAuth _firebaseAuth = fa.FirebaseAuth.instance;
 
   Future<void> initialize() async {
     await Supabase.initialize(
@@ -24,14 +27,18 @@ class SupabaseAuthService {
     // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
     try {
       // Add a timeout to GoogleSignIn initialization as it can hang on some devices
-      await GoogleSignIn.instance.initialize(
-        clientId: kIsWeb ? '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com' : null,
-        serverClientId: '445710215227-go02kj7dh45nfk3q4fot1h8plo3csegu.apps.googleusercontent.com',
-      ).timeout(const Duration(seconds: 5));
+      await GoogleSignIn.instance
+          .initialize(
+            clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
+            serverClientId: AppEnvironment.googleWebClientId,
+          )
+          .timeout(const Duration(seconds: 5));
     } catch (e) {
       log.w('Error o timeout inicializando GoogleSignIn: $e', error: e);
     }
   }
+
+
 
   SupabaseClient get client => _client;
 
@@ -70,7 +77,7 @@ class SupabaseAuthService {
     });
 
     // 3. User is auto-inserted via database trigger "on_auth_user_created"
-    
+
     // 4. Assign user as owner
     await _client.from('household_members').insert({
       'household_id': householdId,
@@ -107,9 +114,9 @@ class SupabaseAuthService {
 
       // Flujo nativo para Android/iOS con google_sign_in
       final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-      
+
       final googleUser = await googleSignIn.authenticate();
-      
+
       // En esta versión authentication es un getter, no un Future.
       final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
@@ -119,7 +126,7 @@ class SupabaseAuthService {
           provider: OAuthProvider.google,
           idToken: idToken,
         );
-        
+
         // Tag user in Crashlytics (mobile only)
         if (!kIsWeb) {
           final user = _client.auth.currentUser;
@@ -129,10 +136,10 @@ class SupabaseAuthService {
         }
         return true;
       }
-    
+
       // Fallback a OAuth
       log.w('Usando fallback de OAuth para Google Sign-In');
-      
+
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'homesync://login-callback',
@@ -172,11 +179,15 @@ class SupabaseAuthService {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {}
+    try {
+      await _firebaseAuth.signOut();
+    } catch (_) {}
     // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier('');
     }
     await _client.auth.signOut();
+    await AppIdentityService.instance.refresh();
   }
 
   Future<void> resetPassword({

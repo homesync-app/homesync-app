@@ -64,8 +64,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8A65)],
     },
     {
-      'id': 'roommates',
-      'name': 'Compañeros',
+      'id': 'friends',
+      'name': 'Grupo',
       'icon': '🏠',
       'desc': 'Compartimos piso o depto',
       'gradient': [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
@@ -233,6 +233,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     setState(() => _isSaving = true);
 
     try {
+      final householdId = ref.read(householdIdProvider).asData?.value;
+      if (householdId != null && _selectedMode != null) {
+        await ref
+            .read(householdRepositoryProvider)
+            .updateHouseholdType(householdId, _selectedMode!);
+      }
+
       await _templateService.cloneTemplates(_selectedTemplateIds.toList());
 
       // Invalida proveedores aquí también para el flujo de creación

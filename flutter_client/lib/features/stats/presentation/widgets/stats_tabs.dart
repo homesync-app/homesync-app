@@ -8,9 +8,9 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'stats_shared_widgets.dart';
 import 'personal_metric_card.dart';
@@ -38,7 +38,8 @@ class WeeklyTab extends ConsumerWidget {
     required this.onRefresh,
   });
 
-  void _showLoveNoteDialog(BuildContext context, WidgetRef ref, AppThemeColors theme) {
+  void _showLoveNoteDialog(
+      BuildContext context, WidgetRef ref, AppThemeColors theme) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -52,7 +53,8 @@ class WeeklyTab extends ConsumerWidget {
             const SizedBox(width: 12),
             Text(
               'Nueva Nota de Amor',
-              style: TextStyle(fontWeight: FontWeight.w900, color: theme.textPrimary),
+              style: TextStyle(
+                  fontWeight: FontWeight.w900, color: theme.textPrimary),
             ),
           ],
         ),
@@ -80,10 +82,10 @@ class WeeklyTab extends ConsumerWidget {
               final content = controller.text.trim();
               if (content.isNotEmpty) {
                 ref.read(loveNotesProvider.notifier).sendNote(
-                  content,
-                  ref.read(currentUserIdProvider) ?? 'me',
-                  'partner',
-                );
+                      content,
+                      ref.read(currentUserIdProvider) ?? 'me',
+                      'partner',
+                    );
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -96,7 +98,8 @@ class WeeklyTab extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Enviar'),
           ),
@@ -113,12 +116,13 @@ class WeeklyTab extends ConsumerWidget {
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
           const SectionLabel(label: 'Duelo de la semana', icon: '⚔️'),
           const SizedBox(height: AppSpacing.md),
-          
+
           if (weeklyRanking.isNotEmpty) ...[
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
             const SizedBox(height: AppSpacing.xl),
@@ -145,40 +149,40 @@ class WeeklyTab extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                    Expanded(
-                      child: SummaryMetric(
-                        icon: '🔥',
-                        value: '$totalTasks',
-                        label: 'Tareas',
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 50,
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
-                    Expanded(
-                      child: SummaryMetric(
-                        icon: '✨',
-                        value: '$totalXp',
-                        label: 'XP',
-                        color: AppColors.accentGold,
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 50,
-                      color: Colors.black.withValues(alpha: 0.06),
-                    ),
-                    Expanded(
-                      child: SummaryMetric(
-                        icon: '💰',
-                        value: '$totalCoins',
-                        label: 'Coins',
-                        color: AppColors.accentTeal,
-                      ),
-                    ),
+                Expanded(
+                  child: SummaryMetric(
+                    icon: '🔥',
+                    value: '$totalTasks',
+                    label: 'Tareas',
+                    color: AppColors.primary,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 50,
+                  color: Colors.black.withValues(alpha: 0.06),
+                ),
+                Expanded(
+                  child: SummaryMetric(
+                    icon: '✨',
+                    value: '$totalXp',
+                    label: 'XP',
+                    color: AppColors.accentGold,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 50,
+                  color: Colors.black.withValues(alpha: 0.06),
+                ),
+                Expanded(
+                  child: SummaryMetric(
+                    icon: '💰',
+                    value: '$totalCoins',
+                    label: 'Coins',
+                    color: AppColors.accentTeal,
+                  ),
+                ),
               ],
             ),
           ),
@@ -216,12 +220,16 @@ class WeeklyTab extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isPremium ? const Color(0xFFFECACA) : Colors.black.withValues(alpha: 0.05),
+                      color: isPremium
+                          ? const Color(0xFFFECACA)
+                          : Colors.black.withValues(alpha: 0.05),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       isPremium ? Icons.favorite_rounded : Icons.lock_rounded,
-                      color: isPremium ? const Color(0xFFEF4444) : AppColors.textMuted,
+                      color: isPremium
+                          ? const Color(0xFFEF4444)
+                          : AppColors.textMuted,
                       size: 22,
                     ),
                   ),
@@ -235,7 +243,9 @@ class WeeklyTab extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: isPremium ? const Color(0xFF991B1B) : AppColors.textPrimary,
+                            color: isPremium
+                                ? const Color(0xFF991B1B)
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -255,7 +265,8 @@ class WeeklyTab extends ConsumerWidget {
                     ),
                   ),
                   if (!isPremium)
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 16, color: AppColors.textMuted),
                 ],
               ),
             ),
@@ -271,7 +282,9 @@ class WeeklyTab extends ConsumerWidget {
           ],
 
           // ── Activity Placeholder ──────────────────────────────────────────
-          const PrivacyBadge(text: 'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
+          const PrivacyBadge(
+              text:
+                  'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
         ],
       ),
     );
@@ -362,8 +375,9 @@ class _ProgressTabState extends State<ProgressTab> {
     final maxY = spots.fold<double>(0, (m, s) => math.max(m, s.y)) * 1.3;
     final color = _showXp ? AppColors.accentGold : AppColors.accentTeal;
 
+    final currentUserId = AppIdentityService.instance.currentUserId;
     final currentUserStats = widget.memberStats.firstWhere(
-      (m) => m['user_id'] == Supabase.instance.client.auth.currentUser?.id,
+      (m) => m['user_id'] == currentUserId,
       orElse: () => {},
     );
 
@@ -371,12 +385,13 @@ class _ProgressTabState extends State<ProgressTab> {
       onRefresh: widget.onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Header ───────────────────────────────────────────────────────
           const SectionLabel(label: 'Tu evolución personal', icon: '📈'),
           const SizedBox(height: AppSpacing.md),
-          
+
           // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
             children: [
@@ -400,7 +415,8 @@ class _ProgressTabState extends State<ProgressTab> {
           // ── Chart ──────────────────────────────────────────────────────
           Container(
             height: 240,
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
@@ -457,10 +473,14 @@ class _ProgressTabState extends State<ProgressTab> {
                         ),
                       ),
                       titlesData: const FlTitlesData(
-                        bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
@@ -473,7 +493,8 @@ class _ProgressTabState extends State<ProgressTab> {
                           isStrokeCapRound: true,
                           dotData: FlDotData(
                             show: true,
-                            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                            getDotPainter: (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
                               radius: 4,
                               color: Colors.white,
                               strokeWidth: 3,
@@ -515,9 +536,11 @@ class _ProgressTabState extends State<ProgressTab> {
                 child: PersonalMetricCard(
                   icon: '📈',
                   label: 'Nivel',
-                  value: '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
+                  value:
+                      '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
                   color: AppColors.primary,
-                  subtitle: '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                  subtitle:
+                      '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
                 ),
               ),
             ],
@@ -526,7 +549,8 @@ class _ProgressTabState extends State<ProgressTab> {
 
           // ── Privacy assurance ───────────────────────────────────────────
           const PrivacyBadge(
-            text: 'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
+            text:
+                'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
           ),
         ],
       ),
@@ -563,17 +587,26 @@ class CategoriesTab extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.insights_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                Icon(Icons.insights_outlined,
+                    size: 18,
+                    color: AppColors.textMuted.withValues(alpha: 0.5)),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(Icons.favorite_border_rounded, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                Icon(Icons.favorite_border_rounded,
+                    size: 18,
+                    color: AppColors.textMuted.withValues(alpha: 0.5)),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(Icons.auto_graph_outlined, size: 18, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                Icon(Icons.auto_graph_outlined,
+                    size: 18,
+                    color: AppColors.textMuted.withValues(alpha: 0.5)),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             const Text(
               'Todavía no hay datos',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5),
             ),
             const SizedBox(height: AppSpacing.xs),
             const Text(
@@ -587,8 +620,10 @@ class CategoriesTab extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
               child: const Text('Actualizar datos'),
             ),
@@ -601,7 +636,8 @@ class CategoriesTab extends StatelessWidget {
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
         children: [
           // ── Premium Dominance Header ─────────────────────────────────────
           const SectionLabel(label: 'Dominio de Categorías', icon: '💎'),
@@ -615,7 +651,7 @@ class CategoriesTab extends StatelessWidget {
           const SectionLabel(label: 'Desglose detallado', icon: '✨'),
           const SizedBox(height: AppSpacing.md),
           ...taskStats.map((stat) => CategoryDetailCard(stat: stat)),
-          
+
           const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -627,7 +663,8 @@ class CategoriesTab extends StatelessWidget {
                 ],
               ),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+              border:
+                  Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
             ),
             child: Row(
               children: [

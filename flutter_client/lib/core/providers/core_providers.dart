@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 
@@ -30,30 +34,122 @@ final parejaTabIndexProvider = NotifierProvider<ParejaTabNotifier, int>(() {
   return ParejaTabNotifier();
 });
 
+// ── Admin / Debug Panel ──────────────────────────────────────────────────────
+class AdminState {
+  final bool isDeveloperMode;
+  final String? impersonatedUserId;
+  final HouseholdType? forcedHouseholdType;
+
+  const AdminState({
+    this.isDeveloperMode = false,
+    this.impersonatedUserId,
+    this.forcedHouseholdType,
+  });
+
+  AdminState copyWith({
+    bool? isDeveloperMode,
+    String? impersonatedUserId,
+    HouseholdType? forcedHouseholdType,
+  }) {
+    return AdminState(
+      isDeveloperMode: isDeveloperMode ?? this.isDeveloperMode,
+      impersonatedUserId: impersonatedUserId, // Can be null to reset
+      forcedHouseholdType: forcedHouseholdType, // Can be null to reset
+    );
+  }
+}
+
+class AdminNotifier extends Notifier<AdminState> {
+  @override
+  AdminState build() => const AdminState();
+
+  void toggleDeveloperMode() {
+    final newValue = !state.isDeveloperMode;
+    state = state.copyWith(isDeveloperMode: newValue);
+    if (!newValue) {
+      // If turning off developer mode, also reset any impersonation
+      state = state.copyWith(impersonatedUserId: null, forcedHouseholdType: null);
+      AppIdentityService.instance.setDebugOverride(null);
+    }
+  }
+  void impersonate(String? userId) {
+    state = state.copyWith(impersonatedUserId: userId);
+    AppIdentityService.instance.setDebugOverride(userId);
+  }
+  void forceType(HouseholdType? type) => state = state.copyWith(forcedHouseholdType: type);
+}
+
+final adminProvider = NotifierProvider<AdminNotifier, AdminState>(AdminNotifier.new);
+
+
+
+
 // ── Auth state provider ──────────────────────────────────────────────────────
-final authStateProvider = StreamProvider<AuthState>((ref) {
-  return Supabase.instance.client.auth.onAuthStateChange;
+class AppAuthState {
+  const AppAuthState({
+    required this.isAuthenticated,
+    required this.source,
+  });
+
+  final bool isAuthenticated;
+  final String source;
+}
+
+final authStateProvider = StreamProvider<AppAuthState>((ref) {
+  if (AppEnvironment.usesFirebaseJwtForSupabase) {
+    return fa.FirebaseAuth.instance.idTokenChanges().map(
+          (user) => AppAuthState(
+            isAuthenticated: user != null,
+            source: 'firebase',
+          ),
+        );
+  }
+
+  return Supabase.instance.client.auth.onAuthStateChange.map(
+    (state) => AppAuthState(
+      isAuthenticated: state.session != null,
+      source: 'supabase',
+    ),
+  );
 });
 
 // ── Singleton service providers ───────────────────────────────────────────────
 final authServiceProvider = Provider<SupabaseAuthService>((ref) {
-  throw UnimplementedError('authServiceProvider must be overridden in ProviderScope.');
+  throw UnimplementedError(
+      'authServiceProvider must be overridden in ProviderScope.');
 });
 
 final rpcServiceProvider = Provider<SupabaseRpcService>((ref) {
-  throw UnimplementedError('rpcServiceProvider must be overridden in ProviderScope.');
+  throw UnimplementedError(
+      'rpcServiceProvider must be overridden in ProviderScope.');
 });
 
 // ── Current user convenience providers ────────────────────────────────────────
+final appIdentityServiceProvider =
+    ChangeNotifierProvider<AppIdentityService>((ref) {
+  return AppIdentityService.instance;
+});
+
 final currentUserIdProvider = Provider<String?>((ref) {
-  final auth = ref.watch(authServiceProvider);
-  return auth.currentUser?.id;
+  final admin = ref.watch(adminProvider);
+  if (admin.isDeveloperMode && admin.impersonatedUserId != null) {
+    return admin.impersonatedUserId;
+  }
+  final identity = ref.watch(appIdentityServiceProvider);
+  return identity.currentUserId;
 });
 
 // ── Household ID — single source of truth ─────────────────────────────────────
 final householdIdProvider = FutureProvider<String?>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return null;
+  String? userId = ref.watch(currentUserIdProvider);
+  
+  // If the userId is currently null (e.g., right after Google sign in but before 
+  // Identity Service resolves its RPC), we explicitly tell it to refresh
+  // to avoid prematurely deciding the user has no household.
+  if (userId == null) {
+    userId = await AppIdentityService.instance.refresh();
+    if (userId == null) return null;
+  }
 
   final client = Supabase.instance.client;
   final result = await client
@@ -79,7 +175,8 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 });
 
 // ── Mercado Pago connection status ─────────────────────────────────────────────
-final mercadopagoConnectionProvider = StreamProvider<Map<String, dynamic>?>((ref) {
+final mercadopagoConnectionProvider =
+    StreamProvider<Map<String, dynamic>?>((ref) {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
 
@@ -91,7 +188,8 @@ final mercadopagoConnectionProvider = StreamProvider<Map<String, dynamic>?>((ref
       .map((data) => data.isNotEmpty ? data.first : null);
 });
 
-final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final mercadopagoMovementsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return [];
 
@@ -109,7 +207,8 @@ final mercadopagoMovementsProvider = FutureProvider<List<Map<String, dynamic>>>(
     );
 
     if (response.status == 200) {
-      final movements = (response.data['movements'] as List).cast<Map<String, dynamic>>();
+      final movements =
+          (response.data['movements'] as List).cast<Map<String, dynamic>>();
       return movements;
     }
     return [];
@@ -128,4 +227,3 @@ final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final result = await rpc.getUserBalance(householdId: householdAsync);
   return result['data'] as Map<String, dynamic>?;
 });
-

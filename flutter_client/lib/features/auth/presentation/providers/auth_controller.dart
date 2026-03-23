@@ -1,4 +1,5 @@
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/domain/models/user_model.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
@@ -21,8 +22,9 @@ class AuthController extends _$AuthController {
 
   Future<void> signInWithEmail(String email, String password) async {
     state = const AsyncValue.loading();
-    final result = await _repository.signInWithEmail(email: email, password: password);
-    
+    final result =
+        await _repository.signInWithEmail(email: email, password: password);
+
     result.fold(
       (failure) {
         log.setCustomKey('auth_flow', 'email_sign_in');
@@ -37,11 +39,12 @@ class AuthController extends _$AuthController {
     );
   }
 
-  Future<void> signUpWithEmail(String email, String password, String? fullName) async {
+  Future<void> signUpWithEmail(
+      String email, String password, String? fullName) async {
     state = const AsyncValue.loading();
     final result = await _repository.signUpWithEmail(
-      email: email, 
-      password: password, 
+      email: email,
+      password: password,
       fullName: fullName,
     );
 
@@ -61,7 +64,7 @@ class AuthController extends _$AuthController {
   Future<bool> signInWithGoogle() async {
     state = const AsyncValue.loading();
     final result = await _repository.signInWithGoogle();
-    
+
     return result.fold(
       (failure) {
         log.setCustomKey('auth_flow', 'google_sign_in');
@@ -74,7 +77,8 @@ class AuthController extends _$AuthController {
           log.i('Google Sign-In successful');
         } else {
           // Case where user cancelled or something went wrong without a hard failure
-          state = const AsyncValue.data(AuthState(AuthChangeEvent.initialSession, null));
+          state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.initialSession, null));
         }
         return success;
       },
@@ -84,7 +88,7 @@ class AuthController extends _$AuthController {
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     final result = await _repository.signOut();
-    
+
     result.fold(
       (failure) {
         log.setCustomKey('auth_flow', 'sign_out');
@@ -98,7 +102,7 @@ class AuthController extends _$AuthController {
   Future<void> resetPassword(String email) async {
     state = const AsyncValue.loading();
     final result = await _repository.resetPassword(email);
-    
+
     result.fold(
       (failure) {
         log.setCustomKey('auth_flow', 'reset_password');
@@ -108,8 +112,9 @@ class AuthController extends _$AuthController {
       },
       (_) {
         log.i('Reset password email sent to $email');
-        // Reset to data state so UI knows it finished even if user isn't logged in
-        state = AsyncValue.data(_repository.authStateChanges.first as dynamic); // Temporary refetch current state
+        state = const AsyncValue.data(
+          AuthState(AuthChangeEvent.initialSession, null),
+        );
       },
     );
   }
@@ -126,20 +131,20 @@ User? currentUser(CurrentUserRef ref) {
 bool isAuthenticated(IsAuthenticatedRef ref) {
   final authState = ref.watch(authControllerProvider).value;
   if (authState == null) return false;
-  
+
   return authState.event == AuthChangeEvent.signedIn ||
-         authState.event == AuthChangeEvent.tokenRefreshed ||
-         authState.event == AuthChangeEvent.userUpdated;
+      authState.event == AuthChangeEvent.tokenRefreshed ||
+      authState.event == AuthChangeEvent.userUpdated;
 }
 
 /// Provides the user profile from the database, updated when the user changes.
 @riverpod
 Future<UserModel?> currentUserProfile(CurrentUserProfileRef ref) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return null;
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null || userId.isEmpty) return null;
 
   final repository = ref.watch(authRepositoryProvider);
-  final result = await repository.getUserProfile(user.id);
+  final result = await repository.getUserProfile(userId);
 
   return result.fold(
     (failure) {

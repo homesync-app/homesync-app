@@ -10,6 +10,7 @@ import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 
 part 'supabase_reward_repository.g.dart';
 
@@ -65,19 +66,21 @@ class SupabaseRewardRepository
     required String icon,
     String? category,
     required String createdBy,
+    bool isApproved = false,
   }) async {
-    return executeWithHandling(() async {
-      await _client.from('rewards').insert({
-        'household_id': householdId,
-        'title': title,
-        'description': description,
-        'cost': cost,
-        'icon': icon,
-        'category': category,
-        'created_by': createdBy,
-        'is_approved': false,
-      });
-    },
+    return executeWithHandling(
+        () async {
+          await _client.from('rewards').insert({
+            'household_id': householdId,
+            'title': title,
+            'description': description,
+            'cost': cost,
+            'icon': icon,
+            'category': category,
+            'created_by': createdBy,
+            'is_approved': isApproved,
+          });
+        },
         context: 'SupabaseRewardRepository.suggestReward',
         isOnline: _isOnline,
         onOffline: () async {
@@ -93,7 +96,7 @@ class SupabaseRewardRepository
                 'icon': icon,
                 'category': category,
                 'created_by': createdBy,
-                'is_approved': false,
+                'is_approved': isApproved,
               },
             ),
           );
@@ -102,11 +105,12 @@ class SupabaseRewardRepository
 
   @override
   Future<Either<Failure, void>> approveReward(String rewardId) async {
-    return executeWithHandling(() async {
-      await _client
-          .from('rewards')
-          .update({'is_approved': true}).eq('id', rewardId);
-    },
+    return executeWithHandling(
+        () async {
+          await _client
+              .from('rewards')
+              .update({'is_approved': true}).eq('id', rewardId);
+        },
         context: 'SupabaseRewardRepository.approveReward',
         isOnline: _isOnline,
         onOffline: () async {
@@ -123,13 +127,14 @@ class SupabaseRewardRepository
 
   @override
   Future<Either<Failure, void>> redeemReward(String rewardId) async {
-    return executeWithHandling(() async {
-      await _rpc.redeemReward(rewardId);
-    },
+    return executeWithHandling(
+        () async {
+          await _rpc.redeemReward(rewardId);
+        },
         context: 'SupabaseRewardRepository.redeemReward',
         isOnline: _isOnline,
         onOffline: () async {
-          final userId = _client.auth.currentUser?.id;
+          final userId = await AppIdentityService.instance.refresh();
           await _queueAction(
             OfflineAction(
               type: OfflineActionType.rpc,
@@ -145,9 +150,10 @@ class SupabaseRewardRepository
 
   @override
   Future<Either<Failure, void>> deleteReward(String rewardId) async {
-    return executeWithHandling(() async {
-      await _client.from('rewards').delete().eq('id', rewardId);
-    },
+    return executeWithHandling(
+        () async {
+          await _client.from('rewards').delete().eq('id', rewardId);
+        },
         context: 'SupabaseRewardRepository.deleteReward',
         isOnline: _isOnline,
         onOffline: () async {

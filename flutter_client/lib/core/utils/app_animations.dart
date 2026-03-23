@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:flutter_animate/flutter_animate.dart';
+export 'package:homesync_client/shared/widgets/animated_press.dart';
+export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
+export 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class AppTransitions {
   static Route<T> slideUp<T>(Widget page) {
@@ -84,103 +87,9 @@ class AppTransitions {
   }
 }
 
-/// A wrapper for widgets that should scale down slightly when pressed.
-/// Now enhanced with HapticFeedback and smoother curves.
-class AnimatedPress extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-  final double scaleDown;
 
-  const AnimatedPress({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.onLongPress,
-    this.scaleDown = 0.95,
-  });
 
-  @override
-  State<AnimatedPress> createState() => _AnimatedPressState();
-}
 
-class _AnimatedPressState extends State<AnimatedPress>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 80),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) {
-        _controller.forward();
-        HapticFeedback.selectionClick();
-      },
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap?.call();
-      },
-      onTapCancel: () => _controller.reverse(),
-      onLongPress: widget.onLongPress != null
-          ? () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress!();
-            }
-          : null,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Standardized Shimmer that feels premium.
-class ShimmerLoading extends StatelessWidget {
-  final Widget child;
-  final bool isLoading;
-
-  const ShimmerLoading({
-    super.key,
-    required this.child,
-    this.isLoading = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isLoading) return child;
-
-    return child
-        .animate(onPlay: (controller) => controller.repeat())
-        .shimmer(
-          duration: 1200.ms,
-          color: Colors.white.withValues(alpha: 0.6),
-        );
-  }
-}
 
 /// Extension for easy access to premium micro-animations via [flutter_animate].
 extension AppAnimationsExtension on Widget {

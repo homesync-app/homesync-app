@@ -44,7 +44,7 @@ final isAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
 // ignore: unused_element
 typedef IsAuthenticatedRef = AutoDisposeProviderRef<bool>;
 String _$currentUserProfileHash() =>
-    r'36ab44b5b0285f7b4e1837f7d9a38763d1f184fa';
+    r'30eb7061bc5c697b74960a043c1455f2500b4893';
 
 /// Provides the user profile from the database, updated when the user changes.
 ///
@@ -64,7 +64,7 @@ final currentUserProfileProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUserProfileRef = AutoDisposeFutureProviderRef<UserModel?>;
-String _$authControllerHash() => r'9278828f3e8e412ee5adfdd32ecb074f3d32b169';
+String _$authControllerHash() => r'7260a2548ac1f33477486ecef1a0bfb1fedf69e4';
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.

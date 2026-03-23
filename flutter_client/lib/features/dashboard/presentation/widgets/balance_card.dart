@@ -37,10 +37,15 @@ class BalanceCard extends ConsumerWidget {
         ? AppColors.accentOrange
         : (isBalanced ? AppColors.sage : AppColors.sage);
 
-    final String balanceMessage = isBalanced
-        ? 'Balance en calma'
-        : (isNegative ? 'Hace falta equilibrar' : 'Quedo a tu favor');
-    const String balanceDetail = 'El amor es lo unico que cuenta hoy.';
+    final String balanceMessage = partnerName == null
+        ? 'Mi presupuesto'
+        : (isBalanced
+            ? 'Balance en calma'
+            : (isNegative ? 'Hace falta equilibrar' : 'Quedo a tu favor'));
+
+    final String balanceDetail = partnerName == null
+        ? '¡Segu\u00ed as\u00ed! Cada paso cuenta.'
+        : '\u00a1Todo en orden! El amor es lo \u00fanico que cuenta hoy \ud83d\udc95';
 
     return Container(
       width: double.infinity,
@@ -157,116 +162,79 @@ class BalanceCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            if (isBalanced)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.border.withValues(alpha: 0.4),
-                    ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: theme.border.withValues(alpha: 0.4),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        balanceDetail,
-                        style: TextStyle(
-                          color: theme.textPrimary.withValues(alpha: 0.78),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.15,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+              ),
+              child: isBalanced 
+                ? Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
                       children: [
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: AppColors.sage.withValues(alpha: 0.55),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.favorite_rounded,
-                          size: 10,
-                          color: AppColors.accentOrange.withValues(alpha: 0.72),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.4),
-                            shape: BoxShape.circle,
+                        Expanded(
+                          child: Text(
+                            balanceDetail,
+                            style: TextStyle(
+                              color: AppColors.sage,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.15,
+                              height: 1.2,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.border.withValues(alpha: 0.4),
+                  )
+                : const SizedBox.shrink(),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: AnimatedPress(
+                    onTap: () {
+                      ref.read(parejaTabIndexProvider.notifier).setIndex(0);
+                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                    },
+                    child: _buildCleanMetric(
+                      context,
+                      label: 'Experiencia',
+                      value:
+                          '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
+                      icon: Icons.star_rounded,
+                      color: const Color(0xFFE8943A),
                     ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AnimatedPress(
-                        onTap: () {
-                          ref.read(parejaTabIndexProvider.notifier).setIndex(0);
-                          ref.read(bottomNavIndexProvider.notifier).setIndex(3);
-                        },
-                        child: _buildCleanMetric(
-                          context,
-                          label: 'Experiencia',
-                          value:
-                              '${NumberFormat.decimalPattern('es_AR').format(xp)} XP',
-                          icon: Icons.star_rounded,
-                          color: const Color(0xFFE8943A),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 1,
-                      height: 32,
-                      color: theme.border.withValues(alpha: 0.4),
-                    ),
-                    Expanded(
-                      child: AnimatedPress(
-                        onTap: () {
-                          ref.read(parejaTabIndexProvider.notifier).setIndex(1);
-                          ref.read(bottomNavIndexProvider.notifier).setIndex(3);
-                        },
-                        child: _buildCleanMetric(
-                          context,
-                          label: 'Coins',
-                          value: NumberFormat.decimalPattern('es_AR')
-                              .format(coins),
-                          icon: Icons.monetization_on_rounded,
-                          color: AppColors.sage,
-                        ),
-                      ),
-                    ),
-                  ],
+                Container(
+                  width: 1,
+                  height: 32,
+                  color: theme.border.withValues(alpha: 0.4),
                 ),
-              ),
+                Expanded(
+                  child: AnimatedPress(
+                    onTap: () {
+                      ref.read(parejaTabIndexProvider.notifier).setIndex(1);
+                      ref.read(bottomNavIndexProvider.notifier).setIndex(3);
+                    },
+                    child: _buildCleanMetric(
+                      context,
+                      label: 'Coins',
+                      value: NumberFormat.decimalPattern('es_AR')
+                          .format(coins),
+                      icon: Icons.monetization_on_rounded,
+                      color: AppColors.sage,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

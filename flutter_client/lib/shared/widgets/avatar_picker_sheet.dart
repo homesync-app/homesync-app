@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'user_avatar.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'user_avatar.dart';
 
 class AvatarPickerSheet extends ConsumerWidget {
   const AvatarPickerSheet({super.key});
@@ -21,14 +22,17 @@ class AvatarPickerSheet extends ConsumerWidget {
   }
 
   Future<void> _updateAvatar(
-      BuildContext context, WidgetRef ref, String emoji) async {
+    BuildContext context,
+    WidgetRef ref,
+    String emoji,
+  ) async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) throw Exception('No autenticado');
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null || userId.isEmpty) throw Exception('No autenticado');
 
       await Supabase.instance.client
           .from('users')
-          .update({'avatar_url': emoji}).eq('id', user.id);
+          .update({'avatar_url': emoji}).eq('id', userId);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(recentActivityProvider);
@@ -37,7 +41,7 @@ class AvatarPickerSheet extends ConsumerWidget {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Avatar actualizado con éxito 🎉'),
+            content: Text('Avatar actualizado con exito'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -94,10 +98,13 @@ class AvatarPickerSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Elegí un avatar de la colección o creá el tuyo propio',
+              'Elegi un avatar de la coleccion o crea el tuyo propio',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withValues(alpha: 0.7),
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
@@ -118,109 +125,30 @@ class AvatarPickerSheet extends ConsumerWidget {
                           emoji: animal['emoji'],
                           color: animal['color'],
                           isSelected: isSelected,
-                          onTap: () => _updateAvatar(context, ref, animal['emoji']),
+                          onTap: () => _updateAvatar(
+                            context,
+                            ref,
+                            animal['emoji'] as String,
+                          ),
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 32),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        const Text(
-                          'Personajes 3D',
-                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 24),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final isPremium = ref.watch(premiumProvider);
+                        return OutlinedButton.icon(
+                          onPressed: isPremium
+                              ? () => _showCustomAvatarDialog(context, ref)
+                              : () => PremiumPaywall.show(context),
+                          icon: const Icon(Icons.auto_awesome_rounded),
+                          label: Text(
+                            isPremium
+                                ? 'Crear avatar personalizado'
+                                : 'Desbloquear avatar personalizado',
                           ),
-                          child: const Text(
-                            'PREMIUM',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      clipBehavior: Clip.none,
-                      child: Row(
-                        children: UserAvatar.premiumAvatars.map((char) {
-                          final premiumUrl = 'premium://${char['url']}';
-                          final isSelected = currentAvatar == premiumUrl;
-        
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Column(
-                              children: [
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutCubic,
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? char['color'].withValues(alpha: 0.15)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(28),
-                                    border: isSelected
-                                        ? Border.all(
-                                            color: AppColors.primary,
-                                            width: 3,
-                                          )
-                                        : null,
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.primary.withValues(alpha: 0.25),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 6),
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: CustomUserAvatar(
-                                    avatarUrl: premiumUrl,
-                                    radius: 40,
-                                    isAnimated: true,
-                                    isPriority: isSelected,
-                                    onTap: () {
-                                      final isPremium = ref.read(premiumProvider);
-                                      if (isPremium) {
-                                        _updateAvatar(context, ref, premiumUrl);
-                                      } else {
-                                        PremiumPaywall.show(context);
-                                      }
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  char['name'] ?? '',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    _CustomEmojiSection(
-                      onSelected: (emoji) => _updateAvatar(context, ref, emoji),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -228,6 +156,39 @@ class AvatarPickerSheet extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Avatar personalizado'),
+        content: TextField(
+          controller: controller,
+          maxLength: 2,
+          decoration: const InputDecoration(
+            hintText: 'Ej: 🌞',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                Navigator.pop(context);
+                _updateAvatar(context, ref, value);
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
       ),
     );
   }
@@ -251,112 +212,30 @@ class _AvatarOption extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutBack,
-        padding: const EdgeInsets.all(3),
+        duration: const Duration(milliseconds: 180),
+        width: 74,
+        height: 74,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          color: color,
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2.5,
+            width: 2,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  )
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [color, color.withValues(alpha: 0.8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              emoji,
-              style: const TextStyle(fontSize: 34),
-            ),
+        child: Center(
+          child: Text(
+            emoji,
+            style: const TextStyle(fontSize: 30),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CustomEmojiSection extends StatefulWidget {
-  final Function(String) onSelected;
-
-  const _CustomEmojiSection({required this.onSelected});
-
-  @override
-  State<_CustomEmojiSection> createState() => _CustomEmojiSectionState();
-}
-
-class _CustomEmojiSectionState extends State<_CustomEmojiSection> {
-  final _controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            '¿Querés algo diferente?',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  textAlign: TextAlign.center,
-                  maxLength: 1,
-                  style: const TextStyle(fontSize: 24),
-                  decoration: InputDecoration(
-                    hintText: '💡 Pegá un emoji',
-                    counterText: '',
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (val) {
-                    if (val.isNotEmpty) {
-                      widget.onSelected(val);
-                      _controller.clear();
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Cualquier emoji que elijas se adaptará a tu perfil',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-          ),
-        ],
       ),
     );
   }

@@ -96,7 +96,7 @@ final activeCategoriesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ActiveCategoriesRef = AutoDisposeProviderRef<AsyncValue<List<String>>>;
-String _$todayTasksHash() => r'c7f2ce226d0b5a4635809ea02f5091c0fb11f6b0';
+String _$todayTasksHash() => r'6b1b3ab925c4a528fb27003c913fe3d8ec796520';
 
 /// See also [todayTasks].
 @ProviderFor(todayTasks)
@@ -178,7 +178,7 @@ final taskViewModeProvider =
 );
 
 typedef _$TaskViewMode = AutoDisposeNotifier<bool>;
-String _$tasksHash() => r'470e07458da5b7b3f0372ff6dfdce69f9872e6d5';
+String _$tasksHash() => r'3298c5ff1ca764fcd2d815ba355784d84b986846';
 
 /// See also [Tasks].
 @ProviderFor(Tasks)

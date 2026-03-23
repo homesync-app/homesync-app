@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,6 +22,8 @@ import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/admin_panel.dart';
+
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -52,8 +55,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null || userId.isEmpty) {
         setState(() => _isLoading = false);
         return;
       }
@@ -61,7 +64,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final householdMember = await Supabase.instance.client
           .from('household_members')
           .select('household_id, role')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (householdMember == null) {
@@ -167,8 +170,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SnackBar(content: Text('Genera un codigo primero')));
       return;
     }
+    String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
+    if (_householdType == 'couple') {
+      intro = '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+    } else if (_householdType == 'family') {
+      intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
+    } else if (_householdType == 'friends') {
+      intro = '¡Hola! Únete a nuestro grupo en HomeSync para convivir mejor.';
+    }
+
     final text =
-        'Hola! Unete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este codigo: *$_invitationCode*\n\nOrganicemos nuestro hogar juntos.';
+        '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -442,6 +454,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             _buildNotificationsCard(),
                             const SizedBox(height: 24),
                             _buildFAQButton(),
+                            const SizedBox(height: 28),
+                            _buildSectionLabel(
+                              eyebrow: 'IDENTIDAD',
+                              title: 'IDs de la cuenta',
+                              subtitle:
+                                  'Sirven para terminar la migracion profesional de Firebase sin adivinar datos.',
+                            ),
+                            const SizedBox(height: 14),
+                            _buildIdentityCard(),
                             const SizedBox(height: 48),
                             _buildSectionLabel(
                               eyebrow: 'CUENTA',
@@ -454,28 +475,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 32),
                             _buildResetAccountButton(),
                             const SizedBox(height: 48),
-                            Opacity(
-                              opacity: 0.4,
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'HOMESYNC',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2,
-                                      color: theme.textPrimary,
+                            GestureDetector(
+                              onTap: () => AdminPanel.show(context),
+                              child: Opacity(
+                                opacity: 0.4,
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'HOMESYNC',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 2,
+                                        color: theme.textPrimary,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Version 1.0.0',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: theme.textSecondary,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Version 1.0.0',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -672,6 +696,125 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildIdentityCard() {
+    final theme = context.theme;
+    final appUserId = ref.watch(currentUserIdProvider);
+    final firebaseUid = fa.FirebaseAuth.instance.currentUser?.uid;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Usa estos valores para vincular la cuenta actual con Firebase.',
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 18),
+          _buildIdentityRow(
+            label: 'App User ID',
+            value: appUserId,
+            onCopy: appUserId == null
+                ? null
+                : () => _copyIdentityValue('App User ID', appUserId),
+          ),
+          const SizedBox(height: 12),
+          _buildIdentityRow(
+            label: 'Firebase UID',
+            value: firebaseUid,
+            onCopy: firebaseUid == null
+                ? null
+                : () => _copyIdentityValue('Firebase UID', firebaseUid),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIdentityRow({
+    required String label,
+    required String? value,
+    required VoidCallback? onCopy,
+  }) {
+    final theme = context.theme;
+    final hasValue = value != null && value.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  hasValue ? value : 'No disponible en esta sesion',
+                  style: TextStyle(
+                    color: hasValue ? theme.textPrimary : theme.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            onPressed: onCopy,
+            tooltip: 'Copiar',
+            icon: Icon(
+              Icons.copy_rounded,
+              color: hasValue ? theme.primary : theme.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _copyIdentityValue(String label, String value) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$label copiado'),
+        backgroundColor: context.theme.success,
+      ),
+    );
+  }
+
   Widget _profileActionBtn({
     required IconData icon,
     required String label,
@@ -718,7 +861,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       'solo': '👤 Solo',
     };
     final memberCount = _members.length;
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = ref.read(currentUserIdProvider);
     final theme = context.theme;
 
     return Container(
@@ -888,13 +1031,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ],
                               ),
                               Text(
-                                role == 'owner' ? 'Propietario' : 'Miembro',
+                                _getMemberRoleLabel(member, role),
                                 style: TextStyle(
                                     color: theme.textSecondary, fontSize: 11),
                               ),
                             ],
                           ),
                         ),
+                        // Edit role button (only for current user or household owner)
+                        if (isCurrentUser ||
+                            _members.any((m) =>
+                                m['user_id'] == currentUserId &&
+                                m['role'] == 'owner'))
+                          IconButton(
+                            icon: Icon(Icons.edit_outlined,
+                                size: 16, color: theme.textSecondary),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _updateMemberRole(member),
+                          ),
                         if (role == 'owner')
                           const Padding(
                             padding: EdgeInsets.only(right: 8),
@@ -1045,6 +1200,121 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               content: Text('Error: $e'), backgroundColor: AppColors.error),
         );
       }
+    }
+  }
+
+  String _getMemberRoleLabel(Map<String, dynamic> member, String? role) {
+    if (member['display_role'] != null && member['display_role'].isNotEmpty) {
+      return member['display_role'];
+    }
+    if (role == 'owner') return 'Propietario';
+    switch (_householdType) {
+      case 'couple':
+        return 'Pareja';
+      case 'family':
+        return 'Familiar';
+      case 'friends':
+        return 'Amigo';
+      default:
+        return 'Miembro';
+    }
+  }
+
+  Future<void> _updateMemberRole(Map<String, dynamic> member) async {
+    final theme = context.theme;
+    final userId = member['user_id'];
+    final currentLabel = member['display_role'] ?? '';
+    final suggestions = <String>[];
+    if (_householdType == 'family') {
+      suggestions.addAll(['Padre', 'Madre', 'Hijo', 'Hija', 'Abuelo', 'Abuela']);
+    } else if (_householdType == 'couple') {
+      suggestions.addAll(['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa']);
+    } else if (_householdType == 'friends') {
+      suggestions.addAll(['Amigo', 'Compañero', 'Invitado']);
+    }
+
+    final ctrl = TextEditingController(text: currentLabel);
+
+    final String? newRole = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Asignar Rol / Apodo',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: InputDecoration(
+                labelText: 'Nombre del rol (ej: Padre)',
+                filled: true,
+                fillColor: theme.primary.withValues(alpha: 0.05),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            if (suggestions.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text('Sugerencias:',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: suggestions
+                    .map((s) => ActionChip(
+                          label: Text(s, style: const TextStyle(fontSize: 12)),
+                          onPressed: () => ctrl.text = s,
+                        ))
+                    .toList(),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (newRole == null || newRole == currentLabel) return;
+
+    try {
+      setState(() => _isLoading = true);
+      final repo = ref.read(householdRepositoryProvider);
+      final result = await repo.updateMemberDisplayRole(userId, newRole);
+
+      result.fold(
+        (l) => throw Exception(l.message),
+        (r) {
+          if (mounted) {
+            setState(() {
+              member['display_role'] = newRole;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('✅ Rol actualizado'),
+                  backgroundColor: AppColors.success),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -1471,12 +1741,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (newName == null || newName.isEmpty || newName == currentName) return;
 
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null || userId.isEmpty) return;
 
       await Supabase.instance.client
           .from('users')
-          .update({'full_name': newName}).eq('id', user.id);
+          .update({'full_name': newName}).eq('id', userId);
 
       // Invalidate profile cache so header updates
       ref.invalidate(userProfileProvider);

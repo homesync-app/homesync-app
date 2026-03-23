@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AIFaceoffWidget extends StatelessWidget {
+class AIFaceoffWidget extends ConsumerWidget {
   final List<Map<String, dynamic>> weeklyRanking;
 
   const AIFaceoffWidget({super.key, required this.weeklyRanking});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (weeklyRanking.length < 2) {
       return const SizedBox.shrink();
     }
 
     final theme = context.theme;
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = ref.watch(currentUserIdProvider);
     final leader = weeklyRanking[0];
     final challenger = weeklyRanking[1];
 

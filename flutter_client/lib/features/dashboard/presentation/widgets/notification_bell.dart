@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Notification Bell with unread badge
-// ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationBell extends StatefulWidget {
   const NotificationBell({super.key});
@@ -46,12 +44,13 @@ class _NotificationBellState extends State<NotificationBell>
 
   Future<void> _loadUnreadCount() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+      final userId = await AppIdentityService.instance.refresh();
+      if (userId == null || userId.isEmpty) return;
+
       final data = await Supabase.instance.client
           .from('notifications')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('is_read', false);
       final count = (data as List).length;
       if (mounted && count != _unreadCount) {

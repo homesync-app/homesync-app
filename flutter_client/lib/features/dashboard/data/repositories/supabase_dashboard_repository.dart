@@ -44,7 +44,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         if (eventType == 'task_completed') {
           uiType = 'task';
-          data['task_title'] = item['title'];
+          final taskTitle = metadata['task_title'] ?? item['title'] ?? 'una tarea';
+          data['title'] = 'Complet\u00f3 la tarea: $taskTitle';
+          data['task_title'] = taskTitle;
           data['xp_reward'] = metadata['xp_reward'] ??
               metadata['xpReward'] ??
               metadata['p_xp_reward'] ??
@@ -53,15 +55,19 @@ class SupabaseDashboardRepository implements DashboardRepository {
               metadata['reward'];
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
-          data['amount'] = metadata['amount'] ?? 0;
-          data['description'] = item['description'];
+          final amount = metadata['amount'] ?? 0;
+          final expenseDesc = item['description'] ?? metadata['description'] ?? 'un gasto';
+          data['title'] = 'Agreg\u00f3 un gasto: $expenseDesc';
+          data['amount'] = amount;
+          data['description'] = expenseDesc;
           data['expense_id'] = metadata['expense_id'] ?? metadata['id'];
-          // Preserve these for filtering
           data['is_shared'] = metadata['is_shared'];
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
           uiType = 'task';
-          data['task_title'] = 'Canjeó premio: ${item['title']}';
+          data['title'] = 'Canje\u00f3 un premio: ${item['title'] ?? 'Premio'}';
+        } else {
+          data['title'] = item['title'] ?? item['description'] ?? 'Realiz\u00f3 una acci\u00f3n';
         }
 
         return {

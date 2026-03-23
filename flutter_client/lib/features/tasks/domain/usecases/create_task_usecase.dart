@@ -17,6 +17,9 @@ class CreateTaskUseCase {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     String? status,
   }) async {
     if (title.trim().isEmpty) {
@@ -36,6 +39,9 @@ class CreateTaskUseCase {
       coinReward: coinReward,
       assignedTo: assignedTo,
       recurrenceType: recurrenceType,
+      recurrenceInterval: recurrenceInterval,
+      recurrenceWeekdays: recurrenceWeekdays,
+      recurrenceMonthDays: recurrenceMonthDays,
       status: status,
     );
   }

@@ -80,6 +80,8 @@ class TaskModel {
   final int coinReward;
   final String? recurrenceType;
   final int recurrenceInterval;
+  final List<int> recurrenceWeekdays;
+  final List<int> recurrenceMonthDays;
   final DateTime? dueAt;
   final DateTime? recurrenceEndAt;
   final String householdId;
@@ -106,6 +108,8 @@ class TaskModel {
     required this.coinReward,
     this.recurrenceType,
     this.recurrenceInterval = 1,
+    this.recurrenceWeekdays = const [],
+    this.recurrenceMonthDays = const [],
     this.dueAt,
     this.recurrenceEndAt,
     required this.householdId,
@@ -134,6 +138,8 @@ class TaskModel {
       coinReward: _toInt(map['coin_reward']),
       recurrenceType: map['recurrence_type'] as String?,
       recurrenceInterval: _toInt(map['recurrence_interval'], defaultValue: 1),
+      recurrenceWeekdays: (map['recurrence_weekdays'] as List?)?.cast<int>() ?? const [],
+      recurrenceMonthDays: (map['recurrence_month_days'] as List?)?.cast<int>() ?? const [],
       dueAt: _parseDate(map['due_at']),
       recurrenceEndAt: _parseDate(map['recurrence_end_at']),
       householdId: map['household_id'] as String? ?? '',
@@ -162,6 +168,8 @@ class TaskModel {
         'coin_reward': coinReward,
         'recurrence_type': recurrenceType,
         'recurrence_interval': recurrenceInterval,
+        'recurrence_weekdays': recurrenceWeekdays,
+        'recurrence_month_days': recurrenceMonthDays,
         'due_at': dueAt?.toIso8601String(),
         'recurrence_end_at': recurrenceEndAt?.toIso8601String(),
         'household_id': householdId,
@@ -191,6 +199,7 @@ class TaskModel {
       isPendingVerification || status == TaskStatus.verified;
   bool get isVerified => status == TaskStatus.verified;
   bool get isObjected => status == TaskStatus.objected;
+  bool get isPending => isActive;
   bool get isRecurring => recurrenceType != null;
   bool get isOverdue =>
       dueAt != null && dueAt!.isBefore(DateTime.now()) && isActive;
@@ -228,6 +237,8 @@ class TaskModel {
     int? coinReward,
     String? recurrenceType,
     int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     DateTime? dueAt,
     DateTime? recurrenceEndAt,
     String? householdId,
@@ -254,6 +265,8 @@ class TaskModel {
       coinReward: coinReward ?? this.coinReward,
       recurrenceType: recurrenceType ?? this.recurrenceType,
       recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
+      recurrenceWeekdays: recurrenceWeekdays ?? this.recurrenceWeekdays,
+      recurrenceMonthDays: recurrenceMonthDays ?? this.recurrenceMonthDays,
       dueAt: dueAt ?? this.dueAt,
       recurrenceEndAt: recurrenceEndAt ?? this.recurrenceEndAt,
       householdId: householdId ?? this.householdId,

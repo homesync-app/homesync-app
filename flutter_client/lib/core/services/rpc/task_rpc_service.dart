@@ -1,5 +1,6 @@
-import 'base_rpc_service.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+
+import 'base_rpc_service.dart';
 
 class TaskRpcService extends BaseRpcService {
   TaskRpcService({super.clientOverride});
@@ -18,17 +19,16 @@ class TaskRpcService extends BaseRpcService {
     String? recurrenceType,
     int recurrenceInterval = 1,
     DateTime? recurrenceEndAt,
+    List<int> recurrenceWeekdays = const [],
+    List<int> recurrenceMonthDays = const [],
   }) async {
     return executeWithRetry(() async {
-      final user = client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Usuario no autenticado');
-      }
+      final userId = await requireCurrentUserId();
 
       final response = await client.rpc(
         'create_task',
         params: {
-          'p_user_id': user.id,
+          'p_user_id': userId,
           'p_title': title,
           'p_category': category,
           'p_assigned_to': assignedTo,
@@ -41,6 +41,8 @@ class TaskRpcService extends BaseRpcService {
           'p_recurrence_type': recurrenceType,
           'p_recurrence_interval': recurrenceInterval,
           'p_recurrence_end_at': recurrenceEndAt?.toIso8601String(),
+          'p_recurrence_weekdays': recurrenceWeekdays,
+          'p_recurrence_month_days': recurrenceMonthDays,
         },
       );
 
@@ -63,36 +65,67 @@ class TaskRpcService extends BaseRpcService {
     required int coinReward,
     required String householdId,
     List<String>? userIds,
+    DateTime? completedAt,
   }) async {
     return executeWithRetry(() async {
-      final user = client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Usuario no autenticado');
-      }
-
+      final userId = await requireCurrentUserId();
       final requestId = generateRequestId();
 
       final response = await client.rpc(
         'complete_task_transaction',
         params: {
           'p_request_id': requestId,
-          'p_user_ids': userIds ?? [user.id],
+          'p_user_ids': userIds ?? [userId],
           'p_task_id': taskId,
           'p_household_id': householdId,
           'p_xp_reward': xpReward,
           'p_coin_reward': coinReward,
           'p_task_title': taskTitle,
+          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
         },
       );
 
       final result = TaskCompletionResult.fromRpcResponse(response);
       if (!result.success) {
-        throw Exception(result.message.isNotEmpty
-            ? result.message
-            : 'No se pudo completar la tarea');
+        throw Exception(
+          result.message.isNotEmpty
+              ? result.message
+              : 'No se pudo completar la tarea',
+        );
       }
 
       return result;
+    });
+  }
+
+  Future<Map<String, dynamic>> completeTasksBatch({
+    required List<String> taskIds,
+    required String householdId,
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
+    return executeWithRetry(() async {
+      final userId = await requireCurrentUserId();
+      final requestId = generateRequestId();
+
+      final response = await client.rpc(
+        'complete_tasks_batch',
+        params: {
+          'p_request_id': requestId,
+          'p_user_ids': userIds ?? [userId],
+          'p_task_ids': taskIds,
+          'p_household_id': householdId,
+          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+        },
+      );
+
+      final Map<String, dynamic> r = response as Map<String, dynamic>;
+      if (r['success'] != true) {
+        throw Exception(
+          r['message'] ?? 'Error al completar las tareas',
+        );
+      }
+      return r;
     });
   }
 
@@ -100,20 +133,16 @@ class TaskRpcService extends BaseRpcService {
     required String taskId,
     String? nextDueAt,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final requestId = generateRequestId();
 
     final response = await client.rpc(
       'verify_task_transaction',
       params: {
         'p_request_id': requestId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_task_id': taskId,
-        'p_verified_by': user.id,
+        'p_verified_by': userId,
         'p_next_due_at': nextDueAt,
       },
     );
@@ -129,20 +158,16 @@ class TaskRpcService extends BaseRpcService {
     required String taskId,
     String? reason,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final requestId = generateRequestId();
 
     final response = await client.rpc(
       'reject_task_transaction',
       params: {
         'p_request_id': requestId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_task_id': taskId,
-        'p_rejected_by': user.id,
+        'p_rejected_by': userId,
         'p_reason': reason,
       },
     );
@@ -154,18 +179,17 @@ class TaskRpcService extends BaseRpcService {
     };
   }
 
-  Future<List<Map<String, dynamic>>> getTasks(
-      {int limit = 100, int offset = 0}) async {
+  Future<List<Map<String, dynamic>>> getTasks({
+    int limit = 100,
+    int offset = 0,
+  }) async {
     return executeWithRetry(() async {
-      final user = client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Usuario no autenticado');
-      }
+      final userId = await requireCurrentUserId();
 
       final householdMembers = await client
           .from('household_members')
           .select('household_id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .limit(1);
 
       if (householdMembers.isEmpty) {
@@ -173,7 +197,6 @@ class TaskRpcService extends BaseRpcService {
       }
 
       final householdId = householdMembers.first['household_id'];
-
       final response = await client
           .from('tasks')
           .select()
@@ -189,16 +212,12 @@ class TaskRpcService extends BaseRpcService {
     required String taskId,
     String? reason,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'object_task_v2',
       params: {
         'p_task_id': taskId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_reason': reason,
       },
     );
@@ -209,16 +228,12 @@ class TaskRpcService extends BaseRpcService {
   Future<Map<String, dynamic>> undoTaskCompletion({
     required String activityId,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'undo_task_completion',
       params: {
         'p_activity_id': activityId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
       },
     );
 
@@ -227,16 +242,12 @@ class TaskRpcService extends BaseRpcService {
 
   Future<Map<String, dynamic>> restoreTaskCoins(
       {required String taskId}) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'restore_task_coins',
       params: {
         'p_task_id': taskId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
       },
     );
 
@@ -244,15 +255,11 @@ class TaskRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getTaskHistory({int limit = 50}) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_task_history',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_limit': limit,
       },
     );

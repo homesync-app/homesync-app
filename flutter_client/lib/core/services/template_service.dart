@@ -1,4 +1,6 @@
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class TaskTemplate {
   final String id;
@@ -89,16 +91,27 @@ class TemplateService {
         .toList();
   }
 
-  Future<int> cloneTemplates(List<String> templateIds) async {
-    final user = _client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
+  Future<String> _requireCurrentUserId() async {
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId != null && appUserId.isNotEmpty) {
+      return appUserId;
     }
+
+    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
+      final user = _client.auth.currentUser;
+      if (user != null) return user.id;
+    }
+
+    throw Exception('Usuario no autenticado');
+  }
+
+  Future<int> cloneTemplates(List<String> templateIds) async {
+    final userId = await _requireCurrentUserId();
 
     final response = await _client.rpc(
       'clone_task_templates',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_template_ids': templateIds.isEmpty ? null : templateIds,
       },
     );
@@ -107,15 +120,12 @@ class TemplateService {
   }
 
   Future<int> cloneAllTemplates() async {
-    final user = _client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    final userId = await _requireCurrentUserId();
 
     final response = await _client.rpc(
       'clone_task_templates',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_template_ids': null,
       },
     );

@@ -12,8 +12,18 @@ abstract class TaskRepository {
 
   /// Mark a TaskModel as completed and award XP/coins via RPC.
   /// Returns the result map from the RPC (new balance, etc.)
-  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds});
+  Future<Either<Failure, TaskCompletionResult>> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  });
+
+  /// Complete multiple tasks simultaneously in a single transaction.
+  Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  });
 
   /// Verify a completed TaskModel (done by the other household member).
   Future<Either<Failure, void>> verifyTask(
@@ -28,7 +38,12 @@ abstract class TaskRepository {
 
   /// Update the recurrence schedule of a task.
   Future<Either<Failure, void>> updateSchedule(
-      String taskId, String? recurrenceType);
+    String taskId,
+    String? recurrenceType, {
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+  });
 
   /// Create a new TaskModel via RPC.
   Future<Either<Failure, void>> createTask({
@@ -40,6 +55,9 @@ abstract class TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     String? status,
   });
 

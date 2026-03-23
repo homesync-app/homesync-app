@@ -130,6 +130,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         'coinReward': int.tryParse(_coinController.text) ?? 1,
         'assignedTo': _selectedMemberId,
         'recurrenceType': _selectedRecurrence,
+        'recurrenceInterval': _recurrenceInterval,
+        'recurrenceWeekdays': _selectedRecurrence == 'custom' 
+            ? _selectedWeekdays.toList() 
+            : null,
+        'recurrenceMonthDays': _selectedRecurrence == 'custom' 
+            ? _selectedMonthDays.toList() 
+            : null,
       });
 
       if (mounted) Navigator.of(context).pop(true);

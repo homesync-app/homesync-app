@@ -7,6 +7,7 @@ import '../../domain/models/expense_template_model.dart';
 import '../../domain/repositories/expense_repository.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
@@ -126,7 +127,7 @@ class SupabaseExpenseRepository
       String householdId) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
-      final currentUserId = _client.auth.currentUser?.id;
+      final currentUserId = await AppIdentityService.instance.refresh();
       final response = await _client.rpc(
         'get_filtered_expenses',
         params: {
@@ -160,7 +161,7 @@ class SupabaseExpenseRepository
       String householdId) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
-      final currentUserId = _client.auth.currentUser?.id;
+      final currentUserId = await AppIdentityService.instance.refresh();
       final response = await _client.rpc(
         'get_combined_feed',
         params: {
@@ -240,8 +241,8 @@ class SupabaseExpenseRepository
     return executeWithHandling(
         () async {
           final sw = Stopwatch()..start();
-          final user = _client.auth.currentUser;
-          if (user == null) throw const AuthFailure();
+          final userId = await AppIdentityService.instance.refresh();
+          if (userId == null || userId.isEmpty) throw const AuthFailure();
 
           await _client.rpc(
             'save_expense_v4',

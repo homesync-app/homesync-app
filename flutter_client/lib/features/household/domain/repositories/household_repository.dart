@@ -33,4 +33,10 @@ abstract class HouseholdRepository {
 
   /// Updates the default split ratio for the household
   Future<Either<Failure, void>> updateDefaultSplitRatio(String householdId, double ratio);
+
+  /// Updates the household type (solo, couple, family, friends)
+  Future<Either<Failure, void>> updateHouseholdType(String householdId, String type);
+
+  /// Updates the custom display role for a member (e.g. Padre, Madre)
+  Future<Either<Failure, void>> updateMemberDisplayRole(String userId, String? displayRole);
 }

@@ -12,8 +12,10 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -120,7 +122,7 @@ void main() async {
   if (deviceContext['device'] != null) {
     log.setCustomKey('device_type', deviceContext['device']);
   }
-  
+
   // 1. Initialize Firebase
   try {
     await Firebase.initializeApp(
@@ -128,18 +130,27 @@ void main() async {
     );
     // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
     if (!kIsWeb) {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-      FirebaseCrashlytics.instance.setCustomKey('environment', appContext['environment'] as String);
-      FirebaseCrashlytics.instance.setCustomKey('app_version', appContext['app_version'] as String);
-      FirebaseCrashlytics.instance.setCustomKey('build_number', appContext['build_number'] as String);
-      FirebaseCrashlytics.instance.setCustomKey('platform', appContext['platform'] as String);
-      FirebaseCrashlytics.instance.setCustomKey('locale', appContext['locale'] as String);
-      FirebaseCrashlytics.instance.setCustomKey('timezone', appContext['timezone'] as String);
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FirebaseCrashlytics.instance
+          .setCustomKey('environment', appContext['environment'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('app_version', appContext['app_version'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('build_number', appContext['build_number'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('platform', appContext['platform'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('locale', appContext['locale'] as String);
+      FirebaseCrashlytics.instance
+          .setCustomKey('timezone', appContext['timezone'] as String);
       if (deviceContext['model'] != null) {
-        FirebaseCrashlytics.instance.setCustomKey('device_model', deviceContext['model'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('device_model', deviceContext['model'] as String);
       }
       if (deviceContext['device'] != null) {
-        FirebaseCrashlytics.instance.setCustomKey('device_type', deviceContext['device'] as String);
+        FirebaseCrashlytics.instance
+            .setCustomKey('device_type', deviceContext['device'] as String);
       }
     }
   } catch (e) {
@@ -148,22 +159,27 @@ void main() async {
 
   final auth = SupabaseAuthService();
   await auth.initialize();
+  await AppIdentityService.instance.initialize();
 
   if (!kIsWeb) {
-    final userId = auth.currentUser?.id;
+    final userId = AppIdentityService.instance.currentUserId;
     if (userId != null && userId.isNotEmpty) {
       FirebaseCrashlytics.instance.setUserIdentifier(userId);
       FirebaseCrashlytics.instance.setCustomKey('user_id', userId);
     }
   }
-  final initialUserId = auth.currentUser?.id;
+  final initialUserId = AppIdentityService.instance.currentUserId;
   if (initialUserId != null && initialUserId.isNotEmpty) {
     log.setUserId(initialUserId);
     log.setCustomKey('user_id', initialUserId);
   }
 
-  Supabase.instance.client.auth.onAuthStateChange.listen((event) {
-    final nextUserId = event.session?.user.id;
+  final authStateStream = AppEnvironment.usesFirebaseJwtForSupabase
+      ? fa.FirebaseAuth.instance.idTokenChanges().map((_) => null)
+      : Supabase.instance.client.auth.onAuthStateChange.map((_) => null);
+
+  authStateStream.listen((_) async {
+    final nextUserId = await AppIdentityService.instance.refresh();
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.setUserIdentifier(nextUserId ?? '');
       FirebaseCrashlytics.instance.setCustomKey('user_id', nextUserId ?? '');
@@ -268,7 +284,7 @@ class MyApp extends ConsumerWidget {
     return _ThemeInit(
       prefs: prefs,
       child: MaterialApp(
-        key: ValueKey(authState.asData?.value.session != null),
+        key: ValueKey(authState.asData?.value.isAuthenticated ?? false),
         title: 'HomeSync',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme(customPrimary: customPrimary),
@@ -276,7 +292,7 @@ class MyApp extends ConsumerWidget {
         themeMode: themeMode,
         home: authState.when(
           data: (state) {
-            if (state.session != null) {
+            if (state.isAuthenticated) {
               return MainScreen(prefs: prefs);
             }
             return LoginScreen(prefs: prefs);
@@ -291,5 +307,3 @@ class MyApp extends ConsumerWidget {
     );
   }
 }
-
-

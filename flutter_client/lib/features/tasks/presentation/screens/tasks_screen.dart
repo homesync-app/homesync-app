@@ -681,12 +681,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   Widget _buildEmptyState(String? filterStatus) {
+    final isSolo = ref.watch(currentHouseholdProvider).valueOrNull?.householdType == 'solo';
     return AppEmptyState(
       title: filterStatus == null
-          ? 'No hay tareas configuradas'
+          ? (isSolo ? 'No hay tareas configuradas' : 'No hay tareas configuradas')
           : 'No hay tareas con esos filtros',
       subtitle: filterStatus == null
-          ? 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.'
+          ? (isSolo ? 'Agrega tu primera tarea para empezar a organizar tu hogar.' : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
           : 'Proba cambiar la categoria o crear una nueva tarea.',
       icon: filterStatus == null
           ? Icons.edit_note_rounded

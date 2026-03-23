@@ -6,15 +6,12 @@ class BalanceRpcService extends BaseRpcService {
   Future<Map<String, dynamic>> getUserBalance({
     required String householdId,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    final userId = await requireCurrentUserId();
 
     final response = await client.rpc(
       'get_user_balance',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_household_id': householdId,
       },
     );
@@ -30,15 +27,12 @@ class BalanceRpcService extends BaseRpcService {
     int offset = 0,
     String? typeFilter,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
+    final userId = await requireCurrentUserId();
 
     final response = await client.rpc(
       'get_transaction_history',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
         'p_limit': limit,
         'p_offset': offset,
         'p_type_filter': typeFilter,

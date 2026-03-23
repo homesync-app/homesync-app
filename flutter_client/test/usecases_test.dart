@@ -27,6 +27,9 @@ class MockTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     String? status,
   }) async {
     createTaskCalled = true;
@@ -35,7 +38,7 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds}) async {
+      {List<String>? userIds, DateTime? completedAt}) async {
     completeTaskCalled = true;
     return right(const TaskCompletionResult(
       success: true,
@@ -43,6 +46,13 @@ class MockTaskRepository implements TaskRepository {
       queued: false,
       xpEarned: 20,
     ));
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
+      List<TaskModel> tasks,
+      {List<String>? userIds, DateTime? completedAt}) async {
+    return right({'success': true});
   }
 
   @override
@@ -54,7 +64,11 @@ class MockTaskRepository implements TaskRepository {
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> updateSchedule(
-          String taskId, String? recurrenceType) async =>
+          String taskId, String? recurrenceType, {
+          int? recurrenceInterval,
+          List<int>? recurrenceWeekdays,
+          List<int>? recurrenceMonthDays,
+  }) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> verifyTask(

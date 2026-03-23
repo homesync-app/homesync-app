@@ -4,6 +4,7 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 
 part 'household_providers.g.dart';
 
@@ -38,5 +39,18 @@ Future<HouseholdModel?> currentHousehold(Ref ref) async {
   return result.fold(
     (l) => null,
     (r) => r,
+  );
+}
+
+@riverpod
+HouseholdCapabilities householdCapabilities(Ref ref) {
+  final admin = ref.watch(adminProvider);
+  if (admin.isDeveloperMode && admin.forcedHouseholdType != null) {
+    return HouseholdCapabilities(type: admin.forcedHouseholdType!);
+  }
+  
+  final household = ref.watch(currentHouseholdProvider).valueOrNull;
+  return HouseholdCapabilities(
+    type: HouseholdType.fromString(household?.householdType),
   );
 }
