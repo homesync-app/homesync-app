@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -44,15 +44,19 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
       edgeOffset: 20,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics()),
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.lg,
+        ),
         children: [
           _buildHeader(theme),
           const SizedBox(height: AppSpacing.lg),
           _buildFinancialSummary(widget.householdId),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           _buildTasksSection(theme),
+          const SizedBox(height: 18),
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
@@ -65,8 +69,12 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
-    final currentMember = members.where((m) => m.userId == currentUserId).firstOrNull;
-    final partnerMember = members.where((m) => m.userId != currentUserId).firstOrNull;
+    final currentMember = members
+        .where((m) => m.userId == currentUserId)
+        .firstOrNull;
+    final partnerMember = members
+        .where((m) => m.userId != currentUserId)
+        .firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,15 +97,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                       letterSpacing: -1.2,
                     ),
                   ).animateEntrance(),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('EEEE, d MMM', 'es_AR').format(DateTime.now())._capitalize(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: theme.textSecondary,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -140,13 +139,30 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Container(width: 24, height: 1.5, color: theme.primary.withValues(alpha: 0.5)),
+            Container(
+              width: 24,
+              height: 1.5,
+              color: theme.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(width: 8),
-            Text('con ', style: TextStyle(color: theme.textSecondary, fontSize: 14)),
-            Text(partnerFirstName ?? 'tu pareja', 
-              style: TextStyle(color: theme.primary, fontSize: 14, fontWeight: FontWeight.w900)),
+            Text(
+              'con ',
+              style: TextStyle(color: theme.textSecondary, fontSize: 14),
+            ),
+            Text(
+              partnerFirstName ?? 'tu pareja',
+              style: TextStyle(
+                color: theme.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             const SizedBox(width: 4),
-            const Icon(Icons.favorite_rounded, size: 12, color: AppColors.accentOrange),
+            const Icon(
+              Icons.favorite_rounded,
+              size: 12,
+              color: AppColors.accentOrange,
+            ),
           ],
         ).animate().fadeIn(delay: 300.ms),
       ],
@@ -163,12 +179,20 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     required String? currentMemberName,
   }) {
     final firstName = _firstName(currentMemberName);
-    final welcome = firstName != null ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido') : 'Bienvenido';
-    
+    final welcome = firstName != null
+        ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
+        : 'Bienvenido';
+
     return TextSpan(
       children: [
-        TextSpan(text: '$welcome, ', style: TextStyle(color: theme.textPrimary)),
-        TextSpan(text: firstName ?? 'Usuario', style: TextStyle(color: theme.primary, fontWeight: FontWeight.w900)),
+        TextSpan(
+          text: '$welcome, ',
+          style: TextStyle(color: theme.textPrimary),
+        ),
+        TextSpan(
+          text: firstName ?? 'Usuario',
+          style: TextStyle(color: theme.primary, fontWeight: FontWeight.w900),
+        ),
       ],
     );
   }
@@ -183,10 +207,13 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildProfileAvatar(dynamic member) {
     return AnimatedPress(
       onTap: widget.onAvatarTap,
-      child: CustomUserAvatar(name: member?.displayName, avatarUrl: member?.avatarUrl, radius: 26),
+      child: CustomUserAvatar(
+        name: member?.displayName,
+        avatarUrl: member?.avatarUrl,
+        radius: 26,
+      ),
     );
   }
-
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
@@ -196,12 +223,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
     double myExpenseBalance = 0;
     expenseBalancesAsync.whenData((balances) {
-      final myBalanceModel = balances.where((b) => b.userId == currentUserId).firstOrNull;
+      final myBalanceModel = balances
+          .where((b) => b.userId == currentUserId)
+          .firstOrNull;
       if (myBalanceModel != null) myExpenseBalance = myBalanceModel.balance;
     });
 
     final partner = membersAsync.whenOrNull(
-      data: (members) => members.where((m) => m.userId != currentUserId).firstOrNull,
+      data: (members) => members
+          .where((m) => m.userId != currentUserId)
+          .firstOrNull,
     );
 
     return BalanceCard(
@@ -230,11 +261,25 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Hoy en casa', 
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: theme.textPrimary, letterSpacing: -0.7)),
+            Text(
+              'Hoy en casa',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: -0.7,
+              ),
+            ),
             TextButton(
-              onPressed: () => ref.read(bottomNavIndexProvider.notifier).setIndex(1),
-              child: Text('Ver Semana', style: TextStyle(color: theme.primary, fontWeight: FontWeight.w700)),
+              onPressed: () =>
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+              child: Text(
+                'Ver Semana',
+                style: TextStyle(
+                  color: theme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ],
         ),
@@ -243,13 +288,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           loading: () => _buildTasksShimmer(theme),
           error: (e, _) => Text('Error: $e'),
           data: (tasks) {
-            if (tasks.isEmpty) return _buildEmptyState('Todo listo por hoy', theme);
+            if (tasks.isEmpty) {
+              return _buildEmptyState('Todo listo por hoy', theme);
+            }
             return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: tasks.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) => _buildTaskCard(tasks.elementAt(index), theme),
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (context, index) =>
+                  _buildTaskCard(tasks.elementAt(index), theme),
             );
           },
         ),
@@ -258,88 +306,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   Widget _buildTaskCard(TaskModel task, AppThemeColors theme) {
-    final isCompleting = _completedTaskIds.contains(task.id);
-    return AnimatedPress(
-      onTap: isCompleting ? null : () => _completeTask(task),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: theme.cardShadow,
-        ),
-        child: Row(
-          children: [
-             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(_getCategoryIcon(task.category), color: theme.primary.withValues(alpha: 0.6), size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: theme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          task.category ?? 'Hogar',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: theme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${task.xpReward} XP',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.textMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-             Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: isCompleting
-                  ? const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.check_rounded, size: 16, color: theme.primary),
-            ),
-          ],
-        ),
-      ),
+    return DashboardTaskCard(
+      task: task,
+      isCompleting: _completedTaskIds.contains(task.id),
+      onTap: () => _completeTask(task),
     );
   }
 
@@ -348,9 +318,14 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     try {
       await ref.read(tasksProvider.notifier).completeTask(task);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
-      if (mounted) setState(() => _completedTaskIds.remove(task.id));
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+      }
     }
   }
 
@@ -361,16 +336,56 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Movimientos del hogar', 
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: theme.textPrimary, letterSpacing: -0.7)),
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Icons.forum_rounded,
+                color: theme.primary,
+                size: 19,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Movimientos del hogar',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: -0.7,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: AppSpacing.md),
         activityAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text('Error: $e'),
+          ),
           data: (activities) {
-            if (activities.isEmpty) return _buildEmptyState('No hay actividad aún', theme);
+            if (activities.isEmpty) {
+              return _buildActivityEmptyState(theme);
+            }
             return Column(
-              children: activities.map((a) => _buildActivityItem(a, theme, currentUserId)).toList(),
+              children: activities
+                  .map(
+                    (activity) => ActivityChatBubble(
+                      activity: activity,
+                      currentUserId: currentUserId,
+                    ),
+                  )
+                  .toList(),
             );
           },
         ),
@@ -378,171 +393,116 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     );
   }
 
-  Widget _buildActivityItem(Map<String, dynamic> activity, AppThemeColors theme, String? currentUserId) {
-    final creatorId = activity['creator_id'];
-    final isMe = creatorId == currentUserId;
-    final data = activity['data'] as Map<String, dynamic>;
-    final time = DateTime.tryParse(activity['created_at'] ?? '')?.toLocal() ?? DateTime.now();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            CustomUserAvatar(
-              name: data['user_name'],
-              avatarUrl: data['avatar_url'] ?? data['creator_avatar_url'],
-              radius: 18,
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isMe ? 20 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 20),
-                ),
-                boxShadow: theme.cardShadow,
-                border: Border.all(
-                  color: isMe ? theme.primary.withValues(alpha: 0.1) : theme.divider.withValues(alpha: 0.05),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Row(
-                    children: [
-                      Icon(_getCategoryIcon(data['category']), size: 16, color: theme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          data['title'] ?? data['description'] ?? 'Realiz\u00f3 una acci\u00f3n',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time_rounded, size: 12, color: theme.textMuted),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatActivityTime(time),
-                        style: TextStyle(fontSize: 11, color: theme.textMuted, fontWeight: FontWeight.w500),
-                      ),
-                      const Spacer(),
-                      if (data['xp_reward'] != null)
-                        _buildSmallPill(
-                          label: '${data['xp_reward']} XP',
-                          color: const Color(0xFFF97316),
-                          icon: Icons.star_rounded,
-                          theme: theme,
-                        ),
-                      const SizedBox(width: 6),
-                      if (data['coins_reward'] != null)
-                        _buildSmallPill(
-                          label: '${data['coins_reward']} coins',
-                          color: const Color(0xFF64748B),
-                          icon: Icons.monetization_on_rounded,
-                          theme: theme,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            CustomUserAvatar(
-              name: data['user_name'],
-              avatarUrl: data['avatar_url'] ?? data['creator_avatar_url'],
-              radius: 18,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallPill({required String label, required Color color, required IconData icon, required AppThemeColors theme}) {
+  Widget _buildActivityEmptyState(AppThemeColors theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: theme.surfaceVariant.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.border.withValues(alpha: 0.38)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: 4),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 18,
+              color: theme.primary.withValues(alpha: 0.72),
+            ),
+          ),
+          const SizedBox(height: 10),
           Text(
-            label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
+            'Todavia no hay movimientos',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Cuando alguien complete una tarea o cargue un gasto, lo vas a ver aca.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.35,
+              color: theme.textSecondary,
+            ),
           ),
         ],
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String? category) {
-    switch (category?.toLowerCase()) {
-      case 'cocina': return Icons.restaurant_rounded;
-      case 'limpieza': return Icons.cleaning_services_rounded;
-      case 'compras': return Icons.shopping_cart_rounded;
-      case 'finanzas': return Icons.payments_rounded;
-      default: return Icons.task_alt_rounded;
-    }
-  }
-
-  String _formatActivityTime(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
-    if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
-    return DateFormat('d MMM').format(time);
   }
 
   Widget _buildTasksShimmer(AppThemeColors theme) {
-    return Column(children: List.generate(2, (_) => ShimmerLoading(child: Container(height: 70, margin: const EdgeInsets.only(bottom: 8), decoration: BoxDecoration(color: theme.surface, borderRadius: BorderRadius.circular(20))))));
+    return Column(
+      children: List.generate(
+        2,
+        (_) => ShimmerLoading(
+          child: Container(
+            height: 70,
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState(String message, AppThemeColors theme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: theme.surface, borderRadius: BorderRadius.circular(24)),
-      child: Column(children: [Text('🐾', style: TextStyle(fontSize: 32)), const SizedBox(height: 8), Text(message, style: TextStyle(fontWeight: FontWeight.w800, color: theme.textPrimary))]),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.favorite_border_rounded,
+              color: theme.primary.withValues(alpha: 0.72),
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showSettlementDialog({required String householdId, required String partnerId, required String partnerName, required double amount, required bool isOwedByMe}) {
+  void _showSettlementDialog({
+    required String householdId,
+    required String partnerId,
+    required String partnerName,
+    required double amount,
+    required bool isOwedByMe,
+  }) {
     // Logic to settle debt...
-  }
-
-
-}
-
-extension _StringExtension on String {
-  String _capitalize() {
-    if (isEmpty) return this;
-    final trimmed = trim();
-    if (trimmed.isEmpty) return this;
-    return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
   }
 }

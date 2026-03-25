@@ -1,0 +1,320 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
+    show dashboardCategoryAccent, dashboardCategoryIcon;
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
+
+class ActivityChatBubble extends ConsumerWidget {
+  final Map<String, dynamic> activity;
+  final String? currentUserId;
+
+  const ActivityChatBubble({
+    super.key,
+    required this.activity,
+    required this.currentUserId,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final type = activity['type'] as String?;
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final creatorId = activity['creator_id'] as String?;
+    final isMe = creatorId == currentUserId;
+    
+    final createdAt =
+        DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
+            DateTime.now();
+
+    final title = _normalizedText(
+      data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad',
+    );
+    final userName = (data['user_name'] as String?)?.trim();
+    final avatarUrl =
+        (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
+    final xpReward = _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
+    final coinsReward = _readInt(data['coins_reward'] ?? data['coins_per_user'] ?? data['coins']);
+    final category = data['category'] as String?;
+    final amount = _parseAmount(data['amount']);
+    final accent = _activityAccent(context, type, category);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: () => _openDetail(context, ref, type, data),
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [
+            if (!isMe) ...[
+              CustomUserAvatar(
+                name: userName,
+                avatarUrl: avatarUrl,
+                radius: 17,
+              ),
+              const SizedBox(width: 8),
+            ],
+            
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: isMe 
+                        ? theme.primary.withValues(alpha: 0.15) 
+                        : theme.divider.withValues(alpha: 0.22),
+                    width: isMe ? 1.2 : 0.8,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isMe ? 20 : 4),
+                    bottomRight: Radius.circular(isMe ? 4 : 20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isMe ? theme.primary : Colors.black)
+                          .withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.5),
+                          child: Icon(
+                            _activityIcon(type, category),
+                            size: 16,
+                            color: accent,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: theme.textPrimary.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              letterSpacing: -0.3,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.access_time_rounded, 
+                                size: 11, color: theme.textMuted.withValues(alpha: 0.7)),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatTime(createdAt),
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (amount != null)
+                          _activityMetaPill(
+                            label: _formatCurrency(amount),
+                            color: accent,
+                            icon: Icons.payments_rounded,
+                            theme: theme,
+                          ),
+                        if (xpReward != null && xpReward > 0)
+                          _activityMetaPill(
+                            label: '$xpReward XP',
+                            color: const Color(0xFFE8943A),
+                            icon: Icons.star_rounded,
+                            theme: theme,
+                          ),
+                        if (coinsReward != null && coinsReward > 0)
+                          _activityMetaPill(
+                            label: '$coinsReward coins',
+                            color: AppColors.sage,
+                            icon: Icons.monetization_on_rounded,
+                            theme: theme,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (isMe) ...[
+              const SizedBox(width: 8),
+              CustomUserAvatar(
+                name: userName,
+                avatarUrl: avatarUrl,
+                radius: 17,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _activityMetaPill({
+    required String label,
+    required Color color,
+    required IconData icon,
+    required AppThemeColors theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openDetail(
+    BuildContext context,
+    WidgetRef ref,
+    String? type,
+    Map<String, dynamic> data,
+  ) async {
+    if (type == 'task') {
+      final taskData = <String, dynamic>{
+        ...data,
+        'title': data['task_title'] ?? data['title'],
+        'category': data['category'] ?? 'limpieza',
+        'xp_reward': data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
+        'coin_reward': data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
+        'completed_at': activity['created_at'],
+        'activity_id': activity['id'],
+        'completed_user': {
+          'full_name': data['user_name'],
+          'avatar_url': data['avatar_url'] ?? data['creator_avatar_url'],
+          'id': activity['creator_id'],
+        },
+      };
+      await TaskDetailSheet.show(context, taskData);
+      return;
+    }
+
+    if (type == 'expense') {
+      final expenseId = data['expense_id']?.toString();
+      if (expenseId == null || expenseId.isEmpty) return;
+      final repo = ref.read(expenseRepositoryProvider);
+      final result = await repo.getExpenseWithSplits(expenseId);
+      result.fold(
+        (_) {},
+        (fullData) => ExpenseDetailSheet.show(
+          context,
+          ExpenseModel.fromJson(fullData),
+        ),
+      );
+    }
+  }
+
+  Color _activityAccent(BuildContext context, String? type, String? category) {
+    if (type == 'expense') return const Color(0xFFF08B49);
+    return dashboardCategoryAccent(context, category);
+  }
+
+  IconData _activityIcon(String? type, String? category) {
+    switch (type) {
+      case 'expense':
+        return Icons.receipt_long_rounded;
+      case 'task':
+        return dashboardCategoryIcon(category);
+      default:
+        return dashboardCategoryIcon(category);
+    }
+  }
+
+  int? _readInt(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw.toString());
+  }
+
+  double? _parseAmount(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is num) return raw.toDouble();
+    return double.tryParse(raw.toString());
+  }
+
+  String _normalizedText(String raw) {
+    return raw
+        .replaceAll('Complet\u00c3\u00b3 la tarea:', '')
+        .replaceAll('Agreg\u00c3\u00b3 un gasto:', '')
+        .replaceAll('Canje\u00c3\u00b3 un premio:', '')
+        .replaceAll('\u00c3\u00b3', 'ó')
+        .replaceAll('\u00c3\u00a1', 'á')
+        .replaceAll('\u00c3\u00a9', 'é')
+        .replaceAll('\u00c3\u00ad', 'í')
+        .replaceAll('\u00c3\u00ba', 'ú')
+        .replaceAll('\u00c3\u00b1', 'ñ')
+        .replaceAll('\u00c2\u00bf', '¿')
+        .replaceAll('\u00c2\u00a1', '¡')
+        .replaceAll('  ', ' ')
+        .trim();
+  }
+
+  String _formatCurrency(double amount) {
+    return '\$ ${NumberFormat.decimalPattern('es_AR').format(amount.round())}';
+  }
+
+  String _formatTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Ahora';
+    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
+    if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
+    return DateFormat('d MMM', 'es_AR').format(time);
+  }
+}
