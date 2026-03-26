@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -40,7 +41,15 @@ class HouseholdSocialHubScreen extends ConsumerWidget {
               132,
             ),
             children: [
-              _HeroCard(caps: caps, householdAsync: householdAsync),
+              _HeroCard(
+                caps: caps,
+                householdAsync: householdAsync,
+                onInvite: () => InvitationSheet.show(context),
+                onTasks: () =>
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+                onFinances: () =>
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(2),
+              ),
               const SizedBox(height: 18),
               membersAsync.when(
                 data: (members) => _MembersSection(
@@ -71,10 +80,16 @@ class _HeroCard extends StatelessWidget {
   const _HeroCard({
     required this.caps,
     required this.householdAsync,
+    required this.onInvite,
+    required this.onTasks,
+    required this.onFinances,
   });
 
   final HouseholdCapabilities caps;
   final AsyncValue<dynamic> householdAsync;
+  final VoidCallback onInvite;
+  final VoidCallback onTasks;
+  final VoidCallback onFinances;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +167,30 @@ class _HeroCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _QuickActionButton(
+                icon: Icons.person_add_alt_1_rounded,
+                label: caps.type == HouseholdType.family
+                    ? 'Invitar familia'
+                    : 'Invitar',
+                onPressed: onInvite,
+              ),
+              _QuickActionButton(
+                icon: Icons.task_alt_rounded,
+                label: 'Tareas',
+                onPressed: onTasks,
+              ),
+              _QuickActionButton(
+                icon: Icons.account_balance_wallet_rounded,
+                label: 'Finanzas',
+                onPressed: onFinances,
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -174,10 +213,13 @@ class _MembersSection extends StatelessWidget {
     final theme = context.theme;
 
     if (members.isEmpty) {
-      return const AppEmptyState(
-        title: 'Todavía no hay miembros cargados',
-        subtitle:
-            'Invitá a tu equipo para empezar a compartir tareas y gastos.',
+      return AppEmptyState(
+        title: caps.type == HouseholdType.family
+            ? 'Todavia no hay integrantes cargados'
+            : 'Todavia no hay companeros cargados',
+        subtitle: caps.type == HouseholdType.family
+            ? 'Invita a tu familia para empezar a compartir tareas y gastos.'
+            : 'Invita a tus companeros para empezar a organizar el piso.',
         icon: Icons.group_off_rounded,
       );
     }
@@ -186,9 +228,12 @@ class _MembersSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          caps.type == HouseholdType.friends
-              ? 'Miembros del grupo'
-              : 'Miembros del hogar',
+          switch (caps.type) {
+            HouseholdType.family => 'Integrantes de la familia',
+            HouseholdType.friends => 'Companeros del piso',
+            HouseholdType.couple => 'Personas del hogar',
+            HouseholdType.solo => 'Miembros',
+          },
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -197,7 +242,13 @@ class _MembersSection extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Una vista clara de quién forma parte del hogar y cómo están organizados.',
+          switch (caps.type) {
+            HouseholdType.family =>
+              'Una vista clara de quien forma parte del hogar y como se reparte la coordinacion.',
+            HouseholdType.friends =>
+              'Una vista clara de quienes conviven en el piso y como se organiza el grupo.',
+            _ => 'Una vista clara de quienes forman parte del hogar.',
+          },
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 13,
@@ -314,24 +365,24 @@ class _CoordinationCard extends StatelessWidget {
     final theme = context.theme;
 
     final title = switch (caps.type) {
-      HouseholdType.family => 'Coordinación familiar',
-      HouseholdType.friends => 'Convivencia del grupo',
-      _ => 'Organización compartida',
+      HouseholdType.family => 'Coordinacion familiar',
+      HouseholdType.friends => 'Convivencia organizada',
+      _ => 'Organizacion compartida',
     };
 
     final bullets = switch (caps.type) {
       HouseholdType.family => const [
-          'Tareas y finanzas siguen compartidas para todos los miembros.',
-          'Este espacio evita mezclar desafíos de pareja con dinámicas familiares.',
-          'Podemos sumar más herramientas sociales acá sin romper el resto del producto.',
+          'El hogar puede coordinar tareas, gastos y miembros desde un mismo lugar.',
+          'La experiencia evita mezclar dinamicas romanticas con organizacion familiar.',
+          'Esta base ya deja listo el camino para roles y permisos familiares.',
         ],
       HouseholdType.friends => const [
-          'Mantiene claro quién participa del hogar y cómo se organiza el grupo.',
-          'Evita que la app muestre copy o recompensas pensadas para pareja.',
-          'Deja una base limpia para futuras funciones de convivencia entre amigos.',
+          'Mantiene claro quien participa del piso y como se organiza la convivencia.',
+          'Separa tareas y gastos compartidos del lenguaje propio de pareja.',
+          'Deja una base limpia para crecer hacia reglas y acuerdos del hogar.',
         ],
       _ => const [
-          'Este espacio centraliza la coordinación del hogar.',
+          'Este espacio centraliza la coordinacion del hogar.',
         ],
     };
 
@@ -384,6 +435,54 @@ class _CoordinationCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.surfaceVariant,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: theme.border.withValues(alpha: 0.6)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

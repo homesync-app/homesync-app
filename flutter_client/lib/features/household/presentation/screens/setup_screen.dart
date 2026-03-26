@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,6 +14,8 @@ import 'package:homesync_client/features/household/data/repositories/supabase_ho
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -31,13 +33,17 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen>
     with TickerProviderStateMixin {
-  // Steps: 0=ValueProp, 1=Welcome, 2=Identity, 3=mode, 4=teamOptions, 5=creating(code display), 6=splitStrategy, 7=taskSelection
+  // Steps: 0=ValueProp, 1=Welcome, 2=Identity, 3=mode, 4=teamOptions,
+  // 5=creating(code display), 6=household setup, 7=taskSelection
   int _currentStep = 0;
   String? _selectedMode;
   bool _createNew = true;
   final _codeController = TextEditingController();
   final _nameController = TextEditingController();
+  final _familyHouseholdNameController = TextEditingController();
   String _selectedAvatar = UserAvatar.defaultAvatars.first['emoji'] as String;
+  String _familyStructure = 'mixed';
+  String _familyRole = 'Adulto responsable';
 
   // Invite code shown to "create" users
   String? _myInviteCode;
@@ -58,28 +64,28 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     {
       'id': 'couple',
       'name': 'Pareja',
-      'icon': '💑',
+      'icon': '??',
       'desc': 'Para convivir y organizar gastos de a dos',
       'gradient': [const Color(0xFF6B8E85), const Color(0xFF84A59D)],
     },
     {
       'id': 'family',
       'name': 'Familia',
-      'icon': '👨‍👩‍👧‍👦',
+      'icon': '???????????',
       'desc': 'Toda la familia participa',
       'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8A65)],
     },
     {
       'id': 'friends',
-      'name': 'Grupo',
-      'icon': '🏠',
-      'desc': 'Compartimos piso o depto',
+      'name': 'Convivencia',
+      'icon': '??',
+      'desc': 'Compartimos piso, depto o roommates',
       'gradient': [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
     },
     {
       'id': 'solo',
       'name': 'Solo yo',
-      'icon': '👤',
+      'icon': '??',
       'desc': 'Mis tareas personales',
       'gradient': [const Color(0xFF9575CD), const Color(0xFFB39DDB)],
     },
@@ -94,6 +100,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   @override
   void dispose() {
     _codeController.dispose();
+    _familyHouseholdNameController.dispose();
     super.dispose();
   }
 
@@ -124,15 +131,27 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
   }
 
-  // ── Step handlers ──────────────────────────────────────────────────────────
+  // -- Step handlers ----------------------------------------------------------
 
   void _onModeSelected() {
     HapticFeedback.mediumImpact();
+    if (_selectedMode == 'family' &&
+        _familyHouseholdNameController.text.trim().isEmpty) {
+      _familyHouseholdNameController.text = _suggestFamilyHouseholdName();
+    }
     if (_selectedMode == 'solo') {
       setState(() => _currentStep = 7);
     } else {
       setState(() => _currentStep = 4);
     }
+  }
+
+  String _suggestFamilyHouseholdName() {
+    final rawName = _nameController.text.trim();
+    if (rawName.isEmpty) return 'Mi familia';
+
+    final firstName = rawName.split(' ').first.trim();
+    return '$firstName y familia';
   }
 
   Future<void> _handleCreateTeam() async {
@@ -208,14 +227,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                '¡Te has unido con éxito! 🎉 Ahora personaliza tus tareas.'),
+                '¡Te has unido con éxito! ?? Ahora personaliza tus tareas.'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
         setState(() {
           _isJoining = false;
-          _currentStep = _selectedMode == 'couple' ? 6 : 7;
+          _currentStep = _selectedMode == 'solo' ? 7 : 6;
         });
       }
     } catch (e) {
@@ -287,7 +306,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('¡Código copiado al portapapeles! 📋'),
+        content: const Text('¡Código copiado al portapapeles! ??'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -298,7 +317,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
     final text =
-        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n?? Organizemos nuestro hogar juntos.';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -324,7 +343,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  // -- Build ------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +451,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 3 => _buildModeSelection(),
                                 4 => _buildTeamOptions(),
                                 5 => _buildInviteCodeStep(),
-                                6 => _buildSplitStep(),
+                                6 => _buildHouseholdSetupStep(),
                                 7 => _buildTaskSelection(),
                                 _ => _buildValuePropStep(),
                               },
@@ -489,30 +508,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 0: Value Proposition ────────────────────────────────────────────
+  // -- Step 0: Value Proposition --------------------------------------------
 
   Widget _buildValuePropStep() {
     final features = [
       _FeatureItem(
-        emoji: '✅',
+        emoji: '?',
         title: 'Tareas compartidas',
         desc: 'Organizá y asigná tareas del hogar. Ganá XP al completarlas.',
         color: AppColors.primary,
       ),
       _FeatureItem(
-        emoji: '💰',
+        emoji: '??',
         title: 'Gastos en equipo',
         desc: 'Registrá gastos, dividí cuentas y llevá el balance al día.',
         color: const Color(0xFF22C55E),
       ),
       _FeatureItem(
-        emoji: '🏆',
+        emoji: '??',
         title: 'Gamificación real',
         desc: 'Competí amistosamente, ganate rewards y subí de nivel.',
         color: AppColors.accentGold,
       ),
       _FeatureItem(
-        emoji: '🛒',
+        emoji: '??',
         title: 'Lista de compras sync',
         desc: 'Tachá ítems en tiempo real desde cualquier dispositivo.',
         color: AppColors.accentTeal,
@@ -574,7 +593,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           }),
           const Spacer(flex: 1),
           _buildPrimaryButton(
-            text: 'Comenzar →',
+            text: 'Comenzar ?',
             onPressed: () {
               HapticFeedback.heavyImpact();
               setState(() => _currentStep = 1);
@@ -653,7 +672,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 1: Welcome ────────────────────────────────────────────────────────
+  // -- Step 1: Welcome --------------------------------------------------------
 
   Widget _buildWelcomeStep() {
     return Padding(
@@ -732,7 +751,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 2: Identity (Name & Avatar) ──────────────────────────────────────
+  // -- Step 2: Identity (Name & Avatar) --------------------------------------
 
   Widget _buildIdentityStep() {
     return Padding(
@@ -876,7 +895,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 0: Mode selection ────────────────────────────────────────────────
+  // -- Step 0: Mode selection ------------------------------------------------
 
   Widget _buildModeSelection() {
     return Padding(
@@ -939,7 +958,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             child: TextButton(
               onPressed: () => setState(() => _currentStep = 2),
               child: Text(
-                '← Ver características de la app',
+                '? Ver características de la app',
                 style: TextStyle(
                   color: AppColors.textSecondary.withValues(alpha: 0.5),
                   fontSize: 13,
@@ -1071,7 +1090,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 1: Create or Join ────────────────────────────────────────────────
+  // -- Step 1: Create or Join ------------------------------------------------
 
   Widget _buildTeamOptions() {
     return Padding(
@@ -1269,9 +1288,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 2: Show invite code ──────────────────────────
+  // -- Step 2: Show invite code --------------------------
 
-  // ── Step 2: Show invite code ──────────────────────────
+  // -- Step 2: Show invite code --------------------------
 
   Widget _buildInviteCodeStep() {
     return Column(
@@ -1283,8 +1302,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             children: [
               const SizedBox(height: 16),
               _buildHeading(
-                '¡Hogar creado!',
-                'Invita a quien quieras compartiendo este código.',
+                _selectedMode == 'family' ? 'Familia creada' : 'Hogar creado',
+                _selectedMode == 'family'
+                    ? 'Comparte este codigo con quienes formen parte del hogar.'
+                    : 'Invita a quien quieras compartiendo este codigo.',
               ),
               const SizedBox(height: 40),
               Center(
@@ -1329,7 +1350,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'CÓDIGO DE INVITACIÓN',
+                                    'CODIGO DE INVITACION',
                                     style: TextStyle(
                                       color: Colors.white70,
                                       fontWeight: FontWeight.w900,
@@ -1392,7 +1413,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             text: 'Continuar',
             onPressed: () {
               setState(() {
-                _currentStep = _selectedMode == 'couple' ? 6 : 7;
+                _currentStep = _selectedMode == 'solo' ? 7 : 6;
               });
             },
           ),
@@ -1409,6 +1430,235 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   double _tempRatio = 0.5;
 
+  Widget _buildHouseholdSetupStep() {
+    if (_selectedMode == 'family') {
+      return _buildFamilySetupStep();
+    }
+    return _buildSplitStep();
+  }
+
+  Widget _buildFamilySetupStep() {
+    return Padding(
+      key: const ValueKey('family_setup'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          _buildHeading(
+            'Base del hogar familiar',
+            'Antes de empezar, definamos como se organiza esta familia.',
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nombre del hogar',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _familyHouseholdNameController,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            hintText: 'Ej: Casa de los Gomez',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tipo de hogar',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            _buildFamilyChoiceChip(
+                              label: 'Solo adultos',
+                              selected: _familyStructure == 'adults',
+                              onTap: () => setState(() {
+                                _familyStructure = 'adults';
+                              }),
+                            ),
+                            _buildFamilyChoiceChip(
+                              label: 'Adultos y chicos',
+                              selected: _familyStructure == 'mixed',
+                              onTap: () => setState(() {
+                                _familyStructure = 'mixed';
+                              }),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _familyStructure == 'adults'
+                              ? 'Ideal para hogares con adultos que comparten tareas y gastos.'
+                              : 'Pensado para familias donde tambien participan chicos o hay responsables del hogar.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tu rol visible',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            'Adulto responsable',
+                            'Madre',
+                            'Padre',
+                            'Tutor/a',
+                          ].map((role) {
+                            return _buildFamilyChoiceChip(
+                              label: role,
+                              selected: _familyRole == role,
+                              onTap: () => setState(() {
+                                _familyRole = role;
+                              }),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildPrimaryButton(
+            text: 'Guardar y Continuar',
+            onPressed: _saveFamilySetup,
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _currentStep = 7),
+              child: const Text('Configurar luego'),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFamilyPanel({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildFamilyChoiceChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.cardBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.textPrimary,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveFamilySetup() async {
+    final householdId = ref.read(householdIdProvider).valueOrNull;
+    final currentUserId = ref.read(currentUserIdProvider);
+    final householdName = _familyHouseholdNameController.text.trim();
+
+    try {
+      if (householdId != null && householdName.isNotEmpty) {
+        await Supabase.instance.client
+            .from('households')
+            .update({'name': householdName}).eq('id', householdId);
+        ref.invalidate(currentHouseholdProvider);
+      }
+
+      if (currentUserId != null && _familyRole.trim().isNotEmpty) {
+        await ref
+            .read(householdRepositoryProvider)
+            .updateMemberDisplayRole(currentUserId, _familyRole);
+        ref.invalidate(householdMembersNotifierProvider);
+      }
+    } catch (_) {
+      // Best effort setup. The family can still continue onboarding.
+    }
+
+    if (mounted) {
+      setState(() => _currentStep = 7);
+    }
+  }
+
   Widget _buildSplitStep() {
     return Padding(
       key: const ValueKey('split'),
@@ -1419,7 +1669,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 16),
           _buildHeading(
             'División de Gastos',
-            'Configuremos la base para dividir gastos en pareja.',
+            'Configuremos la base para dividir gastos en ${_selectedMode == 'couple' ? 'pareja' : 'convivencia'}.',
           ),
           const SizedBox(height: 32),
           Expanded(
@@ -1432,22 +1682,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       color: AppColors.accentTeal.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Text('💡', style: TextStyle(fontSize: 24)),
-                        SizedBox(width: 16),
+                        const Text('??', style: TextStyle(fontSize: 24)),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            'Pueden cambiar esto luego en configuración. Por defecto usamos 50/50.',
-                            style: TextStyle(fontSize: 13, height: 1.4),
+                            _selectedMode == 'couple'
+                                ? 'Pueden cambiar esto luego en configuracion. Por defecto usamos 50/50.'
+                                : 'Pueden cambiar esto luego en configuracion. Por defecto usamos equidad (50/50).',
+                            style: const TextStyle(fontSize: 13, height: 1.4),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 40),
-                  const Text('VOS : OTROS',
-                      style: TextStyle(
+                  Text(_selectedMode == 'couple' ? 'VOS : PAREJA' : 'VOS : OTROS',
+                      style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 2)),
@@ -1494,10 +1746,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     ),
                   ),
                   const SizedBox(height: 40),
-                  _buildStrategyTip('Igualitario (50/50)',
-                      '👫 Ideal para ingresos similares.', _tempRatio == 0.5),
+                  _buildStrategyTip(
+                      'Igualitario (50/50)',
+                      _selectedMode == 'couple'
+                          ? '?? Ideal para ingresos similares.'
+                          : '?? Ideal para ingresos similares o gastos divididos por igual.',
+                      _tempRatio == 0.5),
                   _buildStrategyTip('Proporcional',
-                      '📈 Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
+                      '?? Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
                 ],
               ),
             ),
@@ -1569,7 +1825,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 3: Task selection ────────────────────────────────────────────────
+  // -- Step 3: Task selection ------------------------------------------------
 
   Widget _buildTaskSelection() {
     if (_isLoadingTemplates) {
@@ -1586,8 +1842,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             children: [
               const SizedBox(height: 16),
               _buildHeading(
-                'Personaliza tu hogar',
-                'Elige las tareas iniciales. Hemos seleccionado algunas por ti.',
+                _selectedMode == 'family'
+                    ? 'Primeras tareas para la familia'
+                    : 'Personaliza tu hogar',
+                _selectedMode == 'family'
+                    ? 'Elige tareas iniciales para coordinar el hogar desde el primer dia.'
+                    : 'Elige las tareas iniciales. Hemos seleccionado algunas por ti.',
               ),
               const SizedBox(height: 16),
             ],
@@ -1710,7 +1970,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Shared UI Components ────────────────────────────────────────────────
+  // -- Shared UI Components ------------------------------------------------
 
   Widget _buildHeading(String title, String subtitle) {
     return Column(
@@ -1804,7 +2064,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 }
 
-// ── Data model for value prop features ──────────────────────────────────────
+// -- Data model for value prop features --------------------------------------
 
 class _FeatureItem {
   final String emoji;
@@ -1819,3 +2079,4 @@ class _FeatureItem {
     required this.color,
   });
 }
+

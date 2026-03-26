@@ -18,6 +18,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
+import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:intl/intl.dart';
 
 class HomeFamilyView extends ConsumerStatefulWidget {
@@ -52,12 +53,16 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         children: [
           _buildHeader(theme, caps),
+          const SizedBox(height: 24),
+          _buildFamilySummary(theme),
           const SizedBox(height: 32),
           _buildFinanceSummary(theme, caps),
           const SizedBox(height: 32),
           _buildMembersSection(theme),
           const SizedBox(height: 32),
           _buildTasksSection(theme, caps),
+          const SizedBox(height: 32),
+          _buildShoppingSection(theme),
           const SizedBox(height: 32),
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -165,13 +170,30 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Integrantes',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.textPrimary,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Integrantes',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.textPrimary,
+              ),
+            ),
+            membersAsync.when(
+              data: (members) => Text(
+                '${members.length} en casa',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: theme.textSecondary,
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         membersAsync.when(
@@ -201,6 +223,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildMemberItem(dynamic member, AppThemeColors theme) {
     final firstName = member.displayName;
+    final roleLabel = member.roleLabel;
 
     return Column(
       children: [
@@ -219,7 +242,112 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             color: theme.textPrimary,
           ),
         ),
+        if (roleLabel.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            roleLabel,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: theme.textSecondary,
+            ),
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildFamilySummary(AppThemeColors theme) {
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final tasksAsync = ref.watch(todayTasksProvider);
+    final shoppingAsync = ref.watch(shoppingItemsProvider);
+
+    return Row(
+      children: [
+        _buildSummaryCard(
+          theme,
+          label: 'Integrantes',
+          value: membersAsync.when(
+            data: (members) => members.length.toString(),
+            loading: () => '...',
+            error: (_, __) => '0',
+          ),
+          icon: Icons.family_restroom_rounded,
+          color: AppColors.primary,
+        ),
+        const SizedBox(width: 12),
+        _buildSummaryCard(
+          theme,
+          label: 'Pendientes',
+          value: tasksAsync.when(
+            data: (tasks) => tasks.where((task) => task.isPending).length.toString(),
+            loading: () => '...',
+            error: (_, __) => '0',
+          ),
+          icon: Icons.task_alt_rounded,
+          color: AppColors.accentTeal,
+        ),
+        const SizedBox(width: 12),
+        _buildSummaryCard(
+          theme,
+          label: 'Compras',
+          value: shoppingAsync.when(
+            data: (items) => items.where((item) => !item.completed).length.toString(),
+            loading: () => '...',
+            error: (_, __) => '0',
+          ),
+          icon: Icons.shopping_cart_rounded,
+          color: AppColors.accentGold,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(
+    AppThemeColors theme, {
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.12),
+              color.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: theme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -401,7 +529,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
           const SizedBox(height: 16),
           Text(
-            '¡Todo al día!',
+            'Todo al dia',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -419,6 +547,101 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildShoppingSection(AppThemeColors theme) {
+    final shoppingAsync = ref.watch(shoppingItemsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Compras del hogar',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(bottomNavIndexProvider.notifier).setIndex(5);
+              },
+              child: const Text('Ver lista'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        shoppingAsync.when(
+          data: (items) {
+            final pending = items.where((item) => !item.completed).toList();
+            if (pending.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.surfaceContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'No hay compras pendientes.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.surfaceContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                children: pending.take(3).map((item) {
+                  final quantityLabel = item.quantity != null
+                      ? '${item.quantity} ${item.unit ?? ''}'.trim()
+                      : null;
+
+                  return ListTile(
+                    leading: Text(
+                      item.emoji,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    title: Text(
+                      item.name,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    subtitle: quantityLabel != null && quantityLabel.isNotEmpty
+                        ? Text(quantityLabel)
+                        : null,
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: theme.textMuted,
+                      size: 20,
+                    ),
+                    onTap: () {
+                      ref.read(bottomNavIndexProvider.notifier).setIndex(5);
+                    },
+                  );
+                }).toList(),
+              ),
+            );
+          },
+          loading: () => const ShimmerLoading(height: 60, borderRadius: 20),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 

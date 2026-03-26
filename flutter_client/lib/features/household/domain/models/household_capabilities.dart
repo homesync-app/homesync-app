@@ -28,7 +28,6 @@ class HouseholdCapabilities {
 
   const HouseholdCapabilities({required this.type});
 
-  // UI Strategy
   bool get showPartnerTab => type != HouseholdType.solo;
   bool get usesCoupleRewardsExperience => type == HouseholdType.couple;
   bool get showExpensesSplit => type != HouseholdType.solo;
@@ -62,11 +61,11 @@ class HouseholdCapabilities {
         'Desafios, premios y pequenas recompensas para compartir.',
       HouseholdType.family =>
         'Coordinacion, miembros y acuerdos del hogar para toda la familia.',
-      HouseholdType.friends => 'Organización, convivencia y reparto claro para el piso.',
+      HouseholdType.friends =>
+        'Organizacion, convivencia y reparto claro para el piso.',
     };
   }
 
-  // Dashboard Strategy
   String get dashboardGreeting {
     return switch (type) {
       HouseholdType.solo => 'Mi Progreso',
@@ -75,7 +74,6 @@ class HouseholdCapabilities {
     };
   }
 
-  // Finance Strategy
   String get balanceMessage {
     return switch (type) {
       HouseholdType.solo => 'Llevas gastado este mes',
@@ -94,7 +92,7 @@ class HouseholdCapabilities {
 
   String get emptyStateTasksSubtitle {
     return switch (type) {
-      HouseholdType.solo => 'Agrega tu primera tarea para organizar tu día.',
+      HouseholdType.solo => 'Agrega tu primera tarea para organizar tu dia.',
       _ => 'Agreguen su primera tarea para organizar el hogar.',
     };
   }
@@ -104,7 +102,7 @@ class HouseholdCapabilities {
       HouseholdType.solo => 'Yo',
       HouseholdType.couple => 'Pareja',
       HouseholdType.family => 'Familia',
-      HouseholdType.friends => 'Compañeros',
+      HouseholdType.friends => 'Companeros',
     };
   }
 
@@ -113,7 +111,25 @@ class HouseholdCapabilities {
       HouseholdType.solo => 'conmigo',
       HouseholdType.couple => 'con tu pareja',
       HouseholdType.family => 'con la familia',
-      HouseholdType.friends => 'con tus compañeros',
+      HouseholdType.friends => 'con tus companeros',
+    };
+  }
+
+  IconData get socialTabIcon {
+    return switch (type) {
+      HouseholdType.solo => Icons.person_outline,
+      HouseholdType.couple => Icons.favorite_outline_rounded,
+      HouseholdType.family => Icons.family_restroom_outlined,
+      HouseholdType.friends => Icons.group_outlined,
+    };
+  }
+
+  IconData get socialTabSelectedIcon {
+    return switch (type) {
+      HouseholdType.solo => Icons.person_rounded,
+      HouseholdType.couple => Icons.favorite_rounded,
+      HouseholdType.family => Icons.family_restroom_rounded,
+      HouseholdType.friends => Icons.group_rounded,
     };
   }
 }

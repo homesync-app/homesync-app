@@ -217,7 +217,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } else if (_householdType == 'family') {
       intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
     } else if (_householdType == 'friends') {
-      intro = '¡Hola! Únete a nuestro grupo en HomeSync para convivir mejor.';
+      intro = '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
     }
 
     final text =
@@ -807,6 +807,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final typeLabels = {
       'couple': '💑 Pareja',
       'family': '👨‍👩‍👧‍👦 Familia',
+      'friends': '🏠 Convivencia',
       'roommates': '🏠 Compañeros',
       'solo': '👤 Solo',
     };
@@ -1280,9 +1281,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       case 'couple':
         return 'Pareja';
       case 'family':
-        return 'Familiar';
+        return 'Integrante';
       case 'friends':
-        return 'Amigo';
+        return 'Compañero';
       default:
         return 'Miembro';
     }
@@ -1294,12 +1295,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final currentLabel = member['display_role'] ?? '';
     final suggestions = <String>[];
     if (_householdType == 'family') {
-      suggestions
-          .addAll(['Padre', 'Madre', 'Hijo', 'Hija', 'Abuelo', 'Abuela']);
+      suggestions.addAll([
+        'Adulto responsable',
+        'Madre',
+        'Padre',
+        'Tutor/a',
+        'Hijo/a',
+        'Abuelo/a',
+      ]);
     } else if (_householdType == 'couple') {
       suggestions.addAll(['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa']);
     } else if (_householdType == 'friends') {
-      suggestions.addAll(['Amigo', 'Compañero', 'Invitado']);
+      suggestions.addAll(['Compañero', 'Roommate', 'Invitado', 'Responsable']);
     }
 
     final ctrl = TextEditingController(text: currentLabel);
@@ -1318,7 +1325,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               autofocus: true,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
-                labelText: 'Nombre del rol (ej: Padre)',
+                labelText: _householdType == 'family'
+                    ? 'Nombre del rol (ej: Madre)'
+                    : _householdType == 'friends'
+                        ? 'Nombre del rol (ej: Compañero)'
+                        : 'Nombre del rol (ej: Padre)',
                 filled: true,
                 fillColor: theme.primary.withValues(alpha: 0.05),
                 border:
