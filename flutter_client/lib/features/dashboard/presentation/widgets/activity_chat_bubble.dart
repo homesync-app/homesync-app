@@ -58,21 +58,24 @@ class ActivityChatBubble extends ConsumerWidget {
               CustomUserAvatar(
                 name: userName,
                 avatarUrl: avatarUrl,
-                radius: 17,
+                radius: 16,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
             ],
             
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                constraints: const BoxConstraints(minHeight: 84),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isMe
+                      ? const Color(0xFFFFFCF8)
+                      : const Color(0xFFFFFEFD),
                   border: Border.all(
                     color: isMe 
-                        ? theme.primary.withValues(alpha: 0.15) 
-                        : theme.divider.withValues(alpha: 0.22),
-                    width: isMe ? 1.2 : 0.8,
+                        ? theme.primary.withValues(alpha: 0.1) 
+                        : theme.divider.withValues(alpha: 0.09),
+                    width: 0.9,
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
@@ -83,9 +86,9 @@ class ActivityChatBubble extends ConsumerWidget {
                   boxShadow: [
                     BoxShadow(
                       color: (isMe ? theme.primary : Colors.black)
-                          .withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                          .withValues(alpha: isMe ? 0.03 : 0.022),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -93,6 +96,21 @@ class ActivityChatBubble extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (amount != null &&
+                        ((xpReward ?? 0) == 0) &&
+                        ((coinsReward ?? 0) == 0))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          'Gasto del hogar',
+                          style: TextStyle(
+                            color: accent.withValues(alpha: 0.85),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                      ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +119,7 @@ class ActivityChatBubble extends ConsumerWidget {
                           padding: const EdgeInsets.only(top: 2.5),
                           child: Icon(
                             _activityIcon(type, category),
-                            size: 16,
+                            size: 18,
                             color: accent,
                           ),
                         ),
@@ -112,9 +130,9 @@ class ActivityChatBubble extends ConsumerWidget {
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: theme.textPrimary.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
+                              color: theme.textPrimary.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14.5,
                               letterSpacing: -0.3,
                               height: 1.2,
                             ),
@@ -132,12 +150,12 @@ class ActivityChatBubble extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.access_time_rounded, 
-                                size: 11, color: theme.textMuted.withValues(alpha: 0.7)),
+                                size: 12, color: theme.textMuted.withValues(alpha: 0.72)),
                             const SizedBox(width: 4),
                             Text(
                               _formatTime(createdAt),
                               style: TextStyle(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: theme.textMuted,
                               ),
@@ -173,11 +191,11 @@ class ActivityChatBubble extends ConsumerWidget {
             ),
 
             if (isMe) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               CustomUserAvatar(
                 name: userName,
                 avatarUrl: avatarUrl,
-                radius: 17,
+                radius: 16,
               ),
             ],
           ],
@@ -193,25 +211,25 @@ class ActivityChatBubble extends ConsumerWidget {
     required AppThemeColors theme,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: color.withValues(alpha: 0.15),
-          width: 1,
+          color: color.withValues(alpha: 0.1),
+          width: 0.7,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: color),
+          Icon(icon, size: 10.5, color: color),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontSize: 10,
+              fontSize: 9.2,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.1,
             ),
@@ -303,7 +321,11 @@ class ActivityChatBubble extends ConsumerWidget {
         .replaceAll('\u00c2\u00bf', '¿')
         .replaceAll('\u00c2\u00a1', '¡')
         .replaceAll('  ', ' ')
-        .trim();
+        .trim()
+        .replaceAllMapped(
+          RegExp(r'\bsupermarket\b', caseSensitive: false),
+          (_) => 'supermercado',
+        );
   }
 
   String _formatCurrency(double amount) {

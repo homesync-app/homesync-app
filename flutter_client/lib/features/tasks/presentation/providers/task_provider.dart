@@ -382,10 +382,24 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<void> updateSchedule(TaskModel task, String? recurrenceType) async {
+  Future<void> updateSchedule(
+    TaskModel task,
+    String? recurrenceType, {
+    int recurrenceInterval = 1,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+    String? assignedTo,
+  }) async {
     try {
       final repo = ref.read(taskRepositoryProvider);
-      await repo.updateSchedule(task.id, recurrenceType);
+      await repo.updateSchedule(
+        task.id,
+        recurrenceType,
+        recurrenceInterval: recurrenceInterval,
+        recurrenceWeekdays: recurrenceWeekdays,
+        recurrenceMonthDays: recurrenceMonthDays,
+        assignedTo: assignedTo,
+      );
       if (ref.read(isOnlineProvider)) {
         refresh();
       }

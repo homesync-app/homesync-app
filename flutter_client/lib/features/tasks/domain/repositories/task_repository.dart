@@ -43,6 +43,7 @@ abstract class TaskRepository {
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
+    String? assignedTo,
   });
 
   /// Create a new TaskModel via RPC.

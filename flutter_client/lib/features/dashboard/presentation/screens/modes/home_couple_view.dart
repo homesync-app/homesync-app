@@ -11,7 +11,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/activity
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
@@ -65,16 +65,14 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
-    final currentMember = members
-        .where((m) => m.userId == currentUserId)
-        .firstOrNull;
-    final partnerMember = members
-        .where((m) => m.userId != currentUserId)
-        .firstOrNull;
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
+    final partnerMember =
+        members.where((m) => m.userId != currentUserId).firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,22 +215,20 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
     double myExpenseBalance = 0;
     expenseBalancesAsync.whenData((balances) {
-      final myBalanceModel = balances
-          .where((b) => b.userId == currentUserId)
-          .firstOrNull;
+      final myBalanceModel =
+          balances.where((b) => b.userId == currentUserId).firstOrNull;
       if (myBalanceModel != null) myExpenseBalance = myBalanceModel.balance;
     });
 
     final partner = membersAsync.whenOrNull(
-      data: (members) => members
-          .where((m) => m.userId != currentUserId)
-          .firstOrNull,
+      data: (members) =>
+          members.where((m) => m.userId != currentUserId).firstOrNull,
     );
 
     return BalanceCard(
@@ -336,32 +332,14 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                Icons.forum_rounded,
-                color: theme.primary,
-                size: 19,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Movimientos del hogar',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.7,
-              ),
-            ),
-          ],
+        Text(
+          'Movimientos del hogar',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: theme.textPrimary,
+            letterSpacing: -0.7,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         activityAsync.when(
@@ -396,44 +374,63 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildActivityEmptyState(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: theme.surfaceVariant.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: theme.border.withValues(alpha: 0.38)),
+        gradient: LinearGradient(
+          colors: [
+            theme.surfaceVariant.withValues(alpha: 0.32),
+            theme.surface.withValues(alpha: 0.92),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.border.withValues(alpha: 0.22)),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
+              color: theme.primary.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.chat_bubble_outline_rounded,
               size: 18,
-              color: theme.primary.withValues(alpha: 0.72),
+              color: theme.primary.withValues(alpha: 0.66),
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Todavia no hay movimientos',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: theme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Cuando alguien complete una tarea o cargue un gasto, lo vas a ver aca.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              height: 1.35,
-              color: theme.textSecondary,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Todavia no hay movimientos',
+                    style: TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w800,
+                      color: theme.textPrimary,
+                      letterSpacing: -0.35,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Cuando haya una tarea o un gasto nuevo, aparece aca.',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: theme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -462,31 +459,32 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildEmptyState(String message, AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.primary.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.065)),
       ),
       child: Column(
         children: [
           Container(
-            width: 58,
-            height: 58,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.08),
+              color: theme.primary.withValues(alpha: 0.07),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.favorite_border_rounded,
-              color: theme.primary.withValues(alpha: 0.72),
-              size: 28,
+              color: theme.primary.withValues(alpha: 0.68),
+              size: 26,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             message,
             style: TextStyle(
+              fontSize: 16,
               fontWeight: FontWeight.w800,
               color: theme.textPrimary,
             ),

@@ -4,9 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_solo_view.dart';
@@ -163,28 +161,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildFAB(String householdId, AppThemeColors theme) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 2),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowBase.withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: theme.shadowBase.withValues(alpha: 0.032),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: FloatingActionButton.extended(
-          onPressed: () => _showQuickActionMenu(householdId),
-          backgroundColor: theme.surface.withValues(alpha: 0.97),
-          foregroundColor: theme.primary,
-          elevation: 0,
-          label: Text('Nueva Acci\u00f3n', style: TextStyle(color: theme.primary, fontWeight: FontWeight.w800, fontSize: 14)),
-          icon: Icon(Icons.add_rounded, color: theme.primary, size: 17),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: theme.primary.withValues(alpha: 0.14))),
+        child: SizedBox(
+          height: 56,
+          child: FloatingActionButton.extended(
+            onPressed: () => _showQuickActionMenu(householdId),
+            backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
+            foregroundColor: theme.primary,
+            elevation: 0,
+            extendedPadding:
+                const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
+            label: Text(
+              'Nueva Acci\u00f3n',
+              style: TextStyle(
+                color: theme.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14.5,
+                letterSpacing: -0.15,
+              ),
+            ),
+            icon: Icon(Icons.add_rounded, color: theme.primary, size: 19),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+              side: BorderSide(
+                color: theme.primary.withValues(alpha: 0.075),
+              ),
+            ),
+          ),
         ),
       ).animate(delay: 600.ms)
           .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)

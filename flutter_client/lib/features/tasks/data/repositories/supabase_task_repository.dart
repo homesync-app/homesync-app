@@ -3,10 +3,13 @@ import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -44,6 +47,20 @@ class SupabaseTaskRepository
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+  bool get _isAdminTestingActive {
+    final admin = _ref.read(adminProvider);
+    return AppEnvironment.enableAdminTesting &&
+        admin.isAdminUser &&
+        admin.selectedHouseholdId != null;
+  }
+
+  String? get _selectedAdminHouseholdId {
+    final admin = _ref.read(adminProvider);
+    if (_isAdminTestingActive) {
+      return admin.selectedHouseholdId;
+    }
+    return null;
+  }
 
   Future<void> _queueAction(OfflineAction action) async {
     await _offlineQueue.enqueueAction(
@@ -56,10 +73,19 @@ class SupabaseTaskRepository
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
       {int limit = 100, int offset = 0}) async {
     return executeWithHandling(() async {
-      final raw = await _rpc.getTasks(limit: limit, offset: offset);
-      return (raw as List)
+      final raw = _isAdminTestingActive
+          ? await _client.rpc(
+              'qa_admin_get_tasks',
+              params: {'p_household_id': _selectedAdminHouseholdId},
+            )
+          : await _rpc.getTasks(limit: limit, offset: offset);
+      final tasks = (raw as List)
           .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
           .toList();
+      log.i(
+        'TaskRepository.getTasks household=${_selectedAdminHouseholdId ?? householdId} count=${tasks.length} adminQa=$_isAdminTestingActive',
+      );
+      return tasks;
     }, context: 'SupabaseTaskRepository.getTasks', isOnline: _isOnline);
   }
 
@@ -71,7 +97,8 @@ class SupabaseTaskRepository
   }) async {
     return executeWithHandling(
         () async {
-          final householdId = await _rpc.requireHouseholdId();
+          final householdId =
+              _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
           final result = await _rpc.completeTaskTransaction(
             taskId: task.id,
             taskTitle: task.title,
@@ -92,10 +119,12 @@ class SupabaseTaskRepository
               type: OfflineActionType.rpc,
               target: 'complete_task_transaction',
               params: {
-                'p_request_id': 'offline_' + DateTime.now().millisecondsSinceEpoch.toString(),
+                'p_request_id':
+                    'offline_${DateTime.now().millisecondsSinceEpoch}',
                 'p_user_ids': userIds ?? [userId],
                 'p_task_id': task.id,
-                'p_household_id': await _rpc.requireHouseholdId(),
+                'p_household_id':
+                    _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
                 'p_xp_reward': task.xpReward,
                 'p_coin_reward': task.coinReward,
                 'p_task_title': task.title,
@@ -103,7 +132,11 @@ class SupabaseTaskRepository
               },
             ),
           );
-          return TaskCompletionResult(success: true, message: 'Encolado offline', queued: true);
+          return const TaskCompletionResult(
+            success: true,
+            message: 'Encolado offline',
+            queued: true,
+          );
         });
   }
 
@@ -115,7 +148,8 @@ class SupabaseTaskRepository
   }) async {
     return executeWithHandling(
         () async {
-          final householdId = await _rpc.requireHouseholdId();
+          final householdId =
+              _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
           final taskIds = tasks.map((t) => t.id).toList();
           final result = await _rpc.completeTasksBatch(
             taskIds: taskIds,
@@ -135,15 +169,21 @@ class SupabaseTaskRepository
               type: OfflineActionType.rpc,
               target: 'complete_tasks_batch',
               params: {
-                'p_request_id': 'offline_' + DateTime.now().millisecondsSinceEpoch.toString(),
+                'p_request_id':
+                    'offline_${DateTime.now().millisecondsSinceEpoch}',
                 'p_user_ids': userIds ?? [userId],
                 'p_task_ids': taskIds,
-                'p_household_id': await _rpc.requireHouseholdId(),
+                'p_household_id':
+                    _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
                 if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
               },
             ),
           );
-          return {'success': true, 'message': 'Lote encolado offline', 'queued': true};
+          return const {
+            'success': true,
+            'message': 'Lote encolado offline',
+            'queued': true,
+          };
         });
   }
 
@@ -241,6 +281,7 @@ class SupabaseTaskRepository
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
+    String? assignedTo,
   }) async {
     return executeWithHandling(
         () async {
@@ -250,6 +291,7 @@ class SupabaseTaskRepository
             'recurrence_interval': recurrenceInterval ?? 1,
             'recurrence_weekdays': recurrenceWeekdays ?? [],
             'recurrence_month_days': recurrenceMonthDays ?? [],
+            'assigned_to': assignedTo,
             'updated_at': now,
           };
 
@@ -279,6 +321,7 @@ class SupabaseTaskRepository
             'recurrence_interval': recurrenceInterval ?? 1,
             'recurrence_weekdays': recurrenceWeekdays ?? [],
             'recurrence_month_days': recurrenceMonthDays ?? [],
+            'assigned_to': assignedTo,
             'updated_at': now,
           };
 
@@ -321,6 +364,38 @@ class SupabaseTaskRepository
   }) async {
     return executeWithHandling(
         () async {
+          if (_isAdminTestingActive) {
+            final userId = await AppIdentityService.instance.refresh();
+            if (userId == null || _selectedAdminHouseholdId == null) {
+              throw Exception('QA admin sin viewer u hogar seleccionado');
+            }
+
+            await _client.rpc(
+              'qa_admin_create_task',
+              params: {
+                'p_household_id': _selectedAdminHouseholdId,
+                'p_created_by': userId,
+                'p_title': title,
+                'p_description': description,
+                'p_category': category,
+                'p_assigned_to': assignedTo,
+                'p_type': 'one_time',
+                'p_difficulty': difficulty,
+                'p_xp_reward': xpReward,
+                'p_coin_reward': coinReward,
+                'p_priority': 'medium',
+                'p_recurrence_type': recurrenceType,
+                'p_recurrence_interval': recurrenceInterval ?? 1,
+                'p_recurrence_weekdays': recurrenceWeekdays ?? [],
+                'p_recurrence_month_days': recurrenceMonthDays ?? [],
+              },
+            );
+            log.i(
+              'TaskRepository.createTask QA created household=$_selectedAdminHouseholdId title=$title assignedTo=$assignedTo',
+            );
+            return;
+          }
+
           final taskId = await _rpc.createTask(
             title: title,
             description: description,
@@ -338,7 +413,6 @@ class SupabaseTaskRepository
           final Map<String, dynamic> updates = {};
           if (status != null) updates['status'] = status;
 
-          // If the RPC doesn't set created_by_id, we set it here
           final userId = await AppIdentityService.instance.refresh();
           if (userId != null) updates['created_by_id'] = userId;
 
