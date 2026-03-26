@@ -36,6 +36,10 @@ final socialHubTabIndexProvider = NotifierProvider<SocialHubTabNotifier, int>(()
   return SocialHubTabNotifier();
 });
 
+// Backwards-compatible alias while older rewards screens still reference the
+// previous provider name.
+final parejaTabIndexProvider = socialHubTabIndexProvider;
+
 // ── Admin / Debug Panel ──────────────────────────────────────────────────────
 class AdminState {
   final bool isDeveloperMode;

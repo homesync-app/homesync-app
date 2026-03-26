@@ -1612,10 +1612,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   AppColors.textMuted.withValues(alpha: 0.5)),
                           if (expense.description!
                                   .toLowerCase()
-                                  .contains('artículos') ||
+                                  .contains('art?culos') ||
                               expense.description!
                                   .toLowerCase()
-                                  .contains('hogar')) {
+                                  .contains('hogar'))
                             Padding(
                               padding: const EdgeInsets.only(left: 6),
                               child: Icon(Icons.shopping_bag_rounded,
