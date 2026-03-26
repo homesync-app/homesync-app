@@ -18,20 +18,33 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
   @override
   Future<List<MemberModel>> build() async {
     final householdId = await ref.watch(householdIdProvider.future);
-    if (householdId == null) return [];
+    final currentUserId = ref.read(currentUserIdProvider);
+    final admin = ref.read(adminProvider);
+    if (householdId == null) {
+      log.w(
+        'HouseholdMembersNotifier.build without householdId viewer=$currentUserId adminQa=${admin.isAdminUser} selectedHousehold=${admin.selectedHouseholdId}',
+      );
+      return [];
+    }
 
     _setupRealtime(householdId);
 
     final repo = ref.read(householdRepositoryProvider);
     final result = await repo.getHouseholdMembersRaw();
 
-    return result.fold(
+    final members = result.fold<List<MemberModel>>(
       (l) {
         log.e('Error fetching household members: ${l.message}');
-        return [];
+        return <MemberModel>[];
       },
       (r) => r.map((m) => MemberModel.fromMap(m)).toList(),
     );
+
+    log.i(
+      'HouseholdMembersNotifier.build resolved household=$householdId viewer=$currentUserId count=${members.length} members=${members.map((m) => m.fullDisplayName).toList()} adminQa=${admin.isAdminUser}',
+    );
+
+    return members;
   }
 
   void _setupRealtime(String householdId) {
@@ -62,6 +75,11 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
   }
 
   Future<void> refresh() async {
+    final householdId = await ref.read(householdIdProvider.future);
+    final currentUserId = ref.read(currentUserIdProvider);
+    log.i(
+      'HouseholdMembersNotifier.refresh requested household=$householdId viewer=$currentUserId',
+    );
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => build());
   }

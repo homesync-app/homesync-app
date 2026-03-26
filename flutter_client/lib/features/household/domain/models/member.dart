@@ -6,6 +6,7 @@ class MemberModel {
   final DateTime joinedAt;
   final String? email;
   final String? fullName;
+  final String? displayRole;
 
   final String? avatarUrl;
   final String? mercadopagoAlias;
@@ -18,6 +19,7 @@ class MemberModel {
     required this.joinedAt,
     this.email,
     this.fullName,
+    this.displayRole,
     this.avatarUrl,
     this.mercadopagoAlias,
   });
@@ -33,6 +35,7 @@ class MemberModel {
           DateTime.now(),
       email: userMap?['email'] as String?,
       fullName: userMap?['full_name'] as String?,
+      displayRole: map['display_role'] as String?,
       avatarUrl: userMap?['avatar_url'] as String?,
       mercadopagoAlias: userMap?['mercadopago_alias'] as String?,
     );
@@ -45,6 +48,7 @@ class MemberModel {
       'household_id': householdId,
       'role': role,
       'joined_at': joinedAt.toIso8601String(),
+      'display_role': displayRole,
       'users': {
         'full_name': fullName,
         'email': email,

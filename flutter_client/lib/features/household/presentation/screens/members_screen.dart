@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/providers/rpc_providers.dart';
-
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -24,10 +23,10 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
 
   Future<void> _loadMembers() async {
     try {
-      final members =
-          await ref.read(householdRpcServiceProvider).getHouseholdMembers();
+      final result =
+          await ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
       setState(() {
-        _members = members;
+        _members = result.fold((_) => <dynamic>[], (members) => members);
         _isLoading = false;
       });
     } catch (e) {
@@ -54,9 +53,11 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         children: [
           _buildHeader().animateEntrance(),
           const SizedBox(height: 24),
-          ..._members.asMap().entries.map((entry) => _buildMemberCard(entry.value).animateStaggered(entry.key)),
+          ..._members.asMap().entries.map((entry) =>
+              _buildMemberCard(entry.value).animateStaggered(entry.key)),
           const SizedBox(height: 16),
-          _buildInviteCard().animateScaleIn(delay: (_members.length * 40) + 100),
+          _buildInviteCard()
+              .animateScaleIn(delay: (_members.length * 40) + 100),
         ],
       ),
     );
@@ -156,7 +157,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             ),
             if (isOwner)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),

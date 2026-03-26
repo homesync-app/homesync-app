@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/widgets/homesync_logo.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -116,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                   scale: _logoScale,
                   child: FadeTransition(
                     opacity: _logoOpacity,
-                    child: const _SplashLogo(),
+                    child: HomeSyncLogo(size: 110),
                   ),
                 ),
 
@@ -195,70 +196,6 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 48),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Custom logo widget (no image assets required) ──────────────────────────────
-class _SplashLogo extends StatelessWidget {
-  const _SplashLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 110,
-      height: 110,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEE652B), Color(0xFFFF9866)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEE652B).withValues(alpha: 0.35),
-            blurRadius: 32,
-            offset: const Offset(0, 16),
-          ),
-          BoxShadow(
-            color: const Color(0xFFEE652B).withValues(alpha: 0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Subtle inner highlight
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 55,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.18),
-                    Colors.white.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // House icon
-          const Icon(
-            Icons.home_rounded,
-            size: 58,
-            color: Colors.white,
           ),
         ],
       ),

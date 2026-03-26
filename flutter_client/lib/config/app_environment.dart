@@ -65,6 +65,27 @@ class AppEnvironment {
   static bool get isProduction => current == Environment.production;
   static bool get usesFirebaseJwtForSupabase =>
       authMode == AuthMode.firebaseThirdParty;
+  static bool get enableAdminTesting {
+    const override = String.fromEnvironment('ENABLE_ADMIN_TESTING');
+    if (override.isNotEmpty) {
+      return override.toLowerCase() == 'true';
+    }
+    return isLocal || isStaging;
+  }
+
+  static String get adminTestingUsername {
+    return const String.fromEnvironment(
+      'ADMIN_TESTING_USERNAME',
+      defaultValue: 'admin',
+    );
+  }
+
+  static String get adminTestingPassword {
+    return const String.fromEnvironment(
+      'ADMIN_TESTING_PASSWORD',
+      defaultValue: 'superadmin',
+    );
+  }
 
   // --- Firebase Config ---
   static String get firebaseProjectId {
@@ -137,4 +158,3 @@ enum AuthMode {
   supabaseNative,
   firebaseThirdParty,
 }
-

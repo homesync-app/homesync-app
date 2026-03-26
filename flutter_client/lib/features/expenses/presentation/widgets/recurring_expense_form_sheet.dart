@@ -23,6 +23,7 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
 
 class _RecurringExpenseFormSheetState
     extends ConsumerState<RecurringExpenseFormSheet> {
+  final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
 
@@ -49,8 +50,7 @@ class _RecurringExpenseFormSheetState
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
-      _amountController.text =
-          NumberFormat.decimalPattern('es_ES').format(
+      _amountController.text = NumberFormat.decimalPattern('es_ES').format(
         template.defaultAmount.round(),
       );
       _dayOfMonth = template.dayOfMonth;
@@ -58,6 +58,7 @@ class _RecurringExpenseFormSheetState
       _splitType = template.splitType;
       _payerDefault = template.payerDefault;
     }
+    _initializeDefaultPayer();
   }
 
   @override
@@ -71,6 +72,16 @@ class _RecurringExpenseFormSheetState
     final normalized = raw.trim().replaceAll('.', '').replaceAll(',', '.');
     if (normalized.isEmpty) return null;
     return double.tryParse(normalized);
+  }
+
+  Future<void> _initializeDefaultPayer() async {
+    try {
+      final members = await ref.read(householdMembersProvider.future);
+      if (!mounted || members.isEmpty || _payerDefault.isNotEmpty) return;
+      setState(() => _payerDefault = members.first.userId);
+    } catch (_) {
+      // If members are not available yet, the selector will show loading/error.
+    }
   }
 
   void _onAmountChanged(String value) {
@@ -110,12 +121,24 @@ class _RecurringExpenseFormSheetState
   }
 
   Future<void> _save() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
     final title = _titleController.text.trim();
     final parsedAmount = _parseAmount(_amountController.text);
 
     if (title.isEmpty || parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Completa titulo y monto valido.')),
+      );
+      return;
+    }
+
+    if (_splitType != 'personal' && _payerDefault.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Elige quien suele abonarla para dejarla lista.'),
+        ),
       );
       return;
     }
@@ -215,79 +238,78 @@ class _RecurringExpenseFormSheetState
         ),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (members) {
-          if (_payerDefault.isEmpty && members.isNotEmpty) {
-            _payerDefault = members.first.userId;
-          }
-
           return SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(2),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.divider,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                _buildHeader(),
-                const SizedBox(height: 28),
-                _buildSectionIntro(
-                  eyebrow: 'DETALLE',
-                  title: 'Que se renueva cada mes',
-                  subtitle:
-                      'Define el nombre y el monto para reconocerla rapido.',
-                ),
-                const SizedBox(height: 16),
-                _buildTitleField(),
-                const SizedBox(height: 16),
-                _buildAmountField(),
-                const SizedBox(height: 24),
-                _buildSectionIntro(
-                  eyebrow: 'CALENDARIO',
-                  title: 'Cuando se registra',
-                  subtitle:
-                      'Elegimos el dia habitual para programarla sola.',
-                ),
-                const SizedBox(height: 16),
-                _buildDaySelector(),
-                const SizedBox(height: 24),
-                _buildSectionIntro(
-                  eyebrow: 'CATEGORIA',
-                  title: 'Donde encaja mejor',
-                  subtitle:
-                      'Ayuda a ordenar Finanzas y mantener la lectura clara.',
-                ),
-                const SizedBox(height: 16),
-                _buildCategorySelector(),
-                const SizedBox(height: 24),
-                _buildSectionIntro(
-                  eyebrow: 'REPARTO',
-                  title: 'Como se reparte',
-                  subtitle:
-                      'Define si se divide entre ambos o si queda como personal.',
-                ),
-                const SizedBox(height: 16),
-                _buildSplitTypeSelector(),
-                if (_splitType != 'personal') ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  _buildHeader(),
+                  const SizedBox(height: 28),
                   _buildSectionIntro(
-                    eyebrow: 'PAGADOR',
-                    title: 'Quien suele abonarla',
+                    eyebrow: 'DETALLE',
+                    title: 'Que se renueva cada mes',
                     subtitle:
-                        'Esto deja una sugerencia lista para los proximos meses.',
+                        'Define el nombre y el monto para reconocerla rapido.',
                   ),
                   const SizedBox(height: 16),
-                  _buildPayerSelector(members),
+                  _buildTitleField(),
+                  const SizedBox(height: 16),
+                  _buildAmountField(),
+                  const SizedBox(height: 24),
+                  _buildSectionIntro(
+                    eyebrow: 'CALENDARIO',
+                    title: 'Cuando se registra',
+                    subtitle: 'Elegimos el dia habitual para programarla sola.',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDaySelector(),
+                  const SizedBox(height: 24),
+                  _buildSectionIntro(
+                    eyebrow: 'CATEGORIA',
+                    title: 'Donde encaja mejor',
+                    subtitle:
+                        'Ayuda a ordenar Finanzas y mantener la lectura clara.',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildCategorySelector(),
+                  const SizedBox(height: 24),
+                  _buildSectionIntro(
+                    eyebrow: 'REPARTO',
+                    title: 'Como se reparte',
+                    subtitle:
+                        'Define si se divide entre ambos o si queda como personal.',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSplitTypeSelector(),
+                  if (_splitType != 'personal') ...[
+                    const SizedBox(height: 24),
+                    _buildSectionIntro(
+                      eyebrow: 'PAGADOR',
+                      title: 'Quien suele abonarla',
+                      subtitle:
+                          'Esto deja una sugerencia lista para los proximos meses.',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPayerSelector(members),
+                  ],
+                  const SizedBox(height: 32),
+                  _buildSaveButton(),
                 ],
-                const SizedBox(height: 32),
-                _buildSaveButton(),
-              ],
+              ),
             ),
           );
         },
@@ -372,8 +394,15 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildTitleField() {
-    return TextField(
+    return TextFormField(
       controller: _titleController,
+      textInputAction: TextInputAction.next,
+      validator: (value) {
+        final title = value?.trim() ?? '';
+        if (title.isEmpty) return 'Escribe un nombre para reconocerla.';
+        if (title.length < 3) return 'Usa al menos 3 caracteres.';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: 'Nombre',
         hintText: 'Ej: Netflix, alquiler o internet',
@@ -397,10 +426,16 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildAmountField() {
-    return TextField(
+    return TextFormField(
       controller: _amountController,
       keyboardType: TextInputType.number,
       onChanged: _onAmountChanged,
+      validator: (value) {
+        final amount = _parseAmount(value ?? '');
+        if (amount == null) return 'Ingresa un monto valido.';
+        if (amount <= 0) return 'El monto debe ser mayor a cero.';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: 'Monto por defecto',
         prefixText: r'$ ',
@@ -505,8 +540,7 @@ class _RecurringExpenseFormSheetState
           runSpacing: 8,
           children: _categories.map((category) {
             final isSelected = _category == category['id'];
-            final categoryColor =
-                AppColors.getCategoryColor(category['id']);
+            final categoryColor = AppColors.getCategoryColor(category['id']);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -584,7 +618,8 @@ class _RecurringExpenseFormSheetState
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isSelected ? 0.03 : 0.015),
+                color:
+                    Colors.black.withValues(alpha: isSelected ? 0.03 : 0.015),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),

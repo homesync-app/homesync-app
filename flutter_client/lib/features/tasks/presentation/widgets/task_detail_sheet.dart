@@ -291,8 +291,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     ? _task.recurrenceLabel
                                     : 'Sin programar',
                                 color: _task.isRecurring
-                                    ? AppColors.primary
-                                    : AppColors.accentPeach,
+                                    ? AppColors.accentGold
+                                    : AppColors.accentRed,
                               ),
                             ],
                           ),
@@ -456,7 +456,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

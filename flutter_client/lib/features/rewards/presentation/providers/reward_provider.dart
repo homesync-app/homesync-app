@@ -16,6 +16,7 @@ class Rewards extends _$Rewards {
 
   @override
   Future<List<Map<String, dynamic>>> build() async {
+    final admin = ref.watch(adminProvider);
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
@@ -23,6 +24,28 @@ class Rewards extends _$Rewards {
     _setupRealtime(householdId);
 
     final repo = ref.read(rewardRepositoryProvider);
+    if (admin.isAdminUser) {
+      final client = Supabase.instance.client;
+      final rewardsResponse = await client.rpc(
+        'qa_admin_get_rewards',
+        params: {'p_household_id': householdId},
+      );
+      final rewards = List<Map<String, dynamic>>.from(rewardsResponse as List);
+      if (rewards.isEmpty) {
+        log.i('QA reward store empty, seeding default rewards...');
+        await client.rpc(
+          'qa_admin_seed_default_rewards',
+          params: {'p_household_id': householdId},
+        );
+        final secondTry = await client.rpc(
+          'qa_admin_get_rewards',
+          params: {'p_household_id': householdId},
+        );
+        return List<Map<String, dynamic>>.from(secondTry as List);
+      }
+      return rewards;
+    }
+
     final result = await repo.getRewards(householdId);
 
     return result.fold(
@@ -170,6 +193,25 @@ class Rewards extends _$Rewards {
   }
 
   Future<Either<Failure, int>> cloneTemplates() async {
+    final admin = ref.read(adminProvider);
+    if (admin.isAdminUser) {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) {
+        return const Left(ValidationFailure('Hogar QA no identificado'));
+      }
+      try {
+        final seeded = await Supabase.instance.client.rpc(
+          'qa_admin_seed_default_rewards',
+          params: {'p_household_id': householdId},
+        );
+        ref.invalidateSelf();
+        return Right((seeded as num).toInt());
+      } catch (e) {
+        log.w('QA seed rewards failure: $e');
+        return Left(ServerFailure(e.toString()));
+      }
+    }
+
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.cloneTemplates();
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -23,7 +22,8 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     required this.onTasksCompleted,
   });
 
-  static Future<void> show(BuildContext context, {VoidCallback? onTasksCompleted}) {
+  static Future<void> show(BuildContext context,
+      {VoidCallback? onTasksCompleted}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -110,13 +110,50 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Future<void> _submitCompletedTasks() async {
-    if (_selectedTaskIds.isEmpty || _selectedMemberIds.isEmpty) return;
+    if (_isLoading) return;
+
+    if (_selectedTaskIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecciona al menos una tarea para completar.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedMemberIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecciona quien la hizo antes de continuar.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La fecha de finalizacion no puede ser futura.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final selectedTasks =
           _allTasks.where((t) => _selectedTaskIds.contains(t.id)).toList();
+
+      if (selectedTasks.isEmpty ||
+          selectedTasks.length != _selectedTaskIds.length) {
+        throw Exception(
+          'No pudimos encontrar todas las tareas elegidas. Refresca e intenta de nuevo.',
+        );
+      }
 
       int totalXp = 0;
       int totalCoins = 0;
@@ -132,10 +169,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           _selectedMemberIds.contains(currentUserId);
 
       await ref.read(tasksProvider.notifier).completeTasksBatch(
-        selectedTasks,
-        userIds: _selectedMemberIds.toList(),
-        completedAt: _isRightNow ? null : _customDate,
-      );
+            selectedTasks,
+            userIds: _selectedMemberIds.toList(),
+            completedAt: _isRightNow ? null : _customDate,
+          );
 
       if (mounted) {
         _confettiController.play();
@@ -389,7 +426,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _submitCompletedTasks,
+                          onPressed: _isLoading ||
+                                  _selectedTaskIds.isEmpty ||
+                                  _selectedMemberIds.isEmpty
+                              ? null
+                              : _submitCompletedTasks,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.textPrimary,
                             foregroundColor: Colors.white,
@@ -400,24 +441,36 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                               borderRadius: BorderRadius.circular(22),
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.check_circle_rounded, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                _selectedTaskIds.length == 1
-                                    ? 'Completar 1 tarea'
-                                    : 'Completar ${_selectedTaskIds.length} tareas',
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.4,
-                                  color: Colors.white,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _selectedTaskIds.length == 1
+                                          ? 'Completar 1 tarea'
+                                          : 'Completar ${_selectedTaskIds.length} tareas',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.4,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                     ),

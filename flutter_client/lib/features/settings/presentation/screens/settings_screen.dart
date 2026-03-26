@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
+import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -23,7 +29,6 @@ import 'package:homesync_client/features/settings/presentation/providers/setting
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
-
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -39,6 +44,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isLoading = true;
+  bool _hasLoadedOnce = false;
   String? _householdId;
   String? _invitationCode;
   List<Map<String, dynamic>> _members = [];
@@ -51,41 +57,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _loadData();
   }
 
+  Future<void> _refreshAdminScenarioState() async {
+    ref.invalidate(householdIdProvider);
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(currentHouseholdProvider);
+    ref.invalidate(householdMembersProvider);
+    ref.invalidate(householdMembersNotifierProvider);
+    ref.invalidate(expenseBalancesProvider);
+    ref.invalidate(userBalanceProvider);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(tasksProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(qaAdminRecentEventsProvider);
+    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+  }
+
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasLoadedOnce = true;
+          });
+        }
         return;
       }
 
-      final householdMember = await Supabase.instance.client
-          .from('household_members')
-          .select('household_id, role')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (householdMember == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final hId = householdMember['household_id'];
-      if (hId == null) {
-        setState(() => _isLoading = false);
+      final hId = await ref.read(householdIdProvider.future);
+      if (hId == null || hId.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _hasLoadedOnce = true;
+          });
+        }
         return;
       }
       _householdId = hId;
 
-      final household = await Supabase.instance.client
+      final householdFuture = Supabase.instance.client
           .from('households')
           .select('name, household_type')
           .eq('id', hId)
           .maybeSingle();
-
-      final invitation = await Supabase.instance.client
+      final invitationFuture = Supabase.instance.client
           .from('household_invitations')
           .select('code')
           .eq('household_id', hId)
@@ -93,24 +114,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle();
+      final membersFuture =
+          ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
 
-      final membersResult =
-          await ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
-      final membersList = membersResult.getOrElse((failure) {
-        log.e('Error loading members: ${failure.message}');
-        return [];
-      });
+      final householdResult = await Future.wait<dynamic>([
+        householdFuture,
+        invitationFuture,
+        membersFuture,
+      ]);
+      final household = householdResult[0] as Map<String, dynamic>?;
+      final invitation = householdResult[1] as Map<String, dynamic>?;
+      final membersResult = householdResult[2];
+      final membersList = membersResult.match(
+        (failure) {
+          log.e('Error loading members: ${failure.message}');
+          return <Map<String, dynamic>>[];
+        },
+        (members) => members,
+      );
 
-      setState(() {
-        _householdName = household?['name'];
-        _householdType = household?['household_type'];
-        _invitationCode = invitation?['code'];
-        _members = List<Map<String, dynamic>>.from(membersList);
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _householdName = household?['name'];
+          _householdType = household?['household_type'];
+          _invitationCode = invitation?['code'];
+          _members = List<Map<String, dynamic>>.from(membersList);
+          _isLoading = false;
+          _hasLoadedOnce = true;
+        });
+      }
     } catch (e) {
       log.e('Error loading settings: $e', error: e);
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasLoadedOnce = true;
+        });
+      }
     }
   }
 
@@ -172,7 +212,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
     if (_householdType == 'couple') {
-      intro = '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+      intro =
+          '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
     } else if (_householdType == 'family') {
       intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
     } else if (_householdType == 'friends') {
@@ -363,155 +404,183 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackground,
-        body: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: theme.primary,
-                  strokeWidth: 3,
-                ),
-              )
-            : RefreshIndicator(
-                onRefresh: _loadData,
-                color: theme.primary,
-                backgroundColor: theme.surface,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics()),
-                  slivers: [
-                    SliverAppBar(
-                      expandedHeight: 140,
-                      floating: false,
-                      pinned: true,
-                      elevation: 0,
-                      stretch: true,
-                      backgroundColor: theme.scaffoldBackground,
-                      flexibleSpace: FlexibleSpaceBar(
-                        centerTitle: false,
-                        titlePadding:
-                            const EdgeInsets.only(left: 24, bottom: 20),
-                        title: Text(
-                          'Configuracion',
-                          style: TextStyle(
-                            color: theme.textPrimary,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 26,
-                            letterSpacing: -0.5,
-                          ),
+        body: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _loadData,
+              color: theme.primary,
+              backgroundColor: theme.surface,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 140,
+                    floating: false,
+                    pinned: true,
+                    elevation: 0,
+                    stretch: true,
+                    backgroundColor: theme.scaffoldBackground,
+                    flexibleSpace: FlexibleSpaceBar(
+                      centerTitle: false,
+                      titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
+                      title: Text(
+                        'Configuracion',
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 26,
+                          letterSpacing: -0.5,
                         ),
-                        background: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.primary.withValues(alpha: 0.05),
-                                theme.scaffoldBackground,
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
+                      ),
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.primary.withValues(alpha: 0.05),
+                              theme.scaffoldBackground,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildSectionLabel(
-                              eyebrow: 'PERFIL',
-                              title: 'Tu espacio',
-                              subtitle:
-                                  'Avatar, nombre y datos basicos de tu cuenta.',
-                            ),
-                            const SizedBox(height: 14),
-                            _buildProfileCard(),
-                            const SizedBox(height: 28),
-                            _buildSectionLabel(
-                              eyebrow: 'HOGAR',
-                              title: 'Casa compartida',
-                              subtitle:
-                                  'Miembros, invitaciones y reglas del hogar.',
-                            ),
-                            const SizedBox(height: 14),
-                            if (_householdId != null) ...[
-                              _buildCombinedHouseholdCard(),
-                            ] else ...[
-                              _buildNoHouseholdCard(),
-                            ],
-                            const SizedBox(height: 28),
-                            _buildSectionLabel(
-                              eyebrow: 'APP',
-                              title: 'Preferencias',
-                              subtitle:
-                                  'Tema, notificaciones y herramientas de ayuda.',
-                            ),
-                            const SizedBox(height: 14),
-                            _buildPremiumCard(),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildSectionLabel(
+                            eyebrow: 'PERFIL',
+                            title: 'Tu espacio',
+                            subtitle:
+                                'Avatar, nombre y datos basicos de tu cuenta.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildProfileCard(),
+                          const SizedBox(height: 28),
+                          _buildSectionLabel(
+                            eyebrow: 'HOGAR',
+                            title: 'Casa compartida',
+                            subtitle:
+                                'Miembros, invitaciones y reglas del hogar.',
+                          ),
+                          const SizedBox(height: 14),
+                          if (_householdId != null) ...[
+                            _buildCombinedHouseholdCard(),
+                          ] else if (!_hasLoadedOnce && _isLoading) ...[
+                            _buildLoadingCard(height: 220),
+                          ] else ...[
+                            _buildNoHouseholdCard(),
+                          ],
+                          const SizedBox(height: 28),
+                          _buildSectionLabel(
+                            eyebrow: 'APP',
+                            title: 'Preferencias',
+                            subtitle:
+                                'Tema, notificaciones y herramientas de ayuda.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildPremiumCard(),
+                          const SizedBox(height: 24),
+                          _buildAppearanceCard(),
+                          const SizedBox(height: 24),
+                          _buildNotificationsCard(),
+                          const SizedBox(height: 24),
+                          if (AppEnvironment.enableAdminTesting) ...[
+                            _buildAdminTestingCard(),
                             const SizedBox(height: 24),
-                            _buildAppearanceCard(),
-                            const SizedBox(height: 24),
-                            _buildNotificationsCard(),
-                            const SizedBox(height: 24),
-                            _buildFAQButton(),
-                            const SizedBox(height: 28),
-                            _buildSectionLabel(
-                              eyebrow: 'IDENTIDAD',
-                              title: 'IDs de la cuenta',
-                              subtitle:
-                                  'Sirven para terminar la migracion profesional de Firebase sin adivinar datos.',
-                            ),
-                            const SizedBox(height: 14),
-                            _buildIdentityCard(),
-                            const SizedBox(height: 48),
-                            _buildSectionLabel(
-                              eyebrow: 'CUENTA',
-                              title: 'Sesion y seguridad',
-                              subtitle:
-                                  'Salir de la cuenta o reiniciar tus datos si lo necesitas.',
-                            ),
-                            const SizedBox(height: 14),
-                            _buildLogoutButton(),
-                            const SizedBox(height: 32),
-                            _buildResetAccountButton(),
-                            const SizedBox(height: 48),
-                            GestureDetector(
-                              onTap: () => AdminPanel.show(context),
-                              child: Opacity(
-                                opacity: 0.4,
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'HOMESYNC',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 2,
-                                        color: theme.textPrimary,
-                                      ),
+                          ],
+                          _buildFAQButton(),
+                          const SizedBox(height: 48),
+                          _buildSectionLabel(
+                            eyebrow: 'CUENTA',
+                            title: 'Sesion y seguridad',
+                            subtitle:
+                                'Salir de la cuenta o reiniciar tus datos si lo necesitas.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildLogoutButton(),
+                          const SizedBox(height: 32),
+                          _buildResetAccountButton(),
+                          const SizedBox(height: 48),
+                          GestureDetector(
+                            onTap: AppEnvironment.enableAdminTesting &&
+                                    ref.watch(adminProvider).isAdminUser
+                                ? () => AdminPanel.show(context)
+                                : null,
+                            child: Opacity(
+                              opacity: 0.4,
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'HOMESYNC',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 2,
+                                      color: theme.textPrimary,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Version 1.0.0',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: theme.textSecondary,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Version 1.0.0',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: theme.textSecondary,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            if (_isLoading && !_hasLoadedOnce)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    color: theme.scaffoldBackground.withValues(alpha: 0.001),
+                    alignment: Alignment.center,
+                    child: CircularProgressIndicator(
+                      color: theme.primary,
+                      strokeWidth: 3,
+                    ),
+                  ),
                 ),
               ),
+          ],
+        ),
       ),
     );
   }
+
+  Widget _buildLoadingCard({double height = 180}) {
+    final theme = context.theme;
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
+      ),
+      alignment: Alignment.center,
+      child: CircularProgressIndicator(
+        color: theme.primary,
+        strokeWidth: 2.5,
+      ),
+    );
+  }
+
+  // Profile Card
 
   // Profile Card
 
@@ -696,125 +765,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildIdentityCard() {
-    final theme = context.theme;
-    final appUserId = ref.watch(currentUserIdProvider);
-    final firebaseUid = fa.FirebaseAuth.instance.currentUser?.uid;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadow.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Usa estos valores para vincular la cuenta actual con Firebase.',
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 18),
-          _buildIdentityRow(
-            label: 'App User ID',
-            value: appUserId,
-            onCopy: appUserId == null
-                ? null
-                : () => _copyIdentityValue('App User ID', appUserId),
-          ),
-          const SizedBox(height: 12),
-          _buildIdentityRow(
-            label: 'Firebase UID',
-            value: firebaseUid,
-            onCopy: firebaseUid == null
-                ? null
-                : () => _copyIdentityValue('Firebase UID', firebaseUid),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIdentityRow({
-    required String label,
-    required String? value,
-    required VoidCallback? onCopy,
-  }) {
-    final theme = context.theme;
-    final hasValue = value != null && value.isNotEmpty;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  hasValue ? value : 'No disponible en esta sesion',
-                  style: TextStyle(
-                    color: hasValue ? theme.textPrimary : theme.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed: onCopy,
-            tooltip: 'Copiar',
-            icon: Icon(
-              Icons.copy_rounded,
-              color: hasValue ? theme.primary : theme.textMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _copyIdentityValue(String label, String value) async {
-    await Clipboard.setData(ClipboardData(text: value));
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$label copiado'),
-        backgroundColor: context.theme.success,
-      ),
-    );
-  }
-
   Widget _profileActionBtn({
     required IconData icon,
     required String label,
@@ -989,9 +939,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   final rawName = (userData['full_name'] as String?) ??
                       (userData['email'] as String?)?.split('@').first ??
                       'Miembro';
+                  final email = userData['email'] as String?;
                   final avatarUrl = userData['avatar_url'] as String?;
                   final role = member['role'] ?? 'member';
                   final isCurrentUser = member['user_id'] == currentUserId;
+                  final isQaDummy = AppEnvironment.enableAdminTesting &&
+                      ref.watch(adminProvider).isAdminUser &&
+                      (email?.startsWith('qa.') ?? false) &&
+                      (email?.endsWith('@homesync.local') ?? false);
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -1043,12 +998,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             _members.any((m) =>
                                 m['user_id'] == currentUserId &&
                                 m['role'] == 'owner'))
-                          IconButton(
-                            icon: Icon(Icons.edit_outlined,
-                                size: 16, color: theme.textSecondary),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => _updateMemberRole(member),
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              icon: Icon(Icons.edit_outlined,
+                                  size: 16, color: theme.textSecondary),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 32,
+                                height: 32,
+                              ),
+                              splashRadius: 18,
+                              onPressed: () => _updateMemberRole(member),
+                            ),
                           ),
                         if (role == 'owner')
                           const Padding(
@@ -1061,13 +1024,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 m['user_id'] == currentUserId &&
                                 m['role'] == 'owner') &&
                             !isCurrentUser)
-                          IconButton(
-                            icon: Icon(Icons.person_remove_outlined,
-                                size: 18, color: theme.error),
-                            onPressed: () => _confirmRemoveMember(
-                                member['user_id'], rawName),
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.all(4),
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              icon: Icon(Icons.person_remove_outlined,
+                                  size: 18, color: theme.error),
+                              onPressed: () => _confirmRemoveMember(
+                                  member['user_id'], rawName),
+                              constraints: const BoxConstraints.tightFor(
+                                width: 32,
+                                height: 32,
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              splashRadius: 18,
+                            ),
+                          ),
+                        if (isQaDummy && !isCurrentUser)
+                          SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: IconButton(
+                              icon: Icon(Icons.delete_forever_rounded,
+                                  size: 18, color: theme.error),
+                              onPressed: () => _confirmDeleteDummyMember(
+                                member['user_id'],
+                                rawName,
+                              ),
+                              constraints: const BoxConstraints.tightFor(
+                                width: 32,
+                                height: 32,
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              splashRadius: 18,
+                              tooltip: 'Eliminar dummy QA',
+                            ),
                           ),
                       ],
                     ),
@@ -1134,6 +1125,83 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _confirmDeleteDummyMember(String userId, String name) async {
+    final theme = context.theme;
+    final householdId = _householdId;
+    if (householdId == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text(
+          '¿Eliminar dummy QA?',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          'Esto eliminará a $name como usuario dummy QA. Si no pertenece a otro hogar QA, también se borrará su identidad técnica.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(128, 48),
+            ),
+            child: const Text('Eliminar dummy'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await ref.read(householdRepositoryProvider).qaDeleteDummyMember(
+                householdId: householdId,
+                userId: userId,
+              );
+
+      result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) {},
+      );
+
+      ref.invalidate(householdMembersNotifierProvider);
+      await _loadData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dummy QA eliminado: $name'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos eliminar el dummy: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -1226,7 +1294,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final currentLabel = member['display_role'] ?? '';
     final suggestions = <String>[];
     if (_householdType == 'family') {
-      suggestions.addAll(['Padre', 'Madre', 'Hijo', 'Hija', 'Abuelo', 'Abuela']);
+      suggestions
+          .addAll(['Padre', 'Madre', 'Hijo', 'Hija', 'Abuelo', 'Abuela']);
     } else if (_householdType == 'couple') {
       suggestions.addAll(['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa']);
     } else if (_householdType == 'friends') {
@@ -1310,7 +1379,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text('Error: $e'), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -1592,14 +1662,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
     final isFreeSelected = selectedPalette != null &&
         freePaletteNames.contains(selectedPalette.name);
-
-    if (!isPremium && !isFreeSelected) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(primaryColorProvider.notifier)
-            .setColor(defaultPalette.primary);
-      });
-    }
+    final effectiveColor =
+        (!isPremium && !isFreeSelected) ? defaultPalette.primary : currentColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1647,7 +1711,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             itemBuilder: (context, index) {
               final palette = palettes[index];
               final isSelected =
-                  currentColor.toARGB32() == palette.primary.toARGB32();
+                  effectiveColor.toARGB32() == palette.primary.toARGB32();
               final isFreePalette = freePaletteNames.contains(palette.name);
               final isLocked = !isPremium && !isFreePalette;
 
@@ -1750,6 +1814,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Invalidate profile cache so header updates
       ref.invalidate(userProfileProvider);
+      ref.invalidate(householdMembersNotifierProvider);
 
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
@@ -1978,6 +2043,402 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildAdminTestingCard() {
+    final theme = context.theme;
+    final admin = ref.watch(adminProvider);
+    final selectedScenario =
+        AdminTestingConfig.scenarioByHouseholdId(admin.selectedHouseholdId);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.22),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        admin.isAdminUser
+                            ? 'QA Admin Dashboard'
+                            : 'Modo QA disponible',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: theme.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        admin.isAdminUser
+                            ? 'Admin QA separado de tu cuenta real. Elige un hogar de prueba y luego cambia la vista por avatar.'
+                            : 'Ingresa con la cuenta de testing para habilitar los 4 hogares QA.',
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (admin.isAdminUser)
+                  IconButton(
+                    onPressed: () => AdminPanel.show(context),
+                    tooltip: 'Panel avanzado',
+                    icon: Icon(
+                      Icons.open_in_full_rounded,
+                      color: theme.textMuted,
+                    ),
+                  ),
+              ],
+            ),
+            if (admin.isAdminUser) ...[
+              const SizedBox(height: 18),
+              ...AdminTestingConfig.scenarios.map(
+                (scenario) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildAdminScenarioTile(scenario, admin),
+                ),
+              ),
+              if (selectedScenario != null) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        ref
+                            .read(adminProvider.notifier)
+                            .openOnboardingPreview();
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.play_circle_outline_rounded),
+                      label: const Text('Onboarding'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showAdminAddDummyMemberDialog(selectedScenario),
+                      icon: const Icon(Icons.person_add_alt_1_rounded),
+                      label: const Text('Agregar miembro'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => _resetAdminScenario(selectedScenario),
+                      icon: const Icon(Icons.restart_alt_rounded),
+                      label: const Text('Resetear seed'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Tip: eliminá miembros desde la sección "Miembros" de este mismo hogar QA.',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _resetAdminScenario(AdminTestingScenario scenario) async {
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await ref.read(householdRepositoryProvider).qaResetScenario(
+                scenario.householdId,
+              );
+
+      result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) {},
+      );
+
+      ref.read(adminProvider.notifier).setAdminScenario(scenario);
+      await _refreshAdminScenarioState();
+      await _loadData();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${scenario.title} volvió a su seed QA'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos resetear el escenario: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _showAdminAddDummyMemberDialog(
+    AdminTestingScenario scenario,
+  ) async {
+    final nameCtrl = TextEditingController();
+    final roleCtrl = TextEditingController();
+    final avatarCtrl = TextEditingController();
+    String selectedRole = 'member';
+
+    final payload = await showDialog<Map<String, String?>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: context.theme.surface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text(
+            'Agregar miembro dummy',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre visible',
+                    hintText: 'Ej: Clara',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: roleCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Rol / apodo',
+                    hintText: 'Ej: Invitado, Tía, Roomie',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: avatarCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Avatar emoji opcional',
+                    hintText: 'Ej: 😄',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'member',
+                      icon: Icon(Icons.person_outline_rounded),
+                      label: Text('Miembro'),
+                    ),
+                    ButtonSegment(
+                      value: 'owner',
+                      icon: Icon(Icons.star_rounded),
+                      label: Text('Owner'),
+                    ),
+                  ],
+                  selected: {selectedRole},
+                  onSelectionChanged: (value) {
+                    setDialogState(() => selectedRole = value.first);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, {
+                'full_name': nameCtrl.text.trim(),
+                'display_role': roleCtrl.text.trim(),
+                'avatar_url': avatarCtrl.text.trim(),
+                'role': selectedRole,
+              }),
+              child: const Text('Agregar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (payload == null || (payload['full_name'] ?? '').trim().isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await ref.read(householdRepositoryProvider).qaAddDummyMember(
+                householdId: scenario.householdId,
+                fullName: payload['full_name']!,
+                displayRole: payload['display_role'],
+                avatarUrl: payload['avatar_url'],
+                role: payload['role'] ?? 'member',
+              );
+
+      result.fold(
+        (failure) => throw Exception(failure.message),
+        (_) {},
+      );
+
+      ref.read(adminProvider.notifier).setAdminScenario(scenario);
+      ref.invalidate(householdIdProvider);
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(currentHouseholdProvider);
+      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(qaAdminRecentEventsProvider);
+      await _loadData();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Miembro dummy agregado al escenario'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos agregar el miembro: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildAdminScenarioTile(
+    AdminTestingScenario scenario,
+    AdminState admin,
+  ) {
+    final theme = context.theme;
+    final isSelected = admin.selectedHouseholdId == scenario.householdId;
+
+    final (icon, color) = switch (scenario.householdType) {
+      HouseholdType.solo => (Icons.person_rounded, Colors.blue),
+      HouseholdType.couple => (Icons.favorite_rounded, Colors.pink),
+      HouseholdType.friends => (Icons.group_rounded, Colors.orange),
+      HouseholdType.family => (Icons.family_restroom_rounded, Colors.green),
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          ref.read(adminProvider.notifier).setAdminScenario(scenario);
+          await _refreshAdminScenarioState();
+          await _loadData();
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: 0.10)
+                : theme.scaffoldBackground,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isSelected
+                  ? color.withValues(alpha: 0.65)
+                  : theme.border.withValues(alpha: 0.45),
+              width: isSelected ? 1.6 : 1.0,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      scenario.title,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      scenario.description,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (isSelected)
+                Icon(Icons.check_circle_rounded, color: color)
+              else
+                Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFAQButton() {
     final theme = context.theme;
     return Container(
@@ -2063,6 +2524,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           if (confirm == true) {
             await ref.read(authControllerProvider.notifier).signOut();
+            if (!mounted) return;
+            Navigator.of(context).pop();
             widget.onLogout();
           }
         },
@@ -2324,25 +2787,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ],
                 ),
               ),
-              Switch.adaptive(
-                value: isPremium,
-                activeThumbColor: const Color(0xFFF59E0B),
-                activeTrackColor: const Color(0xFFF59E0B),
-                onChanged: (value) async {
-                  await ref.read(premiumProvider.notifier).setPremium(value);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(value
-                            ? '✨ Modo Premium activado (Simulado)'
-                            : '🖊️ Modo Premium desactivado'),
-                        backgroundColor:
-                            value ? const Color(0xFFB45309) : theme.textPrimary,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
+              const SizedBox(width: 12),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const PremiumPaywallScreen()),
+                  );
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isPremium ? const Color(0xFFF59E0B) : theme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: Text(isPremium ? 'Gestionar' : 'Ver Planes'),
               ),
             ],
           ),

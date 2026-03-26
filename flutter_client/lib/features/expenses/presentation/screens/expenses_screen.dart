@@ -374,26 +374,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildProjectionStat(String label, num amount, Color color,
       {bool isBold = false, VoidCallback? onTap}) {
+    final theme = context.theme;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 11,
-                fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: theme.textMuted,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             '\$ ${_formatCurrency(amount)}',
             style: TextStyle(
-              color: color,
-              fontSize: 16,
+              color: isBold ? theme.textPrimary : color,
+              fontSize: isBold ? 20 : 17,
               fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+              letterSpacing: isBold ? -0.7 : -0.3,
             ),
           ),
         ],
@@ -588,56 +592,47 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildUnifiedSummaryCard(
       num balance, num income, num expense, num projectedPending) {
     final projectedBalance = balance - projectedPending;
+    final theme = context.theme;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.045),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: theme.border.withValues(alpha: 0.82)),
+        boxShadow: theme.cardShadow,
       ),
       child: Column(
         children: [
-          // Premium Header & Balance Section
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+            padding: const EdgeInsets.fromLTRB(24, 22, 24, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'BALANCE ACTUAL',
                   style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11,
+                    color: theme.textMuted,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                    letterSpacing: 1.35,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '\$ ${_formatCurrency(balance)}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 38,
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontSize: 40,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -1.6,
+                      letterSpacing: -1.8,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-                // Income & Expenses Row
+                const SizedBox(height: 18),
                 Row(
                   children: [
                     Expanded(
@@ -664,17 +659,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ],
             ),
           ),
-
-          // Projection Footer (Clean Integration)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.background.withValues(alpha: 0.4),
+              color: theme.surfaceVariant.withValues(alpha: 0.38),
               borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(28)),
+                  const BorderRadius.vertical(bottom: Radius.circular(30)),
               border: Border(
-                  top: BorderSide(
-                      color: AppColors.divider.withValues(alpha: 0.3))),
+                top: BorderSide(
+                  color: theme.border.withValues(alpha: 0.55),
+                ),
+              ),
             ),
             child: Row(
               children: [
@@ -687,10 +682,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                 ),
                 Container(
-                  height: 24,
+                  height: 28,
                   width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  color: AppColors.divider.withValues(alpha: 0.5),
+                  margin: const EdgeInsets.symmetric(horizontal: 18),
+                  color: theme.border.withValues(alpha: 0.62),
                 ),
                 Expanded(
                   child: _buildProjectionStat(
@@ -907,52 +902,57 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildPremiumStatTile(
       String label, num amount, Color color, IconData icon,
       {VoidCallback? onTap}) {
+    final theme = context.theme;
+
     return AnimatedPress(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color: context.theme.surface,
+          color: color.withValues(alpha: 0.075),
           borderRadius: BorderRadius.circular(18),
-          border:
-              Border.all(color: context.theme.border.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          border: Border.all(color: color.withValues(alpha: 0.14)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(icon, size: 14, color: color),
-                const SizedBox(width: 8),
-                Text(
-                  label.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 15, color: color),
             ),
-            const SizedBox(height: 10),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '\$ ${_formatCurrency(amount)}',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: theme.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '\$ ${_formatCurrency(amount)}',
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1384,8 +1384,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () async {
-                  final result = await PlannedExpensePaymentSheet.show(context, item);
-                  if (!mounted || result == null || result['success'] != true) return;
+                  final result =
+                      await PlannedExpensePaymentSheet.show(context, item);
+                  if (!mounted || result == null || result['success'] != true) {
+                    return;
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -1612,7 +1615,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   .contains('artículos') ||
                               expense.description!
                                   .toLowerCase()
-                                  .contains('lista'))
+                                  .contains('hogar')) {
                             Padding(
                               padding: const EdgeInsets.only(left: 6),
                               child: Icon(Icons.shopping_bag_rounded,
@@ -1900,7 +1903,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Empezá hoy mismo a organizar tus finanzas en pareja.',
+              'Empezá hoy mismo a organizar tus finanzas del hogar.',
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: AppColors.textSecondary,
@@ -1918,22 +1921,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showExpenseDetailSheet(ExpenseModel expense) async {
-    // If expense splits are missing (common for feed items), fetch the full expense
-    if (expense.splits == null || expense.splits!.isEmpty) {
-      ref
-          .read(expenseRepositoryProvider)
-          .getExpenseWithSplits(expense.id)
-          .then((result) {
-        result.fold(
-          (failure) => ExpenseDetailSheet.show(
-              context, expense), // Show partial as fallback
-          (fullData) =>
-              ExpenseDetailSheet.show(context, ExpenseModel.fromJson(fullData)),
-        );
-      });
-    } else {
-      ExpenseDetailSheet.show(context, expense);
-    }
+    ExpenseDetailSheet.show(context, expense);
   }
 
   void _showTemplateForm(BuildContext context,
@@ -2418,4 +2406,3 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 }
-

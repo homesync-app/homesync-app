@@ -109,6 +109,13 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         _expandedSections.add(id);
       }
     });
+
+    // Si estaba buscando algo, limpiamos al navegar por secciones
+    if (_inputController.text.isNotEmpty) {
+      _inputController.clear();
+      _lastQuery = '';
+      _suggestionsVal.value = [];
+    }
   }
 
   Future<void> _handleSelection(
@@ -122,11 +129,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final val = name.trim();
     if (val.isEmpty) return;
 
-    // Borramos el buscador pero NO quitamos el foco para permitir agregar múltiples productos seguidos fácilmente
+    // Borramos el buscador y mantenemos el foco para permitir agregar múltiples productos seguidos fácilmente
     _inputController.clear();
     _lastQuery = '';
     _suggestionsVal.value = [];
-    // _inputFocus.unfocus(); // Mantenemos el foco
+    _inputFocus.requestFocus();
 
     // Find if already exists in pending
     final existing = pending

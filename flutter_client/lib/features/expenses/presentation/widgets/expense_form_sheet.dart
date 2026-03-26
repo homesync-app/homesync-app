@@ -211,6 +211,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } else if (widget.defaultOnlyMe) {
       _splitMode = SplitType.personal;
     }
+
+    if (widget.expense == null) {
+      _initializeDefaultSelections();
+    }
   }
 
   @override
@@ -270,7 +274,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         t.contains('liquidacion') ||
         t.contains('saldar') ||
         t.contains('deuda') ||
-        t.contains('pareja')) {
+        t.contains('hogar')) {
       matchedId = 'settlement';
     } else if (t.contains('ahorro') ||
         t.contains('banco') ||
@@ -371,6 +375,27 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     }
   }
 
+  Future<void> _initializeDefaultSelections() async {
+    try {
+      final members = await ref.read(householdMembersProvider.future);
+      if (!mounted || members.isEmpty || _paidByUserId.isNotEmpty) return;
+
+      final currentUserId = ref.read(currentUserIdProvider);
+      final matchingMember = members.any((m) => m.userId == currentUserId)
+          ? members.firstWhere((m) => m.userId == currentUserId)
+          : members.first;
+
+      setState(() {
+        _paidByUserId = matchingMember.userId;
+        if (_selectedMembersForSplit.isEmpty) {
+          _selectedMembersForSplit = members.map((m) => m.userId).toSet();
+        }
+      });
+    } catch (_) {
+      // Members provider will surface its own loading/error state in build.
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -456,6 +481,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           }
         }
         if ((totalFixed - amountParsed).abs() > 0.01) {
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -574,20 +600,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: $e')),
       data: (members) {
+        if (members.isEmpty) {
+          return const Center(
+            child: Text('No hay miembros disponibles para registrar gastos.'),
+          );
+        }
+
         final caps = ref.watch(householdCapabilitiesProvider);
         final showSplit = caps.showExpensesSplit;
-
-        if (_paidByUserId.isEmpty) {
-          final currentUserId = ref.read(currentUserIdProvider);
-          final matchingMember = members.any((m) => m.userId == currentUserId)
-              ? members.firstWhere((m) => m.userId == currentUserId)
-              : members.first;
-          _paidByUserId = matchingMember.userId;
-
-          if (_selectedMembersForSplit.isEmpty && widget.expense == null) {
-            _selectedMembersForSplit = members.map((m) => m.userId).toSet();
-          }
-        }
 
         final payer = members.firstWhere((m) => m.userId == _paidByUserId,
             orElse: () => members.first);
@@ -1677,7 +1697,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }).toList(),
       );
     } else if (_splitMode == SplitType.gift) {
-      return _buildInfoBox('🎁 Este gasto no afectará el balance ${caps.actionMemberLabel}.',
+      return _buildInfoBox(
+          '🎁 Este gasto no afectará el balance ${caps.actionMemberLabel}.',
           AppColors.primary);
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
@@ -1789,6 +1810,7 @@ class _ShoppingItemsSelectorState
   String _searchQuery = '';
   final Set<ShoppingItemModel> _currentSelection = {};
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
 
   @override
   void initState() {
@@ -1799,6 +1821,7 @@ class _ShoppingItemsSelectorState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -1878,6 +1901,7 @@ class _ShoppingItemsSelectorState
                     ),
                     child: TextField(
                       controller: _searchController,
+                      focusNode: _searchFocus,
                       decoration: const InputDecoration(
                         hintText: 'Buscar o agregar producto...',
                         hintStyle:
@@ -1887,6 +1911,31 @@ class _ShoppingItemsSelectorState
                         border: InputBorder.none,
                       ),
                       onChanged: (val) => setState(() => _searchQuery = val),
+                      onSubmitted: (val) async {
+                        if (val.trim().isEmpty) return;
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                        _searchFocus.requestFocus();
+
+                        await ref
+                            .read(shoppingItemsProvider.notifier)
+                            .addItem(
+                              name: val.trim(),
+                              category: 'general',
+                              emoji: '🏷️',
+                            );
+
+                        final temp = ShoppingItemModel(
+                          id: 'selection_sync_${val.trim()}',
+                          name: val.trim(),
+                          householdId: '',
+                          createdAt: DateTime.now(),
+                          emoji: '🏷️',
+                          category: 'general',
+                        );
+                        setState(() => _currentSelection.add(temp));
+                        widget.onItemsSelected(_currentSelection);
+                      },
                     ),
                   ),
                 ),
@@ -1908,6 +1957,7 @@ class _ShoppingItemsSelectorState
                             final queryToSave = _searchQuery.trim();
                             _searchController.clear();
                             setState(() => _searchQuery = '');
+                            _searchFocus.requestFocus();
 
                             await ref
                                 .read(shoppingItemsProvider.notifier)
@@ -1948,6 +1998,7 @@ class _ShoppingItemsSelectorState
                           onTap: () {
                             if (_searchQuery.isNotEmpty) {
                               _searchController.clear();
+                              _searchFocus.requestFocus();
                             }
                             setState(() {
                               if (isSelected) {
@@ -1992,6 +2043,7 @@ class _ShoppingItemsSelectorState
 
                               _searchController.clear();
                               setState(() => _searchQuery = '');
+                              _searchFocus.requestFocus();
 
                               await ref
                                   .read(shoppingItemsProvider.notifier)

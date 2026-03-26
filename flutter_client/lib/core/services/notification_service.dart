@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -137,6 +138,13 @@ class NotificationService {
   Future<void> _saveFcmToken(String token) async {
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId == null || !_isEnabled) return;
+    final authUserId = _supabase.auth.currentUser?.id;
+    if (AppEnvironment.enableAdminTesting &&
+        authUserId != null &&
+        authUserId != appUserId) {
+      log.i('QA admin mode activo: omitimos guardado de FCM token');
+      return;
+    }
 
     try {
       await _supabase.from('user_fcm_tokens').upsert({
@@ -154,6 +162,12 @@ class NotificationService {
   Future<void> _deleteFcmToken() async {
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId == null) return;
+    final authUserId = _supabase.auth.currentUser?.id;
+    if (AppEnvironment.enableAdminTesting &&
+        authUserId != null &&
+        authUserId != appUserId) {
+      return;
+    }
 
     try {
       await _supabase

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -35,6 +36,7 @@ class AvatarPickerSheet extends ConsumerWidget {
           .update({'avatar_url': emoji}).eq('id', userId);
 
       ref.invalidate(userProfileProvider);
+      ref.invalidate(householdMembersNotifierProvider);
       ref.invalidate(recentActivityProvider);
 
       if (context.mounted) {

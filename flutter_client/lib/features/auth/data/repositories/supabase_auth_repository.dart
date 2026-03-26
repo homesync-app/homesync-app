@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/firebase_auth_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
@@ -44,6 +45,20 @@ class SupabaseAuthRepository
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+
+  Future<String?> _resolveCurrentUserId() async {
+    final authUserId = _client.auth.currentUser?.id;
+    if (authUserId != null && authUserId.isNotEmpty) {
+      return authUserId;
+    }
+
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId != null && appUserId.isNotEmpty) {
+      return appUserId;
+    }
+
+    return null;
+  }
 
   @override
   User? get currentUser => _client.auth.currentUser;
@@ -155,5 +170,28 @@ class SupabaseAuthRepository
       if (data == null) return null;
       return UserModel.fromJson(data);
     }, context: 'SupabaseAuthRepository.getUserProfile', isOnline: _isOnline);
+  }
+
+  @override
+  Future<Either<Failure, void>> updateProfile({
+    String? fullName,
+    String? avatarUrl,
+  }) async {
+    return executeWithHandling(() async {
+      final userId = await _resolveCurrentUserId();
+      if (userId == null) {
+        throw const AuthFailure(
+          'No hay una identidad activa para actualizar el perfil',
+        );
+      }
+
+      final updates = <String, dynamic>{};
+      if (fullName != null) updates['full_name'] = fullName;
+      if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+
+      if (updates.isEmpty) return;
+
+      await _client.from('users').update(updates).eq('id', userId);
+    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline);
   }
 }

@@ -4,12 +4,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-
+import 'package:homesync_client/core/widgets/homesync_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -28,7 +29,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isSignUpMode = false;
   final String _loadingMessage = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -56,14 +59,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _animationController.forward();
   }
 
-
-
   @override
   void dispose() {
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _nameController.dispose();
     super.dispose();
+  }
+
+  void _toggleMode() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _isSignUpMode = !_isSignUpMode;
+      _formKey.currentState?.reset();
+    });
   }
 
   void _showError(String message) {
@@ -111,11 +121,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
-    
+
     await ref.read(authControllerProvider.notifier).signInWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
     final authState = ref.read(authControllerProvider);
     if (authState.hasError && mounted) {
@@ -123,15 +133,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
   }
 
+  bool get _isAdminTestingInput {
+    return _emailController.text.trim().toLowerCase() ==
+            AppEnvironment.adminTestingUsername.toLowerCase() &&
+        _passwordController.text == AppEnvironment.adminTestingPassword;
+  }
+
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
 
+    final fullName = _nameController.text.trim();
+
     await ref.read(authControllerProvider.notifier).signUpWithEmail(
-      _emailController.text.trim(),
-      _passwordController.text,
-      null, // Full name handled by profile creation or separate field
-    );
+          _emailController.text.trim(),
+          _passwordController.text,
+          fullName.isEmpty ? null : fullName,
+        );
 
     final authState = ref.read(authControllerProvider);
     if (authState.hasError && mounted) {
@@ -143,8 +161,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.heavyImpact();
-    
-    final success = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+
+    final success =
+        await ref.read(authControllerProvider.notifier).signInWithGoogle();
 
     if (!success && mounted) {
       final authState = ref.read(authControllerProvider);
@@ -156,8 +175,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       }
     }
   }
-
-
 
   Future<void> _handleForgotPassword() async {
     HapticFeedback.lightImpact();
@@ -288,55 +305,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         children: [
                           _buildLogoHeader(),
                           const SizedBox(height: 40),
-                          GlassContainer(
-                            borderRadius: 32,
-                            padding: const EdgeInsets.all(32),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    'Inicio de Sesión',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _buildEmailField(),
-                                  const SizedBox(height: 20),
-                                  _buildPasswordField(),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: _handleForgotPassword,
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8),
-                                      ),
-                                      child: const Text(
-                                        '¿Olvidaste tu contraseña?',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _buildPrimaryButton(),
-                                  const SizedBox(height: 24),
-                                  _buildDivider(),
-                                  const SizedBox(height: 24),
-                                  _buildGoogleButton(),
-                                ],
+                          // ── Mode Selector ─────────────────────────────────
+                          _buildModeSelector(),
+                          const SizedBox(height: 24),
+                          // ── Form Card ─────────────────────────────────────
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 350),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.04),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
                               ),
                             ),
+                            child: _isSignUpMode
+                                ? _buildSignUpCard(
+                                    key: const ValueKey('signup'))
+                                : _buildLoginCard(key: const ValueKey('login')),
                           ),
                           const SizedBox(height: 32),
-                          _buildSignUpPrompt(),
+                          _buildModeTogglePrompt(),
                         ],
                       ),
                     ),
@@ -347,84 +341,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
 
           // Premium Loading Overlay
-          if (isLoading)
-            _PremiumLoadingOverlay(message: _loadingMessage),
+          if (isLoading) _PremiumLoadingOverlay(message: _loadingMessage),
         ],
       ),
     );
   }
 
-
-
   Widget _buildLogoHeader() {
     return Column(
       children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: AppColors.primaryGradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
-              ),
-            ],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    width: 1.2,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.home_rounded,
-                color: Colors.white,
-                size: 36,
-              ),
-              Positioned(
-                right: 18,
-                bottom: 18,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.favorite_rounded,
-                      size: 12,
-                      color: AppColors.accentGold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        Hero(
+          tag: 'app_logo',
+          child: HomeSyncLogo(size: 96),
         ),
         const SizedBox(height: 24),
         const Text(
@@ -433,14 +361,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             fontSize: 36,
             fontWeight: FontWeight.w900,
             letterSpacing: -1.5,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Gestión del hogar para familias modernas',
+          'El hogar mejor organizado empieza aquí.',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textSecondary.withValues(alpha: 0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -449,12 +378,249 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
+  // ── Mode Selector (Login / Registro) ───────────────────────────────────────
+
+  Widget _buildModeSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          _buildModeTab(
+            label: 'Ingresar',
+            isSelected: !_isSignUpMode,
+            onTap: () => _isSignUpMode ? _toggleMode() : null,
+          ),
+          _buildModeTab(
+            label: 'Crear cuenta',
+            isSelected: _isSignUpMode,
+            onTap: () => !_isSignUpMode ? _toggleMode() : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeTab({
+    required String label,
+    required bool isSelected,
+    required VoidCallback? onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Login Card ─────────────────────────────────────────────────────────────
+
+  Widget _buildLoginCard({Key? key}) {
+    return GlassContainer(
+      key: key,
+      borderRadius: 32,
+      padding: const EdgeInsets.all(32),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Bienvenido de nuevo 👋',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Ingresa tus datos para continuar',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildEmailField(),
+            const SizedBox(height: 20),
+            _buildPasswordField(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _handleForgotPassword,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: const Text(
+                  '¿Olvidaste tu contraseña?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildPrimaryButton(
+              label: 'Entrar al Hogar',
+              onPressed: _handleLogin,
+            ),
+            const SizedBox(height: 24),
+            _buildDivider(),
+            const SizedBox(height: 24),
+            _buildGoogleButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Sign Up Card ───────────────────────────────────────────────────────────
+
+  Widget _buildSignUpCard({Key? key}) {
+    return GlassContainer(
+      key: key,
+      borderRadius: 32,
+      padding: const EdgeInsets.all(32),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              '¡Crea tu cuenta! 🏡',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Completa tus datos para empezar',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary.withValues(alpha: 0.8),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // ── Nombre ──────────────────────────────────────────────────────
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Tu nombre',
+                hintText: 'Ej: María',
+                prefixIcon:
+                    const Icon(Icons.person_outline, color: AppColors.primary),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.6),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+                ),
+              ),
+              keyboardType: TextInputType.name,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Ingresá tu nombre';
+                }
+                if (value.trim().length < 2) return 'Nombre muy corto';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildEmailField(),
+            const SizedBox(height: 16),
+            _buildPasswordField(),
+            const SizedBox(height: 8),
+            // ── Password hint ────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 16),
+              child: Text(
+                'Mínimo 6 caracteres',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMuted.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+            _buildPrimaryButton(
+              label: 'Crear mi cuenta',
+              onPressed: _handleSignUp,
+            ),
+            const SizedBox(height: 24),
+            _buildDivider(),
+            const SizedBox(height: 24),
+            _buildGoogleButton(),
+            const SizedBox(height: 16),
+            // ── Terms note ───────────────────────────────────────────────────
+            Text(
+              'Al registrarte aceptas nuestros Términos de Servicio y Política de Privacidad.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.textMuted.withValues(alpha: 0.7),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Shared Fields ──────────────────────────────────────────────────────────
+
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
       decoration: InputDecoration(
-        labelText: 'Correo electrónico',
-        hintText: 'ejemplo@gmail.com',
+        labelText: AppEnvironment.enableAdminTesting
+            ? 'Correo electrónico o usuario QA'
+            : 'Correo electrónico',
+        hintText: AppEnvironment.enableAdminTesting
+            ? 'ejemplo@gmail.com o ${AppEnvironment.adminTestingUsername}'
+            : 'ejemplo@gmail.com',
         prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.6),
@@ -472,6 +638,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       textInputAction: TextInputAction.next,
       validator: (value) {
         if (value == null || value.isEmpty) return 'Ingresa tu correo';
+        if (AppEnvironment.enableAdminTesting && _isAdminTestingInput) {
+          return null;
+        }
         if (!value.contains('@')) return 'Correo inválido';
         return null;
       },
@@ -506,6 +675,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
       ),
       obscureText: _obscurePassword,
+      textInputAction: TextInputAction.done,
       validator: (value) {
         if (value == null || value.length < 6) return 'Mínimo 6 caracteres';
         return null;
@@ -513,10 +683,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildPrimaryButton() {
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     final isLoading = ref.watch(authControllerProvider).isLoading;
     return ElevatedButton(
-      onPressed: isLoading ? null : _handleLogin,
+      onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -530,9 +703,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               child: CircularProgressIndicator(
                   color: Colors.white, strokeWidth: 2.5),
             )
-          : const Text(
-              'Entrar al Hogar',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+          : Text(
+              label,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
     );
   }
@@ -581,19 +754,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           elevation: 0,
         ).copyWith(
-          overlayColor: WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
+          overlayColor:
+              WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const FaIcon(
+            FaIcon(
               FontAwesomeIcons.google,
               size: 20,
               color: Color(0xFFDB4437),
             ),
-            const SizedBox(width: 14),
-            const Text(
-              'Google',
+            SizedBox(width: 14),
+            Text(
+              'Continuar con Google',
               style: TextStyle(
                 color: Color(0xFF1E293B),
                 fontSize: 16,
@@ -607,23 +781,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildSignUpPrompt() {
+  Widget _buildModeTogglePrompt() {
     final isLoading = ref.watch(authControllerProvider).isLoading;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          '¿Eres nuevo?',
-          style: TextStyle(
+        Text(
+          _isSignUpMode ? '¿Ya tenés cuenta?' : '¿Eres nuevo?',
+          style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 15,
               fontWeight: FontWeight.w500),
         ),
         TextButton(
-          onPressed: isLoading ? null : _handleSignUp,
-          child: const Text(
-            'Crea tu cuenta',
-            style: TextStyle(
+          onPressed: isLoading ? null : _toggleMode,
+          child: Text(
+            _isSignUpMode ? 'Ingresar' : 'Crea tu cuenta',
+            style: const TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 15,
               decoration: TextDecoration.underline,

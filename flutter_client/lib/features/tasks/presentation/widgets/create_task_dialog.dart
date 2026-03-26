@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -61,6 +60,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     } else {
       _loadMembers();
     }
+    _loadDefaultCategory();
     _updateRewardControllers();
   }
 
@@ -74,12 +74,48 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     try {
       final members = await ref.read(householdMembersNotifierProvider.future);
       setState(() {
-        _members =
-            members.map((member) => member.toMap()).toList().cast<Map<String, dynamic>>();
+        _members = members
+            .map((member) => member.toMap())
+            .toList()
+            .cast<Map<String, dynamic>>();
       });
     } catch (e) {
       log.e('Error loading members: $e', error: e);
     }
+  }
+
+  Future<void> _loadDefaultCategory() async {
+    try {
+      final categories = await ref.read(categoriesProvider.future);
+      if (!mounted || categories.isEmpty || _selectedCategory != null) return;
+      setState(() => _selectedCategory = categories.first.id);
+    } catch (e) {
+      log.e('Error loading default task category: $e', error: e);
+    }
+  }
+
+  String? _validateCustomRecurrence() {
+    if (_selectedRecurrence != 'custom') return null;
+
+    switch (_customRecurrenceMode) {
+      case 'weekdays':
+        if (_selectedWeekdays.isEmpty) {
+          return 'Elige al menos un dia para la repeticion personalizada.';
+        }
+        break;
+      case 'month_days':
+        if (_selectedMonthDays.isEmpty) {
+          return 'Elige al menos una fecha del mes.';
+        }
+        break;
+      case 'interval':
+        if (_recurrenceInterval < 1) {
+          return 'El intervalo debe ser de al menos 1 dia.';
+        }
+        break;
+    }
+
+    return null;
   }
 
   @override
@@ -93,6 +129,27 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Espera un momento y elige una categoria.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    final recurrenceError = _validateCustomRecurrence();
+    if (recurrenceError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(recurrenceError),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -131,11 +188,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         'assignedTo': _selectedMemberId,
         'recurrenceType': _selectedRecurrence,
         'recurrenceInterval': _recurrenceInterval,
-        'recurrenceWeekdays': _selectedRecurrence == 'custom' 
-            ? _selectedWeekdays.toList() 
-            : null,
-        'recurrenceMonthDays': _selectedRecurrence == 'custom' 
-            ? _selectedMonthDays.toList() 
+        'recurrenceWeekdays':
+            _selectedRecurrence == 'custom' ? _selectedWeekdays.toList() : null,
+        'recurrenceMonthDays': _selectedRecurrence == 'custom'
+            ? _selectedMonthDays.toList()
             : null,
       });
 
@@ -161,12 +217,6 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       data: (list) => list,
       orElse: () => <CategoryModel>[],
     );
-
-    if (_selectedCategory == null && categories.isNotEmpty) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedCategory = categories.first.id);
-      });
-    }
 
     final currentCategoryId =
         _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
@@ -237,9 +287,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                             labelText: 'Que hay que hacer',
                             prefixIcon: Icon(Icons.edit_note_rounded),
                           ),
-                          validator: (value) => (value == null || value.isEmpty)
-                              ? 'Titulo requerido'
-                              : null,
+                          validator: (value) {
+                            final title = value?.trim() ?? '';
+                            if (title.isEmpty) {
+                              return 'Titulo requerido';
+                            }
+                            if (title.length < 3) {
+                              return 'Usa al menos 3 caracteres';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -309,13 +366,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                           ),
                                           child: Center(
                                             child: Icon(
-                                              AppColors
-                                                  .getCategoryMaterialIcon(
+                                              AppColors.getCategoryMaterialIcon(
                                                 category.id,
                                               ),
                                               color: isSelected
                                                   ? color
-                                                  : color.withValues(alpha: 0.8),
+                                                  : color.withValues(
+                                                      alpha: 0.8),
                                               size: 24,
                                             ),
                                           ),
@@ -392,10 +449,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                               final name = member['users']['full_name'] ??
                                   member['users']['email'] ??
                                   'Miembro';
-                              final initial = name
-                                  .toString()
-                                  .substring(0, 1)
-                                  .toUpperCase();
+                              final initial =
+                                  name.toString().substring(0, 1).toUpperCase();
                               return _buildAssigneeChip(
                                 name,
                                 member['user_id'] as String,
@@ -988,6 +1043,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
                   ),
+                  validator: (value) {
+                    if (!_customRewards) return null;
+                    final parsed = int.tryParse((value ?? '').trim());
+                    if (parsed == null) return 'Ingresa un numero';
+                    if (parsed <= 0) return 'Debe ser mayor a 0';
+                    return null;
+                  },
                 ),
               ),
               const SizedBox(width: 12),
@@ -1011,6 +1073,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
                   ),
+                  validator: (value) {
+                    if (!_customRewards) return null;
+                    final parsed = int.tryParse((value ?? '').trim());
+                    if (parsed == null) return 'Ingresa un numero';
+                    if (parsed < 0) return 'No puede ser negativo';
+                    return null;
+                  },
                 ),
               ),
             ],

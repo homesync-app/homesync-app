@@ -6,26 +6,9 @@ part of 'auth_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$currentUserHash() => r'f812fc12dce991ed694aeb3a8286dabdbeafb366';
+String _$isAuthenticatedHash() => r'56ad6feb139dd11c5a56805e5e292cd07f4abf52';
 
 /// Provides the current authenticated user from Supabase.
-///
-/// Copied from [currentUser].
-@ProviderFor(currentUser)
-final currentUserProvider = AutoDisposeProvider<User?>.internal(
-  currentUser,
-  name: r'currentUserProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$currentUserHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CurrentUserRef = AutoDisposeProviderRef<User?>;
-String _$isAuthenticatedHash() => r'031f7927a89c79f48b10a84c493042fdde7bd48f';
-
 /// Provides whether the user is currently authenticated.
 ///
 /// Copied from [isAuthenticated].
@@ -64,7 +47,7 @@ final currentUserProfileProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUserProfileRef = AutoDisposeFutureProviderRef<UserModel?>;
-String _$authControllerHash() => r'7260a2548ac1f33477486ecef1a0bfb1fedf69e4';
+String _$authControllerHash() => r'36203c35b491189c38ab0ea3ad329e0acc397003';
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.

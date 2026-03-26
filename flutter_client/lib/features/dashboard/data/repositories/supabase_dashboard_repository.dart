@@ -44,20 +44,27 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         if (eventType == 'task_completed') {
           uiType = 'task';
-          final taskTitle = metadata['task_title'] ?? item['title'] ?? 'una tarea';
-          data['title'] = 'Complet\u00f3 la tarea: $taskTitle';
+          final taskTitle = metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
+          data['title'] = taskTitle;
           data['task_title'] = taskTitle;
+          data['task_id'] = metadata['task_id'] ?? metadata['id'];
           data['xp_reward'] = metadata['xp_reward'] ??
               metadata['xpReward'] ??
               metadata['p_xp_reward'] ??
               metadata['score_impact'] ??
               metadata['xp'] ??
               metadata['reward'];
+          data['coins_reward'] = metadata['coins_reward'] ??
+              metadata['coin_reward'] ??
+              metadata['coinsReward'] ??
+              metadata['p_coin_reward'] ??
+              metadata['p_coins_reward'] ??
+              metadata['coins'];
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
           final amount = metadata['amount'] ?? 0;
-          final expenseDesc = item['description'] ?? metadata['description'] ?? 'un gasto';
-          data['title'] = 'Agreg\u00f3 un gasto: $expenseDesc';
+          final expenseDesc = _resolveExpenseTitle(item, metadata);
+          data['title'] = expenseDesc;
           data['amount'] = amount;
           data['description'] = expenseDesc;
           data['expense_id'] = metadata['expense_id'] ?? metadata['id'];
@@ -65,7 +72,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
           uiType = 'task';
-          data['title'] = 'Canje\u00f3 un premio: ${item['title'] ?? 'Premio'}';
+          data['title'] = item['title'] ?? 'Premio';
         } else {
           data['title'] = item['title'] ?? item['description'] ?? 'Realiz\u00f3 una acci\u00f3n';
         }
@@ -110,5 +117,34 @@ class SupabaseDashboardRepository implements DashboardRepository {
       dev.log('Error fetching activities: $e');
       return [];
     }
+  }
+
+  String _resolveExpenseTitle(
+    Map<dynamic, dynamic> item,
+    Map<String, dynamic> metadata,
+  ) {
+    final candidates = [
+      metadata['expense_title'],
+      metadata['merchant'],
+      metadata['store_name'],
+      metadata['place_name'],
+      metadata['description'],
+      item['description'],
+      metadata['category_name'],
+      metadata['category'],
+      item['title'],
+    ];
+
+    for (final candidate in candidates) {
+      final value = candidate?.toString().trim();
+      if (value != null &&
+          value.isNotEmpty &&
+          value.toLowerCase() != 'un gasto' &&
+          value.toLowerCase() != 'gasto') {
+        return value;
+      }
+    }
+
+    return 'Gasto del hogar';
   }
 }

@@ -30,4 +30,9 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> resetPassword(String email);
 
   Future<Either<Failure, UserModel?>> getUserProfile(String userId);
+
+  Future<Either<Failure, void>> updateProfile({
+    String? fullName,
+    String? avatarUrl,
+  });
 }

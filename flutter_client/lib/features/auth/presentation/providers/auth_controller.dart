@@ -1,12 +1,19 @@
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/domain/models/user_model.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'auth_controller.g.dart';
+
+@riverpod
+User? currentUser(Ref ref) {
+  return ref.watch(authRepositoryProvider).currentUser;
+}
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.
@@ -21,6 +28,20 @@ class AuthController extends _$AuthController {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   Future<void> signInWithEmail(String email, String password) async {
+    final isAdminTestingLogin = AppEnvironment.enableAdminTesting &&
+        email.trim().toLowerCase() ==
+            AppEnvironment.adminTestingUsername.toLowerCase() &&
+        password == AppEnvironment.adminTestingPassword;
+
+    if (isAdminTestingLogin) {
+      log.i('Admin Testing login detected');
+      ref.read(adminProvider.notifier).adminLogin();
+      state = const AsyncValue.data(
+        AuthState(AuthChangeEvent.signedIn, null),
+      );
+      return;
+    }
+
     state = const AsyncValue.loading();
     final result =
         await _repository.signInWithEmail(email: email, password: password);
@@ -86,6 +107,16 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signOut() async {
+    if (AppEnvironment.enableAdminTesting &&
+        ref.read(adminProvider).isAdminUser) {
+      ref.read(adminProvider.notifier).clearAdminSession();
+      state = const AsyncValue.data(
+        AuthState(AuthChangeEvent.signedOut, null),
+      );
+      log.i('Admin testing session closed');
+      return;
+    }
+
     state = const AsyncValue.loading();
     final result = await _repository.signOut();
 
@@ -121,14 +152,13 @@ class AuthController extends _$AuthController {
 }
 
 /// Provides the current authenticated user from Supabase.
-@riverpod
-User? currentUser(CurrentUserRef ref) {
-  return ref.watch(authRepositoryProvider).currentUser;
-}
-
 /// Provides whether the user is currently authenticated.
 @riverpod
 bool isAuthenticated(IsAuthenticatedRef ref) {
+  final isAdmin =
+      AppEnvironment.enableAdminTesting && ref.watch(adminProvider).isAdminUser;
+  if (isAdmin) return true;
+
   final authState = ref.watch(authControllerProvider).value;
   if (authState == null) return false;
 

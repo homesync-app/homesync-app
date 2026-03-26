@@ -23,6 +23,7 @@ class VideoAvatarPlayer extends StatefulWidget {
 class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
     }
 
     _controller.initialize().then((_) {
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         setState(() {
           _isInitialized = true;
         });
@@ -65,7 +66,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
   @override
   void didUpdateWidget(VideoAvatarPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.url != widget.url) {
+    if (oldWidget.url != widget.url || oldWidget.isAsset != widget.isAsset) {
       _controller.dispose();
       _isInitialized = false;
       _initializeController();
@@ -74,6 +75,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _controller.dispose();
     super.dispose();
   }
@@ -93,16 +95,18 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
       );
     }
 
-    return SizedBox(
-      width: widget.size,
-      height: widget.size,
-      child: ClipRect(
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: _controller.value.size.width,
-            height: _controller.value.size.height,
-            child: VideoPlayer(_controller),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: ClipRect(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: _controller.value.size.width,
+              height: _controller.value.size.height,
+              child: VideoPlayer(_controller),
+            ),
           ),
         ),
       ),

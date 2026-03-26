@@ -62,20 +62,11 @@ class StatsRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyRanking() async {
-    final userId = await requireCurrentUserId();
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (householdMembers == null) {
-      return [];
-    }
+    final householdId = await requireHouseholdId();
 
     final response = await client.rpc(
       'get_weekly_ranking',
-      params: {'p_household_id': householdMembers['household_id']},
+      params: {'p_household_id': householdId},
     );
 
     return List<Map<String, dynamic>>.from(response);
@@ -83,18 +74,11 @@ class StatsRpcService extends BaseRpcService {
 
   Future<bool> isWeekProcessed() async {
     try {
-      final userId = await requireCurrentUserId();
-      final householdMembers = await client
-          .from('household_members')
-          .select('household_id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (householdMembers == null) return false;
+      final householdId = await requireHouseholdId();
 
       final response = await client.rpc(
         'is_week_processed',
-        params: {'p_household_id': householdMembers['household_id']},
+        params: {'p_household_id': householdId},
       );
 
       return response == true;
@@ -104,20 +88,11 @@ class StatsRpcService extends BaseRpcService {
   }
 
   Future<Map<String, dynamic>> awardWeeklyWinner() async {
-    final userId = await requireCurrentUserId();
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (householdMembers == null) {
-      throw Exception('No perteneces a un hogar');
-    }
+    final householdId = await requireHouseholdId();
 
     final response = await client.rpc(
       'award_weekly_winner',
-      params: {'p_household_id': householdMembers['household_id']},
+      params: {'p_household_id': householdId},
     );
 
     return Map<String, dynamic>.from(response);
@@ -125,20 +100,11 @@ class StatsRpcService extends BaseRpcService {
 
   Future<Map<String, dynamic>> checkShouldShowWinner() async {
     try {
-      final userId = await requireCurrentUserId();
-      final householdMembers = await client
-          .from('household_members')
-          .select('household_id')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (householdMembers == null) {
-        return {'show_winner': false};
-      }
+      final householdId = await requireHouseholdId();
 
       final response = await client.rpc(
         'should_show_winner',
-        params: {'p_household_id': householdMembers['household_id']},
+        params: {'p_household_id': householdId},
       );
 
       return Map<String, dynamic>.from(response);

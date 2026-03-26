@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -8,11 +7,18 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
+import 'package:intl/intl.dart';
 
 class HomeFamilyView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -35,7 +41,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).extension<AppThemeColors>()!;
+    final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
@@ -61,10 +67,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
-    final currentMember = members.where((m) => m.userId == currentUserId).firstOrNull;
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,7 +90,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ),
             const SizedBox(height: 4),
             Text(
-              DateFormat('EEEE, d MMM', 'es_AR').format(DateTime.now())._capitalize(),
+              DateFormat('EEEE, d MMM', 'es_AR')
+                  .format(DateTime.now())
+                  ._capitalize(),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -114,7 +123,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildNotificationBadge(AppThemeColors theme) {
     return AnimatedPress(
       onPressed: () {
-        // TODO: Navegar a notificaciones
+        Navigator.push(
+          context,
+          AppTransitions.slideHorizontal(page: const NotificationsScreen()),
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(10),
@@ -148,7 +160,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildMembersSection(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,16 +200,19 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildMemberItem(dynamic member, AppThemeColors theme) {
+    final firstName = member.displayName;
+
     return Column(
       children: [
         CustomUserAvatar(
           avatarUrl: member.avatarUrl,
+          name: member.fullDisplayName,
           radius: 28,
           showBorder: true,
         ),
         const SizedBox(height: 8),
         Text(
-          member.firstName ?? '?',
+          firstName,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -213,7 +228,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       children: [
         AnimatedPress(
           onPressed: () {
-            // TODO: Mostrar invitación
+            InvitationSheet.show(context);
           },
           child: Container(
             width: 56,
@@ -246,7 +261,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildFinanceSummary(AppThemeColors theme, HouseholdCapabilities caps) {
+  Widget _buildFinanceSummary(
+      AppThemeColors theme, HouseholdCapabilities caps) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
 
     return Column(
@@ -264,7 +280,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                ref.read(bottomNavIndexProvider.notifier).setIndex(2);
+              },
               child: const Text('Ver todos'),
             ),
           ],
@@ -273,7 +291,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         balancesAsync.when(
           data: (balances) {
             if (balances.isEmpty) return const SizedBox.shrink();
-            
+
             // For family mode, we show a main summary or multiple cards
             return FamilyBalanceCard(
               balances: balances,
@@ -305,7 +323,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                ref.read(bottomNavIndexProvider.notifier).setIndex(1);
+              },
               child: const Text('Ver panel'),
             ),
           ],
@@ -335,90 +355,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildTaskItem(dynamic task, AppThemeColors theme) {
-    final isCompleting = _completedTaskIds.contains(task.id);
-
-    return AnimatedPress(
-      onPressed: () => _completeTask(task),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: theme.cardShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(_getCategoryIcon(task.category), color: theme.primary.withValues(alpha: 0.6), size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: theme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          task.category ?? 'Hogar',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: theme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${task.xpReward} XP',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.textMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: isCompleting
-                  ? const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.check_rounded, size: 16, color: theme.primary),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildTaskItem(TaskModel task, AppThemeColors theme) {
+    return DashboardTaskCard(
+      task: task,
+      isCompleting: _completedTaskIds.contains(task.id),
+      onTap: () => _completeTask(task),
     );
   }
 
@@ -505,8 +446,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               itemCount: (activities.length > 5) ? 5 : activities.length,
               separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
-                final activity = activities[index];
-                return _buildActivityItem(activity, theme);
+                return ActivityChatBubble(
+                  activity: activities[index],
+                  currentUserId: ref.read(currentUserIdProvider),
+                );
               },
             );
           },
@@ -515,140 +458,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         ),
       ],
     );
-  }
-
-  Widget _buildActivityItem(Map<String, dynamic> activity, AppThemeColors theme) {
-    final currentUserId = ref.watch(currentUserIdProvider);
-    final data = activity['data'] as Map<String, dynamic>? ?? {};
-    final creatorId = activity['creator_id'] as String?;
-    final isMe = creatorId == currentUserId;
-    final timestamp = activity['created_at'] != null ? DateTime.parse(activity['created_at'] as String) : DateTime.now();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            CustomUserAvatar(
-              avatarUrl: data['avatar_url'] ?? data['creator_avatar_url'],
-              name: data['user_name'],
-              radius: 18,
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isMe ? 20 : 4),
-                  bottomRight: Radius.circular(isMe ? 4 : 20),
-                ),
-                boxShadow: theme.cardShadow,
-                border: Border.all(
-                  color: isMe ? theme.primary.withValues(alpha: 0.1) : theme.divider.withValues(alpha: 0.05),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Row(
-                    children: [
-                      Icon(_getCategoryIcon(data['category'] as String?), size: 16, color: theme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          data['title'] ?? data['description'] ?? 'Realiz\u00f3 una acci\u00f3n',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time_rounded, size: 12, color: theme.textMuted),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('HH:mm').format(timestamp),
-                        style: TextStyle(fontSize: 11, color: theme.textMuted, fontWeight: FontWeight.w500),
-                      ),
-                      const Spacer(),
-                      if (data['xp_reward'] != null)
-                        _buildSmallPill(
-                          label: '${data['xp_reward']} XP',
-                          color: const Color(0xFFF97316),
-                          icon: Icons.star_rounded,
-                          theme: theme,
-                        ),
-                      const SizedBox(width: 6),
-                      if (data['coins_reward'] != null)
-                        _buildSmallPill(
-                          label: '${data['coins_reward']} coins',
-                          color: const Color(0xFF64748B),
-                          icon: Icons.monetization_on_rounded,
-                          theme: theme,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            CustomUserAvatar(
-              avatarUrl: data['avatar_url'] ?? data['creator_avatar_url'],
-              name: data['user_name'],
-              radius: 18,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallPill({required String label, required Color color, required IconData icon, required AppThemeColors theme}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getCategoryIcon(String? category) {
-    switch (category?.toLowerCase()) {
-      case 'cocina': return Icons.restaurant_rounded;
-      case 'limpieza': return Icons.cleaning_services_rounded;
-      case 'compras': return Icons.shopping_cart_rounded;
-      case 'finanzas': return Icons.payments_rounded;
-      default: return Icons.task_alt_rounded;
-    }
   }
 
   String? _firstName(String? fullName) {

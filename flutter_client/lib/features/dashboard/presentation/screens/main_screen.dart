@@ -2,29 +2,29 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
 
-import '../../../../core/providers/core_providers.dart';
-import '../../../../core/services/notification_service.dart';
-import '../../../../core/theme/app_theme_extension.dart';
-import '../../../../core/utils/app_animations.dart';
-import '../../../../core/widgets/app_background.dart';
-import '../../../expenses/presentation/providers/expense_provider.dart';
-import '../../../expenses/presentation/screens/expenses_screen.dart';
-import '../../../household/presentation/screens/setup_screen.dart';
-import '../../../notifications/presentation/screens/notifications_screen.dart';
-import 'package:homesync_client/features/rewards/presentation/screens/rewards_screen.dart';
-import '../../../savings/presentation/providers/savings_provider.dart';
-import '../../../shopping/presentation/screens/shopping_list_screen.dart';
-import '../../../stats/presentation/screens/stats_screen.dart';
-import '../../../stats/presentation/screens/weekly_winner_screen.dart';
-import '../../../tasks/presentation/screens/tasks_screen.dart';
-import '../../../settings/presentation/screens/settings_screen.dart';
-import '../providers/dashboard_provider.dart';
-import '../screens/home_screen.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/app_background.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
+import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
+import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
+import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
 import '../../../household/presentation/providers/household_providers.dart';
-import '../../../household/domain/models/household_capabilities.dart';
 import '../widgets/in_app_notification_banner.dart';
 import 'package:intl/intl.dart';
 
@@ -41,7 +41,6 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  bool _isLoading = true;
   bool _showWeeklyWinner = false;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
@@ -149,17 +148,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   Future<void> _checkSetup() async {
     try {
-      // 1. Damos un momento para asegurar que init Notifications y configs básicas terminen.
-      // Riverpod se encarga de checkear el household via householdIdProvider en build().
-      
-      // 2. Revisamos si ya mostramos el popup semanal
       _checkWeeklyWinner();
     } catch (e) {
       debugPrint('Initialization error in MainScreen: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 
@@ -206,28 +197,61 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: context.theme.primary),
-        ),
-      );
-    }
-
     final householdAsync = ref.watch(householdIdProvider);
-    
+
     return householdAsync.when(
       loading: () => Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: context.theme.primary),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: AppBackground(isDarkMode: context.theme.isDarkMode),
+            ),
+            Center(
+              child: CircularProgressIndicator(color: context.theme.primary),
+            ),
+          ],
         ),
       ),
       error: (e, st) => Scaffold(
-        body: Center(
-          child: Text('Error de carga de identidad. Intentá salir de la app y volver a entrar: $e'),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: AppBackground(isDarkMode: context.theme.isDarkMode),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Error de carga de identidad. Intenta salir de la app y volver a entrar: $e',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       data: (householdId) {
+        final admin = ref.watch(adminProvider);
+        if (admin.isAdminUser && (householdId == null || householdId.isEmpty)) {
+          return const AdminWorkspaceScreen();
+        }
+
+        if (admin.isAdminUser &&
+            admin.showOnboardingPreview &&
+            householdId != null &&
+            householdId.isNotEmpty) {
+          return SetupScreen(
+            isAdminPreview: true,
+            onComplete: () {
+              ref.read(adminProvider.notifier).closeOnboardingPreview();
+              ref.invalidate(householdIdProvider);
+              ref.invalidate(userProfileProvider);
+              ref.invalidate(currentHouseholdProvider);
+              ref.invalidate(householdMembersProvider);
+            },
+          );
+        }
+
         if (householdId == null || householdId.isEmpty) {
           return SetupScreen(
             onComplete: () async {
@@ -265,9 +289,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           if (caps.showPartnerTab)
             NavItemConfig(
-              title: 'Pareja',
+              title: caps.socialTabLabel,
               icon: caps.partnerIcon,
-              screen: const RewardsScreen(),
+              screen: caps.usesCoupleRewardsExperience
+                  ? const CoupleSpaceScreen()
+                  : const HouseholdSocialHubScreen(),
             ),
           NavItemConfig(
             title: 'Progreso',
@@ -285,57 +311,57 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final safeIndex = currentIndex >= navConfigs.length ? 0 : currentIndex;
         final currentConfig = navConfigs[safeIndex];
 
-    return PopScope(
-      canPop: currentIndex == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
+        return PopScope(
+          canPop: currentIndex == 0,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
 
-        // If not on the first tab, go to it
-        if (safeIndex != 0) {
-          ref.read(bottomNavIndexProvider.notifier).setIndex(0);
-        }
-      },
-      child: Scaffold(
-        appBar: safeIndex == 0
-            ? null
-            : AppBar(
-                title: _buildAppBarTitle(
-                  title: currentConfig.title,
-                  currentIndex: safeIndex,
-                  theme: theme,
-                ),
-                toolbarHeight: 86,
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings_outlined,
-                      color: theme.textSecondary,
+            // If not on the first tab, go to it
+            if (safeIndex != 0) {
+              ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+            }
+          },
+          child: Scaffold(
+            appBar: safeIndex == 0
+                ? null
+                : AppBar(
+                    title: _buildAppBarTitle(
+                      title: currentConfig.title,
+                      currentIndex: safeIndex,
+                      theme: theme,
                     ),
-                    onPressed: () => _openSettings(context),
+                    toolbarHeight: 86,
+                    actions: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: theme.textSecondary,
+                        ),
+                        onPressed: () => _openSettings(context),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-        // ✅ Stack puts the banner ABOVE everything else in the screen
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: AppBackground(isDarkMode: theme.isDarkMode),
+            // ✅ Stack puts the banner ABOVE everything else in the screen
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: AppBackground(isDarkMode: theme.isDarkMode),
+                ),
+                FadeIndexedStack(
+                  index: safeIndex,
+                  children: navConfigs.map((c) => c.screen).toList(),
+                ),
+                // In-app notification banner (slides from top)
+                InAppNotificationBanner(
+                  key: _bannerKey,
+                  onTap: () => _goToNotifications(context),
+                ),
+              ],
             ),
-            FadeIndexedStack(
-              index: safeIndex,
-              children: navConfigs.map((c) => c.screen).toList(),
-            ),
-            // In-app notification banner (slides from top)
-            InAppNotificationBanner(
-              key: _bannerKey,
-              onTap: () => _goToNotifications(context),
-            ),
-          ],
-        ),
-        bottomNavigationBar: _buildBottomNav(),
-      ),
-    );
+            bottomNavigationBar: _buildBottomNav(),
+          ),
+        );
       },
     );
   }
@@ -389,8 +415,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         SettingsScreen(
           onLogout: () {
             _notifService.dispose();
-            // Auth changes will be handled by authStateProvider
-            ref.read(authServiceProvider).signOut();
           },
         ),
       ),
@@ -414,7 +438,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       (icon: Icons.task_alt_rounded, label: 'Tareas', index: 1),
       (icon: Icons.account_balance_wallet_rounded, label: 'Finanzas', index: 2),
       if (caps.showPartnerTab)
-        (icon: caps.partnerIcon, label: 'Pareja', index: 3),
+        (icon: caps.partnerIcon, label: caps.socialTabLabel, index: 3),
       (icon: Icons.shopping_cart_rounded, label: 'Compras', index: 5),
     ];
 

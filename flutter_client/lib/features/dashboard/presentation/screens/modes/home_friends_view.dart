@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -36,7 +37,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).extension<AppThemeColors>()!;
+    final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
@@ -47,6 +48,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         children: [
           _buildHeader(theme, caps),
+          const SizedBox(height: 32),
+          _buildMembersSection(theme),
           const SizedBox(height: 32),
           _buildFinanceSummary(theme, caps),
           const SizedBox(height: 32),
@@ -60,11 +63,12 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
-    final currentMember = members.where((m) => m.userId == currentUserId).firstOrNull;
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
 
     return Row(
       children: [
@@ -145,7 +149,117 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     );
   }
 
-  Widget _buildFinanceSummary(AppThemeColors theme, HouseholdCapabilities caps) {
+  Widget _buildMembersSection(AppThemeColors theme) {
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Integrantes del grupo',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: theme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Este listado refleja solo el escenario QA activo.',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: theme.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        membersAsync.when(
+          data: (members) {
+            if (members.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.surfaceContainer.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  'Todavía no hay integrantes en este grupo.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              );
+            }
+
+            return SizedBox(
+              height: 108,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: members.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 16),
+                itemBuilder: (context, index) {
+                  final member = members[index];
+                  return _buildMemberItem(member, theme);
+                },
+              ),
+            );
+          },
+          loading: () => const ShimmerLoading(height: 90, borderRadius: 24),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMemberItem(dynamic member, AppThemeColors theme) {
+    final displayRole =
+        (member.displayRole as String?)?.trim().isNotEmpty == true
+            ? member.displayRole as String
+            : member.role;
+    final firstName = member.displayName;
+
+    return SizedBox(
+      width: 84,
+      child: Column(
+        children: [
+          CustomUserAvatar(
+            avatarUrl: member.avatarUrl,
+            name: member.displayName,
+            radius: 28,
+            showBorder: true,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            firstName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: theme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            displayRole ?? 'Miembro',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: theme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceSummary(
+      AppThemeColors theme, HouseholdCapabilities caps) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
 
     return Column(
@@ -233,67 +347,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildTaskItem(TaskModel task, AppThemeColors theme) {
-    final isCompleting = _completedTaskIds.contains(task.id);
-
-    return AnimatedPress(
-      onTap: isCompleting ? null : () => _completeTask(task),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: theme.divider.withValues(alpha: 0.05),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: isCompleting
-                  ? const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(Icons.check_rounded, size: 16, color: theme.primary),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: theme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${task.xpReward} XP • ${task.category ?? 'General'}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: theme.textMuted.withValues(alpha: 0.3),
-            ),
-          ],
-        ),
-      ),
+    return DashboardTaskCard(
+      task: task,
+      isCompleting: _completedTaskIds.contains(task.id),
+      onTap: () => _completeTask(task),
     );
   }
 
@@ -393,58 +450,20 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildActivityItem(dynamic activity, AppThemeColors theme) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.divider.withValues(alpha: 0.05),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          CustomUserAvatar(
-            avatarUrl: activity.avatarUrl,
-            name: activity.userName,
-            radius: 18,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: theme.textPrimary,
-                      fontFamily: 'Outfit',
-                    ),
-                    children: [
-                      TextSpan(
-                        text: activity.userName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: ' ${activity.description}'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('HH:mm').format(activity.timestamp),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    // Convert legacy typed object to Map if needed, or use ActivityChatBubble directly
+    final activityMap = activity is Map<String, dynamic>
+        ? activity
+        : <String, dynamic>{
+            'creator_id': activity.userId,
+            'created_at': activity.timestamp?.toIso8601String(),
+            'data': <String, dynamic>{
+              'title': activity.description,
+              'user_name': activity.userName,
+              'avatar_url': activity.avatarUrl,
+            },
+          };
+    final currentUserId = ref.watch(currentUserIdProvider);
+    return ActivityChatBubble(
+        activity: activityMap, currentUserId: currentUserId);
   }
 }

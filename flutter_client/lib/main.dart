@@ -13,6 +13,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
@@ -267,7 +268,7 @@ class _ThemeInit extends ConsumerWidget {
   }
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   final SharedPreferences prefs;
 
   const MyApp({
@@ -276,33 +277,77 @@ class MyApp extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  static const _minimumSplashDuration = Duration(milliseconds: 2800);
+  bool _startupReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize premium service on app start
+    ref.read(premiumServiceProvider);
+    _completeStartupGate();
+  }
+
+  Future<void> _completeStartupGate() async {
+    final authState = await ref.read(authStateProvider.future).catchError(
+          (_) => const AppAuthState(
+            isAuthenticated: false,
+            source: 'bootstrap_error',
+          ),
+        );
+
+    final bootstrapTasks = <Future<void>>[
+      Future<void>.delayed(_minimumSplashDuration),
+    ];
+
+    if (authState.isAuthenticated) {
+      bootstrapTasks.add(
+        ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
+      );
+    }
+
+    await Future.wait(bootstrapTasks);
+
+    if (!mounted) return;
+
+    setState(() {
+      _startupReady = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final customPrimary = ref.watch(primaryColorProvider);
     final authState = ref.watch(authStateProvider);
 
     return _ThemeInit(
-      prefs: prefs,
+      prefs: widget.prefs,
       child: MaterialApp(
-        key: ValueKey(authState.asData?.value.isAuthenticated ?? false),
         title: 'HomeSync',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme(customPrimary: customPrimary),
         darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
         themeMode: themeMode,
-        home: authState.when(
-          data: (state) {
-            if (state.isAuthenticated) {
-              return MainScreen(prefs: prefs);
-            }
-            return LoginScreen(prefs: prefs);
-          },
-          loading: () => const SplashScreen(),
-          error: (e, stack) {
-            debugPrint('Auth error: $e');
-            return LoginScreen(prefs: prefs);
-          },
-        ),
+        home: !_startupReady
+            ? const SplashScreen()
+            : authState.when(
+                data: (state) {
+                  if (state.isAuthenticated) {
+                    return MainScreen(prefs: widget.prefs);
+                  }
+                  return LoginScreen(prefs: widget.prefs);
+                },
+                loading: () => const SplashScreen(),
+                error: (e, stack) {
+                  debugPrint('Auth error: $e');
+                  return LoginScreen(prefs: widget.prefs);
+                },
+              ),
       ),
     );
   }
