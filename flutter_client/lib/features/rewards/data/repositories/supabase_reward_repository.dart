@@ -67,6 +67,7 @@ class SupabaseRewardRepository
     String? category,
     required String createdBy,
     bool isApproved = false,
+    String targetType = 'all',
   }) async {
     return executeWithHandling(
         () async {
@@ -79,6 +80,7 @@ class SupabaseRewardRepository
             'category': category,
             'created_by': createdBy,
             'is_approved': isApproved,
+            'target_type': targetType,
           });
         },
         context: 'SupabaseRewardRepository.suggestReward',
@@ -97,6 +99,7 @@ class SupabaseRewardRepository
                 'category': category,
                 'created_by': createdBy,
                 'is_approved': isApproved,
+                'target_type': targetType,
               },
             ),
           );

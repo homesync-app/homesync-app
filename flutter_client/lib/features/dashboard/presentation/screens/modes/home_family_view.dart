@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -17,8 +18,10 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
+import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:intl/intl.dart';
 
 class HomeFamilyView extends ConsumerStatefulWidget {
@@ -44,9 +47,22 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
+    final statsAsync = ref.watch(statsControllerProvider);
+
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final isChild = currentMember?.isChild ?? false;
+    final adultCount = members.where((member) => member.isAdult).length;
+    final showFinance = !isChild && adultCount > 1;
 
     return RefreshIndicator(
-      onRefresh: widget.onRefresh,
+      onRefresh: () async {
+        await widget.onRefresh();
+        await ref.read(statsControllerProvider.notifier).refresh();
+      },
       color: AppColors.primary,
       backgroundColor: theme.surface,
       child: ListView(
@@ -54,16 +70,22 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         children: [
           _buildHeader(theme, caps),
           const SizedBox(height: 24),
-          _buildFamilySummary(theme),
-          const SizedBox(height: 32),
-          _buildFinanceSummary(theme, caps),
-          const SizedBox(height: 32),
-          _buildMembersSection(theme),
+          if (isChild) ...[
+            _buildChildWallet(theme),
+            const SizedBox(height: 24),
+          ],
+          _buildWeeklySummaryBlock(theme, statsAsync.valueOrNull),
+          const SizedBox(height: 24),
+          _buildWeeklyRankingBlock(theme, statsAsync.valueOrNull),
           const SizedBox(height: 32),
           _buildTasksSection(theme, caps),
           const SizedBox(height: 32),
           _buildShoppingSection(theme),
           const SizedBox(height: 32),
+          if (showFinance) ...[
+            _buildFinanceSummary(theme, caps),
+            const SizedBox(height: 32),
+          ],
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
@@ -164,234 +186,283 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildMembersSection(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+  Widget _buildWeeklySummaryBlock(AppThemeColors theme, StatsData? stats) {
+    if (stats == null) {
+      return _buildStatsPlaceholder(
+        theme,
+        title: 'Esta semana en el hogar',
+        subtitle: 'Todavia no tenemos suficiente actividad para armar el resumen.',
+        icon: Icons.insights_rounded,
+      );
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Integrantes',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.textPrimary,
-              ),
-            ),
-            membersAsync.when(
-              data: (members) => Text(
-                '${members.length} en casa',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: theme.textSecondary,
-                ),
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
+    final completedTasks = stats.taskStats.fold(0, (sum, cat) => sum + (cat['count'] as int? ?? 0));
+    final totalCoins = stats.weeklyRanking.fold(0, (sum, member) => sum + (member['coins'] as int? ?? 0));
+    
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.primary.withValues(alpha: 0.15),
+            theme.primary.withValues(alpha: 0.05),
           ],
         ),
-        const SizedBox(height: 16),
-        membersAsync.when(
-          data: (members) {
-            return SizedBox(
-              height: 90,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: members.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  if (index == members.length) {
-                    return _buildAddMemberButton(theme);
-                  }
-                  final member = members[index];
-                  return _buildMemberItem(member, theme);
-                },
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Esta semana en el hogar',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: theme.primary,
+                ),
               ),
-            );
-          },
-          loading: () => const ShimmerLoading(height: 80, borderRadius: 20),
-          error: (_, __) => const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMemberItem(dynamic member, AppThemeColors theme) {
-    final firstName = member.displayName;
-    final roleLabel = member.roleLabel;
-
-    return Column(
-      children: [
-        CustomUserAvatar(
-          avatarUrl: member.avatarUrl,
-          name: member.fullDisplayName,
-          radius: 28,
-          showBorder: true,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          firstName,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: theme.textPrimary,
+              Icon(Icons.auto_awesome_rounded, color: theme.primary, size: 18),
+            ],
           ),
-        ),
-        if (roleLabel.isNotEmpty) ...[
-          const SizedBox(height: 2),
-          Text(
-            roleLabel,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: theme.textSecondary,
-            ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSummaryItem(
+                theme,
+                label: 'Puntos totales',
+                value: totalCoins.toString(),
+                icon: Icons.stars_rounded,
+                color: AppColors.accentGold,
+              ),
+              _buildSummaryDivider(theme),
+              _buildSummaryItem(
+                theme,
+                label: 'Tareas cerradas',
+                value: completedTasks.toString(),
+                icon: Icons.check_circle_rounded,
+                color: AppColors.success,
+              ),
+              _buildSummaryDivider(theme),
+              _buildSummaryItem(
+                theme,
+                label: 'Estado',
+                value: completedTasks > 5 ? 'Activo' : 'Calma',
+                icon: Icons.flash_on_rounded,
+                color: AppColors.accentOrange,
+              ),
+            ],
           ),
         ],
-      ],
-    );
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildFamilySummary(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
-    final tasksAsync = ref.watch(todayTasksProvider);
-    final shoppingAsync = ref.watch(shoppingItemsProvider);
-
-    return Row(
-      children: [
-        _buildSummaryCard(
-          theme,
-          label: 'Integrantes',
-          value: membersAsync.when(
-            data: (members) => members.length.toString(),
-            loading: () => '...',
-            error: (_, __) => '0',
-          ),
-          icon: Icons.family_restroom_rounded,
-          color: AppColors.primary,
-        ),
-        const SizedBox(width: 12),
-        _buildSummaryCard(
-          theme,
-          label: 'Pendientes',
-          value: tasksAsync.when(
-            data: (tasks) => tasks.where((task) => task.isPending).length.toString(),
-            loading: () => '...',
-            error: (_, __) => '0',
-          ),
-          icon: Icons.task_alt_rounded,
-          color: AppColors.accentTeal,
-        ),
-        const SizedBox(width: 12),
-        _buildSummaryCard(
-          theme,
-          label: 'Compras',
-          value: shoppingAsync.when(
-            data: (items) => items.where((item) => !item.completed).length.toString(),
-            loading: () => '...',
-            error: (_, __) => '0',
-          ),
-          icon: Icons.shopping_cart_rounded,
-          color: AppColors.accentGold,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(
+  Widget _buildSummaryItem(
     AppThemeColors theme, {
     required String label,
     required String value,
     required IconData icon,
     required Color color,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.12),
-              color.withValues(alpha: 0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Column(
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 14),
+            const SizedBox(width: 4),
             Text(
               value,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: theme.textSecondary,
+                letterSpacing: -0.5,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAddMemberButton(AppThemeColors theme) {
-    return Column(
-      children: [
-        AnimatedPress(
-          onPressed: () {
-            InvitationSheet.show(context);
-          },
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: theme.surfaceContainer,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.divider.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              Icons.add_rounded,
-              color: theme.primary,
-              size: 28,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 2),
         Text(
-          'Invitar',
+          label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: theme.textPrimary,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: theme.textSecondary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFinanceSummary(
-      AppThemeColors theme, HouseholdCapabilities caps) {
+  Widget _buildSummaryDivider(AppThemeColors theme) {
+    return Container(
+      width: 1,
+      height: 24,
+      color: theme.divider.withValues(alpha: 0.1),
+    );
+  }
+
+  Widget _buildWeeklyRankingBlock(AppThemeColors theme, StatsData? stats) {
+    if (stats == null) {
+      return _buildStatsPlaceholder(
+        theme,
+        title: 'Ranking semanal',
+        subtitle:
+            'Cuando empiecen a cerrar tareas, el ranking va a aparecer acÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡.',
+        icon: Icons.emoji_events_outlined,
+      );
+    }
+    
+    final ranking = stats.weeklyRanking;
+    if (ranking.isEmpty) {
+      return _buildPlaceholderRanking(theme);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Ranking Semanal',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: theme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.surfaceContainer.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
+          ),
+          child: Column(
+            children: ranking.take(3).map((item) {
+              final isFirst = ranking.indexOf(item) == 0;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundColor: isFirst ? AppColors.accentGold : theme.divider.withValues(alpha: 0.1),
+                      child: Text(
+                        (ranking.indexOf(item) + 1).toString(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isFirst ? Colors.black : theme.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      item['display_name'] ?? 'Integrante',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: isFirst ? FontWeight.w800 : FontWeight.w600,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${item['coins'] ?? 0} pts',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: theme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPlaceholderRanking(AppThemeColors theme) {
+    return _buildStatsPlaceholder(
+      theme,
+      title: 'Comienza el ranking de la semana',
+      subtitle: 'Suma puntos completando tus tareas.',
+      icon: Icons.emoji_events_outlined,
+    );
+  }
+
+  Widget _buildStatsPlaceholder(
+    AppThemeColors theme, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: theme.textMuted, size: 40),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: theme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceSummary(AppThemeColors theme, HouseholdCapabilities caps) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
+    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final members = membersAsync.valueOrNull ?? [];
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember = members.where((m) => m.userId == currentUserId).firstOrNull;
+    
+    // Check if current user is child ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Phase 2 requirement
+    final isChild = currentMember?.isChild ?? false;
+    
+    // Hide finance section if current user is child (Phase 2) 
+    // OR if there's only one adult in the household (Phase 1)
+    final adultCount = members.where((m) => m.isAdult).length;
+    
+    if (isChild || adultCount <= 1) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +491,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           data: (balances) {
             if (balances.isEmpty) return const SizedBox.shrink();
 
-            // For family mode, we show a main summary or multiple cards
             return FamilyBalanceCard(
               balances: balances,
               title: caps.balanceMessage,
@@ -434,7 +504,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildTasksSection(AppThemeColors theme, HouseholdCapabilities caps) {
-    final tasksAsync = ref.watch(todayTasksProvider);
+    final tasksAsync = ref.watch(tasksProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,7 +531,16 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         const SizedBox(height: 12),
         tasksAsync.when(
           data: (tasks) {
-            final pending = tasks.where((t) => t.isPending).toList();
+            final pending = tasks.where((task) => task.isPending).toList()
+              ..sort((a, b) {
+                if (a.isOverdue != b.isOverdue) {
+                  return a.isOverdue ? -1 : 1;
+                }
+                if (a.isDueToday != b.isDueToday) {
+                  return a.isDueToday ? -1 : 1;
+                }
+                return a.createdAt.compareTo(b.createdAt);
+              });
             if (pending.isEmpty) {
               return _buildEmptyState(theme, caps.emptyStateTasksSubtitle);
             }
@@ -491,20 +570,42 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Future<void> _completeTask(dynamic task) async {
+  Future<void> _completeTask(TaskModel task) async {
     if (_completedTaskIds.contains(task.id)) return;
 
     setState(() => _completedTaskIds.add(task.id));
     try {
-      await ref.read(tasksProvider.notifier).completeTask(task);
+      debugPrint('[family] completing task id=${task.id} title=${task.title}');
+      final result = await ref.read(tasksProvider.notifier).completeTask(task);
+
+      if (!mounted) return;
+
+      if (result == null) {
+        debugPrint('[family] task completion returned null id=${task.id}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No pudimos completar la tarea. Intenta de nuevo.'),
+          ),
+        );
+        return;
+      }
+
+      debugPrint(
+        '[family] task completion success id=${task.id} queued=${result.queued} message=${result.message}',
+      );
+      ref.invalidate(statsControllerProvider);
+      ref.invalidate(tasksProvider);
     } catch (e) {
+      debugPrint('[family] task completion threw id=${task.id} error=$e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
       }
     } finally {
-      if (mounted) setState(() => _completedTaskIds.remove(task.id));
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+      }
     }
   }
 
@@ -529,7 +630,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Todo al dia',
+            'Todo al día',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -680,6 +781,75 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           error: (_, __) => const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildChildWallet(AppThemeColors theme) {
+    final balance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.accentGold.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.3),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: AppColors.accentGold,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.monetization_on_rounded,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Mi Monedero',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  '$balance monedas',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                AppTransitions.slideHorizontal(
+                  page: const FamilyRewardsScreen(),
+                ),
+              );
+            },
+            child: const Text('Tienda'),
+          ),
+        ],
+      ),
     );
   }
 

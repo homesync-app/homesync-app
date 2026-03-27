@@ -185,7 +185,7 @@ class Tasks extends _$Tasks {
       state = AsyncValue.data(oldState
           .map((t) => t.id == task.id
               ? t.copyWith(
-                  status: TaskStatus.active,
+                  status: TaskStatus.pendingVerification,
                   completedBy: primaryUserId,
                   completedAt: effectiveCompletedAt,
                 )
@@ -245,7 +245,7 @@ class Tasks extends _$Tasks {
       state = AsyncValue.data(oldState
           .map((t) => taskIds.contains(t.id)
               ? t.copyWith(
-                  status: TaskStatus.active,
+                  status: TaskStatus.pendingVerification,
                   completedBy: primaryUserId,
                   completedAt: effectiveCompletedAt,
                 )

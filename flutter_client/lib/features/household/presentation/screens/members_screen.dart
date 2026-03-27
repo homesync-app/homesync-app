@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -12,70 +16,68 @@ class MembersScreen extends ConsumerStatefulWidget {
 }
 
 class _MembersScreenState extends ConsumerState<MembersScreen> {
-  bool _isLoading = true;
-  List<dynamic> _members = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMembers();
-  }
-
-  Future<void> _loadMembers() async {
-    try {
-      final result =
-          await ref.read(householdRepositoryProvider).getHouseholdMembersRaw();
-      setState(() {
-        _members = result.fold((_) => <dynamic>[], (members) => members);
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
+    final membersAsync = ref.watch(householdMembersProvider);
+    final theme = context.theme;
 
-    return RefreshIndicator(
-      onRefresh: _loadMembers,
-      color: AppColors.primary,
-      backgroundColor: AppColors.surface,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics()),
-        padding: const EdgeInsets.all(20),
-        children: [
-          _buildHeader().animateEntrance(),
-          const SizedBox(height: 24),
-          ..._members.asMap().entries.map((entry) =>
-              _buildMemberCard(entry.value).animateStaggered(entry.key)),
-          const SizedBox(height: 16),
-          _buildInviteCard()
-              .animateScaleIn(delay: (_members.length * 40) + 100),
-        ],
+    return Scaffold(
+      backgroundColor: theme.surface,
+      body: RefreshIndicator(
+        onRefresh: () => ref.refresh(householdMembersProvider.future),
+        color: AppColors.primary,
+        backgroundColor: theme.surface,
+        child: membersAsync.when(
+          data: (members) => _buildContent(members, theme),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
+        ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildContent(List<MemberModel> members, AppThemeColors theme) {
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
+    final isChild = currentMember?.isChild ?? false;
+
+    return ListView(
+      physics:
+          const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+      padding: const EdgeInsets.all(20),
+      children: [
+        _buildHeader(members.length, theme).animateEntrance(),
+        const SizedBox(height: 24),
+        ...members.asMap().entries.map(
+              (entry) => _buildMemberCard(entry.value, theme)
+                  .animateStaggered(entry.key),
+            ),
+        const SizedBox(height: 16),
+        if (!isChild)
+          _buildInviteCard(theme)
+              .animateScaleIn(delay: (members.length * 40) + 100),
+      ],
+    );
+  }
+
+  Widget _buildHeader(int count, AppThemeColors theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Miembros',
-          style: Theme.of(context).textTheme.headlineMedium,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: theme.textPrimary,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
-          '${_members.length} persona${_members.length == 1 ? '' : 's'} en tu hogar',
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+          '$count persona${count == 1 ? '' : 's'} en tu hogar',
+          style: TextStyle(
+            color: theme.textSecondary,
             fontSize: 15,
           ),
         ),
@@ -83,112 +85,125 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     );
   }
 
-  Widget _buildMemberCard(dynamic member) {
-    final user = member['users'];
-    final isOwner = member['role'] == 'owner';
-    final name = user['full_name'] ?? 'Usuario';
-    final email = user['email'] ?? '';
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
-
+  Widget _buildMemberCard(MemberModel member, AppThemeColors theme) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
       ),
-      child: AnimatedPress(
-        onTap: () {}, // Detail view if needed
-        child: Row(
-          children: [
+      child: Row(
+        children: [
+          Stack(
+            children: [
+              CustomUserAvatar(
+                avatarUrl: member.avatarUrl,
+                name: member.fullDisplayName,
+                radius: 26,
+                showBorder: true,
+              ),
+              if (member.isAdmin)
+                Positioned(
+                  right: -1,
+                  top: -1,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: AppColors.accentGold,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      size: 8,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      member.fullDisplayName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    if (member.isChild) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentOrange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Niño',
+                          style: TextStyle(
+                            color: AppColors.accentOrange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  member.roleLabel,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (member.isAdmin)
             Container(
-              width: 52,
-              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isOwner
-                      ? [AppColors.primary, AppColors.primaryDark]
-                      : [AppColors.info, AppColors.info.withValues(alpha: 0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
+                color: theme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Center(
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 20,
-                  ),
+              child: Text(
+                'Admin',
+                style: TextStyle(
+                  color: theme.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
-              ),
-            ).animateScaleIn(delay: 200),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    email,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
               ),
             ),
-            if (isOwner)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  'Admin',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildInviteCard() {
+  Widget _buildInviteCard(AppThemeColors theme) {
     return AnimatedPress(
-      onTap: () {
-        // Invite logic
+      onPressed: () {
+        InvitationSheet.show(context);
       },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.cardBorder),
+          color: theme.surfaceContainer.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -196,41 +211,41 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                color: theme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.person_add_rounded,
-                color: AppColors.primary,
+                color: theme.primary,
               ),
             ).animatePulse(),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Invitar miembro',
+                    'Invitar integrante',
                     style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      color: theme.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
-                    'Comparte tu código de invitación',
+                    'Sumá otra persona al hogar con un código de invitación.',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: theme.textSecondary,
                       fontSize: 13,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: AppColors.textMuted,
-              size: 16,
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.textMuted,
             ),
           ],
         ),

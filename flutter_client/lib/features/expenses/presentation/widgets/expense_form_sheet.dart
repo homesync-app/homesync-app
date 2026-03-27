@@ -81,67 +81,67 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       'id': 'supermarket',
       'name': 'Supermercado',
       'icon': '🛒',
-      'color': AppColors.accentGold
+      'color': AppColors.getCategoryColor('supermarket')
     },
     {
       'id': 'utilities',
       'name': 'Servicios',
       'icon': '💡',
-      'color': AppColors.accentTeal
+      'color': AppColors.getCategoryColor('utilities')
     },
     {
       'id': 'rent',
       'name': 'Alquiler',
       'icon': '🏠',
-      'color': AppColors.primary
+      'color': AppColors.getCategoryColor('rent')
     },
     {
       'id': 'restaurants',
       'name': 'Restaurantes',
       'icon': '🍽️',
-      'color': const Color(0xFFF06292)
+      'color': AppColors.getCategoryColor('restaurants')
     },
     {
       'id': 'transport',
       'name': 'Transporte',
       'icon': '🚙',
-      'color': const Color(0xFF4DB6AC)
+      'color': AppColors.getCategoryColor('transport')
     },
     {
       'id': 'entertainment',
       'name': 'Entretenimiento',
       'icon': '🎬',
-      'color': const Color(0xFF9575CD)
+      'color': AppColors.getCategoryColor('entertainment')
     },
     {
       'id': 'health',
       'name': 'Salud',
       'icon': '💊',
-      'color': AppColors.accentRed
+      'color': AppColors.getCategoryColor('health')
     },
     {
       'id': 'finanzas',
       'name': 'Ahorro / Inversión',
       'icon': '🏦',
-      'color': AppColors.accentTeal
+      'color': AppColors.getCategoryColor('finanzas')
     },
     {
       'id': 'settlement',
       'name': 'Liquidación',
       'icon': '🤝',
-      'color': AppColors.primary
+      'color': AppColors.getCategoryColor('settlement')
     },
     {
       'id': 'mercadolibre',
-      'name': 'MercadoLibre',
+      'name': 'Compras online',
       'icon': '🛍️',
-      'color': AppColors.accentBlue
+      'color': AppColors.getCategoryColor('mercadolibre')
     },
     {
       'id': 'other',
       'name': 'Otros Gastos',
       'icon': '📦',
-      'color': AppColors.textSecondary
+      'color': AppColors.getCategoryColor('other')
     },
   ];
 
@@ -1051,71 +1051,75 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildAmountField() {
+    final theme = context.theme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.18),
-          width: 1.4,
+          color: theme.border.withValues(alpha: 0.82),
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: theme.cardShadow,
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'Monto total',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: theme.textSecondary,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(right: 10, top: 2),
+              Padding(
+                padding: const EdgeInsets.only(right: 10, top: 2),
                 child: Text(
                   '\$',
                   style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 28,
+                    color: theme.textMuted,
+                    fontSize: 26,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 92, maxWidth: 220),
+              SizedBox(
+                width: 150,
                 child: TextFormField(
                   autofocus: true,
                   controller: _amountController,
                   onChanged: _onAmountChanged,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: theme.textPrimary,
                     fontSize: 34,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1.2,
                   ),
                   textAlign: TextAlign.start,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: '0',
                     hintStyle: TextStyle(
-                      color: AppColors.textMuted,
+                      color: theme.textMuted,
                       fontWeight: FontWeight.w700,
                     ),
+                    filled: false,
+                    fillColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    focusColor: Colors.transparent,
                     border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
                     isCollapsed: true,
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -1123,12 +1127,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Container(
             width: 72,
             height: 1,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: theme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -1138,38 +1142,58 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildTitleField() {
+    final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        border: Border.all(color: theme.border.withValues(alpha: 0.82)),
+        boxShadow: theme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _isIncome
+                ? Icons.account_balance_wallet_outlined
+                : Icons.shopping_bag_outlined,
+            color: theme.textSecondary,
+            size: 24,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: TextField(
+              controller: _titleController,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                hintText: _isIncome
+                    ? '¿De qué es el ingreso? (Opcional)'
+                    : '¿Qué compraste? (Opcional)',
+                hintStyle: TextStyle(
+                  color: theme.textMuted,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                filled: false,
+                fillColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+              ),
+            ),
           ),
         ],
-      ),
-      child: TextField(
-        controller: _titleController,
-        style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.w600),
-        decoration: InputDecoration(
-          hintText: _isIncome
-              ? '¿De qué es el ingreso? (Opcional)'
-              : '¿Qué compraste? (Opcional)',
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 16),
-          border: InputBorder.none,
-          icon: Icon(
-              _isIncome
-                  ? Icons.account_balance_wallet_outlined
-                  : Icons.shopping_bag_outlined,
-              color: AppColors.textSecondary),
-        ),
       ),
     );
   }
@@ -1533,6 +1557,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildSplitConfiguration(
       BuildContext context, List<MemberModel> members) {
+    final theme = context.theme;
     final splitModes = _isIncome
         ? const [SplitType.equal, SplitType.personal]
         : SplitType.values;
@@ -1592,18 +1617,34 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 }
               },
               side: BorderSide(
-                  color: isSelected ? AppColors.primary : AppColors.divider,
-                  width: 1.5),
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.22)
+                    : theme.border.withValues(alpha: 0.78),
+                width: 1.15,
+              ),
               showCheckmark: false,
-              avatar: Icon(icon,
-                  size: 16,
-                  color: isSelected ? Colors.white : AppColors.textSecondary),
-              backgroundColor: AppColors.surface,
-              selectedColor: AppColors.primary,
+              avatar: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : theme.elevatedSurface,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected ? AppColors.primary : theme.textSecondary,
+                ),
+              ),
+              backgroundColor: theme.surface,
+              selectedColor: theme.primary.withValues(alpha: 0.08),
               labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                color: isSelected ? AppColors.primary : theme.textPrimary,
+                fontWeight: FontWeight.w800,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               shape: const StadiumBorder(),
             );
           }).toList(),
@@ -1618,6 +1659,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildSplitDetails(List<MemberModel> members) {
+    final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
     if (_splitMode == SplitType.equal) {
       final household = ref.watch(currentHouseholdProvider).valueOrNull;
@@ -1635,8 +1677,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                   avatarUrl: m.avatarUrl, name: m.displayName, radius: 14),
               title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
               trailing: Text('${(memRatio * 100).toInt()}%',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: theme.primary)),
             );
           }).toList(),
         );
@@ -1657,11 +1699,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.divider)),
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: theme.border.withValues(alpha: 0.82)),
+              boxShadow: theme.cardShadow,
+            ),
             child: Row(
               children: [
                 CustomUserAvatar(
@@ -1669,23 +1713,41 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                     child: Text(m.displayName,
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
-                const Text('\$',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: theme.textPrimary))),
+                Text('\$',
                     style: TextStyle(
-                        color: AppColors.textMuted,
+                        color: theme.textMuted,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
-                SizedBox(
-                  width: 150,
+                Container(
+                  width: 132,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: theme.elevatedSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border:
+                        Border.all(color: theme.border.withValues(alpha: 0.7)),
+                  ),
                   child: TextFormField(
                     controller: controller,
                     focusNode: focusNode,
                     keyboardType: TextInputType.number,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, color: AppColors.primary),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800, color: theme.textPrimary),
+                    decoration: InputDecoration(
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      isDense: true,
                       hintText: '0',
+                      hintStyle: TextStyle(color: theme.textMuted),
+                      contentPadding: EdgeInsets.zero,
                     ),
                     onChanged: (val) =>
                         _onFixedSplitChanged(m.userId, val, members),
@@ -1698,26 +1760,29 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
-          '🎁 Este gasto no afectará el balance ${caps.actionMemberLabel}.',
+          'Este gasto no afectará el balance ${caps.actionMemberLabel}.',
           AppColors.primary);
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
-          '👤 Registrado como gasto personal.', AppColors.textSecondary);
+          'Registrado como gasto personal.', theme.textSecondary);
     }
     return const SizedBox.shrink();
   }
 
   Widget _buildInfoBox(String text, Color color) {
+    final theme = context.theme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
-          borderRadius: BorderRadius.circular(16)),
+          color: color.withValues(alpha: 0.045),
+          border: Border.all(color: color.withValues(alpha: 0.12)),
+          borderRadius: BorderRadius.circular(18)),
       child: Text(text,
           style: TextStyle(
-              color: color.withValues(alpha: 0.8),
+              color: color == theme.textSecondary
+                  ? theme.textSecondary
+                  : color.withValues(alpha: 0.82),
               fontSize: 13,
               fontWeight: FontWeight.w500)),
     );
@@ -1762,29 +1827,65 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildEqualSelection(List<MemberModel> members) {
     return Wrap(
-      spacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       children: members.map((m) {
         final isSelected = _selectedMembersForSplit.contains(m.userId);
-        return FilterChip(
-          label: Text(m.displayName),
-          selected: isSelected,
-          onSelected: (val) {
+        return InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
             setState(() {
-              if (val) {
+              if (isSelected) {
+                if (_selectedMembersForSplit.length > 1) {
+                  _selectedMembersForSplit.remove(m.userId);
+                }
+              } else {
                 _selectedMembersForSplit.add(m.userId);
-              } else if (_selectedMembersForSplit.length > 1) {
-                _selectedMembersForSplit.remove(m.userId);
               }
             });
           },
-          selectedColor: AppColors.primary.withValues(alpha: 0.15),
-          checkmarkColor: AppColors.primary,
-          shape: const StadiumBorder(),
-          side: BorderSide(
-              color: isSelected ? AppColors.primary : AppColors.divider),
-          labelStyle: TextStyle(
-              color: isSelected ? AppColors.primary : AppColors.textPrimary,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.08)
+                  : AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.24)
+                    : AppColors.divider.withValues(alpha: 0.9),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomUserAvatar(
+                  avatarUrl: m.avatarUrl,
+                  name: m.displayName,
+                  radius: 14,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  m.displayName,
+                  style: TextStyle(
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textPrimary,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                ],
+              ],
+            ),
+          ),
         );
       }).toList(),
     );

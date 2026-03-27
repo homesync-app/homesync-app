@@ -214,17 +214,15 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 children: [
                   _buildDuelTab(),
                   rewardsAsync.when(
-                    data: (rawRewards) {
-                      final rewards = rawRewards
-                          .map((r) => RewardModel.fromJson(r))
-                          .where((r) => r.isActive)
-                          .toList();
+                    data: (rewards) {
+                      final activeRewards =
+                          rewards.where((r) => r.isActive).toList();
                       final availableCoins =
                           ref.watch(userBalanceProvider).value?['coins'] ?? 0;
                       final approvedRewards =
-                          rewards.where((r) => r.isApproved == true).toList();
+                          activeRewards.where((r) => r.isApproved == true).toList();
                       final suggestions =
-                          rewards.where((r) => r.isApproved == false).toList();
+                          activeRewards.where((r) => r.isApproved == false).toList();
 
                       return RefreshIndicator(
                         color: AppColors.primary,

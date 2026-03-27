@@ -17,6 +17,7 @@ abstract class RewardRepository {
     String? category,
     required String createdBy,
     bool isApproved = false,
+    String targetType = 'all',
   });
 
   /// Approve a suggested reward (owner only).

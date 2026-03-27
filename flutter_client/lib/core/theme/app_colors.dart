@@ -134,11 +134,11 @@ class AppColors {
         return iconBlue;
       case 'mercadolibre':
       case 'mercado libre':
-        return accentBlue;
+        return const Color(0xFFF6C453);
       case 'utilities':
       case 'servicios':
       case 'facturas':
-        return iconYellow;
+        return const Color(0xFF7D94A8);
       case 'rent':
       case 'alquiler':
         return accentPeach;
@@ -148,22 +148,31 @@ class AppColors {
         return accentOrange;
       case 'transport':
       case 'transporte':
-        return const Color(0xFF6366F1);
+        return const Color(0xFF38B8C8);
       case 'entertainment':
+      case 'entretenimiento':
       case 'hobby':
       case 'ocio':
         return accentPurple;
       case 'health':
       case 'salud':
         return const Color(0xFF10B981);
+      case 'other':
+      case 'otros gastos':
+      case 'otros':
+        return const Color(0xFF94A3B8);
       case 'ropa':
         return const Color(0xFF818CF8); // Indigo
       case 'auto':
       case 'coche':
         return const Color(0xFFF87171); // Red
       case 'finanzas':
+      case 'ahorro / inversión':
+      case 'ahorro / inversion':
+      case 'inversión':
+      case 'inversion':
       case 'savings':
-        return const Color(0xFF10B981); // Emerald
+        return const Color(0xFF2E8B7F); // Teal green, distinct from health
       case 'estudio':
       case 'educación':
       case 'estudio / educación':
@@ -270,6 +279,9 @@ class AppColors {
       case 'servicios':
       case 'facturas':
         return Icons.receipt_long_rounded;
+      case 'entertainment':
+      case 'entretenimiento':
+        return Icons.movie_rounded;
       case 'restaurants':
       case 'restaurant':
       case 'restaurante':
@@ -285,8 +297,13 @@ class AppColors {
         return Icons.priority_high_rounded;
       case 'viajes':
         return Icons.luggage_rounded;
+      case 'health':
       case 'salud':
-        return Icons.favorite_rounded;
+        return Icons.local_hospital_rounded;
+      case 'other':
+      case 'otros gastos':
+      case 'otros':
+        return Icons.inventory_2_rounded;
       case 'ocio':
         return Icons.videogame_asset_rounded;
       case 'regalos':
@@ -348,6 +365,9 @@ class AppColors {
         content.contains('salario')) {
       return Icons.account_balance_wallet_rounded;
     }
+    if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
+      return getCategoryMaterialIcon(normalizedCategory);
+    }
     if (normalizedTitle.contains('sushi') ||
         normalizedTitle.contains('helado') ||
         normalizedTitle.contains('pizza') ||
@@ -390,6 +410,9 @@ class AppColors {
         normalizedTitle.contains('sueldo') ||
         normalizedTitle.contains('salario')) {
       return success;
+    }
+    if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
+      return getCategoryColor(normalizedCategory);
     }
     if (normalizedTitle.contains('sushi') ||
         normalizedTitle.contains('helado') ||
@@ -435,6 +458,9 @@ class AppColors {
         content.contains('sueldo') ||
         content.contains('salario')) {
       return Icons.account_balance_wallet_rounded;
+    }
+    if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
+      return getCategoryMaterialIcon(normalizedCategory);
     }
     if (content.contains('sushi') ||
         content.contains('ramen') ||
@@ -514,6 +540,9 @@ class AppColors {
         content.contains('sueldo') ||
         content.contains('salario')) {
       return success;
+    }
+    if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
+      return getCategoryColor(normalizedCategory);
     }
     if (content.contains('sushi') ||
         content.contains('ramen') ||
@@ -651,8 +680,8 @@ class AppColors {
     'jardin': 'Jardín',
     'jardín': 'Jardín',
     'supermarket': 'Supermercado',
-    'mercadolibre': 'MercadoLibre',
-    'mercado libre': 'MercadoLibre',
+    'mercadolibre': 'Compras online',
+    'mercado libre': 'Compras online',
     'compras': 'Compras',
     'ropa': 'Ropa',
     'residuos': 'Basura / Reciclaje',
@@ -739,5 +768,42 @@ class AppColors {
       return 'ninos';
     }
     return lower;
+  }
+
+  static bool _shouldPrioritizeExplicitExpenseCategory(String? category) {
+    switch (category) {
+      case 'supermarket':
+      case 'compras':
+      case 'mercadolibre':
+      case 'mercado libre':
+      case 'utilities':
+      case 'servicios':
+      case 'facturas':
+      case 'rent':
+      case 'alquiler':
+      case 'restaurants':
+      case 'restaurant':
+      case 'restaurante':
+      case 'transport':
+      case 'transporte':
+      case 'entertainment':
+      case 'entretenimiento':
+      case 'health':
+      case 'salud':
+      case 'other':
+      case 'otros gastos':
+      case 'otros':
+      case 'finanzas':
+      case 'savings':
+      case 'investment':
+      case 'inversión':
+      case 'inversion':
+      case 'settlement':
+      case 'liquidación':
+      case 'liquidacion':
+        return true;
+      default:
+        return false;
+    }
   }
 }

@@ -85,7 +85,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       animation: _tabController,
       builder: (context, child) {
         final theme = context.theme;
-        String label = 'Nuevo Movimiento';
+        String label = 'Movimiento';
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
@@ -106,40 +106,46 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: theme.shadowBase.withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: theme.primary.withValues(alpha: 0.07),
+                  color: theme.shadowBase.withValues(alpha: 0.032),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: theme.primary.withValues(alpha: 0.022),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: FloatingActionButton.extended(
               heroTag: 'expenses_fab',
               onPressed: onPressed,
-              backgroundColor: theme.surface.withValues(alpha: 0.97),
-              foregroundColor: theme.primary,
+              backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
+              foregroundColor: AppColors.primary,
               elevation: 0,
               highlightElevation: 0,
               splashColor: theme.primary.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(22),
                 side: BorderSide(
-                  color: theme.primary.withValues(alpha: 0.14),
+                  color: AppColors.primary.withValues(alpha: 0.075),
+                  width: 1,
                 ),
               ),
               extendedPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 19,
+                color: AppColors.primary,
+              ),
               label: Text(
                 label,
-                style: TextStyle(
-                  color: theme.primary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                  letterSpacing: -0.2,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  letterSpacing: -0.15,
                 ),
               ),
             ),
@@ -1744,7 +1750,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (goals) {
         if (goals.isEmpty) {
-          return _buildEmptyState('No hay metas activas aun', icon: '??');
+          return _buildEmptyState(
+            'No hay metas activas aún',
+            icon: '🎯',
+            subtitle: 'Empezá a guardar para algo que de verdad les entusiasme.',
+          );
         }
 
         return RefreshIndicator(
@@ -1926,12 +1936,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   void _showTemplateForm(BuildContext context,
       {ExpenseTemplateModel? template}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => RecurringExpenseFormSheet(template: template),
-    );
+    RecurringExpenseFormSheet.show(context, template: template);
   }
 
   void _showGoalSheet() {
