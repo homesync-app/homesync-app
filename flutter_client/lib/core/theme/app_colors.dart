@@ -745,7 +745,14 @@ class AppColors {
     if (category == null || category.trim().isEmpty) return 'general';
     final lower = category.toLowerCase().trim();
     if (lower == 'cleaning') return 'limpieza';
-    if (lower == 'kitchen') return 'cocina';
+    if (lower == 'kitchen' ||
+        lower == 'comida' ||
+        lower == 'cocina' ||
+        lower == 'restaurant' ||
+        lower == 'restaurants' ||
+        lower == 'restaurante') {
+      return 'cocina';
+    }
     if (lower == 'bathroom' || lower == 'baño') return 'bano';
     if (lower == 'bedroom') return 'dormitorio';
     if (lower == 'pets') return 'mascotas';

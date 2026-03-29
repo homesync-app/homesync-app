@@ -12,11 +12,12 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
@@ -73,20 +74,28 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           if (isChild) ...[
             _buildChildWallet(theme),
             const SizedBox(height: 24),
-          ],
-          _buildWeeklySummaryBlock(theme, statsAsync.valueOrNull),
-          const SizedBox(height: 24),
-          _buildWeeklyRankingBlock(theme, statsAsync.valueOrNull),
-          const SizedBox(height: 32),
-          _buildTasksSection(theme, caps),
-          const SizedBox(height: 32),
-          _buildShoppingSection(theme),
-          const SizedBox(height: 32),
-          if (showFinance) ...[
-            _buildFinanceSummary(theme, caps),
+            _buildWeeklySummaryBlock(theme, statsAsync.valueOrNull),
+            const SizedBox(height: 24),
+            _buildWeeklyRankingBlock(theme, statsAsync.valueOrNull),
             const SizedBox(height: 32),
+            _buildTasksSection(theme, caps, isChild: true),
+            const SizedBox(height: 32),
+            _buildShoppingSection(theme),
+            const SizedBox(height: 32),
+            _buildActivitySection(theme),
+          ] else ...[
+            _buildAdultHomeWelcome(theme),
+            const SizedBox(height: 28),
+            if (showFinance) ...[
+              _buildFinanceSummary(theme, caps),
+              const SizedBox(height: 28),
+            ],
+            _buildTasksSection(theme, caps, isChild: false),
+            const SizedBox(height: 28),
+            _buildActivitySection(theme, title: 'Movimientos del hogar'),
+            const SizedBox(height: 28),
+            _buildShoppingSection(theme),
           ],
-          _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
       ),
@@ -101,47 +110,47 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         members.where((m) => m.userId == currentUserId).firstOrNull;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hola, ${_firstName(currentMember?.displayName) ?? 'Familia'} \ud83d\udc4b',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.8,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text.rich(
+                _buildWelcomeGreetingSpan(
+                  theme: theme,
+                  currentMemberName: currentMember?.displayName,
+                ),
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1.0,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('EEEE, d MMM', 'es_AR')
-                  .format(DateTime.now())
-                  ._capitalize(),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: theme.textSecondary,
+              const SizedBox(height: 6),
+              Text(
+                DateFormat('EEEE, d MMM', 'es_AR')
+                    .format(DateTime.now())
+                    ._capitalize(),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textSecondary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildNotificationBadge(theme),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: widget.onAvatarTap,
-              child: CustomUserAvatar(
-                avatarUrl: currentMember?.avatarUrl,
-                radius: 26,
-                showBorder: true,
-              ),
-            ),
-          ],
+        const SizedBox(width: 12),
+        _buildNotificationBadge(theme),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: widget.onAvatarTap,
+          child: CustomUserAvatar(
+            avatarUrl: currentMember?.avatarUrl,
+            radius: 26,
+            showBorder: true,
+          ),
         ),
       ],
     );
@@ -183,6 +192,54 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAdultHomeWelcome(AppThemeColors theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Todo lo importante',
+          style: TextStyle(
+            color: theme.textPrimary,
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.55,
+          ),
+        ).animate().fadeIn(delay: 80.ms),
+        Text(
+          'del hogar',
+          style: TextStyle(
+            color: theme.textPrimary.withValues(alpha: 0.7),
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ).animate().fadeIn(delay: 160.ms),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Container(
+              width: 24,
+              height: 1.5,
+              color: theme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'organizado para ',
+              style: TextStyle(color: theme.textSecondary, fontSize: 14),
+            ),
+            Text(
+              'la familia',
+              style: TextStyle(
+                color: theme.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 240.ms),
+      ],
     );
   }
 
@@ -316,7 +373,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         theme,
         title: 'Ranking semanal',
         subtitle:
-            'Cuando empiecen a cerrar tareas, el ranking va a aparecer acÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡.',
+            'Cuando empiecen a cerrar tareas, el ranking va a aparecer acá.',
         icon: Icons.emoji_events_outlined,
       );
     }
@@ -450,19 +507,23 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildFinanceSummary(AppThemeColors theme, HouseholdCapabilities caps) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
+    final walletAsync = ref.watch(userBalanceProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
     final members = membersAsync.valueOrNull ?? [];
     final currentUserId = ref.watch(currentUserIdProvider);
-    final currentMember = members.where((m) => m.userId == currentUserId).firstOrNull;
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
     
-    // Check if current user is child ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Phase 2 requirement
+    // Hide family finances from children in the MVP.
     final isChild = currentMember?.isChild ?? false;
     
     // Hide finance section if current user is child (Phase 2) 
     // OR if there's only one adult in the household (Phase 1)
-    final adultCount = members.where((m) => m.isAdult).length;
-    
-    if (isChild || adultCount <= 1) return const SizedBox.shrink();
+    final adultMembers = members.where((m) => m.isAdult).toList();
+
+    if (isChild || adultMembers.length <= 1) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,7 +532,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Finanzas Familiares',
+              adultMembers.length == 2
+                  ? 'Balance del hogar'
+                  : 'Finanzas familiares',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -489,22 +552,152 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         const SizedBox(height: 12),
         balancesAsync.when(
           data: (balances) {
-            if (balances.isEmpty) return const SizedBox.shrink();
+            if (balances.isEmpty) {
+              if (adultMembers.length == 2) {
+                final partner = adultMembers
+                    .where((member) => member.userId != currentUserId)
+                    .firstOrNull;
+                return BalanceCard(
+                  coins:
+                      walletAsync.whenOrNull(data: (data) => data?['coins'] as int?) ??
+                          0,
+                  xp:
+                      walletAsync.whenOrNull(data: (data) => data?['xp'] as int?) ??
+                          0,
+                  userBalance: 0,
+                  partnerName: partner?.displayName,
+                );
+              }
+
+              return _buildFinanceEmptyState(
+                theme,
+                'Todavía no hay balances del hogar para mostrar.',
+              );
+            }
+
+            final adultIds = adultMembers.map((member) => member.userId).toSet();
+            final adultBalances = balances
+                .where((balance) => adultIds.contains(balance.userId))
+                .toList();
+
+            if (adultBalances.isEmpty) {
+              if (adultMembers.length == 2) {
+                final partner = adultMembers
+                    .where((member) => member.userId != currentUserId)
+                    .firstOrNull;
+                return BalanceCard(
+                  coins:
+                      walletAsync.whenOrNull(data: (data) => data?['coins'] as int?) ??
+                          0,
+                  xp:
+                      walletAsync.whenOrNull(data: (data) => data?['xp'] as int?) ??
+                          0,
+                  userBalance: 0,
+                  partnerName: partner?.displayName,
+                );
+              }
+
+              return _buildFinanceEmptyState(
+                theme,
+                'Todavía no hay balances del hogar para mostrar.',
+              );
+            }
+
+            if (adultMembers.length == 2) {
+              final partner = adultMembers
+                  .where((member) => member.userId != currentUserId)
+                  .firstOrNull;
+              final myBalance = adultBalances
+                  .where((balance) => balance.userId == currentUserId)
+                  .firstOrNull
+                  ?.balance;
+
+              return BalanceCard(
+                coins:
+                    walletAsync.whenOrNull(data: (data) => data?['coins'] as int?) ??
+                        0,
+                xp: walletAsync.whenOrNull(data: (data) => data?['xp'] as int?) ??
+                    0,
+                userBalance: myBalance,
+                partnerName: partner?.displayName,
+              );
+            }
 
             return FamilyBalanceCard(
-              balances: balances,
+              balances: adultBalances,
               title: caps.balanceMessage,
             );
           },
           loading: () => const ShimmerLoading(height: 140, borderRadius: 24),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildFinanceEmptyState(
+            theme,
+            'No pudimos cargar las finanzas del hogar por ahora.',
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTasksSection(AppThemeColors theme, HouseholdCapabilities caps) {
-    final tasksAsync = ref.watch(tasksProvider);
+  Widget _buildFinanceEmptyState(AppThemeColors theme, String subtitle) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              color: theme.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sin resumen financiero todavía',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: theme.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTasksSection(
+    AppThemeColors theme,
+    HouseholdCapabilities caps, {
+    required bool isChild,
+  }) {
+    final tasksAsync = ref.watch(todayTasksProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,18 +706,19 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Tareas del Hogar',
+              isChild ? 'Tareas de hoy' : 'Hoy en casa',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
+                letterSpacing: -0.7,
               ),
             ),
             TextButton(
               onPressed: () {
                 ref.read(bottomNavIndexProvider.notifier).setIndex(1);
               },
-              child: const Text('Ver panel'),
+              child: Text(isChild ? 'Ver panel' : 'Ver semana'),
             ),
           ],
         ),
@@ -542,7 +736,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 return a.createdAt.compareTo(b.createdAt);
               });
             if (pending.isEmpty) {
-              return _buildEmptyState(theme, caps.emptyStateTasksSubtitle);
+              return _buildEmptyState(
+                theme,
+                isChild
+                    ? 'No hay tareas para hoy.'
+                    : 'No hay tareas programadas para hoy.',
+              );
             }
             return ListView.separated(
               shrinkWrap: true,
@@ -595,6 +794,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       );
       ref.invalidate(statsControllerProvider);
       ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(recentActivityProvider);
     } catch (e) {
       debugPrint('[family] task completion threw id=${task.id} error=$e');
       if (mounted) {
@@ -746,14 +947,17 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildActivitySection(AppThemeColors theme) {
+  Widget _buildActivitySection(
+    AppThemeColors theme, {
+    String title = 'Actividad Reciente',
+  }) {
     final activitiesAsync = ref.watch(recentActivityProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Actividad Reciente',
+          title,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -763,16 +967,17 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         const SizedBox(height: 16),
         activitiesAsync.when(
           data: (activities) {
-            if (activities.isEmpty) return const SizedBox.shrink();
+            if (activities.isEmpty) {
+              return _buildActivityEmptyState(theme);
+            }
             return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: (activities.length > 5) ? 5 : activities.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemCount: (activities.length > 4) ? 4 : activities.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                return ActivityChatBubble(
+                return FamilyActivityFeedItem(
                   activity: activities[index],
-                  currentUserId: ref.read(currentUserIdProvider),
                 );
               },
             );
@@ -781,6 +986,62 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           error: (_, __) => const SizedBox.shrink(),
         ),
       ],
+    );
+  }
+
+  Widget _buildActivityEmptyState(AppThemeColors theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.divider.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.timeline_rounded,
+              size: 18,
+              color: theme.primary.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Todavía no hay actividad reciente',
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
+                    letterSpacing: -0.35,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Cuando alguien complete una tarea, registre un gasto o marque una compra, lo vas a ver acá.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.3,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -834,6 +1095,15 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     letterSpacing: -0.5,
                   ),
                 ),
+                const SizedBox(height: 2),
+                Text(
+                  'Tus tareas suman monedas para canjear premios.',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -846,7 +1116,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ),
               );
             },
-            child: const Text('Tienda'),
+            child: const Text('Ver tienda'),
           ),
         ],
       ),
@@ -856,6 +1126,39 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   String? _firstName(String? fullName) {
     if (fullName == null) return null;
     return fullName.trim().split(' ').first;
+  }
+
+  TextSpan _buildWelcomeGreetingSpan({
+    required AppThemeColors theme,
+    required String? currentMemberName,
+  }) {
+    final firstName = _firstName(currentMemberName);
+    final welcome = firstName != null
+        ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
+        : 'Bienvenido';
+
+    return TextSpan(
+      children: [
+        TextSpan(
+          text: '$welcome, ',
+          style: TextStyle(color: theme.textPrimary),
+        ),
+        TextSpan(
+          text: firstName ?? 'Familia',
+          style: TextStyle(
+            color: theme.primary,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _looksFeminineName(String name) {
+    final normalized = name.trim().toLowerCase();
+    const masculineExceptions = {'blas', 'luca', 'noa', 'andrea'};
+    if (masculineExceptions.contains(normalized)) return false;
+    return normalized.endsWith('a');
   }
 }
 

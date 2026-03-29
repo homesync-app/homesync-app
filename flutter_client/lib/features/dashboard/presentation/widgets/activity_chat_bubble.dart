@@ -8,6 +8,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -43,7 +44,28 @@ class ActivityChatBubble extends ConsumerWidget {
     final coinsReward = _readInt(data['coins_reward'] ?? data['coins_per_user'] ?? data['coins']);
     final category = data['category'] as String?;
     final amount = _parseAmount(data['amount']);
-    final accent = _activityAccent(context, type, category);
+    final normalizedCategory = AppColors.normaliseCategory(category);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoryData = categoriesAsync.maybeWhen(
+      data: (list) {
+        try {
+          return list.firstWhere(
+            (c) => AppColors.normaliseCategory(c.id) == normalizedCategory,
+          );
+        } catch (_) {
+          return null;
+        }
+      },
+      orElse: () => null,
+    );
+    final accent = _activityAccent(
+      context,
+      type,
+      category,
+      resolvedCategoryColor: categoryData != null
+          ? AppColors.fromHex(categoryData.color)
+          : null,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -279,8 +301,14 @@ class ActivityChatBubble extends ConsumerWidget {
     }
   }
 
-  Color _activityAccent(BuildContext context, String? type, String? category) {
+  Color _activityAccent(
+    BuildContext context,
+    String? type,
+    String? category, {
+    Color? resolvedCategoryColor,
+  }) {
     if (type == 'expense') return const Color(0xFFF08B49);
+    if (resolvedCategoryColor != null) return resolvedCategoryColor;
     return dashboardCategoryAccent(context, category);
   }
 

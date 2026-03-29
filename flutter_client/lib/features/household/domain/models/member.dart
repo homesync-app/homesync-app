@@ -1,10 +1,10 @@
 enum MemberType { adult, child }
 
 class MemberModel {
-  final String id; // household_member id
+  final String id;
   final String userId;
   final String householdId;
-  final String role; // 'owner' | 'member'
+  final String role;
   final DateTime joinedAt;
   final String? email;
   final String? fullName;
@@ -41,7 +41,7 @@ class MemberModel {
       );
     } else if (displayRole.contains('hijo') ||
         displayRole.contains('hija') ||
-        displayRole.contains('niñ') ||
+        displayRole.contains('nino') ||
         displayRole.contains('nin')) {
       type = MemberType.child;
     } else {
@@ -102,15 +102,20 @@ class MemberModel {
   bool get isAdult => type == MemberType.adult;
   bool get isChild => type == MemberType.child;
 
-  String get roleLabel {
+  String get visibleRoleLabel {
     if (displayRole != null && displayRole!.trim().isNotEmpty) {
       return displayRole!.trim();
     }
-    if (isAdmin) return 'Admin del hogar';
-    if (isChild) return 'Niño/a';
+    if (isChild) return 'Hijo/a';
     if (isAdult) return 'Adulto';
     return 'Integrante';
   }
+
+  String get typeLabel => isChild ? 'Hijo' : 'Adulto';
+
+  String get permissionLabel => isAdmin ? 'Admin' : 'Participa';
+
+  String get roleLabel => visibleRoleLabel;
 
   @override
   bool operator ==(Object other) =>

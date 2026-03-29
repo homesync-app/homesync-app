@@ -109,6 +109,27 @@ class AuthController extends _$AuthController {
   Future<void> signOut() async {
     if (AppEnvironment.enableAdminTesting &&
         ref.read(adminProvider).isAdminUser) {
+      if (ref.read(adminProvider).useRealQaSession) {
+        state = const AsyncValue.loading();
+        final result = await _repository.signOut();
+
+        result.fold(
+          (failure) {
+            log.setCustomKey('auth_flow', 'qa_real_sign_out');
+            log.e('QA real sign out error: ${failure.message}');
+            state = AsyncValue.error(failure.message, StackTrace.current);
+          },
+          (_) {
+            ref.read(adminProvider.notifier).endRealQaSession();
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.signedOut, null),
+            );
+            log.i('QA real session closed');
+          },
+        );
+        return;
+      }
+
       ref.read(adminProvider.notifier).clearAdminSession();
       state = const AsyncValue.data(
         AuthState(AuthChangeEvent.signedOut, null),

@@ -28,6 +28,7 @@ class SupabaseShoppingRepository
     final admin = _ref.read(adminProvider);
     return AppEnvironment.enableAdminTesting &&
         admin.isAdminUser &&
+        !admin.useRealQaSession &&
         admin.selectedHouseholdId != null;
   }
 

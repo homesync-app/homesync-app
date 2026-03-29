@@ -1,50 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 Color dashboardCategoryAccent(BuildContext context, String? category) {
-  switch (category?.toLowerCase()) {
-    case 'cocina':
-      return const Color(0xFFF08B49);
-    case 'limpieza':
-      return const Color(0xFF6D8DF7);
-    case 'compras':
-      return const Color(0xFF3FA97A);
-    case 'finanzas':
-      return const Color(0xFF4B6EF5);
-    case 'mascotas':
-      return const Color(0xFFE08A62);
-    case 'mantenimiento':
-      return const Color(0xFF7C8799);
-    default:
-      return context.theme.primary;
-  }
+  final normalizedCategory = AppColors.normaliseCategory(category);
+  return AppColors.getCategoryColor(normalizedCategory);
 }
 
 /// Maps a task/activity category string to a representative icon.
 IconData dashboardCategoryIcon(String? category) {
-  switch (category?.toLowerCase()) {
-    case 'cocina':
-      return Icons.restaurant_rounded;
-    case 'limpieza':
-      return Icons.cleaning_services_rounded;
-    case 'compras':
-      return Icons.shopping_cart_rounded;
-    case 'finanzas':
-      return Icons.payments_rounded;
-    case 'mascotas':
-      return Icons.pets_rounded;
-    case 'mantenimiento':
-      return Icons.build_rounded;
-    default:
-      return Icons.task_alt_rounded;
-  }
+  final normalizedCategory = AppColors.normaliseCategory(category);
+  return AppColors.getCategoryMaterialIcon(normalizedCategory);
 }
 
 /// A rich task card with category icon, title, category pill, XP display, and
 /// an interactive checkmark. Used in all dashboard modes (Solo, Couple, Family, Friends).
-class DashboardTaskCard extends StatelessWidget {
+class DashboardTaskCard extends ConsumerWidget {
   final TaskModel task;
   final bool isCompleting;
   final VoidCallback? onTap;
@@ -57,9 +32,25 @@ class DashboardTaskCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final accent = dashboardCategoryAccent(context, task.category);
+    final normalizedCategory = AppColors.normaliseCategory(task.category);
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final categoryData = categoriesAsync.maybeWhen(
+      data: (list) {
+        try {
+          return list.firstWhere(
+            (c) => AppColors.normaliseCategory(c.id) == normalizedCategory,
+          );
+        } catch (_) {
+          return null;
+        }
+      },
+      orElse: () => null,
+    );
+    final accent = categoryData != null
+        ? AppColors.fromHex(categoryData.color)
+        : dashboardCategoryAccent(context, task.category);
 
     return AnimatedPress(
       onTap: isCompleting ? null : onTap,

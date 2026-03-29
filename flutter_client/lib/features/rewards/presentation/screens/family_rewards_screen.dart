@@ -105,9 +105,18 @@ class FamilyRewardsScreen extends ConsumerWidget {
     final descriptionController = TextEditingController();
     final costController = TextEditingController();
     var targetType = 'all';
-    var selectedIcon = '🎁';
+    var selectedIcon = '\uD83C\uDF81';
 
-    const icons = ['🎁', '🍕', '🎬', '🍦', '⭐', '🧩', '📱', '🏆'];
+    const icons = [
+      '\uD83C\uDF81',
+      '\uD83C\uDF55',
+      '\uD83C\uDFAC',
+      '\uD83C\uDF66',
+      '\u2B50',
+      '\uD83E\uDDE9',
+      '\uD83D\uDCF1',
+      '\uD83C\uDFC6',
+    ];
 
     showModalBottomSheet(
       context: context,
@@ -235,7 +244,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
                                   : theme.divider.withValues(alpha: 0.4),
                             ),
                           ),
-                          child: Text(icon, style: const TextStyle(fontSize: 24)),
+                          child:
+                              Text(icon, style: const TextStyle(fontSize: 24)),
                         ),
                       );
                     }).toList(),
@@ -340,7 +350,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Canjear premio'),
-        content: Text('¿Querés canjear "${reward.title}" por ${reward.cost} monedas?'),
+        content:
+            Text('¿Querés canjear "${reward.title}" por ${reward.cost} monedas?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

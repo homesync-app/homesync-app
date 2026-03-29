@@ -51,6 +51,7 @@ class SupabaseTaskRepository
     final admin = _ref.read(adminProvider);
     return AppEnvironment.enableAdminTesting &&
         admin.isAdminUser &&
+        !admin.useRealQaSession &&
         admin.selectedHouseholdId != null;
   }
 
@@ -99,15 +100,38 @@ class SupabaseTaskRepository
         () async {
           final householdId =
               _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
-          final result = await _rpc.completeTaskTransaction(
-            taskId: task.id,
-            taskTitle: task.title,
-            xpReward: task.xpReward,
-            coinReward: task.coinReward,
-            householdId: householdId,
-            userIds: userIds,
-            completedAt: completedAt,
-          );
+          final performers = userIds ??
+              [
+                _isAdminTestingActive
+                    ? (_ref.read(currentUserIdProvider) ??
+                        await _rpc.requireCurrentUserId())
+                    : await _rpc.requireCurrentUserId(),
+              ];
+          final result = _isAdminTestingActive
+              ? TaskCompletionResult.fromRpcResponse(
+                  await _client.rpc(
+                    'qa_admin_complete_task',
+                    params: {
+                      'p_household_id': householdId,
+                      'p_user_ids': performers,
+                      'p_task_id': task.id,
+                      'p_xp_reward': task.xpReward,
+                      'p_coin_reward': task.coinReward,
+                      'p_task_title': task.title,
+                      if (completedAt != null)
+                        'p_completed_at': completedAt.toIso8601String(),
+                    },
+                  ),
+                )
+              : await _rpc.completeTaskTransaction(
+                  taskId: task.id,
+                  taskTitle: task.title,
+                  xpReward: task.xpReward,
+                  coinReward: task.coinReward,
+                  householdId: householdId,
+                  userIds: performers,
+                  completedAt: completedAt,
+                );
           return result;
         },
         context: 'SupabaseTaskRepository.completeTask',
@@ -150,11 +174,43 @@ class SupabaseTaskRepository
         () async {
           final householdId =
               _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
+          final performers = userIds ??
+              [
+                _isAdminTestingActive
+                    ? (_ref.read(currentUserIdProvider) ??
+                        await _rpc.requireCurrentUserId())
+                    : await _rpc.requireCurrentUserId(),
+              ];
+          if (_isAdminTestingActive) {
+            final results = <Map<String, dynamic>>[];
+            for (final task in tasks) {
+              final raw = await _client.rpc(
+                'qa_admin_complete_task',
+                params: {
+                  'p_household_id': householdId,
+                  'p_user_ids': performers,
+                  'p_task_id': task.id,
+                  'p_xp_reward': task.xpReward,
+                  'p_coin_reward': task.coinReward,
+                  'p_task_title': task.title,
+                  if (completedAt != null)
+                    'p_completed_at': completedAt.toIso8601String(),
+                },
+              );
+              results.add(Map<String, dynamic>.from(raw as Map));
+            }
+            return {
+              'success': true,
+              'message': 'Tareas completadas',
+              'results': results,
+            };
+          }
+
           final taskIds = tasks.map((t) => t.id).toList();
           final result = await _rpc.completeTasksBatch(
             taskIds: taskIds,
             householdId: householdId,
-            userIds: userIds,
+            userIds: performers,
             completedAt: completedAt,
           );
           return result;

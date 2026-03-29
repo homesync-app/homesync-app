@@ -44,6 +44,63 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
     await _refreshScenarioProviders();
   }
 
+  Future<void> _enterAsQaUser(
+    AdminTestingScenario scenario,
+    QaTestUser qaUser,
+  ) async {
+    setState(() => _isBusy = true);
+    try {
+      await ref.read(qaSessionServiceProvider).signInAsQaUser(scenario, qaUser);
+      await _refreshScenarioProviders();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${qaUser.label} activo con sesión real'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos entrar como ${qaUser.label}: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _exitRealQaSession() async {
+    setState(() => _isBusy = true);
+    try {
+      await ref.read(qaSessionServiceProvider).exitRealQaSession();
+      await _refreshScenarioProviders();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Volviste al panel admin QA'),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No pudimos salir de la sesión QA: $e'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
   Future<void> _resetScenario(AdminTestingScenario scenario) async {
     setState(() => _isBusy = true);
     try {
@@ -375,6 +432,117 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                         ),
                       ],
                     ),
+                    if (selectedScenario != null &&
+                        selectedScenario.qaUsers.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackground,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: theme.border.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Cuentas QA reales',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: theme.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (admin.useRealQaSession)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      admin.realQaUserLabel ??
+                                          admin.realQaUserEmail ??
+                                          'Sesión QA',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ...selectedScenario.qaUsers.map(
+                              (qaUser) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            qaUser.label,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800,
+                                              color: theme.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            qaUser.email,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: theme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    OutlinedButton.icon(
+                                      onPressed: _isBusy
+                                          ? null
+                                          : () => _enterAsQaUser(
+                                                selectedScenario,
+                                                qaUser,
+                                              ),
+                                      icon: const Icon(Icons.login_rounded),
+                                      label: const Text('Entrar'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            if (admin.useRealQaSession)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed:
+                                      _isBusy ? null : _exitRealQaSession,
+                                  icon: const Icon(Icons.logout_rounded),
+                                  label: const Text('Salir de sesión QA'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (selectedScenario != null) ...[
                       const SizedBox(height: 18),
                       membersAsync.when(

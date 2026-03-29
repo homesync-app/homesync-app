@@ -530,7 +530,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       children: [
                                         Text(
                                           template.title,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 16,
                                               color: AppColors.textPrimary),
@@ -538,7 +538,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         const SizedBox(height: 2),
                                         Text(
                                           'Día ${template.dayOfMonth} de cada mes',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               color: AppColors.textSecondary,
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600),
@@ -1886,7 +1886,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return NumberFormat('#,###', 'es_AR').format(amount).replaceAll(',', '.');
   }
 
-  Widget _buildEmptyState(String message, {String icon = '📉'}) {
+  Widget _buildEmptyState(
+    String message, {
+    String icon = '📉',
+    String? subtitle,
+  }) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1904,21 +1908,23 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           Text(
             message,
             style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.5),
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 48),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Empezá hoy mismo a organizar tus finanzas del hogar.',
+              subtitle ?? 'Empez? hoy mismo a organizar tus finanzas del hogar.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -1950,167 +1956,356 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(2))),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Nueva Meta',
-                        style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -1.0)),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.divider),
-                      ),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: titleController,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                            decoration: const InputDecoration(
-                              hintText: '¿Cuál es tu objetivo?',
-                              hintStyle: TextStyle(color: AppColors.textMuted),
-                              border: InputBorder.none,
-                              icon: Icon(Icons.flag_rounded,
-                                  color: AppColors.primary),
-                            ),
-                          ),
-                          const Divider(height: 32),
-                          TextField(
-                            controller: amountController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                            decoration: const InputDecoration(
-                              hintText: 'Monto objetivo',
-                              hintStyle: TextStyle(color: AppColors.textMuted),
-                              border: InputBorder.none,
-                              icon: Icon(Icons.attach_money_rounded,
-                                  color: AppColors.success),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text('Personalizá tu meta',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary)),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildGoalOption(
-                          label: 'Emoji',
-                          value: selectedEmoji,
-                          onTap: () {
-                            final emojis = [
-                              '🎯',
-                              '🏠',
-                              '🚗',
-                              '💍',
-                              '✈️',
-                              '🏝️',
-                              '🎮',
-                              '💻',
-                              '👶',
-                              '🐶'
-                            ];
-                            _showSimplePicker(context, 'Elegí un ícono', emojis,
-                                (e) => setModalState(() => selectedEmoji = e));
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        _buildGoalOption(
-                          label: 'Color',
-                          value: '',
-                          customValue: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                                color: selectedColor, shape: BoxShape.circle),
-                          ),
-                          onTap: () {
-                            final colors = [
-                              AppColors.primary,
-                              AppColors.accentTeal,
-                              AppColors.accentGold,
-                              AppColors.accentPurple,
-                              AppColors.accentRed,
-                              AppColors.success
-                            ];
-                            _showColorPicker(context, colors,
-                                (c) => setModalState(() => selectedColor = c));
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final title = titleController.text.trim();
-                          final amount = double.tryParse(
-                                  amountController.text.replaceAll(',', '.')) ??
-                              0;
+        builder: (context, setModalState) {
+          final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-                          if (title.isNotEmpty && amount > 0) {
-                            ref.read(savingsGoalsProvider.notifier).addGoal(
-                                title,
-                                amount,
-                                '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
-                                selectedEmoji);
-                            Navigator.pop(context);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.textPrimary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: 0.9,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 46,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: AppColors.divider,
+                          borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Text('Crear Meta',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w900, fontSize: 16)),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 18),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.fromLTRB(
+                            24,
+                            8,
+                            24,
+                            24 + bottomInset,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 84,
+                                    height: 84,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(28),
+                                    ),
+                                    child: const Icon(
+                                      Icons.flag_rounded,
+                                      color: AppColors.primary,
+                                      size: 38,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 18),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: const [
+                                        Text(
+                                          'Nueva Meta',
+                                          style: TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.textPrimary,
+                                            letterSpacing: -1.2,
+                                          ),
+                                        ),
+                                        SizedBox(height: 10),
+                                        Text(
+                                          'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            height: 1.4,
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 32),
+                              const Text(
+                                'DETALLE',
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Qué quieren alcanzar',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              TextField(
+                                controller: titleController,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  color: AppColors.textPrimary,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Nombre',
+                                  hintText: '¿Cuál es tu objetivo?',
+                                  prefixIcon: const Icon(
+                                    Icons.flag_rounded,
+                                    color: AppColors.primary,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 22,
+                                    vertical: 22,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primary,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: amountController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 22,
+                                  color: AppColors.textPrimary,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Monto objetivo',
+                                  hintText: '¿Cuánto quieren juntar?',
+                                  prefixText: '\$ ',
+                                  prefixStyle: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 20,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 22,
+                                    vertical: 22,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(28),
+                                    borderSide: const BorderSide(
+                                      color: AppColors.primary,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              const Text(
+                                'PERSONALIZACIÓN',
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Dale personalidad',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  _buildGoalOption(
+                                    label: 'Emoji',
+                                    value: selectedEmoji,
+                                    onTap: () {
+                                      final emojis = [
+                                        '🎯',
+                                        '🏡',
+                                        '✈️',
+                                        '🚗',
+                                        '💍',
+                                        '🛋️',
+                                        '🍼',
+                                        '🎓',
+                                        '🐶',
+                                        '💻',
+                                      ];
+                                      _showSimplePicker(
+                                        context,
+                                        'Elegí un ícono',
+                                        emojis,
+                                        (e) => setModalState(() => selectedEmoji = e),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: 14),
+                                  _buildGoalOption(
+                                    label: 'Color',
+                                    value: '',
+                                    customValue: Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: selectedColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      final colors = [
+                                        AppColors.primary,
+                                        AppColors.accentTeal,
+                                        AppColors.accentGold,
+                                        AppColors.accentPurple,
+                                        AppColors.accentRed,
+                                        AppColors.success,
+                                      ];
+                                      _showColorPicker(
+                                        context,
+                                        colors,
+                                        (c) => setModalState(() => selectedColor = c),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          18,
+                          24,
+                          20 + MediaQuery.of(context).padding.bottom,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            top: BorderSide(color: AppColors.divider),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: SizedBox(
+                                height: 58,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    final title = titleController.text.trim();
+                                    final amount = double.tryParse(
+                                          amountController.text.replaceAll(',', '.'),
+                                        ) ??
+                                        0;
+
+                                    if (title.isNotEmpty && amount > 0) {
+                                      ref.read(savingsGoalsProvider.notifier).addGoal(
+                                            title,
+                                            amount,
+                                            '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
+                                            selectedEmoji,
+                                          );
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Crear Meta',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
+
 
   Widget _buildGoalOption(
       {required String label,

@@ -7,6 +7,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/qa_session_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 
@@ -51,6 +52,9 @@ class AdminState {
   final String? selectedScenarioId;
   final HouseholdType? forcedHouseholdType;
   final bool showOnboardingPreview;
+  final bool useRealQaSession;
+  final String? realQaUserEmail;
+  final String? realQaUserLabel;
 
   const AdminState({
     this.isDeveloperMode = false,
@@ -62,6 +66,9 @@ class AdminState {
     this.selectedScenarioId,
     this.forcedHouseholdType,
     this.showOnboardingPreview = false,
+    this.useRealQaSession = false,
+    this.realQaUserEmail,
+    this.realQaUserLabel,
   });
 
   AdminState copyWith({
@@ -75,6 +82,9 @@ class AdminState {
     bool clearSelectedHousehold = false,
     HouseholdType? forcedHouseholdType,
     bool? showOnboardingPreview,
+    bool? useRealQaSession,
+    String? realQaUserEmail,
+    String? realQaUserLabel,
   }) {
     return AdminState(
       isDeveloperMode: isDeveloperMode ?? this.isDeveloperMode,
@@ -95,6 +105,9 @@ class AdminState {
       forcedHouseholdType: forcedHouseholdType ?? this.forcedHouseholdType,
       showOnboardingPreview:
           showOnboardingPreview ?? this.showOnboardingPreview,
+      useRealQaSession: useRealQaSession ?? this.useRealQaSession,
+      realQaUserEmail: realQaUserEmail ?? this.realQaUserEmail,
+      realQaUserLabel: realQaUserLabel ?? this.realQaUserLabel,
     );
   }
 }
@@ -127,6 +140,9 @@ class AdminNotifier extends Notifier<AdminState> {
       impersonatedUserId: null,
       forcedHouseholdType: null,
       showOnboardingPreview: false,
+      useRealQaSession: false,
+      realQaUserEmail: null,
+      realQaUserLabel: null,
     );
     AppIdentityService.instance.setDebugOverride(null);
     log.i('Admin testing login activated');
@@ -143,7 +159,9 @@ class AdminNotifier extends Notifier<AdminState> {
       showOnboardingPreview: false,
       clearSelectedHousehold: scenario == null,
     );
-    AppIdentityService.instance.setDebugOverride(scenario?.defaultViewerUserId);
+    if (!state.useRealQaSession) {
+      AppIdentityService.instance.setDebugOverride(scenario?.defaultViewerUserId);
+    }
     log.i(
       'Admin scenario selected scenario=${scenario?.id} household=${scenario?.householdId} viewer=${scenario?.defaultViewerUserId} type=${scenario?.householdType.name}',
     );
@@ -164,6 +182,42 @@ class AdminNotifier extends Notifier<AdminState> {
     log.i('Admin testing session cleared');
   }
 
+  void beginRealQaSession({
+    required AdminTestingScenario scenario,
+    required QaTestUser qaUser,
+  }) {
+    state = state.copyWith(
+      isAdminUser: true,
+      isDeveloperMode: true,
+      selectedHouseholdId: scenario.householdId,
+      selectedHouseholdName: scenario.title,
+      selectedScenarioId: scenario.id,
+      forcedHouseholdType: scenario.householdType,
+      impersonatedUserId: null,
+      defaultViewerUserId: null,
+      useRealQaSession: true,
+      realQaUserEmail: qaUser.email,
+      realQaUserLabel: qaUser.label,
+      showOnboardingPreview: false,
+    );
+    AppIdentityService.instance.setDebugOverride(null);
+  }
+
+  void endRealQaSession() {
+    final fallbackViewer = state.selectedHouseholdId != null
+        ? AdminTestingConfig.scenarioByHouseholdId(state.selectedHouseholdId)
+            ?.defaultViewerUserId
+        : null;
+    state = state.copyWith(
+      useRealQaSession: false,
+      realQaUserEmail: null,
+      realQaUserLabel: null,
+      impersonatedUserId: null,
+      defaultViewerUserId: fallbackViewer,
+    );
+    AppIdentityService.instance.setDebugOverride(fallbackViewer);
+  }
+
   void forceType(HouseholdType? type) =>
       state = state.copyWith(forcedHouseholdType: type);
 
@@ -179,6 +233,10 @@ class AdminNotifier extends Notifier<AdminState> {
 final adminProvider =
     NotifierProvider<AdminNotifier, AdminState>(AdminNotifier.new);
 
+final qaSessionServiceProvider = Provider<QaSessionService>((ref) {
+  return QaSessionService(ref);
+});
+
 // ── Auth state provider ──────────────────────────────────────────────────────
 class AppAuthState {
   const AppAuthState({
@@ -192,7 +250,9 @@ class AppAuthState {
 
 final authStateProvider = StreamProvider<AppAuthState>((ref) {
   final admin = ref.watch(adminProvider);
-  if (AppEnvironment.enableAdminTesting && admin.isAdminUser) {
+  if (AppEnvironment.enableAdminTesting &&
+      admin.isAdminUser &&
+      !admin.useRealQaSession) {
     return Stream.value(
       const AppAuthState(
         isAuthenticated: true,
@@ -237,7 +297,9 @@ final appIdentityServiceProvider =
 // ── Current user convenience providers ────────────────────────────────────────
 final currentUserIdProvider = Provider<String?>((ref) {
   final admin = ref.watch(adminProvider);
-  if (AppEnvironment.enableAdminTesting && admin.isAdminUser) {
+  if (AppEnvironment.enableAdminTesting &&
+      admin.isAdminUser &&
+      !admin.useRealQaSession) {
     return admin.impersonatedUserId ??
         admin.defaultViewerUserId ??
         AdminTestingConfig.adminTestingUserId;
@@ -249,7 +311,9 @@ final currentUserIdProvider = Provider<String?>((ref) {
 // ── Household ID — single source of truth ─────────────────────────────────────
 final householdIdProvider = FutureProvider<String?>((ref) async {
   final admin = ref.watch(adminProvider);
-  if (AppEnvironment.enableAdminTesting && admin.isAdminUser) {
+  if (AppEnvironment.enableAdminTesting &&
+      admin.isAdminUser &&
+      !admin.useRealQaSession) {
     return admin.selectedHouseholdId;
   }
 
@@ -275,6 +339,7 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final admin = ref.watch(adminProvider);
   if (AppEnvironment.enableAdminTesting &&
       admin.isAdminUser &&
+      !admin.useRealQaSession &&
       admin.impersonatedUserId == null &&
       admin.selectedHouseholdId == null) {
     return {

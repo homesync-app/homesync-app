@@ -8,13 +8,14 @@ import '../../domain/repositories/expense_repository.dart';
 import '../../../../core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/connectivity_provider.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class SupabaseExpenseRepository
     with RepositoryErrorHandler
@@ -26,6 +27,13 @@ class SupabaseExpenseRepository
   SupabaseExpenseRepository(this._client, this._ref);
 
   bool get _isOnline => _ref.read(isOnlineProvider);
+  bool get _isAdminTestingActive {
+    final admin = _ref.read(adminProvider);
+    return AppEnvironment.enableAdminTesting &&
+        admin.isAdminUser &&
+        !admin.useRealQaSession &&
+        admin.selectedHouseholdId != null;
+  }
 
   bool _isPrivateSplitType(String? splitType) {
     final value = splitType?.toLowerCase();
@@ -192,6 +200,14 @@ class SupabaseExpenseRepository
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
       String expenseId) async {
     return executeWithHandling(() async {
+      if (_isAdminTestingActive) {
+        final response = await _client.rpc(
+          'qa_admin_get_expense_with_splits',
+          params: {'p_expense_id': expenseId},
+        );
+        return Map<String, dynamic>.from(response as Map);
+      }
+
       return await _client.from('expenses').select('''
             *,
             expense_splits(*, users(email, full_name, avatar_url))
@@ -241,11 +257,13 @@ class SupabaseExpenseRepository
     return executeWithHandling(
         () async {
           final sw = Stopwatch()..start();
-          final userId = await AppIdentityService.instance.refresh();
+          final userId = _isAdminTestingActive
+              ? _ref.read(currentUserIdProvider)
+              : await AppIdentityService.instance.refresh();
           if (userId == null || userId.isEmpty) throw const AuthFailure();
 
           await _client.rpc(
-            'save_expense_v4',
+            _isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4',
             params: {
               'p_id': id,
               'p_household_id': householdId,
@@ -260,11 +278,12 @@ class SupabaseExpenseRepository
                   splitType != SplitType.gift,
               'p_type': type,
               'p_splits': splits,
+              if (_isAdminTestingActive) 'p_actor_user_id': userId,
             },
           );
           sw.stop();
           log.i(
-            'Finance RPC save_expense_v4 ok household=$householdId type=$type split=${splitType.name} amount=$amount ms=${sw.elapsedMilliseconds}',
+            'Finance RPC ${_isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4'} ok household=$householdId type=$type split=${splitType.name} amount=$amount ms=${sw.elapsedMilliseconds}',
           );
         },
         context: 'SupabaseExpenseRepository.saveExpense',

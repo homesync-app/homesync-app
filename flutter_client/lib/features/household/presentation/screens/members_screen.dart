@@ -66,7 +66,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Miembros',
+          'Integrantes',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -130,43 +130,48 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      member.fullDisplayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: theme.textPrimary,
+                    Flexible(
+                      child: Text(
+                        member.fullDisplayName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: theme.textPrimary,
+                        ),
                       ),
                     ),
-                    if (member.isChild) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentOrange.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'Niño',
-                          style: TextStyle(
-                            color: AppColors.accentOrange,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: member.isChild
+                            ? AppColors.accentOrange.withValues(alpha: 0.1)
+                            : theme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        member.typeLabel,
+                        style: TextStyle(
+                          color: member.isChild
+                              ? AppColors.accentOrange
+                              : theme.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
+                    ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  member.roleLabel,
+                  member.visibleRoleLabel,
                   style: TextStyle(
-                    color: theme.textSecondary,
+                    color: theme.textPrimary,
                     fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -234,7 +239,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Sumá otra persona al hogar con un código de invitación.',
+                    'Suma otra persona al hogar con un codigo de invitacion.',
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 13,

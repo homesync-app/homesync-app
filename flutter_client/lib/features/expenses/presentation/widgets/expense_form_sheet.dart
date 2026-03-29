@@ -15,6 +15,7 @@ import 'package:homesync_client/features/shopping/data/shopping_predefined.dart'
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
@@ -199,6 +200,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   List<Map<String, dynamic>> get _currentCategories =>
       _isIncome ? _incomeCategories : _expenseCategories;
 
+  List<MemberModel> _financeMembers(List<MemberModel> members) {
+    final caps = ref.read(householdCapabilitiesProvider);
+    if (caps.type != HouseholdType.family) return members;
+
+    final adults = members.where((member) => member.isAdult).toList();
+    return adults.isNotEmpty ? adults : members;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -379,16 +388,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     try {
       final members = await ref.read(householdMembersProvider.future);
       if (!mounted || members.isEmpty || _paidByUserId.isNotEmpty) return;
+      final financeMembers = _financeMembers(members);
 
       final currentUserId = ref.read(currentUserIdProvider);
-      final matchingMember = members.any((m) => m.userId == currentUserId)
-          ? members.firstWhere((m) => m.userId == currentUserId)
-          : members.first;
+      final matchingMember =
+          financeMembers.any((m) => m.userId == currentUserId)
+              ? financeMembers.firstWhere((m) => m.userId == currentUserId)
+              : financeMembers.first;
 
       setState(() {
         _paidByUserId = matchingMember.userId;
         if (_selectedMembersForSplit.isEmpty) {
-          _selectedMembersForSplit = members.map((m) => m.userId).toSet();
+          _selectedMembersForSplit =
+              financeMembers.map((m) => m.userId).toSet();
         }
       });
     } catch (_) {
@@ -425,6 +437,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (householdId == null) throw Exception("No pertenecés a un hogar");
 
     final members = await ref.read(householdMembersProvider.future);
+    final financeMembers = _financeMembers(members);
 
     setState(() => _isLoading = true);
 
@@ -453,9 +466,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         final household = ref.read(currentHouseholdProvider).valueOrNull;
         final defaultRatio = household?.defaultSplitRatio ?? 0.5;
 
-        if (members.length == 2 && defaultRatio != 0.5) {
+        if (financeMembers.length == 2 && defaultRatio != 0.5) {
           final currentUserId = ref.read(currentUserIdProvider);
-          for (final mem in members) {
+          for (final mem in financeMembers) {
             final isMe = mem.userId == currentUserId;
             final memRatio = isMe ? defaultRatio : (1.0 - defaultRatio);
             splits.add(
@@ -473,7 +486,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       } else if (_splitMode == SplitType.fixed) {
         double totalFixed = 0;
-        for (final mem in members) {
+        for (final mem in financeMembers) {
           final amt = _fixedSplitAmounts[mem.userId] ?? 0.0;
           if (amt > 0) {
             totalFixed += amt;
@@ -605,12 +618,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             child: Text('No hay miembros disponibles para registrar gastos.'),
           );
         }
+        final financeMembers = _financeMembers(members);
 
         final caps = ref.watch(householdCapabilitiesProvider);
         final showSplit = caps.showExpensesSplit;
 
-        final payer = members.firstWhere((m) => m.userId == _paidByUserId,
-            orElse: () => members.first);
+        final payer = financeMembers.firstWhere(
+          (m) => m.userId == _paidByUserId,
+          orElse: () => financeMembers.first,
+        );
 
         return Container(
           height: MediaQuery.of(context).size.height * 0.9,
@@ -671,7 +687,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                 'Estos datos ordenan el movimiento dentro del hogar.',
                           ),
                           const SizedBox(height: 14),
-                          _buildDateAndPayerRow(context, payer, members),
+                          _buildDateAndPayerRow(
+                            context,
+                            payer,
+                            financeMembers,
+                          ),
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
                               context, shoppingItemsAsync),
@@ -697,7 +717,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                   'Definí si es compartido, fijo, regalo o personal.',
                             ),
                             const SizedBox(height: 14),
-                            _buildSplitConfiguration(context, members),
+                            _buildSplitConfiguration(context, financeMembers),
                           ],
                           const SizedBox(height: 32),
                           const SizedBox(height: 48),

@@ -12,7 +12,7 @@ part 'dashboard_provider.g.dart';
 DashboardRepository dashboardRepository(DashboardRepositoryRef ref) {
   // We can pass Supabase.instance.client directly directly since it is globally configured
   // Alternatively we could get a SupabaseClient provider if we had one.
-  return SupabaseDashboardRepository(Supabase.instance.client);
+  return SupabaseDashboardRepository(Supabase.instance.client, ref);
 }
 
 // 2. UseCase Provider

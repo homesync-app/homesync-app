@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
@@ -12,26 +13,172 @@ import 'package:homesync_client/features/household/presentation/widgets/invitati
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-class HouseholdSocialHubScreen extends ConsumerWidget {
+class HouseholdSocialHubScreen extends ConsumerStatefulWidget {
   const HouseholdSocialHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HouseholdSocialHubScreen> createState() =>
+      _HouseholdSocialHubScreenState();
+}
+
+class _HouseholdSocialHubScreenState
+    extends ConsumerState<HouseholdSocialHubScreen> {
+  Future<void> _refreshData() async {
+    ref.invalidate(currentHouseholdProvider);
+    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+  }
+
+  Future<void> _editMemberRole(
+    MemberModel member,
+    HouseholdCapabilities caps,
+  ) async {
+    final theme = context.theme;
+    final controller = TextEditingController(text: member.displayRole ?? '');
+    final suggestions = _roleSuggestionsFor(member, caps);
+
+    final String? selectedRole = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: theme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            'Rol visible de ${member.displayName}',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: controller,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: 'Rol visible',
+                  hintText: member.visibleRoleLabel,
+                  filled: true,
+                  fillColor: theme.surfaceVariant,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+              if (suggestions.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Sugerencias',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: suggestions
+                      .map(
+                        (suggestion) => ActionChip(
+                          label: Text(suggestion),
+                          onPressed: () => controller.text = suggestion,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, controller.text.trim()),
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || selectedRole == null) return;
+
+    final newRole = selectedRole.trim();
+    final repo = ref.read(householdRepositoryProvider);
+    final result = await repo.updateMemberDisplayRole(
+      member.userId,
+      newRole.isEmpty ? null : newRole,
+    );
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No pudimos actualizar el rol: ${failure.message}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      },
+      (_) async {
+        await _refreshData();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Rol actualizado'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      },
+    );
+  }
+
+  List<String> _roleSuggestionsFor(
+    MemberModel member,
+    HouseholdCapabilities caps,
+  ) {
+    if (caps.type == HouseholdType.family) {
+      return member.isChild
+          ? const ['Hijo', 'Hija']
+          : const ['Padre', 'Madre', 'Tutor/a', 'Abuelo/a'];
+    }
+    if (caps.type == HouseholdType.friends) {
+      return const ['Compañero', 'Roommate', 'Responsable'];
+    }
+    if (caps.type == HouseholdType.couple) {
+      return const ['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa'];
+    }
+    return const ['Integrante'];
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final householdAsync = ref.watch(currentHouseholdProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final theme = context.theme;
 
+    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final canManageMembers = currentMember?.isAdmin ?? false;
+
     return Scaffold(
       backgroundColor: theme.background,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: () async {
-            ref.invalidate(currentHouseholdProvider);
-            await ref.read(householdMembersNotifierProvider.notifier).refresh();
-          },
+          onRefresh: _refreshData,
           child: ListView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
@@ -41,9 +188,10 @@ class HouseholdSocialHubScreen extends ConsumerWidget {
               132,
             ),
             children: [
-              _HeroCard(
+              _HeaderCard(
                 caps: caps,
                 householdAsync: householdAsync,
+                canManageMembers: canManageMembers,
                 onInvite: () => InvitationSheet.show(context),
                 onTasks: () =>
                     ref.read(bottomNavIndexProvider.notifier).setIndex(1),
@@ -52,22 +200,27 @@ class HouseholdSocialHubScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               membersAsync.when(
-                data: (members) => _MembersSection(
+                data: (resolvedMembers) => _MembersSection(
                   caps: caps,
                   currentUserId: currentUserId,
-                  members: members,
+                  members: resolvedMembers,
+                  canManageMembers: canManageMembers,
+                  onEditRole: (member) => _editMemberRole(member, caps),
                 ),
                 loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 32),
-                  child: AppLoadingState(message: 'Cargando miembros...'),
+                  child: AppLoadingState(message: 'Cargando integrantes...'),
                 ),
                 error: (error, _) => AppErrorState(
-                  message: 'No pudimos cargar los miembros.\n$error',
+                  message: 'No pudimos cargar los integrantes.\n$error',
                   onRetry: () => ref.invalidate(householdMembersNotifierProvider),
                 ),
               ),
               const SizedBox(height: 18),
-              _CoordinationCard(caps: caps),
+              _RolesAndAccessCard(
+                caps: caps,
+                canManageMembers: canManageMembers,
+              ),
             ],
           ),
         ),
@@ -76,10 +229,11 @@ class HouseholdSocialHubScreen extends ConsumerWidget {
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({
     required this.caps,
     required this.householdAsync,
+    required this.canManageMembers,
     required this.onInvite,
     required this.onTasks,
     required this.onFinances,
@@ -87,6 +241,7 @@ class _HeroCard extends StatelessWidget {
 
   final HouseholdCapabilities caps;
   final AsyncValue<dynamic> householdAsync;
+  final bool canManageMembers;
   final VoidCallback onInvite;
   final VoidCallback onTasks;
   final VoidCallback onFinances;
@@ -95,6 +250,21 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final household = householdAsync.valueOrNull;
+
+    final title = switch (caps.type) {
+      HouseholdType.family => 'Familia',
+      HouseholdType.friends => 'Convivencia',
+      HouseholdType.couple => 'Hogar',
+      HouseholdType.solo => 'Mi espacio',
+    };
+
+    final subtitle = switch (caps.type) {
+      HouseholdType.family =>
+        'Integrantes, roles visibles y organización del hogar.',
+      HouseholdType.friends =>
+        'Compañeros, roles y organización de la convivencia.',
+      _ => caps.socialHubSubtitle,
+    };
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -131,7 +301,7 @@ class _HeroCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      caps.socialHubTitle,
+                      title,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
@@ -140,7 +310,7 @@ class _HeroCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      caps.socialHubSubtitle,
+                      subtitle,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 14,
@@ -162,8 +332,8 @@ class _HeroCard extends StatelessWidget {
                 label: household?.name ?? 'Mi hogar',
               ),
               _InfoChip(
-                icon: Icons.category_rounded,
-                label: caps.socialTabLabel,
+                icon: Icons.group_rounded,
+                label: canManageMembers ? 'Gestion activa' : 'Vista familiar',
               ),
             ],
           ),
@@ -172,13 +342,14 @@ class _HeroCard extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _QuickActionButton(
-                icon: Icons.person_add_alt_1_rounded,
-                label: caps.type == HouseholdType.family
-                    ? 'Invitar familia'
-                    : 'Invitar',
-                onPressed: onInvite,
-              ),
+              if (canManageMembers)
+                _QuickActionButton(
+                  icon: Icons.person_add_alt_1_rounded,
+                  label: caps.type == HouseholdType.family
+                      ? 'Invitar familia'
+                      : 'Invitar',
+                  onPressed: onInvite,
+                ),
               _QuickActionButton(
                 icon: Icons.task_alt_rounded,
                 label: 'Tareas',
@@ -202,11 +373,15 @@ class _MembersSection extends StatelessWidget {
     required this.caps,
     required this.currentUserId,
     required this.members,
+    required this.canManageMembers,
+    required this.onEditRole,
   });
 
   final HouseholdCapabilities caps;
   final String? currentUserId;
   final List<MemberModel> members;
+  final bool canManageMembers;
+  final ValueChanged<MemberModel> onEditRole;
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +393,7 @@ class _MembersSection extends StatelessWidget {
             ? 'Todavia no hay integrantes cargados'
             : 'Todavia no hay companeros cargados',
         subtitle: caps.type == HouseholdType.family
-            ? 'Invita a tu familia para empezar a compartir tareas y gastos.'
+            ? 'Invita a tu familia para empezar a coordinar el hogar.'
             : 'Invita a tus companeros para empezar a organizar el piso.',
         icon: Icons.group_off_rounded,
       );
@@ -228,12 +403,9 @@ class _MembersSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          switch (caps.type) {
-            HouseholdType.family => 'Integrantes de la familia',
-            HouseholdType.friends => 'Companeros del piso',
-            HouseholdType.couple => 'Personas del hogar',
-            HouseholdType.solo => 'Miembros',
-          },
+          caps.type == HouseholdType.family
+              ? 'Integrantes'
+              : 'Personas del hogar',
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -242,13 +414,9 @@ class _MembersSection extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          switch (caps.type) {
-            HouseholdType.family =>
-              'Una vista clara de quien forma parte del hogar y como se reparte la coordinacion.',
-            HouseholdType.friends =>
-              'Una vista clara de quienes conviven en el piso y como se organiza el grupo.',
-            _ => 'Una vista clara de quienes forman parte del hogar.',
-          },
+          caps.type == HouseholdType.family
+              ? 'Cada integrante muestra su rol visible, tipo y nivel de acceso dentro del hogar.'
+              : 'Una vista clara de quienes forman parte del hogar.',
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 13,
@@ -267,6 +435,7 @@ class _MembersSection extends StatelessWidget {
               border: Border.all(color: theme.border.withValues(alpha: 0.72)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomUserAvatar(
                   avatarUrl: member.avatarUrl,
@@ -314,38 +483,48 @@ class _MembersSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        member.email ?? member.roleLabel,
+                        member.visibleRoleLabel,
                         style: TextStyle(
-                          color: theme.textSecondary,
-                          fontSize: 13,
+                          color: theme.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _RoleChip(
+                            label: member.typeLabel,
+                            color: member.isChild
+                                ? AppColors.accentOrange
+                                : AppColors.primary,
+                            background: member.isChild
+                                ? AppColors.accentOrange.withValues(alpha: 0.12)
+                                : AppColors.primaryLight,
+                          ),
+                          if (member.isAdmin)
+                            _RoleChip(
+                              label: member.permissionLabel,
+                              color: AppColors.success,
+                              background:
+                                  AppColors.success.withValues(alpha: 0.12),
+                            ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: member.isOwner
-                        ? const Color(0xFFFFF1E8)
-                        : theme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    member.isOwner ? 'Admin' : 'Miembro',
-                    style: TextStyle(
-                      color: member.isOwner
-                          ? AppColors.primary
-                          : theme.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                if (canManageMembers)
+                  IconButton(
+                    onPressed: () => onEditRole(member),
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      color: theme.textSecondary,
                     ),
+                    tooltip: 'Editar rol visible',
                   ),
-                ),
               ],
             ),
           );
@@ -355,34 +534,38 @@ class _MembersSection extends StatelessWidget {
   }
 }
 
-class _CoordinationCard extends StatelessWidget {
-  const _CoordinationCard({required this.caps});
+class _RolesAndAccessCard extends StatelessWidget {
+  const _RolesAndAccessCard({
+    required this.caps,
+    required this.canManageMembers,
+  });
 
   final HouseholdCapabilities caps;
+  final bool canManageMembers;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
 
     final title = switch (caps.type) {
-      HouseholdType.family => 'Coordinacion familiar',
-      HouseholdType.friends => 'Convivencia organizada',
-      _ => 'Organizacion compartida',
+      HouseholdType.family => 'Roles y acceso del hogar',
+      HouseholdType.friends => 'Roles y convivencia',
+      _ => 'Organizacion del hogar',
     };
 
     final bullets = switch (caps.type) {
       HouseholdType.family => const [
-          'El hogar puede coordinar tareas, gastos y miembros desde un mismo lugar.',
-          'La experiencia evita mezclar dinamicas romanticas con organizacion familiar.',
-          'Esta base ya deja listo el camino para roles y permisos familiares.',
+          'Los roles visibles muestran Padre, Madre, Hijo o Hija como identidad principal.',
+          'Admin es un permiso de gestión, no el rol principal del integrante.',
+          'Los adultos coordinan finanzas y hogar; los hijos participan con tareas y recompensas.',
         ],
       HouseholdType.friends => const [
-          'Mantiene claro quien participa del piso y como se organiza la convivencia.',
-          'Separa tareas y gastos compartidos del lenguaje propio de pareja.',
-          'Deja una base limpia para crecer hacia reglas y acuerdos del hogar.',
+          'La convivencia usa roles visibles claros para cada integrante.',
+          'Las tareas y las compras se coordinan sin lenguaje de pareja.',
+          'Admin indica quién puede ordenar la estructura del hogar.',
         ],
       _ => const [
-          'Este espacio centraliza la coordinacion del hogar.',
+          'Este espacio centraliza quienes forman parte del hogar.',
         ],
     };
 
@@ -396,15 +579,27 @@ class _CoordinationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.3,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+              if (canManageMembers)
+                const _RoleChip(
+                  label: 'Gestion activa',
+                  color: AppColors.primary,
+                  background: AppColors.primaryLight,
+                ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ...bullets.map(
             (bullet) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -435,6 +630,37 @@ class _CoordinationCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RoleChip extends StatelessWidget {
+  const _RoleChip({
+    required this.label,
+    required this.color,
+    required this.background,
+  });
+
+  final String label;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

@@ -36,12 +36,15 @@ class SupabaseHouseholdRepository
     final admin = _ref.read(adminProvider);
     return AppEnvironment.enableAdminTesting &&
         admin.isAdminUser &&
+        !admin.useRealQaSession &&
         admin.selectedHouseholdId != null;
   }
 
   String? get _selectedAdminHouseholdId {
     final admin = _ref.read(adminProvider);
-    if (AppEnvironment.enableAdminTesting && admin.isAdminUser) {
+    if (AppEnvironment.enableAdminTesting &&
+        admin.isAdminUser &&
+        !admin.useRealQaSession) {
       return admin.selectedHouseholdId;
     }
     return null;
