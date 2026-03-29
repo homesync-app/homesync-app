@@ -4,14 +4,10 @@ class RewardRpcService extends BaseRpcService {
   RewardRpcService({super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getAvailableRewards() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_available_rewards',
-      params: {'p_user_id': user.id},
+      params: {'p_user_id': userId},
     );
 
     return List<Map<String, dynamic>>.from(response);
@@ -22,7 +18,7 @@ class RewardRpcService extends BaseRpcService {
     required String title,
     String? description,
     required int cost,
-    String icon = '🎁',
+    String icon = '??',
   }) async {
     final response = await client.rpc(
       'create_custom_reward',
@@ -39,16 +35,12 @@ class RewardRpcService extends BaseRpcService {
   }
 
   Future<Map<String, dynamic>> redeemReward(String rewardId) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'redeem_reward',
       params: {
         'p_reward_id': rewardId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
       },
     );
 
@@ -61,15 +53,11 @@ class RewardRpcService extends BaseRpcService {
     required String householdId,
     String? note,
   }) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'transfer_coins',
       params: {
-        'p_from_user_id': user.id,
+        'p_from_user_id': userId,
         'p_to_user_id': toUserId,
         'p_amount': amount,
         'p_household_id': householdId,
@@ -81,30 +69,22 @@ class RewardRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getRedemptionHistory() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_redemption_history',
-      params: {'p_user_id': user.id},
+      params: {'p_user_id': userId},
     );
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<Map<String, dynamic>> fulfillRedemption(String redemptionId) async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'fulfill_redemption',
       params: {
         'p_redemption_id': redemptionId,
-        'p_user_id': user.id,
+        'p_user_id': userId,
       },
     );
 
@@ -112,15 +92,11 @@ class RewardRpcService extends BaseRpcService {
   }
 
   Future<int> cloneRewardTemplates() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'clone_reward_templates',
       params: {
-        'p_user_id': user.id,
+        'p_user_id': userId,
       },
     );
 

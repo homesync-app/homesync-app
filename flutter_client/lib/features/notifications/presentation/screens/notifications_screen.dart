@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -26,12 +27,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
+      final userId = await AppIdentityService.instance.refresh();
+      if (userId != null) {
         final data = await Supabase.instance.client
             .from('notifications')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .order('created_at', ascending: false)
             .limit(50);
         setState(() => _notifications = data);
@@ -56,12 +57,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAllAsRead() async {
     try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
+      final userId = await AppIdentityService.instance.refresh();
+      if (userId != null) {
         await Supabase.instance.client
             .from('notifications')
             .update({'is_read': true})
-            .eq('user_id', user.id)
+            .eq('user_id', userId)
             .eq('is_read', false);
         _loadNotifications();
       }

@@ -6,12 +6,30 @@ part of 'reward_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$rewardsHash() => r'3b717bb465abd52c8fb77d4c651a243a9f74e54c';
+String _$filteredRewardsHash() => r'94ca8435b3d86205a52981efc3b6a02023d72666';
+
+/// See also [filteredRewards].
+@ProviderFor(filteredRewards)
+final filteredRewardsProvider =
+    AutoDisposeFutureProvider<List<RewardModel>>.internal(
+  filteredRewards,
+  name: r'filteredRewardsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$filteredRewardsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FilteredRewardsRef = AutoDisposeFutureProviderRef<List<RewardModel>>;
+String _$rewardsHash() => r'62714448183e4d49f0efd3da608a4a3fb8a36ce2';
 
 /// See also [Rewards].
 @ProviderFor(Rewards)
-final rewardsProvider = AutoDisposeAsyncNotifierProvider<Rewards,
-    List<Map<String, dynamic>>>.internal(
+final rewardsProvider =
+    AutoDisposeAsyncNotifierProvider<Rewards, List<RewardModel>>.internal(
   Rewards.new,
   name: r'rewardsProvider',
   debugGetCreateSourceHash:
@@ -20,6 +38,6 @@ final rewardsProvider = AutoDisposeAsyncNotifierProvider<Rewards,
   allTransitiveDependencies: null,
 );
 
-typedef _$Rewards = AutoDisposeAsyncNotifier<List<Map<String, dynamic>>>;
+typedef _$Rewards = AutoDisposeAsyncNotifier<List<RewardModel>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

@@ -1,32 +1,55 @@
 import 'dart:developer' as dev;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 
 class SupabaseDashboardRepository implements DashboardRepository {
   final SupabaseClient _client;
+  final Ref _ref;
 
-  SupabaseDashboardRepository(this._client);
+  SupabaseDashboardRepository(this._client, this._ref);
+
+  bool get _isAdminTestingActive {
+    final admin = _ref.read(adminProvider);
+    return AppEnvironment.enableAdminTesting &&
+        admin.isAdminUser &&
+        !admin.useRealQaSession &&
+        admin.selectedHouseholdId != null;
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getRecentActivity(
       String householdId, String userId) async {
     try {
-      final today = DateTime.now();
-      final startOfDay =
-          DateTime(today.year, today.month, today.day).toIso8601String();
+      final now = DateTime.now();
+      final since = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).toUtc().toIso8601String();
 
-      final response = await _client
-          .from('household_activities')
-          .select('''
-            id, event_type, title, description, metadata, created_at, user_id,
-            user:users!household_activities_user_id_fkey(id, full_name, avatar_url)
-          ''')
-          .eq('household_id', householdId)
-          .gte('created_at', startOfDay) // Only today's activity
-          .order('created_at', ascending: false)
-          .limit(30);
+      final response = _isAdminTestingActive
+          ? await _client.rpc(
+              'qa_admin_get_recent_activity',
+              params: {
+                'p_household_id': householdId,
+                'p_since': since,
+              },
+            )
+          : await _client
+              .from('household_activities')
+              .select('''
+                id, event_type, title, description, metadata, created_at, user_id,
+                user:users!household_activities_user_id_fkey(id, full_name, avatar_url)
+              ''')
+              .eq('household_id', householdId)
+              .gte('created_at', since)
+              .order('created_at', ascending: false)
+              .limit(30);
 
-      final activities = (response as List).map((item) {
+      final mappedActivities = (response as List).map((item) {
         final eventType = item['event_type'] as String;
         final user = item['user'] as Map<String, dynamic>?;
         final creatorId = item['user_id'] as String?;
@@ -44,24 +67,40 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         if (eventType == 'task_completed') {
           uiType = 'task';
-          data['task_title'] = item['title'];
+          final taskTitle = metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
+          data['title'] = taskTitle;
+          data['task_title'] = taskTitle;
+          data['task_id'] = metadata['task_id'] ?? metadata['id'];
+          data['category'] = metadata['category'] ??
+              metadata['task_category'] ??
+              metadata['category_name'];
           data['xp_reward'] = metadata['xp_reward'] ??
               metadata['xpReward'] ??
               metadata['p_xp_reward'] ??
               metadata['score_impact'] ??
               metadata['xp'] ??
               metadata['reward'];
+          data['coins_reward'] = metadata['coins_reward'] ??
+              metadata['coin_reward'] ??
+              metadata['coinsReward'] ??
+              metadata['p_coin_reward'] ??
+              metadata['p_coins_reward'] ??
+              metadata['coins'];
         } else if (eventType == 'expense_added') {
           uiType = 'expense';
-          data['amount'] = metadata['amount'] ?? 0;
-          data['description'] = item['description'];
+          final amount = metadata['amount'] ?? 0;
+          final expenseDesc = _resolveExpenseTitle(item, metadata);
+          data['title'] = expenseDesc;
+          data['amount'] = amount;
+          data['description'] = expenseDesc;
           data['expense_id'] = metadata['expense_id'] ?? metadata['id'];
-          // Preserve these for filtering
           data['is_shared'] = metadata['is_shared'];
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
           uiType = 'task';
-          data['task_title'] = 'Canjeó premio: ${item['title']}';
+          data['title'] = item['title'] ?? 'Premio';
+        } else {
+          data['title'] = item['title'] ?? item['description'] ?? 'Realiz\u00f3 una acci\u00f3n';
         }
 
         return {
@@ -97,12 +136,95 @@ class SupabaseDashboardRepository implements DashboardRepository {
         return true;
       }).toList();
 
+      final activities = _dedupeActivities(mappedActivities);
+
       dev.log(
-          'SupabaseDashboardRepository: Fetched ${activities.length} activities');
+        'SupabaseDashboardRepository: Fetched ${activities.length} activities '
+        'for household=$householdId since=$since',
+      );
       return activities;
     } catch (e) {
       dev.log('Error fetching activities: $e');
       return [];
     }
+  }
+
+  String _resolveExpenseTitle(
+    Map<dynamic, dynamic> item,
+    Map<String, dynamic> metadata,
+  ) {
+    final candidates = [
+      metadata['expense_title'],
+      metadata['merchant'],
+      metadata['store_name'],
+      metadata['place_name'],
+      metadata['description'],
+      item['description'],
+      metadata['category_name'],
+      metadata['category'],
+      item['title'],
+    ];
+
+    for (final candidate in candidates) {
+      final value = candidate?.toString().trim();
+      if (value != null &&
+          value.isNotEmpty &&
+          value.toLowerCase() != 'un gasto' &&
+          value.toLowerCase() != 'gasto') {
+        return value;
+      }
+    }
+
+    return 'Gasto del hogar';
+  }
+
+  List<Map<String, dynamic>> _dedupeActivities(
+    List<Map<String, dynamic>> activities,
+  ) {
+    final unique = <String, Map<String, dynamic>>{};
+
+    for (final activity in activities) {
+      final type = activity['type'] as String?;
+      final data = (activity['data'] as Map<String, dynamic>?) ?? const {};
+      final stableId = switch (type) {
+        'expense' => data['expense_id']?.toString(),
+        'task' => data['task_id']?.toString(),
+        _ => null,
+      };
+
+      final key = stableId != null && stableId.isNotEmpty
+          ? '$type:$stableId'
+          : '${activity['id']}';
+
+      final current = unique[key];
+      if (current == null || _activityScore(activity) > _activityScore(current)) {
+        unique[key] = activity;
+      }
+    }
+
+    final deduped = unique.values.toList()
+      ..sort((a, b) {
+        final aDate = DateTime.tryParse(a['created_at'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate = DateTime.tryParse(b['created_at'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        return bDate.compareTo(aDate);
+      });
+
+    return deduped;
+  }
+
+  int _activityScore(Map<String, dynamic> activity) {
+    final data = (activity['data'] as Map<String, dynamic>?) ?? const {};
+    final title = (data['title'] ?? '').toString().trim().toLowerCase();
+    final description = (data['description'] ?? '').toString().trim().toLowerCase();
+
+    var score = 0;
+    if (title.isNotEmpty && title != 'nuevo movimiento' && title != 'gasto del hogar') {
+      score += 3;
+    }
+    if (description.isNotEmpty) score += 1;
+    if (data['expense_id'] != null || data['task_id'] != null) score += 1;
+    return score;
   }
 }

@@ -1,17 +1,27 @@
-import 'package:url_launcher/url_launcher.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'rpc/admin_rpc_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'logger_service.dart';
+import 'rpc/admin_rpc_service.dart';
 
 class MercadoPagoService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // Mercado Pago Public Key for FE initialization
   static const String publicKey =
       'APP_USR-c6c4925e-2e11-4fb3-980f-ac459a542677';
 
-  /// Creates a payment preference by calling our Supabase Edge Function.
-  /// This returns the [initPoint] URL to redirect the user to.
+  Future<String> _requireCurrentUserId() async {
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId != null && appUserId.isNotEmpty) {
+      return appUserId;
+    }
+
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw 'Usuario no autenticado';
+    return user.id;
+  }
+
   Future<String?> createPaymentPreference({
     required String title,
     required double amount,
@@ -41,44 +51,34 @@ class MercadoPagoService {
         context: {
           'title': title,
           'amount': amount,
-          'external_reference': externalReference
+          'external_reference': externalReference,
         },
       );
       return null;
     }
   }
 
-  /// Launches the Mercado Pago checkout URL.
   Future<void> launchCheckout(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode
-            .externalApplication, // Important for opening MP app or mobile browser
-      );
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $url';
     }
   }
 
-  /// Starts the OAuth flow to connect the user's Mercado Pago account.
-  /// This will redirect to a URL provided by our backend.
   Future<void> startOAuthFlow() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) throw 'Usuario no autenticado';
+    final userId = await _requireCurrentUserId();
 
     try {
       final response = await _supabase.functions.invoke(
         'mercadopago-api',
         body: {
           'action': 'get_auth_url',
-          'userId': user.id,
+          'userId': userId,
         },
       );
 
-      // Check if the response itself indicates an error code or status
-      // Some versions of Supabase SDK return a FunctionResponse where status is the HTTP status code
       if (response.status >= 400) {
         throw 'Error de servidor: ${response.status}';
       }
@@ -88,30 +88,28 @@ class MercadoPagoService {
         final url = data['url'] as String;
         await launchCheckout(url);
       } else {
-        throw 'No se pudo obtener la URL de conexión.';
+        throw 'No se pudo obtener la URL de conexion.';
       }
     } catch (e, stack) {
       log.e('Error starting OAuth: $e');
       await AdminRpcService().logApplicationError(
         message: 'Error starting OAuth: $e',
         stackTrace: stack.toString(),
-        context: {'userId': user.id},
+        context: {'userId': userId},
       );
       throw 'Error al conectar con Mercado Pago: $e';
     }
   }
 
-  /// Fetches recent approved payments from the user's connected MP account.
   Future<List<Map<String, dynamic>>> getRecentMovements() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) throw 'No autenticado';
+    final userId = await _requireCurrentUserId();
 
     try {
       final response = await _supabase.functions.invoke(
         'mercadopago-api',
         body: {
           'action': 'get_recent_movements',
-          'userId': user.id,
+          'userId': userId,
         },
       );
 
@@ -125,7 +123,7 @@ class MercadoPagoService {
       await AdminRpcService().logApplicationError(
         message: 'Error fetching MP movements: $e',
         stackTrace: stack.toString(),
-        context: {'userId': user.id},
+        context: {'userId': userId},
       );
       return [];
     }

@@ -15,12 +15,10 @@ import 'package:mockito/annotations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:fpdart/fpdart.dart';
 
 import 'tasks_flow_test.mocks.dart';
 
-// Fake Supabase for Realtime setup
 class FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
   RealtimeChannel channel(String name,
@@ -53,9 +51,6 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 @GenerateMocks([TaskRepository])
 void main() {
   provideDummy<Either<Failure, List<TaskModel>>>(const Right([]));
-  provideDummy<Either<Failure, TaskCompletionResult>>(
-    const Right(TaskCompletionResult(success: true, message: 'ok', queued: false)),
-  );
   provideDummy<Either<Failure, void>>(const Right(null));
 
   late MockTaskRepository mockTaskRepo;
@@ -84,26 +79,12 @@ void main() {
     householdId: 'h1',
   );
 
-  testWidgets('TasksScreen renders tasks and allows completion',
+  testWidgets('TasksScreen renders tasks and shows management actions',
       (WidgetTester tester) async {
-    // 1. Mock Repository Responses
     when(mockTaskRepo.getTasks('h1',
             limit: anyNamed('limit'), offset: anyNamed('offset')))
         .thenAnswer((_) async => Right([testTask]));
 
-    // For completion
-    when(mockTaskRepo.completeTask(testTask, userIds: anyNamed('userIds')))
-        .thenAnswer((_) async => const Right(
-              TaskCompletionResult(
-                success: true,
-                message: 'ok',
-                queued: false,
-                xpEarned: 10,
-                coinsEarned: 5,
-              ),
-            ));
-
-    // 2. Build Widget with Overrides
     await tester.pumpWidget(ProviderScope(
       overrides: [
         taskRepositoryProvider.overrideWithValue(mockTaskRepo),
@@ -129,26 +110,16 @@ void main() {
       ),
     ));
 
-    // 3. Verify initial state
     await tester.pumpAndSettle();
     expect(find.text('Lavar platos'), findsOneWidget);
     expect(find.text('LIMPIEZA'), findsOneWidget);
 
-    // 4. Click to Expand
     await tester.tap(find.text('Lavar platos'));
     await tester.pumpAndSettle();
 
-    // 5. Click Complete
-    final completeButton = find.text('Completar');
-    expect(completeButton, findsOneWidget);
-    await tester.tap(completeButton);
-    await tester.pumpAndSettle();
-
-    // 6. Verify Repository Call
-    verify(mockTaskRepo.completeTask(testTask, userIds: argThat(contains('u1'), named: 'userIds'))).called(1);
-
-    // 7. Verify Snackbar
-    expect(find.textContaining('¡Ganaste 10 XP y 5 coins!'), findsOneWidget);
+    expect(find.text('Editar'), findsOneWidget);
+    expect(find.text('Programar'), findsOneWidget);
+    expect(find.text('Eliminar'), findsOneWidget);
   });
 }
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class RewardModel {
@@ -13,6 +13,7 @@ class RewardModel {
   final bool isApproved;
   final bool isActive;
   final DateTime? createdAt;
+  final String targetType; // 'adult', 'child', or 'all'
 
   const RewardModel({
     required this.id,
@@ -26,6 +27,7 @@ class RewardModel {
     required this.isApproved,
     required this.isActive,
     this.createdAt,
+    this.targetType = 'all',
   });
 
   factory RewardModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class RewardModel {
       isApproved: json['is_approved'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: parsedCreatedAt,
+      targetType: (json['target_type'] as String?) ?? 'all',
     );
   }
 
@@ -62,8 +65,39 @@ class RewardModel {
       'created_by': createdBy,
       'is_approved': isApproved,
       'is_active': isActive,
+      'target_type': targetType,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
     };
+  }
+
+  RewardModel copyWith({
+    String? id,
+    String? householdId,
+    String? title,
+    String? description,
+    int? cost,
+    String? icon,
+    String? category,
+    String? createdBy,
+    bool? isApproved,
+    bool? isActive,
+    DateTime? createdAt,
+    String? targetType,
+  }) {
+    return RewardModel(
+      id: id ?? this.id,
+      householdId: householdId ?? this.householdId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      cost: cost ?? this.cost,
+      icon: icon ?? this.icon,
+      category: category ?? this.category,
+      createdBy: createdBy ?? this.createdBy,
+      isApproved: isApproved ?? this.isApproved,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      targetType: targetType ?? this.targetType,
+    );
   }
 
   @override
@@ -76,7 +110,8 @@ class RewardModel {
           cost == other.cost &&
           category == other.category &&
           isApproved == other.isApproved &&
-          isActive == other.isActive;
+          isActive == other.isActive &&
+          targetType == other.targetType;
 
   @override
   int get hashCode =>
@@ -85,5 +120,6 @@ class RewardModel {
       cost.hashCode ^
       category.hashCode ^
       isApproved.hashCode ^
-      isActive.hashCode;
+      isActive.hashCode ^
+      targetType.hashCode;
 }

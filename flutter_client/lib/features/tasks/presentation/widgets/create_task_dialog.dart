@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
@@ -24,7 +23,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   final _xpController = TextEditingController();
   final _coinController = TextEditingController();
 
-  String? _selectedCategory; // initialised from DB on first build
+  String? _selectedCategory;
   String _selectedDifficulty = 'medium';
   String? _selectedMemberId;
   String? _selectedRecurrence;
@@ -35,20 +34,21 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   bool _customRewards = false;
   bool _isLoading = false;
   List<Map<String, dynamic>> _members = [];
+
   final List<Map<String, dynamic>> _difficulties = [
-    {'id': 'easy', 'name': 'Fácil', 'xp': 5, 'Coins': 1},
-    {'id': 'medium', 'name': 'Medio', 'xp': 10, 'Coins': 1},
-    {'id': 'hard', 'name': 'Difícil', 'xp': 20, 'Coins': 2},
+    {'id': 'easy', 'name': 'Facil', 'xp': 5, 'coins': 1},
+    {'id': 'medium', 'name': 'Media', 'xp': 10, 'coins': 1},
+    {'id': 'hard', 'name': 'Dificil', 'xp': 20, 'coins': 2},
   ];
 
   final List<Map<String, String>> _recurrenceOptions = [
-    {'id': 'daily', 'name': 'Diario'},
+    {'id': 'daily', 'name': 'Diaria'},
     {'id': 'weekly', 'name': 'Semanal'},
     {'id': 'monthly', 'name': 'Mensual'},
   ];
 
   Map<String, dynamic> get _currentDifficulty => _difficulties.firstWhere(
-        (d) => d['id'] == _selectedDifficulty,
+        (difficulty) => difficulty['id'] == _selectedDifficulty,
         orElse: () => _difficulties[1],
       );
 
@@ -60,23 +60,62 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     } else {
       _loadMembers();
     }
+    _loadDefaultCategory();
     _updateRewardControllers();
   }
 
   void _updateRewardControllers() {
-    final diff = _currentDifficulty;
-    _xpController.text = diff['xp'].toString();
-    _coinController.text = diff['Coins'].toString();
+    final difficulty = _currentDifficulty;
+    _xpController.text = difficulty['xp'].toString();
+    _coinController.text = difficulty['coins'].toString();
   }
 
   Future<void> _loadMembers() async {
     try {
       final members = await ref.read(householdMembersNotifierProvider.future);
-      setState(() => _members =
-          members.map((m) => m.toMap()).toList().cast<Map<String, dynamic>>());
+      setState(() {
+        _members = members
+            .map((member) => member.toMap())
+            .toList()
+            .cast<Map<String, dynamic>>();
+      });
     } catch (e) {
       log.e('Error loading members: $e', error: e);
     }
+  }
+
+  Future<void> _loadDefaultCategory() async {
+    try {
+      final categories = await ref.read(categoriesProvider.future);
+      if (!mounted || categories.isEmpty || _selectedCategory != null) return;
+      setState(() => _selectedCategory = categories.first.id);
+    } catch (e) {
+      log.e('Error loading default task category: $e', error: e);
+    }
+  }
+
+  String? _validateCustomRecurrence() {
+    if (_selectedRecurrence != 'custom') return null;
+
+    switch (_customRecurrenceMode) {
+      case 'weekdays':
+        if (_selectedWeekdays.isEmpty) {
+          return 'Elige al menos un dia para la repeticion personalizada.';
+        }
+        break;
+      case 'month_days':
+        if (_selectedMonthDays.isEmpty) {
+          return 'Elige al menos una fecha del mes.';
+        }
+        break;
+      case 'interval':
+        if (_recurrenceInterval < 1) {
+          return 'El intervalo debe ser de al menos 1 dia.';
+        }
+        break;
+    }
+
+    return null;
   }
 
   @override
@@ -91,22 +130,43 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Espera un momento y elige una categoria.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    final recurrenceError = _validateCustomRecurrence();
+    if (recurrenceError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(recurrenceError),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final title = _titleController.text.trim();
     final tasks = ref.read(tasksProvider).value ?? [];
-    final isDuplicate = tasks.any((t) {
-      final sameTitle = t.title.toLowerCase().trim() == title.toLowerCase();
-      final sameCategory = t.category == _selectedCategory;
-      final sameAssignee = t.assignedTo == _selectedMemberId;
-      return !t.isVerified && sameTitle && sameCategory && sameAssignee;
+    final isDuplicate = tasks.any((task) {
+      final sameTitle = task.title.toLowerCase().trim() == title.toLowerCase();
+      final sameCategory = task.category == _selectedCategory;
+      final sameAssignee = task.assignedTo == _selectedMemberId;
+      return !task.isVerified && sameTitle && sameCategory && sameAssignee;
     });
 
     if (isDuplicate) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Ya existe una tarea idéntica activa'),
+            content: Text('Ya existe una tarea identica activa'),
             backgroundColor: AppColors.accentOrange,
           ),
         );
@@ -124,9 +184,15 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         'category': _selectedCategory,
         'difficulty': _selectedDifficulty,
         'xpReward': int.tryParse(_xpController.text) ?? 10,
-        'coinReward': int.tryParse(_coinController.text) ?? 5,
+        'coinReward': int.tryParse(_coinController.text) ?? 1,
         'assignedTo': _selectedMemberId,
         'recurrenceType': _selectedRecurrence,
+        'recurrenceInterval': _recurrenceInterval,
+        'recurrenceWeekdays':
+            _selectedRecurrence == 'custom' ? _selectedWeekdays.toList() : null,
+        'recurrenceMonthDays': _selectedRecurrence == 'custom'
+            ? _selectedMonthDays.toList()
+            : null,
       });
 
       if (mounted) Navigator.of(context).pop(true);
@@ -134,7 +200,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error),
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
@@ -150,12 +218,6 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       orElse: () => <CategoryModel>[],
     );
 
-    // Initialise selected category to the first DB entry on first build
-    if (_selectedCategory == null && categories.isNotEmpty) {
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _selectedCategory = categories.first.id);
-      });
-    }
     final currentCategoryId =
         _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
 
@@ -164,46 +226,77 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 600),
+        constraints: const BoxConstraints(maxWidth: 420, maxHeight: 640),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.16),
+                        ),
                       ),
-                      child: const Icon(Icons.add_task_rounded,
-                          color: AppColors.primary),
+                      child: const Icon(
+                        Icons.add_task_rounded,
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 16),
-                    const Text('Nueva Tarea',
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.w700)),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Nueva tarea',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 Flexible(
                   child: SingleChildScrollView(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildSectionHeader(
+                          'DETALLE',
+                          'Que hay que hacer',
+                          'Ponle un nombre claro para que se entienda de un vistazo.',
+                        ),
+                        const SizedBox(height: 14),
                         TextFormField(
                           controller: _titleController,
                           decoration: const InputDecoration(
-                            labelText: '¿Qué hay que hacer?',
+                            labelText: 'Que hay que hacer',
                             prefixIcon: Icon(Icons.edit_note_rounded),
                           ),
-                          validator: (value) => (value == null || value.isEmpty)
-                              ? 'Título requerido'
-                              : null,
+                          validator: (value) {
+                            final title = value?.trim() ?? '';
+                            if (title.isEmpty) {
+                              return 'Titulo requerido';
+                            }
+                            if (title.length < 3) {
+                              return 'Usa al menos 3 caracteres';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -212,7 +305,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           decoration: const InputDecoration(
                             labelText: 'Notas (opcional)',
                             hintText:
-                                'ej: "usar el limpiapisos azul", "revisar el filtro también"',
+                                'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
                             prefixIcon: Padding(
                               padding: EdgeInsets.only(bottom: 24),
                               child: Icon(Icons.notes_rounded),
@@ -220,22 +313,26 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                             alignLabelWithHint: true,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // -- Category picker -----------------------------
-                        const Text('Categoría',
-                            style: TextStyle(
-                                fontSize: 13, color: AppColors.textSecondary)),
+                        const SizedBox(height: 18),
+                        _buildSectionHeader(
+                          'CATEGORIA',
+                          'Donde vive mejor',
+                          'Elige la zona del hogar para que aparezca ordenada.',
+                        ),
+                        const SizedBox(height: 10),
                         categoriesAsync.when(
                           data: (_) => SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Row(
-                              children: categories.map((cat) {
-                                final isSelected = currentCategoryId == cat.id;
-                                final color = AppColors.fromHex(cat.color);
+                              children: categories.map((category) {
+                                final isSelected =
+                                    currentCategoryId == category.id;
+                                final color = AppColors.fromHex(category.color);
                                 return GestureDetector(
                                   onTap: () => setState(
-                                      () => _selectedCategory = cat.id),
+                                    () => _selectedCategory = category.id,
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.only(right: 16),
                                     child: Column(
@@ -257,18 +354,21 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                             boxShadow: isSelected
                                                 ? [
                                                     BoxShadow(
-                                                        color: color.withValues(
-                                                            alpha: 0.2),
-                                                        blurRadius: 10,
-                                                        offset:
-                                                            const Offset(0, 4)),
+                                                      color: color.withValues(
+                                                        alpha: 0.2,
+                                                      ),
+                                                      blurRadius: 10,
+                                                      offset:
+                                                          const Offset(0, 4),
+                                                    ),
                                                   ]
                                                 : [],
                                           ),
                                           child: Center(
                                             child: Icon(
                                               AppColors.getCategoryMaterialIcon(
-                                                  cat.id),
+                                                category.id,
+                                              ),
                                               color: isSelected
                                                   ? color
                                                   : color.withValues(
@@ -279,7 +379,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          cat.name,
+                                          category.name,
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: isSelected
@@ -300,24 +400,33 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           loading: () => const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
                             child: Center(
-                                child: CircularProgressIndicator(
-                                    color: AppColors.primary, strokeWidth: 2)),
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                                strokeWidth: 2,
+                              ),
+                            ),
                           ),
                           error: (_, __) => const SizedBox(),
                         ),
                         const SizedBox(height: 20),
-                        const Text('Frecuencia',
-                            style: TextStyle(
-                                fontSize: 13, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
+                        _buildSectionHeader(
+                          'FRECUENCIA',
+                          'Cuando se repite',
+                          'Puede quedar unica, repetirse o seguir un patron propio.',
+                        ),
+                        const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
                             _buildFrequencyChip('Sin repetir', null),
-                            ..._recurrenceOptions.map((r) =>
-                                _buildFrequencyChip(r['name']!, r['id'])),
-                            _buildFrequencyChip('Personalizado', 'custom'),
+                            ..._recurrenceOptions.map(
+                              (recurrence) => _buildFrequencyChip(
+                                recurrence['name']!,
+                                recurrence['id'],
+                              ),
+                            ),
+                            _buildFrequencyChip('Personalizada', 'custom'),
                           ],
                         ),
                         if (_selectedRecurrence == 'custom') ...[
@@ -325,27 +434,38 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           _buildCustomRecurrenceMenu(),
                         ],
                         const SizedBox(height: 20),
-                        const Text('Asignar a',
-                            style: TextStyle(
-                                fontSize: 13, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
+                        _buildSectionHeader(
+                          'RESPONSABLE',
+                          'Quien puede hacerla',
+                          'Puedes dejarla abierta o asignarla a alguien en particular.',
+                        ),
+                        const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
                             _buildAssigneeChip('Cualquiera', null, 'C'),
-                            ..._members.map((m) {
-                              final name = m['users']['full_name'] ??
-                                  m['users']['email'] ??
+                            ..._members.map((member) {
+                              final name = member['users']['full_name'] ??
+                                  member['users']['email'] ??
                                   'Miembro';
                               final initial =
                                   name.toString().substring(0, 1).toUpperCase();
                               return _buildAssigneeChip(
-                                  name, m['user_id'] as String, initial);
+                                name,
+                                member['user_id'] as String,
+                                initial,
+                              );
                             }),
                           ],
                         ),
                         const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          'VALOR',
+                          'Cuanto vale completarla',
+                          'La dificultad define puntos y coins de forma rapida.',
+                        ),
+                        const SizedBox(height: 10),
                         _buildDifficultySection(),
                         const SizedBox(height: 16),
                         _buildRewardsSection(),
@@ -363,13 +483,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
-                        child: const Text('Cancelar',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w700,
-                            )),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -380,8 +503,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.25),
-                              blurRadius: 15,
+                              color: AppColors.primary.withValues(alpha: 0.14),
+                              blurRadius: 18,
                               offset: const Offset(0, 8),
                             ),
                           ],
@@ -389,10 +512,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _handleSubmit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: AppColors.textPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                             elevation: 0,
                           ),
                           child: _isLoading
@@ -400,14 +524,18 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2),
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
-                              : const Text('Crear tarea',
+                              : const Text(
+                                  'Crear tarea',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
                                     fontSize: 16,
-                                  )),
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -421,6 +549,32 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     );
   }
 
+  Widget _buildSectionHeader(String eyebrow, String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+            color: AppColors.primary.withValues(alpha: 0.72),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFrequencyChip(String label, String? value) {
     final isSelected = _selectedRecurrence == value;
     return GestureDetector(
@@ -429,7 +583,6 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         if (value == 'custom' &&
             _selectedWeekdays.isEmpty &&
             _selectedMonthDays.isEmpty) {
-          // Defaults if none selected
           _selectedWeekdays.add(DateTime.now().weekday);
         }
       }),
@@ -471,7 +624,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildCustomModeTab('Por día', 'weekdays'),
+              _buildCustomModeTab('Por dia', 'weekdays'),
               _buildCustomModeTab('Intervalo', 'interval'),
               _buildCustomModeTab('Fecha', 'month_days'),
             ],
@@ -515,7 +668,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildWeekdaySelector() {
-    final days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -550,7 +703,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
-                      )
+                      ),
                     ]
                   : [],
             ),
@@ -572,8 +725,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text('Repetir cada',
-            style: TextStyle(color: AppColors.textSecondary)),
+        const Text(
+          'Repetir cada',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
         const SizedBox(width: 12),
         Container(
           height: 40,
@@ -586,8 +741,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             children: [
               IconButton(
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.remove,
-                    size: 20, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.remove,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () {
                   if (_recurrenceInterval > 1) {
                     setState(() => _recurrenceInterval--);
@@ -600,13 +758,18 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 child: Text(
                   _recurrenceInterval.toString(),
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               IconButton(
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.add,
-                    size: 20, color: AppColors.textSecondary),
+                icon: const Icon(
+                  Icons.add,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
                 onPressed: () {
                   if (_recurrenceInterval < 365) {
                     setState(() => _recurrenceInterval++);
@@ -617,7 +780,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           ),
         ),
         const SizedBox(width: 12),
-        const Text('días', style: TextStyle(color: AppColors.textSecondary)),
+        const Text(
+          'dias',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -625,8 +791,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   Widget _buildMonthDaySelector() {
     return Column(
       children: [
-        const Text('Elige los días del mes',
-            style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+        const Text(
+          'Elige los dias del mes',
+          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 6,
@@ -697,7 +865,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -733,81 +901,73 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildDifficultySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Dificultad',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-        const SizedBox(height: 8),
-        Row(
-          children: _difficulties.map((d) {
-            final isSelected = _selectedDifficulty == d['id'];
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedDifficulty = d['id'] as String;
-                    if (!_customRewards) {
-                      _updateRewardControllers();
-                    }
-                  });
-                },
-                child: Container(
-                  margin:
-                      EdgeInsets.only(right: d != _difficulties.last ? 8 : 0),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.1)
-                        : AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color:
-                          isSelected ? AppColors.primary : Colors.transparent,
-                      width: 2,
+    return Row(
+      children: _difficulties.map((difficulty) {
+        final isSelected = _selectedDifficulty == difficulty['id'];
+        return Expanded(
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedDifficulty = difficulty['id'] as String;
+                if (!_customRewards) {
+                  _updateRewardControllers();
+                }
+              });
+            },
+            child: Container(
+              margin: EdgeInsets.only(
+                right: difficulty != _difficulties.last ? 8 : 0,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    difficulty['name'] as String,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
                     ),
                   ),
-                  child: Column(
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        d['name'] as String,
+                        '${difficulty['xp']} XP / ${difficulty['coins']}',
                         style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: 11,
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.textPrimary,
+                              : AppColors.textMuted,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${d['xp']} XP / ${d['Coins']}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.textMuted,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.monetization_on_rounded,
-                            size: 11,
-                            color: isSelected ? AppColors.primary : AppColors.sage,
-                          ),
-                        ],
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.monetization_on_rounded,
+                        size: 11,
+                        color: isSelected ? AppColors.primary : AppColors.sage,
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -823,8 +983,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recompensas',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Recompensas',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               GestureDetector(
                 onTap: () => setState(() {
                   _customRewards = !_customRewards;
@@ -868,8 +1030,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'XP',
-                    prefixIcon: Icon(Icons.star_rounded,
-                        color: AppColors.accent, size: 20),
+                    prefixIcon: Icon(
+                      Icons.star_rounded,
+                      color: AppColors.accent,
+                      size: 20,
+                    ),
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
@@ -878,6 +1043,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
                   ),
+                  validator: (value) {
+                    if (!_customRewards) return null;
+                    final parsed = int.tryParse((value ?? '').trim());
+                    if (parsed == null) return 'Ingresa un numero';
+                    if (parsed <= 0) return 'Debe ser mayor a 0';
+                    return null;
+                  },
                 ),
               ),
               const SizedBox(width: 12),
@@ -888,8 +1060,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Coins',
-                    prefixIcon: Icon(Icons.monetization_on_rounded,
-                        color: AppColors.sage, size: 20),
+                    prefixIcon: Icon(
+                      Icons.monetization_on_rounded,
+                      color: AppColors.sage,
+                      size: 20,
+                    ),
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   ),
@@ -898,6 +1073,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ? AppColors.textPrimary
                         : AppColors.textMuted,
                   ),
+                  validator: (value) {
+                    if (!_customRewards) return null;
+                    final parsed = int.tryParse((value ?? '').trim());
+                    if (parsed == null) return 'Ingresa un numero';
+                    if (parsed < 0) return 'No puede ser negativo';
+                    return null;
+                  },
                 ),
               ),
             ],
@@ -907,5 +1089,3 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     );
   }
 }
-
-

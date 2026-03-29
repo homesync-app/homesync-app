@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 
-class CustomBottomNav extends StatelessWidget {
+class CustomBottomNav extends ConsumerWidget {
   final int currentIndex;
   final Function(int) onTap;
 
@@ -13,8 +12,9 @@ class CustomBottomNav extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final caps = ref.watch(householdCapabilitiesProvider);
     return Container(
       padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 24),
       decoration: BoxDecoration(
@@ -54,9 +54,9 @@ class CustomBottomNav extends StatelessWidget {
             onTap: () => onTap(2),
           ),
           _NavItem(
-            icon: Icons.person_outline,
-            selectedIcon: Icons.person_rounded,
-            label: 'Pareja',
+            icon: caps.socialTabIcon,
+            selectedIcon: caps.socialTabSelectedIcon,
+            label: caps.socialTabLabel,
             isSelected: currentIndex == 3,
             onTap: () => onTap(3),
           ),

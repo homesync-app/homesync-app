@@ -6,7 +6,7 @@ import 'package:homesync_client/features/tasks/data/repositories/supabase_task_r
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 
 class TaskDetailSheet extends ConsumerStatefulWidget {
   final Map<String, dynamic> taskData;
@@ -58,8 +58,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       (_completedUser?['full_name'] as String?) ?? 'Alguien';
   String? get _completedByAvatar => _completedUser?['avatar_url'] as String?;
   String? get _completedById => _completedUser?['id'] as String?;
-  String get _currentUserId =>
-      Supabase.instance.client.auth.currentUser?.id ?? '';
+  String get _currentUserId => ref.read(currentUserIdProvider) ?? '';
   bool get _isAuthor => _completedById == _currentUserId;
   bool get _hasCompletionRecord =>
       _activityId != null || widget.taskData['completed_at'] != null;
@@ -292,8 +291,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     ? _task.recurrenceLabel
                                     : 'Sin programar',
                                 color: _task.isRecurring
-                                    ? AppColors.primary
-                                    : AppColors.accentPeach,
+                                    ? AppColors.accentGold
+                                    : AppColors.accentRed,
                               ),
                             ],
                           ),
@@ -457,7 +456,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(

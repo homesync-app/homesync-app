@@ -24,6 +24,26 @@ final currentHouseholdProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentHouseholdRef = AutoDisposeFutureProviderRef<HouseholdModel?>;
+String _$householdCapabilitiesHash() =>
+    r'87cb4b247af30837b93cdf79c8482e569b01eef5';
+
+/// See also [householdCapabilities].
+@ProviderFor(householdCapabilities)
+final householdCapabilitiesProvider =
+    AutoDisposeProvider<HouseholdCapabilities>.internal(
+  householdCapabilities,
+  name: r'householdCapabilitiesProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$householdCapabilitiesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef HouseholdCapabilitiesRef
+    = AutoDisposeProviderRef<HouseholdCapabilities>;
 String _$householdMembersHash() => r'71fd395dfb05821b732c64b29efb10f944e72a03';
 
 /// See also [HouseholdMembers].

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -18,10 +19,27 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
   @override
   ConsumerState<RecurringExpenseFormSheet> createState() =>
       _RecurringExpenseFormSheetState();
+
+  static Future<void> show(BuildContext context,
+      {ExpenseTemplateModel? template}) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: 0.92,
+          child: RecurringExpenseFormSheet(template: template),
+        ),
+      ),
+    );
+  }
 }
 
 class _RecurringExpenseFormSheetState
     extends ConsumerState<RecurringExpenseFormSheet> {
+  final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
 
@@ -32,14 +50,14 @@ class _RecurringExpenseFormSheetState
   bool _isLoading = false;
 
   final List<Map<String, String>> _categories = const [
-    {'id': 'utilities', 'name': 'Servicios', 'icon': '💡'},
-    {'id': 'rent', 'name': 'Alquiler', 'icon': '🏠'},
-    {'id': 'supermarket', 'name': 'Suscripciones', 'icon': '📺'},
-    {'id': 'entertainment', 'name': 'Hobby', 'icon': '🎬'},
-    {'id': 'transport', 'name': 'Seguros', 'icon': '🚙'},
-    {'id': 'health', 'name': 'Salud', 'icon': '💊'},
-    {'id': 'finanzas', 'name': 'Ahorro / Inversión', 'icon': '🏦'},
-    {'id': 'other', 'name': 'Otros', 'icon': '📦'},
+    {'id': 'utilities', 'name': 'Servicios'},
+    {'id': 'rent', 'name': 'Alquiler'},
+    {'id': 'supermarket', 'name': 'Suscripciones'},
+    {'id': 'entertainment', 'name': 'Hobby'},
+    {'id': 'transport', 'name': 'Seguros'},
+    {'id': 'health', 'name': 'Salud'},
+    {'id': 'finanzas', 'name': 'Ahorro / Inversion'},
+    {'id': 'other', 'name': 'Otros'},
   ];
 
   @override
@@ -48,13 +66,15 @@ class _RecurringExpenseFormSheetState
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
-      _amountController.text =
-          NumberFormat.decimalPattern('es_ES').format(template.defaultAmount.round());
+      _amountController.text = NumberFormat.decimalPattern('es_ES').format(
+        template.defaultAmount.round(),
+      );
       _dayOfMonth = template.dayOfMonth;
       _category = template.category;
       _splitType = template.splitType;
       _payerDefault = template.payerDefault;
     }
+    _initializeDefaultPayer();
   }
 
   @override
@@ -70,8 +90,18 @@ class _RecurringExpenseFormSheetState
     return double.tryParse(normalized);
   }
 
-  void _onAmountChanged(String val) {
-    final clean = val.replaceAll('.', '').replaceAll(',', '');
+  Future<void> _initializeDefaultPayer() async {
+    try {
+      final members = await ref.read(householdMembersProvider.future);
+      if (!mounted || members.isEmpty || _payerDefault.isNotEmpty) return;
+      setState(() => _payerDefault = members.first.userId);
+    } catch (_) {
+      // If members are not available yet, the selector will show loading/error.
+    }
+  }
+
+  void _onAmountChanged(String value) {
+    final clean = value.replaceAll('.', '').replaceAll(',', '');
     if (clean.isEmpty) {
       _amountController.text = '';
       return;
@@ -92,7 +122,10 @@ class _RecurringExpenseFormSheetState
     if (day >= now.day) {
       final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
       return DateTime(
-          now.year, now.month, day > daysInMonth ? daysInMonth : day);
+        now.year,
+        now.month,
+        day > daysInMonth ? daysInMonth : day,
+      );
     }
 
     final daysInNextMonth = DateTime(now.year, now.month + 2, 0).day;
@@ -104,12 +137,24 @@ class _RecurringExpenseFormSheetState
   }
 
   Future<void> _save() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
     final title = _titleController.text.trim();
     final parsedAmount = _parseAmount(_amountController.text);
 
     if (title.isEmpty || parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completá título y monto válido.')),
+        const SnackBar(content: Text('Completa titulo y monto valido.')),
+      );
+      return;
+    }
+
+    if (_splitType != 'personal' && _payerDefault.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Elige quien suele abonarla para dejarla lista.'),
+        ),
       );
       return;
     }
@@ -156,8 +201,8 @@ class _RecurringExpenseFormSheetState
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar suscripción?'),
-        content: const Text('Dejará de aparecer en futuros meses.'),
+        title: const Text('Eliminar suscripcion?'),
+        content: const Text('Dejara de aparecer en futuros meses.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -183,115 +228,301 @@ class _RecurringExpenseFormSheetState
   @override
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(householdMembersProvider);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        12,
-        24,
-        MediaQuery.of(context).viewInsets.bottom + 24,
+      decoration: BoxDecoration(
+        color: context.theme.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 28,
+            offset: const Offset(0, -8),
+          ),
+        ],
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: membersAsync.when(
-        loading: () => const SizedBox(
-          height: 200,
-          child: Center(child: CircularProgressIndicator()),
-        ),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (members) {
-          if (_payerDefault.isEmpty && members.isNotEmpty) {
-            _payerDefault = members.first.userId;
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        top: false,
+        child: membersAsync.when(
+          loading: () => const SizedBox(
+            height: 220,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (members) {
+            return Column(
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(2),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(24, 12, 24, 28 + bottomInset),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 56,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: AppColors.divider.withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          _buildHeader(),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'DETALLE',
+                            title: 'Qué se renueva cada mes',
+                            subtitle:
+                                'Define el nombre y el monto para reconocerla rápido.',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTitleField(),
+                          const SizedBox(height: 16),
+                          _buildAmountField(),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'CALENDARIO',
+                            title: 'Cuándo se registra',
+                            subtitle:
+                                'Elegimos el día habitual para programarla sola.',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildDaySelector(),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'CATEGORÍA',
+                            title: 'Dónde encaja mejor',
+                            subtitle:
+                                'Ayuda a ordenar Finanzas y mantener la lectura clara.',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildCategorySelector(),
+                          const SizedBox(height: 28),
+                          _buildSectionIntro(
+                            eyebrow: 'REPARTO',
+                            title: 'Cómo se reparte',
+                            subtitle:
+                                'Define si se divide entre ambos o si queda como personal.',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildSplitTypeSelector(),
+                          if (_splitType != 'personal') ...[
+                            const SizedBox(height: 28),
+                            _buildSectionIntro(
+                              eyebrow: 'PAGADOR',
+                              title: 'Quién suele abonarla',
+                              subtitle:
+                                  'Esto deja una sugerencia lista para los próximos meses.',
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPayerSelector(members),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                _buildHeader(),
-                const SizedBox(height: 24),
-                _buildTitleField(),
-                const SizedBox(height: 16),
-                _buildAmountField(),
-                const SizedBox(height: 24),
-                _buildDaySelector(),
-                const SizedBox(height: 24),
-                _buildCategorySelector(),
-                const SizedBox(height: 24),
-                _buildSplitTypeSelector(),
-                if (_splitType != 'personal') ...[
-                  const SizedBox(height: 24),
-                  _buildPayerSelector(members),
-                ],
-                const SizedBox(height: 32),
-                _buildSaveButton(),
+                _buildBottomActions(bottomInset),
               ],
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.14),
+                ),
+              ),
+              child: const Icon(
+                Icons.autorenew_rounded,
+                color: AppColors.primary,
+                size: 40,
+              ),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.template == null
+                        ? 'Nueva suscripción'
+                        : 'Editar suscripción',
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.9,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.template == null
+                        ? 'Dejala configurada y lista para que se registre sola todos los meses.'
+                        : 'Ajusta monto, categoría y reparto para mantenerla al día.',
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            IconButton(
+              icon: const Icon(
+                Icons.close_rounded,
+                color: AppColors.textMuted,
+                size: 36,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+        if (widget.template != null) ...[
+          const SizedBox(height: 18),
+          OutlinedButton.icon(
+            onPressed: _delete,
+            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+            label: const Text('Eliminar suscripción'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: BorderSide(color: AppColors.error.withValues(alpha: 0.22)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSectionIntro({
+    required String eyebrow,
+    required String title,
+    required String subtitle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.template == null ? 'Nueva Suscripción' : 'Editar Suscripción',
+          eyebrow,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+            color: AppColors.primary.withValues(alpha: 0.72),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w900,
             color: AppColors.textPrimary,
           ),
         ),
-        if (widget.template != null)
-          IconButton(
-            icon: const Icon(Icons.delete_outline_rounded,
-                color: AppColors.error),
-            onPressed: _delete,
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 14.5,
+            height: 1.45,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
           ),
+        ),
       ],
     );
   }
 
   Widget _buildTitleField() {
-    return TextField(
+    return TextFormField(
       controller: _titleController,
+      textInputAction: TextInputAction.next,
+      validator: (value) {
+        final title = value?.trim() ?? '';
+        if (title.isEmpty) return 'Escribe un nombre para reconocerla.';
+        if (title.length < 3) return 'Usa al menos 3 caracteres.';
+        return null;
+      },
       decoration: InputDecoration(
-        labelText: 'Nombre (ej: Netflix, Alquiler)',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        labelText: 'Nombre',
+        hintText: 'Ej: Netflix, alquiler o internet',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.14),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+        ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
     );
   }
 
   Widget _buildAmountField() {
-    return TextField(
+    return TextFormField(
       controller: _amountController,
       keyboardType: TextInputType.number,
       onChanged: _onAmountChanged,
+      validator: (value) {
+        final amount = _parseAmount(value ?? '');
+        if (amount == null) return 'Ingresa un monto valido.';
+        if (amount <= 0) return 'El monto debe ser mayor a cero.';
+        return null;
+      },
       decoration: InputDecoration(
         labelText: 'Monto por defecto',
         prefixText: r'$ ',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.14),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+        ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
     );
   }
@@ -301,7 +532,7 @@ class _RecurringExpenseFormSheetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Se cobra el día:',
+          'Se cobra el dia:',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
@@ -323,11 +554,22 @@ class _RecurringExpenseFormSheetState
                   width: 44,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.surface,
+                    color: isSelected ? AppColors.primary : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.divider,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.divider.withValues(alpha: 0.65),
                     ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Center(
                     child: Text(
@@ -354,7 +596,7 @@ class _RecurringExpenseFormSheetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Categoría:',
+          'Categoria:',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
@@ -365,24 +607,24 @@ class _RecurringExpenseFormSheetState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _categories.map((c) {
-            final isSelected = _category == c['id'];
-            final categoryColor = AppColors.getCategoryColor(c['id']);
+          children: _categories.map((category) {
+            final isSelected = _category == category['id'];
+            final categoryColor = AppColors.getCategoryColor(category['id']);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    AppColors.getCategoryMaterialIcon(c['id']),
+                    AppColors.getCategoryMaterialIcon(category['id']),
                     size: 16,
                     color: categoryColor,
                   ),
                   const SizedBox(width: 6),
-                  Text(c['name']!),
+                  Text(category['name']!),
                 ],
               ),
               selected: isSelected,
-              onSelected: (_) => setState(() => _category = c['id']!),
+              onSelected: (_) => setState(() => _category = category['id']!),
               selectedColor: categoryColor.withValues(alpha: 0.16),
               backgroundColor: categoryColor.withValues(alpha: 0.07),
               checkmarkColor: categoryColor,
@@ -419,7 +661,7 @@ class _RecurringExpenseFormSheetState
           children: [
             _buildSplitOption('equal', 'Dividir 50/50', Icons.groups_rounded),
             const SizedBox(width: 12),
-            _buildSplitOption('personal', 'Solo mío', Icons.person_rounded),
+            _buildSplitOption('personal', 'Solo mio', Icons.person_rounded),
           ],
         ),
       ],
@@ -436,10 +678,21 @@ class _RecurringExpenseFormSheetState
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.1)
-                : AppColors.surface,
+                : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.divider),
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.divider.withValues(alpha: 0.7),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    Colors.black.withValues(alpha: isSelected ? 0.03 : 0.015),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -481,23 +734,33 @@ class _RecurringExpenseFormSheetState
         Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: members.map((m) {
-            final isSelected = _payerDefault == m.userId;
+          children: members.map((member) {
+            final isSelected = _payerDefault == member.userId;
             return GestureDetector(
-              onTap: () => setState(() => _payerDefault = m.userId),
+              onTap: () => setState(() => _payerDefault = member.userId),
               child: Opacity(
-                opacity: isSelected ? 1.0 : 0.5,
+                opacity: isSelected ? 1.0 : 0.58,
                 child: Container(
+                  padding: const EdgeInsets.all(4),
                   decoration: isSelected
                       ? BoxDecoration(
-                          border:
-                              Border.all(color: AppColors.primary, width: 2),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.6,
+                          ),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.16),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         )
                       : null,
                   child: CustomUserAvatar(
-                    avatarUrl: m.avatarUrl,
-                    name: m.displayName,
+                    avatarUrl: member.avatarUrl,
+                    name: member.displayName,
                     radius: 24,
                   ),
                 ),
@@ -511,23 +774,70 @@ class _RecurringExpenseFormSheetState
 
   Widget _buildSaveButton() {
     return SizedBox(
-      width: double.infinity,
-      height: 54,
+      height: 60,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _save,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           elevation: 0,
+          shadowColor: Colors.transparent,
         ),
         child: _isLoading
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Guardar Suscripción',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.6,
+                ),
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_rounded, size: 22),
+                  SizedBox(width: 10),
+                  Text(
+                    'Guardar suscripción',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                    ),
+                  ),
+                ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildBottomActions(double bottomInset) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
+      decoration: BoxDecoration(
+        color: context.theme.background.withValues(alpha: 0.98),
+        border: Border(
+          top: BorderSide(color: AppColors.divider.withValues(alpha: 0.7)),
+        ),
+      ),
+      child: Row(
+        children: [
+          TextButton(
+            onPressed: _isLoading ? null : () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textMuted,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+            ),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: _buildSaveButton()),
+        ],
       ),
     );
   }

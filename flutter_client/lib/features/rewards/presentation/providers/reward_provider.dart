@@ -1,12 +1,15 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
+
+import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/providers/supabase_provider.dart';
-import '../../data/repositories/supabase_reward_repository.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
+import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 
 part 'reward_provider.g.dart';
 
@@ -15,38 +18,50 @@ class Rewards extends _$Rewards {
   RealtimeChannel? _channel;
 
   @override
-  Future<List<Map<String, dynamic>>> build() async {
+  Future<List<RewardModel>> build() async {
+    final admin = ref.watch(adminProvider);
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
-    // Realtime setup
     _setupRealtime(householdId);
 
     final repo = ref.read(rewardRepositoryProvider);
-    final result = await repo.getRewards(householdId);
+    List<Map<String, dynamic>> rawRewards = [];
 
-    return result.fold(
-      (failure) {
-        log.e('Error loading rewards: ${failure.message}');
-        throw Exception(failure.message);
-      },
-      (rewards) async {
-        // If the store is empty, automatically clone templates to provide immediate content
-        if (rewards.isEmpty) {
-          log.i('Reward store empty, auto-cloning templates...');
-          final cloneResult = await repo.cloneTemplates();
-          return cloneResult.fold(
-            (l) => [], // If clone fails, return empty
-            (r) async {
-              // Fetch again after cloning
-              final secondTry = await repo.getRewards(householdId);
-              return secondTry.getOrElse((_) => []);
-            },
-          );
+    if (admin.isAdminUser) {
+      final client = Supabase.instance.client;
+      final rewardsResponse = await client.rpc(
+        'qa_admin_get_rewards',
+        params: {'p_household_id': householdId},
+      );
+      rawRewards = List<Map<String, dynamic>>.from(rewardsResponse as List);
+      if (rawRewards.isEmpty) {
+        log.i('QA reward store empty, seeding default rewards...');
+        await client.rpc(
+          'qa_admin_seed_default_rewards',
+          params: {'p_household_id': householdId},
+        );
+        final secondTry = await client.rpc(
+          'qa_admin_get_rewards',
+          params: {'p_household_id': householdId},
+        );
+        rawRewards = List<Map<String, dynamic>>.from(secondTry as List);
+      }
+    } else {
+      final result = await repo.getRewards(householdId);
+      rawRewards = result.getOrElse((_) => []);
+
+      if (rawRewards.isEmpty) {
+        log.i('Reward store empty, auto-cloning templates...');
+        final cloneResult = await repo.cloneTemplates();
+        if (cloneResult.isRight()) {
+          final secondTry = await repo.getRewards(householdId);
+          rawRewards = secondTry.getOrElse((_) => []);
         }
-        return rewards;
-      },
-    );
+      }
+    }
+
+    return rawRewards.map(RewardModel.fromJson).toList();
   }
 
   void _setupRealtime(String householdId) {
@@ -87,6 +102,8 @@ class Rewards extends _$Rewards {
     required int cost,
     String icon = '🎁',
     String? category,
+    bool isApproved = false,
+    String targetType = 'all',
   }) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
@@ -105,6 +122,8 @@ class Rewards extends _$Rewards {
       icon: icon,
       category: category,
       createdBy: userId,
+      isApproved: isApproved,
+      targetType: targetType,
     );
 
     return result.fold(
@@ -120,6 +139,18 @@ class Rewards extends _$Rewards {
   }
 
   Future<Either<Failure, void>> approveReward(String rewardId) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    if (currentUserId != null) {
+      final members = await ref.read(householdMembersProvider.future);
+      final currentMember =
+          members.where((m) => m.userId == currentUserId).firstOrNull;
+      if (currentMember != null && !currentMember.isAdult) {
+        return const Left(
+          ValidationFailure('Solo los adultos pueden aprobar premios'),
+        );
+      }
+    }
+
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.approveReward(rewardId);
 
@@ -168,6 +199,25 @@ class Rewards extends _$Rewards {
   }
 
   Future<Either<Failure, int>> cloneTemplates() async {
+    final admin = ref.read(adminProvider);
+    if (admin.isAdminUser) {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId == null) {
+        return const Left(ValidationFailure('Hogar QA no identificado'));
+      }
+      try {
+        final seeded = await Supabase.instance.client.rpc(
+          'qa_admin_seed_default_rewards',
+          params: {'p_household_id': householdId},
+        );
+        ref.invalidateSelf();
+        return Right((seeded as num).toInt());
+      } catch (e) {
+        log.w('QA seed rewards failure: $e');
+        return Left(ServerFailure(e.toString()));
+      }
+    }
+
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.cloneTemplates();
 
@@ -182,4 +232,26 @@ class Rewards extends _$Rewards {
       },
     );
   }
+}
+
+@riverpod
+Future<List<RewardModel>> filteredRewards(FilteredRewardsRef ref) async {
+  final rewards = await ref.watch(rewardsProvider.future);
+  final members = await ref.watch(householdMembersProvider.future);
+  final currentUserId = ref.read(currentUserIdProvider);
+
+  final currentMember =
+      members.where((m) => m.userId == currentUserId).firstOrNull;
+  if (currentMember == null) return rewards;
+
+  if (currentMember.isAdult) {
+    return rewards;
+  }
+
+  return rewards.where((reward) {
+    final isTargeted =
+        reward.targetType == 'all' || reward.targetType == 'child';
+    final isVisible = reward.isApproved || reward.createdBy == currentUserId;
+    return isTargeted && isVisible;
+  }).toList();
 }

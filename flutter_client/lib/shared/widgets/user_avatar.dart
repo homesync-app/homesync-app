@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/constants/admin_testing_config.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'video_avatar_player.dart';
 
@@ -26,13 +30,15 @@ class UserAvatar {
   static const List<Map<String, dynamic>> premiumAvatars = [
     {
       'id': 'premium_boy',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
       'color': Color(0xFFE3F2FD)
     },
     {
       'id': 'premium_girl',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
       'color': Color(0xFFFCE4EC)
     },
@@ -44,19 +50,22 @@ class UserAvatar {
     },
     {
       'id': 'premium_dog',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
       'color': Color(0xFFE8EAF6)
     },
     {
       'id': 'premium_robot',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
       'color': Color(0xFFE0F2F1)
     },
     {
       'id': 'premium_bird',
-      'url': 'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
+      'url':
+          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'Pájaro 3D',
       'color': Color(0xFFF3E5F5)
     },
@@ -71,8 +80,9 @@ class UserAvatar {
   }
 }
 
-class CustomUserAvatar extends StatelessWidget {
+class CustomUserAvatar extends ConsumerWidget {
   final String? name;
+  final String? userId; // Added for admin impersonation
   final String? avatarUrl;
   final double radius;
   final VoidCallback? onTap;
@@ -85,6 +95,7 @@ class CustomUserAvatar extends StatelessWidget {
   const CustomUserAvatar({
     super.key,
     this.name,
+    this.userId,
     this.avatarUrl,
     this.radius = 20,
     this.onTap,
@@ -95,21 +106,21 @@ class CustomUserAvatar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bool isPremium = avatarUrl?.startsWith('premium://') ?? false;
+    final admin = ref.watch(adminProvider);
 
+    Widget avatarContent;
     if (isPremium && !forceCircular) {
-      return _PremiumCharacterAvatar(
+      avatarContent = _PremiumCharacterAvatar(
         url: avatarUrl!.replaceFirst('premium://', ''),
         radius: radius,
-        isAnimated: isAnimated, // Respect the widget's isAnimated parameter
+        isAnimated: isAnimated,
         isPriority: isPriority,
         onTap: onTap,
       );
-    }
-
-    if (isAnimated || isPriority) {
-      return _AnimatedAvatar(
+    } else if (isAnimated || isPriority) {
+      avatarContent = _AnimatedAvatar(
         name: name,
         avatarUrl: avatarUrl,
         radius: radius,
@@ -117,14 +128,53 @@ class CustomUserAvatar extends StatelessWidget {
         showBorder: showBorder,
         isPriority: isPriority,
       );
+    } else {
+      avatarContent = _StaticAvatar(
+        name: name,
+        avatarUrl: avatarUrl,
+        radius: radius,
+        onTap: onTap,
+        showBorder: showBorder,
+      );
     }
-    return _StaticAvatar(
-      name: name,
-      avatarUrl: avatarUrl,
-      radius: radius,
-      onTap: onTap,
-      showBorder: showBorder,
-    );
+
+    // Admin impersonation feature - allow long press on any user avatar EXCEPT a few special cases if needed
+    if (AppEnvironment.enableAdminTesting &&
+        admin.isAdminUser &&
+        userId != null &&
+        userId != AdminTestingConfig.adminTestingUserId) {
+      return GestureDetector(
+        onLongPress: () {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Admin: Impersonación'),
+              content:
+                  Text('¿Deseas ver la app como ${name ?? 'este usuario'}?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref.read(adminProvider.notifier).impersonate(userId);
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Viendo como: ${name ?? userId}')),
+                    );
+                  },
+                  child: const Text('Impersonar'),
+                ),
+              ],
+            ),
+          );
+        },
+        child: avatarContent,
+      );
+    }
+
+    return avatarContent;
   }
 }
 
@@ -176,7 +226,8 @@ class _AnimatedAvatar extends StatefulWidget {
   State<_AnimatedAvatar> createState() => _AnimatedAvatarState();
 }
 
-class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProviderStateMixin {
+class _AnimatedAvatarState extends State<_AnimatedAvatar>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _pulseAnimation;
@@ -219,7 +270,8 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProvi
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.accentGold.withValues(alpha: 1 - _pulseAnimation.value),
+                    color: AppColors.accentGold
+                        .withValues(alpha: 1 - _pulseAnimation.value),
                     width: 2,
                   ),
                 ),
@@ -234,7 +286,8 @@ class _AnimatedAvatarState extends State<_AnimatedAvatar> with SingleTickerProvi
             radius: widget.radius,
             onTap: widget.onTap,
             showBorder: widget.showBorder,
-            borderColor: widget.isPriority ? AppColors.accentGold : Colors.white,
+            borderColor:
+                widget.isPriority ? AppColors.accentGold : Colors.white,
           ),
         ),
       ],
@@ -262,11 +315,13 @@ class _AvatarContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasAvatar = avatarUrl != null && avatarUrl!.trim().isNotEmpty;
-    
+    final int avatarCacheSize =
+        (radius * 2 * MediaQuery.devicePixelRatioOf(context)).round();
+
     // Check if it's a premium local asset encoded as premium://assets/...
     final String cleanUrl = (avatarUrl ?? '').replaceFirst('premium://', '');
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
-    
+
     final bool isEmoji = hasAvatar && !isAsset && avatarUrl!.trim().length <= 2;
     final bool isNetwork = hasAvatar && cleanUrl.startsWith('http');
 
@@ -275,17 +330,22 @@ class _AvatarContent extends StatelessWidget {
         : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
 
     final safeName = name?.trim() ?? '';
-    final initial = safeName.isNotEmpty
-        ? safeName.substring(0, 1).toUpperCase()
-        : '?';
+    final initial =
+        safeName.isNotEmpty ? safeName.substring(0, 1).toUpperCase() : '?';
 
     final avatarWidget = Container(
       width: radius * 2,
       height: radius * 2,
       decoration: BoxDecoration(
-        color: isEmoji ? color : ((isNetwork || isAsset) ? Colors.grey.shade100 : AppColors.primary),
+        color: isEmoji
+            ? color
+            : ((isNetwork || isAsset)
+                ? Colors.grey.shade100
+                : AppColors.primary),
         shape: BoxShape.circle,
-        border: showBorder ? Border.all(color: borderColor ?? Colors.white, width: 2) : null,
+        border: showBorder
+            ? Border.all(color: borderColor ?? Colors.white, width: 2)
+            : null,
         boxShadow: showBorder
             ? [
                 BoxShadow(
@@ -301,6 +361,9 @@ class _AvatarContent extends StatelessWidget {
             ? Image.asset(
                 cleanUrl,
                 fit: BoxFit.cover,
+                cacheWidth: avatarCacheSize,
+                cacheHeight: avatarCacheSize,
+                filterQuality: FilterQuality.low,
                 errorBuilder: (_, __, ___) => Center(
                   child: Text(
                     initial,
@@ -316,6 +379,9 @@ class _AvatarContent extends StatelessWidget {
                 ? Image.network(
                     cleanUrl,
                     fit: BoxFit.cover,
+                    cacheWidth: avatarCacheSize,
+                    cacheHeight: avatarCacheSize,
+                    filterQuality: FilterQuality.low,
                     errorBuilder: (_, __, ___) => Center(
                       child: Text(
                         initial,
@@ -358,6 +424,7 @@ class _AvatarContent extends StatelessWidget {
     return avatarWidget;
   }
 }
+
 class _PremiumCharacterAvatar extends StatelessWidget {
   final String url;
   final double radius;
@@ -375,32 +442,40 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String cleanUrl = url.startsWith('premium://')
-        ? url.replaceFirst('premium://', '')
-        : url;
+    final String cleanUrl =
+        url.startsWith('premium://') ? url.replaceFirst('premium://', '') : url;
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
+    final bool shouldPlayVideo =
+        isVideo && (isAnimated || isPriority || radius >= 32);
 
     // Increase size significantly for premium video characters
-    final double size = isVideo ? radius * 3.2 : radius * 2.8;
+    final double size = isVideo ? radius * 2.8 : radius * 2.8;
+    final int premiumCacheSize =
+        (size * MediaQuery.devicePixelRatioOf(context)).round();
 
     final bool isAsset = cleanUrl.startsWith('assets/');
 
     // The image or video widget — transparent background or clipped circle
     Widget contentWidget;
 
-    if (isVideo) {
+    if (isVideo && shouldPlayVideo) {
       contentWidget = VideoAvatarPlayer(
         url: cleanUrl,
         size: size,
         isAsset: isAsset,
       );
+    } else if (isVideo) {
+      contentWidget = _buildStaticVideoFallback(cleanUrl, size);
     } else if (isAsset) {
       contentWidget = Image.asset(
         cleanUrl,
         width: size,
         height: size,
         fit: BoxFit.contain,
+        cacheWidth: premiumCacheSize,
+        cacheHeight: premiumCacheSize,
+        filterQuality: FilterQuality.low,
         errorBuilder: (context, error, stackTrace) {
           return SizedBox(
             width: size,
@@ -421,6 +496,9 @@ class _PremiumCharacterAvatar extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        cacheWidth: premiumCacheSize,
+        cacheHeight: premiumCacheSize,
+        filterQuality: FilterQuality.low,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return SizedBox(
@@ -468,6 +546,29 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     return content;
   }
 
+  Widget _buildStaticVideoFallback(String cleanUrl, double size) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.14),
+          ),
+        ),
+        child: Center(
+          child: Icon(
+            _getFallbackIcon(cleanUrl),
+            size: radius,
+            color: AppColors.primary.withValues(alpha: 0.78),
+          ),
+        ),
+      ),
+    );
+  }
+
   IconData _getFallbackIcon(String url) {
     final lowerUrl = url.toLowerCase();
     if (lowerUrl.contains('cat')) return Icons.pets;
@@ -479,7 +580,6 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     return Icons.star;
   }
 }
-
 
 /// Gentle up-down float animation — no zoom/scale, pure vertical drift
 class _FloatingAnimation extends StatefulWidget {
@@ -528,5 +628,3 @@ class _FloatingAnimationState extends State<_FloatingAnimation>
     );
   }
 }
-
-

@@ -1,30 +1,26 @@
 import 'package:homesync_client/core/services/logger_service.dart';
+
 import 'base_rpc_service.dart';
 
 class StatsRpcService extends BaseRpcService {
   StatsRpcService({super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getTaskStatsByCategory() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_task_stats_by_category',
-      params: {'p_user_id': user.id},
+      params: {'p_user_id': userId},
     );
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<List<Map<String, dynamic>>> getXpHistory() async {
-    final user = client.auth.currentUser;
-    if (user == null) return [];
     try {
+      final userId = await requireCurrentUserId();
       final response = await client.rpc(
         'get_xp_history',
-        params: {'p_user_id': user.id},
+        params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
@@ -33,12 +29,11 @@ class StatsRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getCoinHistory() async {
-    final user = client.auth.currentUser;
-    if (user == null) return [];
     try {
+      final userId = await requireCurrentUserId();
       final response = await client.rpc(
         'get_coin_history',
-        params: {'p_user_id': user.id},
+        params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
@@ -47,135 +42,83 @@ class StatsRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getExpenseStatsByCategory() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_expense_stats_by_category',
-      params: {'p_user_id': user.id},
+      params: {'p_user_id': userId},
     );
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<List<Map<String, dynamic>>> getMemberActivityStats() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
+    final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'get_member_activity_stats',
-      params: {'p_user_id': user.id},
+      params: {'p_user_id': userId},
     );
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyRanking() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (householdMembers == null) {
-      return [];
-    }
+    final householdId = await requireHouseholdId();
 
     final response = await client.rpc(
       'get_weekly_ranking',
-      params: {'p_household_id': householdMembers['household_id']},
+      params: {'p_household_id': householdId},
     );
 
     return List<Map<String, dynamic>>.from(response);
   }
 
   Future<bool> isWeekProcessed() async {
-    final user = client.auth.currentUser;
-    if (user == null) return false;
+    try {
+      final householdId = await requireHouseholdId();
 
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      final response = await client.rpc(
+        'is_week_processed',
+        params: {'p_household_id': householdId},
+      );
 
-    if (householdMembers == null) return false;
-
-    final response = await client.rpc(
-      'is_week_processed',
-      params: {'p_household_id': householdMembers['household_id']},
-    );
-
-    return response == true;
+      return response == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<Map<String, dynamic>> awardWeeklyWinner() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (householdMembers == null) {
-      throw Exception('No perteneces a un hogar');
-    }
+    final householdId = await requireHouseholdId();
 
     final response = await client.rpc(
       'award_weekly_winner',
-      params: {'p_household_id': householdMembers['household_id']},
+      params: {'p_household_id': householdId},
     );
 
     return Map<String, dynamic>.from(response);
   }
 
   Future<Map<String, dynamic>> checkShouldShowWinner() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
+    try {
+      final householdId = await requireHouseholdId();
+
+      final response = await client.rpc(
+        'should_show_winner',
+        params: {'p_household_id': householdId},
+      );
+
+      return Map<String, dynamic>.from(response);
+    } catch (_) {
       return {'show_winner': false};
     }
-
-    final householdMembers = await client
-        .from('household_members')
-        .select('household_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-    if (householdMembers == null) {
-      return {'show_winner': false};
-    }
-
-    final response = await client.rpc(
-      'should_show_winner',
-      params: {'p_household_id': householdMembers['household_id']},
-    );
-
-    return Map<String, dynamic>.from(response);
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyDuelHistory() async {
-    final user = client.auth.currentUser;
-    if (user == null) {
-      throw Exception('Usuario no autenticado');
-    }
-
     try {
+      final userId = await requireCurrentUserId();
       final response = await client.rpc(
         'get_weekly_duel_history',
-        params: {'p_user_id': user.id},
+        params: {'p_user_id': userId},
       );
 
       return List<Map<String, dynamic>>.from(response);

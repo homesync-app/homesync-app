@@ -30,7 +30,10 @@ class _MercadoPagoSettingsCardState
     setState(() => _isSaving = true);
 
     try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null || userId.isEmpty) {
+        throw Exception('No se pudo resolver el usuario actual');
+      }
       await Supabase.instance.client
           .from('users')
           .update({'mercadopago_alias': alias}).eq('id', userId);

@@ -38,13 +38,22 @@
   }
 }
 
-.glass {
+@utility glass {
   @apply bg-white/10 backdrop-blur-md border border-white/20;
 }
 
-.glass-dark {
+@utility glass-dark {
   @apply bg-black/20 backdrop-blur-lg border border-white/10;
 }
+
+@utility surface-card {
+  @apply bg-white/5 border border-white/10 rounded-2xl;
+}
+
+@utility state-card {
+  @apply glass-dark border border-white/10 rounded-3xl p-8 text-center;
+}
+
 
 .glow-violet {
   box-shadow: 0 0 20px rgba(127, 13, 242, 0.3);
@@ -58,10 +67,3 @@
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
-.surface-card {
-  @apply bg-white/5 border border-white/10 rounded-2xl;
-}
-
-.state-card {
-  @apply glass-dark border border-white/10 rounded-3xl p-8 text-center;
-}

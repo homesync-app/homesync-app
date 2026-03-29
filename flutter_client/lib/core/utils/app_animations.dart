@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:flutter_animate/flutter_animate.dart';
+export 'package:homesync_client/shared/widgets/animated_press.dart';
+export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
+export 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class AppTransitions {
   static Route<T> slideUp<T>(Widget page) {
@@ -84,110 +86,17 @@ class AppTransitions {
   }
 }
 
-/// A wrapper for widgets that should scale down slightly when pressed.
-/// Now enhanced with HapticFeedback and smoother curves.
-class AnimatedPress extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-  final double scaleDown;
-
-  const AnimatedPress({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.onLongPress,
-    this.scaleDown = 0.95,
-  });
-
-  @override
-  State<AnimatedPress> createState() => _AnimatedPressState();
-}
-
-class _AnimatedPressState extends State<AnimatedPress>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 80),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) {
-        _controller.forward();
-        HapticFeedback.selectionClick();
-      },
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap?.call();
-      },
-      onTapCancel: () => _controller.reverse(),
-      onLongPress: widget.onLongPress != null
-          ? () {
-              HapticFeedback.mediumImpact();
-              widget.onLongPress!();
-            }
-          : null,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-/// Standardized Shimmer that feels premium.
-class ShimmerLoading extends StatelessWidget {
-  final Widget child;
-  final bool isLoading;
-
-  const ShimmerLoading({
-    super.key,
-    required this.child,
-    this.isLoading = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!isLoading) return child;
-
-    return child
-        .animate(onPlay: (controller) => controller.repeat())
-        .shimmer(
-          duration: 1200.ms,
-          color: Colors.white.withValues(alpha: 0.6),
-        );
-  }
-}
-
 /// Extension for easy access to premium micro-animations via [flutter_animate].
 extension AppAnimationsExtension on Widget {
   Widget animateEntrance({int delay = 0}) {
     return animate()
         .fadeIn(duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic)
-        .slideY(begin: 0.1, end: 0, duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic);
+        .slideY(
+            begin: 0.1,
+            end: 0,
+            duration: 400.ms,
+            delay: delay.ms,
+            curve: Curves.easeOutCubic);
   }
 
   Widget animateStaggered(int index) {
@@ -209,7 +118,10 @@ extension AppAnimationsExtension on Widget {
   Widget animatePulse({bool active = true}) {
     if (!active) return this;
     return animate(onPlay: (controller) => controller.repeat(reverse: true))
-        .scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02), duration: 1000.ms);
+        .scale(
+            begin: const Offset(1, 1),
+            end: const Offset(1.02, 1.02),
+            duration: 1000.ms);
   }
 }
 
@@ -231,52 +143,44 @@ class FadeIndexedStack extends StatefulWidget {
 
 class _FadeIndexedStackState extends State<FadeIndexedStack>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late int _currentIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.index;
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..forward();
-  }
-
-  @override
-  void didUpdateWidget(FadeIndexedStack oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.index != _currentIndex) {
-      _controller.reverse().then((_) {
-        setState(() => _currentIndex = widget.index);
-        _controller.forward();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _controller,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0.0, 0.05),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _controller,
+    final safeIndex = widget.index.clamp(0, widget.children.length - 1);
+
+    return AnimatedSwitcher(
+      duration: widget.duration,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        final fade = CurvedAnimation(
+          parent: animation,
           curve: Curves.easeOutCubic,
-        )),
-        child: IndexedStack(
-          index: _currentIndex,
-          children: widget.children,
-        ),
+        );
+        final slide = Tween<Offset>(
+          begin: const Offset(0.0, 0.035),
+          end: Offset.zero,
+        ).animate(fade);
+
+        return FadeTransition(
+          opacity: fade,
+          child: SlideTransition(
+            position: slide,
+            child: child,
+          ),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey<int>(safeIndex),
+        child: widget.children[safeIndex],
       ),
     );
   }

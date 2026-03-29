@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -22,6 +21,18 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     super.key,
     required this.onTasksCompleted,
   });
+
+  static Future<void> show(BuildContext context,
+      {VoidCallback? onTasksCompleted}) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CompleteTaskSheet(
+        onTasksCompleted: onTasksCompleted ?? () {},
+      ),
+    );
+  }
 
   @override
   ConsumerState<CompleteTaskSheet> createState() => _CompleteTaskSheetState();
@@ -48,7 +59,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
     _loadData();
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = ref.read(currentUserIdProvider);
     if (currentUserId != null) {
       _selectedMemberIds.add(currentUserId);
     }
@@ -99,13 +110,50 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Future<void> _submitCompletedTasks() async {
-    if (_selectedTaskIds.isEmpty || _selectedMemberIds.isEmpty) return;
+    if (_isLoading) return;
+
+    if (_selectedTaskIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecciona al menos una tarea para completar.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedMemberIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selecciona quien la hizo antes de continuar.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
+
+    if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La fecha de finalizacion no puede ser futura.'),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final selectedTasks =
           _allTasks.where((t) => _selectedTaskIds.contains(t.id)).toList();
+
+      if (selectedTasks.isEmpty ||
+          selectedTasks.length != _selectedTaskIds.length) {
+        throw Exception(
+          'No pudimos encontrar todas las tareas elegidas. Refresca e intenta de nuevo.',
+        );
+      }
 
       int totalXp = 0;
       int totalCoins = 0;
@@ -117,21 +165,14 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       }
 
       final currentUserId = ref.read(currentUserIdProvider);
-      final onlyMe =
-          _selectedMemberIds.length == 1 && _selectedMemberIds.contains(currentUserId);
+      final onlyMe = _selectedMemberIds.length == 1 &&
+          _selectedMemberIds.contains(currentUserId);
 
-      for (var task in selectedTasks) {
-        await ref
-            .read(tasksProvider.notifier)
-            .completeTask(task, userIds: _selectedMemberIds.toList());
-
-        if (!_isRightNow) {
-          await Supabase.instance.client
-              .from('tasks')
-              .update({'completed_at': _customDate.toIso8601String()}).eq(
-                  'id', task.id);
-        }
-      }
+      await ref.read(tasksProvider.notifier).completeTasksBatch(
+            selectedTasks,
+            userIds: _selectedMemberIds.toList(),
+            completedAt: _isRightNow ? null : _customDate,
+          );
 
       if (mounted) {
         _confettiController.play();
@@ -139,7 +180,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         Navigator.pop(context); // Pop the sheet first
 
         final String verb = onlyMe ? "Ganaste" : "Ganaron";
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -148,7 +189,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             ),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             margin: const EdgeInsets.all(16),
             duration: const Duration(seconds: 3),
           ),
@@ -245,82 +287,43 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     final tasksToShow = filteredTasks;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          _buildBody(tasksToShow, categories),
-          Align(
-            alignment: Alignment.topCenter,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
-              colors: const [
-                AppColors.primary,
-                AppColors.accentGold,
-                AppColors.success,
-                AppColors.accentBlue,
-              ],
-            ),
+    return Stack(
+      children: [
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: FractionallySizedBox(
+            heightFactor: 0.86,
+            child: _buildBody(tasksToShow, categories),
           ),
-        ],
-      ),
-      bottomSheet: _selectedTaskIds.isEmpty || _isLoading
-          ? const SizedBox.shrink()
-          : Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 20,
-                    offset: Offset(0, -10),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
-              child: SafeArea(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submitCompletedTasks,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      elevation: 8,
-                      shadowColor: AppColors.primary.withValues(alpha: 0.5),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24)),
-                    ),
-                    child: Text(
-                      _selectedTaskIds.length == 1
-                          ? 'Completar 1 tarea'
-                          : 'Completar ${_selectedTaskIds.length} tareas',
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                          color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [
+              AppColors.primary,
+              AppColors.accentGold,
+              AppColors.success,
+              AppColors.accentBlue,
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildBody(List<TaskModel> tasks, List<CategoryModel> categories) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x1A000000),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 30,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -338,21 +341,38 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Icon(Icons.task_alt_rounded,
-                          color: AppColors.primary, size: 28),
-                      SizedBox(width: 12),
-                      Text(
-                        'Completar Tareas',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: Color(0xFF0F172A),
+                      Row(
+                        children: [
+                          Icon(Icons.task_alt_rounded,
+                              color: AppColors.primary, size: 28),
+                          SizedBox(width: 12),
+                          Text(
+                            'Completar tareas',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Marcá lo que ya hicieron y asigná el mérito en un solo paso.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF64748B),
+                            height: 1.35,
+                          ),
                         ),
                       ),
                     ],
@@ -361,7 +381,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.only(bottom: 140),
+                    padding: EdgeInsets.only(
+                      bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
+                    ),
                     children: [
                       _buildSectionHeader(Icons.people_alt_rounded,
                           '¿Quién lo hizo?', 'Selecciona quiénes ayudaron'),
@@ -386,6 +408,73 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     ],
                   ),
                 ),
+                if (_selectedTaskIds.isNotEmpty && !_isLoading)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.98),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, -10),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+                    child: SafeArea(
+                      top: false,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ||
+                                  _selectedTaskIds.isEmpty ||
+                                  _selectedMemberIds.isEmpty
+                              ? null
+                              : _submitCompletedTasks,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.textPrimary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            elevation: 0,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _selectedTaskIds.length == 1
+                                          ? 'Completar 1 tarea'
+                                          : 'Completar ${_selectedTaskIds.length} tareas',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.4,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
     );
@@ -393,15 +482,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildSectionHeader(IconData icon, String title, String subtitle) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: AppColors.primary, size: 20),
           ),
@@ -413,18 +502,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.35,
                     color: Color(0xFF1E293B),
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -437,7 +518,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildMembersSelection() {
     return SizedBox(
-      height: 110,
+      height: 116,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -461,7 +542,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               });
             },
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -470,6 +551,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     padding: EdgeInsets.all(isSelected ? 3.0 : 0.0),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.06)
+                          : Colors.transparent,
                       border: Border.all(
                         color:
                             isSelected ? AppColors.primary : Colors.transparent,
@@ -550,7 +634,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.primary : const Color(0xFFF1F5F9),
+            color: isSelected ? AppColors.primary : const Color(0xFFEAEFF5),
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -596,9 +680,16 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: TextField(
               controller: _searchController,
@@ -808,8 +899,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               isSelected
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color:
-                  isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
+              color: isSelected ? AppColors.primary : const Color(0xFFCBD5E1),
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -819,9 +909,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.primary
-                      : const Color(0xFF1E293B),
+                  color:
+                      isSelected ? AppColors.primary : const Color(0xFF1E293B),
                 ),
               ),
             ),

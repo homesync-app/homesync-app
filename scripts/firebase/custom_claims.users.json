@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "label": "Blas",
+      "email": "blas.r7@gmail.com",
+      "app_user_id": "e4a31718-a63d-450f-b70f-db899dd109a9",
+      "firebase_uid": "yTNKo5xTfHfoAFp89BTaW4VjNX52",
+      "claims": {
+        "role": "authenticated",
+        "app_user_id": "e4a31718-a63d-450f-b70f-db899dd109a9"
+      }
+    },
+    {
+      "label": "Rochi",
+      "email": "gonzalezvenegasestudio@gmail.com",
+      "app_user_id": "4fe99844-3706-4fde-8472-c2f1feb83c00",
+      "firebase_uid": "3z4jQeVJHtRZANHBMAZi5hV7vD93",
+      "claims": {
+        "role": "authenticated",
+        "app_user_id": "4fe99844-3706-4fde-8472-c2f1feb83c00"
+      }
+    }
+  ]
+}

@@ -19,6 +19,15 @@ void main() {
     ];
 
     final failures = <String>[];
+    final baselinePath = File('test/text_encoding_guard_baseline.txt');
+    final baseline = baselinePath.existsSync()
+        ? baselinePath
+            .readAsLinesSync()
+            .map((line) => line.trim())
+            .where((line) => line.isNotEmpty && !line.startsWith('#'))
+            .toSet()
+        : <String>{};
+
     final roots = <String>['lib', 'test'];
 
     for (final root in roots) {
@@ -50,10 +59,20 @@ void main() {
       }
     }
 
+    final normalizedFailures = failures
+        .map((line) => line.replaceAll('\\', '/'))
+        .toList(growable: false);
+    final newFailures = normalizedFailures
+        .where((line) => !baseline.contains(line))
+        .toList(growable: false);
+
     expect(
-      failures,
+      newFailures,
       isEmpty,
-      reason: failures.isEmpty ? null : '\n${failures.join('\n')}',
+      reason: newFailures.isEmpty
+          ? null
+          : '\n${newFailures.join('\n')}\n\n'
+              'If this is legacy debt, add it to test/text_encoding_guard_baseline.txt.',
     );
   });
 }

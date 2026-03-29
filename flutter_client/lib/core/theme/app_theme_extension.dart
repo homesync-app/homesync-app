@@ -62,6 +62,8 @@ class AppThemeColors {
   Color get info => AppColors.info;
 
   Color get scaffoldBackground => background;
+  Color get surfaceContainer => isDarkMode ? AppColors.surfaceVariantDark : AppColors.surfaceVariant;
+  Color get divider => isDarkMode ? Colors.white12 : Colors.black12;
 
   Color get glassWhite =>
       isDarkMode ? const Color(0x33000000) : AppColors.glassWhite;

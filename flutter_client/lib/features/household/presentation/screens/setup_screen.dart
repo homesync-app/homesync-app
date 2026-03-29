@@ -1,23 +1,29 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:homesync_client/core/services/template_service.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/widgets/homesync_logo.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-
+import 'package:homesync_client/core/services/template_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import '../../data/repositories/supabase_household_repository.dart';
-import '../../../auth/presentation/providers/auth_controller.dart';
-import '../providers/household_provider.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
+  final bool isAdminPreview;
 
   const SetupScreen({
     required this.onComplete,
+    this.isAdminPreview = false,
     super.key,
   });
 
@@ -27,11 +33,17 @@ class SetupScreen extends ConsumerStatefulWidget {
 
 class _SetupScreenState extends ConsumerState<SetupScreen>
     with TickerProviderStateMixin {
-  // Steps: 0=Welcome, 1=mode, 2=teamOptions, 3=creating(code display), 4=splitStrategy, 5=taskSelection
+  // Steps: 0=ValueProp, 1=Welcome, 2=Identity, 3=mode, 4=teamOptions,
+  // 5=creating(code display), 6=household setup, 7=taskSelection
   int _currentStep = 0;
   String? _selectedMode;
   bool _createNew = true;
   final _codeController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _familyHouseholdNameController = TextEditingController();
+  String _selectedAvatar = UserAvatar.defaultAvatars.first['emoji'] as String;
+  String _familyStructure = 'mixed';
+  String _familyRole = 'Adulto responsable';
 
   // Invite code shown to "create" users
   String? _myInviteCode;
@@ -52,28 +64,28 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     {
       'id': 'couple',
       'name': 'Pareja',
-      'icon': '💑',
-      'desc': 'Compartimos el hogar juntos',
+      'icon': '??',
+      'desc': 'Para convivir y organizar gastos de a dos',
       'gradient': [const Color(0xFF6B8E85), const Color(0xFF84A59D)],
     },
     {
       'id': 'family',
       'name': 'Familia',
-      'icon': '👨‍👩‍👧‍👦',
+      'icon': '???????????',
       'desc': 'Toda la familia participa',
       'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8A65)],
     },
     {
-      'id': 'roommates',
-      'name': 'Compañeros',
-      'icon': '🏠',
-      'desc': 'Compartimos piso o depto',
+      'id': 'friends',
+      'name': 'Convivencia',
+      'icon': '??',
+      'desc': 'Compartimos piso, depto o roommates',
       'gradient': [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
     },
     {
       'id': 'solo',
       'name': 'Solo yo',
-      'icon': '👤',
+      'icon': '??',
       'desc': 'Mis tareas personales',
       'gradient': [const Color(0xFF9575CD), const Color(0xFFB39DDB)],
     },
@@ -88,6 +100,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   @override
   void dispose() {
     _codeController.dispose();
+    _familyHouseholdNameController.dispose();
     super.dispose();
   }
 
@@ -118,15 +131,27 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
   }
 
-  // ── Step handlers ──────────────────────────────────────────────────────────
+  // -- Step handlers ----------------------------------------------------------
 
   void _onModeSelected() {
     HapticFeedback.mediumImpact();
-    if (_selectedMode == 'solo') {
-      setState(() => _currentStep = 5);
-    } else {
-      setState(() => _currentStep = 2);
+    if (_selectedMode == 'family' &&
+        _familyHouseholdNameController.text.trim().isEmpty) {
+      _familyHouseholdNameController.text = _suggestFamilyHouseholdName();
     }
+    if (_selectedMode == 'solo') {
+      setState(() => _currentStep = 7);
+    } else {
+      setState(() => _currentStep = 4);
+    }
+  }
+
+  String _suggestFamilyHouseholdName() {
+    final rawName = _nameController.text.trim();
+    if (rawName.isEmpty) return 'Mi familia';
+
+    final firstName = rawName.split(' ').first.trim();
+    return '$firstName y familia';
   }
 
   Future<void> _handleCreateTeam() async {
@@ -157,7 +182,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             setState(() {
               _myInviteCode = code;
               _isGeneratingCode = false;
-              _currentStep = 3; // Mostrar código
+              _currentStep = 5; // Mostrar código
             });
           },
         );
@@ -202,14 +227,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                '¡Te has unido con éxito! 🎉 Ahora personaliza tus tareas.'),
+                '¡Te has unido con éxito! ?? Ahora personaliza tus tareas.'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
         setState(() {
           _isJoining = false;
-          _currentStep = _selectedMode == 'couple' ? 4 : 5;
+          _currentStep = _selectedMode == 'solo' ? 7 : 6;
         });
       }
     } catch (e) {
@@ -233,6 +258,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     setState(() => _isSaving = true);
 
     try {
+      final householdId = await ref.read(householdIdProvider.future);
+      if (householdId != null && _selectedMode != null) {
+        await ref
+            .read(householdRepositoryProvider)
+            .updateHouseholdType(householdId, _selectedMode!);
+      }
+
+      // Update user profile with name and avatar
+      if (!widget.isAdminPreview && _nameController.text.trim().isNotEmpty) {
+        final profileResult =
+            await ref.read(authRepositoryProvider).updateProfile(
+                  fullName: _nameController.text.trim(),
+                  avatarUrl: _selectedAvatar,
+                );
+        profileResult.fold(
+          (failure) => throw Exception(failure.message),
+          (_) {},
+        );
+      }
+
       await _templateService.cloneTemplates(_selectedTemplateIds.toList());
 
       // Invalida proveedores aquí también para el flujo de creación
@@ -241,8 +286,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       ref.invalidate(userBalanceProvider);
       ref.invalidate(householdMembersNotifierProvider);
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('setup_completed', true);
+      if (!widget.isAdminPreview) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('setup_completed', true);
+      }
       if (mounted) widget.onComplete();
     } catch (e) {
       if (mounted) {
@@ -259,7 +306,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('¡Código copiado al portapapeles! 📋'),
+        content: const Text('¡Código copiado al portapapeles! ??'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -270,7 +317,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
     final text =
-        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n🏡 Organizemos nuestro hogar juntos.';
+        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n?? Organizemos nuestro hogar juntos.';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -296,7 +343,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
+  // -- Build ------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -345,31 +392,72 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   children: [
                     _buildProgressIndicator(),
                     Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 500),
-                        switchInCurve: Curves.easeOutQuart,
-                        switchOutCurve: Curves.easeInQuart,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween<Offset>(
-                                begin: const Offset(0, 0.05),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
+                      child: Column(
+                        children: [
+                          if (widget.isAdminPreview)
+                            Container(
+                              margin: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.18),
+                                ),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.auto_fix_high_rounded,
+                                      color: AppColors.primary, size: 18),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      'Preview QA del onboarding. No modifica tu perfil real; sirve para configurar y testear el escenario activo.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        height: 1.35,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                        child: switch (_currentStep) {
-                          0 => _buildWelcomeStep(),
-                          1 => _buildModeSelection(),
-                          2 => _buildTeamOptions(),
-                          3 => _buildInviteCodeStep(),
-                          4 => _buildSplitStep(),
-                          5 => _buildTaskSelection(),
-                          _ => _buildWelcomeStep(),
-                        },
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 500),
+                              switchInCurve: Curves.easeOutQuart,
+                              switchOutCurve: Curves.easeInQuart,
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.05),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: switch (_currentStep) {
+                                0 => _buildValuePropStep(),
+                                1 => _buildWelcomeStep(),
+                                2 => _buildIdentityStep(),
+                                3 => _buildModeSelection(),
+                                4 => _buildTeamOptions(),
+                                5 => _buildInviteCodeStep(),
+                                6 => _buildHouseholdSetupStep(),
+                                7 => _buildTaskSelection(),
+                                _ => _buildValuePropStep(),
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -383,12 +471,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildProgressIndicator() {
+    // Only show progress from step 1 onward (step 0 is value prop / intro)
+    if (_currentStep == 0) return const SizedBox(height: 8);
+    final totalSteps = 7; // steps 1-7
+    final activeStep = _currentStep - 1; // normalize
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
-        children: List.generate(6, (index) {
-          final isActive = index <= _currentStep;
-          final isCurrent = index == _currentStep;
+        children: List.generate(totalSteps, (index) {
+          final isActive = index <= activeStep;
+          final isCurrent = index == activeStep;
 
           return Expanded(
             child: Container(
@@ -416,7 +508,171 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 0: Welcome ────────────────────────────────────────────────────────
+  // -- Step 0: Value Proposition --------------------------------------------
+
+  Widget _buildValuePropStep() {
+    final features = [
+      _FeatureItem(
+        emoji: '?',
+        title: 'Tareas compartidas',
+        desc: 'Organizá y asigná tareas del hogar. Ganá XP al completarlas.',
+        color: AppColors.primary,
+      ),
+      _FeatureItem(
+        emoji: '??',
+        title: 'Gastos en equipo',
+        desc: 'Registrá gastos, dividí cuentas y llevá el balance al día.',
+        color: const Color(0xFF22C55E),
+      ),
+      _FeatureItem(
+        emoji: '??',
+        title: 'Gamificación real',
+        desc: 'Competí amistosamente, ganate rewards y subí de nivel.',
+        color: AppColors.accentGold,
+      ),
+      _FeatureItem(
+        emoji: '??',
+        title: 'Lista de compras sync',
+        desc: 'Tachá ítems en tiempo real desde cualquier dispositivo.',
+        color: AppColors.accentTeal,
+      ),
+    ];
+
+    return Padding(
+      key: const ValueKey('value_prop'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const Spacer(flex: 1),
+          // Hero logo
+          const Hero(
+            tag: 'app_logo',
+            child: HomeSyncLogo(
+              size: 120,
+              showShadow: true,
+            ),
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'HomeSync',
+            style: TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'El hogar mejor organizado empieza aquí.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary.withValues(alpha: 0.85),
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Feature cards
+          ...features.asMap().entries.map((entry) {
+            final i = entry.key;
+            final f = entry.value;
+            return TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 350 + (i * 80)),
+              tween: Tween(begin: 0.0, end: 1.0),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) => Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              ),
+              child: _buildFeatureCard(f),
+            );
+          }),
+          const Spacer(flex: 1),
+          _buildPrimaryButton(
+            text: 'Comenzar ?',
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              setState(() => _currentStep = 1);
+            },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Te llevará menos de 2 minutos',
+            style: TextStyle(
+              color: AppColors.textSecondary.withValues(alpha: 0.6),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(_FeatureItem feature) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: feature.color.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: feature.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(feature.emoji, style: const TextStyle(fontSize: 24)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  feature.title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  feature.desc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Step 1: Welcome --------------------------------------------------------
 
   Widget _buildWelcomeStep() {
     return Padding(
@@ -427,33 +683,23 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         children: [
           const Spacer(),
           // Profile/Logo Hero
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: AppColors.primaryGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(44),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.35),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text('🏡', style: TextStyle(fontSize: 64)),
+          const Hero(
+            tag: 'app_logo',
+            child: HomeSyncLogo(
+              size: 140,
+              showShadow: true,
             ),
           ),
           const SizedBox(height: 64),
 
           // Premium Glass Welcome Card
-          GlassContainer(
-            borderRadius: 32,
+          // Welcome card
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
             padding: const EdgeInsets.all(32),
             child: Column(
               children: [
@@ -484,10 +730,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const Spacer(),
 
           _buildPrimaryButton(
-            text: 'Comenzar Configuración',
+            text: 'Configurar mi hogar',
             onPressed: () {
               HapticFeedback.heavyImpact();
-              setState(() => _currentStep = 1);
+              setState(() => _currentStep = 2);
             },
           ),
           const SizedBox(height: 16),
@@ -505,7 +751,151 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 0: Mode selection ────────────────────────────────────────────────
+  // -- Step 2: Identity (Name & Avatar) --------------------------------------
+
+  Widget _buildIdentityStep() {
+    return Padding(
+      key: const ValueKey('identity'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildHeading(
+              '¿Cómo te llamas?',
+              'Personalizá tu perfil para que tu equipo te identifique mejor.',
+            ),
+            const SizedBox(height: 48),
+
+            // Avatar Selector
+            Center(
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: UserAvatar.getColorForEmoji(_selectedAvatar)
+                          .withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          blurRadius: 30,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        _selectedAvatar,
+                        style: const TextStyle(fontSize: 72),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit_rounded,
+                        color: Colors.white, size: 20),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            // Name Field
+            TextField(
+              controller: _nameController,
+              autofocus: true,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                hintText: 'Tu nombre o apodo',
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.all(22),
+              ),
+              onSubmitted: (_) {
+                if (_nameController.text.trim().isNotEmpty) {
+                  setState(() => _currentStep = 3);
+                }
+              },
+            ),
+
+            const SizedBox(height: 32),
+
+            // Emoji Picker (Simple horizontal list)
+            SizedBox(
+              height: 70,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: UserAvatar.defaultAvatars.length,
+                itemBuilder: (context, index) {
+                  final avatar = UserAvatar.defaultAvatars[index];
+                  final emoji = avatar['emoji'] as String;
+                  final isSelected = _selectedAvatar == emoji;
+
+                  return GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedAvatar = emoji);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 60,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected ? AppColors.primary : AppColors.surface,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color:
+                              isSelected ? AppColors.primary : AppColors.border,
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child:
+                            Text(emoji, style: const TextStyle(fontSize: 28)),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 48),
+
+            _buildPrimaryButton(
+              text: 'Continuar',
+              onPressed: _nameController.text.trim().isEmpty
+                  ? null
+                  : () {
+                      HapticFeedback.heavyImpact();
+                      setState(() => _currentStep = 3);
+                    },
+            ),
+            const SizedBox(height: 48),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // -- Step 0: Mode selection ------------------------------------------------
 
   Widget _buildModeSelection() {
     return Padding(
@@ -564,6 +954,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
           ),
           const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _currentStep = 2),
+              child: Text(
+                '? Ver características de la app',
+                style: TextStyle(
+                  color: AppColors.textSecondary.withValues(alpha: 0.5),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -686,11 +1090,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 1: Create or Join ────────────────────────────────────────────────
+  // -- Step 1: Create or Join ------------------------------------------------
 
   Widget _buildTeamOptions() {
     return Padding(
-      key: const ValueKey('team'),
+      key: const ValueKey('team_options'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,7 +1108,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           _buildOptionTile(
             icon: Icons.add_home_work_rounded,
             title: 'Crear nuevo hogar',
-            desc: 'Genera un código para invitar a tu pareja o familia.',
+            desc: 'Genera un código para invitar a los miembros de tu hogar.',
             isSelected: _createNew,
             onTap: () => setState(() {
               _createNew = true;
@@ -737,7 +1141,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 16),
           Center(
             child: TextButton(
-              onPressed: () => setState(() => _currentStep = 1),
+              onPressed: () => setState(() => _currentStep = 3),
               child: const Text('Volver atrás'),
             ),
           ),
@@ -884,9 +1288,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 2: Show invite code ──────────────────────────
+  // -- Step 2: Show invite code --------------------------
 
-  // ── Step 2: Show invite code ──────────────────────────
+  // -- Step 2: Show invite code --------------------------
 
   Widget _buildInviteCodeStep() {
     return Column(
@@ -898,11 +1302,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             children: [
               const SizedBox(height: 16),
               _buildHeading(
-                '¡Hogar creado!',
-                'Invita a quien quieras compartiendo este código.',
+                _selectedMode == 'family' ? 'Familia creada' : 'Hogar creado',
+                _selectedMode == 'family'
+                    ? 'Comparte este codigo con quienes formen parte del hogar.'
+                    : 'Invita a quien quieras compartiendo este codigo.',
               ),
               const SizedBox(height: 40),
-
               Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 320),
@@ -941,10 +1346,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               padding: const EdgeInsets.all(32),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'CÓDIGO DE INVITACIÓN',
+                                    'CODIGO DE INVITACION',
                                     style: TextStyle(
                                       color: Colors.white70,
                                       fontWeight: FontWeight.w900,
@@ -977,9 +1383,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   ),
                 ),
               ),
-
               const SizedBox(height: 48),
-
               Row(
                 children: [
                   Expanded(
@@ -1009,14 +1413,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             text: 'Continuar',
             onPressed: () {
               setState(() {
-                _currentStep = _selectedMode == 'couple' ? 4 : 5;
+                _currentStep = _selectedMode == 'solo' ? 7 : 6;
               });
             },
           ),
         ),
         const SizedBox(height: 16),
         TextButton(
-          onPressed: () => setState(() => _currentStep = 2),
+          onPressed: () => setState(() => _currentStep = 4),
           child: const Text('Volver'),
         ),
         const SizedBox(height: 32),
@@ -1025,6 +1429,235 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   double _tempRatio = 0.5;
+
+  Widget _buildHouseholdSetupStep() {
+    if (_selectedMode == 'family') {
+      return _buildFamilySetupStep();
+    }
+    return _buildSplitStep();
+  }
+
+  Widget _buildFamilySetupStep() {
+    return Padding(
+      key: const ValueKey('family_setup'),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          _buildHeading(
+            'Base del hogar familiar',
+            'Antes de empezar, definamos como se organiza esta familia.',
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nombre del hogar',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: _familyHouseholdNameController,
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            hintText: 'Ej: Casa de los Gomez',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tipo de hogar',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            _buildFamilyChoiceChip(
+                              label: 'Solo adultos',
+                              selected: _familyStructure == 'adults',
+                              onTap: () => setState(() {
+                                _familyStructure = 'adults';
+                              }),
+                            ),
+                            _buildFamilyChoiceChip(
+                              label: 'Adultos y chicos',
+                              selected: _familyStructure == 'mixed',
+                              onTap: () => setState(() {
+                                _familyStructure = 'mixed';
+                              }),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _familyStructure == 'adults'
+                              ? 'Ideal para hogares con adultos que comparten tareas y gastos.'
+                              : 'Pensado para familias donde tambien participan chicos o hay responsables del hogar.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildFamilyPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tu rol visible',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            'Adulto responsable',
+                            'Madre',
+                            'Padre',
+                            'Tutor/a',
+                          ].map((role) {
+                            return _buildFamilyChoiceChip(
+                              label: role,
+                              selected: _familyRole == role,
+                              onTap: () => setState(() {
+                                _familyRole = role;
+                              }),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildPrimaryButton(
+            text: 'Guardar y Continuar',
+            onPressed: _saveFamilySetup,
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() => _currentStep = 7),
+              child: const Text('Configurar luego'),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFamilyPanel({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildFamilyChoiceChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.cardBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : AppColors.textPrimary,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveFamilySetup() async {
+    final householdId = ref.read(householdIdProvider).valueOrNull;
+    final currentUserId = ref.read(currentUserIdProvider);
+    final householdName = _familyHouseholdNameController.text.trim();
+
+    try {
+      if (householdId != null && householdName.isNotEmpty) {
+        await Supabase.instance.client
+            .from('households')
+            .update({'name': householdName}).eq('id', householdId);
+        ref.invalidate(currentHouseholdProvider);
+      }
+
+      if (currentUserId != null && _familyRole.trim().isNotEmpty) {
+        await ref
+            .read(householdRepositoryProvider)
+            .updateMemberDisplayRole(currentUserId, _familyRole);
+        ref.invalidate(householdMembersNotifierProvider);
+      }
+    } catch (_) {
+      // Best effort setup. The family can still continue onboarding.
+    }
+
+    if (mounted) {
+      setState(() => _currentStep = 7);
+    }
+  }
 
   Widget _buildSplitStep() {
     return Padding(
@@ -1036,7 +1669,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 16),
           _buildHeading(
             'División de Gastos',
-            'Configuremos cómo se dividirán los gastos de pareja.',
+            'Configuremos la base para dividir gastos en ${_selectedMode == 'couple' ? 'pareja' : 'convivencia'}.',
           ),
           const SizedBox(height: 32),
           Expanded(
@@ -1049,22 +1682,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       color: AppColors.accentTeal.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Text('💡', style: TextStyle(fontSize: 24)),
-                        SizedBox(width: 16),
+                        const Text('??', style: TextStyle(fontSize: 24)),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            'Pueden cambiar esto luego en configuración. Por defecto usamos 50/50.',
-                            style: TextStyle(fontSize: 13, height: 1.4),
+                            _selectedMode == 'couple'
+                                ? 'Pueden cambiar esto luego en configuracion. Por defecto usamos 50/50.'
+                                : 'Pueden cambiar esto luego en configuracion. Por defecto usamos equidad (50/50).',
+                            style: const TextStyle(fontSize: 13, height: 1.4),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 40),
-                  const Text('VOS : PAREJA',
-                      style: TextStyle(
+                  Text(_selectedMode == 'couple' ? 'VOS : PAREJA' : 'VOS : OTROS',
+                      style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 2)),
@@ -1074,24 +1709,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     children: [
                       Text('${(_tempRatio * 100).toInt()}%',
                           style: const TextStyle(
-                              fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary)),
                       const Text(' / ',
                           style: TextStyle(
                               fontSize: 32, fontWeight: FontWeight.w300)),
                       Text('${(100 - (_tempRatio * 100)).toInt()}%',
                           style: const TextStyle(
-                              fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.error)),
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.error)),
                     ],
                   ),
                   const SizedBox(height: 32),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: AppColors.primary,
-                      inactiveTrackColor: AppColors.primary.withValues(alpha: 0.1),
+                      inactiveTrackColor:
+                          AppColors.primary.withValues(alpha: 0.1),
                       thumbColor: AppColors.primary,
                       overlayColor: AppColors.primary.withValues(alpha: 0.2),
                       trackHeight: 12,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 18),
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 18),
                     ),
                     child: Slider(
                       value: _tempRatio,
@@ -1105,8 +1746,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     ),
                   ),
                   const SizedBox(height: 40),
-                  _buildStrategyTip('Igualitario (50/50)', '👫 Ideal para ingresos similares.', _tempRatio == 0.5),
-                  _buildStrategyTip('Proporcional', '📈 Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
+                  _buildStrategyTip(
+                      'Igualitario (50/50)',
+                      _selectedMode == 'couple'
+                          ? '?? Ideal para ingresos similares.'
+                          : '?? Ideal para ingresos similares o gastos divididos por igual.',
+                      _tempRatio == 0.5),
+                  _buildStrategyTip('Proporcional',
+                      '?? Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
                 ],
               ),
             ),
@@ -1118,18 +1765,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               try {
                 final householdId = ref.read(householdIdProvider).valueOrNull;
                 if (householdId != null) {
-                  await ref.read(householdRepositoryProvider).updateDefaultSplitRatio(householdId, _tempRatio);
+                  await ref
+                      .read(householdRepositoryProvider)
+                      .updateDefaultSplitRatio(householdId, _tempRatio);
                 }
               } catch (e) {
                 // Ignore error
               }
-              setState(() => _currentStep = 5);
+              setState(() => _currentStep = 7);
             },
           ),
           const SizedBox(height: 16),
           Center(
             child: TextButton(
-              onPressed: () => setState(() => _currentStep = 5),
+              onPressed: () => setState(() => _currentStep = 7),
               child: const Text('Configurar luego'),
             ),
           ),
@@ -1145,20 +1794,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: active ? AppColors.primary.withValues(alpha: 0.05) : Colors.transparent,
+        color: active
+            ? AppColors.primary.withValues(alpha: 0.05)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: active ? AppColors.primary : AppColors.cardBorder),
+        border: Border.all(
+            color: active ? AppColors.primary : AppColors.cardBorder),
       ),
       child: Row(
         children: [
-          Icon(active ? Icons.check_circle_rounded : Icons.circle_outlined, color: active ? AppColors.primary : AppColors.textMuted),
+          Icon(active ? Icons.check_circle_rounded : Icons.circle_outlined,
+              color: active ? AppColors.primary : AppColors.textMuted),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: active ? AppColors.primary : null)),
-                Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(title,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: active ? AppColors.primary : null)),
+                Text(desc,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -1167,7 +1825,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Step 3: Task selection ────────────────────────────────────────────────
+  // -- Step 3: Task selection ------------------------------------------------
 
   Widget _buildTaskSelection() {
     if (_isLoadingTemplates) {
@@ -1184,8 +1842,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             children: [
               const SizedBox(height: 16),
               _buildHeading(
-                'Personaliza tu hogar',
-                'Elige las tareas iniciales. Hemos seleccionado algunas por ti.',
+                _selectedMode == 'family'
+                    ? 'Primeras tareas para la familia'
+                    : 'Personaliza tu hogar',
+                _selectedMode == 'family'
+                    ? 'Elige tareas iniciales para coordinar el hogar desde el primer dia.'
+                    : 'Elige las tareas iniciales. Hemos seleccionado algunas por ti.',
               ),
               const SizedBox(height: 16),
             ],
@@ -1308,7 +1970,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 
-  // ── Shared UI Components ────────────────────────────────────────────────
+  // -- Shared UI Components ------------------------------------------------
 
   Widget _buildHeading(String title, String subtitle) {
     return Column(
@@ -1401,3 +2063,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     );
   }
 }
+
+// -- Data model for value prop features --------------------------------------
+
+class _FeatureItem {
+  final String emoji;
+  final String title;
+  final String desc;
+  final Color color;
+
+  const _FeatureItem({
+    required this.emoji,
+    required this.title,
+    required this.desc,
+    required this.color,
+  });
+}
+

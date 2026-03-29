@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -167,30 +169,39 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<TaskCompletionResult?> completeTask(TaskModel task, {List<String>? userIds}) async {
+  Future<TaskCompletionResult?> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final performers =
+        userIds ?? (currentUserId != null ? [currentUserId] : null);
     final primaryUserId = performers?.first ?? currentUserId;
-    
+    final effectiveCompletedAt = completedAt ?? DateTime.now();
+
     final oldState = state.value;
-    
+
     // Optimistic update
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(
-              status: TaskStatus.active,
-              completedBy: primaryUserId,
-              completedAt: DateTime.now(),
-            )
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: primaryUserId,
+                  completedAt: effectiveCompletedAt,
+                )
+              : t)
+          .toList());
     }
 
     try {
       final useCase = ref.read(completeTaskUseCaseProvider);
-      final result = await useCase(task, userIds: performers);
+      final result = await useCase(
+        task,
+        userIds: performers,
+        completedAt: effectiveCompletedAt,
+      );
       
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
@@ -215,6 +226,62 @@ class Tasks extends _$Tasks {
     } catch (e) {
       log.w('Complete task failure: $e');
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> completeTasksBatch(
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final primaryUserId = performers?.first ?? currentUserId;
+    final effectiveCompletedAt = completedAt ?? DateTime.now();
+    final taskIds = tasks.map((t) => t.id).toSet();
+
+    final oldState = state.value;
+
+    if (oldState != null) {
+      state = AsyncValue.data(oldState
+          .map((t) => taskIds.contains(t.id)
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: primaryUserId,
+                  completedAt: effectiveCompletedAt,
+                )
+              : t)
+          .toList());
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      final result = await repo.completeTasksBatch(
+        tasks,
+        userIds: performers,
+        completedAt: effectiveCompletedAt,
+      );
+      
+      if (result.isRight()) {
+        final isOnline = ref.read(isOnlineProvider);
+        if (isOnline) {
+          silentRefresh();
+          ref.invalidate(userBalanceProvider);
+          ref.invalidate(recentActivityProvider);
+        }
+      }
+      
+      return result.fold(
+        (failure) {
+          if (oldState != null) state = AsyncValue.data(oldState);
+          return null;
+        },
+        (data) => data,
+      );
+    } catch (e) {
+      log.w('Complete tasks batch failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
       return null;
     }
   }
@@ -317,10 +384,24 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<void> updateSchedule(TaskModel task, String? recurrenceType) async {
+  Future<void> updateSchedule(
+    TaskModel task,
+    String? recurrenceType, {
+    int recurrenceInterval = 1,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+    String? assignedTo,
+  }) async {
     try {
       final repo = ref.read(taskRepositoryProvider);
-      await repo.updateSchedule(task.id, recurrenceType);
+      await repo.updateSchedule(
+        task.id,
+        recurrenceType,
+        recurrenceInterval: recurrenceInterval,
+        recurrenceWeekdays: recurrenceWeekdays,
+        recurrenceMonthDays: recurrenceMonthDays,
+        assignedTo: assignedTo,
+      );
       if (ref.read(isOnlineProvider)) {
         refresh();
       }
@@ -333,7 +414,7 @@ class Tasks extends _$Tasks {
     try {
       final xp = taskData['xpReward'] as int;
       final coins = taskData['coinReward'] as int;
-      
+
       final useCase = ref.read(createTaskUseCaseProvider);
       final result = await useCase(
         title: taskData['title'] as String,
@@ -344,6 +425,9 @@ class Tasks extends _$Tasks {
         coinReward: coins,
         assignedTo: taskData['assignedTo'] as String?,
         recurrenceType: taskData['recurrenceType'] as String?,
+        recurrenceInterval: taskData['recurrenceInterval'] as int?,
+        recurrenceWeekdays: taskData['recurrenceWeekdays'] as List<int>?,
+        recurrenceMonthDays: taskData['recurrenceMonthDays'] as List<int>?,
         status: null,
       );
 
@@ -419,38 +503,68 @@ AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
 AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
+  final caps = ref.watch(householdCapabilitiesProvider);
+  final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
+  final currentMember =
+      members.where((member) => member.userId == currentUserId).firstOrNull;
+  final isFamilyAdult =
+      caps.type == HouseholdType.family && (currentMember?.isAdult ?? false);
 
   return tasksAsync.whenData((tasks) {
     final now = DateTime.now();
-    return tasks.where((task) {
-      // 1. Ownership check
-      if (task.assignedTo != null && task.assignedTo != currentUserId) {
+    final visibleTasks = tasks.where((task) {
+      // In family mode, adults need the household picture of the day.
+      // Children still default to their own tasks.
+      final shouldFilterByAssignment = !isFamilyAdult;
+      if (shouldFilterByAssignment &&
+          task.assignedTo != null &&
+          task.assignedTo != currentUserId) {
         return false;
       }
 
-      // 2. Completed-today tasks should leave "today" and remain only in activity history.
-      // We keep status=active in the new flow, so date is the source of truth for this list.
+      // Completed-today tasks should leave "today" and remain only in activity.
       if (isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }
 
-      // 3. Must be active (includes objected)
+      // Only actionable tasks belong in this list.
       if (!task.isActive) return false;
 
-      // 4. Visibility check:
-      // - Already due today?
       if (task.isDueToday) return true;
 
-      // - Is it a daily recurring task? (These always show unless completed)
       if (task.recurrenceType == 'daily') return true;
 
-      // - Is it overdue? (Due in the past but still active)
       if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {
         return true;
       }
 
       return false;
     }).toList();
+
+    if (visibleTasks.isNotEmpty || !isFamilyAdult) {
+      return visibleTasks;
+    }
+
+    // Family QA and new households can have active tasks without a due date or
+    // explicit "today" schedule yet. In that case, show the next active tasks
+    // instead of leaving the home empty.
+    final householdFallback = tasks.where((task) {
+      if (!task.isActive) return false;
+      if (isTaskCompletedOnLocalDate(task, now)) return false;
+      return true;
+    }).toList()
+      ..sort((a, b) {
+        final aDue = a.dueAt;
+        final bDue = b.dueAt;
+        if (aDue == null && bDue == null) {
+          return a.createdAt.compareTo(b.createdAt);
+        }
+        if (aDue == null) return 1;
+        if (bDue == null) return -1;
+        return aDue.compareTo(bDue);
+      });
+
+    return householdFallback.take(3).toList();
   });
 }
 

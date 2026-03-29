@@ -32,5 +32,33 @@ abstract class HouseholdRepository {
   Future<Either<Failure, Map<String, dynamic>>> resetAndClearHousehold();
 
   /// Updates the default split ratio for the household
-  Future<Either<Failure, void>> updateDefaultSplitRatio(String householdId, double ratio);
+  Future<Either<Failure, void>> updateDefaultSplitRatio(
+      String householdId, double ratio);
+
+  /// Updates the household type (solo, couple, family, friends)
+  Future<Either<Failure, void>> updateHouseholdType(
+      String householdId, String type);
+
+  /// Updates the custom display role for a member (e.g. Padre, Madre)
+  Future<Either<Failure, void>> updateMemberDisplayRole(
+      String userId, String? displayRole);
+
+  /// QA admin: restores a testing scenario to its seeded baseline.
+  Future<Either<Failure, Map<String, dynamic>>> qaResetScenario(
+      String householdId);
+
+  /// QA admin: creates a new dummy member inside a testing scenario.
+  Future<Either<Failure, Map<String, dynamic>>> qaAddDummyMember({
+    required String householdId,
+    required String fullName,
+    String? displayRole,
+    String? avatarUrl,
+    String role = 'member',
+  });
+
+  /// QA admin: removes a dummy QA member completely when safe to do so.
+  Future<Either<Failure, Map<String, dynamic>>> qaDeleteDummyMember({
+    required String householdId,
+    required String userId,
+  });
 }

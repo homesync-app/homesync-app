@@ -1,9 +1,13 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../errors/failures.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/retry/retry_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/config/app_environment.dart';
+
+import '../../errors/failures.dart';
 
 /// Base class for all RPC services.
-/// Provides retry logic and rate limit handling.
+/// Provides retry logic, rate limit handling and a unified auth guard.
 abstract class BaseRpcService {
   final SupabaseClient client;
 
@@ -42,6 +46,45 @@ abstract class BaseRpcService {
       ),
       shouldRetry: (_) => true,
     );
+  }
+
+  Future<String> requireCurrentUserId() async {
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId != null && appUserId.isNotEmpty) {
+      return appUserId;
+    }
+
+    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
+      final authUser = client.auth.currentUser;
+      if (authUser != null) {
+        return authUser.id;
+      }
+    }
+
+    throw Exception('Usuario no autenticado');
+  }
+
+  Future<String> requireHouseholdId() async {
+    final userId = await requireCurrentUserId();
+    final response = await client
+        .from('household_members')
+        .select('household_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (response != null && response['household_id'] != null) {
+      return response['household_id'] as String;
+    }
+
+    throw Exception('El usuario no pertenece a ningún hogar');
+  }
+
+  String? currentAuthEmail() {
+    if (AppEnvironment.usesFirebaseJwtForSupabase) {
+      return fa.FirebaseAuth.instance.currentUser?.email;
+    }
+    return fa.FirebaseAuth.instance.currentUser?.email ??
+        client.auth.currentUser?.email;
   }
 
   bool _isRateLimitError(PostgrestException e) {

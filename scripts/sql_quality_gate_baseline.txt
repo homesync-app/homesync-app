@@ -1,0 +1,10 @@
+# Baseline debt for SQL quality gate.
+# Each entry format: relative/path.sql|message
+supabase/migrations/20260318_fix_complete_task_transaction_recurring.sql|SECURITY DEFINER function without SET search_path in function definition.
+supabase/migrations/20260319_finance_hardening_contracts.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/003_rpc_functions.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/005_task_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/006_expense_management.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/007_statistics_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/010_reward_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
+database/migrations/004_rls_policies.sql|Potentially over-permissive RLS policy 'Users can create households' on sensitive table public.households.

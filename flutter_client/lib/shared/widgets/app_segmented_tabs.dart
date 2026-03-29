@@ -66,10 +66,9 @@ class AppSegmentedTabs extends StatelessWidget {
                                 ? AppColors.primary
                                 : theme.textSecondary,
                             fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w900
-                                : FontWeight.w700,
-                            letterSpacing: -0.2,
+                            fontWeight:
+                                isSelected ? FontWeight.w800 : FontWeight.w700,
+                            letterSpacing: -0.1,
                           ),
                         ),
                       ),

@@ -27,7 +27,7 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds}) async {
+      {List<String>? userIds, DateTime? completedAt}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right(TaskCompletionResult(
       success: true,
@@ -36,6 +36,15 @@ class MockTaskRepository implements TaskRepository {
       xpEarned: task.xpReward,
       coinsEarned: task.coinReward,
     ));
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
+    return right({'success': true});
   }
 
   @override
@@ -60,8 +69,7 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(
-      String taskId, String? recurrenceType) async {
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType, {int? recurrenceInterval, List<int>? recurrenceWeekdays, List<int>? recurrenceMonthDays}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -76,6 +84,9 @@ class MockTaskRepository implements TaskRepository {
     required int coinReward,
     String? assignedTo,
     String? recurrenceType,
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
     String? status,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));

@@ -121,65 +121,185 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         .read(householdMembersProvider)
         .maybeWhen(data: (m) => m, orElse: () => <MemberModel>[]);
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => ScheduleDialog(
-        currentRepeat: task.recurrenceType,
-        members: members
-            .map((m) => {
-                  'user_id': m.userId,
-                  'users': {'full_name': m.fullName, 'email': m.email},
-                })
-            .toList(),
-        onSave: (mode, customDays, assignedMembers) async {
-          String? recurrenceType;
-          switch (mode) {
-            case TaskRepeatMode.daily:
-              recurrenceType = 'daily';
-            case TaskRepeatMode.weekly:
-              recurrenceType = 'weekly';
-            case TaskRepeatMode.monthly:
-              recurrenceType = 'monthly';
-            case TaskRepeatMode.custom:
-              recurrenceType = 'custom';
-            case TaskRepeatMode.none:
-              recurrenceType = null;
-          }
-          try {
-            await ref
-                .read(tasksProvider.notifier)
-                .updateSchedule(task, recurrenceType);
-            if (mounted) {
-              _showSnack('Frecuencia actualizada', AppColors.accentGreen);
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.88,
+        child: ScheduleDialog(
+          currentRepeat: task.recurrenceType,
+          currentWeekdays: task.recurrenceWeekdays,
+          currentMonthDays: task.recurrenceMonthDays,
+          currentInterval: task.recurrenceInterval,
+          currentAssignedTo: task.assignedTo,
+          members: members
+              .map((m) => {
+                    'user_id': m.userId,
+                    'users': {
+                      'full_name': m.fullName,
+                      'email': m.email,
+                      'avatar_url': m.avatarUrl,
+                    },
+                  })
+              .toList(),
+          onSave: (selection) async {
+            String? recurrenceType;
+            switch (selection.mode) {
+              case TaskRepeatMode.daily:
+                recurrenceType = 'daily';
+                break;
+              case TaskRepeatMode.weekly:
+                recurrenceType = 'weekly';
+                break;
+              case TaskRepeatMode.monthly:
+                recurrenceType = 'monthly';
+                break;
+              case TaskRepeatMode.custom:
+                recurrenceType = 'custom';
+                break;
+              case TaskRepeatMode.none:
+                recurrenceType = null;
+                break;
             }
-          } catch (e) {
-            if (mounted) _showSnack('Error: $e', AppColors.error);
-          }
-        },
+            try {
+              await ref
+                  .read(tasksProvider.notifier)
+                  .updateSchedule(
+                    task,
+                    recurrenceType,
+                    recurrenceInterval: selection.recurrenceInterval,
+                    recurrenceWeekdays: selection.recurrenceWeekdays,
+                    recurrenceMonthDays: selection.recurrenceMonthDays,
+                    assignedTo: selection.assignedTo,
+                  );
+              if (mounted) {
+                _showSnack('Frecuencia actualizada', AppColors.accentGreen);
+              }
+            } catch (e) {
+              if (mounted) _showSnack('Error: $e', AppColors.error);
+            }
+          },
+        ),
       ),
     );
   }
 
   Future<void> _deleteTask(TaskModel task) async {
+    final theme = context.theme;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Eliminar tarea?'),
-        content: Text('Se eliminara "${task.title}"'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+      barrierDismissible: true,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 30),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child:
-                const Text('Eliminar', style: TextStyle(color: Colors.white)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentRed.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.accentRed,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      'Eliminar tarea',
+                      style: TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        color: theme.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Se va a eliminar "${task.title}" y no se puede deshacer.',
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.4,
+                  color: theme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          color: theme.textMuted,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            AppColors.accentRed.withValues(alpha: 0.86),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'Eliminar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -263,18 +383,50 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     return Scaffold(
       backgroundColor: theme.background,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 20),
-        child: FloatingActionButton.extended(
-          heroTag: null,
-          onPressed: _showCreateTaskDialog,
-          backgroundColor: theme.primary,
-          elevation: 4,
-          extendedPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
-          label: const Text(
-            'Nueva tarea',
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15),
+        padding: const EdgeInsets.only(bottom: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowBase.withValues(alpha: 0.032),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: SizedBox(
+            height: 56,
+            child: FloatingActionButton.extended(
+              heroTag: null,
+              onPressed: _showCreateTaskDialog,
+              backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
+              foregroundColor: AppColors.primary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(
+                  color: AppColors.primary.withValues(alpha: 0.075),
+                  width: 1,
+                ),
+              ),
+              extendedPadding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 19,
+                color: AppColors.primary,
+              ),
+              label: const Text(
+                'Nueva tarea',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  letterSpacing: -0.15,
+                ),
+              ),
+            ),
           ),
         ).animateScaleIn(delay: 400),
       ),
@@ -670,12 +822,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   Widget _buildEmptyState(String? filterStatus) {
+    final isSolo = ref.watch(currentHouseholdProvider).valueOrNull?.householdType == 'solo';
     return AppEmptyState(
       title: filterStatus == null
-          ? 'No hay tareas configuradas'
+          ? (isSolo ? 'No hay tareas configuradas' : 'No hay tareas configuradas')
           : 'No hay tareas con esos filtros',
       subtitle: filterStatus == null
-          ? 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.'
+          ? (isSolo ? 'Agrega tu primera tarea para empezar a organizar tu hogar.' : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
           : 'Proba cambiar la categoria o crear una nueva tarea.',
       icon: filterStatus == null
           ? Icons.edit_note_rounded
@@ -947,12 +1100,11 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                   ? task.recurrenceLabel
                                   : 'Sin programar',
                               color: task.isRecurring
-                                  ? AppColors.primary
-                                  : AppColors.accentPeach,
+                                  ? AppColors.accentGold
+                                  : AppColors.accentRed,
                               background: task.isRecurring
-                                  ? AppColors.primary.withValues(alpha: 0.10)
-                                  : AppColors.accentPeach
-                                      .withValues(alpha: 0.12),
+                                  ? AppColors.accentGold.withValues(alpha: 0.16)
+                                  : AppColors.accentRed.withValues(alpha: 0.16),
                             ),
                             if (task.isOverdue)
                               _pill(
@@ -960,7 +1112,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                 label: 'Vencida',
                                 color: AppColors.accentRed,
                                 background:
-                                    AppColors.accentRed.withValues(alpha: 0.10),
+                                    AppColors.accentRed.withValues(alpha: 0.16),
                               ),
                           ],
                         ),
@@ -1072,23 +1224,29 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required Color color,
     required Color background,
   }) {
+    final readableColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.18),
+      color,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: readableColor),
           const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 10,
-              color: color,
+              color: readableColor,
               letterSpacing: -0.1,
             ),
           ),

@@ -115,7 +115,7 @@ class PremiumPaywall extends ConsumerWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () async {
-                        await ref.read(premiumProvider.notifier).setPremium(true);
+                        await ref.read(premiumProvider.notifier).togglePremiumMock();
                         if (context.mounted) Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(

@@ -1,9 +1,11 @@
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class NotificationService {
   static final NotificationService instance = NotificationService._();
@@ -51,11 +53,11 @@ class NotificationService {
   // ── Supabase Realtime (in-app notifications) ──────────────────────────────
 
   Future<void> _setupRealtimeListener() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId == null) return;
 
     _channel = _supabase
-        .channel('notifications:${user.id}')
+        .channel('notifications:$appUserId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
@@ -63,7 +65,7 @@ class NotificationService {
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
             column: 'user_id',
-            value: user.id,
+            value: appUserId,
           ),
           callback: (payload) {
             final record = payload.newRecord;
@@ -134,12 +136,19 @@ class NotificationService {
   }
 
   Future<void> _saveFcmToken(String token) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null || !_isEnabled) return;
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId == null || !_isEnabled) return;
+    final authUserId = _supabase.auth.currentUser?.id;
+    if (AppEnvironment.enableAdminTesting &&
+        authUserId != null &&
+        authUserId != appUserId) {
+      log.i('QA admin mode activo: omitimos guardado de FCM token');
+      return;
+    }
 
     try {
       await _supabase.from('user_fcm_tokens').upsert({
-        'user_id': user.id,
+        'user_id': appUserId,
         'token': token,
         'platform': defaultTargetPlatform.name,
         'updated_at': DateTime.now().toIso8601String(),
@@ -151,14 +160,20 @@ class NotificationService {
   }
 
   Future<void> _deleteFcmToken() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
+    final appUserId = await AppIdentityService.instance.refresh();
+    if (appUserId == null) return;
+    final authUserId = _supabase.auth.currentUser?.id;
+    if (AppEnvironment.enableAdminTesting &&
+        authUserId != null &&
+        authUserId != appUserId) {
+      return;
+    }
 
     try {
       await _supabase
           .from('user_fcm_tokens')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', appUserId)
           .eq('platform', defaultTargetPlatform.name);
       log.i('✅ FCM tokens eliminados del servidor');
     } catch (e) {
