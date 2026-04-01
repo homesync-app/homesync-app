@@ -1,17 +1,18 @@
-
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 
-class LoveNotesNotifier extends StateNotifier<List<LoveNoteModel>> {
-  final Ref ref;
+class LoveNotesNotifier extends Notifier<List<LoveNoteModel>> {
   static const _storageKey = 'love_notes_storage';
 
-  LoveNotesNotifier(this.ref) : super([]) {
-    _loadNotes();
+  @override
+  List<LoveNoteModel> build() {
+    unawaited(_loadNotes());
+    return [];
   }
 
   Future<void> _loadNotes() async {
@@ -25,7 +26,7 @@ class LoveNotesNotifier extends StateNotifier<List<LoveNoteModel>> {
 
   Future<void> sendNote(String content, String fromId, String toId) async {
     // Solo si es Premium (doble verificación, aunque la UI ya lo bloquea)
-    if (!ref.read(premiumProvider)) return;
+    if (!(ref.read(premiumProvider).valueOrNull ?? false)) return;
 
     final note = LoveNoteModel(
       id: const Uuid().v4(),
@@ -54,8 +55,9 @@ class LoveNotesNotifier extends StateNotifier<List<LoveNoteModel>> {
   }
 }
 
-final loveNotesProvider = StateNotifierProvider<LoveNotesNotifier, List<LoveNoteModel>>((ref) {
-  return LoveNotesNotifier(ref);
+final loveNotesProvider =
+    NotifierProvider<LoveNotesNotifier, List<LoveNoteModel>>(() {
+  return LoveNotesNotifier();
 });
 
 final incomingLoveNotesProvider = Provider<List<LoveNoteModel>>((ref) {

@@ -723,17 +723,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         const SizedBox(height: 12),
         tasksAsync.when(
           data: (tasks) {
-            final pending = tasks.where((task) => task.isPending).toList()
+            final reviewTasks = !isChild
+                ? tasks.where((task) => task.isPendingApproval).toList()
+                : <TaskModel>[];
+            final todayTasks = tasks
+                .where((task) => task.isPending && !task.isPendingApproval)
+                .where((task) => task.isDueToday)
+                .toList()
               ..sort((a, b) {
-                if (!isChild && a.isPendingApproval != b.isPendingApproval) {
-                  return a.isPendingApproval ? -1 : 1;
-                }
-                if (a.isOverdue != b.isOverdue) {
-                  return a.isOverdue ? -1 : 1;
-                }
-                if (a.isDueToday != b.isDueToday) {
-                  return a.isDueToday ? -1 : 1;
-                }
                 final aAssigned = a.assignedTo != null;
                 final bAssigned = b.assignedTo != null;
                 if (aAssigned != bAssigned) {
@@ -741,7 +738,17 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 }
                 return a.createdAt.compareTo(b.createdAt);
               });
-            if (pending.isEmpty) {
+            final overdueTasks = tasks
+                .where((task) => task.isPending && !task.isPendingApproval)
+                .where((task) => task.isOverdue)
+                .toList()
+              ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+            final visibleTasks = <TaskModel>[
+              ...reviewTasks,
+              ...todayTasks,
+            ];
+
+            if (visibleTasks.isEmpty) {
               return _buildEmptyState(
                 theme,
                 isChild
@@ -749,15 +756,58 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     : 'No hay tareas programadas para hoy.',
               );
             }
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: (pending.length > 3) ? 3 : pending.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final task = pending[index];
-                return _buildTaskItem(task, theme);
-              },
+            return Column(
+              children: [
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: visibleTasks.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final task = visibleTasks[index];
+                    return _buildTaskItem(task, theme);
+                  },
+                ),
+                if (overdueTasks.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: theme.divider.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.history_rounded,
+                          size: 18,
+                          color: theme.textSecondary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            overdueTasks.length == 1
+                                ? 'Hay 1 tarea atrasada pendiente.'
+                                : 'Hay ${overdueTasks.length} tareas atrasadas pendientes.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             );
           },
           loading: () => const ShimmerLoading(height: 60, borderRadius: 16),
@@ -782,7 +832,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         .firstOrNull;
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
-    final isAssignedToChild = assignedMember?.isChild ?? false;
 
     IconData actionIcon;
     VoidCallback? onTap;
@@ -815,7 +864,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         onTap = () => _completeTask(task);
       }
     } else {
-      if (isAdultView && isAssignedToChild) {
+      if (isAdultView) {
         actionIcon = Icons.check_rounded;
         onTap = () => _confirmAdultTakeoverCompletion(task, assignedMember);
       } else {

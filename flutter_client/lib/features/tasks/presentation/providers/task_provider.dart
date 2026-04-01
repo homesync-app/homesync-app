@@ -6,6 +6,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
@@ -107,7 +108,7 @@ class Tasks extends _$Tasks {
   void _setupRealtime(String householdId) {
     _channel?.unsubscribe();
     final client = ref.read(supabaseClientProvider);
-    
+
     _channel = client
         .channel('tasks_realtime_$householdId')
         .onPostgresChanges(
@@ -202,7 +203,7 @@ class Tasks extends _$Tasks {
         userIds: performers,
         completedAt: effectiveCompletedAt,
       );
-      
+
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
@@ -215,7 +216,7 @@ class Tasks extends _$Tasks {
           ref.invalidate(recentActivityProvider);
         }
       }
-      
+
       return result.fold(
         (failure) {
           state = AsyncValue.data(oldState!);
@@ -236,7 +237,8 @@ class Tasks extends _$Tasks {
     DateTime? completedAt,
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final performers =
+        userIds ?? (currentUserId != null ? [currentUserId] : null);
     final primaryUserId = performers?.first ?? currentUserId;
     final effectiveCompletedAt = completedAt ?? DateTime.now();
     final taskIds = tasks.map((t) => t.id).toSet();
@@ -262,7 +264,7 @@ class Tasks extends _$Tasks {
         userIds: performers,
         completedAt: effectiveCompletedAt,
       );
-      
+
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         if (isOnline) {
@@ -271,7 +273,7 @@ class Tasks extends _$Tasks {
           ref.invalidate(recentActivityProvider);
         }
       }
-      
+
       return result.fold(
         (failure) {
           if (oldState != null) state = AsyncValue.data(oldState);
@@ -292,12 +294,14 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.verified, verifiedBy: userId, verifiedAt: DateTime.now())
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.verified,
+                  verifiedBy: userId,
+                  verifiedAt: DateTime.now())
+              : t)
+          .toList());
     }
 
     try {
@@ -315,12 +319,14 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.active, completedBy: null, completedAt: null)
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: null,
+                  completedAt: null)
+              : t)
+          .toList());
     }
 
     try {
@@ -338,12 +344,10 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.active)
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) =>
+              t.id == task.id ? t.copyWith(status: TaskStatus.active) : t)
+          .toList());
     }
 
     try {
@@ -455,9 +459,7 @@ class Tasks extends _$Tasks {
   Future<void> deleteTask(TaskModel task) async {
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.where((t) => t.id != task.id).toList()
-      );
+      state = AsyncValue.data(oldState.where((t) => t.id != task.id).toList());
     }
 
     try {
@@ -545,7 +547,6 @@ class Tasks extends _$Tasks {
   }
 }
 
-
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
 @riverpod
@@ -559,7 +560,7 @@ AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
     if (selectedCategories.isNotEmpty) {
       result = result
           .where((t) => selectedCategories
-              .contains(AppColors.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)))
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -577,7 +578,7 @@ AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
     final activeSet = <String>{};
     for (var t in tasks) {
       if (t.isActive) {
-        activeSet.add(AppColors.normaliseCategory(t.category));
+        activeSet.add(CategoryMapping.normaliseCategory(t.category));
       }
     }
     return activeSet.toList();
@@ -602,8 +603,7 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       // In family mode, only children should default to "my tasks".
       // Adults, and any temporarily unresolved family viewer in QA,
       // should keep the household coordination view.
-      final shouldFilterByAssignment =
-          isFamilyMode ? isFamilyChild : true;
+      final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
       if (shouldFilterByAssignment &&
           task.assignedTo != null &&
           task.assignedTo != currentUserId) {

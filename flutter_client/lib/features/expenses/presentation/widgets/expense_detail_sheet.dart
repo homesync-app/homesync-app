@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -73,14 +74,14 @@ class _ExpenseDetailSheetContentState
   @override
   Widget build(BuildContext context) {
     final expense = _expense;
-    final accentColor = AppColors.getSmartExpenseDisplayColor(
+    final accentColor = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
       title: expense.title,
       description: expense.description,
       transactionType: expense.type,
       splitType: expense.splitType,
     );
-    final displayIcon = AppColors.getSmartExpenseDisplayIcon(
+    final displayIcon = CategoryMapping.getSmartExpenseDisplayIcon(
       expense.category,
       title: expense.title,
       description: expense.description,

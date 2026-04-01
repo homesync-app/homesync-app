@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -351,7 +352,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             Icon(
               id == null
                   ? Icons.format_list_bulleted_rounded
-                  : AppColors.getCategoryMaterialIcon(id),
+                  : CategoryMapping.getCategoryMaterialIcon(id),
               size: 16,
               color: isSelected ? color : AppColors.textSecondary,
             ),
@@ -425,7 +426,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       (item) => item.id == catId,
       orElse: () => CategoryModel(
         id: catId,
-        name: AppColors.categoryNames[catId] ?? catId,
+        name: CategoryMapping.categoryNames[catId] ?? catId,
         icon: 'box',
         color: '#94A3B8',
       ),
@@ -446,7 +447,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  AppColors.getCategoryMaterialIcon(category.id),
+                  CategoryMapping.getCategoryMaterialIcon(category.id),
                   size: 14,
                   color: color,
                 ),
@@ -512,7 +513,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            AppColors.getCategoryMaterialIcon(category.id),
+            CategoryMapping.getCategoryMaterialIcon(category.id),
             color: color,
             size: 22,
           ),

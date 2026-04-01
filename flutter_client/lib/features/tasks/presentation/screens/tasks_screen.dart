@@ -16,6 +16,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
@@ -165,9 +166,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 break;
             }
             try {
-              await ref
-                  .read(tasksProvider.notifier)
-                  .updateSchedule(
+              await ref.read(tasksProvider.notifier).updateSchedule(
                     task,
                     recurrenceType,
                     recurrenceInterval: selection.recurrenceInterval,
@@ -185,134 +184,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _deleteTask(TaskModel task) async {
-    final theme = context.theme;
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-          decoration: BoxDecoration(
-            color: theme.background,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 28,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentRed.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppColors.accentRed,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      'Eliminar tarea',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        color: theme.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Se va a eliminar "${task.title}" y no se puede deshacer.',
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.4,
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          color: theme.textMuted,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            AppColors.accentRed.withValues(alpha: 0.86),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      await ref.read(tasksProvider.notifier).deleteTask(task);
-      if (mounted) _showSnack('Tarea eliminada', AppColors.accentGreen);
-    } catch (e) {
-      if (mounted) _showSnack('Error: $e', AppColors.error);
-    }
   }
 
   void _showCreateTaskDialog() async {
@@ -472,7 +343,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                   data: (catList) {
                                     final visibleCats = catList
                                         .where((c) => activeCats.contains(
-                                            AppColors.normaliseCategory(c.id)))
+                                            CategoryMapping.normaliseCategory(
+                                                c.id)))
                                         .toList();
 
                                     return Column(
@@ -765,7 +637,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isSelected = id == null
         ? selectedCategories.isEmpty
-        : selectedCategories.contains(AppColors.normaliseCategory(id));
+        : selectedCategories.contains(CategoryMapping.normaliseCategory(id));
     final theme = context.theme;
 
     return GestureDetector(
@@ -775,7 +647,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         } else {
           ref
               .read(taskCategoryFilterProvider.notifier)
-              .toggle(AppColors.normaliseCategory(id));
+              .toggle(CategoryMapping.normaliseCategory(id));
         }
       },
       child: AnimatedContainer(
@@ -804,7 +676,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              AppColors.getCategoryMaterialIcon(id ?? name),
+              CategoryMapping.getCategoryMaterialIcon(id ?? name),
               color: isSelected ? color : color.withValues(alpha: 0.85),
               size: 18,
             ),
@@ -824,13 +696,19 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   Widget _buildEmptyState(String? filterStatus) {
-    final isSolo = ref.watch(currentHouseholdProvider).valueOrNull?.householdType == 'solo';
+    final isSolo =
+        ref.watch(currentHouseholdProvider).valueOrNull?.householdType ==
+            'solo';
     return AppEmptyState(
       title: filterStatus == null
-          ? (isSolo ? 'No hay tareas configuradas' : 'No hay tareas configuradas')
+          ? (isSolo
+              ? 'No hay tareas configuradas'
+              : 'No hay tareas configuradas')
           : 'No hay tareas con esos filtros',
       subtitle: filterStatus == null
-          ? (isSolo ? 'Agrega tu primera tarea para empezar a organizar tu hogar.' : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
+          ? (isSolo
+              ? 'Agrega tu primera tarea para empezar a organizar tu hogar.'
+              : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
           : 'Proba cambiar la categoria o crear una nueva tarea.',
       icon: filterStatus == null
           ? Icons.edit_note_rounded
@@ -851,7 +729,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};
     for (final c in categories) {
-      final norm = AppColors.normaliseCategory(c.id);
+      final norm = CategoryMapping.normaliseCategory(c.id);
       // If collision, keep existing (usually the first in sort order)
       if (!catLookup.containsKey(norm)) {
         catLookup[norm] = c;
@@ -863,14 +741,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     if (selectedCategories.isNotEmpty) {
       tasksToDisplay = deduped
           .where((t) => selectedCategories
-              .contains(AppColors.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)))
           .toList();
     }
 
     // 3. Group the tasks to display
     final grouped = <String, List<TaskModel>>{};
     for (final t in tasksToDisplay) {
-      final normCat = AppColors.normaliseCategory(t.category);
+      final normCat = CategoryMapping.normaliseCategory(t.category);
       (grouped[normCat] ??= []).add(t);
     }
 
@@ -894,7 +772,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               color: '#94A3B8');
 
       widgets.add(_SectionHeader(
-        icon: AppColors.getCategoryMaterialIcon(normCat),
+        icon: CategoryMapping.getCategoryMaterialIcon(normCat),
         title: catInfo.name,
         count: catTasks.length,
         color: AppColors.fromHex(catInfo.color),
@@ -908,7 +786,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           task: task,
           onSchedule: () => _showScheduleDialog(task),
           onEdit: () => _showEditDialog(task),
-          onDelete: () => _deleteTask(task),
         ).animateStaggered(index);
       }));
     }
@@ -993,14 +870,12 @@ class _TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
   final VoidCallback onSchedule;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
 
   const _TaskCard({
     super.key,
     required this.task,
     required this.onSchedule,
     required this.onEdit,
-    required this.onDelete,
   });
 
   @override
@@ -1016,7 +891,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final task = widget.task;
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-    final members = ref.watch(householdMembersProvider).valueOrNull ?? const <MemberModel>[];
+    final members = ref.watch(householdMembersProvider).valueOrNull ??
+        const <MemberModel>[];
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
@@ -1043,7 +919,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
-        : AppColors.getCategoryColor(task.category);
+        : CategoryMapping.getCategoryColor(task.category);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
@@ -1161,16 +1037,6 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       children: [
                         const Divider(color: Color(0xFFF1F5F9), height: 1),
                         const SizedBox(height: 16),
-                        if (isFamilyMode) ...[
-                          _buildFamilyTaskAction(
-                            isChildView: isChildView,
-                            isAdultView: isAdultView,
-                            isOpenTask: isOpenTask,
-                            isAssignedToCurrentUser: isAssignedToCurrentUser,
-                            assignedMember: assignedMember,
-                          ),
-                          const SizedBox(height: 10),
-                        ],
                         Row(
                           children: [
                             Expanded(
@@ -1192,12 +1058,23 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: _buildActionTilePremium(
-                                icon: Icons.delete_outline_rounded,
-                                label: 'Eliminar',
-                                color: AppColors.accentRed,
-                                onTap: widget.onDelete,
-                              ),
+                              child: isFamilyMode
+                                  ? _buildFamilyTaskAction(
+                                      isChildView: isChildView,
+                                      isAdultView: isAdultView,
+                                      isOpenTask: isOpenTask,
+                                      isAssignedToCurrentUser:
+                                          isAssignedToCurrentUser,
+                                      assignedMember: assignedMember,
+                                    )
+                                  : _buildActionTilePremium(
+                                      icon: Icons.check_rounded,
+                                      label: _isSubmitting
+                                          ? 'Completando...'
+                                          : 'Completar',
+                                      color: AppColors.accentGreen,
+                                      onTap: _isSubmitting ? null : _completeTask,
+                                    ),
                             ),
                           ],
                         ),
@@ -1220,8 +1097,6 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required bool isAssignedToCurrentUser,
     required MemberModel? assignedMember,
   }) {
-    final isAssignedToChild = assignedMember?.isChild ?? false;
-
     if (widget.task.isPendingApproval) {
       if (!isAdultView) {
         return _buildInfoBanner(
@@ -1290,7 +1165,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     }
 
     final ownerName = assignedMember?.displayName ?? 'otra persona';
-    if (isAdultView && isAssignedToChild) {
+    if (isAdultView) {
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
         label: _isSubmitting ? 'Completando...' : 'Completar igual',
@@ -1477,7 +1352,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   Future<void> _completeTask() async {
     setState(() => _isSubmitting = true);
     try {
-      final result = await ref.read(tasksProvider.notifier).completeTask(widget.task);
+      final result =
+          await ref.read(tasksProvider.notifier).completeTask(widget.task);
       if (!mounted) return;
       if (result == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1499,8 +1375,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   Future<void> _approvePendingTask() async {
     setState(() => _isSubmitting = true);
     try {
-      final result =
-          await ref.read(tasksProvider.notifier).approvePendingTask(widget.task);
+      final result = await ref
+          .read(tasksProvider.notifier)
+          .approvePendingTask(widget.task);
       if (!mounted) return;
       if (result == null) {
         ScaffoldMessenger.of(context).showSnackBar(

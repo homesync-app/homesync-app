@@ -302,7 +302,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       decoration: BoxDecoration(
           color: theme.surface, borderRadius: BorderRadius.circular(24)),
       child: Column(children: [
-        Text('🎯', style: TextStyle(fontSize: 32)),
+        const Text('🎯', style: TextStyle(fontSize: 32)),
         const SizedBox(height: 8),
         Text(message,
             style: TextStyle(

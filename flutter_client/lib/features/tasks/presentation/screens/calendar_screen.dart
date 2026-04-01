@@ -5,6 +5,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -309,15 +310,15 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final isCompleted = task.isVerified;
     final xp = task.xpReward;
     final category = task.category ?? 'general';
-    final normalizedCategory = AppColors.normaliseCategory(category);
+    final normalizedCategory = CategoryMapping.normaliseCategory(category);
 
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
         try {
           return list.firstWhere((c) =>
-              AppColors.normaliseCategory(c.id) ==
-              AppColors.normaliseCategory(category));
+              CategoryMapping.normaliseCategory(c.id) ==
+              CategoryMapping.normaliseCategory(category));
         } catch (_) {
           return null;
         }
@@ -327,8 +328,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
 
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
-        : AppColors.getCategoryColor(category);
-    final categoryIcon = AppColors.getCategoryMaterialIcon(normalizedCategory);
+        : CategoryMapping.getCategoryColor(category);
+    final categoryIcon =
+        CategoryMapping.getCategoryMaterialIcon(normalizedCategory);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),

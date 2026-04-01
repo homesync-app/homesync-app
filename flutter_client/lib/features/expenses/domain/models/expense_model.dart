@@ -1,4 +1,4 @@
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 class ExpenseSplitModel {
   final String userId;
@@ -73,7 +73,7 @@ class ExpenseModel {
     // Robustly handle joined user data
     Map<String, dynamic>? payerMap;
     final rawPayer = map['users'] ?? map['payer'];
-    
+
     if (rawPayer is Map<String, dynamic>) {
       payerMap = rawPayer;
     } else if (rawPayer is List && rawPayer.isNotEmpty) {
@@ -96,10 +96,8 @@ class ExpenseModel {
       payerFullName: payerMap?['full_name'] as String?,
       payerAvatarUrl: payerMap?['avatar_url'] as String?,
       isShared: (map['is_shared'] as bool?) ??
-          !({
-            'personal',
-            'gift'
-          }.contains((map['split_type'] as String?)?.toLowerCase())),
+          !({'personal', 'gift'}
+              .contains((map['split_type'] as String?)?.toLowerCase())),
       type: map['type'] as String? ?? 'expense',
       splitType: map['split_type'] as String?,
       description: map['description'] as String?,
@@ -143,11 +141,11 @@ class ExpenseModel {
   String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
 
   String get categoryIcon {
-    return AppColors.categoryIcons[category] ?? '📦';
+    return CategoryMapping.categoryIcons[category] ?? '📦';
   }
 
   String get categoryLabel {
-    return AppColors.categoryNames[category] ?? 'Otros';
+    return CategoryMapping.categoryNames[category] ?? 'Otros';
   }
 
   @override
@@ -160,7 +158,6 @@ class ExpenseModel {
   @override
   String toString() => 'ExpenseModel(id: $id, title: $title, amount: $amount)';
 }
-
 
 /// Represents a member's financial balance within the household
 class HouseholdBalanceModel {

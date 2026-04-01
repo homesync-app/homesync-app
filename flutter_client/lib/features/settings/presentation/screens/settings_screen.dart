@@ -1659,7 +1659,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildColorPicker(WidgetRef ref) {
-    final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final theme = context.theme;
 
@@ -2716,7 +2716,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   // Premium Card
 
   Widget _buildPremiumCard() {
-    final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     final theme = context.theme;
 
     return Container(

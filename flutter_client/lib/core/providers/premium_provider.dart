@@ -6,33 +6,30 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import '../services/premium_service.dart';
 import '../services/logger_service.dart';
 
-class PremiumNotifier extends Notifier<bool> {
+class PremiumNotifier extends AsyncNotifier<bool> {
   late final SupabaseClient _supabase;
-  
+
   @override
-  bool build() {
+  Future<bool> build() async {
     _supabase = ref.read(supabaseClientProvider);
 
     ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
       next.whenData((authState) {
         if (authState.isAuthenticated) {
-          unawaited(_refreshFromDb());
+          unawaited(refresh());
         } else {
-          state = false;
+          state = const AsyncData(false);
         }
       });
     });
 
-    unawaited(_refreshFromDb());
-
-    return false;
+    return _fetchPremiumStatus();
   }
 
-  Future<void> _refreshFromDb() async {
+  Future<bool> _fetchPremiumStatus() async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
-      state = false;
-      return;
+      return false;
     }
 
     try {
@@ -41,14 +38,11 @@ class PremiumNotifier extends Notifier<bool> {
           .select('is_premium')
           .eq('id', user.id)
           .maybeSingle();
-      
-      if (data != null && data['is_premium'] == true) {
-        state = true;
-      } else {
-        state = false;
-      }
+
+      return data != null && data['is_premium'] == true;
     } catch (e) {
       log.e('Error fetching premium status: $e');
+      return false;
     }
   }
 
@@ -57,17 +51,22 @@ class PremiumNotifier extends Notifier<bool> {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    final newState = !state;
-    await _supabase.from('users').update({'is_premium': newState}).eq('id', user.id);
-    state = newState;
+    final currentPremium = state.valueOrNull ?? false;
+    final newState = !currentPremium;
+    await _supabase
+        .from('users')
+        .update({'is_premium': newState})
+        .eq('id', user.id);
+    state = AsyncData(newState);
   }
 
   Future<void> refresh() async {
-    await _refreshFromDb();
+    state = const AsyncLoading<bool>().copyWithPrevious(state);
+    state = await AsyncValue.guard(_fetchPremiumStatus);
   }
 }
 
-final premiumProvider = NotifierProvider<PremiumNotifier, bool>(() {
+final premiumProvider = AsyncNotifierProvider<PremiumNotifier, bool>(() {
   return PremiumNotifier();
 });
 

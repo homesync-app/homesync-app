@@ -146,7 +146,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                     const SizedBox(height: 24),
                     Consumer(
                       builder: (context, ref, _) {
-                        final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                         return OutlinedButton.icon(
                           onPressed: isPremium
                               ? () => _showCustomAvatarDialog(context, ref)

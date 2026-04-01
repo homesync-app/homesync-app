@@ -13,7 +13,7 @@ class PremiumPaywallScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(premiumProductsProvider);
-    final isPremium = ref.watch(premiumProvider);
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
     return Scaffold(
       extendBodyBehindAppBar: true,

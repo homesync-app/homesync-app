@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -267,7 +268,8 @@ class _RecurringExpenseFormSheetState
                               width: 56,
                               height: 6,
                               decoration: BoxDecoration(
-                                color: AppColors.divider.withValues(alpha: 0.85),
+                                color:
+                                    AppColors.divider.withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(99),
                               ),
                             ),
@@ -609,13 +611,14 @@ class _RecurringExpenseFormSheetState
           runSpacing: 8,
           children: _categories.map((category) {
             final isSelected = _category == category['id'];
-            final categoryColor = AppColors.getCategoryColor(category['id']);
+            final categoryColor =
+                CategoryMapping.getCategoryColor(category['id']);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    AppColors.getCategoryMaterialIcon(category['id']),
+                    CategoryMapping.getCategoryMaterialIcon(category['id']),
                     size: 16,
                     color: categoryColor,
                   ),
@@ -815,7 +818,8 @@ class _RecurringExpenseFormSheetState
 
   Widget _buildBottomActions(double bottomInset) {
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
+      padding:
+          EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
       decoration: BoxDecoration(
         color: context.theme.background.withValues(alpha: 0.98),
         border: Border(

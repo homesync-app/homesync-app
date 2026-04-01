@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -89,7 +90,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
-          final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
           label = 'Nueva Suscripción';
           onPressed = isPremium
               ? () => _showTemplateForm(context)
@@ -414,7 +415,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   // --- Recurrentes Tab ---
 
   Widget _buildRecurrentesTab() {
-    final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     if (!isPremium) return _buildPremiumLockedRecurrentes();
 
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
@@ -483,7 +484,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       (context, index) {
                         final template = templates[index];
                         final color =
-                            AppColors.getCategoryColor(template.category);
+                            CategoryMapping.getCategoryColor(template.category);
                         final theme = context.theme;
 
                         return Padding(
@@ -517,7 +518,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Icon(
-                                      AppColors.getCategoryMaterialIcon(
+                                      CategoryMapping.getCategoryMaterialIcon(
                                           template.category),
                                       size: 24,
                                       color: color,
@@ -1038,7 +1039,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     title: item.title,
                     amount: item.amount,
                     date: item.date,
-                    icon: AppColors.getSmartExpenseDisplayIcon(
+                    icon: CategoryMapping.getSmartExpenseDisplayIcon(
                       item.category,
                       title: item.title,
                       description: null,
@@ -1078,7 +1079,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         title: e.title,
                         amount: e.amount,
                         date: e.paidAt,
-                        icon: AppColors.getSmartExpenseDisplayIcon(
+                        icon: CategoryMapping.getSmartExpenseDisplayIcon(
                           e.category,
                           title: e.title,
                           description: e.description,
@@ -1305,14 +1306,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildPlannedExpenseCard(FeedItemModel item) {
     final theme = context.theme;
-    final categoryColor = AppColors.getSmartExpenseDisplayColor(
+    final categoryColor = CategoryMapping.getSmartExpenseDisplayColor(
       item.category,
       title: item.title,
       description: null,
       transactionType: item.transactionType,
       splitType: item.splitType,
     );
-    final categoryIcon = AppColors.getSmartExpenseDisplayIcon(
+    final categoryIcon = CategoryMapping.getSmartExpenseDisplayIcon(
       item.category,
       title: item.title,
       description: null,
@@ -1503,14 +1504,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final isIncome = expense.isIncome;
     final isShared = expense.isShared || expense.splitType == 'gift';
     final theme = context.theme;
-    final color = AppColors.getSmartExpenseDisplayColor(
+    final color = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
       title: expense.title,
       description: expense.description,
       transactionType: expense.type,
       splitType: expense.splitType,
     );
-    final categoryIcon = AppColors.getSmartExpenseDisplayIcon(
+    final categoryIcon = CategoryMapping.getSmartExpenseDisplayIcon(
       expense.category,
       title: expense.title,
       description: expense.description,
@@ -1970,7 +1971,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               child: Container(
                 decoration: BoxDecoration(
                   color: context.theme.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(36)),
                 ),
                 child: SafeArea(
                   top: false,
@@ -2464,7 +2466,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           decoration: BoxDecoration(
             color: theme.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

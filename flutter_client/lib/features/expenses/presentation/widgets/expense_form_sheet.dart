@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -82,67 +83,67 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       'id': 'supermarket',
       'name': 'Supermercado',
       'icon': '🛒',
-      'color': AppColors.getCategoryColor('supermarket')
+      'color': CategoryMapping.getCategoryColor('supermarket')
     },
     {
       'id': 'utilities',
       'name': 'Servicios',
       'icon': '💡',
-      'color': AppColors.getCategoryColor('utilities')
+      'color': CategoryMapping.getCategoryColor('utilities')
     },
     {
       'id': 'rent',
       'name': 'Alquiler',
       'icon': '🏠',
-      'color': AppColors.getCategoryColor('rent')
+      'color': CategoryMapping.getCategoryColor('rent')
     },
     {
       'id': 'restaurants',
       'name': 'Restaurantes',
       'icon': '🍽️',
-      'color': AppColors.getCategoryColor('restaurants')
+      'color': CategoryMapping.getCategoryColor('restaurants')
     },
     {
       'id': 'transport',
       'name': 'Transporte',
       'icon': '🚙',
-      'color': AppColors.getCategoryColor('transport')
+      'color': CategoryMapping.getCategoryColor('transport')
     },
     {
       'id': 'entertainment',
       'name': 'Entretenimiento',
       'icon': '🎬',
-      'color': AppColors.getCategoryColor('entertainment')
+      'color': CategoryMapping.getCategoryColor('entertainment')
     },
     {
       'id': 'health',
       'name': 'Salud',
       'icon': '💊',
-      'color': AppColors.getCategoryColor('health')
+      'color': CategoryMapping.getCategoryColor('health')
     },
     {
       'id': 'finanzas',
       'name': 'Ahorro / Inversión',
       'icon': '🏦',
-      'color': AppColors.getCategoryColor('finanzas')
+      'color': CategoryMapping.getCategoryColor('finanzas')
     },
     {
       'id': 'settlement',
       'name': 'Liquidación',
       'icon': '🤝',
-      'color': AppColors.getCategoryColor('settlement')
+      'color': CategoryMapping.getCategoryColor('settlement')
     },
     {
       'id': 'mercadolibre',
       'name': 'Compras online',
       'icon': '🛍️',
-      'color': AppColors.getCategoryColor('mercadolibre')
+      'color': CategoryMapping.getCategoryColor('mercadolibre')
     },
     {
       'id': 'other',
       'name': 'Otros Gastos',
       'icon': '📦',
-      'color': AppColors.getCategoryColor('other')
+      'color': CategoryMapping.getCategoryColor('other')
     },
   ];
 
@@ -1364,7 +1365,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                AppColors.getCategoryMaterialIcon(_selectedCategory!['id']),
+                CategoryMapping.getCategoryMaterialIcon(
+                    _selectedCategory!['id']),
                 size: 24,
                 color: _selectedCategory!['color'] as Color,
               ),
@@ -1428,7 +1430,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                 (cat['color'] as Color).withValues(alpha: 0.1),
                             shape: BoxShape.circle),
                         child: Icon(
-                          AppColors.getCategoryMaterialIcon(cat['id']),
+                          CategoryMapping.getCategoryMaterialIcon(cat['id']),
                           size: 20,
                           color: cat['color'] as Color,
                         ),
@@ -1465,7 +1467,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return shoppingItemsAsync.when(
       data: (allItems) {
         // Eliminamos el early return para que siempre sea visible
-        final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
         return Opacity(
           opacity: isPremium ? 1.0 : 0.6,
@@ -1738,8 +1740,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             color: theme.textPrimary))),
                 Text('\$',
                     style: TextStyle(
-                        color: theme.textMuted,
-                        fontWeight: FontWeight.bold)),
+                        color: theme.textMuted, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
                 Container(
                   width: 132,
@@ -2038,9 +2039,7 @@ class _ShoppingItemsSelectorState
                         setState(() => _searchQuery = '');
                         _searchFocus.requestFocus();
 
-                        await ref
-                            .read(shoppingItemsProvider.notifier)
-                            .addItem(
+                        await ref.read(shoppingItemsProvider.notifier).addItem(
                               name: val.trim(),
                               category: 'general',
                               emoji: '🏷️',

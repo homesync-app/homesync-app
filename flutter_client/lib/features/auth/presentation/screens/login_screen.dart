@@ -372,7 +372,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           height: 92,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
@@ -475,9 +475,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: InkWell(
               onTap: _handleForgotPassword,
               borderRadius: BorderRadius.circular(8),
-              child: Padding(
+              child: const Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                 child: Text(
                   '¿Olvidaste tu contraseña?',
                   style: TextStyle(
