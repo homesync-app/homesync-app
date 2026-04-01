@@ -1220,6 +1220,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required bool isAssignedToCurrentUser,
     required MemberModel? assignedMember,
   }) {
+    final isAssignedToChild = assignedMember?.isChild ?? false;
+
     if (widget.task.isPendingApproval) {
       if (!isAdultView) {
         return _buildInfoBanner(
@@ -1257,7 +1259,15 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         icon: Icons.check_rounded,
         label: _isSubmitting ? 'Marcando...' : 'Marcar realizada',
         color: AppColors.primary,
-        onTap: _isSubmitting ? null : () => _confirmOpenTaskCompletion(isChildView: isChildView),
+        onTap: _isSubmitting
+            ? null
+            : () {
+                if (isChildView) {
+                  _confirmOpenTaskCompletion(isChildView: true);
+                } else {
+                  _completeTask();
+                }
+              },
       );
     }
 
@@ -1280,6 +1290,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     }
 
     final ownerName = assignedMember?.displayName ?? 'otra persona';
+    if (isAdultView && isAssignedToChild) {
+      return _buildActionTilePremium(
+        icon: Icons.check_rounded,
+        label: _isSubmitting ? 'Completando...' : 'Completar igual',
+        color: AppColors.primary,
+        onTap: _isSubmitting
+            ? null
+            : () => _confirmAdultTakeoverCompletion(ownerName),
+      );
+    }
+
     return _buildInfoBanner(
       icon: Icons.lock_outline_rounded,
       text: 'Le toca a $ownerName.',
@@ -1409,6 +1430,32 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     } else {
       await _completeTask();
     }
+  }
+
+  Future<void> _confirmAdultTakeoverCompletion(String ownerName) async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Completar tarea'),
+            content: Text(
+              'Esta tarea estaba asignada a $ownerName. Si seguís, se va a marcar como realizada por vos.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Completar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+    await _completeTask();
   }
 
   Future<void> _submitTaskForApproval() async {

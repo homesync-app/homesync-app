@@ -158,6 +158,11 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
   }
 
+  await Supabase.initialize(
+    url: AppEnvironment.supabaseUrl,
+    anonKey: AppEnvironment.supabaseAnonKey,
+  );
+
   final supabaseClient = Supabase.instance.client;
   AppIdentityService.instance.configure(client: supabaseClient);
   final auth = SupabaseAuthService(client: supabaseClient);

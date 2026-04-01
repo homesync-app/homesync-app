@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -614,11 +615,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildFeatureCard(_FeatureItem feature) {
+    final theme = context.theme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -975,6 +977,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Widget _buildPremiumModeCard(Map<String, dynamic> mode) {
     final isSelected = _selectedMode == mode['id'];
     final gradient = mode['gradient'] as List<Color>;
+    final theme = context.theme;
 
     return GestureDetector(
       onTap: () {
@@ -985,7 +988,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -1273,7 +1276,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 color: AppColors.textMuted.withValues(alpha: 0.3),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.theme.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -1472,7 +1475,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           decoration: InputDecoration(
                             hintText: 'Ej: Casa de los Gomez',
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: context.theme.surface,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
                               borderSide: BorderSide.none,
@@ -1698,7 +1701,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     ),
                   ),
                   const SizedBox(height: 40),
-                  Text(_selectedMode == 'couple' ? 'VOS : PAREJA' : 'VOS : OTROS',
+                  Text(
+                      _selectedMode == 'couple'
+                          ? 'VOS : PAREJA'
+                          : 'VOS : OTROS',
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
@@ -2079,4 +2085,3 @@ class _FeatureItem {
     required this.color,
   });
 }
-

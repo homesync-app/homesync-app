@@ -44,7 +44,7 @@ class AdminTestingConfig {
       '5ac9da1b-11ba-4427-a994-691577ad596f';
   static const String adminDisplayName = 'Admin QA';
   static const String adminEmail = 'admin@homesync.qa';
-  static const String adminAvatar = '🛠️';
+  static const String adminAvatar = '\u{1F6E0}\u{FE0F}';
 
   static const String defaultUsername = 'admin';
   static const String defaultPassword = 'superadmin';

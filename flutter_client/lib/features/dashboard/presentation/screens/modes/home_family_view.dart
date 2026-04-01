@@ -782,6 +782,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         .firstOrNull;
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
+    final isAssignedToChild = assignedMember?.isChild ?? false;
 
     IconData actionIcon;
     VoidCallback? onTap;
@@ -798,7 +799,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       }
     } else if (isOpenTask) {
       actionIcon = Icons.check_rounded;
-      onTap = () => _confirmOpenTaskCompletion(task, isChildView: isChildView);
+      onTap = () {
+        if (isChildView) {
+          _confirmOpenTaskCompletion(task, isChildView: true);
+        } else {
+          _completeTask(task);
+        }
+      };
     } else if (isAssignedToCurrentUser) {
       if (isChildView) {
         actionIcon = Icons.send_rounded;
@@ -808,9 +815,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         onTap = () => _completeTask(task);
       }
     } else {
-      actionIcon = Icons.lock_outline_rounded;
-      isActionEnabled = false;
-      onTap = () => _showTaskLockedMessage(assignedMember);
+      if (isAdultView && isAssignedToChild) {
+        actionIcon = Icons.check_rounded;
+        onTap = () => _confirmAdultTakeoverCompletion(task, assignedMember);
+      } else {
+        actionIcon = Icons.lock_outline_rounded;
+        isActionEnabled = false;
+        onTap = () => _showTaskLockedMessage(assignedMember);
+      }
     }
 
     return FamilyTaskCard(
@@ -866,6 +878,36 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     } else {
       await _completeTask(task);
     }
+  }
+
+  Future<void> _confirmAdultTakeoverCompletion(
+    TaskModel task,
+    MemberModel? assignedMember,
+  ) async {
+    final ownerName = assignedMember?.displayName ?? 'otro integrante';
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Completar tarea'),
+            content: Text(
+              'Esta tarea estaba asignada a $ownerName. Si seguís, se va a marcar como realizada por vos.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Completar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+    await _completeTask(task);
   }
 
   void _showTaskLockedMessage(MemberModel? assignedMember) {

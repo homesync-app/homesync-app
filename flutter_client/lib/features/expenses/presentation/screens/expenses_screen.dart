@@ -484,6 +484,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         final template = templates[index];
                         final color =
                             AppColors.getCategoryColor(template.category);
+                        final theme = context.theme;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -494,7 +495,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.surface,
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
                                     color: AppColors.divider
@@ -538,7 +539,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         const SizedBox(height: 2),
                                         Text(
                                           'Día ${template.dayOfMonth} de cada mes',
-                                            style: const TextStyle(
+                                          style: const TextStyle(
                                               color: AppColors.textSecondary,
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600),
@@ -1753,7 +1754,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           return _buildEmptyState(
             'No hay metas activas aún',
             icon: '🎯',
-            subtitle: 'Empezá a guardar para algo que de verdad les entusiasme.',
+            subtitle:
+                'Empezá a guardar para algo que de verdad les entusiasme.',
           );
         }
 
@@ -1772,12 +1774,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildGoalCard(SavingsGoalModel goal) {
+    final theme = context.theme;
     return AnimatedPress(
       onTap: () => _showContributionDialog(goal),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
@@ -1918,7 +1921,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              subtitle ?? 'Empez? hoy mismo a organizar tus finanzas del hogar.',
+              subtitle ??
+                  'Empez? hoy mismo a organizar tus finanzas del hogar.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -1964,8 +1968,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             child: FractionallySizedBox(
               heightFactor: 0.9,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
+                decoration: BoxDecoration(
+                  color: context.theme.background,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
                 ),
                 child: SafeArea(
@@ -2000,7 +2004,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     width: 84,
                                     height: 84,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(28),
                                     ),
                                     child: const Icon(
@@ -2012,7 +2017,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   const SizedBox(width: 18),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Nueva Meta',
@@ -2074,7 +2080,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     color: AppColors.primary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -2082,13 +2088,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -2119,7 +2127,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     color: AppColors.textSecondary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -2127,13 +2135,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -2188,7 +2198,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         context,
                                         'Elegí un ícono',
                                         emojis,
-                                        (e) => setModalState(() => selectedEmoji = e),
+                                        (e) => setModalState(
+                                            () => selectedEmoji = e),
                                       );
                                     },
                                   ),
@@ -2216,7 +2227,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       _showColorPicker(
                                         context,
                                         colors,
-                                        (c) => setModalState(() => selectedColor = c),
+                                        (c) => setModalState(
+                                            () => selectedColor = c),
                                       );
                                     },
                                   ),
@@ -2260,12 +2272,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   onPressed: () {
                                     final title = titleController.text.trim();
                                     final amount = double.tryParse(
-                                          amountController.text.replaceAll(',', '.'),
+                                          amountController.text
+                                              .replaceAll(',', '.'),
                                         ) ??
                                         0;
 
                                     if (title.isNotEmpty && amount > 0) {
-                                      ref.read(savingsGoalsProvider.notifier).addGoal(
+                                      ref
+                                          .read(savingsGoalsProvider.notifier)
+                                          .addGoal(
                                             title,
                                             amount,
                                             '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
@@ -2305,7 +2320,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       ),
     );
   }
-
 
   Widget _buildGoalOption(
       {required String label,
@@ -2439,6 +2453,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final theme = context.theme;
         final amountController = TextEditingController();
         return Container(
           padding: EdgeInsets.only(
@@ -2447,8 +2462,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             left: 24,
             right: 24,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
+          decoration: BoxDecoration(
+            color: theme.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(

@@ -30,7 +30,7 @@ class ShoppingItem {
     this.quantity,
     this.unit,
     this.category = 'general',
-    this.emoji = '??',
+    this.emoji = '\u{1F6D2}',
     this.note,
     this.addedBy,
     this.addedByName,
@@ -49,7 +49,7 @@ class ShoppingItem {
       quantity: map['quantity'] as String?,
       unit: map['unit'] as String?,
       category: map['category'] as String? ?? 'general',
-      emoji: map['emoji'] as String? ?? '??',
+      emoji: map['emoji'] as String? ?? '\u{1F6D2}',
       note: map['note'] as String?,
       addedBy: map['added_by'] as String?,
       addedByName: (map['added_by_user'] as Map?)?['full_name'] as String?,
@@ -162,7 +162,7 @@ class ShoppingService {
     String? quantity,
     String? unit,
     String category = 'general',
-    String emoji = '??',
+    String emoji = '\u{1F6D2}',
     String? note,
   }) async {
     final userId = await _getCurrentUserId();

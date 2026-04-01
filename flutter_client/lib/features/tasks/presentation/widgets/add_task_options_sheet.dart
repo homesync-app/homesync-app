@@ -141,9 +141,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       return !activeKeys.contains(key);
     }).toList();
 
-    final activeCatIds = availableTemplates.map((template) => template.categoryId).toSet();
-    final displayCategories =
-        dbCategories.where((category) => activeCatIds.contains(category.id)).toList();
+    final activeCatIds =
+        availableTemplates.map((template) => template.categoryId).toSet();
+    final displayCategories = dbCategories
+        .where((category) => activeCatIds.contains(category.id))
+        .toList();
 
     final filtered = _selectedCategory == null
         ? availableTemplates
@@ -229,8 +231,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 children: [
                   _buildCategoryChip(null, 'Todas', null),
                   ...displayCategories.map(
-                    (category) =>
-                        _buildCategoryChip(category.id, category.name, category),
+                    (category) => _buildCategoryChip(
+                        category.id, category.name, category),
                   ),
                 ],
               ),
@@ -265,8 +267,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       final result = await showDialog<bool>(
                         context: context,
                         builder: (context) => CreateTaskDialog(
-                          members:
-                              widget.members.map((member) => member.toMap()).toList(),
+                          members: widget.members
+                              .map((member) => member.toMap())
+                              .toList(),
                         ),
                       );
                       if (result == true && context.mounted) {
@@ -276,7 +279,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     icon: const Icon(Icons.edit_rounded),
                     label: const Text('Personalizada'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: context.theme.surface,
                       foregroundColor: AppColors.primary,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
@@ -330,9 +333,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? color
-                : AppColors.divider.withValues(alpha: 0.6),
+            color:
+                isSelected ? color : AppColors.divider.withValues(alpha: 0.6),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: [
