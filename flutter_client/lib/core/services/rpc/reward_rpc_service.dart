@@ -1,7 +1,7 @@
 import 'base_rpc_service.dart';
 
 class RewardRpcService extends BaseRpcService {
-  RewardRpcService({super.clientOverride});
+  RewardRpcService({required super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getAvailableRewards() async {
     final userId = await requireCurrentUserId();

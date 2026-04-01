@@ -11,8 +11,8 @@ import '../../errors/failures.dart';
 abstract class BaseRpcService {
   final SupabaseClient client;
 
-  BaseRpcService({SupabaseClient? clientOverride})
-      : client = clientOverride ?? Supabase.instance.client;
+  BaseRpcService({required SupabaseClient clientOverride})
+      : client = clientOverride;
 
   static const int _maxRetries = 3;
   static const Duration _initialDelay = Duration(seconds: 1);

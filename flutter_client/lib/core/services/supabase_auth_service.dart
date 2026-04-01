@@ -10,19 +10,16 @@ import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
-  factory SupabaseAuthService() => _instance;
+  factory SupabaseAuthService({required SupabaseClient client}) {
+    _instance._client = client;
+    return _instance;
+  }
   SupabaseAuthService._internal();
 
-  late final SupabaseClient _client;
+  late SupabaseClient _client;
   final fa.FirebaseAuth _firebaseAuth = fa.FirebaseAuth.instance;
 
   Future<void> initialize() async {
-    await Supabase.initialize(
-      url: AppEnvironment.supabaseUrl,
-      anonKey: AppEnvironment.supabaseAnonKey,
-    );
-    _client = Supabase.instance.client;
-
     // Inicializar GoogleSignIn con el Web Client ID (serverClientId)
     // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
     try {

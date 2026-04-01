@@ -12,11 +12,15 @@ import '../../domain/repositories/savings_repository.dart';
 class SupabaseSavingsRepository
     with RepositoryErrorHandler
     implements SavingsRepository {
-  final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient _client;
   final Ref _ref;
   final OfflineQueueService _offlineQueue = OfflineQueueService();
 
-  SupabaseSavingsRepository({required Ref ref}) : _ref = ref;
+  SupabaseSavingsRepository({
+    required SupabaseClient client,
+    required Ref ref,
+  })  : _client = client,
+        _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
 

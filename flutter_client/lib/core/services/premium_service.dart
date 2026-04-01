@@ -3,11 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import '../services/logger_service.dart';
 
 class PremiumService {
   final InAppPurchase _iap = InAppPurchase.instance;
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
   
   // Real IDs in store (change later if needed)
   static const String _monthlyId = 'premium_monthly';
@@ -20,7 +21,10 @@ class PremiumService {
   // To update UI from outside
   final Function(bool isPremium)? onPremiumStatusChanged;
 
-  PremiumService({this.onPremiumStatusChanged});
+  PremiumService({
+    required SupabaseClient supabase,
+    this.onPremiumStatusChanged,
+  }) : _supabase = supabase;
 
   void initialize() {
     if (kIsWeb) {
@@ -128,7 +132,9 @@ class PremiumService {
 }
 
 final premiumServiceProvider = Provider<PremiumService>((ref) {
-  final service = PremiumService();
+  final service = PremiumService(
+    supabase: ref.watch(supabaseClientProvider),
+  );
   service.initialize();
   return service;
 });

@@ -9,12 +9,12 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -53,12 +53,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   String? _joinError;
 
   // TaskModel selection
-  final TemplateService _templateService = TemplateService();
   final Set<String> _selectedTemplateIds = {};
   List<Category> _categories = [];
   Map<String, List<TaskTemplate>> _templatesByCategory = {};
   bool _isLoadingTemplates = true;
   bool _isSaving = false;
+  TemplateService get _templateService => ref.read(templateServiceProvider);
   final List<Map<String, dynamic>> _modes = [
     {
       'id': 'couple',
@@ -1637,7 +1637,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     try {
       if (householdId != null && householdName.isNotEmpty) {
-        await Supabase.instance.client
+        await ref
+            .read(supabaseClientProvider)
             .from('households')
             .update({'name': householdName}).eq('id', householdId);
         ref.invalidate(currentHouseholdProvider);

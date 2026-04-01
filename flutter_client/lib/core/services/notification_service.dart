@@ -8,10 +8,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:homesync_client/config/app_environment.dart';
 
 class NotificationService {
-  static final NotificationService instance = NotificationService._();
-  NotificationService._();
+  NotificationService({required SupabaseClient supabaseClient})
+      : _supabase = supabaseClient;
 
-  final _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
   RealtimeChannel? _channel;
   NotificationCallback? _onNotification;
   bool _isEnabled = true; // Default

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'user_avatar.dart';
@@ -32,7 +32,8 @@ class AvatarPickerSheet extends ConsumerWidget {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) throw Exception('No autenticado');
 
-      await Supabase.instance.client
+      final client = ref.read(supabaseClientProvider);
+      await client
           .from('users')
           .update({'avatar_url': normalizedEmoji}).eq('id', userId);
 

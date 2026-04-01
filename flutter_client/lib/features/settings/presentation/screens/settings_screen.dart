@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
@@ -101,12 +101,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
       _householdId = hId;
 
-      final householdFuture = Supabase.instance.client
+      final supabaseClient = ref.read(supabaseClientProvider);
+      final householdFuture = supabaseClient
           .from('households')
           .select('name, household_type')
           .eq('id', hId)
           .maybeSingle();
-      final invitationFuture = Supabase.instance.client
+      final invitationFuture = supabaseClient
           .from('household_invitations')
           .select('code')
           .eq('household_id', hId)
@@ -1250,7 +1251,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final hId = _householdId;
       if (hId == null) return;
 
-      await Supabase.instance.client
+      await ref
+          .read(supabaseClientProvider)
           .from('households')
           .update({'name': newName}).eq('id', hId);
 
@@ -1819,7 +1821,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) return;
 
-      await Supabase.instance.client
+      await ref
+          .read(supabaseClientProvider)
           .from('users')
           .update({'full_name': newName}).eq('id', userId);
 

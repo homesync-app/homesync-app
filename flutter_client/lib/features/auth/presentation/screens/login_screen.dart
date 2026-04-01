@@ -744,8 +744,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _buildModeTogglePrompt(ThemeData theme) {
     final isLoading = ref.watch(authControllerProvider).isLoading;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 4,
       children: [
         Text(
           _isSignUpMode ? '¿Ya tenés cuenta?' : '¿Sos nuevo en HomeSync?',
@@ -755,7 +758,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(width: 6),
         InkWell(
           onTap: isLoading ? null : _toggleMode,
           borderRadius: BorderRadius.circular(8),

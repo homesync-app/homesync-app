@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 
-class NotificationBell extends StatefulWidget {
+class NotificationBell extends ConsumerStatefulWidget {
   const NotificationBell({super.key});
 
   @override
-  State<NotificationBell> createState() => _NotificationBellState();
+  ConsumerState<NotificationBell> createState() => _NotificationBellState();
 }
 
-class _NotificationBellState extends State<NotificationBell>
+class _NotificationBellState extends ConsumerState<NotificationBell>
     with SingleTickerProviderStateMixin {
   int _unreadCount = 0;
   late AnimationController _shakeController;
@@ -47,7 +48,8 @@ class _NotificationBellState extends State<NotificationBell>
       final userId = await AppIdentityService.instance.refresh();
       if (userId == null || userId.isEmpty) return;
 
-      final data = await Supabase.instance.client
+      final data = await ref
+          .read(supabaseClientProvider)
           .from('notifications')
           .select('id')
           .eq('user_id', userId)

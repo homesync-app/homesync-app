@@ -1,7 +1,7 @@
 import 'base_rpc_service.dart';
 
 class HouseholdRpcService extends BaseRpcService {
-  HouseholdRpcService({super.clientOverride});
+  HouseholdRpcService({required super.clientOverride});
 
   Future<Map<String, dynamic>> getHouseholdInfo() async {
     final userId = await requireCurrentUserId();

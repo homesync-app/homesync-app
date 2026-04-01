@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -30,7 +31,6 @@ class AddTaskOptionsSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
-  final TemplateService _templateService = TemplateService();
   List<TaskTemplate> _templates = [];
   bool _isLoading = true;
   final Set<String> _addingIds = {};
@@ -38,6 +38,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   String? _selectedCategory;
 
   List<CategoryModel> _categories = [];
+  TemplateService get _templateService => ref.read(templateServiceProvider);
 
   @override
   void initState() {

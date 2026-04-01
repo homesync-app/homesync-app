@@ -18,9 +18,8 @@ class SupabaseRpcService {
   late final BalanceRpcService _balance;
   late final HouseholdRpcService _household;
 
-
-  SupabaseRpcService({SupabaseClient? clientOverride})
-      : _client = clientOverride ?? Supabase.instance.client {
+  SupabaseRpcService({required SupabaseClient clientOverride})
+      : _client = clientOverride {
     _admin = AdminRpcService(clientOverride: _client);
     _task = TaskRpcService(clientOverride: _client);
     _stats = StatsRpcService(clientOverride: _client);

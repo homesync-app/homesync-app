@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 
 class QaAdminEvent {
   const QaAdminEvent({
@@ -18,7 +18,8 @@ class QaAdminEvent {
 
 final qaAdminRecentEventsProvider =
     FutureProvider<List<QaAdminEvent>>((ref) async {
-  final response = await Supabase.instance.client
+  final response = await ref
+      .read(supabaseClientProvider)
       .from('system_events')
       .select('created_at, event_type, household_id, metadata')
       .eq('source', 'qa_admin')

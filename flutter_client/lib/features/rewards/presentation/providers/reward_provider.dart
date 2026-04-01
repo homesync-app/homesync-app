@@ -29,7 +29,7 @@ class Rewards extends _$Rewards {
     List<Map<String, dynamic>> rawRewards = [];
 
     if (admin.isAdminUser) {
-      final client = Supabase.instance.client;
+      final client = ref.read(supabaseClientProvider);
       final rewardsResponse = await client.rpc(
         'qa_admin_get_rewards',
         params: {'p_household_id': householdId},
@@ -206,7 +206,8 @@ class Rewards extends _$Rewards {
         return const Left(ValidationFailure('Hogar QA no identificado'));
       }
       try {
-        final seeded = await Supabase.instance.client.rpc(
+        final client = ref.read(supabaseClientProvider);
+        final seeded = await client.rpc(
           'qa_admin_seed_default_rewards',
           params: {'p_household_id': householdId},
         );

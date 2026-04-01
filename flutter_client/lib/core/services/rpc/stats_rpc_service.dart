@@ -3,7 +3,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'base_rpc_service.dart';
 
 class StatsRpcService extends BaseRpcService {
-  StatsRpcService({super.clientOverride});
+  StatsRpcService({required super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getTaskStatsByCategory() async {
     final userId = await requireCurrentUserId();

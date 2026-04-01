@@ -107,7 +107,10 @@ class ShoppingItem {
 }
 
 class ShoppingService {
-  final _client = Supabase.instance.client;
+  ShoppingService({required SupabaseClient supabaseClient})
+      : _client = supabaseClient;
+
+  final SupabaseClient _client;
   RealtimeChannel? _channel;
 
   static final StreamController<void> _localChanges =

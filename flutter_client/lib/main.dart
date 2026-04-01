@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
@@ -12,17 +13,15 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -159,43 +158,12 @@ void main() async {
     debugPrint('Firebase initialization error: $e');
   }
 
-  final auth = SupabaseAuthService();
+  final supabaseClient = Supabase.instance.client;
+  AppIdentityService.instance.configure(client: supabaseClient);
+  final auth = SupabaseAuthService(client: supabaseClient);
   await auth.initialize();
-  await AppIdentityService.instance.initialize();
 
-  if (!kIsWeb) {
-    final userId = AppIdentityService.instance.currentUserId;
-    if (userId != null && userId.isNotEmpty) {
-      FirebaseCrashlytics.instance.setUserIdentifier(userId);
-      FirebaseCrashlytics.instance.setCustomKey('user_id', userId);
-    }
-  }
-  final initialUserId = AppIdentityService.instance.currentUserId;
-  if (initialUserId != null && initialUserId.isNotEmpty) {
-    log.setUserId(initialUserId);
-    log.setCustomKey('user_id', initialUserId);
-  }
-
-  final authStateStream = AppEnvironment.usesFirebaseJwtForSupabase
-      ? fa.FirebaseAuth.instance.idTokenChanges().map((_) => null)
-      : Supabase.instance.client.auth.onAuthStateChange.map((_) => null);
-
-  authStateStream.listen((_) async {
-    final nextUserId = await AppIdentityService.instance.refresh();
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance.setUserIdentifier(nextUserId ?? '');
-      FirebaseCrashlytics.instance.setCustomKey('user_id', nextUserId ?? '');
-    }
-    if (nextUserId != null && nextUserId.isNotEmpty) {
-      log.setUserId(nextUserId);
-      log.setCustomKey('user_id', nextUserId);
-    } else {
-      log.setUserId('');
-      log.setCustomKey('user_id', '');
-    }
-  });
-
-  final rpc = SupabaseRpcService();
+  final rpc = SupabaseRpcService(clientOverride: supabaseClient);
   await rpc.initialize();
 
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
@@ -272,6 +240,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    ref.read(authBootstrapProvider);
     if (AppEnvironment.adminTestingAutoLogin) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || ref.read(adminProvider).isAdminUser) return;
@@ -309,6 +278,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _completeStartupGate() async {
+    await ref.read(authBootstrapProvider.future).catchError((_) {});
+
     final authState = await ref.read(authStateProvider.future).catchError(
           (_) => const AppAuthState(
             isAuthenticated: false,

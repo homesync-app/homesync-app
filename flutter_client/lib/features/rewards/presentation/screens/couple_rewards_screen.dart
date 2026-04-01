@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -16,7 +17,6 @@ import '../widgets/couple_challenge_card.dart';
 import '../../../household/presentation/providers/household_provider.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
@@ -86,7 +86,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       late final List<dynamic> results;
 
       if (admin.isAdminUser) {
-        final client = Supabase.instance.client;
+        final client = ref.read(supabaseClientProvider);
         results = await Future.wait<dynamic>([
           client.rpc(
             'qa_admin_get_task_stats_by_category',
@@ -996,7 +996,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         userIds.add(currentUserId);
       }
 
-      final taskRpc = TaskRpcService();
+      final taskRpc = ref.read(taskRpcServiceProvider);
       final newTaskId = await taskRpc.createTask(
         title: 'Desafío: ${challenge.title}',
         description: challenge.description,

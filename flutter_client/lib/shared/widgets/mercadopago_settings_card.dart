@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 
 class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
   const MercadoPagoSettingsCard({super.key});
@@ -34,7 +34,8 @@ class _MercadoPagoSettingsCardState
       if (userId == null || userId.isEmpty) {
         throw Exception('No se pudo resolver el usuario actual');
       }
-      await Supabase.instance.client
+      final client = ref.read(supabaseClientProvider);
+      await client
           .from('users')
           .update({'mercadopago_alias': alias}).eq('id', userId);
 

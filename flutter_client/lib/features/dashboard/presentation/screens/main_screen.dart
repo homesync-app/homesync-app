@@ -47,11 +47,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
-  final _notifService = NotificationService.instance;
+  late final NotificationService _notifService;
 
   @override
   void initState() {
     super.initState();
+    _notifService = ref.read(notificationServiceProvider);
     _checkSetup();
     _initNotifications();
     _initDeepLinks();

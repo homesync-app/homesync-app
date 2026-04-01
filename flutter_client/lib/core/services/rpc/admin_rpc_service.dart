@@ -4,7 +4,7 @@ import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'base_rpc_service.dart';
 
 class AdminRpcService extends BaseRpcService {
-  AdminRpcService({super.clientOverride});
+  AdminRpcService({required super.clientOverride});
 
   Future<void> logApplicationError({
     required String message,

@@ -16,7 +16,9 @@ import '../../domain/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
-  return FirebaseAuthService();
+  return FirebaseAuthService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {

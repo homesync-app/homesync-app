@@ -5,6 +5,7 @@ import 'package:homesync_client/main.dart' as app;
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -124,7 +125,7 @@ void main() {
       // Request 61+: 429 Rate Limit Exceeded
 
       // Uses TaskRpcService (formerly part of the monolithic SupabaseRpcService)
-      final rpcService = TaskRpcService();
+      final rpcService = TaskRpcService(clientOverride: Supabase.instance.client);
       int successCount = 0;
       int rateLimitedCount = 0;
 
@@ -328,7 +329,8 @@ void main() {
       // 3. Try to use old refresh token
       // 4. Verify it's rejected with 401/403
 
-      final authService = SupabaseAuthService();
+      final authService =
+          SupabaseAuthService(client: Supabase.instance.client);
 
       // Login
       final response =

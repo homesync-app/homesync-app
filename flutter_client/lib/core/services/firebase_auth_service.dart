@@ -12,14 +12,29 @@ import 'logger_service.dart';
 class FirebaseAuthService {
   static final FirebaseAuthService _instance = FirebaseAuthService._internal();
 
-  factory FirebaseAuthService() => _instance;
+  factory FirebaseAuthService({SupabaseClient? supabaseClient}) {
+    if (supabaseClient != null) {
+      _instance._supabaseClient = supabaseClient;
+    }
+    return _instance;
+  }
 
   FirebaseAuthService._internal();
 
   final fa.FirebaseAuth _auth = fa.FirebaseAuth.instance;
+  SupabaseClient? _supabaseClient;
   GoogleSignIn? _googleSignIn;
 
   fa.FirebaseAuth get auth => _auth;
+  SupabaseClient get _client {
+    final client = _supabaseClient;
+    if (client == null) {
+      throw StateError(
+        'FirebaseAuthService requires a configured SupabaseClient before use.',
+      );
+    }
+    return client;
+  }
 
   Future<void> _ensureInitialized() async {
     if (!kIsWeb && _googleSignIn == null) {
@@ -167,6 +182,20 @@ class FirebaseAuthService {
     await AppIdentityService.instance.refresh();
   }
 
+  Future<void> syncSupabaseSessionIfNeeded() async {
+    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
+      return;
+    }
+
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      await AppIdentityService.instance.refresh();
+      return;
+    }
+
+    await _prepareSupabaseAfterFirebaseSignIn();
+  }
+
   Future<void> _syncSupabaseSessionWithFirebase({String? idToken}) async {
     try {
       final tokenToUse = idToken ?? await _auth.currentUser?.getIdToken();
@@ -177,7 +206,7 @@ class FirebaseAuthService {
 
       log.i('Syncing identity with Supabase via Third-Party Auth...');
       
-      await Supabase.instance.client.auth.signInWithIdToken(
+      await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: tokenToUse,
       );
@@ -194,7 +223,7 @@ class FirebaseAuthService {
 
   Future<void> _createUserProfileIfNeeded() async {
     try {
-      final supabaseClient = Supabase.instance.client;
+      final supabaseClient = _client;
       final appUserId = await _resolveCurrentAppUserId();
       if (appUserId == null) {
         log.e('No app user id available after login');
@@ -246,7 +275,7 @@ class FirebaseAuthService {
       }
 
       if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-        await Supabase.instance.client.auth.signOut();
+        await _client.auth.signOut();
       }
       await AppIdentityService.instance.refresh();
 
@@ -261,7 +290,7 @@ class FirebaseAuthService {
 
   Future<void> ensureHouseholdExists() async {
     try {
-      final supabaseClient = Supabase.instance.client;
+      final supabaseClient = _client;
       final appUserId = await _resolveCurrentAppUserId();
       if (appUserId == null) {
         log.w('ensureHouseholdExists: no app user id available yet');
@@ -285,7 +314,7 @@ class FirebaseAuthService {
 
   fa.User? get currentUser => _auth.currentUser;
 
-  Stream<fa.User?> get authStateChanges => _auth.idTokenChanges();
+  Stream<fa.User?> get authStateChanges => _auth.authStateChanges();
 
   Future<bool> isAuthenticated() async {
     return _auth.currentUser != null;
@@ -313,7 +342,7 @@ class FirebaseAuthService {
       return appUserId;
     }
 
-    final supabaseUser = Supabase.instance.client.auth.currentUser;
+    final supabaseUser = _client.auth.currentUser;
     return supabaseUser?.id;
   }
 }

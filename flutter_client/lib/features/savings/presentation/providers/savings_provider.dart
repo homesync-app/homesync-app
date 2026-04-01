@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
@@ -16,7 +17,8 @@ part 'savings_provider.g.dart';
 
 @riverpod
 SavingsRepository savingsRepository(SavingsRepositoryRef ref) {
-  return SupabaseSavingsRepository(ref: ref);
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseSavingsRepository(client: client, ref: ref);
 }
 
 @riverpod

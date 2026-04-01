@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 import 'package:homesync_client/core/utils/app_animations.dart';
 
-class NotificationsScreen extends StatefulWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> {
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   bool _isLoading = true;
   List<dynamic> _notifications = [];
 
@@ -29,7 +31,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     try {
       final userId = await AppIdentityService.instance.refresh();
       if (userId != null) {
-        final data = await Supabase.instance.client
+        final data = await ref
+            .read(supabaseClientProvider)
             .from('notifications')
             .select('*')
             .eq('user_id', userId)
@@ -46,7 +49,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAsRead(String id) async {
     try {
-      await Supabase.instance.client
+      await ref
+          .read(supabaseClientProvider)
           .from('notifications')
           .update({'is_read': true}).eq('id', id);
       _loadNotifications();
@@ -59,7 +63,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     try {
       final userId = await AppIdentityService.instance.refresh();
       if (userId != null) {
-        await Supabase.instance.client
+        await ref
+            .read(supabaseClientProvider)
             .from('notifications')
             .update({'is_read': true})
             .eq('user_id', userId)

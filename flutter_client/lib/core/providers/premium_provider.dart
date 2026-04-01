@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import '../services/premium_service.dart';
 import '../services/logger_service.dart';
 
@@ -9,20 +11,19 @@ class PremiumNotifier extends Notifier<bool> {
   
   @override
   bool build() {
-    _supabase = Supabase.instance.client;
-    
-    // Initial fetch from current user metadata or session
-    // But better to fetch from DB
-    _refreshFromDb();
-    
-    // Also listen to auth changes to refresh
-    _supabase.auth.onAuthStateChange.listen((data) {
-      if (data.session != null) {
-        _refreshFromDb();
-      } else {
-        state = false;
-      }
+    _supabase = ref.read(supabaseClientProvider);
+
+    ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
+      next.whenData((authState) {
+        if (authState.isAuthenticated) {
+          unawaited(_refreshFromDb());
+        } else {
+          state = false;
+        }
+      });
     });
+
+    unawaited(_refreshFromDb());
 
     return false;
   }

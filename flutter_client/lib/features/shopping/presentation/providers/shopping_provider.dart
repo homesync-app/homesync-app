@@ -21,7 +21,8 @@ part 'shopping_provider.g.dart';
 
 @riverpod
 ShoppingRepository shoppingRepository(ShoppingRepositoryRef ref) {
-  return SupabaseShoppingRepository(ref: ref);
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseShoppingRepository(client: client, ref: ref);
 }
 
 @riverpod

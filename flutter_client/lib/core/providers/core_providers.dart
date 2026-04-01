@@ -1,15 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/firebase_auth_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/mercadopago_service.dart';
+import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/services/qa_session_service.dart';
+import 'package:homesync_client/core/services/shopping_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
+import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BottomNavNotifier extends Notifier<int> {
   @override
@@ -22,6 +31,30 @@ class BottomNavNotifier extends Notifier<int> {
 
 final bottomNavIndexProvider = NotifierProvider<BottomNavNotifier, int>(() {
   return BottomNavNotifier();
+});
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
+});
+
+final mercadoPagoServiceProvider = Provider<MercadoPagoService>((ref) {
+  return MercadoPagoService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
+});
+
+final shoppingServiceProvider = Provider<ShoppingService>((ref) {
+  return ShoppingService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
+});
+
+final templateServiceProvider = Provider<TemplateService>((ref) {
+  return TemplateService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
 });
 
 class SocialHubTabNotifier extends Notifier<int> {
@@ -313,21 +346,67 @@ final authStateProvider = StreamProvider<AppAuthState>((ref) {
     );
   }
 
-  if (AppEnvironment.usesFirebaseJwtForSupabase) {
-    return fa.FirebaseAuth.instance.idTokenChanges().map(
-          (user) => AppAuthState(
-            isAuthenticated: user != null,
-            source: 'firebase',
-          ),
-        );
-  }
-
-  return Supabase.instance.client.auth.onAuthStateChange.map(
+  final repository = ref.watch(authRepositoryProvider);
+  return repository.authStateChanges.map(
     (state) => AppAuthState(
-      isAuthenticated: state.session != null,
-      source: 'supabase',
+      isAuthenticated: state.session != null ||
+          state.event == AuthChangeEvent.signedIn ||
+          state.event == AuthChangeEvent.tokenRefreshed ||
+          state.event == AuthChangeEvent.userUpdated,
+      source: AppEnvironment.usesFirebaseJwtForSupabase
+          ? 'firebase'
+          : 'supabase',
     ),
   );
+});
+
+Future<void> _applySessionDiagnostics(String? userId) async {
+  final resolvedUserId = userId ?? '';
+  log.setUserId(resolvedUserId);
+  log.setCustomKey('user_id', resolvedUserId);
+
+  if (!kIsWeb) {
+    await FirebaseCrashlytics.instance.setUserIdentifier(resolvedUserId);
+    await FirebaseCrashlytics.instance.setCustomKey('user_id', resolvedUserId);
+  }
+}
+
+Future<void> _syncSessionContextFromAuth(
+  AppAuthState authState,
+  FirebaseAuthService firebaseAuthService,
+) async {
+  if (AppEnvironment.usesFirebaseJwtForSupabase && authState.isAuthenticated) {
+    await firebaseAuthService.syncSupabaseSessionIfNeeded();
+  }
+
+  if (!authState.isAuthenticated) {
+    await AppIdentityService.instance.refresh();
+    await _applySessionDiagnostics(null);
+    return;
+  }
+
+  final nextUserId = await AppIdentityService.instance.refresh();
+  await _applySessionDiagnostics(nextUserId);
+}
+
+final authBootstrapProvider = FutureProvider<void>((ref) async {
+  final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
+  await AppIdentityService.instance.initialize();
+
+  ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
+    next.whenData((authState) {
+      unawaited(_syncSessionContextFromAuth(authState, firebaseAuthService));
+    });
+  });
+
+  final initialAuthState = await ref.read(authStateProvider.future).catchError(
+        (_) => const AppAuthState(
+          isAuthenticated: false,
+          source: 'bootstrap_error',
+        ),
+      );
+
+  await _syncSessionContextFromAuth(initialAuthState, firebaseAuthService);
 });
 
 // ── Singleton service providers ───────────────────────────────────────────────
@@ -343,7 +422,9 @@ final rpcServiceProvider = Provider<SupabaseRpcService>((ref) {
 
 final appIdentityServiceProvider =
     ChangeNotifierProvider<AppIdentityService>((ref) {
-  return AppIdentityService.instance;
+  final service = AppIdentityService.instance;
+  service.configure(client: ref.read(supabaseClientProvider));
+  return service;
 });
 
 // ── Current user convenience providers ────────────────────────────────────────
@@ -376,7 +457,7 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
     if (userId == null) return null;
   }
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   final result = await client
       .from('household_members')
       .select('household_id')
@@ -407,7 +488,7 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   return await client
       .from('users')
       .select('id, full_name, email, avatar_url, mercadopago_alias, is_admin')
@@ -421,7 +502,7 @@ final mercadopagoConnectionProvider =
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return Stream.value(null);
 
-  final client = Supabase.instance.client;
+  final client = ref.read(supabaseClientProvider);
   return client
       .from('mercadopago_connections')
       .stream(primaryKey: ['user_id'])
@@ -439,7 +520,8 @@ final mercadopagoMovementsProvider =
   if (connection == null) return [];
 
   try {
-    final response = await Supabase.instance.client.functions.invoke(
+    final client = ref.read(supabaseClientProvider);
+    final response = await client.functions.invoke(
       'mercadopago-api',
       body: {
         'action': 'get_recent_movements',

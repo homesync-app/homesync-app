@@ -66,7 +66,8 @@ class Category {
 class TemplateService {
   final SupabaseClient _client;
 
-  TemplateService() : _client = Supabase.instance.client;
+  TemplateService({required SupabaseClient supabaseClient})
+      : _client = supabaseClient;
 
   Future<List<Category>> getCategories() async {
     final response =
