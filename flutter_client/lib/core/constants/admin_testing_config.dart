@@ -171,4 +171,26 @@ class AdminTestingConfig {
     }
     return null;
   }
+
+  static AdminTestingScenario? scenarioById(String? scenarioId) {
+    if (scenarioId == null || scenarioId.isEmpty) return null;
+    for (final scenario in scenarios) {
+      if (scenario.id == scenarioId) {
+        return scenario;
+      }
+    }
+    return null;
+  }
+
+  static QaTestUser? qaUserById(String? userId) {
+    if (userId == null || userId.isEmpty) return null;
+    for (final scenario in scenarios) {
+      for (final user in scenario.qaUsers) {
+        if (user.userId == userId) {
+          return user;
+        }
+      }
+    }
+    return null;
+  }
 }

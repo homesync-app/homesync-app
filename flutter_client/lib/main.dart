@@ -14,6 +14,7 @@ import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
+import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
@@ -243,29 +244,13 @@ void main() async {
       overrides: [
         authServiceProvider.overrideWithValue(auth),
         rpcServiceProvider.overrideWithValue(rpc),
+        sharedPreferencesProvider.overrideWithValue(prefs),
       ],
       child: MyApp(
         prefs: prefs,
       ),
     ),
   );
-}
-
-// Helper to init theme after ProviderScope is ready
-class _ThemeInit extends ConsumerWidget {
-  final Widget child;
-  final SharedPreferences prefs;
-  const _ThemeInit({required this.child, required this.prefs});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Init once on first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(themeModeProvider.notifier).init(prefs);
-      await ref.read(primaryColorProvider.notifier).init(prefs);
-    });
-    return child;
-  }
 }
 
 class MyApp extends ConsumerStatefulWidget {
@@ -287,6 +272,37 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    if (AppEnvironment.adminTestingAutoLogin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || ref.read(adminProvider).isAdminUser) return;
+        final scenarioId = AppEnvironment.adminTestingAutoScenarioId;
+        final viewerUserId = AppEnvironment.adminTestingAutoViewerUserId;
+        final scenario = AdminTestingConfig.scenarioById(scenarioId);
+        final qaUser = AdminTestingConfig.qaUserById(viewerUserId);
+
+        if (AppEnvironment.adminTestingAutoAdminSessionEnabled) {
+          ref.read(qaSessionServiceProvider).signInAsAdminPreviewSession(
+                email: AppEnvironment.adminTestingBaseEmail,
+                password: AppEnvironment.adminTestingBasePassword,
+                scenarioId: scenarioId,
+                viewerUserId: viewerUserId,
+              );
+          return;
+        }
+
+        if (AppEnvironment.adminTestingAutoRealQaLogin &&
+            scenario != null &&
+            qaUser != null) {
+          ref.read(qaSessionServiceProvider).signInAsQaUser(scenario, qaUser);
+          return;
+        }
+
+        ref.read(adminProvider.notifier).activateAutoQaSession(
+              scenarioId: scenarioId,
+              viewerUserId: viewerUserId,
+            );
+      });
+    }
     // Initialize premium service on app start
     ref.read(premiumServiceProvider);
     _completeStartupGate();
@@ -300,11 +316,13 @@ class _MyAppState extends ConsumerState<MyApp> {
           ),
         );
 
+    if (!mounted) return;
+
     final bootstrapTasks = <Future<void>>[
       Future<void>.delayed(_minimumSplashDuration),
     ];
 
-    if (authState.isAuthenticated) {
+    if (authState.isAuthenticated && authState.source != 'admin_testing') {
       bootstrapTasks.add(
         ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
       );
@@ -325,30 +343,27 @@ class _MyAppState extends ConsumerState<MyApp> {
     final customPrimary = ref.watch(primaryColorProvider);
     final authState = ref.watch(authStateProvider);
 
-    return _ThemeInit(
-      prefs: widget.prefs,
-      child: MaterialApp(
-        title: 'HomeSync',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme(customPrimary: customPrimary),
-        darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
-        themeMode: themeMode,
-        home: !_startupReady
-            ? const SplashScreen()
-            : authState.when(
-                data: (state) {
-                  if (state.isAuthenticated) {
-                    return MainScreen(prefs: widget.prefs);
-                  }
-                  return LoginScreen(prefs: widget.prefs);
-                },
-                loading: () => const SplashScreen(),
-                error: (e, stack) {
-                  debugPrint('Auth error: $e');
-                  return LoginScreen(prefs: widget.prefs);
-                },
-              ),
-      ),
+    return MaterialApp(
+      title: 'HomeSync',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme(customPrimary: customPrimary),
+      darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
+      themeMode: themeMode,
+      home: !_startupReady
+          ? const SplashScreen()
+          : authState.when(
+              data: (state) {
+                if (state.isAuthenticated) {
+                  return MainScreen(prefs: widget.prefs);
+                }
+                return LoginScreen(prefs: widget.prefs);
+              },
+              loading: () => const SplashScreen(),
+              error: (e, stack) {
+                debugPrint('Auth error: $e');
+                return LoginScreen(prefs: widget.prefs);
+              },
+            ),
     );
   }
 }

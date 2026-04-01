@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -473,7 +472,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Widget _buildProgressIndicator() {
     // Only show progress from step 1 onward (step 0 is value prop / intro)
     if (_currentStep == 0) return const SizedBox(height: 8);
-    final totalSteps = 7; // steps 1-7
+    const totalSteps = 7; // steps 1-7
     final activeStep = _currentStep - 1; // normalize
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -511,7 +510,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   // -- Step 0: Value Proposition --------------------------------------------
 
   Widget _buildValuePropStep() {
-    final features = [
+    const features = [
       _FeatureItem(
         emoji: '?',
         title: 'Tareas compartidas',
@@ -522,7 +521,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         emoji: '??',
         title: 'Gastos en equipo',
         desc: 'Registrá gastos, dividí cuentas y llevá el balance al día.',
-        color: const Color(0xFF22C55E),
+        color: Color(0xFF22C55E),
       ),
       _FeatureItem(
         emoji: '??',

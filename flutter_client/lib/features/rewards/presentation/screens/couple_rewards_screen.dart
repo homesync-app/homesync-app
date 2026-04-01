@@ -1339,7 +1339,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           ),
           decoration: BoxDecoration(
             color: context.theme.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           ),
           child: Form(
             key: formKey,

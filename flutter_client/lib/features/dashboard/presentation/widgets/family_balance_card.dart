@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class FamilyBalanceCard extends ConsumerWidget {

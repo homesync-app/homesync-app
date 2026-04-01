@@ -132,7 +132,7 @@ class Tasks extends _$Tasks {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading<List<TaskModel>>().copyWithPrevious(state);
     state = await AsyncValue.guard(() => build());
   }
 
@@ -367,6 +367,91 @@ class Tasks extends _$Tasks {
     }
   }
 
+  Future<void> submitTaskForApproval(TaskModel task) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    final submittedAt = DateTime.now();
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState
+            .map((t) => t.id == task.id
+                ? t.copyWith(
+                    status: TaskStatus.pendingApproval,
+                    completedBy: userId,
+                    completedAt: submittedAt,
+                  )
+                : t)
+            .toList(),
+      );
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.editTask(task.id, {
+        'status': 'pending_approval',
+        'completed_by': userId,
+        'completed_at': submittedAt.toIso8601String(),
+        'last_completed_at': submittedAt.toIso8601String(),
+      });
+      if (ref.read(isOnlineProvider)) {
+        silentRefresh();
+        ref.invalidate(recentActivityProvider);
+      }
+    } catch (e) {
+      log.w('Submit task for approval failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
+      rethrow;
+    }
+  }
+
+  Future<TaskCompletionResult?> approvePendingTask(TaskModel task) async {
+    final performerId = task.completedBy ?? task.assignedTo;
+    if (performerId == null) return null;
+
+    return completeTask(
+      task,
+      userIds: [performerId],
+      completedAt: task.completedAt ?? DateTime.now(),
+    );
+  }
+
+  Future<void> rejectPendingTask(TaskModel task) async {
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState
+            .map((t) => t.id == task.id
+                ? t.copyWith(
+                    status: TaskStatus.active,
+                    completedBy: null,
+                    completedAt: null,
+                  )
+                : t)
+            .toList(),
+      );
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.editTask(task.id, {
+        'status': 'active',
+        'completed_by': null,
+        'completed_at': null,
+        'last_completed_at': null,
+      });
+      if (ref.read(isOnlineProvider)) {
+        silentRefresh();
+        ref.invalidate(recentActivityProvider);
+      }
+    } catch (e) {
+      log.w('Reject pending task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
+      rethrow;
+    }
+  }
+
   Future<void> deleteTask(TaskModel task) async {
     final oldState = state.value;
     if (oldState != null) {
@@ -507,15 +592,18 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
   final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
   final currentMember =
       members.where((member) => member.userId == currentUserId).firstOrNull;
-  final isFamilyAdult =
-      caps.type == HouseholdType.family && (currentMember?.isAdult ?? false);
+  final isFamilyMode = caps.type == HouseholdType.family;
+  final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
+  final shouldUseFamilyHouseholdScope = isFamilyMode && !isFamilyChild;
 
   return tasksAsync.whenData((tasks) {
     final now = DateTime.now();
     final visibleTasks = tasks.where((task) {
-      // In family mode, adults need the household picture of the day.
-      // Children still default to their own tasks.
-      final shouldFilterByAssignment = !isFamilyAdult;
+      // In family mode, only children should default to "my tasks".
+      // Adults, and any temporarily unresolved family viewer in QA,
+      // should keep the household coordination view.
+      final shouldFilterByAssignment =
+          isFamilyMode ? isFamilyChild : true;
       if (shouldFilterByAssignment &&
           task.assignedTo != null &&
           task.assignedTo != currentUserId) {
@@ -541,7 +629,7 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       return false;
     }).toList();
 
-    if (visibleTasks.isNotEmpty || !isFamilyAdult) {
+    if (visibleTasks.isNotEmpty || !shouldUseFamilyHouseholdScope) {
       return visibleTasks;
     }
 

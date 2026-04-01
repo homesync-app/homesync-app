@@ -68,6 +68,7 @@ class MockTaskRepository implements TaskRepository {
           int? recurrenceInterval,
           List<int>? recurrenceWeekdays,
           List<int>? recurrenceMonthDays,
+          String? assignedTo,
   }) async =>
       throw UnimplementedError();
   @override

@@ -80,7 +80,7 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
     log.i(
       'HouseholdMembersNotifier.refresh requested household=$householdId viewer=$currentUserId',
     );
-    state = const AsyncValue.loading();
+    state = const AsyncLoading<List<MemberModel>>().copyWithPrevious(state);
     state = await AsyncValue.guard(() => build());
   }
 }

@@ -28,12 +28,13 @@ class AvatarPickerSheet extends ConsumerWidget {
     String emoji,
   ) async {
     try {
+      final normalizedEmoji = UserAvatar.normalizeAvatarValue(emoji) ?? emoji;
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) throw Exception('No autenticado');
 
       await Supabase.instance.client
           .from('users')
-          .update({'avatar_url': emoji}).eq('id', userId);
+          .update({'avatar_url': normalizedEmoji}).eq('id', userId);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersNotifierProvider);
@@ -63,8 +64,10 @@ class AvatarPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
-    final currentAvatar = profileAsync.whenOrNull(
-      data: (p) => p?['avatar_url'] as String?,
+    final currentAvatar = UserAvatar.normalizeAvatarValue(
+      profileAsync.whenOrNull(
+        data: (p) => p?['avatar_url'] as String?,
+      ),
     );
 
     return Container(
@@ -122,15 +125,19 @@ class AvatarPickerSheet extends ConsumerWidget {
                       runSpacing: 16,
                       alignment: WrapAlignment.center,
                       children: UserAvatar.defaultAvatars.map((animal) {
-                        final isSelected = currentAvatar == animal['emoji'];
+                        final normalizedEmoji = UserAvatar.normalizeAvatarValue(
+                              animal['emoji'] as String?,
+                            ) ??
+                            '';
+                        final isSelected = currentAvatar == normalizedEmoji;
                         return _AvatarOption(
-                          emoji: animal['emoji'],
+                          emoji: normalizedEmoji,
                           color: animal['color'],
                           isSelected: isSelected,
                           onTap: () => _updateAvatar(
                             context,
                             ref,
-                            animal['emoji'] as String,
+                            normalizedEmoji,
                           ),
                         );
                       }).toList(),

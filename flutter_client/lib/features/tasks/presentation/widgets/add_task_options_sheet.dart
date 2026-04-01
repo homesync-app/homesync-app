@@ -197,11 +197,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Nueva tarea',
                         style: TextStyle(
                           fontSize: 24,

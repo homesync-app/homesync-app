@@ -53,6 +53,8 @@ class AdminState {
   final HouseholdType? forcedHouseholdType;
   final bool showOnboardingPreview;
   final bool useRealQaSession;
+  final bool useAdminPreviewBaseSession;
+  final String? adminPreviewBaseEmail;
   final String? realQaUserEmail;
   final String? realQaUserLabel;
 
@@ -67,6 +69,8 @@ class AdminState {
     this.forcedHouseholdType,
     this.showOnboardingPreview = false,
     this.useRealQaSession = false,
+    this.useAdminPreviewBaseSession = false,
+    this.adminPreviewBaseEmail,
     this.realQaUserEmail,
     this.realQaUserLabel,
   });
@@ -83,6 +87,8 @@ class AdminState {
     HouseholdType? forcedHouseholdType,
     bool? showOnboardingPreview,
     bool? useRealQaSession,
+    bool? useAdminPreviewBaseSession,
+    String? adminPreviewBaseEmail,
     String? realQaUserEmail,
     String? realQaUserLabel,
   }) {
@@ -106,6 +112,10 @@ class AdminState {
       showOnboardingPreview:
           showOnboardingPreview ?? this.showOnboardingPreview,
       useRealQaSession: useRealQaSession ?? this.useRealQaSession,
+      useAdminPreviewBaseSession:
+          useAdminPreviewBaseSession ?? this.useAdminPreviewBaseSession,
+      adminPreviewBaseEmail:
+          adminPreviewBaseEmail ?? this.adminPreviewBaseEmail,
       realQaUserEmail: realQaUserEmail ?? this.realQaUserEmail,
       realQaUserLabel: realQaUserLabel ?? this.realQaUserLabel,
     );
@@ -127,7 +137,7 @@ class AdminNotifier extends Notifier<AdminState> {
         forcedHouseholdType: null,
         showOnboardingPreview: false,
       );
-      AppIdentityService.instance.setDebugOverride(null);
+      AppIdentityService.instance.setDebugOverride(null, householdId: null);
     }
   }
 
@@ -141,11 +151,40 @@ class AdminNotifier extends Notifier<AdminState> {
       forcedHouseholdType: null,
       showOnboardingPreview: false,
       useRealQaSession: false,
+      useAdminPreviewBaseSession: false,
+      adminPreviewBaseEmail: null,
       realQaUserEmail: null,
       realQaUserLabel: null,
     );
-    AppIdentityService.instance.setDebugOverride(null);
+    AppIdentityService.instance.setDebugOverride(null, householdId: null);
     log.i('Admin testing login activated');
+  }
+
+  void activateAutoQaSession({
+    String? scenarioId,
+    String? viewerUserId,
+    bool useAdminPreviewBaseSession = false,
+    String? adminPreviewBaseEmail,
+  }) {
+    adminLogin();
+
+    if (useAdminPreviewBaseSession) {
+      state = state.copyWith(
+        useAdminPreviewBaseSession: true,
+        adminPreviewBaseEmail: adminPreviewBaseEmail,
+      );
+    }
+
+    final scenario = AdminTestingConfig.scenarioById(scenarioId);
+    if (scenario == null) {
+      return;
+    }
+
+    setAdminScenario(scenario);
+
+    if (viewerUserId != null && viewerUserId.isNotEmpty) {
+      impersonate(viewerUserId);
+    }
   }
 
   void setAdminScenario(AdminTestingScenario? scenario) {
@@ -160,7 +199,10 @@ class AdminNotifier extends Notifier<AdminState> {
       clearSelectedHousehold: scenario == null,
     );
     if (!state.useRealQaSession) {
-      AppIdentityService.instance.setDebugOverride(scenario?.defaultViewerUserId);
+      AppIdentityService.instance.setDebugOverride(
+        scenario?.defaultViewerUserId,
+        householdId: scenario?.householdId,
+      );
     }
     log.i(
       'Admin scenario selected scenario=${scenario?.id} household=${scenario?.householdId} viewer=${scenario?.defaultViewerUserId} type=${scenario?.householdType.name}',
@@ -170,7 +212,10 @@ class AdminNotifier extends Notifier<AdminState> {
   void impersonate(String? userId) {
     state = state.copyWith(impersonatedUserId: userId);
     AppIdentityService.instance
-        .setDebugOverride(userId ?? state.defaultViewerUserId);
+        .setDebugOverride(
+          userId ?? state.defaultViewerUserId,
+          householdId: state.selectedHouseholdId,
+        );
     log.i(
       'Admin impersonation changed impersonated=$userId fallbackViewer=${state.defaultViewerUserId} selectedHousehold=${state.selectedHouseholdId}',
     );
@@ -178,7 +223,7 @@ class AdminNotifier extends Notifier<AdminState> {
 
   void clearAdminSession() {
     state = const AdminState();
-    AppIdentityService.instance.setDebugOverride(null);
+    AppIdentityService.instance.setDebugOverride(null, householdId: null);
     log.i('Admin testing session cleared');
   }
 
@@ -196,11 +241,13 @@ class AdminNotifier extends Notifier<AdminState> {
       impersonatedUserId: null,
       defaultViewerUserId: null,
       useRealQaSession: true,
+      useAdminPreviewBaseSession: false,
+      adminPreviewBaseEmail: null,
       realQaUserEmail: qaUser.email,
       realQaUserLabel: qaUser.label,
       showOnboardingPreview: false,
     );
-    AppIdentityService.instance.setDebugOverride(null);
+    AppIdentityService.instance.setDebugOverride(null, householdId: null);
   }
 
   void endRealQaSession() {
@@ -210,12 +257,17 @@ class AdminNotifier extends Notifier<AdminState> {
         : null;
     state = state.copyWith(
       useRealQaSession: false,
+      useAdminPreviewBaseSession: false,
+      adminPreviewBaseEmail: null,
       realQaUserEmail: null,
       realQaUserLabel: null,
       impersonatedUserId: null,
       defaultViewerUserId: fallbackViewer,
     );
-    AppIdentityService.instance.setDebugOverride(fallbackViewer);
+    AppIdentityService.instance.setDebugOverride(
+      fallbackViewer,
+      householdId: state.selectedHouseholdId,
+    );
   }
 
   void forceType(HouseholdType? type) =>

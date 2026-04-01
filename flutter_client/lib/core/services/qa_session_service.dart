@@ -32,6 +32,30 @@ class QaSessionService {
     );
   }
 
+  Future<void> signInAsAdminPreviewSession({
+    required String email,
+    required String password,
+    String? scenarioId,
+    String? viewerUserId,
+  }) async {
+    final adminNotifier = _ref.read(adminProvider.notifier);
+
+    await _auth.signOut();
+    await _auth.signIn(email: email, password: password);
+    await AppIdentityService.instance.refresh();
+
+    adminNotifier.activateAutoQaSession(
+      scenarioId: scenarioId,
+      viewerUserId: viewerUserId,
+      useAdminPreviewBaseSession: true,
+      adminPreviewBaseEmail: email,
+    );
+
+    log.i(
+      'QA admin preview session started email=$email scenario=$scenarioId viewer=$viewerUserId',
+    );
+  }
+
   Future<void> exitRealQaSession() async {
     await _auth.signOut();
     await AppIdentityService.instance.refresh();

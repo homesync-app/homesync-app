@@ -5,8 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'logger_service.dart';
-
 class AppIdentityService extends ChangeNotifier {
   AppIdentityService._();
 
@@ -19,14 +17,18 @@ class AppIdentityService extends ChangeNotifier {
   StreamSubscription<fa.User?>? _firebaseSubscription;
   String? _currentUserId;
   String? _debugOverrideUserId;
+  String? _debugOverrideHouseholdId;
   bool _initialized = false;
   bool _isRefreshing = false;
 
   String? get currentUserId => _debugOverrideUserId ?? _currentUserId;
+  String? get currentHouseholdId => _debugOverrideHouseholdId;
 
-  void setDebugOverride(String? userId) {
-    if (_debugOverrideUserId != userId) {
+  void setDebugOverride(String? userId, {String? householdId}) {
+    if (_debugOverrideUserId != userId ||
+        _debugOverrideHouseholdId != householdId) {
       _debugOverrideUserId = userId;
+      _debugOverrideHouseholdId = householdId;
       notifyListeners();
     }
   }

@@ -7,6 +7,25 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'video_avatar_player.dart';
 
 class UserAvatar {
+  static const Map<String, String> _legacyAvatarAliases = {
+    'ðŸ±': '\u{1F431}',
+    'ðŸ¶': '\u{1F436}',
+    'ðŸ¦Š': '\u{1F98A}',
+    'ðŸ¼': '\u{1F43C}',
+    'ðŸ°': '\u{1F430}',
+    'ðŸ»': '\u{1F43B}',
+    'ðŸ¨': '\u{1F428}',
+    'ðŸ¯': '\u{1F42F}',
+    'ðŸ¦‹': '\u{1F98B}',
+    'ðŸ™': '\u{1F419}',
+    'ðŸ¦©': '\u{1F9A9}',
+    'ðŸ§': '\u{1F427}',
+    'ðŸ¦„': '\u{1F984}',
+    'ðŸ‰': '\u{1F409}',
+    'ðŸ¦’': '\u{1F992}',
+    'ðŸ¦¥': '\u{1F9A5}',
+  };
+
   static const List<Map<String, dynamic>> defaultAvatars = [
     // Lindos iconos de animales con colores pastel para el fondo
     {'emoji': '🐱', 'color': Color(0xFFFFD180), 'name': 'Gato'},
@@ -72,11 +91,18 @@ class UserAvatar {
   ];
 
   static Color getColorForEmoji(String emoji) {
+    final normalizedEmoji = normalizeAvatarValue(emoji) ?? emoji;
     final avatar = defaultAvatars.firstWhere(
-      (a) => a['emoji'] == emoji,
+      (a) => normalizeAvatarValue(a['emoji'] as String) == normalizedEmoji,
       orElse: () => {'color': AppColors.primary.withValues(alpha: 0.15)},
     );
     return avatar['color'] as Color;
+  }
+
+  static String? normalizeAvatarValue(String? raw) {
+    final trimmed = raw?.trim();
+    if (trimmed == null || trimmed.isEmpty) return trimmed;
+    return _legacyAvatarAliases[trimmed] ?? trimmed;
   }
 }
 
@@ -314,19 +340,23 @@ class _AvatarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasAvatar = avatarUrl != null && avatarUrl!.trim().isNotEmpty;
+    final normalizedAvatarUrl = UserAvatar.normalizeAvatarValue(avatarUrl);
+    final bool hasAvatar =
+        normalizedAvatarUrl != null && normalizedAvatarUrl.trim().isNotEmpty;
     final int avatarCacheSize =
         (radius * 2 * MediaQuery.devicePixelRatioOf(context)).round();
 
     // Check if it's a premium local asset encoded as premium://assets/...
-    final String cleanUrl = (avatarUrl ?? '').replaceFirst('premium://', '');
+    final String cleanUrl =
+        (normalizedAvatarUrl ?? '').replaceFirst('premium://', '');
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
 
-    final bool isEmoji = hasAvatar && !isAsset && avatarUrl!.trim().length <= 2;
+    final bool isEmoji =
+        hasAvatar && !isAsset && normalizedAvatarUrl.runes.length <= 2;
     final bool isNetwork = hasAvatar && cleanUrl.startsWith('http');
 
     final color = isEmoji
-        ? UserAvatar.getColorForEmoji((avatarUrl ?? '').trim())
+        ? UserAvatar.getColorForEmoji(normalizedAvatarUrl)
         : ((isNetwork || isAsset) ? Colors.transparent : AppColors.primary);
 
     final safeName = name?.trim() ?? '';
@@ -396,7 +426,7 @@ class _AvatarContent extends StatelessWidget {
                 : Center(
                     child: isEmoji
                         ? Text(
-                            (avatarUrl ?? '').trim(),
+                            normalizedAvatarUrl,
                             style: TextStyle(
                               fontSize: radius * 1.0,
                               height: 1.1,

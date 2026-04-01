@@ -30,7 +30,7 @@ class SupabaseAuthService {
       await GoogleSignIn.instance
           .initialize(
             clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
-            serverClientId: AppEnvironment.googleWebClientId,
+            serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
           )
           .timeout(const Duration(seconds: 5));
     } catch (e) {

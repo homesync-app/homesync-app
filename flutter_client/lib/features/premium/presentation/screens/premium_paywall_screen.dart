@@ -105,19 +105,19 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   const SizedBox(height: 40),
 
                   // ── Premium Benefits ──────────────────────────────────────
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.auto_graph_rounded,
                     title: 'Estadísticas Avanzadas',
                     desc: 'Analiza tus gastos y tareas por categoría con gráficos detallados.',
                   ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.2),
 
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.home_work_rounded,
                     title: 'Hogares Ilimitados',
                     desc: 'Crea múltiples hogares para tu pareja, familia, amigos o proyectos.',
                   ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.2),
 
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.palette_rounded,
                     title: 'Personalización Total',
                     desc: 'Acceso a temas premium, colores únicos y widgets personalizados.',

@@ -162,7 +162,6 @@ class FirebaseAuthService {
 
   Future<void> _prepareSupabaseAfterFirebaseSignIn({
     String? idToken,
-    bool forceRefreshToken = true,
   }) async {
     await _syncSupabaseSessionWithFirebase(idToken: idToken);
     await AppIdentityService.instance.refresh();

@@ -16,8 +16,8 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/balance_
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
@@ -93,8 +93,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             _buildTasksSection(theme, caps, isChild: false),
             const SizedBox(height: 28),
             _buildActivitySection(theme, title: 'Movimientos del hogar'),
-            const SizedBox(height: 28),
-            _buildShoppingSection(theme),
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
@@ -727,11 +725,19 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           data: (tasks) {
             final pending = tasks.where((task) => task.isPending).toList()
               ..sort((a, b) {
+                if (!isChild && a.isPendingApproval != b.isPendingApproval) {
+                  return a.isPendingApproval ? -1 : 1;
+                }
                 if (a.isOverdue != b.isOverdue) {
                   return a.isOverdue ? -1 : 1;
                 }
                 if (a.isDueToday != b.isDueToday) {
                   return a.isDueToday ? -1 : 1;
+                }
+                final aAssigned = a.assignedTo != null;
+                final bAssigned = b.assignedTo != null;
+                if (aAssigned != bAssigned) {
+                  return aAssigned ? -1 : 1;
                 }
                 return a.createdAt.compareTo(b.createdAt);
               });
@@ -762,11 +768,272 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildTaskItem(TaskModel task, AppThemeColors theme) {
-    return DashboardTaskCard(
+    final members = ref.watch(householdMembersNotifierProvider).valueOrNull ?? const <MemberModel>[];
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final isChildView = currentMember?.isChild ?? false;
+    final isAdultView = currentMember?.isAdult ?? false;
+    final assignedMember = members
+        .where((member) => member.userId == task.assignedTo)
+        .firstOrNull;
+    final completedMember = members
+        .where((member) => member.userId == task.completedBy)
+        .firstOrNull;
+    final isOpenTask = task.assignedTo == null;
+    final isAssignedToCurrentUser = task.assignedTo == currentUserId;
+
+    IconData actionIcon;
+    VoidCallback? onTap;
+    var isActionEnabled = true;
+
+    if (task.isPendingApproval) {
+      if (isAdultView) {
+        actionIcon = Icons.fact_check_rounded;
+        onTap = () => _showApprovalActions(task, members);
+      } else {
+        actionIcon = Icons.hourglass_top_rounded;
+        isActionEnabled = false;
+        onTap = null;
+      }
+    } else if (isOpenTask) {
+      actionIcon = Icons.check_rounded;
+      onTap = () => _confirmOpenTaskCompletion(task, isChildView: isChildView);
+    } else if (isAssignedToCurrentUser) {
+      if (isChildView) {
+        actionIcon = Icons.send_rounded;
+        onTap = () => _submitTaskForApproval(task);
+      } else {
+        actionIcon = Icons.check_rounded;
+        onTap = () => _completeTask(task);
+      }
+    } else {
+      actionIcon = Icons.lock_outline_rounded;
+      isActionEnabled = false;
+      onTap = () => _showTaskLockedMessage(assignedMember);
+    }
+
+    return FamilyTaskCard(
       task: task,
       isCompleting: _completedTaskIds.contains(task.id),
-      onTap: () => _completeTask(task),
+      isChildView: isChildView,
+      assignedMember: assignedMember,
+      completedMember: completedMember,
+      actionIcon: actionIcon,
+      isActionEnabled: isActionEnabled,
+      onTap: onTap,
     );
+  }
+
+  Future<void> _confirmOpenTaskCompletion(
+    TaskModel task, {
+    required bool isChildView,
+  }) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final members =
+        ref.read(householdMembersNotifierProvider).valueOrNull ?? const <MemberModel>[];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final actorName = currentMember?.displayName ?? 'vos';
+
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Marcar tarea'),
+            content: Text(
+              isChildView
+                  ? 'Se va a marcar "${task.title}" como realizada por $actorName y se enviará a revisión.'
+                  : 'Se va a marcar "${task.title}" como realizada por $actorName.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    if (isChildView) {
+      await _submitTaskForApproval(task);
+    } else {
+      await _completeTask(task);
+    }
+  }
+
+  void _showTaskLockedMessage(MemberModel? assignedMember) {
+    final ownerName = assignedMember?.displayName ?? 'otra persona';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Esta tarea le toca a $ownerName.'),
+      ),
+    );
+  }
+
+  Future<void> _submitTaskForApproval(TaskModel task) async {
+    if (_completedTaskIds.contains(task.id)) return;
+
+    setState(() => _completedTaskIds.add(task.id));
+    try {
+      await ref.read(tasksProvider.notifier).submitTaskForApproval(task);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enviada para revisión de un adulto.'),
+        ),
+      );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(recentActivityProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No pudimos enviar la tarea: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+      }
+    }
+  }
+
+  Future<void> _showApprovalActions(
+    TaskModel task,
+    List<MemberModel> members,
+  ) async {
+    final performer = members
+        .where((member) => member.userId == task.completedBy)
+        .firstOrNull;
+    final performerName = performer?.displayName ?? 'este integrante';
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = context.theme;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Revisar tarea',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: theme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$performerName marcó "${task.title}" como realizada.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _approvePendingTask(task);
+                    },
+                    icon: const Icon(Icons.check_rounded),
+                    label: const Text('Aprobar tarea'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _rejectPendingTask(task);
+                    },
+                    icon: const Icon(Icons.reply_rounded),
+                    label: const Text('Devolver para corregir'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _approvePendingTask(TaskModel task) async {
+    if (_completedTaskIds.contains(task.id)) return;
+
+    setState(() => _completedTaskIds.add(task.id));
+    try {
+      final result = await ref.read(tasksProvider.notifier).approvePendingTask(task);
+      if (!mounted) return;
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No pudimos aprobar la tarea.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarea aprobada.')),
+        );
+        ref.invalidate(tasksProvider);
+        ref.invalidate(todayTasksProvider);
+        ref.invalidate(recentActivityProvider);
+        ref.invalidate(statsControllerProvider);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No pudimos aprobar la tarea: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+      }
+    }
+  }
+
+  Future<void> _rejectPendingTask(TaskModel task) async {
+    if (_completedTaskIds.contains(task.id)) return;
+
+    setState(() => _completedTaskIds.add(task.id));
+    try {
+      await ref.read(tasksProvider.notifier).rejectPendingTask(task);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La tarea volvió a quedar pendiente.')),
+      );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(recentActivityProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No pudimos devolver la tarea: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _completedTaskIds.remove(task.id));
+      }
+    }
   }
 
   Future<void> _completeTask(TaskModel task) async {

@@ -65,6 +65,11 @@ abstract class BaseRpcService {
   }
 
   Future<String> requireHouseholdId() async {
+    final debugHouseholdId = AppIdentityService.instance.currentHouseholdId;
+    if (debugHouseholdId != null && debugHouseholdId.isNotEmpty) {
+      return debugHouseholdId;
+    }
+
     final userId = await requireCurrentUserId();
     final response = await client
         .from('household_members')

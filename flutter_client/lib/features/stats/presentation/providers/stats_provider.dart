@@ -43,7 +43,7 @@ class StatsController extends _$StatsController {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading<StatsData>().copyWithPrevious(state);
     state = await AsyncValue.guard(() => build());
   }
 }

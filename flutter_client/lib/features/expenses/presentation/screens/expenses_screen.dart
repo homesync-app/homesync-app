@@ -530,7 +530,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       children: [
                                         Text(
                                           template.title,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 16,
                                               color: AppColors.textPrimary),
@@ -538,7 +538,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         const SizedBox(height: 2),
                                         Text(
                                           'Día ${template.dayOfMonth} de cada mes',
-                                          style: TextStyle(
+                                            style: const TextStyle(
                                               color: AppColors.textSecondary,
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600),
@@ -2010,10 +2010,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     ),
                                   ),
                                   const SizedBox(width: 18),
-                                  Expanded(
+                                  const Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: const [
+                                      children: [
                                         Text(
                                           'Nueva Meta',
                                           style: TextStyle(

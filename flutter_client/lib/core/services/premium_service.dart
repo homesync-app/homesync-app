@@ -1,7 +1,6 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/logger_service.dart';
@@ -9,7 +8,6 @@ import '../services/logger_service.dart';
 class PremiumService {
   final InAppPurchase _iap = InAppPurchase.instance;
   final SupabaseClient _supabase = Supabase.instance.client;
-  final Ref _ref;
   
   // Real IDs in store (change later if needed)
   static const String _monthlyId = 'premium_monthly';
@@ -22,9 +20,14 @@ class PremiumService {
   // To update UI from outside
   final Function(bool isPremium)? onPremiumStatusChanged;
 
-  PremiumService(this._ref, {this.onPremiumStatusChanged});
+  PremiumService({this.onPremiumStatusChanged});
 
   void initialize() {
+    if (kIsWeb) {
+      log.i('PremiumService: skipping IAP initialization on web');
+      return;
+    }
+
     final purchaseUpdated = _iap.purchaseStream;
     _subscription = purchaseUpdated.listen(
       _onPurchaseUpdate,
@@ -38,6 +41,11 @@ class PremiumService {
   }
 
   Future<List<ProductDetails>> getProducts() async {
+    if (kIsWeb) {
+      log.w('IAP products are not available on web');
+      return [];
+    }
+
     final bool available = await _iap.isAvailable();
     if (!available) {
       log.w('IAP not available on this device');
@@ -53,6 +61,10 @@ class PremiumService {
   }
 
   Future<void> buyProduct(ProductDetails product) async {
+    if (kIsWeb) {
+      throw UnsupportedError('In-app purchases are not supported on web');
+    }
+
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
     
     // Non-consumables for subscriptions
@@ -106,12 +118,17 @@ class PremiumService {
   }
 
   Future<void> restorePurchases() async {
+    if (kIsWeb) {
+      log.w('Restore purchases is not supported on web');
+      return;
+    }
+
     await _iap.restorePurchases();
   }
 }
 
 final premiumServiceProvider = Provider<PremiumService>((ref) {
-  final service = PremiumService(ref);
+  final service = PremiumService();
   service.initialize();
   return service;
 });

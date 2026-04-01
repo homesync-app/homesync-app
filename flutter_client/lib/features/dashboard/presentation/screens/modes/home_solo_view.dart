@@ -207,8 +207,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
           loading: () => _buildTasksShimmer(theme),
           error: (e, _) => Text('Error: $e'),
           data: (tasks) {
-            if (tasks.isEmpty)
+            if (tasks.isEmpty) {
               return _buildEmptyState('Todo listo por hoy', theme);
+            }
             final myTasks = tasks.toList();
             return ListView.separated(
               shrinkWrap: true,
@@ -237,9 +238,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
     try {
       await ref.read(tasksProvider.notifier).completeTask(task);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _completedTaskIds.remove(task.id));
     }
@@ -263,8 +265,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('Error: $e'),
           data: (activities) {
-            if (activities.isEmpty)
+            if (activities.isEmpty) {
               return _buildEmptyState('No hay actividad aún', theme);
+            }
             return Column(
               children: activities
                   .map((a) => ActivityChatBubble(

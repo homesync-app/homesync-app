@@ -28,7 +28,7 @@ class AuthController extends _$AuthController {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   Future<void> signInWithEmail(String email, String password) async {
-    final isAdminTestingLogin = AppEnvironment.enableAdminTesting &&
+    final isAdminTestingLogin = AppEnvironment.adminTestingPasswordLoginEnabled &&
         email.trim().toLowerCase() ==
             AppEnvironment.adminTestingUsername.toLowerCase() &&
         password == AppEnvironment.adminTestingPassword;
@@ -125,6 +125,27 @@ class AuthController extends _$AuthController {
               AuthState(AuthChangeEvent.signedOut, null),
             );
             log.i('QA real session closed');
+          },
+        );
+        return;
+      }
+
+      if (ref.read(adminProvider).useAdminPreviewBaseSession) {
+        state = const AsyncValue.loading();
+        final result = await _repository.signOut();
+
+        result.fold(
+          (failure) {
+            log.setCustomKey('auth_flow', 'qa_admin_preview_sign_out');
+            log.e('QA admin preview sign out error: ${failure.message}');
+            state = AsyncValue.error(failure.message, StackTrace.current);
+          },
+          (_) {
+            ref.read(adminProvider.notifier).clearAdminSession();
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.signedOut, null),
+            );
+            log.i('Admin testing session closed');
           },
         );
         return;
