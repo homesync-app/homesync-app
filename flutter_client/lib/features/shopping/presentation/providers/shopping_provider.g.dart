@@ -7,7 +7,7 @@ part of 'shopping_provider.dart';
 // **************************************************************************
 
 String _$shoppingRepositoryHash() =>
-    r'abe0cbaaa24b1f20e8d58e0d325687e1afa1b98d';
+    r'fb6f2bbad2f60c7b06f19eb0d0a78b7ec6505d1d';
 
 /// See also [shoppingRepository].
 @ProviderFor(shoppingRepository)

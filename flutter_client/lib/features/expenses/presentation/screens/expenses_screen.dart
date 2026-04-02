@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -90,7 +91,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
-final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+          final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
           label = 'Nueva Suscripción';
           onPressed = isPremium
               ? () => _showTemplateForm(context)
@@ -168,6 +169,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
         ref.invalidate(personalFinanceSummaryProvider);
         ref.invalidate(expenseBalancesProvider);
         ref.invalidate(combinedFeedControllerProvider);
+        ref.invalidate(monthlyPendingPlannedExpensesProvider);
         ref.invalidate(monthlyProjectionProvider);
         ref.invalidate(expenseControllerProvider);
       },
@@ -356,6 +358,21 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
         .toList();
   }
 
+  List<FeedItemModel> _effectiveMonthlyPendingForBreakdowns() {
+    final monthlyPending =
+        ref.read(monthlyPendingPlannedExpensesProvider).valueOrNull;
+    if (monthlyPending != null) return monthlyPending;
+
+    final now = DateTime.now();
+    return _effectiveFeedForBreakdowns()
+        .where((item) =>
+            item.isPlanned &&
+            item.status == 'pending' &&
+            item.date.month == now.month &&
+            item.date.year == now.year)
+        .toList();
+  }
+
   ExpenseModel _expenseFromFeedItem(FeedItemModel item) {
     final expenses = ref.read(expenseControllerProvider).valueOrNull;
     final matches = expenses?.where((e) => e.id == item.id).toList() ??
@@ -377,6 +394,23 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
       isShared: item.splitType != SplitType.personal.name,
       type: item.transactionType,
     );
+  }
+
+  int _householdMemberCount() {
+    final members = ref.read(householdMembersProvider).valueOrNull;
+    if (members != null && members.isNotEmpty) return members.length;
+    return 2;
+  }
+
+  double _plannedShareAmount(FeedItemModel item, String? userId) {
+    if (userId == null) return 0.0;
+
+    final splitType = (item.splitType ?? 'equal').toLowerCase();
+    if (splitType == SplitType.personal.name || splitType == 'gift') {
+      return item.payerId == userId ? item.amount : 0.0;
+    }
+
+    return item.amount / _householdMemberCount();
   }
 
   Widget _buildProjectionStat(String label, num amount, Color color,
@@ -415,7 +449,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
   // --- Recurrentes Tab ---
 
   Widget _buildRecurrentesTab() {
-final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     if (!isPremium) return _buildPremiumLockedRecurrentes();
 
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
@@ -683,7 +717,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
               children: [
                 Expanded(
                   child: _buildProjectionStat(
-                    'Gastos pendientes',
+                    'Tu parte pendiente',
                     projectedPending,
                     AppColors.textSecondary,
                     onTap: () => _showPendingBreakdownSheet(projectedPending),
@@ -715,18 +749,12 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
   void _showProjectionBreakdownSheet(
       num balance, num pendingTotal, num estimated) {
-    final feedAsync = _effectiveFeedForBreakdowns();
+    final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
-    final now = DateTime.now();
     final theme = context.theme;
 
-    final pendingItems = feedAsync
-        .where((item) =>
-            item.isPlanned &&
-            item.status == 'pending' &&
-            item.payerId == userId &&
-            item.date.month == now.month &&
-            item.date.year == now.year)
+    final pendingItems = pendingFeed
+        .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
 
     showModalBottomSheet(
@@ -782,7 +810,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                       'Balance actual', balance, AppColors.textPrimary),
                   const SizedBox(height: 16),
                   _buildBreakdownRow(
-                      'Gastos pendientes', -pendingTotal, AppColors.primary),
+                      'Tu parte pendiente', -pendingTotal, AppColors.primary),
                   const Divider(
                       height: 40, thickness: 1, color: AppColors.divider),
                   _buildBreakdownRow(
@@ -841,7 +869,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                                 ),
                               ),
                               Text(
-                                '\$ ${_formatCurrency(item.amount)}',
+                                '\$ ${_formatCurrency(_plannedShareAmount(item, userId))}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14,
@@ -1010,17 +1038,11 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
   }
 
   void _showPendingBreakdownSheet(num total) {
-    final feedAsync = _effectiveFeedForBreakdowns();
+    final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
-    final now = DateTime.now();
 
-    final items = feedAsync
-        .where((item) =>
-            item.isPlanned &&
-            item.status == 'pending' &&
-            item.payerId == userId &&
-            item.date.month == now.month &&
-            item.date.year == now.year)
+    final items = pendingFeed
+        .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
 
     showModalBottomSheet(
@@ -1028,16 +1050,17 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _buildBreakdownBaseContainer(
-        title: 'Gastos Pendientes',
-        subtitle: 'Lo que tenés programado pagar antes de fin de mes.',
+        title: 'Tu Parte Pendiente',
+        subtitle:
+            'Lo que te corresponde de los gastos planificados de este mes.',
         total: total,
-        totalLabel: 'Total pendiente',
+        totalLabel: 'Tu total pendiente',
         accentColor: AppColors.textSecondary,
         content: Column(
           children: items
               .map((item) => _buildMovementDetailRow(
                     title: item.title,
-                    amount: item.amount,
+                    amount: _plannedShareAmount(item, userId),
                     date: item.date,
                     icon: CategoryMapping.getSmartExpenseDisplayIcon(
                       item.category,
@@ -1486,6 +1509,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
   bool _shouldShowFeedItem(FeedItemModel item) {
     if (!item.isPlanned) return true;
+    if (item.status != 'pending') return false;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

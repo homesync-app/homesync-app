@@ -6,7 +6,7 @@ part of 'savings_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$savingsRepositoryHash() => r'57fe3e37cf7da8999c58163c88d392d0b766f7ea';
+String _$savingsRepositoryHash() => r'da0ce6235c56850f2f9daa064837a24866e65eee';
 
 /// See also [savingsRepository].
 @ProviderFor(savingsRepository)

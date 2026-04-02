@@ -102,7 +102,27 @@ final getPersonalFinanceSummaryUseCaseProvider =
 // ignore: unused_element
 typedef GetPersonalFinanceSummaryUseCaseRef
     = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
-String _$monthlyProjectionHash() => r'375638a6684f9c6abf9ed0c8da46932ee815a8c1';
+String _$monthlyPendingPlannedExpensesHash() =>
+    r'b1c4d9dd758f0a09b458f5b5b09a12a9a6af20fd';
+
+/// See also [monthlyPendingPlannedExpenses].
+@ProviderFor(monthlyPendingPlannedExpenses)
+final monthlyPendingPlannedExpensesProvider =
+    AutoDisposeFutureProvider<List<FeedItemModel>>.internal(
+  monthlyPendingPlannedExpenses,
+  name: r'monthlyPendingPlannedExpensesProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$monthlyPendingPlannedExpensesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MonthlyPendingPlannedExpensesRef
+    = AutoDisposeFutureProviderRef<List<FeedItemModel>>;
+String _$monthlyProjectionHash() => r'a82e4c897b5abcd44ab1dc34cd7538a695ad3d90';
 
 /// See also [monthlyProjection].
 @ProviderFor(monthlyProjection)
@@ -173,7 +193,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'd438ffc5950f71a1aa6d3b04e1c918330f9f74e6';
+    r'01fcf47adc57905583350d9f894d436fd9ccfd12';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)
@@ -191,7 +211,7 @@ final combinedFeedControllerProvider = AutoDisposeAsyncNotifierProvider<
 typedef _$CombinedFeedController
     = AutoDisposeAsyncNotifier<List<FeedItemModel>>;
 String _$expenseTemplateControllerHash() =>
-    r'd5475d35698ba8e75cd8ddc540cf7fac54807ec2';
+    r'eec4d80efc04c784ca2dd44eab0cbe459b810d3e';
 
 /// See also [ExpenseTemplateController].
 @ProviderFor(ExpenseTemplateController)

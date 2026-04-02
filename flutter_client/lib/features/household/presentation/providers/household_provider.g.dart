@@ -23,7 +23,7 @@ final householdProvider = FutureProvider<HouseholdModel?>.internal(
 // ignore: unused_element
 typedef HouseholdRef = FutureProviderRef<HouseholdModel?>;
 String _$householdMembersNotifierHash() =>
-    r'c5a292fbb553957ffca7346f5199532300a4a982';
+    r'df65d92f4c8b34b8e30b2b299cddbff19b14b444';
 
 /// See also [HouseholdMembersNotifier].
 @ProviderFor(HouseholdMembersNotifier)

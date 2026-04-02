@@ -23,7 +23,7 @@ final statsRepositoryProvider = Provider<StatsRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef StatsRepositoryRef = ProviderRef<StatsRepository>;
-String _$statsControllerHash() => r'87e271140a7e7e9cf75697b6ee8e7ab553e1e814';
+String _$statsControllerHash() => r'9196a80d8c685e7b43803cecd418821b4659c056';
 
 /// See also [StatsController].
 @ProviderFor(StatsController)

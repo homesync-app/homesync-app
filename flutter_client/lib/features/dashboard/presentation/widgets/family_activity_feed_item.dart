@@ -81,44 +81,44 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _headlineFor(type, userName),
-                              style: TextStyle(
-                                color: theme.textPrimary,
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
+                      Text(
+                        _headlineFor(type, userName),
+                        style: TextStyle(
+                          color: theme.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.05,
+                        ),
+                      ),
                             const SizedBox(height: 2),
                             Text(
                               detailTitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: theme.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                height: 1.25,
+                                color: theme.textPrimary,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w800,
+                                height: 1.18,
                               ),
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Container(
-                        width: 34,
-                        height: 34,
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _activityIcon(type, category),
-                          size: 18,
-                          color: accent,
-                        ),
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(11),
                       ),
+                      child: Icon(
+                        _activityIcon(type, category),
+                        size: 16,
+                        color: accent,
+                      ),
+                    ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -171,29 +171,29 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     required IconData icon,
     required String label,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: 0.12),
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(
+        color: color.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-            ),
+      children: [
+        Icon(icon, size: 11, color: color),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
           ),
-        ],
+        ),
+      ],
       ),
     );
   }
@@ -239,16 +239,16 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     }
   }
 
-  String _headlineFor(String? type, String userName) {
-    switch (type) {
-      case 'task':
-        return '$userName completó una tarea';
-      case 'expense':
-        return '$userName registró un gasto';
-      default:
-        return '$userName hizo una acción';
-    }
+String _headlineFor(String? type, String userName) {
+  switch (type) {
+    case 'task':
+      return '$userName completó';
+    case 'expense':
+      return '$userName registró un gasto';
+    default:
+      return '$userName hizo una acción';
   }
+}
 
   Color _activityAccent(BuildContext context, String? type, String? category) {
     if (type == 'expense') return const Color(0xFFF08B49);
@@ -305,3 +305,5 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     return DateFormat('d MMM', 'es_AR').format(time);
   }
 }
+
+

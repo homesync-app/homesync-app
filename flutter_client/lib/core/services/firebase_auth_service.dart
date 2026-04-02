@@ -79,6 +79,8 @@ class FirebaseAuthService {
         return false;
       }
 
+      final googlePhotoUrl = googleUser?.photoUrl;
+
       final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
@@ -97,7 +99,7 @@ class FirebaseAuthService {
       }
 
       await _prepareSupabaseAfterFirebaseSignIn(idToken: idToken);
-      await _createUserProfileIfNeeded();
+      await _createUserProfileIfNeeded(googlePhotoUrl: googlePhotoUrl);
       await _ensureProvisionedAccess();
       log.i('Firebase Auth: signInWithGoogle finished successfully');
       return true;
@@ -205,12 +207,12 @@ class FirebaseAuthService {
       }
 
       log.i('Syncing identity with Supabase via Third-Party Auth...');
-      
+
       await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: tokenToUse,
       );
-      
+
       log.i('Identity synced successfully in Supabase (Auth Session active)');
     } catch (e, stack) {
       log.e(
@@ -221,7 +223,7 @@ class FirebaseAuthService {
     }
   }
 
-  Future<void> _createUserProfileIfNeeded() async {
+  Future<void> _createUserProfileIfNeeded({String? googlePhotoUrl}) async {
     try {
       final supabaseClient = _client;
       final appUserId = await _resolveCurrentAppUserId();
@@ -250,11 +252,18 @@ class FirebaseAuthService {
         'household_type': 'couple',
       });
 
-      await supabaseClient.from('household_members').insert({
+      final updates = <String, dynamic>{
         'household_id': householdId,
         'user_id': appUserId,
         'role': 'owner',
-      });
+      };
+
+      if (googlePhotoUrl != null && googlePhotoUrl.isNotEmpty) {
+        updates['avatar_url'] = googlePhotoUrl;
+        log.i('Using Google profile photo as avatar: $googlePhotoUrl');
+      }
+
+      await supabaseClient.from('household_members').insert(updates);
       log.i('Household created successfully');
     } catch (e, stack) {
       log.e('Error in _createUserProfileIfNeeded: $e',

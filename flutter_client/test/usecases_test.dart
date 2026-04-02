@@ -180,6 +180,14 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
+  Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
+    String householdId, {
+    required DateTime month,
+  }) async {
+    return const Right([]);
+  }
+
+  @override
   Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
     return const Right(unit);
   }

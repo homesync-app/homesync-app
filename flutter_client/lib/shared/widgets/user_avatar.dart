@@ -4,46 +4,46 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+
 import 'video_avatar_player.dart';
 
 class UserAvatar {
   static const Map<String, String> _legacyAvatarAliases = {
-    'ðŸ±': '\u{1F431}',
-    'ðŸ¶': '\u{1F436}',
-    'ðŸ¦Š': '\u{1F98A}',
-    'ðŸ¼': '\u{1F43C}',
-    'ðŸ°': '\u{1F430}',
-    'ðŸ»': '\u{1F43B}',
-    'ðŸ¨': '\u{1F428}',
-    'ðŸ¯': '\u{1F42F}',
-    'ðŸ¦‹': '\u{1F98B}',
-    'ðŸ™': '\u{1F419}',
-    'ðŸ¦©': '\u{1F9A9}',
-    'ðŸ§': '\u{1F427}',
-    'ðŸ¦„': '\u{1F984}',
-    'ðŸ‰': '\u{1F409}',
-    'ðŸ¦’': '\u{1F992}',
-    'ðŸ¦¥': '\u{1F9A5}',
+    'Ã°Å¸ÂÂ±': '\u{1F431}',
+    'Ã°Å¸ÂÂ¶': '\u{1F436}',
+    'Ã°Å¸Â¦Å ': '\u{1F98A}',
+    'Ã°Å¸ÂÂ¼': '\u{1F43C}',
+    'Ã°Å¸ÂÂ°': '\u{1F430}',
+    'Ã°Å¸ÂÂ»': '\u{1F43B}',
+    'Ã°Å¸ÂÂ¨': '\u{1F428}',
+    'Ã°Å¸ÂÂ¯': '\u{1F42F}',
+    'Ã°Å¸Â¦â€¹': '\u{1F98B}',
+    'Ã°Å¸Ââ„¢': '\u{1F419}',
+    'Ã°Å¸Â¦Â©': '\u{1F9A9}',
+    'Ã°Å¸ÂÂ§': '\u{1F427}',
+    'Ã°Å¸Â¦â€ž': '\u{1F984}',
+    'Ã°Å¸Ââ€°': '\u{1F409}',
+    'Ã°Å¸Â¦â€™': '\u{1F992}',
+    'Ã°Å¸Â¦Â¥': '\u{1F9A5}',
   };
 
   static const List<Map<String, dynamic>> defaultAvatars = [
-    // Lindos iconos de animales con colores pastel para el fondo
-    {'emoji': '🐱', 'color': Color(0xFFFFD180), 'name': 'Gato'},
-    {'emoji': '🐶', 'color': Color(0xFF80D8FF), 'name': 'Perro'},
-    {'emoji': '🦊', 'color': Color(0xFFFFAB40), 'name': 'Zorro'},
-    {'emoji': '🐼', 'color': Color(0xFFB9F6CA), 'name': 'Panda'},
-    {'emoji': '🐰', 'color': Color(0xFFFF80AB), 'name': 'Conejo'},
-    {'emoji': '🐻', 'color': Color(0xFFFFD54F), 'name': 'Oso'},
-    {'emoji': '🐨', 'color': Color(0xFFCFD8DC), 'name': 'Koala'},
-    {'emoji': '🐯', 'color': Color(0xFFFFCC80), 'name': 'Tigre'},
-    {'emoji': '🦋', 'color': Color(0xFFE1BEE7), 'name': 'Mariposa'},
-    {'emoji': '🐙', 'color': Color(0xFFFFCDD2), 'name': 'Pulpo'},
-    {'emoji': '🦩', 'color': Color(0xFFF8BBD0), 'name': 'Flamenco'},
-    {'emoji': '🐧', 'color': Color(0xFFE0E0E0), 'name': 'Pingüino'},
-    {'emoji': '🦄', 'color': Color(0xFFF3E5F5), 'name': 'Unicornio'},
-    {'emoji': '🐉', 'color': Color(0xFFC8E6C9), 'name': 'Dragón'},
-    {'emoji': '🦒', 'color': Color(0xFFFFF9C4), 'name': 'Jirafa'},
-    {'emoji': '🦥', 'color': Color(0xFFD7CCC8), 'name': 'Pereza'},
+    {'emoji': '\u{1F431}', 'color': Color(0xFFFFD180), 'name': 'Gato'},
+    {'emoji': '\u{1F436}', 'color': Color(0xFF80D8FF), 'name': 'Perro'},
+    {'emoji': '\u{1F98A}', 'color': Color(0xFFFFAB40), 'name': 'Zorro'},
+    {'emoji': '\u{1F43C}', 'color': Color(0xFFB9F6CA), 'name': 'Panda'},
+    {'emoji': '\u{1F430}', 'color': Color(0xFFFF80AB), 'name': 'Conejo'},
+    {'emoji': '\u{1F43B}', 'color': Color(0xFFFFD54F), 'name': 'Oso'},
+    {'emoji': '\u{1F428}', 'color': Color(0xFFCFD8DC), 'name': 'Koala'},
+    {'emoji': '\u{1F42F}', 'color': Color(0xFFFFCC80), 'name': 'Tigre'},
+    {'emoji': '\u{1F98B}', 'color': Color(0xFFE1BEE7), 'name': 'Mariposa'},
+    {'emoji': '\u{1F419}', 'color': Color(0xFFFFCDD2), 'name': 'Pulpo'},
+    {'emoji': '\u{1F9A9}', 'color': Color(0xFFF8BBD0), 'name': 'Flamenco'},
+    {'emoji': '\u{1F427}', 'color': Color(0xFFE0E0E0), 'name': 'Ping\u00FCino'},
+    {'emoji': '\u{1F984}', 'color': Color(0xFFF3E5F5), 'name': 'Unicornio'},
+    {'emoji': '\u{1F409}', 'color': Color(0xFFC8E6C9), 'name': 'Drag\u00F3n'},
+    {'emoji': '\u{1F992}', 'color': Color(0xFFFFF9C4), 'name': 'Jirafa'},
+    {'emoji': '\u{1F9A5}', 'color': Color(0xFFD7CCC8), 'name': 'Pereza'},
   ];
 
   static const List<Map<String, dynamic>> premiumAvatars = [
@@ -85,7 +85,7 @@ class UserAvatar {
       'id': 'premium_bird',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
-      'name': 'Pájaro 3D',
+      'name': 'P\u00E1jaro 3D',
       'color': Color(0xFFF3E5F5)
     },
   ];
@@ -108,12 +108,11 @@ class UserAvatar {
 
 class CustomUserAvatar extends ConsumerWidget {
   final String? name;
-  final String? userId; // Added for admin impersonation
+  final String? userId;
   final String? avatarUrl;
   final double radius;
   final VoidCallback? onTap;
   final bool showBorder;
-
   final bool isAnimated;
   final bool isPriority;
   final bool forceCircular;
@@ -164,7 +163,6 @@ class CustomUserAvatar extends ConsumerWidget {
       );
     }
 
-    // Admin impersonation feature - allow long press on any user avatar EXCEPT a few special cases if needed
     if (AppEnvironment.enableAdminTesting &&
         admin.isAdminUser &&
         userId != null &&
@@ -174,9 +172,9 @@ class CustomUserAvatar extends ConsumerWidget {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Admin: Impersonación'),
+              title: const Text('Admin: Impersonaci\u00F3n'),
               content:
-                  Text('¿Deseas ver la app como ${name ?? 'este usuario'}?'),
+                  Text('\u00BFDeseas ver la app como ${name ?? 'este usuario'}?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -346,7 +344,6 @@ class _AvatarContent extends StatelessWidget {
     final int avatarCacheSize =
         (radius * 2 * MediaQuery.devicePixelRatioOf(context)).round();
 
-    // Check if it's a premium local asset encoded as premium://assets/...
     final String cleanUrl =
         (normalizedAvatarUrl ?? '').replaceFirst('premium://', '');
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
@@ -479,14 +476,12 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     final bool shouldPlayVideo =
         isVideo && (isAnimated || isPriority || radius >= 32);
 
-    // Increase size significantly for premium video characters
     final double size = isVideo ? radius * 2.8 : radius * 2.8;
     final int premiumCacheSize =
         (size * MediaQuery.devicePixelRatioOf(context)).round();
 
     final bool isAsset = cleanUrl.startsWith('assets/');
 
-    // The image or video widget — transparent background or clipped circle
     Widget contentWidget;
 
     if (isVideo && shouldPlayVideo) {
@@ -564,7 +559,6 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
     Widget content = contentWidget;
 
-    // Wrap in floating animation (gentle vertical levitation)
     if (isAnimated || isPriority) {
       content = _FloatingAnimation(child: content);
     }
@@ -611,9 +605,9 @@ class _PremiumCharacterAvatar extends StatelessWidget {
   }
 }
 
-/// Gentle up-down float animation — no zoom/scale, pure vertical drift
 class _FloatingAnimation extends StatefulWidget {
   final Widget child;
+
   const _FloatingAnimation({required this.child});
 
   @override
