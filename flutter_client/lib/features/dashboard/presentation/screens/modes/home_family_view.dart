@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -812,6 +813,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildFinanceHeader(AppThemeColors theme, String title) {
+    final caps = ref.watch(householdCapabilitiesProvider);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -825,7 +828,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         ),
         TextButton(
           onPressed: () {
-            ref.read(bottomNavIndexProvider.notifier).setIndex(2);
+            final index = indexForMainTab(caps, MainTab.expenses);
+            if (index >= 0) {
+              ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+            }
           },
           child: const Text('Ver todos'),
         ),
@@ -976,7 +982,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ),
             TextButton(
               onPressed: () {
-                ref.read(bottomNavIndexProvider.notifier).setIndex(2);
+                final index = indexForMainTab(caps, MainTab.expenses);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
               },
               child: const Text('Ver todos'),
             ),
@@ -1189,7 +1198,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
               TextButton(
                 onPressed: () {
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(1);
+                  final index = indexForMainTab(caps, MainTab.tasks);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
                 },
                 child: Text(ctaLabel),
               ),
@@ -1753,6 +1765,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildShoppingSection(AppThemeColors theme) {
     final shoppingAsync = ref.watch(shoppingItemsProvider);
+    final caps = ref.watch(householdCapabilitiesProvider);
     return _buildSectionStateSwitcher(
       child: shoppingAsync.when(
         loading: () => KeyedSubtree(
@@ -1783,7 +1796,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
               TextButton(
                 onPressed: () {
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(5);
+                  final index = indexForMainTab(caps, MainTab.shopping);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
                 },
                 child: const Text('Ver lista'),
               ),
@@ -1860,7 +1876,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                           size: 20,
                         ),
                         onTap: () {
-                          ref.read(bottomNavIndexProvider.notifier).setIndex(5);
+                          final index =
+                              indexForMainTab(caps, MainTab.shopping);
+                          if (index >= 0) {
+                            ref
+                                .read(bottomNavIndexProvider.notifier)
+                                .setIndex(index);
+                          }
                         },
                       );
                     }).toList(),

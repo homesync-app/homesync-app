@@ -25,13 +25,19 @@ enum HouseholdType {
 
 class HouseholdCapabilities {
   final HouseholdType type;
+  final bool tasksEnabled;
 
-  const HouseholdCapabilities({required this.type});
+  const HouseholdCapabilities({
+    required this.type,
+    this.tasksEnabled = true,
+  });
 
   bool get showPartnerTab => type != HouseholdType.solo;
   bool get usesCoupleRewardsExperience => type == HouseholdType.couple;
   bool get showExpensesSplit => type != HouseholdType.solo;
   bool get hasSharedTasks => type != HouseholdType.solo;
+  bool get showTasks => tasksEnabled;
+  bool get showStats => tasksEnabled;
   bool get showLoveNotes => type == HouseholdType.couple;
   bool get showFamilyBoard =>
       type == HouseholdType.family || type == HouseholdType.friends;

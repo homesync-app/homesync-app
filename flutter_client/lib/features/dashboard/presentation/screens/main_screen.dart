@@ -17,6 +17,7 @@ import 'package:homesync_client/features/notifications/presentation/screens/noti
 import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
@@ -25,6 +26,7 @@ import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../widgets/in_app_notification_banner.dart';
 import 'package:intl/intl.dart';
@@ -272,42 +274,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final theme = context.theme;
         final currentIndex = ref.watch(bottomNavIndexProvider);
         final caps = ref.watch(householdCapabilitiesProvider);
-
-        final navConfigs = [
-          NavItemConfig(
-            title: 'Inicio',
-            icon: Icons.home_rounded,
-            screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
-          ),
-          NavItemConfig(
-            title: 'Tareas',
-            icon: Icons.task_alt_rounded,
-            screen: const TasksScreen(),
-          ),
-          NavItemConfig(
-            title: 'Finanzas',
-            icon: Icons.account_balance_wallet_rounded,
-            screen: const ExpensesScreen(),
-          ),
-          if (caps.showPartnerTab)
-            NavItemConfig(
-              title: caps.socialTabLabel,
-              icon: caps.partnerIcon,
-              screen: caps.usesCoupleRewardsExperience
-                  ? const CoupleSpaceScreen()
-                  : const HouseholdSocialHubScreen(),
-            ),
-          NavItemConfig(
-            title: 'Progreso',
-            icon: Icons.bar_chart_rounded,
-            screen: const StatsScreen(),
-          ),
-          NavItemConfig(
-            title: 'Compras',
-            icon: Icons.shopping_cart_rounded,
-            screen: const ShoppingListScreen(),
-          ),
-        ];
+        final navConfigs = visibleMainTabs(caps)
+            .map((tab) => _navConfigForTab(tab, context))
+            .toList(growable: false);
 
         // Ensure currentIndex is within bounds
         final safeIndex = currentIndex >= navConfigs.length ? 0 : currentIndex;
@@ -434,15 +403,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-
-    final navItems = [
-      (icon: Icons.home_rounded, label: 'Inicio', index: 0),
-      (icon: Icons.task_alt_rounded, label: 'Tareas', index: 1),
-      (icon: Icons.account_balance_wallet_rounded, label: 'Finanzas', index: 2),
-      if (caps.showPartnerTab)
-        (icon: caps.partnerIcon, label: caps.socialTabLabel, index: 3),
-      (icon: Icons.shopping_cart_rounded, label: 'Compras', index: 5),
-    ];
+    final navItems = visibleMainTabs(caps)
+        .where((tab) => tab != MainTab.stats)
+        .map(
+          (tab) => (
+            icon: _iconForTab(tab, caps),
+            label: _labelForTab(tab, caps),
+            index: indexForMainTab(caps, tab),
+          ),
+        )
+        .toList(growable: false);
 
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -516,6 +486,67 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
       ),
     );
+  }
+
+  NavItemConfig _navConfigForTab(MainTab tab, BuildContext context) {
+    final caps = ref.read(householdCapabilitiesProvider);
+
+    return switch (tab) {
+      MainTab.home => NavItemConfig(
+          title: 'Inicio',
+          icon: Icons.home_rounded,
+          screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
+        ),
+      MainTab.tasks => NavItemConfig(
+          title: 'Tareas',
+          icon: Icons.task_alt_rounded,
+          screen: const TasksScreen(),
+        ),
+      MainTab.expenses => NavItemConfig(
+          title: 'Finanzas',
+          icon: Icons.account_balance_wallet_rounded,
+          screen: const ExpensesScreen(),
+        ),
+      MainTab.social => NavItemConfig(
+          title: caps.socialTabLabel,
+          icon: caps.partnerIcon,
+          screen: caps.usesCoupleRewardsExperience
+              ? const CoupleSpaceScreen()
+              : const HouseholdSocialHubScreen(),
+        ),
+      MainTab.stats => NavItemConfig(
+          title: 'Progreso',
+          icon: Icons.bar_chart_rounded,
+          screen: const StatsScreen(),
+        ),
+      MainTab.shopping => NavItemConfig(
+          title: 'Compras',
+          icon: Icons.shopping_cart_rounded,
+          screen: const ShoppingListScreen(),
+        ),
+    };
+  }
+
+  IconData _iconForTab(MainTab tab, HouseholdCapabilities caps) {
+    return switch (tab) {
+      MainTab.home => Icons.home_rounded,
+      MainTab.tasks => Icons.task_alt_rounded,
+      MainTab.expenses => Icons.account_balance_wallet_rounded,
+      MainTab.social => caps.partnerIcon,
+      MainTab.stats => Icons.bar_chart_rounded,
+      MainTab.shopping => Icons.shopping_cart_rounded,
+    };
+  }
+
+  String _labelForTab(MainTab tab, HouseholdCapabilities caps) {
+    return switch (tab) {
+      MainTab.home => 'Inicio',
+      MainTab.tasks => 'Tareas',
+      MainTab.expenses => 'Finanzas',
+      MainTab.social => caps.socialTabLabel,
+      MainTab.stats => 'Progreso',
+      MainTab.shopping => 'Compras',
+    };
   }
 }
 

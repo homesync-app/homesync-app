@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -194,10 +195,18 @@ class _HouseholdSocialHubScreenState
                 householdAsync: householdAsync,
                 canManageMembers: canManageMembers,
                 onInvite: () => InvitationSheet.show(context),
-                onTasks: () =>
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(1),
-                onFinances: () =>
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(2),
+                onTasks: () {
+                  final index = indexForMainTab(caps, MainTab.tasks);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
+                onFinances: () {
+                  final index = indexForMainTab(caps, MainTab.expenses);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
                 onRewards: () {
                   Navigator.push(
                     context,
