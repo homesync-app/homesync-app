@@ -10,6 +10,7 @@ import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
 import '../../domain/models/feed_item_model.dart';
 import '../../domain/models/expense_template_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
@@ -79,7 +80,7 @@ class ExpenseBalances extends _$ExpenseBalances {
     final useCase = ref.watch(getBalancesUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (balances) => balances,
     );
   }
@@ -95,7 +96,7 @@ class ExpenseController extends _$ExpenseController {
     final useCase = ref.watch(getExpensesUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (expenses) => expenses,
     );
   }
@@ -130,10 +131,11 @@ class ExpenseController extends _$ExpenseController {
       splits: splits,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) {},
-    );
+    if (result.isLeft()) {
+      final failure = result.getLeft().toNullable()!;
+      log.w('Save expense failed: ${failure.message}');
+      throw failure;
+    }
 
     if (ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
@@ -161,13 +163,14 @@ class ExpenseController extends _$ExpenseController {
 
     result.fold(
       (failure) {
+        log.w('Delete expense failed: ${failure.message}');
         if (previousExpenses != null) {
           state = AsyncData(previousExpenses);
         }
         if (previousFeed != null) {
           combinedFeedNotifier.replaceLocalFeed(previousFeed);
         }
-        throw Exception(failure.message);
+        throw failure;
       },
       (_) {},
     );
@@ -197,15 +200,12 @@ class ExpenseController extends _$ExpenseController {
     );
 
     result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('Settle debt failed: ${failure.message}');
+        throw failure;
+      },
       (_) {},
     );
-
-    if (ref.read(isOnlineProvider)) {
-      ref.invalidate(expenseBalancesProvider);
-      ref.invalidate(personalFinanceSummaryProvider);
-      ref.invalidate(combinedFeedControllerProvider);
-    }
     // Note: Do not invalidateSelf() here to avoid CircularDependencyError if this is called from within the same family or branch of providers
   }
 }
@@ -227,7 +227,10 @@ class CombinedFeedController extends _$CombinedFeedController {
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('CombinedFeed build failed: ${failure.message}');
+        throw failure;
+      },
       (feed) => feed,
     );
   }
@@ -247,7 +250,10 @@ class CombinedFeedController extends _$CombinedFeedController {
     );
 
     return result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Pay planned expense failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
@@ -266,7 +272,10 @@ class CombinedFeedController extends _$CombinedFeedController {
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.deletePlannedExpense(id);
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Discard planned expense failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
@@ -309,7 +318,10 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     final result = await repo.getTemplates(householdId);
 
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('ExpenseTemplateController build failed: ${failure.message}');
+        throw failure;
+      },
       (templates) => templates,
     );
   }
@@ -319,11 +331,13 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     final result = await repo.saveTemplate(template);
 
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Save template failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
-          // Generar feed de nuevo porque puede afectar proyecciones
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
@@ -337,7 +351,10 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     final result = await repo.toggleTemplateActivity(id, false);
 
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Delete template failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
@@ -385,7 +402,10 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
   );
 
   return result.fold(
-    (failure) => throw Exception(failure.message),
+    (failure) {
+      log.w('Monthly pending planned expenses failed: ${failure.message}');
+      throw failure;
+    },
     (items) => items,
   );
 }

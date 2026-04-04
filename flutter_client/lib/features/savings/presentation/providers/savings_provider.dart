@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
@@ -14,6 +15,42 @@ import 'package:homesync_client/features/savings/domain/usecases/delete_savings_
 import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
 
 part 'savings_provider.g.dart';
+
+const _savingsGoalsPageSize = 12;
+
+class SavingsGoalsPageState {
+  final List<SavingsGoalModel> items;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  const SavingsGoalsPageState({
+    required this.items,
+    required this.hasMore,
+    required this.isLoadingMore,
+  });
+
+  SavingsGoalsPageState copyWith({
+    List<SavingsGoalModel>? items,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) {
+    return SavingsGoalsPageState(
+      items: items ?? this.items,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+class _SavingsGoalsChunk {
+  final List<SavingsGoalModel> items;
+  final bool hasMore;
+
+  const _SavingsGoalsChunk({
+    required this.items,
+    required this.hasMore,
+  });
+}
 
 @riverpod
 SavingsRepository savingsRepository(SavingsRepositoryRef ref) {
@@ -51,7 +88,7 @@ Future<List<SavingsContributionModel>> goalContributions(GoalContributionsRef re
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
   final result = await getGoalContributions.execute(goalId);
   return result.fold(
-    (failure) => throw Exception(failure.message),
+    (failure) => throw failure,
     (items) => items,
   );
 }
@@ -66,7 +103,7 @@ class SavingsGoals extends _$SavingsGoals {
     final getSavingsGoals = ref.watch(getSavingsGoalsUseCaseProvider);
     final result = await getSavingsGoals.execute(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (goals) => goals,
     );
   }
@@ -86,8 +123,9 @@ class SavingsGoals extends _$SavingsGoals {
       );
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
+      ref.invalidate(paginatedSavingsGoalsProvider);
       return result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (goals) => goals,
       );
     });
@@ -124,17 +162,18 @@ class SavingsGoals extends _$SavingsGoals {
         );
       } catch (e) {
         // Log error but don't fail the whole operation if ledger failed
-        debugPrint('Error creating expense for contribution: $e');
+        log.w('Error creating expense for contribution', error: e);
       }
       
       ref.invalidate(goalContributionsProvider(goalId));
       ref.invalidate(personalFinanceSummaryProvider); 
       ref.invalidate(expenseControllerProvider);
+      ref.invalidate(paginatedSavingsGoalsProvider);
       
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (goals) => goals,
       );
     });
@@ -147,13 +186,90 @@ class SavingsGoals extends _$SavingsGoals {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(deleteSavingsGoalUseCaseProvider).execute(goalId);
+      ref.invalidate(paginatedSavingsGoalsProvider);
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (goals) => goals,
       );
     });
+  }
+}
+
+@riverpod
+class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
+  @override
+  Future<SavingsGoalsPageState> build() async {
+    final chunk = await _fetchChunk(offset: 0);
+    return SavingsGoalsPageState(
+      items: chunk.items,
+      hasMore: chunk.hasMore,
+      isLoadingMore: false,
+    );
+  }
+
+  Future<_SavingsGoalsChunk> _fetchChunk({required int offset}) async {
+    final householdId = await ref.read(householdIdProvider.future);
+    if (householdId == null) {
+      return const _SavingsGoalsChunk(items: [], hasMore: false);
+    }
+
+    final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
+    final result = await getSavingsGoals.execute(
+      householdId,
+      limit: _savingsGoalsPageSize,
+      offset: offset,
+    );
+
+    return result.fold(
+      (failure) => throw failure,
+      (goals) => _SavingsGoalsChunk(
+        items: goals,
+        hasMore: goals.length == _savingsGoalsPageSize,
+      ),
+    );
+  }
+
+  Future<void> refresh() async {
+    state =
+        const AsyncLoading<SavingsGoalsPageState>().copyWithPrevious(state);
+    state = await AsyncValue.guard(() async {
+      final chunk = await _fetchChunk(offset: 0);
+      return SavingsGoalsPageState(
+        items: chunk.items,
+        hasMore: chunk.hasMore,
+        isLoadingMore: false,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || current.isLoadingMore || !current.hasMore) {
+      return;
+    }
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    try {
+      final chunk = await _fetchChunk(offset: current.items.length);
+      state = AsyncData(
+        current.copyWith(
+          items: [...current.items, ...chunk.items],
+          hasMore: chunk.hasMore,
+          isLoadingMore: false,
+        ),
+      );
+    } catch (error, stackTrace) {
+      state = AsyncData(current.copyWith(isLoadingMore: false));
+      log.e(
+        'Error loading more savings goals: $error',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 }
 

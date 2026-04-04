@@ -175,10 +175,22 @@ class SupabaseAuthService {
   Future<void> signOut() async {
     try {
       await GoogleSignIn.instance.signOut();
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'Google sign-out cleanup failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     try {
       await _firebaseAuth.signOut();
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'Firebase sign-out cleanup failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier('');

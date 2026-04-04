@@ -94,7 +94,7 @@ void main() async {
       }
     }
   } catch (e) {
-    debugPrint('Device info error: $e');
+    log.w('Device info initialization failed', error: e);
   }
 
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
@@ -155,7 +155,7 @@ void main() async {
       }
     }
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    log.e('Firebase initialization failed', error: e);
   }
 
   await Supabase.initialize(
@@ -336,7 +336,7 @@ class _MyAppState extends ConsumerState<MyApp> {
               },
               loading: () => const SplashScreen(),
               error: (e, stack) {
-                debugPrint('Auth error: $e');
+                log.e('Auth bootstrap failed', error: e, stackTrace: stack);
                 return LoginScreen(prefs: widget.prefs);
               },
             ),

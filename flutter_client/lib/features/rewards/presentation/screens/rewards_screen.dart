@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 
@@ -163,7 +164,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       });
 
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'RewardsScreen failed to load duel stats',
+        error: error,
+        stackTrace: stackTrace,
+      );
 
       if (!mounted) return;
 
@@ -275,7 +281,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
 
 
-    final rewardsAsync = ref.watch(rewardsProvider);
+    final rewardsAsync = ref.watch(paginatedRewardsProvider);
 
     final currentUserId = ref.read(currentUserIdProvider);
 
@@ -335,9 +341,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                     data: (rawRewards) {
 
-                      final rewards = rawRewards
-                          .where((r) => r.isActive)
-                          .toList();
+                      final rewards = rawRewards.items;
 
                       final availableCoins =
 
@@ -359,7 +363,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                         onRefresh: () =>
 
-                            ref.read(rewardsProvider.notifier).refresh(),
+                              ref.read(paginatedRewardsProvider.notifier).refresh(),
 
                         child: ListView(
 
@@ -405,6 +409,42 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                             ],
 
+                            if (rawRewards.isLoadingMore) ...[
+
+                              const SizedBox(height: 20),
+
+                              const Center(
+
+                                child: CircularProgressIndicator(
+
+                                  color: AppColors.primary,
+
+                                ),
+
+                              ),
+
+                            ] else if (rawRewards.hasMore) ...[
+
+                              const SizedBox(height: 20),
+
+                              Center(
+
+                                child: OutlinedButton(
+
+                                  onPressed: () => ref
+
+                                      .read(paginatedRewardsProvider.notifier)
+
+                                      .loadMore(),
+
+                                  child: const Text('Cargar mas'),
+
+                                ),
+
+                              ),
+
+                            ],
+
                             const SizedBox(height: 32),
 
                             _buildActionButtons(),
@@ -425,7 +465,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                       message: 'No pudimos cargar premios.\n$e',
 
-                      onRetry: () => ref.invalidate(rewardsProvider),
+                        onRetry: () => ref.invalidate(paginatedRewardsProvider),
 
                     ),
 
@@ -1589,9 +1629,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
           ElevatedButton(
 
-            onPressed: () =>
+              onPressed: () =>
 
-                ref.read(rewardsProvider.notifier).cloneTemplates(),
+                ref.read(rewardsProvider.notifier).cloneTemplates().then((_) {
+                  ref.read(paginatedRewardsProvider.notifier).refresh();
+                }),
 
             style: ElevatedButton.styleFrom(
 
@@ -2048,6 +2090,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
     if (confirm == true) {
 
       await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      await ref.read(paginatedRewardsProvider.notifier).refresh();
 
     }
 
@@ -2131,7 +2174,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
               Navigator.pop(dialogCtx);
 
-              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
+              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) async {
+
+                await ref.read(paginatedRewardsProvider.notifier).refresh();
 
                 if (!mounted) return;
 
@@ -2415,6 +2460,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                               .deleteReward(reward.id);
 
+                          await ref
+
+                              .read(paginatedRewardsProvider.notifier)
+
+                              .refresh();
+
                         },
 
                         style: OutlinedButton.styleFrom(
@@ -2460,6 +2511,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                               .read(rewardsProvider.notifier)
 
                               .approveReward(reward.id);
+
+                          await ref
+
+                              .read(paginatedRewardsProvider.notifier)
+
+                              .refresh();
 
                         },
 
@@ -2957,7 +3014,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                 ElevatedButton(
 
-                  onPressed: () {
+                  onPressed: () async {
 
                     final cost = int.tryParse(costController.text) ?? 0;
 
@@ -2969,7 +3026,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
 
 
-                    ref.read(rewardsProvider.notifier).suggestReward(
+                    await ref.read(rewardsProvider.notifier).suggestReward(
 
                           title: titleController.text.trim(),
 
@@ -2986,6 +3043,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                           category: selectedCategory,
 
                         );
+
+                    await ref
+
+                        .read(paginatedRewardsProvider.notifier)
+
+                        .refresh();
+
+                    if (!context.mounted) return;
 
                     Navigator.pop(context);
 

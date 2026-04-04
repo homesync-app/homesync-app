@@ -94,7 +94,7 @@ class Tasks extends _$Tasks {
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await useCase(householdId, limit: _pageSize, offset: 0);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (tasks) {
         if (tasks.length < _pageSize) {
           _hasMore = false;
@@ -518,7 +518,7 @@ class Tasks extends _$Tasks {
       );
 
       result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (_) {
           final isOnline = ref.read(isOnlineProvider);
           if (isOnline) {

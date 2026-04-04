@@ -8,14 +8,15 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -165,8 +166,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       final authService = ref.read(authServiceProvider);
       await authService.ensureHouseholdExists();
 
-      final householdRepo = ref.read(householdRepositoryProvider);
-      final result = await householdRepo.generateInvitationCode();
+      final result = await ref.read(generateInvitationCodeUseCaseProvider).call();
       if (mounted) {
         result.fold(
           (failure) {
@@ -214,8 +214,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     });
 
     try {
-      final householdRepo = ref.read(householdRepositoryProvider);
-      await householdRepo.joinHousehold(code);
+      final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
+      result.fold((failure) => throw failure, (_) {});
 
       // Invalida proveedores para que MainScreen/HomeScreen vean el nuevo hogar
       ref.invalidate(householdIdProvider);
@@ -260,9 +260,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     try {
       final householdId = await ref.read(householdIdProvider.future);
       if (householdId != null && _selectedMode != null) {
-        await ref
-            .read(householdRepositoryProvider)
-            .updateHouseholdType(householdId, _selectedMode!);
+        final result = await ref
+            .read(updateHouseholdTypeUseCaseProvider)
+            .call(householdId, _selectedMode!);
+        result.fold((failure) => throw failure, (_) {});
       }
 
       // Update user profile with name and avatar
@@ -273,7 +274,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   avatarUrl: _selectedAvatar,
                 );
         profileResult.fold(
-          (failure) => throw Exception(failure.message),
+          (failure) => throw failure,
           (_) {},
         );
       }
@@ -1648,12 +1649,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       }
 
       if (currentUserId != null && _familyRole.trim().isNotEmpty) {
-        await ref
-            .read(householdRepositoryProvider)
-            .updateMemberDisplayRole(currentUserId, _familyRole);
+        final result = await ref
+            .read(updateMemberDisplayRoleUseCaseProvider)
+            .call(currentUserId, _familyRole);
+        result.fold((failure) => throw failure, (_) {});
         ref.invalidate(householdMembersNotifierProvider);
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen family onboarding best-effort update failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // Best effort setup. The family can still continue onboarding.
     }
 
@@ -1771,9 +1778,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               try {
                 final householdId = ref.read(householdIdProvider).valueOrNull;
                 if (householdId != null) {
-                  await ref
-                      .read(householdRepositoryProvider)
-                      .updateDefaultSplitRatio(householdId, _tempRatio);
+                  final result = await ref
+                      .read(updateDefaultSplitRatioUseCaseProvider)
+                      .call(householdId, _tempRatio);
+                  result.fold((failure) => throw failure, (_) {});
                 }
               } catch (e) {
                 // Ignore error

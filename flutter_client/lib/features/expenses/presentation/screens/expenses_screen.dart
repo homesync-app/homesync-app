@@ -518,7 +518,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       (context, index) {
                         final template = templates[index];
                         final color =
-                            CategoryMapping.getCategoryColor(template.category);
+                            CategoryMapping.getSmartExpenseDisplayColor(
+                          template.category,
+                          title: template.title,
+                          description: null,
+                        );
+                        final icon = CategoryMapping.getSmartExpenseDisplayIcon(
+                          template.category,
+                          title: template.title,
+                          description: null,
+                        );
                         final theme = context.theme;
 
                         return Padding(
@@ -552,8 +561,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Icon(
-                                      CategoryMapping.getCategoryMaterialIcon(
-                                          template.category),
+                                      icon,
                                       size: 24,
                                       color: color,
                                     ),

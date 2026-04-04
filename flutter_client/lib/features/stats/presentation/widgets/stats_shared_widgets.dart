@@ -210,10 +210,10 @@ class DuelHistoryWidget extends StatelessWidget {
           
           String weekLabel = 'Semana pasada';
           if (weekDate != null) {
-            try {
-              final date = DateTime.parse(weekDate.toString());
+            final date = DateTime.tryParse(weekDate.toString());
+            if (date != null) {
               weekLabel = '${date.day}/${date.month}';
-            } catch (_) {}
+            }
           }
 
           return Container(

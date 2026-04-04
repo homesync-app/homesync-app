@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 class PremiumPaywallScreen extends ConsumerWidget {
@@ -139,7 +138,9 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   
                   // Footer links
                   TextButton(
-                    onPressed: () => ref.read(premiumServiceProvider).restorePurchases(),
+                    onPressed: () => ref
+                        .read(restorePremiumPurchasesUseCaseProvider)
+                        .call(),
                     child: const Text(
                       'Restaurar compras',
                       style: TextStyle(color: Colors.white54, fontSize: 13),
@@ -298,7 +299,7 @@ class _ProductCard extends ConsumerWidget {
               const Text('Ahorra 20%', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
-        onTap: () => ref.read(premiumServiceProvider).buyProduct(product),
+        onTap: () => ref.read(buyPremiumProductUseCaseProvider).call(product),
       ),
     );
   }

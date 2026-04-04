@@ -546,13 +546,16 @@ class SupabaseExpenseRepository
     return executeWithHandling(
         () async {
           final sw = Stopwatch()..start();
+          final rpcName = _isAdminTestingActive
+              ? 'qa_admin_process_recurring_expenses'
+              : 'process_recurring_expenses';
           await _client.rpc(
-            'process_recurring_expenses',
+            rpcName,
             params: {'p_household_id': householdId},
           );
           sw.stop();
           log.i(
-            'Finance RPC process_recurring_expenses ok household=$householdId ms=${sw.elapsedMilliseconds}',
+            'Finance RPC $rpcName ok household=$householdId ms=${sw.elapsedMilliseconds}',
           );
           return unit;
         },

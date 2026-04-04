@@ -103,7 +103,7 @@ final getPersonalFinanceSummaryUseCaseProvider =
 typedef GetPersonalFinanceSummaryUseCaseRef
     = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
 String _$monthlyPendingPlannedExpensesHash() =>
-    r'b1c4d9dd758f0a09b458f5b5b09a12a9a6af20fd';
+    r'b1ad935b11d41d6703c0cf85af1f64d5cf4aaef9';
 
 /// See also [monthlyPendingPlannedExpenses].
 @ProviderFor(monthlyPendingPlannedExpenses)
@@ -159,7 +159,7 @@ final personalFinanceSummaryProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$PersonalFinanceSummary
     = AutoDisposeAsyncNotifier<Map<String, dynamic>>;
-String _$expenseBalancesHash() => r'ff3cf4266841e1f70ce794b2910fbdbc6608cb21';
+String _$expenseBalancesHash() => r'1726eaee36cfa3bf82470443b8253a4caa436147';
 
 /// See also [ExpenseBalances].
 @ProviderFor(ExpenseBalances)
@@ -176,7 +176,7 @@ final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseBalances
     = AutoDisposeAsyncNotifier<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'75fa9e0082853dfd1e08f80eb27409668e7b5a27';
+String _$expenseControllerHash() => r'fe922b49f6b34ce389139bf27fe411b7e2eab4c2';
 
 /// See also [ExpenseController].
 @ProviderFor(ExpenseController)
@@ -193,7 +193,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'01fcf47adc57905583350d9f894d436fd9ccfd12';
+    r'e93ec692c294903053347a2a4408e65903c414b1';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)
@@ -211,7 +211,7 @@ final combinedFeedControllerProvider = AutoDisposeAsyncNotifierProvider<
 typedef _$CombinedFeedController
     = AutoDisposeAsyncNotifier<List<FeedItemModel>>;
 String _$expenseTemplateControllerHash() =>
-    r'eec4d80efc04c784ca2dd44eab0cbe459b810d3e';
+    r'ae93628fc23a05ebc6ffac5f375508a7877f029c';
 
 /// See also [ExpenseTemplateController].
 @ProviderFor(ExpenseTemplateController)

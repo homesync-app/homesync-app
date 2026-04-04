@@ -19,11 +19,11 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<List<SavingsGoalModel>>>(savingsGoalsProvider,
+    ref.listen<AsyncValue<SavingsGoalsPageState>>(paginatedSavingsGoalsProvider,
         (previous, next) {
       if (previous != null && previous.hasValue && next.hasValue) {
-        final prevGoals = previous.value!;
-        final nextGoals = next.value!;
+        final prevGoals = previous.value!.items;
+        final nextGoals = next.value!.items;
 
         for (final goal in nextGoals) {
           final prevGoal = prevGoals.any((g) => g.id == goal.id)
@@ -39,7 +39,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       }
     });
 
-    final goalsAsync = ref.watch(savingsGoalsProvider);
+    final goalsAsync = ref.watch(paginatedSavingsGoalsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,14 +60,20 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         ),
       ),
       body: goalsAsync.when(
-        data: (List<SavingsGoalModel> goals) => RefreshIndicator(
-          onRefresh: () => ref.refresh(savingsGoalsProvider.future),
+        data: (SavingsGoalsPageState goalsState) => RefreshIndicator(
+          onRefresh: () => ref.read(paginatedSavingsGoalsProvider.notifier).refresh(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Builder(
+                  builder: (_) {
+                    final goals = goalsState.items;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                 _buildTotalSavingsCard(goals),
                 const SizedBox(height: 32),
                 Row(
@@ -94,8 +100,28 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   _buildEmptyState()
                 else
                   ...goals.map((goal) => _buildGoalCard(goal)),
+                if (goalsState.isLoadingMore) ...[
+                  const SizedBox(height: 20),
+                  const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                ] else if (goalsState.hasMore) ...[
+                  const SizedBox(height: 20),
+                  Center(
+                    child: OutlinedButton(
+                      onPressed: () => ref
+                          .read(paginatedSavingsGoalsProvider.notifier)
+                          .loadMore(),
+                      child: const Text('Cargar mas'),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 40),
                 _buildAddGoalButton(),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -387,14 +413,9 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   }
 
   Color _parseColor(String colorStr) {
-    try {
-      if (colorStr.startsWith('#')) {
-        return Color(int.parse(colorStr.replaceFirst('#', '0xFF')));
-      }
-      return AppColors.primary;
-    } catch (_) {
-      return AppColors.primary;
-    }
+    if (!colorStr.startsWith('#')) return AppColors.primary;
+    final parsed = int.tryParse(colorStr.replaceFirst('#', '0xFF'));
+    return parsed != null ? Color(parsed) : AppColors.primary;
   }
 
   void _confirmDelete(SavingsGoalModel goal) {

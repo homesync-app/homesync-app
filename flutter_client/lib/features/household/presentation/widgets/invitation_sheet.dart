@@ -5,8 +5,8 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class InvitationSheet extends ConsumerStatefulWidget {
@@ -42,7 +42,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
       if (hId == null) return;
 
       // Intentar buscar código existente o generar uno nuevo
-      final result = await ref.read(householdRepositoryProvider).generateInvitationCode();
+      final result = await ref.read(generateInvitationCodeUseCaseProvider).call();
       result.fold(
         (failure) => _showError(failure.message),
         (code) => setState(() => _invitationCode = code),

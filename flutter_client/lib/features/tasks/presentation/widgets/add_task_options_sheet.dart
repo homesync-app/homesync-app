@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -32,8 +33,12 @@ class AddTaskOptionsSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
+  static const int _pageSize = 24;
+
   List<TaskTemplate> _templates = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   final Set<String> _addingIds = {};
   final Set<String> _addedIds = {};
   String? _selectedCategory;
@@ -49,15 +54,48 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
   Future<void> _fetchTemplates() async {
     try {
-      final templates = await _templateService.getTemplates();
+      final templates = await _templateService.getTemplates(limit: _pageSize);
       if (mounted) {
         setState(() {
           _templates = templates;
           _isLoading = false;
+          _hasMore = templates.length == _pageSize;
         });
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'AddTaskOptionsSheet failed to fetch templates',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreTemplates() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextPage = await _templateService.getTemplates(
+        limit: _pageSize,
+        offset: _templates.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _templates = [..._templates, ...nextPage];
+        _hasMore = nextPage.length == _pageSize;
+        _isLoadingMore = false;
+      });
+    } catch (error, stackTrace) {
+      log.w(
+        'AddTaskOptionsSheet failed to load more templates',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
     }
   }
 
@@ -416,6 +454,20 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         for (final catId in orderedCatIds) ...[
           if (_selectedCategory == null) _buildSectionHeader(catId),
           ...grouped[catId]!.map(_buildTemplateCard),
+        ],
+        if (_isLoadingMore) ...[
+          const SizedBox(height: 16),
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ] else if (_hasMore && _selectedCategory == null) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: OutlinedButton(
+              onPressed: _loadMoreTemplates,
+              child: const Text('Cargar mas'),
+            ),
+          ),
         ],
       ],
     );

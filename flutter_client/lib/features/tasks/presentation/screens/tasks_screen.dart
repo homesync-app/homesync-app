@@ -908,11 +908,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere((c) => c.id == task.category);
-        } catch (_) {
-          return null;
+        for (final category in list) {
+          if (category.id == task.category) {
+            return category;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );

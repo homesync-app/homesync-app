@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -123,7 +124,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         _duelHistory = _mapList(results[3]);
         _isStatsLoading = false;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'CoupleRewardsScreen failed to load duel stats',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
       setState(() => _isStatsLoading = false);
     }

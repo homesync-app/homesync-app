@@ -262,6 +262,14 @@ class CategoryMapping {
         content.contains('salario')) {
       return Icons.account_balance_wallet_rounded;
     }
+    final serviceIcon = _serviceSpecificExpenseIcon(content);
+    if (serviceIcon != null) {
+      return serviceIcon;
+    }
+    final keywordIcon = _keywordExpenseIcon(content);
+    if (keywordIcon != null) {
+      return keywordIcon;
+    }
     if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
       return getCategoryMaterialIcon(normalizedCategory);
     }
@@ -307,6 +315,14 @@ class CategoryMapping {
         normalizedTitle.contains('sueldo') ||
         normalizedTitle.contains('salario')) {
       return AppColors.success;
+    }
+    final serviceColor = _serviceSpecificExpenseColor(normalizedTitle);
+    if (serviceColor != null) {
+      return serviceColor;
+    }
+    final keywordColor = _keywordExpenseColor(normalizedTitle);
+    if (keywordColor != null) {
+      return keywordColor;
     }
     if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
       return getCategoryColor(normalizedCategory);
@@ -355,6 +371,14 @@ class CategoryMapping {
         content.contains('sueldo') ||
         content.contains('salario')) {
       return Icons.account_balance_wallet_rounded;
+    }
+    final serviceIcon = _serviceSpecificExpenseIcon(content);
+    if (serviceIcon != null) {
+      return serviceIcon;
+    }
+    final keywordIcon = _keywordExpenseIcon(content);
+    if (keywordIcon != null) {
+      return keywordIcon;
     }
     if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
       return getCategoryMaterialIcon(normalizedCategory);
@@ -437,6 +461,14 @@ class CategoryMapping {
         content.contains('sueldo') ||
         content.contains('salario')) {
       return AppColors.success;
+    }
+    final serviceColor = _serviceSpecificExpenseColor(content);
+    if (serviceColor != null) {
+      return serviceColor;
+    }
+    final keywordColor = _keywordExpenseColor(content);
+    if (keywordColor != null) {
+      return keywordColor;
     }
     if (_shouldPrioritizeExplicitExpenseCategory(normalizedCategory)) {
       return getCategoryColor(normalizedCategory);
@@ -596,9 +628,9 @@ class CategoryMapping {
     'savings': 'Ahorro',
     'income': 'Ingreso',
     'settlement': 'Liquidación de pareja',
-    'rent': 'Alquiler',
+    'rent': 'Alquiler y hogar',
     'utilities': 'Servicios',
-    'restaurants': 'Restaurantes',
+    'restaurants': 'Salidas y comidas',
     'transport': 'Transporte',
     'health': 'Salud',
     'salary': 'Sueldo',
@@ -616,6 +648,7 @@ class CategoryMapping {
     'pension': 'Pensub/Jubilación',
     'crypto': 'Cripto / Inversión',
     'prestamo': 'Préstamo',
+    'entertainment': 'Ocio y planes',
     'other': 'Otros',
   };
 
@@ -784,5 +817,587 @@ class CategoryMapping {
       default:
         return false;
     }
+  }
+
+  static IconData? _serviceSpecificExpenseIcon(String content) {
+    if (content.isEmpty) return null;
+
+    if (_containsAny(content, const [
+      'gas',
+      'metrogas',
+      'natural gas',
+      'gas natural',
+      'garrafa',
+    ])) {
+      return Icons.local_fire_department_rounded;
+    }
+    if (_containsAny(content, const [
+      'luz',
+      'electricidad',
+      'edenor',
+      'edesur',
+      'energia',
+      'energía',
+      'electric',
+    ])) {
+      return Icons.bolt_rounded;
+    }
+    if (_containsAny(content, const [
+      'internet',
+      'wifi',
+      'wi-fi',
+      'fibra',
+      'telecentro',
+      'personal flow',
+    ])) {
+      return Icons.wifi_rounded;
+    }
+    if (_containsAny(content, const [
+      'agua',
+      'aysa',
+      'water',
+    ])) {
+      return Icons.water_drop_rounded;
+    }
+    if (_containsAny(content, const [
+      'telefono',
+      'teléfono',
+      'celular',
+      'phone',
+      'mobile',
+      'claro',
+      'movistar',
+    ])) {
+      return Icons.smartphone_rounded;
+    }
+    if (_containsAny(content, const [
+      'expensas',
+      'consorcio',
+      'administracion',
+      'administración',
+    ])) {
+      return Icons.apartment_rounded;
+    }
+    if (_containsAny(content, const [
+      'alquiler',
+      'rent',
+      'inmobiliaria',
+    ])) {
+      return Icons.house_rounded;
+    }
+    if (_containsAny(content, const [
+      'netflix',
+      'spotify',
+      'disney',
+      'hbo',
+      'hbo max',
+      'prime video',
+      'youtube premium',
+      'suscripcion',
+      'suscripción',
+      'streaming',
+    ])) {
+      return Icons.play_circle_rounded;
+    }
+    if (_containsAny(content, const [
+      'seguro',
+      'insurance',
+      'obra social',
+      'prepaga',
+    ])) {
+      return Icons.health_and_safety_rounded;
+    }
+
+    return null;
+  }
+
+  static Color? _serviceSpecificExpenseColor(String content) {
+    if (content.isEmpty) return null;
+
+    if (_containsAny(content, const [
+      'gas',
+      'metrogas',
+      'natural gas',
+      'gas natural',
+      'garrafa',
+    ])) {
+      return const Color(0xFFF97316);
+    }
+    if (_containsAny(content, const [
+      'luz',
+      'electricidad',
+      'edenor',
+      'edesur',
+      'energia',
+      'energía',
+      'electric',
+    ])) {
+      return const Color(0xFFF6B21A);
+    }
+    if (_containsAny(content, const [
+      'internet',
+      'wifi',
+      'wi-fi',
+      'fibra',
+      'telecentro',
+      'personal flow',
+    ])) {
+      return const Color(0xFF3B82F6);
+    }
+    if (_containsAny(content, const [
+      'agua',
+      'aysa',
+      'water',
+    ])) {
+      return const Color(0xFF06B6D4);
+    }
+    if (_containsAny(content, const [
+      'telefono',
+      'teléfono',
+      'celular',
+      'phone',
+      'mobile',
+      'claro',
+      'movistar',
+    ])) {
+      return const Color(0xFF8B5CF6);
+    }
+    if (_containsAny(content, const [
+      'expensas',
+      'consorcio',
+      'administracion',
+      'administración',
+    ])) {
+      return const Color(0xFF64748B);
+    }
+    if (_containsAny(content, const [
+      'alquiler',
+      'rent',
+      'inmobiliaria',
+    ])) {
+      return AppColors.accentPeach;
+    }
+    if (_containsAny(content, const [
+      'netflix',
+      'spotify',
+      'disney',
+      'hbo',
+      'hbo max',
+      'prime video',
+      'youtube premium',
+      'suscripcion',
+      'suscripción',
+      'streaming',
+    ])) {
+      return const Color(0xFFE11D48);
+    }
+    if (_containsAny(content, const [
+      'seguro',
+      'insurance',
+      'obra social',
+      'prepaga',
+    ])) {
+      return const Color(0xFF10B981);
+    }
+
+    return null;
+  }
+
+  static IconData? _keywordExpenseIcon(String content) {
+    if (content.isEmpty) return null;
+
+    if (_containsAny(content, const [
+      'sushi',
+      'ramen',
+      'wok',
+      'poke',
+    ])) {
+      return Icons.ramen_dining_rounded;
+    }
+    if (_containsAny(content, const [
+      'pizza',
+      'hamburguesa',
+      'burger',
+      'empanada',
+      'sandwich',
+      'sándwich',
+      'mcdonald',
+      'burger king',
+      'mostaza',
+    ])) {
+      return Icons.lunch_dining_rounded;
+    }
+    if (_containsAny(content, const [
+      'helado',
+      'postre',
+      'torta',
+      'cafe',
+      'café',
+      'medialuna',
+      'panaderia',
+      'panadería',
+      'pasteleria',
+      'pastelería',
+    ])) {
+      return Icons.icecream_rounded;
+    }
+    if (_containsAny(content, const [
+      'restaurante',
+      'restaurant',
+      'cena',
+      'almuerzo',
+      'desayuno',
+      'bar',
+      'bistro',
+      'bistró',
+    ])) {
+      return Icons.restaurant_rounded;
+    }
+    if (_containsAny(content, const [
+      'super',
+      'mercado',
+      'compra',
+      'carrefour',
+      'coto',
+      'jumbo',
+      'dia',
+      'disco',
+      'vea',
+    ])) {
+      return Icons.shopping_bag_rounded;
+    }
+    if (_containsAny(content, const [
+      'farmacia',
+      'farmacity',
+      'ibuprofeno',
+      'paracetamol',
+      'medicamento',
+      'remedio',
+    ])) {
+      return Icons.local_pharmacy_rounded;
+    }
+    if (_containsAny(content, const [
+      'uber',
+      'cabify',
+      'taxi',
+      'subte',
+      'colectivo',
+      'nafta',
+      'combustible',
+      'estacionamiento',
+      'parking',
+      'peaje',
+      'shell',
+      'ypf',
+      'axion',
+    ])) {
+      return Icons.directions_car_filled_rounded;
+    }
+    if (_containsAny(content, const [
+      'veterinaria',
+      'vet',
+      'petshop',
+      'pet shop',
+      'balanceado',
+      'alimento perro',
+      'alimento gato',
+    ])) {
+      return Icons.pets_rounded;
+    }
+    if (_containsAny(content, const [
+      'gym',
+      'gimnasio',
+      'entrenamiento',
+      'crossfit',
+      'pilates',
+      'yoga',
+    ])) {
+      return Icons.fitness_center_rounded;
+    }
+    if (_containsAny(content, const [
+      'ropa',
+      'remera',
+      'pantalon',
+      'pantalón',
+      'zapatilla',
+      'zapatillas',
+      'campera',
+      'vestido',
+    ])) {
+      return Icons.checkroom_rounded;
+    }
+    if (_containsAny(content, const [
+      'ferreteria',
+      'ferretería',
+      'herramienta',
+      'reparacion',
+      'reparación',
+      'pintura',
+      'electricista',
+      'plomero',
+      'cerrajero',
+    ])) {
+      return Icons.handyman_rounded;
+    }
+    if (_containsAny(content, const [
+      'colegio',
+      'escuela',
+      'curso',
+      'universidad',
+      'libro',
+      'clase',
+      'matricula',
+      'matrícula',
+    ])) {
+      return Icons.school_rounded;
+    }
+    if (_containsAny(content, const [
+      'cine',
+      'teatro',
+      'show',
+      'concierto',
+      'entrada',
+      'steam',
+      'playstation',
+      'xbox',
+      'nintendo',
+    ])) {
+      return Icons.movie_rounded;
+    }
+    if (_containsAny(content, const [
+      'hotel',
+      'vuelo',
+      'pasaje',
+      'aerolineas',
+      'aerolíneas',
+      'airbnb',
+      'hostel',
+      'viaje',
+      'vacaciones',
+    ])) {
+      return Icons.luggage_rounded;
+    }
+    if (_containsAny(content, const [
+      'juguete',
+      'guarderia',
+      'guardería',
+      'pañal',
+      'panal',
+      'leche maternizada',
+      'jardin maternal',
+      'jardín maternal',
+    ])) {
+      return Icons.child_care_rounded;
+    }
+
+    return null;
+  }
+
+  static Color? _keywordExpenseColor(String content) {
+    if (content.isEmpty) return null;
+
+    if (_containsAny(content, const [
+      'sushi',
+      'ramen',
+      'wok',
+      'poke',
+    ])) {
+      return const Color(0xFFF97316);
+    }
+    if (_containsAny(content, const [
+      'pizza',
+      'hamburguesa',
+      'burger',
+      'empanada',
+      'sandwich',
+      'sándwich',
+      'mcdonald',
+      'burger king',
+      'mostaza',
+    ])) {
+      return const Color(0xFFEF6C3E);
+    }
+    if (_containsAny(content, const [
+      'helado',
+      'postre',
+      'torta',
+      'cafe',
+      'café',
+      'medialuna',
+      'panaderia',
+      'panadería',
+      'pasteleria',
+      'pastelería',
+    ])) {
+      return const Color(0xFFEC4899);
+    }
+    if (_containsAny(content, const [
+      'restaurante',
+      'restaurant',
+      'cena',
+      'almuerzo',
+      'desayuno',
+      'bar',
+      'bistro',
+      'bistró',
+    ])) {
+      return const Color(0xFFFB923C);
+    }
+    if (_containsAny(content, const [
+      'super',
+      'mercado',
+      'compra',
+      'carrefour',
+      'coto',
+      'jumbo',
+      'dia',
+      'disco',
+      'vea',
+    ])) {
+      return AppColors.iconBlue;
+    }
+    if (_containsAny(content, const [
+      'farmacia',
+      'farmacity',
+      'ibuprofeno',
+      'paracetamol',
+      'medicamento',
+      'remedio',
+    ])) {
+      return const Color(0xFF10B981);
+    }
+    if (_containsAny(content, const [
+      'uber',
+      'cabify',
+      'taxi',
+      'subte',
+      'colectivo',
+      'nafta',
+      'combustible',
+      'estacionamiento',
+      'parking',
+      'peaje',
+      'shell',
+      'ypf',
+      'axion',
+    ])) {
+      return const Color(0xFF6366F1);
+    }
+    if (_containsAny(content, const [
+      'veterinaria',
+      'vet',
+      'petshop',
+      'pet shop',
+      'balanceado',
+      'alimento perro',
+      'alimento gato',
+    ])) {
+      return const Color(0xFFF59E0B);
+    }
+    if (_containsAny(content, const [
+      'gym',
+      'gimnasio',
+      'entrenamiento',
+      'crossfit',
+      'pilates',
+      'yoga',
+    ])) {
+      return const Color(0xFF8B5CF6);
+    }
+    if (_containsAny(content, const [
+      'ropa',
+      'remera',
+      'pantalon',
+      'pantalón',
+      'zapatilla',
+      'zapatillas',
+      'campera',
+      'vestido',
+    ])) {
+      return const Color(0xFF818CF8);
+    }
+    if (_containsAny(content, const [
+      'ferreteria',
+      'ferretería',
+      'herramienta',
+      'reparacion',
+      'reparación',
+      'pintura',
+      'electricista',
+      'plomero',
+      'cerrajero',
+    ])) {
+      return const Color(0xFF64748B);
+    }
+    if (_containsAny(content, const [
+      'colegio',
+      'escuela',
+      'curso',
+      'universidad',
+      'libro',
+      'clase',
+      'matricula',
+      'matrícula',
+    ])) {
+      return const Color(0xFFEAB308);
+    }
+    if (_containsAny(content, const [
+      'cine',
+      'teatro',
+      'show',
+      'concierto',
+      'entrada',
+      'steam',
+      'playstation',
+      'xbox',
+      'nintendo',
+    ])) {
+      return AppColors.accentPurple;
+    }
+    if (_containsAny(content, const [
+      'hotel',
+      'vuelo',
+      'pasaje',
+      'aerolineas',
+      'aerolíneas',
+      'airbnb',
+      'hostel',
+      'viaje',
+      'vacaciones',
+    ])) {
+      return const Color(0xFF14B8A6);
+    }
+    if (_containsAny(content, const [
+      'juguete',
+      'guarderia',
+      'guardería',
+      'pañal',
+      'panal',
+      'leche maternizada',
+      'jardin maternal',
+      'jardín maternal',
+    ])) {
+      return const Color(0xFFF97316);
+    }
+
+    return null;
+  }
+
+  static bool _containsAny(String content, List<String> terms) {
+    for (final term in terms) {
+      if (_containsTerm(content, term)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _containsTerm(String content, String term) {
+    final escapedTerm = RegExp.escape(term);
+    final pattern = RegExp(
+      '(^|[^a-z0-9áéíóúüñ])$escapedTerm([^a-z0-9áéíóúüñ]|\$)',
+      caseSensitive: false,
+    );
+    return pattern.hasMatch(content);
   }
 }

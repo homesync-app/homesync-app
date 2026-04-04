@@ -109,7 +109,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
           .qaResetScenario(scenario.householdId);
 
       result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (_) {},
       );
 
@@ -240,7 +240,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
               );
 
       result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (_) {},
       );
 

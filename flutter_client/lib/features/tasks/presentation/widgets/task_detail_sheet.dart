@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -113,7 +114,12 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           if (mounted) Navigator.pop(context);
         },
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'TaskDetailSheet failed to undo task',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _isLoading = false);
         _showSnack('No se pudo deshacer', AppColors.error);

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_links/app_links.dart';
 
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -68,7 +69,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void _initDeepLinks() {
     _appLinks = AppLinks();
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Deep Link received: $uri');
+      log.d('Deep link received: $uri');
 
       if (uri.scheme != 'homesync') return;
 
@@ -151,7 +152,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     try {
       _checkWeeklyWinner();
     } catch (e) {
-      debugPrint('Initialization error in MainScreen: $e');
+      log.e('MainScreen initialization failed', error: e);
     }
   }
 
@@ -179,7 +180,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error checking weekly winner: $e');
+      log.w('Weekly winner check failed', error: e);
     }
   }
 

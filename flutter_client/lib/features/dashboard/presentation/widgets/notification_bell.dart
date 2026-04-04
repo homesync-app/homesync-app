@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
@@ -61,7 +62,13 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
           _shakeController.forward(from: 0);
         }
       }
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'NotificationBell failed to load unread count',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override

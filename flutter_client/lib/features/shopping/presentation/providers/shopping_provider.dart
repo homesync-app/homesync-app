@@ -73,7 +73,7 @@ class ShoppingItems extends _$ShoppingItems {
     final result = await getItems.execute(householdId);
     
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (items) => items,
     );
   }
@@ -120,7 +120,7 @@ class ShoppingItems extends _$ShoppingItems {
     
     final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (items) => items,
     );
   }

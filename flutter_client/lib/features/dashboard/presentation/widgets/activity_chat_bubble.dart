@@ -51,14 +51,13 @@ class ActivityChatBubble extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere(
-            (c) =>
-                CategoryMapping.normaliseCategory(c.id) == normalizedCategory,
-          );
-        } catch (_) {
-          return null;
+        for (final category in list) {
+          if (CategoryMapping.normaliseCategory(category.id) ==
+              normalizedCategory) {
+            return category;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );

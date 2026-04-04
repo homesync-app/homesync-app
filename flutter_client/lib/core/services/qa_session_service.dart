@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/admin_providers.dart';
+import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';

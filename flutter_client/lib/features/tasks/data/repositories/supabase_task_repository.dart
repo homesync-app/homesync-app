@@ -205,28 +205,26 @@ class SupabaseTaskRepository
                     : await _rpc.requireCurrentUserId(),
               ];
           if (_isAdminTestingActive) {
-            final results = <Map<String, dynamic>>[];
-            for (final task in tasks) {
-              final raw = await _client.rpc(
-                'qa_admin_complete_task',
-                params: {
-                  'p_household_id': householdId,
-                  'p_user_ids': performers,
-                  'p_task_id': task.id,
-                  'p_xp_reward': task.xpReward,
-                  'p_coin_reward': task.coinReward,
-                  'p_task_title': task.title,
-                  if (completedAt != null)
-                    'p_completed_at': completedAt.toIso8601String(),
-                },
-              );
-              results.add(Map<String, dynamic>.from(raw as Map));
-            }
-            return {
-              'success': true,
-              'message': 'Tareas completadas',
-              'results': results,
-            };
+            final raw = await _client.rpc(
+              'qa_admin_complete_tasks_batch',
+              params: {
+                'p_household_id': householdId,
+                'p_user_ids': performers,
+                'p_tasks': tasks
+                    .map(
+                      (task) => {
+                        'task_id': task.id,
+                        'xp_reward': task.xpReward,
+                        'coin_reward': task.coinReward,
+                        'task_title': task.title,
+                      },
+                    )
+                    .toList(),
+                if (completedAt != null)
+                  'p_completed_at': completedAt.toIso8601String(),
+              },
+            );
+            return Map<String, dynamic>.from(raw as Map);
           }
 
           final taskIds = tasks.map((t) => t.id).toList();

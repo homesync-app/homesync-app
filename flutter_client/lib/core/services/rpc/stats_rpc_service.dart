@@ -23,7 +23,12 @@ class StatsRpcService extends BaseRpcService {
         params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getXpHistory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }
@@ -36,7 +41,12 @@ class StatsRpcService extends BaseRpcService {
         params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getCoinHistory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }
@@ -82,7 +92,12 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return response == true;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.isWeekProcessed fallback to false',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -108,7 +123,12 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return Map<String, dynamic>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.checkShouldShowWinner fallback to hidden',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return {'show_winner': false};
     }
   }

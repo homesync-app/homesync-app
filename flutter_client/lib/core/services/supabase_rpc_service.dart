@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'rpc/admin_rpc_service.dart';
 import 'rpc/task_rpc_service.dart';
 import 'rpc/stats_rpc_service.dart';
@@ -30,7 +30,7 @@ class SupabaseRpcService {
 
   Future<void> initialize() async {
     // Initialization logic if any
-    debugPrint('SupabaseRpcService initialized');
+    log.d('SupabaseRpcService initialized');
   }
 
   // --- Admin ---

@@ -392,11 +392,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Hero(
               tag: 'homesync_logo',
               child: Transform.scale(
-                scale: 3.1,
+                scale: 3.25,
                 child: Image.asset(
                   'assets/images/logo_premium_transparent.png',
-                  width: 86,
-                  height: 86,
+                  width: 90,
+                  height: 90,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.high,
                   isAntiAlias: true,
@@ -476,8 +476,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               onTap: _handleForgotPassword,
               borderRadius: BorderRadius.circular(8),
               child: const Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                 child: Text(
                   '¿Olvidaste tu contraseña?',
                   style: TextStyle(
@@ -597,8 +596,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           padding: const EdgeInsets.only(left: 20, right: 12),
           child: Icon(icon, color: AppColors.textMuted, size: 24),
         ),
-        prefixIconConstraints:
-            const BoxConstraints(minWidth: 0, minHeight: 0),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         suffixIcon: isPassword
             ? Padding(
                 padding: const EdgeInsets.only(right: 12),
@@ -636,13 +634,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.4),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide:
-              const BorderSide(color: Colors.redAccent, width: 1.4),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
       ),
       validator: validator,

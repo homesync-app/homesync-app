@@ -315,13 +315,15 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere((c) =>
-              CategoryMapping.normaliseCategory(c.id) ==
-              CategoryMapping.normaliseCategory(category));
-        } catch (_) {
-          return null;
+        final normalizedTaskCategory =
+            CategoryMapping.normaliseCategory(category);
+        for (final categoryOption in list) {
+          if (CategoryMapping.normaliseCategory(categoryOption.id) ==
+              normalizedTaskCategory) {
+            return categoryOption;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );

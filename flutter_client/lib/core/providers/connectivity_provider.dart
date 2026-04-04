@@ -7,6 +7,28 @@ part 'connectivity_provider.g.dart';
 
 enum ConnectivityStatus { online, offline, checking }
 
+abstract class ConnectivityClient {
+  Future<List<ConnectivityResult>> checkConnectivity();
+  Stream<List<ConnectivityResult>> get onConnectivityChanged;
+}
+
+class ConnectivityPlusClient implements ConnectivityClient {
+  final Connectivity _connectivity;
+
+  ConnectivityPlusClient([Connectivity? connectivity])
+      : _connectivity = connectivity ?? Connectivity();
+
+  @override
+  Future<List<ConnectivityResult>> checkConnectivity() {
+    return _connectivity.checkConnectivity();
+  }
+
+  @override
+  Stream<List<ConnectivityResult>> get onConnectivityChanged {
+    return _connectivity.onConnectivityChanged;
+  }
+}
+
 class ConnectivityState {
   final ConnectivityStatus status;
   final bool isOnline;
@@ -32,15 +54,19 @@ class ConnectivityState {
 }
 
 @Riverpod(keepAlive: true)
+ConnectivityClient connectivityClient(ConnectivityClientRef ref) {
+  return ConnectivityPlusClient();
+}
+
+@Riverpod(keepAlive: true)
 class ConnectivityNotifier extends _$ConnectivityNotifier {
-  final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   @override
   ConnectivityState build() {
     // Setup listener after build completes
     Future.microtask(() => _init());
-    
+
     ref.onDispose(() {
       _subscription?.cancel();
     });
@@ -54,30 +80,42 @@ class ConnectivityNotifier extends _$ConnectivityNotifier {
   }
 
   Future<void> _init() async {
-    // Start listening for changes but don't block on them
     try {
       _subscription =
-          _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+          ref.read(connectivityClientProvider).onConnectivityChanged.listen(
+                _updateConnectionStatus,
+              );
+      await _checkConnection();
     } catch (e) {
       log.w('Failed to subscribe to connectivity changes: $e');
     }
   }
 
   Future<void> _checkConnection() async {
-    // Always assume online - let Supabase handle actual connection errors
-    state = state.copyWith(
-      status: ConnectivityStatus.online,
-      isOnline: true,
-      lastChecked: DateTime.now(),
-    );
+    try {
+      final results = await ref.read(connectivityClientProvider).checkConnectivity();
+      _applyConnectivityResult(results);
+    } catch (e) {
+      log.w('Connectivity check failed: $e');
+      state = state.copyWith(
+        status: ConnectivityStatus.online,
+        isOnline: true,
+        lastChecked: DateTime.now(),
+      );
+    }
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
-    // Ignore connectivity_plus results - they are unreliable
-    // Always stay online and let Supabase handle actual errors
+    _applyConnectivityResult(results);
+  }
+
+  void _applyConnectivityResult(List<ConnectivityResult> results) {
+    final hasConnection = results.any((r) => r != ConnectivityResult.none);
     state = state.copyWith(
-      status: ConnectivityStatus.online,
-      isOnline: true,
+      status: hasConnection
+          ? ConnectivityStatus.online
+          : ConnectivityStatus.offline,
+      isOnline: hasConnection,
       lastChecked: DateTime.now(),
     );
   }

@@ -44,6 +44,26 @@ class PremiumService {
     _subscription?.cancel();
   }
 
+  Future<bool> getPremiumStatus() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      return false;
+    }
+
+    try {
+      final data = await _supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      return data != null && data['is_premium'] == true;
+    } catch (e) {
+      log.e('Error fetching premium status: $e');
+      return false;
+    }
+  }
+
   Future<List<ProductDetails>> getProducts() async {
     if (kIsWeb) {
       log.w('IAP products are not available on web');
@@ -128,6 +148,31 @@ class PremiumService {
     }
 
     await _iap.restorePurchases();
+  }
+
+  Future<void> togglePremiumMock() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      log.w('togglePremiumMock skipped: no authenticated user');
+      return;
+    }
+
+    try {
+      final current = await getPremiumStatus();
+      final next = !current;
+      await _supabase.from('users').update({
+        'is_premium': next,
+        'premium_until': next
+            ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
+            : null,
+      }).eq('id', user.id);
+
+      onPremiumStatusChanged?.call(next);
+      log.i('Premium mock toggled for user ${user.id}: $next');
+    } catch (e) {
+      log.e('Error toggling premium mock: $e');
+      rethrow;
+    }
   }
 }
 
