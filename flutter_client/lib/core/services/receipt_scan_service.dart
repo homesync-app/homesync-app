@@ -47,7 +47,7 @@ class ReceiptScanService {
       format: CompressFormat.webp,
     );
 
-    final imageFile = compressed ?? File(picked.path);
+    final XFile imageFile = compressed ?? picked;
     final imageBytes = await imageFile.readAsBytes();
 
     debugPrint(
