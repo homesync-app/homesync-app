@@ -33,6 +33,7 @@ abstract class ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath, // path en Storage, solo si el usuario confirmó con ticket
   });
 
   Future<Either<Failure, void>> deleteExpense(String id);

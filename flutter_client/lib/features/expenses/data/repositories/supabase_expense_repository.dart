@@ -253,6 +253,7 @@ class SupabaseExpenseRepository
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   }) async {
     return executeWithHandling(
         () async {
@@ -278,12 +279,13 @@ class SupabaseExpenseRepository
                   splitType != SplitType.gift,
               'p_type': type,
               'p_splits': splits,
+              'p_receipt_path': receiptPath,
               if (_isAdminTestingActive) 'p_actor_user_id': userId,
             },
           );
           sw.stop();
           log.i(
-            'Finance RPC ${_isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4'} ok household=$householdId type=$type split=${splitType.name} amount=$amount ms=${sw.elapsedMilliseconds}',
+            'Finance RPC ${_isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4'} ok household=$householdId type=$type split=${splitType.name} amount=$amount receipt=${receiptPath != null} ms=${sw.elapsedMilliseconds}',
           );
         },
         context: 'SupabaseExpenseRepository.saveExpense',
@@ -307,6 +309,7 @@ class SupabaseExpenseRepository
                     splitType != SplitType.gift,
                 'p_type': type,
                 'p_splits': splits,
+                'p_receipt_path': receiptPath,
               },
             ),
           );

@@ -140,4 +140,49 @@ class ShoppingPredefined {
       {'name': 'Mermelada', 'emoji': '🍯'},
     ],
   };
+
+  /// Busca un item predefinido a partir de un nombre crudo del OCR.
+  ///
+  /// Estrategia conservadora:
+  /// - Normaliza tildes y minúsculas.
+  /// - Match exacto por palabra clave (la primera palabra significativa).
+  /// - Devuelve { emoji, category } o null si no hay match seguro.
+  ///
+  /// Deliberadamente no usa contains() agresivo para evitar falsos positivos.
+  static Map<String, String>? findByName(String rawName) {
+    final normalized = _normalize(rawName);
+    final firstWord = normalized.split(' ').first;
+
+    // Solo matcheamos si la primera palabra tiene al menos 4 letras
+    // para evitar matches con artículos o abreviaturas.
+    if (firstWord.length < 4) return null;
+
+    for (final entry in itemsPerCategory.entries) {
+      for (final item in entry.value) {
+        final itemNorm = _normalize(item['name']!);
+        final itemFirst = itemNorm.split(' ').first;
+
+        // Match exacto de primera palabra en ambas direcciones
+        if (itemFirst == firstWord ||
+            (itemFirst.length >= 4 && normalized.contains(itemFirst)) ||
+            (firstWord.length >= 4 && itemNorm.contains(firstWord))) {
+          return {'emoji': item['emoji']!, 'category': entry.key};
+        }
+      }
+    }
+    return null;
+  }
+
+  static String _normalize(String s) {
+    return s
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ñ', 'n')
+        .trim();
+  }
 }

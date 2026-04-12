@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
+import 'package:homesync_client/core/services/receipt_scan_service.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
 
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
@@ -20,22 +25,31 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/receipt_preview_widget.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
   final bool defaultOnlyMe;
 
+  /// Si true, abre la cámara automáticamente al mostrar el form.
+  /// Útil al venir del banner post-compra de la lista de compras.
+  final bool triggerScanOnOpen;
+
   const ExpenseFormSheet({
     super.key,
     this.expense,
     this.defaultOnlyMe = false,
+    this.triggerScanOnOpen = false,
   });
 
   @override
   ConsumerState<ExpenseFormSheet> createState() => _ExpenseFormSheetState();
 
   static Future<void> show(BuildContext context,
-      {ExpenseModel? expense, bool defaultOnlyMe = false}) {
+      {ExpenseModel? expense,
+      bool defaultOnlyMe = false,
+      bool triggerScanOnOpen = false}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -47,6 +61,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
           child: ExpenseFormSheet(
             expense: expense,
             defaultOnlyMe: defaultOnlyMe,
+            triggerScanOnOpen: triggerScanOnOpen,
           ),
         ),
       ),
@@ -68,6 +83,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   // Shopping items integration
   final Set<ShoppingItemModel> _selectedShoppingItems = {};
+
+  // Receipt OCR state
+  bool _isScanningReceipt = false;
+  ReceiptScanResult? _scanResult;
+  // Items detectados por OCR que no matchearon con la lista de compras activa.
+  // Se muestran como sugerencia; el usuario decide si los agrega.
+  List<String> _unmatchedOcrItems = [];
 
   // Split logic
   SplitType _splitMode = SplitType.equal;
@@ -223,6 +245,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
     if (widget.expense == null) {
       _initializeDefaultSelections();
+    }
+
+    // Abrir cámara automáticamente al venir del banner post-compra.
+    if (widget.triggerScanOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scanReceipt(ImageSource.camera);
+      });
     }
   }
 
@@ -408,6 +437,94 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     }
   }
 
+  // ── Receipt OCR ────────────────────────────────────────────────────────────
+
+  Future<void> _scanReceipt(ImageSource source) async {
+    if (_isScanningReceipt) return;
+    setState(() => _isScanningReceipt = true);
+    try {
+      final service = ReceiptScanService(Supabase.instance.client);
+      final result = await service.scan(source: source);
+      if (result == null || !mounted) return;
+      // Pre-fill disponible para todos
+      _prefillFromScan(result);
+
+      // Integración con lista de compras: solo premium
+      final canLink = ref.read(canUseReceiptShoppingLinkProvider);
+      if (canLink) {
+        _matchOcrItemsToShoppingList(result.detectedItems);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('No se pudo leer el ticket: $e'),
+          backgroundColor: AppColors.error,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _isScanningReceipt = false);
+    }
+  }
+
+  /// Pre-rellena el formulario con los datos del OCR.
+  /// Todos los campos son sugerencias editables — nunca se bloquean.
+  void _prefillFromScan(ReceiptScanResult result) {
+    setState(() {
+      _scanResult = result;
+
+      if (result.merchant != null && result.merchant!.isNotEmpty) {
+        _titleController.text = result.merchant!;
+      }
+      if (result.amount != null) {
+        _amountController.text = result.amount!.toStringAsFixed(2);
+      }
+      if (result.date != null) {
+        _selectedDate = result.date!;
+      }
+      if (result.category != null) {
+        final matched = _expenseCategories
+            .where((c) => c['id'] == result.category)
+            .toList();
+        if (matched.isNotEmpty) _selectedCategory = matched.first;
+      }
+    });
+
+    if (result.hasLowConfidence && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Ticket difícil de leer — revisá los datos antes de guardar'),
+        duration: Duration(seconds: 3),
+      ));
+    }
+  }
+
+  /// Match conservador via ReceiptMatcher: centraliza toda la lógica de matching.
+  void _matchOcrItemsToShoppingList(List<String> ocrItems) {
+    final pending = ref
+            .read(shoppingItemsProvider)
+            .valueOrNull
+            ?.where((i) => !i.completed)
+            .toList() ??
+        [];
+
+    final result = ReceiptMatcher.match(
+      ocrItems: ocrItems,
+      pendingShoppingItems: pending,
+    );
+
+    setState(() {
+      _selectedShoppingItems.addAll(result.matched);
+      _unmatchedOcrItems = result.unmatched;
+    });
+  }
+
+  /// Limpia el ticket escaneado.
+  void _clearScan() => setState(() {
+        _scanResult = null;
+        _unmatchedOcrItems = [];
+      });
+
+  // ── Date picker ─────────────────────────────────────────────────────────────
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -521,6 +638,23 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         description = "Lista de compras:\n$itemsStr";
       }
 
+      // Subir ticket a Storage ahora que el usuario confirmó el gasto.
+      // Solo si hay imagen escaneada y aún no fue subida previamente.
+      String? receiptPath = widget.expense?.receiptPath;
+      if (_scanResult != null && receiptPath == null) {
+        try {
+          final receiptService = ReceiptScanService(Supabase.instance.client);
+          receiptPath = await receiptService.uploadReceipt(
+            localImagePath: _scanResult!.localImagePath,
+            householdId: householdId,
+          );
+        } catch (e) {
+          // El upload del ticket no bloquea el guardado del gasto.
+          // El gasto se guarda igual; el ticket queda sin adjuntar.
+          debugPrint('[ExpenseForm] Upload de ticket falló: $e');
+        }
+      }
+
       final saveResult = await repo.saveExpense(
         id: widget.expense?.id,
         householdId: householdId,
@@ -533,6 +667,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         splitType: !caps.showExpensesSplit ? SplitType.personal : _splitMode,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
+        receiptPath: receiptPath,
       );
       saveResult.fold(
         (failure) => throw Exception(failure.message),
@@ -663,6 +798,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                         children: [
                           const SizedBox(height: 16),
                           _buildTypeToggle(),
+                          if (!_isIncome) ...[
+                            const SizedBox(height: 20),
+                            _buildReceiptSection(),
+                          ],
                           const SizedBox(height: 28),
                           _buildAmountField(),
                           const SizedBox(height: 32),
@@ -695,6 +834,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
                               context, shoppingItemsAsync),
+                          if (_unmatchedOcrItems.isNotEmpty) ...[
+                            NewItemsSuggestionBanner(
+                              items: _unmatchedOcrItems,
+                              onDismiss: () =>
+                                  setState(() => _unmatchedOcrItems = []),
+                            ),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Categoría',
@@ -1555,6 +1701,72 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
+  // ── Receipt scan UI ─────────────────────────────────────────────────────────
+
+  Widget _buildReceiptSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_scanResult != null) ...[
+          ReceiptPreviewWidget(
+            localPath: _scanResult!.localImagePath,
+            onRemove: _clearScan,
+          ),
+          const SizedBox(height: 12),
+          if (_scanResult!.hasLowConfidence)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: AppColors.warning),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Confianza baja — revisá los datos antes de guardar.',
+                      style:
+                          TextStyle(fontSize: 12, color: AppColors.warning),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: _ScanButton(
+                icon: Icons.camera_alt_outlined,
+                label: _scanResult == null ? 'Escanear ticket' : 'Re-escanear',
+                isLoading: _isScanningReceipt,
+                onTap: _isScanningReceipt
+                    ? null
+                    : () => _scanReceipt(ImageSource.camera),
+              ),
+            ),
+            const SizedBox(width: 10),
+            _ScanButton(
+              icon: Icons.photo_library_outlined,
+              label: 'Galería',
+              isLoading: false,
+              onTap: _isScanningReceipt
+                  ? null
+                  : () => _scanReceipt(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   void _showShoppingItemsSelector(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -2212,6 +2424,64 @@ class _ShoppingItemsSelectorState
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// _ScanButton — botón compacto para escanear ticket (cámara o galería)
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _ScanButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  const _ScanButton({
+    required this.icon,
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.accentBlue.withValues(alpha: 0.07),
+          border:
+              Border.all(color: AppColors.accentBlue.withValues(alpha: 0.25)),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(icon, size: 18, color: AppColors.accentBlue),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ],
         ),
       ),
     );

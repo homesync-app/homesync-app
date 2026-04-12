@@ -10,6 +10,9 @@ import '../providers/shopping_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import '../widgets/shopping_item_sheet.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 // -----------------------------------------------------------------------------
 // ShoppingListScreen - Lista de compras interactiva (Estilo Bring!)
@@ -28,6 +31,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final FocusNode _inputFocus = FocusNode();
 
   final Set<String> _expandedSections = {};
+
+  // IDs de items completados durante esta sesión (desde que se abrió la pantalla).
+  // Se usa para la heurística del banner post-compra: queremos detectar que el
+  // usuario acaba de hacer las compras, no items completados históricamente.
+  final Set<String> _completedThisSession = {};
   final ValueNotifier<List<Map<String, String>>> _suggestionsVal =
       ValueNotifier([]);
   Timer? _debounce;
@@ -91,9 +99,17 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
     HapticFeedback.lightImpact();
-    ref
-        .read(shoppingItemsProvider.notifier)
-        .toggleItem(item.id, !item.completed);
+    final willBeCompleted = !item.completed;
+    ref.read(shoppingItemsProvider.notifier).toggleItem(item.id, willBeCompleted);
+
+    // Trackear completados en esta sesión para la heurística del banner.
+    setState(() {
+      if (willBeCompleted) {
+        _completedThisSession.add(item.id);
+      } else {
+        _completedThisSession.remove(item.id);
+      }
+    });
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
@@ -643,6 +659,28 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           ),
                         ],
 
+                        // Banner post-compra: aparece cuando el usuario completó
+                        // ≥3 items en esta sesión (no históricos).
+                        // La heurística detecta que acaba de hacer las compras.
+                        if (_completedThisSession.length >= 3)
+                          SliverToBoxAdapter(
+                            child: _PostShoppingBanner(
+                              completedCount: _completedThisSession.length,
+                              onScanTap: () {
+                                final canScan = ref.read(
+                                    canUseReceiptShoppingLinkProvider);
+                                if (canScan) {
+                                  ExpenseFormSheet.show(
+                                    context,
+                                    triggerScanOnOpen: true,
+                                  );
+                                } else {
+                                  PremiumPaywall.show(context);
+                                }
+                              },
+                            ),
+                          ),
+
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
                             'Volver a comprar',
@@ -933,6 +971,84 @@ class _ShoppingItemTile extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Banner post-compra: aparece cuando hay ≥3 items completados.
+// Invita a escanear el ticket para registrar el gasto.
+// -----------------------------------------------------------------------------
+
+class _PostShoppingBanner extends StatelessWidget {
+  final int completedCount;
+  final VoidCallback onScanTap;
+
+  const _PostShoppingBanner({
+    required this.completedCount,
+    required this.onScanTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.12),
+            AppColors.accentBlue.withOpacity(0.08),
+          ],
+        ),
+        border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onScanTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                const Text('🧾', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '✅ $completedCount productos comprados',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Escanear ticket y registrar gasto',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

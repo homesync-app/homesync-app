@@ -50,6 +50,11 @@ class ExpenseModel {
   final String type; // 'expense' or 'income'
   final List<ExpenseSplitModel>? splits;
 
+  /// Path del objeto en Supabase Storage (bucket 'receipts').
+  /// Nunca es una URL pública. Se usa para generar signed URLs al leer.
+  /// Null si el gasto no tiene ticket adjunto o si venció la retención (60 días).
+  final String? receiptPath;
+
   const ExpenseModel({
     required this.id,
     required this.title,
@@ -67,6 +72,7 @@ class ExpenseModel {
     this.splitType,
     this.description,
     this.splits,
+    this.receiptPath,
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> map) {
@@ -106,6 +112,7 @@ class ExpenseModel {
       splits: (map['expense_splits'] as List<dynamic>?)
           ?.map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      receiptPath: map['receipt_path'] as String?,
     );
   }
 
@@ -122,6 +129,7 @@ class ExpenseModel {
         'type': type,
         'split_type': splitType,
         'description': description,
+        'receipt_path': receiptPath,
       };
 
   // ── Display helpers ────────────────────────────────────────────────────────
