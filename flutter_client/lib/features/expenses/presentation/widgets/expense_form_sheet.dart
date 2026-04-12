@@ -90,6 +90,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   // Items detectados por OCR que no matchearon con la lista de compras activa.
   // Se muestran como sugerencia; el usuario decide si los agrega.
   List<String> _unmatchedOcrItems = [];
+  // Items auto-seleccionados por OCR en _selectedShoppingItems.
+  // Se usan para revertirlos si el usuario quita el ticket.
+  final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
   // Split logic
   SplitType _splitMode = SplitType.equal;
@@ -512,15 +515,21 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
 
     setState(() {
+      _ocrMatchedShoppingItems
+        ..clear()
+        ..addAll(result.matched);
       _selectedShoppingItems.addAll(result.matched);
       _unmatchedOcrItems = result.unmatched;
     });
   }
 
-  /// Limpia el ticket escaneado.
+  /// Limpia el ticket escaneado y revierte los shopping items que fueron
+  /// auto-seleccionados por OCR (los seleccionados manualmente se conservan).
   void _clearScan() => setState(() {
         _scanResult = null;
         _unmatchedOcrItems = [];
+        _selectedShoppingItems.removeAll(_ocrMatchedShoppingItems);
+        _ocrMatchedShoppingItems.clear();
       });
 
   // ── Date picker ─────────────────────────────────────────────────────────────
@@ -639,9 +648,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       // Subir ticket a Storage ahora que el usuario confirmó el gasto.
-      // Solo si hay imagen escaneada y aún no fue subida previamente.
+      // Si hay una imagen nueva escaneada, siempre se sube (reemplaza la anterior si existía).
       String? receiptPath = widget.expense?.receiptPath;
-      if (_scanResult != null && receiptPath == null) {
+      if (_scanResult != null) {
         try {
           final receiptService = ReceiptScanService(Supabase.instance.client);
           receiptPath = await receiptService.uploadReceipt(

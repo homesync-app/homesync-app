@@ -1,5 +1,13 @@
 -- Extiende save_expense_v4 con p_receipt_path.
 -- Se pasa solo cuando el usuario confirma el gasto (nunca antes).
+--
+-- Eliminar la firma anterior explícitamente: CREATE OR REPLACE no reemplaza
+-- overloads con distinta lista de parámetros; crea una variante nueva y deja
+-- ambas activas, lo que genera ambigüedad en el RPC y pierde el GRANT previo.
+DROP FUNCTION IF EXISTS public.save_expense_v4(
+    UUID, UUID, TEXT, DECIMAL, TEXT, UUID, TIMESTAMPTZ,
+    TEXT, TEXT, BOOLEAN, TEXT, JSONB
+);
 
 CREATE OR REPLACE FUNCTION public.save_expense_v4(
     p_id UUID DEFAULT NULL,
@@ -134,3 +142,9 @@ BEGIN
     RETURN v_expense_id;
 END;
 $$;
+
+-- Restaurar permisos sobre la nueva firma (SECURITY DEFINER no hereda GRANTs anteriores).
+GRANT EXECUTE ON FUNCTION public.save_expense_v4(
+    UUID, UUID, TEXT, DECIMAL, TEXT, UUID, TIMESTAMPTZ,
+    TEXT, TEXT, BOOLEAN, TEXT, JSONB, TEXT
+) TO authenticated;

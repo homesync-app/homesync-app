@@ -5,21 +5,22 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Elimina tickets del bucket 'receipts' con más de 60 días usando la
 // Storage API con service role — más seguro que DELETE sobre storage.objects.
 //
+// Estructura del bucket: receipts/{household_id}/{uuid}.webp
+// → Primero lista carpetas raíz (household_ids), luego archivos dentro de cada una.
+//
 // Configurar en Supabase Dashboard > Edge Functions > Cron:
 //   Schedule: 0 3 * * *  (3am UTC diario)
 //   Function: cleanup-old-receipts
 
 const RETENTION_DAYS = 60;
 const BUCKET = "receipts";
+const PAGE_SIZE = 100;
 
 serve(async (req) => {
-  // Solo aceptar requests del cron interno de Supabase o autenticados
   const authHeader = req.headers.get("Authorization");
   const cronSecret = Deno.env.get("CRON_SECRET");
 
-  // Validar: o es el cron con su secret, o un admin autenticado
-  const isCron =
-    cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
   const isServiceRole =
     authHeader === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
 
@@ -39,62 +40,100 @@ serve(async (req) => {
   cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
 
   console.log(
-    `[cleanup-old-receipts] Buscando archivos anteriores a ${cutoff.toISOString()}`
+    `[cleanup-old-receipts] Cutoff: ${cutoff.toISOString()}`
   );
 
-  // Listar todos los archivos del bucket (paginado para escalar)
   let totalDeleted = 0;
-  let offset = 0;
-  const PAGE_SIZE = 100;
   const errors: string[] = [];
 
-  while (true) {
-    const { data: files, error: listError } = await supabase.storage
-      .from(BUCKET)
-      .list("", {
-        limit: PAGE_SIZE,
-        offset,
-        sortBy: { column: "created_at", order: "asc" },
-      });
+  // ── Paso 1: listar carpetas raíz (= household_ids) ────────────────────────
+  let folderOffset = 0;
+  const householdFolders: string[] = [];
 
-    if (listError) {
-      console.error("[cleanup-old-receipts] Error listando:", listError);
+  while (true) {
+    const { data: roots, error } = await supabase.storage
+      .from(BUCKET)
+      .list("", { limit: PAGE_SIZE, offset: folderOffset });
+
+    if (error) {
+      console.error("[cleanup-old-receipts] Error listando raíz:", error);
       break;
     }
+    if (!roots || roots.length === 0) break;
 
-    if (!files || files.length === 0) break;
-
-    // Filtrar los que superan el tiempo de retención
-    const toDelete = files
-      .filter((f) => {
-        const created = new Date(f.created_at ?? "");
-        return created < cutoff;
-      })
-      .map((f) => f.name);
-
-    if (toDelete.length > 0) {
-      const { error: deleteError } = await supabase.storage
-        .from(BUCKET)
-        .remove(toDelete);
-
-      if (deleteError) {
-        console.error("[cleanup-old-receipts] Error borrando:", deleteError);
-        errors.push(deleteError.message);
-      } else {
-        totalDeleted += toDelete.length;
-        console.log(
-          `[cleanup-old-receipts] Eliminados ${toDelete.length} archivos`
-        );
+    // En Storage, las entradas sin extensión son carpetas
+    for (const entry of roots) {
+      if (!entry.name.includes(".")) {
+        householdFolders.push(entry.name);
       }
     }
 
-    // Si la página está completa seguimos paginando; si no, terminamos
-    if (files.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
+    if (roots.length < PAGE_SIZE) break;
+    folderOffset += PAGE_SIZE;
+  }
+
+  console.log(
+    `[cleanup-old-receipts] Carpetas de hogar encontradas: ${householdFolders.length}`
+  );
+
+  // ── Paso 2: dentro de cada carpeta, listar archivos y borrar los viejos ───
+  for (const folder of householdFolders) {
+    let fileOffset = 0;
+
+    while (true) {
+      const { data: files, error: listError } = await supabase.storage
+        .from(BUCKET)
+        .list(folder, {
+          limit: PAGE_SIZE,
+          offset: fileOffset,
+          sortBy: { column: "created_at", order: "asc" },
+        });
+
+      if (listError) {
+        console.error(
+          `[cleanup-old-receipts] Error listando ${folder}:`,
+          listError
+        );
+        errors.push(`${folder}: ${listError.message}`);
+        break;
+      }
+
+      if (!files || files.length === 0) break;
+
+      const toDelete = files
+        .filter((f) => {
+          const created = new Date(f.created_at ?? "");
+          return !isNaN(created.getTime()) && created < cutoff;
+        })
+        .map((f) => `${folder}/${f.name}`); // path completo requerido por .remove()
+
+      if (toDelete.length > 0) {
+        const { error: deleteError } = await supabase.storage
+          .from(BUCKET)
+          .remove(toDelete);
+
+        if (deleteError) {
+          console.error(
+            `[cleanup-old-receipts] Error borrando en ${folder}:`,
+            deleteError
+          );
+          errors.push(`${folder}: ${deleteError.message}`);
+        } else {
+          totalDeleted += toDelete.length;
+          console.log(
+            `[cleanup-old-receipts] ${folder}: eliminados ${toDelete.length} archivos`
+          );
+        }
+      }
+
+      if (files.length < PAGE_SIZE) break;
+      fileOffset += PAGE_SIZE;
+    }
   }
 
   const result = {
     deleted: totalDeleted,
+    households_scanned: householdFolders.length,
     errors: errors.length > 0 ? errors : undefined,
     retention_days: RETENTION_DAYS,
     cutoff: cutoff.toISOString(),
