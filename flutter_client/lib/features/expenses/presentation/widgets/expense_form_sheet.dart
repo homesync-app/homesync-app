@@ -807,10 +807,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                         children: [
                           const SizedBox(height: 16),
                           _buildTypeToggle(),
-                          if (!_isIncome) ...[
-                            const SizedBox(height: 20),
-                            _buildReceiptSection(),
-                          ],
                           const SizedBox(height: 28),
                           _buildAmountField(),
                           const SizedBox(height: 32),
@@ -825,6 +821,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 14),
                           _buildTitleField(),
+                          if (!_isIncome && _scanResult != null) ...[
+                            const SizedBox(height: 10),
+                            _buildReceiptPreviewInline(),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Contexto',
@@ -1328,13 +1328,43 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ),
       child: Row(
         children: [
-          Icon(
-            _isIncome
-                ? Icons.account_balance_wallet_outlined
-                : Icons.shopping_bag_outlined,
-            color: theme.textSecondary,
-            size: 24,
-          ),
+          if (!_isIncome)
+            GestureDetector(
+              onTap: _isScanningReceipt
+                  ? null
+                  : () => _scanReceipt(ImageSource.camera),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _scanResult != null
+                      ? AppColors.accentGreen.withValues(alpha: 0.12)
+                      : AppColors.accentBlue.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _isScanningReceipt
+                    ? const Padding(
+                        padding: EdgeInsets.all(9),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.accentBlue),
+                      )
+                    : Icon(
+                        _scanResult != null
+                            ? Icons.receipt_long_rounded
+                            : Icons.document_scanner_outlined,
+                        color: _scanResult != null
+                            ? AppColors.accentGreen
+                            : AppColors.accentBlue,
+                        size: 20,
+                      ),
+              ),
+            )
+          else
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              color: theme.textSecondary,
+              size: 24,
+            ),
           const SizedBox(width: 14),
           Expanded(
             child: TextField(
@@ -1712,66 +1742,68 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   // ── Receipt scan UI ─────────────────────────────────────────────────────────
 
-  Widget _buildReceiptSection() {
+  /// Preview compacto que aparece debajo del campo de título cuando hay ticket.
+  Widget _buildReceiptPreviewInline() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_scanResult != null) ...[
-          ReceiptPreviewWidget(
-            localPath: _scanResult!.localImagePath,
-            onRemove: _clearScan,
-          ),
-          const SizedBox(height: 12),
-          if (_scanResult!.hasLowConfidence)
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      size: 16, color: AppColors.warning),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Confianza baja — revisá los datos antes de guardar.',
-                      style:
-                          TextStyle(fontSize: 12, color: AppColors.warning),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 12),
-        ],
         Row(
           children: [
-            Expanded(
-              child: _ScanButton(
-                icon: Icons.camera_alt_outlined,
-                label: _scanResult == null ? 'Escanear ticket' : 'Re-escanear',
-                isLoading: _isScanningReceipt,
-                onTap: _isScanningReceipt
-                    ? null
-                    : () => _scanReceipt(ImageSource.camera),
-              ),
+            ReceiptPreviewWidget(
+              localPath: _scanResult!.localImagePath,
+              onRemove: _clearScan,
             ),
             const SizedBox(width: 10),
-            _ScanButton(
-              icon: Icons.photo_library_outlined,
-              label: 'Galería',
-              isLoading: false,
-              onTap: _isScanningReceipt
-                  ? null
-                  : () => _scanReceipt(ImageSource.gallery),
+            // Opciones secundarias: re-escanear o galería
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ScanButton(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Re-escanear',
+                  isLoading: _isScanningReceipt,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.camera),
+                ),
+                const SizedBox(height: 6),
+                _ScanButton(
+                  icon: Icons.photo_library_outlined,
+                  label: 'Galería',
+                  isLoading: false,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.gallery),
+                ),
+              ],
             ),
           ],
         ),
+        if (_scanResult!.hasLowConfidence) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: AppColors.warning),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Confianza baja — revisá los datos antes de guardar.',
+                    style: TextStyle(fontSize: 12, color: AppColors.warning),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
