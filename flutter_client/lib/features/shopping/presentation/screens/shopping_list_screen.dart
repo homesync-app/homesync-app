@@ -581,7 +581,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                         done.isEmpty
                                             ? 'Todo en orden'
                                             : 'Lista resuelta',
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
@@ -595,7 +595,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                           ? 'Heladera lista.\nNecesitan algo hoy?'
                                           : 'Todo comprado.\nQueres anotar algo mas?',
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: AppColors.textPrimary,
                                         fontSize: 22,
                                         height: 1.3,

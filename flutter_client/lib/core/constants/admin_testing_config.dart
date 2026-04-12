@@ -44,7 +44,7 @@ class AdminTestingConfig {
       '5ac9da1b-11ba-4427-a994-691577ad596f';
   static const String adminDisplayName = 'Admin QA';
   static const String adminEmail = 'admin@homesync.qa';
-  static const String adminAvatar = '🛠️';
+  static const String adminAvatar = '\u{1F6E0}\u{FE0F}';
 
   static const String defaultUsername = 'admin';
   static const String defaultPassword = 'superadmin';
@@ -167,6 +167,28 @@ class AdminTestingConfig {
     for (final scenario in scenarios) {
       if (scenario.householdId == householdId) {
         return scenario;
+      }
+    }
+    return null;
+  }
+
+  static AdminTestingScenario? scenarioById(String? scenarioId) {
+    if (scenarioId == null || scenarioId.isEmpty) return null;
+    for (final scenario in scenarios) {
+      if (scenario.id == scenarioId) {
+        return scenario;
+      }
+    }
+    return null;
+  }
+
+  static QaTestUser? qaUserById(String? userId) {
+    if (userId == null || userId.isEmpty) return null;
+    for (final scenario in scenarios) {
+      for (final user in scenario.qaUsers) {
+        if (user.userId == userId) {
+          return user;
+        }
       }
     }
     return null;

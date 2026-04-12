@@ -234,6 +234,305 @@ No ve:
 - configuración del hogar
 - edición de miembros
 
+## Matriz de experiencia por perfil
+
+`Familia` no debe diseñarse como una sola app con permisos escondidos.
+
+Debe diseñarse como dos superficies principales dentro del mismo hogar:
+
+1. `superficie adulta de coordinación`
+2. `superficie infantil de participación`
+
+Y dentro de la superficie adulta, diferenciar qué puede hacer un `admin` y qué puede hacer un `non-admin`.
+
+La pregunta correcta para cada sección no es solo `quién tiene permiso`, sino:
+
+- qué necesita ver este perfil
+- qué necesita hacer este perfil
+- qué información le sobra o le genera ruido
+
+### Regla general
+
+Para cualquier pestaña del modo `Familia`, siempre debemos poder responder:
+
+- qué ve un `adulto admin`
+- qué ve un `adulto no admin`
+- qué ve un `hijo`
+- qué puede hacer cada uno
+
+Si una pantalla no responde eso con claridad, todavía no está bien diseñada.
+
+### 1. Inicio
+
+#### Adulto admin
+
+Ve:
+
+- saludo
+- contexto del hogar
+- finanzas adultas
+- tareas del hogar con foco en responsables
+- movimientos del hogar
+- compras del hogar
+
+Hace:
+
+- coordina
+- detecta qué falta
+- identifica quién tiene cada tarea
+
+#### Adulto no admin
+
+Ve:
+
+- casi la misma home adulta
+- finanzas adultas
+- tareas con responsables
+- compras
+- actividad del hogar
+
+Hace:
+
+- participa
+- completa
+- registra gastos
+- coordina en el día a día
+
+#### Hijo
+
+Ve:
+
+- saludo
+- monedero
+- sus tareas
+- ranking
+- tienda
+
+Hace:
+
+- ejecuta sus tareas
+- sigue su progreso
+- gana monedas
+
+No necesita:
+
+- ver coordinación global del hogar con el mismo nivel de detalle
+- ver balances o settlement de adultos
+
+### 2. Tareas
+
+#### Adulto admin
+
+Ve:
+
+- tareas del hogar
+- responsables
+- vencimientos
+- sin asignar
+
+Hace:
+
+- crea
+- asigna
+- reprograma
+- filtra por integrante
+
+#### Adulto no admin
+
+Ve:
+
+- tareas del hogar
+- responsables
+- urgencia
+
+Hace:
+
+- completa
+- colabora
+- puede crear tareas si el producto lo habilita
+
+#### Hijo
+
+Ve:
+
+- principalmente sus tareas
+- progreso del día
+- recompensas asociadas
+
+Hace:
+
+- completa sus tareas
+
+No necesita:
+
+- una vista de coordinación global
+- demasiada información sobre responsables porque normalmente el responsable es él
+
+### 3. Finanzas
+
+#### Adulto admin
+
+Ve:
+
+- finanzas del hogar
+- método de aporte adulto
+- balances
+- gastos
+- recurrentes
+
+Hace:
+
+- configura modo igual o proporcional
+- registra y revisa movimientos
+
+#### Adulto no admin
+
+Ve:
+
+- finanzas del hogar
+- balances
+- gastos
+- recurrentes
+
+Hace:
+
+- registra gastos
+- consulta balances
+
+#### Hijo
+
+Ve:
+
+- monedero y tienda como economía propia
+
+No ve:
+
+- balances entre adultos
+- reparto del hogar
+- configuración financiera adulta
+
+### 4. Familia
+
+#### Adulto admin
+
+Ve:
+
+- integrantes
+- roles visibles
+- permisos
+- ajustes del hogar
+
+Hace:
+
+- invita
+- edita rol visible
+- ajusta configuración sensible
+
+#### Adulto no admin
+
+Ve:
+
+- integrantes
+- roles visibles
+- estructura del hogar
+
+Hace:
+
+- edita su propio perfil si aplica
+
+#### Hijo
+
+Ve:
+
+- integrantes del hogar
+- vínculos básicos
+
+No hace:
+
+- gestión estructural
+
+### 5. Compras
+
+#### Adulto admin
+
+Ve:
+
+- lista completa
+- prioridad
+- estado
+
+Hace:
+
+- agrega
+- edita
+- marca comprado
+- convierte en gasto
+
+#### Adulto no admin
+
+Ve:
+
+- lista completa
+- estado
+
+Hace:
+
+- agrega
+- marca comprado
+- colabora con la lista
+
+#### Hijo
+
+Ve:
+
+- versión simple de la lista
+
+Hace:
+
+- puede colaborar marcando o viendo qué falta, si el MVP lo mantiene habilitado
+
+No necesita:
+
+- convertir compras en gasto adulto
+
+### 6. Rewards / tienda
+
+#### Adulto admin
+
+Ve:
+
+- catálogo
+- canjes
+- recompensas familiares
+
+Hace:
+
+- crea y ajusta recompensas
+
+#### Adulto no admin
+
+Ve:
+
+- catálogo
+- canjes
+
+Hace:
+
+- usa recompensas
+
+#### Hijo
+
+Ve:
+
+- tienda
+- premios posibles
+- monedas disponibles
+
+Hace:
+
+- canjea
+- sigue motivación y progreso
+
 ## Pestaña por pestaña
 
 ## 1. Inicio
@@ -573,6 +872,7 @@ Puede:
 - reprogramar tareas
 - filtrar por integrante
 - ver hoy, semana, vencidas
+- aprobar o rechazar tareas infantiles cuando el flujo lo requiera
 
 ## Tareas para adulto no admin
 
@@ -582,6 +882,7 @@ Puede:
 - completar tareas
 - crear tareas si decidimos habilitarlo
 - filtrar por integrante
+- aprobar o rechazar tareas infantiles si el producto habilita verificación por cualquier adulto
 
 No puede:
 
@@ -594,10 +895,12 @@ Debe ver principalmente:
 - sus tareas
 - las tareas del día
 - progreso simple
+- tareas abiertas del hogar para tomar
 
 Puede:
 
 - completar sus tareas
+- tomar tareas abiertas
 
 No debería entrar por defecto a una vista de gestión global.
 
@@ -613,6 +916,103 @@ Completar una tarea debe impactar de forma consistente en:
 - recompensas si aplica
 
 Si no pasa eso, la experiencia familiar se rompe.
+
+## Reglas operativas del MVP para tareas familiares
+
+Las tareas familiares no deben pensarse solo como una lista fija de responsables.
+
+También deben servir como herramienta para:
+
+- coordinación adulta
+- autonomía infantil
+- acuerdos entre hermanos
+- distribución espontánea de tareas abiertas
+
+## Tipos prácticos de tarea en el MVP
+
+### 1. Tarea asignada a un hijo
+
+- solo ese hijo la puede completar
+- un adulto la puede revisar
+- al completarse puede pasar por aprobación o verificación adulta
+
+### 2. Tarea asignada a un adulto
+
+- solo ese adulto la puede completar
+- no requiere aprobación posterior en el MVP
+
+### 3. Tarea sin asignar
+
+No es una tarea "sin dueño" ni una tarea residual.
+
+Es una `tarea abierta del hogar`.
+
+Sirve para que:
+
+- los hijos se organicen
+- dos hermanos acuerden quién la hace
+- un adulto la tome si corresponde
+- el hogar tenga margen de coordinación real
+
+Por lo tanto:
+
+- una tarea sin asignar debe poder ser visible y elegible
+- no debe reservarse solo a adultos
+- no debe interpretarse como error de configuración
+
+## Regla de toma de tarea
+
+Las tareas abiertas del hogar deben poder `tomarse`.
+
+Eso significa:
+
+- un hijo puede tomar una tarea abierta
+- un adulto puede tomar una tarea abierta
+- al tomarla, la tarea pasa a tener responsable
+
+## Regla de completado por responsable
+
+- si la tarea está asignada, solo el responsable la completa
+- si la tarea está abierta, primero debe poder tomarse o completarse desde una acción equivalente que deje claro quién la ejecutó
+- los hijos no deben completar tareas asignadas a otros
+- los adultos no deben cerrar tareas de hijos como si las hubieran hecho ellos, salvo acción administrativa explícita futura
+
+## Regla de aprobación
+
+Para el MVP se recomienda:
+
+- `hijo completa tarea` -> puede requerir aprobación adulta
+- `adulto completa tarea` -> queda resuelta sin aprobación adicional
+
+Esto protege:
+
+- sistema de monedas
+- recompensas
+- justicia entre hermanos
+- confianza de los padres en el sistema
+
+## Regla de desaprobación
+
+Un adulto debe poder:
+
+- aprobar una tarea infantil
+- rechazar o devolver una tarea infantil
+
+Si la tarea se rechaza:
+
+- vuelve a estado activo
+- no entrega recompensa final
+- debe poder comunicarse claramente al hijo que necesita corregirla
+
+## Decisión de producto para tareas abiertas
+
+Las tareas sin asignar NO quedan definidas como "solo adultos".
+
+Quedan definidas como:
+
+- `tareas abiertas del hogar`
+- disponibles para organización familiar
+- especialmente útiles para hijos cuando queremos fomentar autonomía y acuerdos
 
 ## 3. Finanzas
 

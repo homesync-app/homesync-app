@@ -5,9 +5,11 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
@@ -180,6 +182,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
 
   Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,8 +197,12 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                     color: theme.textPrimary,
                     letterSpacing: -0.7)),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+              onPressed: () {
+                final index = indexForMainTab(caps, MainTab.tasks);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
               child: Text('Ver Semana',
                   style: TextStyle(
                       color: theme.primary, fontWeight: FontWeight.w700)),
@@ -207,8 +214,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
           loading: () => _buildTasksShimmer(theme),
           error: (e, _) => Text('Error: $e'),
           data: (tasks) {
-            if (tasks.isEmpty)
+            if (tasks.isEmpty) {
               return _buildEmptyState('Todo listo por hoy', theme);
+            }
             final myTasks = tasks.toList();
             return ListView.separated(
               shrinkWrap: true,
@@ -237,9 +245,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
     try {
       await ref.read(tasksProvider.notifier).completeTask(task);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _completedTaskIds.remove(task.id));
     }
@@ -263,8 +272,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('Error: $e'),
           data: (activities) {
-            if (activities.isEmpty)
+            if (activities.isEmpty) {
               return _buildEmptyState('No hay actividad aún', theme);
+            }
             return Column(
               children: activities
                   .map((a) => ActivityChatBubble(
@@ -299,7 +309,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       decoration: BoxDecoration(
           color: theme.surface, borderRadius: BorderRadius.circular(24)),
       child: Column(children: [
-        Text('🎯', style: TextStyle(fontSize: 32)),
+        const Text('🎯', style: TextStyle(fontSize: 32)),
         const SizedBox(height: 8),
         Text(message,
             style: TextStyle(

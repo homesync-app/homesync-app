@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 
 class CoupleSplitStrategyScreen extends ConsumerStatefulWidget {
   const CoupleSplitStrategyScreen({super.key});
@@ -37,11 +37,13 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
     HapticFeedback.mediumImpact();
 
     try {
-      final repo = ref.read(householdRepositoryProvider);
       final household = ref.read(currentHouseholdProvider).valueOrNull;
       
       if (household != null) {
-        await repo.updateDefaultSplitRatio(household.id, _splitRatio);
+        final result = await ref
+            .read(updateDefaultSplitRatioUseCaseProvider)
+            .call(household.id, _splitRatio);
+        result.fold((failure) => throw failure, (_) {});
         ref.invalidate(currentHouseholdProvider);
         
         if (mounted) {

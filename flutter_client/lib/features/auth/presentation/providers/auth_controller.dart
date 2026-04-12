@@ -28,17 +28,34 @@ class AuthController extends _$AuthController {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   Future<void> signInWithEmail(String email, String password) async {
-    final isAdminTestingLogin = AppEnvironment.enableAdminTesting &&
+    final isAdminTestingLogin = AppEnvironment.adminTestingPasswordLoginEnabled &&
         email.trim().toLowerCase() ==
             AppEnvironment.adminTestingUsername.toLowerCase() &&
         password == AppEnvironment.adminTestingPassword;
 
     if (isAdminTestingLogin) {
       log.i('Admin Testing login detected');
-      ref.read(adminProvider.notifier).adminLogin();
-      state = const AsyncValue.data(
-        AuthState(AuthChangeEvent.signedIn, null),
-      );
+      state = const AsyncValue.loading();
+      try {
+        if (AppEnvironment.adminTestingAutoAdminSessionEnabled) {
+          await ref.read(qaSessionServiceProvider).signInAsAdminPreviewSession(
+                email: AppEnvironment.adminTestingBaseEmail,
+                password: AppEnvironment.adminTestingBasePassword,
+              );
+        } else {
+          ref.read(adminProvider.notifier).adminLogin();
+        }
+        state = const AsyncValue.data(
+          AuthState(AuthChangeEvent.signedIn, null),
+        );
+      } catch (error, stackTrace) {
+        log.e(
+          'Admin testing login error: $error',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        state = AsyncValue.error(error, stackTrace);
+      }
       return;
     }
 
@@ -130,6 +147,27 @@ class AuthController extends _$AuthController {
         return;
       }
 
+      if (ref.read(adminProvider).useAdminPreviewBaseSession) {
+        state = const AsyncValue.loading();
+        final result = await _repository.signOut();
+
+        result.fold(
+          (failure) {
+            log.setCustomKey('auth_flow', 'qa_admin_preview_sign_out');
+            log.e('QA admin preview sign out error: ${failure.message}');
+            state = AsyncValue.error(failure.message, StackTrace.current);
+          },
+          (_) {
+            ref.read(adminProvider.notifier).clearAdminSession();
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.signedOut, null),
+            );
+            log.i('Admin testing session closed');
+          },
+        );
+        return;
+      }
+
       ref.read(adminProvider.notifier).clearAdminSession();
       state = const AsyncValue.data(
         AuthState(AuthChangeEvent.signedOut, null),
@@ -180,12 +218,8 @@ bool isAuthenticated(IsAuthenticatedRef ref) {
       AppEnvironment.enableAdminTesting && ref.watch(adminProvider).isAdminUser;
   if (isAdmin) return true;
 
-  final authState = ref.watch(authControllerProvider).value;
-  if (authState == null) return false;
-
-  return authState.event == AuthChangeEvent.signedIn ||
-      authState.event == AuthChangeEvent.tokenRefreshed ||
-      authState.event == AuthChangeEvent.userUpdated;
+  final authState = ref.watch(authStateProvider).valueOrNull;
+  return authState?.isAuthenticated ?? false;
 }
 
 /// Provides the user profile from the database, updated when the user changes.

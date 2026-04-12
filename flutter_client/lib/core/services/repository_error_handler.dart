@@ -16,9 +16,14 @@ mixin RepositoryErrorHandler {
     // 1. Pre-fetch connectivity guard (Connectivity Guard rule)
     if (isOnline == false) {
       if (onOffline != null) {
-        log.i('$context: Offline queueing action');
-        final offlineResult = await onOffline();
-        return right(offlineResult);
+        try {
+          log.i('$context: Offline queueing/fallback action');
+          final offlineResult = await onOffline();
+          return right(offlineResult);
+        } catch (e) {
+          log.w('$context: Offline action failed - $e');
+          return left(const NetworkFailure('Sin conexión a internet.'));
+        }
       }
       log.w('$context: Offline Guard - Refusing request while disconnected');
       return left(const NetworkFailure('Sin conexión a internet. Verificá tu red.'));
@@ -44,9 +49,14 @@ mixin RepositoryErrorHandler {
       return left(ServerFailure('Error en la base de datos: ${e.message}'));
     } on OfflineException {
       if (onOffline != null) {
-        log.i('$context: Offline exception queued');
-        final offlineResult = await onOffline();
-        return right(offlineResult);
+        try {
+          log.i('$context: Offline exception queued/fallback');
+          final offlineResult = await onOffline();
+          return right(offlineResult);
+        } catch (e) {
+          log.w('$context: Offline action failed after exception - $e');
+          return left(const NetworkFailure('No hay conexión a internet.'));
+        }
       }
       log.w('$context: Offline requested');
       return left(const NetworkFailure('No hay conexión a internet.'));
@@ -60,6 +70,15 @@ mixin RepositoryErrorHandler {
         return left(const ServerFailure('Demasiadas solicitudes. Reintentá en un momento.'));
       }
       if (msg.contains('SocketException') || msg.contains('Connection refused') || msg.contains('Failed host lookup')) {
+        if (onOffline != null) {
+          try {
+            log.i('$context: SocketException mapped to offline fallback');
+            final offlineResult = await onOffline();
+            return right(offlineResult);
+          } catch (e) {
+            return left(const NetworkFailure('No se pudo establecer conexión. (Sin caché)'));
+          }
+        }
         return left(const NetworkFailure('No se pudo establecer conexión con el servidor.'));
       }
       return left(ServerFailure('Error inesperado: ${e.toString().split(':').last.trim()}'));

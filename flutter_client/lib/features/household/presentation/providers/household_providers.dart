@@ -80,5 +80,6 @@ HouseholdCapabilities householdCapabilities(Ref ref) {
   final household = ref.watch(currentHouseholdProvider).valueOrNull;
   return HouseholdCapabilities(
     type: HouseholdType.fromString(household?.householdType),
+    tasksEnabled: household?.tasksEnabled ?? true,
   );
 }

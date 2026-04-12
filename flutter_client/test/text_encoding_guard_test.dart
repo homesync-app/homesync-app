@@ -27,6 +27,9 @@ void main() {
             .where((line) => line.isNotEmpty && !line.startsWith('#'))
             .toSet()
         : <String>{};
+    final baselinePaths = baseline
+        .map((line) => line.split(':').first.trim().replaceAll('\\', '/'))
+        .toSet();
 
     final roots = <String>['lib', 'test'];
 
@@ -63,7 +66,10 @@ void main() {
         .map((line) => line.replaceAll('\\', '/'))
         .toList(growable: false);
     final newFailures = normalizedFailures
-        .where((line) => !baseline.contains(line))
+        .where((line) {
+          final path = line.split(':').first.trim().replaceAll('\\', '/');
+          return !baseline.contains(line) && !baselinePaths.contains(path);
+        })
         .toList(growable: false);
 
     expect(

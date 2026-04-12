@@ -67,25 +67,88 @@ class AppEnvironment {
       authMode == AuthMode.firebaseThirdParty;
   static bool get enableAdminTesting {
     const override = String.fromEnvironment('ENABLE_ADMIN_TESTING');
-    if (override.isNotEmpty) {
-      return override.toLowerCase() == 'true';
-    }
-    return isLocal || isStaging;
+    return !isProduction && override.toLowerCase() == 'true';
+  }
+
+  static String _readWebQueryParam(String key) {
+    final value = Uri.base.queryParameters[key];
+    return value?.trim() ?? '';
+  }
+
+  static bool _isTruthy(String value) {
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'true' || normalized == '1' || normalized == 'yes';
   }
 
   static String get adminTestingUsername {
     return const String.fromEnvironment(
       'ADMIN_TESTING_USERNAME',
-      defaultValue: 'admin',
+      defaultValue: '',
     );
   }
 
   static String get adminTestingPassword {
     return const String.fromEnvironment(
       'ADMIN_TESTING_PASSWORD',
-      defaultValue: 'superadmin',
+      defaultValue: '',
     );
   }
+
+  static bool get adminTestingPasswordLoginEnabled =>
+      enableAdminTesting &&
+      adminTestingUsername.trim().isNotEmpty &&
+      adminTestingPassword.isNotEmpty;
+
+  static bool get adminTestingAutoLogin {
+    const override = String.fromEnvironment('ADMIN_TESTING_AUTO_LOGIN');
+    final queryOverride = _readWebQueryParam('qaAutoLogin');
+    return enableAdminTesting &&
+        (_isTruthy(override) || _isTruthy(queryOverride));
+  }
+
+  static String get adminTestingAutoScenarioId {
+    const override = String.fromEnvironment(
+      'ADMIN_TESTING_AUTO_SCENARIO_ID',
+      defaultValue: '',
+    );
+    if (override.isNotEmpty) return override;
+    return _readWebQueryParam('qaScenario');
+  }
+
+  static String get adminTestingAutoViewerUserId {
+    const override = String.fromEnvironment(
+      'ADMIN_TESTING_AUTO_VIEWER_USER_ID',
+      defaultValue: '',
+    );
+    if (override.isNotEmpty) return override;
+    return _readWebQueryParam('qaViewer');
+  }
+
+  static bool get adminTestingAutoRealQaLogin {
+    const override = String.fromEnvironment('ADMIN_TESTING_AUTO_REAL_QA_LOGIN');
+    final queryOverride = _readWebQueryParam('qaRealSession');
+    return enableAdminTesting &&
+        (_isTruthy(override) || _isTruthy(queryOverride));
+  }
+
+  static String get adminTestingBaseEmail {
+    return const String.fromEnvironment(
+      'ADMIN_TESTING_BASE_EMAIL',
+      defaultValue: '',
+    );
+  }
+
+  static String get adminTestingBasePassword {
+    return const String.fromEnvironment(
+      'ADMIN_TESTING_BASE_PASSWORD',
+      defaultValue: '',
+    );
+  }
+
+  static bool get adminTestingAutoAdminSessionEnabled =>
+      enableAdminTesting &&
+      adminTestingBaseEmail.trim().isNotEmpty &&
+      adminTestingBasePassword.isNotEmpty;
 
   // --- Firebase Config ---
   static String get firebaseProjectId {

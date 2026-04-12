@@ -23,15 +23,14 @@ class FamilyRewardsScreen extends ConsumerWidget {
         ?.where((member) => member.userId == currentUserId)
         .firstOrNull;
     final isAdult = currentMember?.isAdult ?? true;
+    final isAdmin = currentMember?.isAdmin ?? isAdult;
 
     return Scaffold(
       backgroundColor: theme.background,
-      appBar: AppBar(
-        title: Text(isAdult ? 'Tienda familiar' : 'Mis recompensas'),
-      ),
-      floatingActionButton: isAdult
+      appBar: AppBar(title: const Text('Tienda del hogar')),
+      floatingActionButton: isAdmin
           ? FloatingActionButton.extended(
-              onPressed: () => _showRewardComposer(context, ref, isAdult),
+              onPressed: () => _showRewardComposer(context, ref, isAdmin),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add_rounded),
@@ -40,54 +39,115 @@ class FamilyRewardsScreen extends ConsumerWidget {
           : null,
       body: rewardsAsync.when(
         data: (rewards) {
+          final activeRewards =
+              rewards.where((reward) => reward.isActive).toList();
           final approvedRewards =
-              rewards.where((reward) => reward.isApproved).toList();
+              activeRewards.where((reward) => reward.isApproved).toList();
           final pendingRewards =
-              rewards.where((reward) => !reward.isApproved).toList();
+              activeRewards.where((reward) => !reward.isApproved).toList();
+          final childRewards = approvedRewards
+              .where((reward) => reward.targetType == 'child')
+              .toList();
+          final adultRewards = approvedRewards
+              .where((reward) => reward.targetType == 'adult')
+              .toList();
+          final familyRewards = approvedRewards
+              .where((reward) => reward.targetType == 'all')
+              .toList();
 
           return RefreshIndicator(
             onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
               children: [
-                _BalanceCard(balance: balance, isAdult: isAdult),
-                const SizedBox(height: 24),
-                _SectionTitle(
-                  title: isAdult ? 'Premios activos' : 'Lo que podés canjear',
-                  subtitle: isAdult
-                      ? 'Gestioná premios para adultos, chicos o toda la familia.'
-                      : 'Tus monedas se convierten en premios del hogar.',
-                ),
-                const SizedBox(height: 12),
-                if (approvedRewards.isEmpty)
-                  _EmptyPanel(
-                    title: 'Todavía no hay premios disponibles',
-                    subtitle: isAdult
-                        ? 'Creá el primer premio para empezar la economía del hogar.'
-                        : 'Todavía no hay premios para canjear.',
-                  )
-                else
-                  _RewardGrid(
-                    rewards: approvedRewards,
-                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    canDelete: isAdult,
-                    onDelete: (reward) =>
-                        _confirmDelete(context, ref, reward, isAdult),
-                  ),
-                if (isAdult && pendingRewards.isNotEmpty) ...[
+                _BalanceHero(balance: balance, isAdult: isAdult),
+                const SizedBox(height: 18),
+                _CoinsDivider(balance: balance),
+                if (isAdmin && pendingRewards.isNotEmpty) ...[
                   const SizedBox(height: 28),
-                  const _SectionTitle(
-                    title: 'Pendientes de aprobación',
-                    subtitle: 'Revisá lo que propusieron antes de publicarlo.',
+                  _SectionTitle(
+                    title: 'Pendientes de aprobacion',
+                    subtitle:
+                        'Premios propuestos que todavia necesitan decision.',
+                    trailing: _CountPill(label: '${pendingRewards.length}'),
                   ),
                   const SizedBox(height: 12),
                   ...pendingRewards.map(
-                    (reward) => _PendingRewardTile(
-                      reward: reward,
-                      onApprove: () => _approveReward(context, ref, reward),
-                      onDelete: () =>
-                          _confirmDelete(context, ref, reward, isAdult),
+                    (reward) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _PendingRewardCard(
+                        reward: reward,
+                        onApprove: () => _approveReward(context, ref, reward),
+                        onDelete: () =>
+                            _confirmDelete(context, ref, reward, isAdmin),
+                      ),
                     ),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                if (approvedRewards.isEmpty)
+                  _EmptyBoutique(
+                    isAdmin: isAdmin,
+                    onSeed: () =>
+                        ref.read(rewardsProvider.notifier).cloneTemplates(),
+                    onCreate: isAdmin
+                        ? () => _showRewardComposer(context, ref, isAdmin)
+                        : null,
+                  )
+                else if (isAdult) ...[
+                  _RewardSection(
+                    title: 'Premios para chicos',
+                    subtitle:
+                        'Recompensas pensadas para motivar y celebrar avances.',
+                    rewards: childRewards,
+                    emptyText: 'Todavia no hay premios para chicos.',
+                    canDelete: isAdmin,
+                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
+                    onDelete: (reward) =>
+                        _confirmDelete(context, ref, reward, isAdmin),
+                  ),
+                  const SizedBox(height: 26),
+                  _RewardSection(
+                    title: 'Premios para adultos',
+                    subtitle:
+                        'Toman el lenguaje visual y emocional de la boutique de pareja.',
+                    rewards: adultRewards,
+                    emptyText: 'Todavia no hay premios para adultos.',
+                    canDelete: isAdmin,
+                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
+                    onDelete: (reward) =>
+                        _confirmDelete(context, ref, reward, isAdmin),
+                  ),
+                  const SizedBox(height: 26),
+                  _RewardSection(
+                    title: 'Planes familiares',
+                    subtitle: 'Premios y salidas para disfrutar entre todos.',
+                    rewards: familyRewards,
+                    emptyText: 'Todavia no hay planes familiares cargados.',
+                    canDelete: isAdmin,
+                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
+                    onDelete: (reward) =>
+                        _confirmDelete(context, ref, reward, isAdmin),
+                  ),
+                ] else ...[
+                  _RewardSection(
+                    title: 'Premios para mi',
+                    subtitle: 'Lo que podes canjear con tus monedas.',
+                    rewards: childRewards,
+                    emptyText: 'Todavia no hay premios para vos.',
+                    canDelete: false,
+                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
+                    onDelete: (_) {},
+                  ),
+                  const SizedBox(height: 26),
+                  _RewardSection(
+                    title: 'Planes familiares',
+                    subtitle: 'Experiencias compartidas del hogar.',
+                    rewards: familyRewards,
+                    emptyText: 'Todavia no hay planes familiares disponibles.',
+                    canDelete: false,
+                    onRedeem: (reward) => _confirmRedeem(context, ref, reward),
+                    onDelete: (_) {},
                   ),
                 ],
               ],
@@ -100,7 +160,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
     );
   }
 
-  void _showRewardComposer(BuildContext context, WidgetRef ref, bool isAdult) {
+  void _showRewardComposer(BuildContext context, WidgetRef ref, bool isAdmin) {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final costController = TextEditingController();
@@ -125,7 +185,6 @@ class FamilyRewardsScreen extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final theme = context.theme;
-
           return Container(
             padding: EdgeInsets.only(
               left: 20,
@@ -165,23 +224,21 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   TextField(
                     controller: titleController,
                     decoration:
-                        const InputDecoration(labelText: 'Título del premio'),
+                        const InputDecoration(labelText: 'Titulo del premio'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: descriptionController,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Descripción breve',
-                    ),
+                    decoration:
+                        const InputDecoration(labelText: 'Descripcion breve'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: costController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Costo en monedas',
-                    ),
+                    decoration:
+                        const InputDecoration(labelText: 'Costo en monedas'),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -259,7 +316,6 @@ class FamilyRewardsScreen extends ConsumerWidget {
                         final description = descriptionController.text.trim();
                         final cost = int.tryParse(costController.text) ?? 0;
                         if (title.isEmpty || cost <= 0) return;
-
                         await ref.read(rewardsProvider.notifier).suggestReward(
                               title: title,
                               description:
@@ -267,12 +323,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
                               cost: cost,
                               icon: selectedIcon,
                               category: 'familia',
-                              isApproved: isAdult,
+                              isApproved: isAdmin,
                               targetType: targetType,
                             );
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                        }
+                        if (context.mounted) Navigator.pop(context);
                       },
                       child: const Text('Guardar premio'),
                     ),
@@ -287,10 +341,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
   }
 
   Future<void> _approveReward(
-    BuildContext context,
-    WidgetRef ref,
-    RewardModel reward,
-  ) async {
+      BuildContext context, WidgetRef ref, RewardModel reward) async {
     final result = await ref.read(rewardsProvider.notifier).approveReward(
           reward.id,
         );
@@ -299,7 +350,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
         SnackBar(content: Text(failure.message)),
       ),
       (_) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${reward.title}" quedó aprobado.')),
+        SnackBar(content: Text('"${reward.title}" quedo aprobado.')),
       ),
     );
   }
@@ -334,14 +385,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmRedeem(
-    BuildContext context,
-    WidgetRef ref,
-    RewardModel reward,
-  ) async {
+      BuildContext context, WidgetRef ref, RewardModel reward) async {
     final balance = ref.read(userBalanceProvider).value?['coins'] ?? 0;
     if (balance < reward.cost) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No te alcanzan las monedas todavía.')),
+        const SnackBar(content: Text('No te alcanzan las monedas todavia.')),
       );
       return;
     }
@@ -350,8 +398,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Canjear premio'),
-        content:
-            Text('¿Querés canjear "${reward.title}" por ${reward.cost} monedas?'),
+        content: Text(
+            'Queres canjear "${reward.title}" por ${reward.cost} monedas?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -376,11 +424,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
+class _BalanceHero extends StatelessWidget {
+  const _BalanceHero({required this.balance, required this.isAdult});
+
   final int balance;
   final bool isAdult;
-
-  const _BalanceCard({required this.balance, required this.isAdult});
 
   @override
   Widget build(BuildContext context) {
@@ -418,6 +466,7 @@ class _BalanceCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   '$balance monedas',
                   style: TextStyle(
@@ -435,73 +484,45 @@ class _BalanceCard extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _CoinsDivider extends StatelessWidget {
+  const _CoinsDivider({required this.balance});
 
-  const _SectionTitle({required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: TextStyle(
-            color: theme.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyPanel extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _EmptyPanel({required this.title, required this.subtitle});
+  final int balance;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.divider.withValues(alpha: 0.4)),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Icon(Icons.storefront_outlined, color: theme.textMuted, size: 36),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontWeight: FontWeight.w800,
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.monetization_on_rounded,
+              color: AppColors.accentGold,
+              size: 20,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(width: 10),
           Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: theme.textSecondary),
+            '$balance monedas disponibles',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -509,12 +530,230 @@ class _EmptyPanel extends StatelessWidget {
   }
 }
 
-class _RewardGrid extends StatelessWidget {
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+      ],
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _RewardSection extends StatelessWidget {
+  const _RewardSection({
+    required this.title,
+    required this.subtitle,
+    required this.rewards,
+    required this.emptyText,
+    required this.canDelete,
+    required this.onRedeem,
+    required this.onDelete,
+  });
+
+  final String title;
+  final String subtitle;
   final List<RewardModel> rewards;
-  final ValueChanged<RewardModel> onRedeem;
+  final String emptyText;
   final bool canDelete;
+  final ValueChanged<RewardModel> onRedeem;
   final ValueChanged<RewardModel> onDelete;
 
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          title: title,
+          subtitle: subtitle,
+          trailing: _CountPill(label: '${rewards.length}'),
+        ),
+        const SizedBox(height: 14),
+        if (rewards.isEmpty)
+          _InlineEmptyState(message: emptyText)
+        else
+          _RewardGrid(
+            rewards: rewards,
+            onRedeem: onRedeem,
+            canDelete: canDelete,
+            onDelete: onDelete,
+          ),
+      ],
+    );
+  }
+}
+
+class _EmptyBoutique extends StatelessWidget {
+  const _EmptyBoutique({
+    required this.isAdmin,
+    required this.onSeed,
+    this.onCreate,
+  });
+
+  final bool isAdmin;
+  final Future<dynamic> Function() onSeed;
+  final VoidCallback? onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.storefront_outlined, color: theme.textMuted, size: 40),
+          const SizedBox(height: 14),
+          Text(
+            'Boutique vacia',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isAdmin
+                ? 'Carga premios sugeridos o crea el primer catalogo del hogar.'
+                : 'Todavia no hay premios disponibles en la tienda del hogar.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          if (isAdmin) ...[
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => onSeed(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+                foregroundColor: AppColors.primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                'Cargar catalogo inicial',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+            if (onCreate != null) ...[
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: onCreate,
+                child: const Text(
+                  'O crear un premio personalizado',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineEmptyState extends StatelessWidget {
+  const _InlineEmptyState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.border.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        message,
+        style: TextStyle(
+          color: theme.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _RewardGrid extends ConsumerWidget {
   const _RewardGrid({
     required this.rewards,
     required this.onRedeem,
@@ -522,87 +761,173 @@ class _RewardGrid extends StatelessWidget {
     required this.onDelete,
   });
 
+  final List<RewardModel> rewards;
+  final ValueChanged<RewardModel> onRedeem;
+  final bool canDelete;
+  final ValueChanged<RewardModel> onDelete;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: rewards.map((reward) {
-        return SizedBox(
-          width: (MediaQuery.sizeOf(context).width - 52) / 2,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: theme.divider.withValues(alpha: 0.4)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(reward.icon, style: const TextStyle(fontSize: 28)),
-                    const Spacer(),
-                    if (canDelete)
-                      InkWell(
-                        onTap: () => onDelete(reward),
-                        child: Icon(
-                          Icons.close_rounded,
-                          color: theme.textMuted,
-                          size: 18,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  reward.title,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w800,
+    final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width - 40;
+        final columns = viewportWidth >= 280 ? 2 : 1;
+        final cardWidth =
+            (viewportWidth - (12 * (columns - 1))).clamp(0, double.infinity) /
+                columns;
+        final cardHeight = columns == 2 ? 198.0 : 210.0;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: rewards.map((reward) {
+            final canAfford = userBalance >= reward.cost;
+            final accent = canAfford ? theme.primary : theme.textMuted;
+
+            return SizedBox(
+              width: cardWidth,
+              height: cardHeight,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [theme.surface, AppColors.surfaceVariant],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.border.withValues(alpha: 0.55),
+                  ),
+                  boxShadow: theme.cardShadow,
                 ),
-                if (reward.description != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    reward.description!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: theme.textSecondary,
-                      fontSize: 12,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => onRedeem(reward),
+                    borderRadius: BorderRadius.circular(24),
+                    child: Stack(
+                      children: [
+                        if (canDelete)
+                          Positioned(
+                            top: -4,
+                            right: 2,
+                            child: IconButton(
+                              onPressed: () => onDelete(reward),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 28,
+                                minHeight: 28,
+                              ),
+                              icon: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: theme.textMuted.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 12),
+                              Container(
+                                width: 52,
+                                height: 52,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGold.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Text(
+                                  reward.icon,
+                                  style: const TextStyle(fontSize: 29),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    reward.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: theme.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1.14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: canAfford
+                                      ? theme.primary.withValues(alpha: 0.12)
+                                      : theme.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: canAfford
+                                        ? theme.primary.withValues(alpha: 0.18)
+                                        : theme.border.withValues(alpha: 0.65),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.monetization_on_rounded,
+                                      size: 13,
+                                      color: accent,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${reward.cost} monedas',
+                                      style: TextStyle(
+                                        color: accent,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => onRedeem(reward),
-                    child: Text('${reward.cost} monedas'),
-                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }
 
-class _PendingRewardTile extends StatelessWidget {
-  final RewardModel reward;
-  final VoidCallback onApprove;
-  final VoidCallback onDelete;
-
-  const _PendingRewardTile({
+class _PendingRewardCard extends StatelessWidget {
+  const _PendingRewardCard({
     required this.reward,
     required this.onApprove,
     required this.onDelete,
   });
+
+  final RewardModel reward;
+  final VoidCallback onApprove;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -610,53 +935,71 @@ class _PendingRewardTile extends StatelessWidget {
     final audience = switch (reward.targetType) {
       'adult' => 'Adultos',
       'child' => 'Chicos',
-      _ => 'Toda la familia',
+      _ => 'Familia',
     };
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: theme.divider.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+        boxShadow: theme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(reward.icon, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 10),
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(reward.icon, style: const TextStyle(fontSize: 24)),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  reward.title,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      reward.title,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      audience,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                audience,
-                style: TextStyle(
-                  color: theme.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
+              const _CountPill(label: 'Revisar'),
             ],
           ),
-          if (reward.description != null) ...[
-            const SizedBox(height: 8),
+          if (reward.description != null && reward.description!.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Text(
               reward.description!,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontSize: 13,
+                height: 1.35,
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -681,39 +1024,39 @@ class _PendingRewardTile extends StatelessWidget {
 }
 
 class _TargetChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
   const _TargetChip({
     required this.label,
     required this.selected,
     required this.onTap,
   });
 
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final theme = context.theme;
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primary.withValues(alpha: 0.12)
-              : context.theme.surface,
-          borderRadius: BorderRadius.circular(14),
+              : theme.surface,
+          borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: selected
                 ? AppColors.primary
-                : context.theme.divider.withValues(alpha: 0.4),
+                : theme.divider.withValues(alpha: 0.4),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? AppColors.primary : context.theme.textSecondary,
-            fontWeight: FontWeight.w700,
+            color: selected ? AppColors.primary : theme.textSecondary,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),

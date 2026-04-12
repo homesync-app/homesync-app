@@ -1,21 +1,22 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -54,12 +55,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   String? _joinError;
 
   // TaskModel selection
-  final TemplateService _templateService = TemplateService();
   final Set<String> _selectedTemplateIds = {};
   List<Category> _categories = [];
   Map<String, List<TaskTemplate>> _templatesByCategory = {};
   bool _isLoadingTemplates = true;
   bool _isSaving = false;
+  TemplateService get _templateService => ref.read(templateServiceProvider);
   final List<Map<String, dynamic>> _modes = [
     {
       'id': 'couple',
@@ -165,8 +166,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       final authService = ref.read(authServiceProvider);
       await authService.ensureHouseholdExists();
 
-      final householdRepo = ref.read(householdRepositoryProvider);
-      final result = await householdRepo.generateInvitationCode();
+      final result = await ref.read(generateInvitationCodeUseCaseProvider).call();
       if (mounted) {
         result.fold(
           (failure) {
@@ -214,8 +214,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     });
 
     try {
-      final householdRepo = ref.read(householdRepositoryProvider);
-      await householdRepo.joinHousehold(code);
+      final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
+      result.fold((failure) => throw failure, (_) {});
 
       // Invalida proveedores para que MainScreen/HomeScreen vean el nuevo hogar
       ref.invalidate(householdIdProvider);
@@ -260,9 +260,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     try {
       final householdId = await ref.read(householdIdProvider.future);
       if (householdId != null && _selectedMode != null) {
-        await ref
-            .read(householdRepositoryProvider)
-            .updateHouseholdType(householdId, _selectedMode!);
+        final result = await ref
+            .read(updateHouseholdTypeUseCaseProvider)
+            .call(householdId, _selectedMode!);
+        result.fold((failure) => throw failure, (_) {});
       }
 
       // Update user profile with name and avatar
@@ -273,7 +274,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   avatarUrl: _selectedAvatar,
                 );
         profileResult.fold(
-          (failure) => throw Exception(failure.message),
+          (failure) => throw failure,
           (_) {},
         );
       }
@@ -473,7 +474,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Widget _buildProgressIndicator() {
     // Only show progress from step 1 onward (step 0 is value prop / intro)
     if (_currentStep == 0) return const SizedBox(height: 8);
-    final totalSteps = 7; // steps 1-7
+    const totalSteps = 7; // steps 1-7
     final activeStep = _currentStep - 1; // normalize
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -511,7 +512,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   // -- Step 0: Value Proposition --------------------------------------------
 
   Widget _buildValuePropStep() {
-    final features = [
+    const features = [
       _FeatureItem(
         emoji: '?',
         title: 'Tareas compartidas',
@@ -522,7 +523,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         emoji: '??',
         title: 'Gastos en equipo',
         desc: 'Registrá gastos, dividí cuentas y llevá el balance al día.',
-        color: const Color(0xFF22C55E),
+        color: Color(0xFF22C55E),
       ),
       _FeatureItem(
         emoji: '??',
@@ -615,11 +616,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildFeatureCard(_FeatureItem feature) {
+    final theme = context.theme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -976,6 +978,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   Widget _buildPremiumModeCard(Map<String, dynamic> mode) {
     final isSelected = _selectedMode == mode['id'];
     final gradient = mode['gradient'] as List<Color>;
+    final theme = context.theme;
 
     return GestureDetector(
       onTap: () {
@@ -986,7 +989,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -1274,7 +1277,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 color: AppColors.textMuted.withValues(alpha: 0.3),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: context.theme.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -1473,7 +1476,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           decoration: InputDecoration(
                             hintText: 'Ej: Casa de los Gomez',
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: context.theme.surface,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
                               borderSide: BorderSide.none,
@@ -1638,19 +1641,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     try {
       if (householdId != null && householdName.isNotEmpty) {
-        await Supabase.instance.client
+        await ref
+            .read(supabaseClientProvider)
             .from('households')
             .update({'name': householdName}).eq('id', householdId);
         ref.invalidate(currentHouseholdProvider);
       }
 
       if (currentUserId != null && _familyRole.trim().isNotEmpty) {
-        await ref
-            .read(householdRepositoryProvider)
-            .updateMemberDisplayRole(currentUserId, _familyRole);
+        final result = await ref
+            .read(updateMemberDisplayRoleUseCaseProvider)
+            .call(currentUserId, _familyRole);
+        result.fold((failure) => throw failure, (_) {});
         ref.invalidate(householdMembersNotifierProvider);
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'SetupScreen family onboarding best-effort update failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // Best effort setup. The family can still continue onboarding.
     }
 
@@ -1698,7 +1708,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     ),
                   ),
                   const SizedBox(height: 40),
-                  Text(_selectedMode == 'couple' ? 'VOS : PAREJA' : 'VOS : OTROS',
+                  Text(
+                      _selectedMode == 'couple'
+                          ? 'VOS : PAREJA'
+                          : 'VOS : OTROS',
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
@@ -1765,9 +1778,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               try {
                 final householdId = ref.read(householdIdProvider).valueOrNull;
                 if (householdId != null) {
-                  await ref
-                      .read(householdRepositoryProvider)
-                      .updateDefaultSplitRatio(householdId, _tempRatio);
+                  final result = await ref
+                      .read(updateDefaultSplitRatioUseCaseProvider)
+                      .call(householdId, _tempRatio);
+                  result.fold((failure) => throw failure, (_) {});
                 }
               } catch (e) {
                 // Ignore error
@@ -2079,4 +2093,3 @@ class _FeatureItem {
     required this.color,
   });
 }
-

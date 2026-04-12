@@ -111,7 +111,7 @@ class WeeklyTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,

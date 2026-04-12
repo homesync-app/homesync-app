@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
@@ -29,7 +30,7 @@ class ActivityChatBubble extends ConsumerWidget {
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
     final creatorId = activity['creator_id'] as String?;
     final isMe = creatorId == currentUserId;
-    
+
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
@@ -40,21 +41,23 @@ class ActivityChatBubble extends ConsumerWidget {
     final userName = (data['user_name'] as String?)?.trim();
     final avatarUrl =
         (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
-    final xpReward = _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
-    final coinsReward = _readInt(data['coins_reward'] ?? data['coins_per_user'] ?? data['coins']);
+    final xpReward =
+        _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
+    final coinsReward = _readInt(
+        data['coins_reward'] ?? data['coins_per_user'] ?? data['coins']);
     final category = data['category'] as String?;
     final amount = _parseAmount(data['amount']);
-    final normalizedCategory = AppColors.normaliseCategory(category);
+    final normalizedCategory = CategoryMapping.normaliseCategory(category);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere(
-            (c) => AppColors.normaliseCategory(c.id) == normalizedCategory,
-          );
-        } catch (_) {
-          return null;
+        for (final category in list) {
+          if (CategoryMapping.normaliseCategory(category.id) ==
+              normalizedCategory) {
+            return category;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );
@@ -62,9 +65,8 @@ class ActivityChatBubble extends ConsumerWidget {
       context,
       type,
       category,
-      resolvedCategoryColor: categoryData != null
-          ? AppColors.fromHex(categoryData.color)
-          : null,
+      resolvedCategoryColor:
+          categoryData != null ? AppColors.fromHex(categoryData.color) : null,
     );
 
     return Container(
@@ -74,7 +76,8 @@ class ActivityChatBubble extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
           children: [
             if (!isMe) ...[
               CustomUserAvatar(
@@ -84,18 +87,16 @@ class ActivityChatBubble extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
             ],
-            
             Flexible(
               child: Container(
                 constraints: const BoxConstraints(minHeight: 84),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 decoration: BoxDecoration(
-                  color: isMe
-                      ? const Color(0xFFFFFCF8)
-                      : const Color(0xFFFFFEFD),
+                  color:
+                      isMe ? const Color(0xFFFFFCF8) : const Color(0xFFFFFEFD),
                   border: Border.all(
-                    color: isMe 
-                        ? theme.primary.withValues(alpha: 0.1) 
+                    color: isMe
+                        ? theme.primary.withValues(alpha: 0.1)
                         : theme.divider.withValues(alpha: 0.09),
                     width: 0.9,
                   ),
@@ -171,8 +172,9 @@ class ActivityChatBubble extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.access_time_rounded, 
-                                size: 12, color: theme.textMuted.withValues(alpha: 0.72)),
+                            Icon(Icons.access_time_rounded,
+                                size: 12,
+                                color: theme.textMuted.withValues(alpha: 0.72)),
                             const SizedBox(width: 4),
                             Text(
                               _formatTime(createdAt),
@@ -211,7 +213,6 @@ class ActivityChatBubble extends ConsumerWidget {
                 ),
               ),
             ),
-
             if (isMe) ...[
               const SizedBox(width: 4),
               CustomUserAvatar(
@@ -273,7 +274,8 @@ class ActivityChatBubble extends ConsumerWidget {
         'title': data['task_title'] ?? data['title'],
         'category': data['category'] ?? 'limpieza',
         'xp_reward': data['xp_reward'] ?? data['xp_per_user'] ?? data['xp'],
-        'coin_reward': data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
+        'coin_reward':
+            data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
         'completed_at': activity['created_at'],
         'activity_id': activity['id'],
         'completed_user': {

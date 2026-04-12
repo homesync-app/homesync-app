@@ -12,11 +12,15 @@ import '../../domain/repositories/savings_repository.dart';
 class SupabaseSavingsRepository
     with RepositoryErrorHandler
     implements SavingsRepository {
-  final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient _client;
   final Ref _ref;
   final OfflineQueueService _offlineQueue = OfflineQueueService();
 
-  SupabaseSavingsRepository({required Ref ref}) : _ref = ref;
+  SupabaseSavingsRepository({
+    required SupabaseClient client,
+    required Ref ref,
+  })  : _client = client,
+        _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
 
@@ -29,13 +33,19 @@ class SupabaseSavingsRepository
 
   @override
   Future<Either<Failure, List<SavingsGoalModel>>> getGoals(
-      {required String householdId}) async {
+      {required String householdId, int? limit, int? offset}) async {
     return executeWithHandling(() async {
-      final response = await _client
+      var query = _client
           .from('savings_goals')
           .select()
           .eq('household_id', householdId)
           .order('created_at', ascending: false);
+      if (offset != null && limit != null) {
+        query = query.range(offset, offset + limit - 1);
+      } else if (limit != null) {
+        query = query.limit(limit);
+      }
+      final response = await query;
 
       return (response as List)
           .map((json) => SavingsGoalModel.fromJson(json))

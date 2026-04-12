@@ -1,16 +1,13 @@
 import 'dart:ui' show ImageFilter;
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/config/app_environment.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:flutter/services.dart';
-import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/widgets/homesync_logo.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -33,29 +30,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _obscurePassword = true;
   bool _isSignUpMode = false;
   final String _loadingMessage = '';
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     log.setScreen('LoginScreen');
+
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 900),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
+      curve: const Interval(0.0, 0.72, curve: Curves.easeOut),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05),
+      begin: const Offset(0, 0.04),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.72, curve: Curves.easeOutCubic),
+      ),
+    );
+
     _animationController.forward();
   }
 
@@ -69,7 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   void _toggleMode() {
-    HapticFeedback.lightImpact();
+    HapticFeedback.selectionClick();
     setState(() {
       _isSignUpMode = !_isSignUpMode;
       _formKey.currentState?.reset();
@@ -83,16 +85,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         margin: const EdgeInsets.all(20),
-        elevation: 10,
+        elevation: 0,
       ),
     );
   }
@@ -104,18 +106,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         margin: const EdgeInsets.all(20),
-        elevation: 10,
+        elevation: 0,
       ),
     );
+  }
+
+  bool get _isAdminTestingInput {
+    return AppEnvironment.adminTestingPasswordLoginEnabled &&
+        _emailController.text.trim().toLowerCase() ==
+            AppEnvironment.adminTestingUsername.toLowerCase() &&
+        _passwordController.text == AppEnvironment.adminTestingPassword;
   }
 
   Future<void> _handleLogin() async {
@@ -131,12 +140,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (authState.hasError && mounted) {
       _showError(authState.error.toString());
     }
-  }
-
-  bool get _isAdminTestingInput {
-    return _emailController.text.trim().toLowerCase() ==
-            AppEnvironment.adminTestingUsername.toLowerCase() &&
-        _passwordController.text == AppEnvironment.adminTestingPassword;
   }
 
   Future<void> _handleSignUp() async {
@@ -155,12 +158,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (authState.hasError && mounted) {
       _showError(authState.error.toString());
     } else if (mounted) {
-      _showSuccess('¡Revisa tu email para confirmar tu cuenta! 📧');
+      _showSuccess('¡Revisá tu correo para confirmar tu cuenta!');
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
-    HapticFeedback.heavyImpact();
+    HapticFeedback.mediumImpact();
 
     final success =
         await ref.read(authControllerProvider.notifier).signInWithGoogle();
@@ -188,20 +191,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         backgroundColor: Theme.of(context).cardColor,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(28),
         ),
         title: const Text(
           'Recuperar contraseña',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Te enviaremos un link para restablecer tu contraseña.',
+            Text(
+              'Te enviaremos un enlace para restablecer tu contraseña.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
                 fontSize: 15,
                 height: 1.5,
               ),
@@ -214,9 +220,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 labelText: 'Correo electrónico',
                 prefixIcon: const Icon(Icons.email_outlined),
                 filled: true,
-                fillColor: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E1E1E)
+                    : const Color(0xFFF6F2ED),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -226,6 +234,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
+            ),
             child: const Text('Cancelar'),
           ),
           Padding(
@@ -233,12 +247,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(120, 48),
+                minimumSize: const Size(132, 48),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text('Enviar link'),
+              child: const Text('Enviar enlace'),
             ),
           ),
         ],
@@ -260,7 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (authState.hasError && mounted) {
       _showError(authState.error.toString());
     } else if (mounted) {
-      _showSuccess('¡Revisa tu email para cambiar tu contraseña! 📧');
+      _showSuccess('¡Revisá tu correo para cambiar tu contraseña!');
     }
   }
 
@@ -268,49 +285,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
+    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Background Gradient and Blobs
-          Container(decoration: AppTheme.backgroundGradientBox),
-          _AnimatedBackgroundBlob(
-            top: -100,
-            right: -50,
-            color: AppColors.primary.withValues(alpha: 0.12),
-            size: 400,
-            duration: const Duration(seconds: 10),
+          Positioned(
+            top: -86,
+            right: -32,
+            child: _LoginOrb(
+              size: 214,
+              color: AppColors.primary.withValues(alpha: 0.055),
+            ),
           ),
-          _AnimatedBackgroundBlob(
-            bottom: -50,
-            left: -50,
-            color: AppColors.accentGold.withValues(alpha: 0.08),
-            size: 350,
-            duration: const Duration(seconds: 12),
+          Positioned(
+            left: -92,
+            bottom: 82,
+            child: _LoginOrb(
+              size: 182,
+              color: AppColors.sage.withValues(alpha: 0.045),
+            ),
           ),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 450),
+                      constraints: const BoxConstraints(maxWidth: 430),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildLogoHeader(),
-                          const SizedBox(height: 40),
-                          // ── Mode Selector ─────────────────────────────────
-                          _buildModeSelector(),
-                          const SizedBox(height: 24),
-                          // ── Form Card ─────────────────────────────────────
+                          _buildHeader(theme),
+                          const SizedBox(height: 18),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 350),
+                            duration: const Duration(milliseconds: 320),
                             switchInCurve: Curves.easeOutCubic,
                             switchOutCurve: Curves.easeInCubic,
                             transitionBuilder: (child, animation) =>
@@ -318,19 +332,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               opacity: animation,
                               child: SlideTransition(
                                 position: Tween<Offset>(
-                                  begin: const Offset(0, 0.04),
+                                  begin: const Offset(0, 0.03),
                                   end: Offset.zero,
                                 ).animate(animation),
                                 child: child,
                               ),
                             ),
                             child: _isSignUpMode
-                                ? _buildSignUpCard(
-                                    key: const ValueKey('signup'))
-                                : _buildLoginCard(key: const ValueKey('login')),
+                                ? _buildSignUpForm(
+                                    key: const ValueKey('signup'),
+                                    theme: theme,
+                                  )
+                                : _buildLoginForm(
+                                    key: const ValueKey('login'),
+                                    theme: theme,
+                                  ),
                           ),
-                          const SizedBox(height: 32),
-                          _buildModeTogglePrompt(),
+                          const SizedBox(height: 18),
+                          _buildModeTogglePrompt(theme),
                         ],
                       ),
                     ),
@@ -339,347 +358,290 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ),
           ),
-
-          // Premium Loading Overlay
           if (isLoading) _PremiumLoadingOverlay(message: _loadingMessage),
         ],
       ),
     );
   }
 
-  Widget _buildLogoHeader() {
+  Widget _buildHeader(ThemeData theme) {
     return Column(
       children: [
-        Hero(
-          tag: 'app_logo',
-          child: HomeSyncLogo(size: 96),
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'HomeSync',
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.5,
-            color: Colors.white,
+        Container(
+          width: 92,
+          height: 92,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                AppColors.primaryLight,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.07),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Hero(
+              tag: 'homesync_logo',
+              child: Transform.scale(
+                scale: 3.25,
+                child: Image.asset(
+                  'assets/images/logo_premium_transparent.png',
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  isAntiAlias: true,
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'El hogar mejor organizado empieza aquí.',
+          _isSignUpMode ? 'Armá tu hogar' : 'Bienvenido',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+            fontSize: 34,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1.2,
+            height: 1.05,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 288),
+          child: Text(
+            _isSignUpMode
+                ? 'Creá tu cuenta para empezar a organizar tu hogar.'
+                : 'Ingresá para entrar a tu hogar y mantener todo al día.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.48),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 1.28,
+            ),
           ),
         ),
       ],
     );
   }
 
-  // ── Mode Selector (Login / Registro) ───────────────────────────────────────
-
-  Widget _buildModeSelector() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-      ),
-      child: Row(
+  Widget _buildLoginForm({Key? key, required ThemeData theme}) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        key: key,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildModeTab(
-            label: 'Ingresar',
-            isSelected: !_isSignUpMode,
-            onTap: () => _isSignUpMode ? _toggleMode() : null,
+          _buildPremiumTextField(
+            controller: _emailController,
+            hint: AppEnvironment.adminTestingPasswordLoginEnabled
+                ? 'Email o usuario QA'
+                : 'Correo electrónico',
+            icon: Icons.alternate_email_rounded,
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Requerido';
+              if (_isAdminTestingInput) return null;
+              if (!value.contains('@')) return 'Inválido';
+              return null;
+            },
           ),
-          _buildModeTab(
-            label: 'Crear cuenta',
-            isSelected: _isSignUpMode,
-            onTap: () => !_isSignUpMode ? _toggleMode() : null,
+          const SizedBox(height: 16),
+          _buildPremiumTextField(
+            controller: _passwordController,
+            hint: 'Contraseña',
+            icon: Icons.lock_outline_rounded,
+            isPassword: true,
+            validator: (value) {
+              if (value == null || value.length < 6) return 'Inválida';
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: InkWell(
+              onTap: _handleForgotPassword,
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                child: Text(
+                  '¿Olvidaste tu contraseña?',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          _buildPrimaryButton(label: 'Ingresar', onPressed: _handleLogin),
+          const SizedBox(height: 28),
+          _buildGoogleDivider(theme),
+          const SizedBox(height: 24),
+          _buildGoogleButton(theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSignUpForm({Key? key, required ThemeData theme}) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        key: key,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildPremiumTextField(
+            controller: _nameController,
+            hint: 'Tu nombre o apodo',
+            icon: Icons.person_outline_rounded,
+            keyboardType: TextInputType.name,
+            textCapitalization: TextCapitalization.words,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) return 'Requerido';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildPremiumTextField(
+            controller: _emailController,
+            hint: 'Correo electrónico',
+            icon: Icons.alternate_email_rounded,
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Requerido';
+              if (!value.contains('@')) return 'Inválido';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildPremiumTextField(
+            controller: _passwordController,
+            hint: 'Contraseña (mínimo 6 caracteres)',
+            icon: Icons.lock_outline_rounded,
+            isPassword: true,
+            validator: (value) {
+              if (value == null || value.length < 6) return 'Inválida';
+              return null;
+            },
+          ),
+          const SizedBox(height: 28),
+          _buildPrimaryButton(label: 'Crear cuenta', onPressed: _handleSignUp),
+          const SizedBox(height: 28),
+          _buildGoogleDivider(theme),
+          const SizedBox(height: 24),
+          _buildGoogleButton(theme),
+          const SizedBox(height: 28),
+          Text(
+            'Al crear una cuenta aceptás nuestros términos y la política de privacidad.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.42),
+              height: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildModeTab({
-    required String label,
-    required bool isSelected,
-    required VoidCallback? onTap,
+  Widget _buildPremiumTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+    TextInputType keyboardType = TextInputType.text,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    String? Function(String?)? validator,
   }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              letterSpacing: -0.2,
-            ),
-          ),
-        ),
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword && _obscurePassword,
+      keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
       ),
-    );
-  }
-
-  // ── Login Card ─────────────────────────────────────────────────────────────
-
-  Widget _buildLoginCard({Key? key}) {
-    return GlassContainer(
-      key: key,
-      borderRadius: 32,
-      padding: const EdgeInsets.all(32),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              'Bienvenido de nuevo 👋',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Ingresa tus datos para continuar',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildEmailField(),
-            const SizedBox(height: 20),
-            _buildPasswordField(),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _handleForgotPassword,
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-                child: const Text(
-                  '¿Olvidaste tu contraseña?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFFA9A19C),
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.82),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 12),
+          child: Icon(icon, color: AppColors.textMuted, size: 24),
+        ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIcon: isPassword
+            ? Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.textMuted,
+                    size: 24,
                   ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  splashRadius: 20,
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildPrimaryButton(
-              label: 'Entrar al Hogar',
-              onPressed: _handleLogin,
-            ),
-            const SizedBox(height: 24),
-            _buildDivider(),
-            const SizedBox(height: 24),
-            _buildGoogleButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Sign Up Card ───────────────────────────────────────────────────────────
-
-  Widget _buildSignUpCard({Key? key}) {
-    return GlassContainer(
-      key: key,
-      borderRadius: 32,
-      padding: const EdgeInsets.all(32),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              '¡Crea tu cuenta! 🏡',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Completa tus datos para empezar',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // ── Nombre ──────────────────────────────────────────────────────
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Tu nombre',
-                hintText: 'Ej: María',
-                prefixIcon:
-                    const Icon(Icons.person_outline, color: AppColors.primary),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.8), width: 1.5),
-                ),
-              ),
-              keyboardType: TextInputType.name,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Ingresá tu nombre';
-                }
-                if (value.trim().length < 2) return 'Nombre muy corto';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _buildEmailField(),
-            const SizedBox(height: 16),
-            _buildPasswordField(),
-            const SizedBox(height: 8),
-            // ── Password hint ────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 16),
-              child: Text(
-                'Mínimo 6 caracteres',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-            _buildPrimaryButton(
-              label: 'Crear mi cuenta',
-              onPressed: _handleSignUp,
-            ),
-            const SizedBox(height: 24),
-            _buildDivider(),
-            const SizedBox(height: 24),
-            _buildGoogleButton(),
-            const SizedBox(height: 16),
-            // ── Terms note ───────────────────────────────────────────────────
-            Text(
-              'Al registrarte aceptas nuestros Términos de Servicio y Política de Privacidad.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textMuted.withValues(alpha: 0.7),
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Shared Fields ──────────────────────────────────────────────────────────
-
-  Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      decoration: InputDecoration(
-        labelText: AppEnvironment.enableAdminTesting
-            ? 'Correo electrónico o usuario QA'
-            : 'Correo electrónico',
-        hintText: AppEnvironment.enableAdminTesting
-            ? 'ejemplo@gmail.com o ${AppEnvironment.adminTestingUsername}'
-            : 'ejemplo@gmail.com',
-        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
+              )
+            : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.8), width: 1.5),
-        ),
-      ),
-      keyboardType: TextInputType.emailAddress,
-      textInputAction: TextInputAction.next,
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Ingresa tu correo';
-        if (AppEnvironment.enableAdminTesting && _isAdminTestingInput) {
-          return null;
-        }
-        if (!value.contains('@')) return 'Correo inválido';
-        return null;
-      },
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      decoration: InputDecoration(
-        labelText: 'Contraseña',
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.6),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.8), width: 1.5),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            color: AppColors.textSecondary,
+            color: AppColors.border.withValues(alpha: 0.95),
+            width: 1.2,
           ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            width: 1.4,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
         ),
       ),
-      obscureText: _obscurePassword,
-      textInputAction: TextInputAction.done,
-      validator: (value) {
-        if (value == null || value.length < 6) return 'Mínimo 6 caracteres';
-        return null;
-      },
+      validator: validator,
     );
   }
 
@@ -691,117 +653,119 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 8,
-        shadowColor: AppColors.primary.withValues(alpha: 0.3),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        elevation: 0,
       ),
       child: isLoading
           ? const SizedBox(
               height: 24,
               width: 24,
               child: CircularProgressIndicator(
-                  color: Colors.white, strokeWidth: 2.5),
+                color: Colors.white,
+                strokeWidth: 2.5,
+              ),
             )
           : Text(
               label,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-            ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(
-            child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'o continúa con',
-            style: TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 13,
-                fontWeight: FontWeight.w600),
-          ),
-        ),
-        Expanded(
-            child: Divider(color: AppColors.textMuted.withValues(alpha: 0.2))),
-      ],
-    );
-  }
-
-  Widget _buildGoogleButton() {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: OutlinedButton(
-        onPressed: isLoading ? null : _handleGoogleSignIn,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          elevation: 0,
-        ).copyWith(
-          overlayColor:
-              WidgetStateProperty.all(Colors.grey.withValues(alpha: 0.05)),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FaIcon(
-              FontAwesomeIcons.google,
-              size: 20,
-              color: Color(0xFFDB4437),
-            ),
-            SizedBox(width: 14),
-            Text(
-              'Continuar con Google',
-              style: TextStyle(
-                color: Color(0xFF1E293B),
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
                 letterSpacing: -0.2,
               ),
             ),
-          ],
+    );
+  }
+
+  Widget _buildGoogleButton(ThemeData theme) {
+    final isLoading = ref.watch(authControllerProvider).isLoading;
+
+    return OutlinedButton(
+      onPressed: isLoading ? null : _handleGoogleSignIn,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        foregroundColor: theme.colorScheme.onSurface,
+        side: BorderSide(
+          color: AppColors.border.withValues(alpha: 0.9),
+          width: 1.4,
         ),
+        backgroundColor: Colors.white.withValues(alpha: 0.88),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const FaIcon(
+            FontAwesomeIcons.google,
+            size: 20,
+            color: Color(0xFFDB4437),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Continuar con Google',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildModeTogglePrompt() {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
+  Widget _buildGoogleDivider(ThemeData theme) {
+    final color = theme.colorScheme.onSurface.withValues(alpha: 0.08);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(child: Divider(color: color, thickness: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            'o continuá con',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: color, thickness: 1)),
+      ],
+    );
+  }
+
+  Widget _buildModeTogglePrompt(ThemeData theme) {
+    final isLoading = ref.watch(authControllerProvider).isLoading;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 6,
+      runSpacing: 4,
       children: [
         Text(
-          _isSignUpMode ? '¿Ya tenés cuenta?' : '¿Eres nuevo?',
-          style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              fontWeight: FontWeight.w500),
+          _isSignUpMode ? '¿Ya tenés cuenta?' : '¿Sos nuevo en HomeSync?',
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        TextButton(
-          onPressed: isLoading ? null : _toggleMode,
-          child: Text(
-            _isSignUpMode ? 'Ingresar' : 'Crea tu cuenta',
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-              decoration: TextDecoration.underline,
-              decorationThickness: 2,
+        InkWell(
+          onTap: isLoading ? null : _toggleMode,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text(
+              _isSignUpMode ? 'Ingresá' : 'Registrate',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
             ),
           ),
         ),
@@ -810,78 +774,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 }
 
-class _AnimatedBackgroundBlob extends StatefulWidget {
-  final double? top, bottom, left, right;
-  final Color color;
+class _LoginOrb extends StatelessWidget {
   final double size;
-  final Duration duration;
+  final Color color;
 
-  const _AnimatedBackgroundBlob({
-    this.top,
-    this.bottom,
-    this.left,
-    this.right,
-    required this.color,
+  const _LoginOrb({
     required this.size,
-    required this.duration,
+    required this.color,
   });
 
   @override
-  State<_AnimatedBackgroundBlob> createState() =>
-      _AnimatedBackgroundBlobState();
-}
-
-class _AnimatedBackgroundBlobState extends State<_AnimatedBackgroundBlob>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: widget.duration);
-    if (!kIsWeb && Platform.environment.containsKey('FLUTTER_TEST')) {
-      _controller.forward();
-    } else {
-      _controller.repeat(reverse: true);
-    }
-    _animation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: widget.top,
-      bottom: widget.bottom,
-      left: widget.left,
-      right: widget.right,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _animation.value,
-            child: Container(
-              width: widget.size,
-              height: widget.size,
-              decoration: BoxDecoration(
-                color: widget.color,
-                shape: BoxShape.circle,
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-          );
-        },
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color,
+              color.withValues(alpha: 0),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -889,10 +805,14 @@ class _AnimatedBackgroundBlobState extends State<_AnimatedBackgroundBlob>
 
 class _PremiumLoadingOverlay extends StatelessWidget {
   final String message;
+
   const _PremiumLoadingOverlay({required this.message});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 300),
@@ -900,55 +820,52 @@ class _PremiumLoadingOverlay extends StatelessWidget {
         return Opacity(
           opacity: value,
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12 * value, sigmaY: 12 * value),
+            filter: ImageFilter.blur(sigmaX: 10 * value, sigmaY: 10 * value),
             child: Container(
-              color: Colors.black.withValues(alpha: 0.4 * value),
+              color: theme.colorScheme.surface.withValues(alpha: 0.6 * value),
               child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(40),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 40,
-                            offset: const Offset(0, 20),
-                          ),
-                        ],
+                child: Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                        blurRadius: 40,
+                        offset: const Offset(0, 20),
                       ),
-                      child: Column(
-                        children: [
-                          const SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 4,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primary),
-                              strokeCap: StrokeCap.round,
-                            ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3.5,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
                           ),
-                          if (message.isNotEmpty) ...[
-                            const SizedBox(height: 32),
-                            Text(
-                              message,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF1E293B),
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                          ],
-                        ],
+                          strokeCap: StrokeCap.round,
+                        ),
                       ),
-                    ),
-                  ],
+                      if (message.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),

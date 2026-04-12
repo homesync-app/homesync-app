@@ -5,6 +5,7 @@ import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class WeeklyWinnerScreen extends ConsumerStatefulWidget {
@@ -33,13 +34,12 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
 
   Future<void> _loadData() async {
     try {
-      final statsRpc = ref.read(statsRpcServiceProvider);
       final householdRpc = ref.read(householdRpcServiceProvider);
-      final ranking = await statsRpc.getWeeklyRanking();
+      final ranking = await ref.read(weeklyRankingUseCaseProvider).call();
 
       if (ranking.isNotEmpty) {
         _winner = ranking.first;
-        await statsRpc.awardWeeklyWinner();
+        await ref.read(weeklyWinnerAwardUseCaseProvider).call();
 
         if (ranking.length >= 2) {
           final householdInfo = await householdRpc.getHouseholdInfo();
@@ -53,7 +53,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                 DateTime(weekStart.year, weekStart.month, weekStart.day)
                     .subtract(Duration(days: weekStart.weekday - 1));
 
-            await statsRpc.saveWeeklyDuelResult(
+            await ref.read(weeklyDuelResultSaveUseCaseProvider).call(
               householdId: householdId,
               weekStartDate: weekStartDate,
               winnerUserId: winner['user_id'] ?? '',

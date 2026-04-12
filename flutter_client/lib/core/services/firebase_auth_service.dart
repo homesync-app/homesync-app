@@ -12,14 +12,29 @@ import 'logger_service.dart';
 class FirebaseAuthService {
   static final FirebaseAuthService _instance = FirebaseAuthService._internal();
 
-  factory FirebaseAuthService() => _instance;
+  factory FirebaseAuthService({SupabaseClient? supabaseClient}) {
+    if (supabaseClient != null) {
+      _instance._supabaseClient = supabaseClient;
+    }
+    return _instance;
+  }
 
   FirebaseAuthService._internal();
 
   final fa.FirebaseAuth _auth = fa.FirebaseAuth.instance;
+  SupabaseClient? _supabaseClient;
   GoogleSignIn? _googleSignIn;
 
   fa.FirebaseAuth get auth => _auth;
+  SupabaseClient get _client {
+    final client = _supabaseClient;
+    if (client == null) {
+      throw StateError(
+        'FirebaseAuthService requires a configured SupabaseClient before use.',
+      );
+    }
+    return client;
+  }
 
   Future<void> _ensureInitialized() async {
     if (!kIsWeb && _googleSignIn == null) {
@@ -64,6 +79,8 @@ class FirebaseAuthService {
         return false;
       }
 
+      final googlePhotoUrl = googleUser?.photoUrl;
+
       final googleAuth = googleUser.authentication;
       final idToken = googleAuth.idToken;
       if (idToken == null) {
@@ -82,7 +99,7 @@ class FirebaseAuthService {
       }
 
       await _prepareSupabaseAfterFirebaseSignIn(idToken: idToken);
-      await _createUserProfileIfNeeded();
+      await _createUserProfileIfNeeded(googlePhotoUrl: googlePhotoUrl);
       await _ensureProvisionedAccess();
       log.i('Firebase Auth: signInWithGoogle finished successfully');
       return true;
@@ -162,10 +179,23 @@ class FirebaseAuthService {
 
   Future<void> _prepareSupabaseAfterFirebaseSignIn({
     String? idToken,
-    bool forceRefreshToken = true,
   }) async {
     await _syncSupabaseSessionWithFirebase(idToken: idToken);
     await AppIdentityService.instance.refresh();
+  }
+
+  Future<void> syncSupabaseSessionIfNeeded() async {
+    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
+      return;
+    }
+
+    final firebaseUser = _auth.currentUser;
+    if (firebaseUser == null) {
+      await AppIdentityService.instance.refresh();
+      return;
+    }
+
+    await _prepareSupabaseAfterFirebaseSignIn();
   }
 
   Future<void> _syncSupabaseSessionWithFirebase({String? idToken}) async {
@@ -177,12 +207,12 @@ class FirebaseAuthService {
       }
 
       log.i('Syncing identity with Supabase via Third-Party Auth...');
-      
-      await Supabase.instance.client.auth.signInWithIdToken(
+
+      await _client.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: tokenToUse,
       );
-      
+
       log.i('Identity synced successfully in Supabase (Auth Session active)');
     } catch (e, stack) {
       log.e(
@@ -193,9 +223,9 @@ class FirebaseAuthService {
     }
   }
 
-  Future<void> _createUserProfileIfNeeded() async {
+  Future<void> _createUserProfileIfNeeded({String? googlePhotoUrl}) async {
     try {
-      final supabaseClient = Supabase.instance.client;
+      final supabaseClient = _client;
       final appUserId = await _resolveCurrentAppUserId();
       if (appUserId == null) {
         log.e('No app user id available after login');
@@ -222,11 +252,18 @@ class FirebaseAuthService {
         'household_type': 'couple',
       });
 
-      await supabaseClient.from('household_members').insert({
+      final updates = <String, dynamic>{
         'household_id': householdId,
         'user_id': appUserId,
         'role': 'owner',
-      });
+      };
+
+      if (googlePhotoUrl != null && googlePhotoUrl.isNotEmpty) {
+        updates['avatar_url'] = googlePhotoUrl;
+        log.i('Using Google profile photo as avatar: $googlePhotoUrl');
+      }
+
+      await supabaseClient.from('household_members').insert(updates);
       log.i('Household created successfully');
     } catch (e, stack) {
       log.e('Error in _createUserProfileIfNeeded: $e',
@@ -247,7 +284,7 @@ class FirebaseAuthService {
       }
 
       if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-        await Supabase.instance.client.auth.signOut();
+        await _client.auth.signOut();
       }
       await AppIdentityService.instance.refresh();
 
@@ -262,7 +299,7 @@ class FirebaseAuthService {
 
   Future<void> ensureHouseholdExists() async {
     try {
-      final supabaseClient = Supabase.instance.client;
+      final supabaseClient = _client;
       final appUserId = await _resolveCurrentAppUserId();
       if (appUserId == null) {
         log.w('ensureHouseholdExists: no app user id available yet');
@@ -286,7 +323,7 @@ class FirebaseAuthService {
 
   fa.User? get currentUser => _auth.currentUser;
 
-  Stream<fa.User?> get authStateChanges => _auth.idTokenChanges();
+  Stream<fa.User?> get authStateChanges => _auth.authStateChanges();
 
   Future<bool> isAuthenticated() async {
     return _auth.currentUser != null;
@@ -314,7 +351,7 @@ class FirebaseAuthService {
       return appUserId;
     }
 
-    final supabaseUser = Supabase.instance.client.auth.currentUser;
+    final supabaseUser = _client.auth.currentUser;
     return supabaseUser?.id;
   }
 }

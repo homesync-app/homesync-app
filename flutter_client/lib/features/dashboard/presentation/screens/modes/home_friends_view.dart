@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -380,8 +381,12 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
               ),
             ),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(2),
+              onPressed: () {
+                final index = indexForMainTab(caps, MainTab.expenses);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
               child: const Text('Cuentas'),
             ),
           ],
@@ -420,8 +425,12 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
               ),
             ),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+              onPressed: () {
+                final index = indexForMainTab(caps, MainTab.tasks);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
               child: const Text('Ver todas'),
             ),
           ],
@@ -478,6 +487,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
   Widget _buildShoppingSection(AppThemeColors theme) {
     final shoppingAsync = ref.watch(shoppingItemsProvider);
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,8 +504,12 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
               ),
             ),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(5),
+              onPressed: () {
+                final index = indexForMainTab(caps, MainTab.shopping);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
               child: const Text('Ver lista'),
             ),
           ],
@@ -544,8 +558,12 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                         : null,
                     trailing: Icon(Icons.chevron_right_rounded,
                         color: theme.textMuted, size: 20),
-                    onTap: () =>
-                        ref.read(bottomNavIndexProvider.notifier).setIndex(5),
+                    onTap: () {
+                      final index = indexForMainTab(caps, MainTab.shopping);
+                      if (index >= 0) {
+                        ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                      }
+                    },
                   );
                 }).toList(),
               ),

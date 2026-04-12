@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 class PremiumPaywallScreen extends ConsumerWidget {
@@ -13,7 +12,7 @@ class PremiumPaywallScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsync = ref.watch(premiumProductsProvider);
-    final isPremium = ref.watch(premiumProvider);
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -105,19 +104,19 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   const SizedBox(height: 40),
 
                   // ── Premium Benefits ──────────────────────────────────────
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.auto_graph_rounded,
                     title: 'Estadísticas Avanzadas',
                     desc: 'Analiza tus gastos y tareas por categoría con gráficos detallados.',
                   ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.2),
 
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.home_work_rounded,
                     title: 'Hogares Ilimitados',
                     desc: 'Crea múltiples hogares para tu pareja, familia, amigos o proyectos.',
                   ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.2),
 
-                  _BenefitCard(
+                  const _BenefitCard(
                     icon: Icons.palette_rounded,
                     title: 'Personalización Total',
                     desc: 'Acceso a temas premium, colores únicos y widgets personalizados.',
@@ -139,7 +138,9 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   
                   // Footer links
                   TextButton(
-                    onPressed: () => ref.read(premiumServiceProvider).restorePurchases(),
+                    onPressed: () => ref
+                        .read(restorePremiumPurchasesUseCaseProvider)
+                        .call(),
                     child: const Text(
                       'Restaurar compras',
                       style: TextStyle(color: Colors.white54, fontSize: 13),
@@ -298,7 +299,7 @@ class _ProductCard extends ConsumerWidget {
               const Text('Ahorra 20%', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
-        onTap: () => ref.read(premiumServiceProvider).buyProduct(product),
+        onTap: () => ref.read(buyPremiumProductUseCaseProvider).call(product),
       ),
     );
   }

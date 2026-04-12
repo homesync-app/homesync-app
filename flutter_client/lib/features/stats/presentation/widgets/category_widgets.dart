@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 class CategoryBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> taskStats;
@@ -12,7 +13,9 @@ class CategoryBarChart extends StatelessWidget {
     final theme = context.theme;
 
     final totalValue = taskStats.fold<double>(
-        0, (sum, item) => sum + ((item['completed_count'] as num?)?.toDouble() ?? 0));
+        0,
+        (sum, item) =>
+            sum + ((item['completed_count'] as num?)?.toDouble() ?? 0));
 
     return Container(
       padding: const EdgeInsets.all(28),
@@ -38,7 +41,8 @@ class CategoryBarChart extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
@@ -62,9 +66,10 @@ class CategoryBarChart extends StatelessWidget {
               child: Row(
                 children: taskStats.map((stat) {
                   final category = stat['category'] as String? ?? 'general';
-                  final count = (stat['completed_count'] as num?)?.toDouble() ?? 0;
+                  final count =
+                      (stat['completed_count'] as num?)?.toDouble() ?? 0;
                   final weight = totalValue > 0 ? count / totalValue : 0.0;
-                  final color = AppColors.getCategoryColor(category);
+                  final color = CategoryMapping.getCategoryColor(category);
 
                   if (weight < 0.01) return const SizedBox.shrink();
 
@@ -83,7 +88,7 @@ class CategoryBarChart extends StatelessWidget {
                       child: Center(
                         child: weight > 0.08
                             ? Text(
-                                AppColors.categoryIcons[category] ?? '📋',
+                                CategoryMapping.categoryIcons[category] ?? '📋',
                                 style: const TextStyle(fontSize: 20),
                               )
                             : const SizedBox.shrink(),
@@ -100,8 +105,8 @@ class CategoryBarChart extends StatelessWidget {
             runSpacing: 12,
             children: taskStats.take(5).map((stat) {
               final category = stat['category'] as String? ?? 'general';
-              final color = AppColors.getCategoryColor(category);
-              final name = AppColors.categoryNames[category] ?? category;
+              final color = CategoryMapping.getCategoryColor(category);
+              final name = CategoryMapping.categoryNames[category] ?? category;
 
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -142,9 +147,9 @@ class CategoryDetailCard extends StatelessWidget {
     final category = stat['category'] as String? ?? 'general';
     final count = (stat['completed_count'] as num?)?.toInt() ?? 0;
     final xp = (stat['total_xp'] as num?)?.toInt() ?? 0;
-    final color = AppColors.getCategoryColor(category);
-    final icon = AppColors.categoryIcons[category] ?? '📋';
-    final name = AppColors.categoryNames[category] ?? category;
+    final color = CategoryMapping.getCategoryColor(category);
+    final icon = CategoryMapping.categoryIcons[category] ?? '📋';
+    final name = CategoryMapping.categoryNames[category] ?? category;
     final theme = context.theme;
 
     return Container(
@@ -163,7 +168,10 @@ class CategoryDetailCard extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color.withValues(alpha: 0.12), color.withValues(alpha: 0.04)],
+                colors: [
+                  color.withValues(alpha: 0.12),
+                  color.withValues(alpha: 0.04)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -190,7 +198,8 @@ class CategoryDetailCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.check_circle_rounded, size: 14, color: color.withValues(alpha: 0.5)),
+                    Icon(Icons.check_circle_rounded,
+                        size: 14, color: color.withValues(alpha: 0.5)),
                     const SizedBox(width: 4),
                     Text(
                       '$count completadas',

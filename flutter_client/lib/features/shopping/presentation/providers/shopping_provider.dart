@@ -21,7 +21,8 @@ part 'shopping_provider.g.dart';
 
 @riverpod
 ShoppingRepository shoppingRepository(ShoppingRepositoryRef ref) {
-  return SupabaseShoppingRepository(ref: ref);
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseShoppingRepository(client: client, ref: ref);
 }
 
 @riverpod
@@ -72,7 +73,7 @@ class ShoppingItems extends _$ShoppingItems {
     final result = await getItems.execute(householdId);
     
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (items) => items,
     );
   }
@@ -119,7 +120,7 @@ class ShoppingItems extends _$ShoppingItems {
     
     final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (items) => items,
     );
   }

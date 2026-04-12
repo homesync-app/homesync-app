@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/admin_providers.dart';
+import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
@@ -29,6 +30,30 @@ class QaSessionService {
 
     log.i(
       'QA real session started scenario=${scenario.id} email=${qaUser.email} household=${scenario.householdId}',
+    );
+  }
+
+  Future<void> signInAsAdminPreviewSession({
+    required String email,
+    required String password,
+    String? scenarioId,
+    String? viewerUserId,
+  }) async {
+    final adminNotifier = _ref.read(adminProvider.notifier);
+
+    await _auth.signOut();
+    await _auth.signIn(email: email, password: password);
+    await AppIdentityService.instance.refresh();
+
+    adminNotifier.activateAutoQaSession(
+      scenarioId: scenarioId,
+      viewerUserId: viewerUserId,
+      useAdminPreviewBaseSession: true,
+      adminPreviewBaseEmail: email,
+    );
+
+    log.i(
+      'QA admin preview session started email=$email scenario=$scenarioId viewer=$viewerUserId',
     );
   }
 

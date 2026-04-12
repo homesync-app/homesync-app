@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
@@ -89,7 +91,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
-          final isPremium = ref.watch(premiumProvider);
+          final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
           label = 'Nueva Suscripción';
           onPressed = isPremium
               ? () => _showTemplateForm(context)
@@ -167,6 +169,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ref.invalidate(personalFinanceSummaryProvider);
         ref.invalidate(expenseBalancesProvider);
         ref.invalidate(combinedFeedControllerProvider);
+        ref.invalidate(monthlyPendingPlannedExpensesProvider);
         ref.invalidate(monthlyProjectionProvider);
         ref.invalidate(expenseControllerProvider);
       },
@@ -355,6 +358,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .toList();
   }
 
+  List<FeedItemModel> _effectiveMonthlyPendingForBreakdowns() {
+    final monthlyPending =
+        ref.read(monthlyPendingPlannedExpensesProvider).valueOrNull;
+    if (monthlyPending != null) return monthlyPending;
+
+    final now = DateTime.now();
+    return _effectiveFeedForBreakdowns()
+        .where((item) =>
+            item.isPlanned &&
+            item.status == 'pending' &&
+            item.date.month == now.month &&
+            item.date.year == now.year)
+        .toList();
+  }
+
   ExpenseModel _expenseFromFeedItem(FeedItemModel item) {
     final expenses = ref.read(expenseControllerProvider).valueOrNull;
     final matches = expenses?.where((e) => e.id == item.id).toList() ??
@@ -376,6 +394,23 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       isShared: item.splitType != SplitType.personal.name,
       type: item.transactionType,
     );
+  }
+
+  int _householdMemberCount() {
+    final members = ref.read(householdMembersProvider).valueOrNull;
+    if (members != null && members.isNotEmpty) return members.length;
+    return 2;
+  }
+
+  double _plannedShareAmount(FeedItemModel item, String? userId) {
+    if (userId == null) return 0.0;
+
+    final splitType = (item.splitType ?? 'equal').toLowerCase();
+    if (splitType == SplitType.personal.name || splitType == 'gift') {
+      return item.payerId == userId ? item.amount : 0.0;
+    }
+
+    return item.amount / _householdMemberCount();
   }
 
   Widget _buildProjectionStat(String label, num amount, Color color,
@@ -414,7 +449,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   // --- Recurrentes Tab ---
 
   Widget _buildRecurrentesTab() {
-    final isPremium = ref.watch(premiumProvider);
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     if (!isPremium) return _buildPremiumLockedRecurrentes();
 
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
@@ -483,7 +518,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       (context, index) {
                         final template = templates[index];
                         final color =
-                            AppColors.getCategoryColor(template.category);
+                            CategoryMapping.getSmartExpenseDisplayColor(
+                          template.category,
+                          title: template.title,
+                          description: null,
+                        );
+                        final icon = CategoryMapping.getSmartExpenseDisplayIcon(
+                          template.category,
+                          title: template.title,
+                          description: null,
+                        );
+                        final theme = context.theme;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -494,7 +539,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: theme.surface,
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
                                     color: AppColors.divider
@@ -516,8 +561,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Icon(
-                                      AppColors.getCategoryMaterialIcon(
-                                          template.category),
+                                      icon,
                                       size: 24,
                                       color: color,
                                     ),
@@ -530,7 +574,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       children: [
                                         Text(
                                           template.title,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 16,
                                               color: AppColors.textPrimary),
@@ -538,7 +582,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         const SizedBox(height: 2),
                                         Text(
                                           'Día ${template.dayOfMonth} de cada mes',
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                               color: AppColors.textSecondary,
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600),
@@ -681,7 +725,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               children: [
                 Expanded(
                   child: _buildProjectionStat(
-                    'Gastos pendientes',
+                    'Tu parte pendiente',
                     projectedPending,
                     AppColors.textSecondary,
                     onTap: () => _showPendingBreakdownSheet(projectedPending),
@@ -713,18 +757,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   void _showProjectionBreakdownSheet(
       num balance, num pendingTotal, num estimated) {
-    final feedAsync = _effectiveFeedForBreakdowns();
+    final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
-    final now = DateTime.now();
     final theme = context.theme;
 
-    final pendingItems = feedAsync
-        .where((item) =>
-            item.isPlanned &&
-            item.status == 'pending' &&
-            item.payerId == userId &&
-            item.date.month == now.month &&
-            item.date.year == now.year)
+    final pendingItems = pendingFeed
+        .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
 
     showModalBottomSheet(
@@ -780,7 +818,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       'Balance actual', balance, AppColors.textPrimary),
                   const SizedBox(height: 16),
                   _buildBreakdownRow(
-                      'Gastos pendientes', -pendingTotal, AppColors.primary),
+                      'Tu parte pendiente', -pendingTotal, AppColors.primary),
                   const Divider(
                       height: 40, thickness: 1, color: AppColors.divider),
                   _buildBreakdownRow(
@@ -839,7 +877,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 ),
                               ),
                               Text(
-                                '\$ ${_formatCurrency(item.amount)}',
+                                '\$ ${_formatCurrency(_plannedShareAmount(item, userId))}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14,
@@ -1008,17 +1046,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showPendingBreakdownSheet(num total) {
-    final feedAsync = _effectiveFeedForBreakdowns();
+    final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
-    final now = DateTime.now();
 
-    final items = feedAsync
-        .where((item) =>
-            item.isPlanned &&
-            item.status == 'pending' &&
-            item.payerId == userId &&
-            item.date.month == now.month &&
-            item.date.year == now.year)
+    final items = pendingFeed
+        .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
 
     showModalBottomSheet(
@@ -1026,18 +1058,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _buildBreakdownBaseContainer(
-        title: 'Gastos Pendientes',
-        subtitle: 'Lo que tenés programado pagar antes de fin de mes.',
+        title: 'Tu Parte Pendiente',
+        subtitle:
+            'Lo que te corresponde de los gastos planificados de este mes.',
         total: total,
-        totalLabel: 'Total pendiente',
+        totalLabel: 'Tu total pendiente',
         accentColor: AppColors.textSecondary,
         content: Column(
           children: items
               .map((item) => _buildMovementDetailRow(
                     title: item.title,
-                    amount: item.amount,
+                    amount: _plannedShareAmount(item, userId),
                     date: item.date,
-                    icon: AppColors.getSmartExpenseDisplayIcon(
+                    icon: CategoryMapping.getSmartExpenseDisplayIcon(
                       item.category,
                       title: item.title,
                       description: null,
@@ -1077,7 +1110,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         title: e.title,
                         amount: e.amount,
                         date: e.paidAt,
-                        icon: AppColors.getSmartExpenseDisplayIcon(
+                        icon: CategoryMapping.getSmartExpenseDisplayIcon(
                           e.category,
                           title: e.title,
                           description: e.description,
@@ -1304,14 +1337,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildPlannedExpenseCard(FeedItemModel item) {
     final theme = context.theme;
-    final categoryColor = AppColors.getSmartExpenseDisplayColor(
+    final categoryColor = CategoryMapping.getSmartExpenseDisplayColor(
       item.category,
       title: item.title,
       description: null,
       transactionType: item.transactionType,
       splitType: item.splitType,
     );
-    final categoryIcon = AppColors.getSmartExpenseDisplayIcon(
+    final categoryIcon = CategoryMapping.getSmartExpenseDisplayIcon(
       item.category,
       title: item.title,
       description: null,
@@ -1484,6 +1517,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   bool _shouldShowFeedItem(FeedItemModel item) {
     if (!item.isPlanned) return true;
+    if (item.status != 'pending') return false;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -1502,14 +1536,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final isIncome = expense.isIncome;
     final isShared = expense.isShared || expense.splitType == 'gift';
     final theme = context.theme;
-    final color = AppColors.getSmartExpenseDisplayColor(
+    final color = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
       title: expense.title,
       description: expense.description,
       transactionType: expense.type,
       splitType: expense.splitType,
     );
-    final categoryIcon = AppColors.getSmartExpenseDisplayIcon(
+    final categoryIcon = CategoryMapping.getSmartExpenseDisplayIcon(
       expense.category,
       title: expense.title,
       description: expense.description,
@@ -1753,7 +1787,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           return _buildEmptyState(
             'No hay metas activas aún',
             icon: '🎯',
-            subtitle: 'Empezá a guardar para algo que de verdad les entusiasme.',
+            subtitle:
+                'Empezá a guardar para algo que de verdad les entusiasme.',
           );
         }
 
@@ -1772,12 +1807,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildGoalCard(SavingsGoalModel goal) {
+    final theme = context.theme;
     return AnimatedPress(
       onTap: () => _showContributionDialog(goal),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.surface,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
@@ -1918,7 +1954,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              subtitle ?? 'Empez? hoy mismo a organizar tus finanzas del hogar.',
+              subtitle ??
+                  'Empez? hoy mismo a organizar tus finanzas del hogar.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -1964,9 +2001,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             child: FractionallySizedBox(
               heightFactor: 0.9,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                decoration: BoxDecoration(
+                  color: context.theme.background,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(36)),
                 ),
                 child: SafeArea(
                   top: false,
@@ -2000,7 +2038,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     width: 84,
                                     height: 84,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(28),
                                     ),
                                     child: const Icon(
@@ -2010,10 +2049,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     ),
                                   ),
                                   const SizedBox(width: 18),
-                                  Expanded(
+                                  const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: const [
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Text(
                                           'Nueva Meta',
                                           style: TextStyle(
@@ -2074,7 +2114,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     color: AppColors.primary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -2082,13 +2122,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -2119,7 +2161,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                     color: AppColors.textSecondary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: context.theme.surface,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -2127,13 +2169,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -2188,7 +2232,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         context,
                                         'Elegí un ícono',
                                         emojis,
-                                        (e) => setModalState(() => selectedEmoji = e),
+                                        (e) => setModalState(
+                                            () => selectedEmoji = e),
                                       );
                                     },
                                   ),
@@ -2216,7 +2261,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       _showColorPicker(
                                         context,
                                         colors,
-                                        (c) => setModalState(() => selectedColor = c),
+                                        (c) => setModalState(
+                                            () => selectedColor = c),
                                       );
                                     },
                                   ),
@@ -2260,12 +2306,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   onPressed: () {
                                     final title = titleController.text.trim();
                                     final amount = double.tryParse(
-                                          amountController.text.replaceAll(',', '.'),
+                                          amountController.text
+                                              .replaceAll(',', '.'),
                                         ) ??
                                         0;
 
                                     if (title.isNotEmpty && amount > 0) {
-                                      ref.read(savingsGoalsProvider.notifier).addGoal(
+                                      ref
+                                          .read(savingsGoalsProvider.notifier)
+                                          .addGoal(
                                             title,
                                             amount,
                                             '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
@@ -2305,7 +2354,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       ),
     );
   }
-
 
   Widget _buildGoalOption(
       {required String label,
@@ -2439,6 +2487,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final theme = context.theme;
         final amountController = TextEditingController();
         return Container(
           padding: EdgeInsets.only(
@@ -2447,9 +2496,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             left: 24,
             right: 24,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

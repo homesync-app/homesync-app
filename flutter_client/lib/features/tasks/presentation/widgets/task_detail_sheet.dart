@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -112,7 +114,12 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           if (mounted) Navigator.pop(context);
         },
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'TaskDetailSheet failed to undo task',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _isLoading = false);
         _showSnack('No se pudo deshacer', AppColors.error);
@@ -135,10 +142,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (statusLabel, statusColor, statusIcon) = _statusInfo;
-    final categoryColor = AppColors.getCategoryColor(_category);
-    final categoryIcon = AppColors.getCategoryMaterialIcon(_category);
+    final categoryColor = CategoryMapping.getCategoryColor(_category);
+    final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
     final categoryLabel =
-        AppColors.categoryNames[_category.toLowerCase()] ?? _category;
+        CategoryMapping.categoryNames[_category.toLowerCase()] ?? _category;
     final completedAt = widget.taskData['completed_at'];
     final dateStr = completedAt != null
         ? DateFormat("d MMM '·' HH:mm", 'es')

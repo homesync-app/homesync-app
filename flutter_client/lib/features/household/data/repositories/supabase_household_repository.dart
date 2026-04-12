@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
+import 'package:homesync_client/core/offline/offline_storage_service.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -188,10 +189,36 @@ class SupabaseHouseholdRepository
         'Household members raw fetched household=$resolvedHouseholdId viewer=$resolvedViewerId count=${members.length} names=$names adminQa=$_isAdminTestingActive',
       );
 
+      // Save to persistence
+      if (resolvedHouseholdId != null) {
+        try {
+          await OfflineStorageService().set(
+            'household_members_$resolvedHouseholdId',
+            {'members': members},
+          );
+        } catch (error, stackTrace) {
+          log.w(
+            'SupabaseHouseholdRepository.getHouseholdMembersRaw: cache persistence skipped: $error',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+
       return members;
     },
         context: 'SupabaseHouseholdRepository.getHouseholdMembersRaw',
-        isOnline: _isOnline);
+        isOnline: _isOnline,
+        onOffline: () async {
+          final householdMember = await _requireCurrentHouseholdMembership();
+          final resolvedHouseholdId = householdMember['household_id'] as String?;
+          final cached = await OfflineStorageService().get('household_members_$resolvedHouseholdId');
+          if (cached != null && cached['members'] != null) {
+            log.i('SupabaseHouseholdRepository.getHouseholdMembersRaw: Recovered from cache');
+            return List<Map<String, dynamic>>.from((cached['members'] as List).map((e) => Map<String, dynamic>.from(e as Map)));
+          }
+          throw const NetworkFailure('No data in cache');
+        });
   }
 
   @override

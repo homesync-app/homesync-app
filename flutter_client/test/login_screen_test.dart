@@ -1,47 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-
-import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
-import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:homesync_client/core/errors/failures.dart';
-
 import 'dart:io';
 
-// Fakes simplificados para simular el comportamiento de los servicios
-class FakeAuthService implements SupabaseAuthService {
-  bool didCallSignIn = false;
-  bool shouldFail = false;
-  String? lastEmailed;
-
-  @override
-  Future<AuthResponse> signIn(
-      {required String email, required String password}) async {
-    lastEmailed = email;
-    didCallSignIn = true;
-    if (shouldFail) {
-      throw const AuthException('Invalid login credentials');
-    }
-    return AuthResponse(
-      session: null,
-      user: const User(
-        id: '123',
-        appMetadata: {},
-        userMetadata: {},
-        aud: 'authenticated',
-        createdAt: '',
-      ),
-    );
-  }
-
-  // Ignoramos el resto de los métodos exigidos por defecto para hacer esto un Mock funcional
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
+import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
+import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FakeAuthRepository implements AuthRepository {
   bool didCallSignIn = false;
@@ -49,8 +16,17 @@ class FakeAuthRepository implements AuthRepository {
   String? lastEmailed;
 
   @override
-  Future<Either<Failure, void>> signInWithEmail(
-      {required String email, required String password}) async {
+  User? get currentUser => null;
+
+  @override
+  Stream<AuthState> get authStateChanges =>
+      Stream.value(const AuthState(AuthChangeEvent.initialSession, null));
+
+  @override
+  Future<Either<Failure, void>> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
@@ -58,12 +34,6 @@ class FakeAuthRepository implements AuthRepository {
     }
     return const Right(null);
   }
-
-  @override
-  User? get currentUser => null;
-
-  @override
-  Stream<AuthState> get authStateChanges => Stream.value(const AuthState(AuthChangeEvent.initialSession, null));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -74,7 +44,6 @@ class FakePrefs {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-// Para evitar errores de carga de imágenes de red en los tests
 class MockHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -84,10 +53,33 @@ class MockHttpOverrides extends HttpOverrides {
   }
 }
 
+Future<void> _pumpLoginScreen(
+  WidgetTester tester, {
+  required FakeAuthRepository fakeRepo,
+  required FakePrefs fakePrefs,
+  bool withScaffold = false,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(fakeRepo),
+      ],
+      child: MaterialApp(
+        theme: ThemeData(useMaterial3: true),
+        home: withScaffold
+            ? Scaffold(body: LoginScreen(prefs: fakePrefs))
+            : LoginScreen(prefs: fakePrefs),
+      ),
+    ),
+  );
+
+  await tester.pumpAndSettle();
+}
+
 void main() {
   HttpOverrides.global = MockHttpOverrides();
 
-  testWidgets('Test de Interfaz Visual - LoginScreen Renderiza Correctamente',
+  testWidgets('LoginScreen renders the current login experience',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -99,28 +91,20 @@ void main() {
     final fakeRepo = FakeAuthRepository();
     final fakePrefs = FakePrefs();
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fakeRepo),
-      ],
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        home: LoginScreen(prefs: fakePrefs),
-      ),
-    ));
+    await _pumpLoginScreen(
+      tester,
+      fakeRepo: fakeRepo,
+      fakePrefs: fakePrefs,
+    );
 
-    await tester.pumpAndSettle();
-
-    // Verificamos que cargan los textos esperados
-    expect(find.text('Inicio de Sesión'), findsAtLeastNWidgets(1));
-    expect(find.text('HomeSync'), findsAtLeastNWidgets(1));
-    expect(find.text('¿Eres nuevo?'), findsOneWidget);
-
-    // Verificamos inputs
-    expect(find.byType(TextFormField), findsNWidgets(2)); // Email y Password
+    expect(find.text('Bienvenido'), findsOneWidget);
+    expect(find.textContaining('HomeSync'), findsOneWidget);
+    expect(find.textContaining('Ingres'), findsWidgets);
+    expect(find.text('¿Sos nuevo en HomeSync?'), findsOneWidget);
+    expect(find.byType(TextFormField), findsNWidgets(2));
   });
 
-  testWidgets('Test de Validaciones - LoginScreen requiere inputs válidos',
+  testWidgets('LoginScreen validates required and malformed inputs',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -132,39 +116,30 @@ void main() {
     final fakeRepo = FakeAuthRepository();
     final fakePrefs = FakePrefs();
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fakeRepo),
-      ],
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        home: LoginScreen(prefs: fakePrefs),
-      ),
-    ));
+    await _pumpLoginScreen(
+      tester,
+      fakeRepo: fakeRepo,
+      fakePrefs: fakePrefs,
+    );
 
+    await tester.ensureVisible(find.text('Ingresar'));
+    await tester.tap(find.text('Ingresar'));
     await tester.pumpAndSettle();
 
-    // Tocamos el botón de iniciar sesión sin datos
-    await tester.ensureVisible(find.text('Entrar al Hogar'));
-    await tester.tap(find.text('Entrar al Hogar'));
-    await tester.pumpAndSettle();
+    expect(find.text('Requerido'), findsOneWidget);
+    expect(find.text('Inválida'), findsOneWidget);
 
-    // Deben aparecer los mensajes de error del form
-    expect(find.text('Ingresa tu correo'), findsOneWidget);
-    expect(find.text('Mínimo 6 caracteres'), findsOneWidget);
-
-    // Intentamos un correo no válido
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Correo electrónico'),
-        'correoInvalido');
-    await tester.tap(find.text('Entrar al Hogar'));
+      find.widgetWithText(TextFormField, 'Correo electrónico'),
+      'correoInvalido',
+    );
+    await tester.tap(find.text('Ingresar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Correo inválido'), findsOneWidget);
+    expect(find.text('Inválido'), findsOneWidget);
   });
 
-  testWidgets(
-      'Test de Interacción Front-to-Back - LoginScreen llama a AuthService',
+  testWidgets('LoginScreen submits credentials and surfaces auth failures',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(600, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -173,47 +148,36 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    final fakeRepo = FakeAuthRepository();
+    final fakeRepo = FakeAuthRepository()..shouldFail = true;
     final fakePrefs = FakePrefs();
 
-    fakeRepo.shouldFail =
-        true; // Simularemos una falla de login del Server para ver el SnackBar
+    await _pumpLoginScreen(
+      tester,
+      fakeRepo: fakeRepo,
+      fakePrefs: fakePrefs,
+      withScaffold: true,
+    );
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(fakeRepo),
-      ],
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        home: Scaffold(
-          body: LoginScreen(prefs: fakePrefs),
-        ),
-      ),
-    ));
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Correo electrónico'),
+      'test@test.com',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Contraseña'),
+      '123456',
+    );
 
+    await tester.ensureVisible(find.text('Ingresar'));
+    await tester.tap(find.text('Ingresar'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
 
-    // Ingresamos datos correctos estructuralmente pero fallarán desde el "backend simulado"
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Correo electrónico'),
-        'test@test.com');
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Contraseña'), '123456');
-
-    // Nos aseguramos que el botón sea visible y lo tocamos
-    await tester.ensureVisible(find.text('Entrar al Hogar'));
-    await tester.tap(find.text('Entrar al Hogar'));
-    await tester.pump(); // Inicia proceso
-    await tester.pump(
-        const Duration(milliseconds: 500)); // Espera un poco de la animación
-    await tester.pumpAndSettle(); // Termina animaciones
-
-    // Verificamos que sí se interceptó el botón
     expect(fakeRepo.didCallSignIn, isTrue);
     expect(fakeRepo.lastEmailed, 'test@test.com');
-
-    // Verificamos que la falla generó el SnackBar rojo en pantalla al usuario
-    expect(find.text('Credenciales inválidas o cuenta no existente'),
-        findsOneWidget);
+    expect(
+      find.text('Credenciales inválidas o cuenta no existente'),
+      findsOneWidget,
+    );
   });
 }

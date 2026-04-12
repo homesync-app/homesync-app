@@ -3,8 +3,11 @@ import 'package:homesync_client/core/errors/failures.dart';
 import '../models/savings_model.dart';
 
 abstract class SavingsRepository {
-  Future<Either<Failure, List<SavingsGoalModel>>> getGoals(
-      {required String householdId});
+  Future<Either<Failure, List<SavingsGoalModel>>> getGoals({
+    required String householdId,
+    int? limit,
+    int? offset,
+  });
 
   Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions(
       {required String goalId});

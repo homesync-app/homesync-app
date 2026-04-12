@@ -161,6 +161,14 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
+  Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
+    String householdId, {
+    required DateTime month,
+  }) async {
+    return const Right([]);
+  }
+
+  @override
   Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
     return const Right(unit);
   }
@@ -216,7 +224,7 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType, {int? recurrenceInterval, List<int>? recurrenceWeekdays, List<int>? recurrenceMonthDays}) async =>
+  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType, {int? recurrenceInterval, List<int>? recurrenceWeekdays, List<int>? recurrenceMonthDays, String? assignedTo}) async =>
       const Right(null);
 
   @override

@@ -68,6 +68,7 @@ class MockTaskRepository implements TaskRepository {
           int? recurrenceInterval,
           List<int>? recurrenceWeekdays,
           List<int>? recurrenceMonthDays,
+          String? assignedTo,
   }) async =>
       throw UnimplementedError();
   @override
@@ -176,6 +177,14 @@ class MockExpenseRepository implements ExpenseRepository {
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
     return const Right(unit);
+  }
+
+  @override
+  Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
+    String householdId, {
+    required DateTime month,
+  }) async {
+    return const Right([]);
   }
 
   @override

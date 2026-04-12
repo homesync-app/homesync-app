@@ -1,7 +1,7 @@
 import 'base_rpc_service.dart';
 
 class BalanceRpcService extends BaseRpcService {
-  BalanceRpcService({super.clientOverride});
+  BalanceRpcService({required super.clientOverride});
 
   Future<Map<String, dynamic>> getUserBalance({
     required String householdId,

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/template_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -30,14 +33,18 @@ class AddTaskOptionsSheet extends ConsumerStatefulWidget {
 }
 
 class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
-  final TemplateService _templateService = TemplateService();
+  static const int _pageSize = 24;
+
   List<TaskTemplate> _templates = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   final Set<String> _addingIds = {};
   final Set<String> _addedIds = {};
   String? _selectedCategory;
 
   List<CategoryModel> _categories = [];
+  TemplateService get _templateService => ref.read(templateServiceProvider);
 
   @override
   void initState() {
@@ -47,15 +54,48 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
   Future<void> _fetchTemplates() async {
     try {
-      final templates = await _templateService.getTemplates();
+      final templates = await _templateService.getTemplates(limit: _pageSize);
       if (mounted) {
         setState(() {
           _templates = templates;
           _isLoading = false;
+          _hasMore = templates.length == _pageSize;
         });
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'AddTaskOptionsSheet failed to fetch templates',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreTemplates() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() => _isLoadingMore = true);
+    try {
+      final nextPage = await _templateService.getTemplates(
+        limit: _pageSize,
+        offset: _templates.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _templates = [..._templates, ...nextPage];
+        _hasMore = nextPage.length == _pageSize;
+        _isLoadingMore = false;
+      });
+    } catch (error, stackTrace) {
+      log.w(
+        'AddTaskOptionsSheet failed to load more templates',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
     }
   }
 
@@ -140,9 +180,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       return !activeKeys.contains(key);
     }).toList();
 
-    final activeCatIds = availableTemplates.map((template) => template.categoryId).toSet();
-    final displayCategories =
-        dbCategories.where((category) => activeCatIds.contains(category.id)).toList();
+    final activeCatIds =
+        availableTemplates.map((template) => template.categoryId).toSet();
+    final displayCategories = dbCategories
+        .where((category) => activeCatIds.contains(category.id))
+        .toList();
 
     final filtered = _selectedCategory == null
         ? availableTemplates
@@ -197,11 +239,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Nueva tarea',
                         style: TextStyle(
                           fontSize: 24,
@@ -228,8 +270,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 children: [
                   _buildCategoryChip(null, 'Todas', null),
                   ...displayCategories.map(
-                    (category) =>
-                        _buildCategoryChip(category.id, category.name, category),
+                    (category) => _buildCategoryChip(
+                        category.id, category.name, category),
                   ),
                 ],
               ),
@@ -264,8 +306,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       final result = await showDialog<bool>(
                         context: context,
                         builder: (context) => CreateTaskDialog(
-                          members:
-                              widget.members.map((member) => member.toMap()).toList(),
+                          members: widget.members
+                              .map((member) => member.toMap())
+                              .toList(),
                         ),
                       );
                       if (result == true && context.mounted) {
@@ -275,7 +318,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     icon: const Icon(Icons.edit_rounded),
                     label: const Text('Personalizada'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: context.theme.surface,
                       foregroundColor: AppColors.primary,
                       minimumSize: const Size(0, 52),
                       shape: RoundedRectangleBorder(
@@ -329,9 +372,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           color: isSelected ? color.withValues(alpha: 0.12) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? color
-                : AppColors.divider.withValues(alpha: 0.6),
+            color:
+                isSelected ? color : AppColors.divider.withValues(alpha: 0.6),
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: [
@@ -348,7 +390,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             Icon(
               id == null
                   ? Icons.format_list_bulleted_rounded
-                  : AppColors.getCategoryMaterialIcon(id),
+                  : CategoryMapping.getCategoryMaterialIcon(id),
               size: 16,
               color: isSelected ? color : AppColors.textSecondary,
             ),
@@ -413,6 +455,20 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           if (_selectedCategory == null) _buildSectionHeader(catId),
           ...grouped[catId]!.map(_buildTemplateCard),
         ],
+        if (_isLoadingMore) ...[
+          const SizedBox(height: 16),
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ] else if (_hasMore && _selectedCategory == null) ...[
+          const SizedBox(height: 16),
+          Center(
+            child: OutlinedButton(
+              onPressed: _loadMoreTemplates,
+              child: const Text('Cargar mas'),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -422,7 +478,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       (item) => item.id == catId,
       orElse: () => CategoryModel(
         id: catId,
-        name: AppColors.categoryNames[catId] ?? catId,
+        name: CategoryMapping.categoryNames[catId] ?? catId,
         icon: 'box',
         color: '#94A3B8',
       ),
@@ -443,7 +499,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  AppColors.getCategoryMaterialIcon(category.id),
+                  CategoryMapping.getCategoryMaterialIcon(category.id),
                   size: 14,
                   color: color,
                 ),
@@ -509,7 +565,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            AppColors.getCategoryMaterialIcon(category.id),
+            CategoryMapping.getCategoryMaterialIcon(category.id),
             color: color,
             size: 22,
           ),

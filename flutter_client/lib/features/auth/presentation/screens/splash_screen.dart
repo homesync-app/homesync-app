@@ -110,11 +110,12 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               SafeArea(
-                child: Padding(
+                child: SingleChildScrollView(
+                  child: Padding(
                   padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
                   child: Column(
                     children: [
-                      const Spacer(flex: 2),
+                      const SizedBox(height: 24),
                       Transform.scale(
                         scale: _windowZoom.value,
                         child: Opacity(
@@ -129,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 36),
                       FadeTransition(
                         opacity: _copyOpacity,
-                        child: Column(
+                        child: const Column(
                           children: [
                             Text(
                               'Entrando al hogar',
@@ -140,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 letterSpacing: -0.6,
                               ),
                             ),
-                            const SizedBox(height: 10),
+                            SizedBox(height: 10),
                             Text(
                               'Todo se está acomodando para recibirte.',
                               textAlign: TextAlign.center,
@@ -154,13 +155,13 @@ class _SplashScreenState extends State<SplashScreen>
                           ],
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 32),
                       FadeTransition(
                         opacity: _copyOpacity,
-                        child: Column(
+                        child: const Column(
                           children: [
-                            _LoadingPulse(progress: _loadingController.value),
-                            const SizedBox(height: 14),
+                            _LoadingPulse(progress: 0),
+                            SizedBox(height: 14),
                             Text(
                               'Sincronizando hogar, tareas y finanzas',
                               textAlign: TextAlign.center,
@@ -175,6 +176,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               ),
@@ -321,9 +323,9 @@ class _WindowSplashArtwork extends StatelessWidget {
                           left: width * 0.16,
                           child: Row(
                             children: [
-                              _BookAccent(height: 42, color: const Color(0xFFC59C6A)),
+                              const _BookAccent(height: 42, color: Color(0xFFC59C6A)),
                               const SizedBox(width: 8),
-                              _BookAccent(height: 36, color: const Color(0xFFDBC8B0)),
+                              const _BookAccent(height: 36, color: Color(0xFFDBC8B0)),
                               const SizedBox(width: 8),
                               Container(
                                 width: 28,

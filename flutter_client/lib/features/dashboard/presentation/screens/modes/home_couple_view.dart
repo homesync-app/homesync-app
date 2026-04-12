@@ -6,14 +6,17 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:intl/intl.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -250,6 +253,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,8 +271,12 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
               ),
             ),
             TextButton(
-              onPressed: () =>
-                  ref.read(bottomNavIndexProvider.notifier).setIndex(1),
+              onPressed: () {
+                final index = indexForMainTab(caps, MainTab.tasks);
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
               child: Text(
                 'Ver Semana',
                 style: TextStyle(
@@ -501,6 +509,90 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     required double amount,
     required bool isOwedByMe,
   }) {
-    // Logic to settle debt...
+    final currentUserId = ref.read(currentUserIdProvider);
+    if (currentUserId == null) {
+      _showMessage('No pudimos identificar tu usuario.');
+      return;
+    }
+
+    final payerId = isOwedByMe ? currentUserId : partnerId;
+    final receiverId = isOwedByMe ? partnerId : currentUserId;
+    final formattedAmount =
+        NumberFormat.decimalPattern('es_AR').format(amount.round());
+
+    showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = dialogContext.theme;
+        return AlertDialog(
+          backgroundColor: theme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            isOwedByMe ? 'Equilibrar con $partnerName' : 'Registrar equilibrio',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          content: Text(
+            isOwedByMe
+                ? 'Se va a registrar un pago de \$ $formattedAmount para saldar el balance con $partnerName.'
+                : 'Se va a registrar que $partnerName te compenso \$ $formattedAmount para dejar el balance al dia.',
+            style: TextStyle(
+              color: theme.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    ).then((confirmed) async {
+      if (confirmed != true || !mounted) return;
+
+      try {
+        await ref.read(expenseControllerProvider.notifier).settleDebt(
+              fromUserId: payerId,
+              toUserId: receiverId,
+              amount: amount,
+            );
+
+        if (!mounted) return;
+        _showMessage(
+          isOwedByMe
+              ? 'Balance equilibrado con $partnerName.'
+              : 'Registramos el equilibrio con $partnerName.',
+        );
+      } catch (e) {
+        if (!mounted) return;
+        _showMessage('No se pudo equilibrar el balance: $e');
+      }
+    });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

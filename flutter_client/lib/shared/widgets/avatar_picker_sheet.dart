@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'user_avatar.dart';
@@ -28,12 +28,14 @@ class AvatarPickerSheet extends ConsumerWidget {
     String emoji,
   ) async {
     try {
+      final normalizedEmoji = UserAvatar.normalizeAvatarValue(emoji) ?? emoji;
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) throw Exception('No autenticado');
 
-      await Supabase.instance.client
+      final client = ref.read(supabaseClientProvider);
+      await client
           .from('users')
-          .update({'avatar_url': emoji}).eq('id', userId);
+          .update({'avatar_url': normalizedEmoji}).eq('id', userId);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersNotifierProvider);
@@ -63,8 +65,10 @@ class AvatarPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
-    final currentAvatar = profileAsync.whenOrNull(
-      data: (p) => p?['avatar_url'] as String?,
+    final currentAvatar = UserAvatar.normalizeAvatarValue(
+      profileAsync.whenOrNull(
+        data: (p) => p?['avatar_url'] as String?,
+      ),
     );
 
     return Container(
@@ -122,15 +126,19 @@ class AvatarPickerSheet extends ConsumerWidget {
                       runSpacing: 16,
                       alignment: WrapAlignment.center,
                       children: UserAvatar.defaultAvatars.map((animal) {
-                        final isSelected = currentAvatar == animal['emoji'];
+                        final normalizedEmoji = UserAvatar.normalizeAvatarValue(
+                              animal['emoji'] as String?,
+                            ) ??
+                            '';
+                        final isSelected = currentAvatar == normalizedEmoji;
                         return _AvatarOption(
-                          emoji: animal['emoji'],
+                          emoji: normalizedEmoji,
                           color: animal['color'],
                           isSelected: isSelected,
                           onTap: () => _updateAvatar(
                             context,
                             ref,
-                            animal['emoji'] as String,
+                            normalizedEmoji,
                           ),
                         );
                       }).toList(),
@@ -138,7 +146,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                     const SizedBox(height: 24),
                     Consumer(
                       builder: (context, ref, _) {
-                        final isPremium = ref.watch(premiumProvider);
+final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                         return OutlinedButton.icon(
                           onPressed: isPremium
                               ? () => _showCustomAvatarDialog(context, ref)

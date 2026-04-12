@@ -124,16 +124,12 @@ class SyncState {
   }
 }
 
-class SyncNotifier extends StateNotifier<SyncState> {
+class SyncNotifier extends Notifier<SyncState> {
   final SyncService _syncService = SyncService();
-  final Ref _ref;
 
-  SyncNotifier(this._ref) : super(const SyncState()) {
-    _init();
-  }
-
-  void _init() {
-    _ref.listen<bool>(
+  @override
+  SyncState build() {
+    ref.listen<bool>(
       isOnlineProvider,
       (previous, isOnline) {
         if (isOnline && !_syncService.isSyncing) {
@@ -141,6 +137,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
         }
       },
     );
+
+    return const SyncState();
   }
 
   Future<void> sync({
@@ -150,7 +148,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
     try {
       final processor =
-          processRequest ?? _ref.read(offlineActionProcessorProvider);
+          processRequest ?? ref.read(offlineActionProcessorProvider);
       final result = await _syncService.sync(processRequest: processor);
       state = state.copyWith(
         isSyncing: false,
@@ -172,8 +170,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
   }
 }
 
-final syncProvider = StateNotifierProvider<SyncNotifier, SyncState>((ref) {
-  return SyncNotifier(ref);
+final syncProvider = NotifierProvider<SyncNotifier, SyncState>(() {
+  return SyncNotifier();
 });
 
 final pendingRequestsCountProvider = Provider<int>((ref) {

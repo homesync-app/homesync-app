@@ -11,8 +11,8 @@ import '../../errors/failures.dart';
 abstract class BaseRpcService {
   final SupabaseClient client;
 
-  BaseRpcService({SupabaseClient? clientOverride})
-      : client = clientOverride ?? Supabase.instance.client;
+  BaseRpcService({required SupabaseClient clientOverride})
+      : client = clientOverride;
 
   static const int _maxRetries = 3;
   static const Duration _initialDelay = Duration(seconds: 1);
@@ -65,6 +65,11 @@ abstract class BaseRpcService {
   }
 
   Future<String> requireHouseholdId() async {
+    final debugHouseholdId = AppIdentityService.instance.currentHouseholdId;
+    if (debugHouseholdId != null && debugHouseholdId.isNotEmpty) {
+      return debugHouseholdId;
+    }
+
     final userId = await requireCurrentUserId();
     final response = await client
         .from('household_members')

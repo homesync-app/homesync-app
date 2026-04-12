@@ -1,79 +1,77 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import '../services/premium_service.dart';
-import '../services/logger_service.dart';
+import 'package:homesync_client/features/premium/data/repositories/premium_service_repository.dart';
+import 'package:homesync_client/features/premium/domain/repositories/premium_repository.dart';
+import 'package:homesync_client/features/premium/domain/usecases/buy_premium_product_usecase.dart';
+import 'package:homesync_client/features/premium/domain/usecases/get_premium_products_usecase.dart';
+import 'package:homesync_client/features/premium/domain/usecases/get_premium_status_usecase.dart';
+import 'package:homesync_client/features/premium/domain/usecases/restore_premium_purchases_usecase.dart';
 
-class PremiumNotifier extends Notifier<bool> {
-  late final SupabaseClient _supabase;
-  
+class PremiumNotifier extends AsyncNotifier<bool> {
   @override
-  bool build() {
-    _supabase = Supabase.instance.client;
-    
-    // Initial fetch from current user metadata or session
-    // But better to fetch from DB
-    _refreshFromDb();
-    
-    // Also listen to auth changes to refresh
-    _supabase.auth.onAuthStateChange.listen((data) {
-      if (data.session != null) {
-        _refreshFromDb();
-      } else {
-        state = false;
-      }
+  Future<bool> build() async {
+    ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
+      next.whenData((authState) {
+        if (authState.isAuthenticated) {
+          unawaited(refresh());
+        } else {
+          state = const AsyncData(false);
+        }
+      });
     });
 
-    return false;
+    return _fetchPremiumStatus();
   }
 
-  Future<void> _refreshFromDb() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) {
-      state = false;
-      return;
-    }
+  PremiumRepository get _repository => ref.read(premiumRepositoryProvider);
 
-    try {
-      final data = await _supabase
-          .from('users')
-          .select('is_premium')
-          .eq('id', user.id)
-          .maybeSingle();
-      
-      if (data != null && data['is_premium'] == true) {
-        state = true;
-      } else {
-        state = false;
-      }
-    } catch (e) {
-      log.e('Error fetching premium status: $e');
-    }
+  Future<bool> _fetchPremiumStatus() async {
+    return ref.read(getPremiumStatusUseCaseProvider).call();
   }
 
   /// FOR DEMO/DEVELOPMENT ONLY: Toggles local mock premium
   Future<void> togglePremiumMock() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
-
-    final newState = !state;
-    await _supabase.from('users').update({'is_premium': newState}).eq('id', user.id);
-    state = newState;
+    await _repository.togglePremiumMock();
+    await refresh();
   }
 
   Future<void> refresh() async {
-    await _refreshFromDb();
+    state = const AsyncLoading<bool>().copyWithPrevious(state);
+    state = await AsyncValue.guard(_fetchPremiumStatus);
   }
 }
 
-final premiumProvider = NotifierProvider<PremiumNotifier, bool>(() {
+final premiumProvider = AsyncNotifierProvider<PremiumNotifier, bool>(() {
   return PremiumNotifier();
+});
+
+final premiumRepositoryProvider = Provider<PremiumRepository>((ref) {
+  return PremiumServiceRepository(ref.read(premiumServiceProvider));
+});
+
+final getPremiumStatusUseCaseProvider = Provider<GetPremiumStatusUseCase>((ref) {
+  return GetPremiumStatusUseCase(ref.read(premiumRepositoryProvider));
+});
+
+final getPremiumProductsUseCaseProvider =
+    Provider<GetPremiumProductsUseCase>((ref) {
+  return GetPremiumProductsUseCase(ref.read(premiumRepositoryProvider));
+});
+
+final buyPremiumProductUseCaseProvider = Provider<BuyPremiumProductUseCase>((ref) {
+  return BuyPremiumProductUseCase(ref.read(premiumRepositoryProvider));
+});
+
+final restorePremiumPurchasesUseCaseProvider =
+    Provider<RestorePremiumPurchasesUseCase>((ref) {
+  return RestorePremiumPurchasesUseCase(ref.read(premiumRepositoryProvider));
 });
 
 /// UI-facing provider for available products
 final premiumProductsProvider = FutureProvider((ref) async {
-  final service = ref.read(premiumServiceProvider);
-  return await service.getProducts();
+  return ref.read(getPremiumProductsUseCaseProvider).call();
 });
 
 /// Gate para la integración OCR + lista de compras.

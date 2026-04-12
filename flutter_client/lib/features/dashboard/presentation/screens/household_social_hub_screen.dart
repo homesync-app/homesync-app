@@ -4,12 +4,14 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
+import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -193,10 +195,38 @@ class _HouseholdSocialHubScreenState
                 householdAsync: householdAsync,
                 canManageMembers: canManageMembers,
                 onInvite: () => InvitationSheet.show(context),
-                onTasks: () =>
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(1),
-                onFinances: () =>
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(2),
+                onTasks: () {
+                  final index = indexForMainTab(caps, MainTab.tasks);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
+                onFinances: () {
+                  final index = indexForMainTab(caps, MainTab.expenses);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
+                onRewards: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FamilyRewardsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 18),
+              _FamilyStoreCard(
+                caps: caps,
+                onOpen: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FamilyRewardsScreen(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 18),
               membersAsync.when(
@@ -213,7 +243,8 @@ class _HouseholdSocialHubScreenState
                 ),
                 error: (error, _) => AppErrorState(
                   message: 'No pudimos cargar los integrantes.\n$error',
-                  onRetry: () => ref.invalidate(householdMembersNotifierProvider),
+                  onRetry: () =>
+                      ref.invalidate(householdMembersNotifierProvider),
                 ),
               ),
               const SizedBox(height: 18),
@@ -237,6 +268,7 @@ class _HeaderCard extends StatelessWidget {
     required this.onInvite,
     required this.onTasks,
     required this.onFinances,
+    required this.onRewards,
   });
 
   final HouseholdCapabilities caps;
@@ -245,6 +277,7 @@ class _HeaderCard extends StatelessWidget {
   final VoidCallback onInvite;
   final VoidCallback onTasks;
   final VoidCallback onFinances;
+  final VoidCallback onRewards;
 
   @override
   Widget build(BuildContext context) {
@@ -359,6 +392,11 @@ class _HeaderCard extends StatelessWidget {
                 icon: Icons.account_balance_wallet_rounded,
                 label: 'Finanzas',
                 onPressed: onFinances,
+              ),
+              _QuickActionButton(
+                icon: Icons.storefront_rounded,
+                label: 'Tienda',
+                onPressed: onRewards,
               ),
             ],
           ),
@@ -628,6 +666,89 @@ class _RolesAndAccessCard extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FamilyStoreCard extends StatelessWidget {
+  const _FamilyStoreCard({
+    required this.caps,
+    required this.onOpen,
+  });
+
+  final HouseholdCapabilities caps;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final title = switch (caps.type) {
+      HouseholdType.family => 'Tienda del hogar',
+      HouseholdType.friends => 'Tienda compartida',
+      _ => 'Tienda',
+    };
+    final subtitle = switch (caps.type) {
+      HouseholdType.family =>
+        'Premios para chicos, adultos y planes familiares en un solo lugar.',
+      HouseholdType.friends =>
+        'Accede al catalogo de recompensas y propuestas compartidas.',
+      _ => 'Accede al catalogo de recompensas del hogar.',
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.72)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.storefront_rounded,
+              color: AppColors.accentGold,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onOpen,
+            child: const Text('Abrir'),
           ),
         ],
       ),

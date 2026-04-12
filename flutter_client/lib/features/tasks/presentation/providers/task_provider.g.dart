@@ -60,7 +60,7 @@ final createTaskUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CreateTaskUseCaseRef = AutoDisposeProviderRef<CreateTaskUseCase>;
-String _$filteredTasksHash() => r'f6afda8f040843191da355b18e1c387c3e6bf5d3';
+String _$filteredTasksHash() => r'50ffcd222c7f5e52b532049d6ce0a4ed25476114';
 
 /// See also [filteredTasks].
 @ProviderFor(filteredTasks)
@@ -78,7 +78,7 @@ final filteredTasksProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FilteredTasksRef = AutoDisposeProviderRef<AsyncValue<List<TaskModel>>>;
-String _$activeCategoriesHash() => r'c152b5dbe3208626d4fb8a48d85ee1f4d4825971';
+String _$activeCategoriesHash() => r'95968adf9e3c57e04ed2825447fd2fe14a49b7b5';
 
 /// See also [activeCategories].
 @ProviderFor(activeCategories)
@@ -96,7 +96,7 @@ final activeCategoriesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ActiveCategoriesRef = AutoDisposeProviderRef<AsyncValue<List<String>>>;
-String _$todayTasksHash() => r'6b1b3ab925c4a528fb27003c913fe3d8ec796520';
+String _$todayTasksHash() => r'3a5abbb6a41a78b14bf6d9b633955fbe8c49bec7';
 
 /// See also [todayTasks].
 @ProviderFor(todayTasks)
@@ -178,7 +178,7 @@ final taskViewModeProvider =
 );
 
 typedef _$TaskViewMode = AutoDisposeNotifier<bool>;
-String _$tasksHash() => r'3298c5ff1ca764fcd2d815ba355784d84b986846';
+String _$tasksHash() => r'87667261c16ae60ad97c18f4ec9a3a65ce92c6ea';
 
 /// See also [Tasks].
 @ProviderFor(Tasks)

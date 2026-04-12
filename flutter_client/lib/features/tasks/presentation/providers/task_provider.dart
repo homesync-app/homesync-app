@@ -5,7 +5,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
@@ -94,7 +94,7 @@ class Tasks extends _$Tasks {
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await useCase(householdId, limit: _pageSize, offset: 0);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (tasks) {
         if (tasks.length < _pageSize) {
           _hasMore = false;
@@ -107,7 +107,7 @@ class Tasks extends _$Tasks {
   void _setupRealtime(String householdId) {
     _channel?.unsubscribe();
     final client = ref.read(supabaseClientProvider);
-    
+
     _channel = client
         .channel('tasks_realtime_$householdId')
         .onPostgresChanges(
@@ -132,7 +132,7 @@ class Tasks extends _$Tasks {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
+    state = const AsyncLoading<List<TaskModel>>().copyWithPrevious(state);
     state = await AsyncValue.guard(() => build());
   }
 
@@ -202,7 +202,7 @@ class Tasks extends _$Tasks {
         userIds: performers,
         completedAt: effectiveCompletedAt,
       );
-      
+
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
@@ -215,7 +215,7 @@ class Tasks extends _$Tasks {
           ref.invalidate(recentActivityProvider);
         }
       }
-      
+
       return result.fold(
         (failure) {
           state = AsyncValue.data(oldState!);
@@ -236,7 +236,8 @@ class Tasks extends _$Tasks {
     DateTime? completedAt,
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final performers = userIds ?? (currentUserId != null ? [currentUserId] : null);
+    final performers =
+        userIds ?? (currentUserId != null ? [currentUserId] : null);
     final primaryUserId = performers?.first ?? currentUserId;
     final effectiveCompletedAt = completedAt ?? DateTime.now();
     final taskIds = tasks.map((t) => t.id).toSet();
@@ -262,7 +263,7 @@ class Tasks extends _$Tasks {
         userIds: performers,
         completedAt: effectiveCompletedAt,
       );
-      
+
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         if (isOnline) {
@@ -271,7 +272,7 @@ class Tasks extends _$Tasks {
           ref.invalidate(recentActivityProvider);
         }
       }
-      
+
       return result.fold(
         (failure) {
           if (oldState != null) state = AsyncValue.data(oldState);
@@ -292,12 +293,14 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.verified, verifiedBy: userId, verifiedAt: DateTime.now())
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.verified,
+                  verifiedBy: userId,
+                  verifiedAt: DateTime.now())
+              : t)
+          .toList());
     }
 
     try {
@@ -315,12 +318,14 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.active, completedBy: null, completedAt: null)
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) => t.id == task.id
+              ? t.copyWith(
+                  status: TaskStatus.active,
+                  completedBy: null,
+                  completedAt: null)
+              : t)
+          .toList());
     }
 
     try {
@@ -338,12 +343,10 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState.map((t) => t.id == task.id 
-          ? t.copyWith(status: TaskStatus.active)
-          : t
-        ).toList()
-      );
+      state = AsyncValue.data(oldState
+          .map((t) =>
+              t.id == task.id ? t.copyWith(status: TaskStatus.active) : t)
+          .toList());
     }
 
     try {
@@ -367,12 +370,95 @@ class Tasks extends _$Tasks {
     }
   }
 
-  Future<void> deleteTask(TaskModel task) async {
+  Future<void> submitTaskForApproval(TaskModel task) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+
+    final submittedAt = DateTime.now();
     final oldState = state.value;
     if (oldState != null) {
       state = AsyncValue.data(
-        oldState.where((t) => t.id != task.id).toList()
+        oldState
+            .map((t) => t.id == task.id
+                ? t.copyWith(
+                    status: TaskStatus.pendingApproval,
+                    completedBy: userId,
+                    completedAt: submittedAt,
+                  )
+                : t)
+            .toList(),
       );
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.editTask(task.id, {
+        'status': 'pending_approval',
+        'completed_by': userId,
+        'completed_at': submittedAt.toIso8601String(),
+        'last_completed_at': submittedAt.toIso8601String(),
+      });
+      if (ref.read(isOnlineProvider)) {
+        silentRefresh();
+        ref.invalidate(recentActivityProvider);
+      }
+    } catch (e) {
+      log.w('Submit task for approval failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
+      rethrow;
+    }
+  }
+
+  Future<TaskCompletionResult?> approvePendingTask(TaskModel task) async {
+    final performerId = task.completedBy ?? task.assignedTo;
+    if (performerId == null) return null;
+
+    return completeTask(
+      task,
+      userIds: [performerId],
+      completedAt: task.completedAt ?? DateTime.now(),
+    );
+  }
+
+  Future<void> rejectPendingTask(TaskModel task) async {
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(
+        oldState
+            .map((t) => t.id == task.id
+                ? t.copyWith(
+                    status: TaskStatus.active,
+                    completedBy: null,
+                    completedAt: null,
+                  )
+                : t)
+            .toList(),
+      );
+    }
+
+    try {
+      final repo = ref.read(taskRepositoryProvider);
+      await repo.editTask(task.id, {
+        'status': 'active',
+        'completed_by': null,
+        'completed_at': null,
+        'last_completed_at': null,
+      });
+      if (ref.read(isOnlineProvider)) {
+        silentRefresh();
+        ref.invalidate(recentActivityProvider);
+      }
+    } catch (e) {
+      log.w('Reject pending task failure: $e');
+      if (oldState != null) state = AsyncValue.data(oldState);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteTask(TaskModel task) async {
+    final oldState = state.value;
+    if (oldState != null) {
+      state = AsyncValue.data(oldState.where((t) => t.id != task.id).toList());
     }
 
     try {
@@ -432,7 +518,7 @@ class Tasks extends _$Tasks {
       );
 
       result.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (_) {
           final isOnline = ref.read(isOnlineProvider);
           if (isOnline) {
@@ -460,7 +546,6 @@ class Tasks extends _$Tasks {
   }
 }
 
-
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
 @riverpod
@@ -474,7 +559,7 @@ AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
     if (selectedCategories.isNotEmpty) {
       result = result
           .where((t) => selectedCategories
-              .contains(AppColors.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)))
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -492,7 +577,7 @@ AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
     final activeSet = <String>{};
     for (var t in tasks) {
       if (t.isActive) {
-        activeSet.add(AppColors.normaliseCategory(t.category));
+        activeSet.add(CategoryMapping.normaliseCategory(t.category));
       }
     }
     return activeSet.toList();
@@ -507,15 +592,17 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
   final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
   final currentMember =
       members.where((member) => member.userId == currentUserId).firstOrNull;
-  final isFamilyAdult =
-      caps.type == HouseholdType.family && (currentMember?.isAdult ?? false);
+  final isFamilyMode = caps.type == HouseholdType.family;
+  final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
+  final shouldUseFamilyHouseholdScope = isFamilyMode && !isFamilyChild;
 
   return tasksAsync.whenData((tasks) {
     final now = DateTime.now();
     final visibleTasks = tasks.where((task) {
-      // In family mode, adults need the household picture of the day.
-      // Children still default to their own tasks.
-      final shouldFilterByAssignment = !isFamilyAdult;
+      // In family mode, only children should default to "my tasks".
+      // Adults, and any temporarily unresolved family viewer in QA,
+      // should keep the household coordination view.
+      final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
       if (shouldFilterByAssignment &&
           task.assignedTo != null &&
           task.assignedTo != currentUserId) {
@@ -541,7 +628,7 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       return false;
     }).toList();
 
-    if (visibleTasks.isNotEmpty || !isFamilyAdult) {
+    if (visibleTasks.isNotEmpty || !shouldUseFamilyHouseholdScope) {
       return visibleTasks;
     }
 

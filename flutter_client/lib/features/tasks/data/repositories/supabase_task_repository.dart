@@ -17,6 +17,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_storage_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 
 part 'supabase_task_repository.g.dart';
@@ -86,8 +87,30 @@ class SupabaseTaskRepository
       log.i(
         'TaskRepository.getTasks household=${_selectedAdminHouseholdId ?? householdId} count=${tasks.length} adminQa=$_isAdminTestingActive',
       );
+      try {
+        await OfflineStorageService().set(
+          'tasks_cache_${_selectedAdminHouseholdId ?? householdId}',
+          {'tasks': raw},
+        );
+      } catch (error, stackTrace) {
+        log.w(
+          'TaskRepository.getTasks: cache persistence skipped: $error',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
       return tasks;
-    }, context: 'SupabaseTaskRepository.getTasks', isOnline: _isOnline);
+    }, context: 'SupabaseTaskRepository.getTasks', isOnline: _isOnline,
+    onOffline: () async {
+      final cached = await OfflineStorageService().get('tasks_cache_${_selectedAdminHouseholdId ?? householdId}');
+      if (cached != null && cached['tasks'] != null) {
+        log.i('TaskRepository.getTasks: Recovered from persistent offline cache');
+        return (cached['tasks'] as List)
+            .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
+            .toList();
+      }
+      throw const NetworkFailure('No hay conexión y no existen datos locales en caché');
+    });
   }
 
   @override
@@ -182,28 +205,26 @@ class SupabaseTaskRepository
                     : await _rpc.requireCurrentUserId(),
               ];
           if (_isAdminTestingActive) {
-            final results = <Map<String, dynamic>>[];
-            for (final task in tasks) {
-              final raw = await _client.rpc(
-                'qa_admin_complete_task',
-                params: {
-                  'p_household_id': householdId,
-                  'p_user_ids': performers,
-                  'p_task_id': task.id,
-                  'p_xp_reward': task.xpReward,
-                  'p_coin_reward': task.coinReward,
-                  'p_task_title': task.title,
-                  if (completedAt != null)
-                    'p_completed_at': completedAt.toIso8601String(),
-                },
-              );
-              results.add(Map<String, dynamic>.from(raw as Map));
-            }
-            return {
-              'success': true,
-              'message': 'Tareas completadas',
-              'results': results,
-            };
+            final raw = await _client.rpc(
+              'qa_admin_complete_tasks_batch',
+              params: {
+                'p_household_id': householdId,
+                'p_user_ids': performers,
+                'p_tasks': tasks
+                    .map(
+                      (task) => {
+                        'task_id': task.id,
+                        'xp_reward': task.xpReward,
+                        'coin_reward': task.coinReward,
+                        'task_title': task.title,
+                      },
+                    )
+                    .toList(),
+                if (completedAt != null)
+                  'p_completed_at': completedAt.toIso8601String(),
+              },
+            );
+            return Map<String, dynamic>.from(raw as Map);
           }
 
           final taskIds = tasks.map((t) => t.id).toList();
@@ -342,6 +363,8 @@ class SupabaseTaskRepository
     return executeWithHandling(
         () async {
           final now = DateTime.now().toIso8601String();
+          final hasSchedulingIntent =
+              recurrenceType != null || assignedTo != null;
           final Map<String, dynamic> updates = {
             'recurrence_type': recurrenceType,
             'recurrence_interval': recurrenceInterval ?? 1,
@@ -351,8 +374,10 @@ class SupabaseTaskRepository
             'updated_at': now,
           };
 
-          // Al establecer recurrencia, reseteamos a activo y ponemos fecha de hoy
-          if (recurrenceType != null) {
+          // "Programar tarea" en la UI actual no elige una fecha puntual.
+          // Si la persona asigna un responsable o una recurrencia, lo
+          // interpretamos como una programación para hoy.
+          if (hasSchedulingIntent) {
             updates['due_at'] = now;
             updates['status'] = TaskStatus.active.name;
             updates['completed_at'] = null;
@@ -361,17 +386,38 @@ class SupabaseTaskRepository
             updates['last_verified_by'] = null;
             updates['objected_at'] = null;
             updates['objected_by'] = null;
+          } else {
+            updates['due_at'] = null;
           }
 
-          await _client
-              .from(AppConstants.tableTasks)
-              .update(updates)
-              .eq('id', taskId);
+          if (_isAdminTestingActive) {
+            await _client.rpc(
+              'qa_admin_update_task_v1',
+              params: {
+                'p_household_id': _selectedAdminHouseholdId,
+                'p_task_id': taskId,
+                'p_assigned_to': assignedTo,
+                'p_due_at': updates['due_at'],
+                'p_recurrence_type': recurrenceType,
+                'p_recurrence_interval': recurrenceInterval ?? 1,
+                'p_recurrence_weekdays': recurrenceWeekdays ?? [],
+                'p_recurrence_month_days': recurrenceMonthDays ?? [],
+                'p_status': updates['status'],
+              },
+            );
+          } else {
+            await _client
+                .from(AppConstants.tableTasks)
+                .update(updates)
+                .eq('id', taskId);
+          }
         },
         context: 'SupabaseTaskRepository.updateSchedule',
         isOnline: _isOnline,
         onOffline: () async {
           final now = DateTime.now().toIso8601String();
+          final hasSchedulingIntent =
+              recurrenceType != null || assignedTo != null;
           final Map<String, dynamic> queuedUpdates = {
             'recurrence_type': recurrenceType,
             'recurrence_interval': recurrenceInterval ?? 1,
@@ -381,7 +427,7 @@ class SupabaseTaskRepository
             'updated_at': now,
           };
 
-          if (recurrenceType != null) {
+          if (hasSchedulingIntent) {
             queuedUpdates['due_at'] = now;
             queuedUpdates['status'] = TaskStatus.active.name;
             queuedUpdates['completed_at'] = null;
@@ -390,6 +436,8 @@ class SupabaseTaskRepository
             queuedUpdates['last_verified_by'] = null;
             queuedUpdates['objected_at'] = null;
             queuedUpdates['objected_by'] = null;
+          } else {
+            queuedUpdates['due_at'] = null;
           }
 
           await _queueAction(
@@ -421,7 +469,9 @@ class SupabaseTaskRepository
     return executeWithHandling(
         () async {
           if (_isAdminTestingActive) {
-            final userId = await AppIdentityService.instance.refresh();
+            final userId =
+                _ref.read(currentUserIdProvider) ??
+                await AppIdentityService.instance.refresh();
             if (userId == null || _selectedAdminHouseholdId == null) {
               throw Exception('QA admin sin viewer u hogar seleccionado');
             }
@@ -550,10 +600,40 @@ class SupabaseTaskRepository
     return executeWithHandling(
         () async {
           updates['updated_at'] = DateTime.now().toIso8601String();
-          await _client
-              .from(AppConstants.tableTasks)
-              .update(updates)
-              .eq('id', taskId);
+          if (_isAdminTestingActive) {
+            await _client.rpc(
+              'qa_admin_update_task_v1',
+              params: {
+                'p_household_id': _selectedAdminHouseholdId,
+                'p_task_id': taskId,
+                'p_title': updates['title'],
+                'p_description': updates['description'],
+                'p_category': updates['category'],
+                'p_assigned_to': updates['assigned_to'],
+                'p_due_at': updates['due_at'],
+                'p_recurrence_type': updates['recurrence_type'],
+                'p_recurrence_interval': updates['recurrence_interval'],
+                'p_recurrence_weekdays': updates['recurrence_weekdays'],
+                'p_recurrence_month_days': updates['recurrence_month_days'],
+                'p_status': updates['status'],
+                if (updates.containsKey('completed_by'))
+                  'p_completed_by': updates['completed_by'],
+                if (updates.containsKey('completed_at'))
+                  'p_completed_at': updates['completed_at'],
+                if (updates.containsKey('last_completed_at'))
+                  'p_last_completed_at': updates['last_completed_at'],
+                if (updates.containsKey('completed_by') ||
+                    updates.containsKey('completed_at') ||
+                    updates.containsKey('last_completed_at'))
+                  'p_touch_completion': true,
+              },
+            );
+          } else {
+            await _client
+                .from(AppConstants.tableTasks)
+                .update(updates)
+                .eq('id', taskId);
+          }
         },
         context: 'SupabaseTaskRepository.editTask',
         isOnline: _isOnline,

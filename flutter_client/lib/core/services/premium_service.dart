@@ -1,15 +1,14 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import '../services/logger_service.dart';
 
 class PremiumService {
   final InAppPurchase _iap = InAppPurchase.instance;
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final Ref _ref;
+  final SupabaseClient _supabase;
   
   // Real IDs in store (change later if needed)
   static const String _monthlyId = 'premium_monthly';
@@ -22,9 +21,17 @@ class PremiumService {
   // To update UI from outside
   final Function(bool isPremium)? onPremiumStatusChanged;
 
-  PremiumService(this._ref, {this.onPremiumStatusChanged});
+  PremiumService({
+    required SupabaseClient supabase,
+    this.onPremiumStatusChanged,
+  }) : _supabase = supabase;
 
   void initialize() {
+    if (kIsWeb) {
+      log.i('PremiumService: skipping IAP initialization on web');
+      return;
+    }
+
     final purchaseUpdated = _iap.purchaseStream;
     _subscription = purchaseUpdated.listen(
       _onPurchaseUpdate,
@@ -37,7 +44,32 @@ class PremiumService {
     _subscription?.cancel();
   }
 
+  Future<bool> getPremiumStatus() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      return false;
+    }
+
+    try {
+      final data = await _supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      return data != null && data['is_premium'] == true;
+    } catch (e) {
+      log.e('Error fetching premium status: $e');
+      return false;
+    }
+  }
+
   Future<List<ProductDetails>> getProducts() async {
+    if (kIsWeb) {
+      log.w('IAP products are not available on web');
+      return [];
+    }
+
     final bool available = await _iap.isAvailable();
     if (!available) {
       log.w('IAP not available on this device');
@@ -53,6 +85,10 @@ class PremiumService {
   }
 
   Future<void> buyProduct(ProductDetails product) async {
+    if (kIsWeb) {
+      throw UnsupportedError('In-app purchases are not supported on web');
+    }
+
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
     
     // Non-consumables for subscriptions
@@ -106,12 +142,44 @@ class PremiumService {
   }
 
   Future<void> restorePurchases() async {
+    if (kIsWeb) {
+      log.w('Restore purchases is not supported on web');
+      return;
+    }
+
     await _iap.restorePurchases();
+  }
+
+  Future<void> togglePremiumMock() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      log.w('togglePremiumMock skipped: no authenticated user');
+      return;
+    }
+
+    try {
+      final current = await getPremiumStatus();
+      final next = !current;
+      await _supabase.from('users').update({
+        'is_premium': next,
+        'premium_until': next
+            ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
+            : null,
+      }).eq('id', user.id);
+
+      onPremiumStatusChanged?.call(next);
+      log.i('Premium mock toggled for user ${user.id}: $next');
+    } catch (e) {
+      log.e('Error toggling premium mock: $e');
+      rethrow;
+    }
   }
 }
 
 final premiumServiceProvider = Provider<PremiumService>((ref) {
-  final service = PremiumService(ref);
+  final service = PremiumService(
+    supabase: ref.watch(supabaseClientProvider),
+  );
   service.initialize();
   return service;
 });

@@ -10,8 +10,9 @@ import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
 import '../../domain/models/feed_item_model.dart';
 import '../../domain/models/expense_template_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 
 part 'expense_provider.g.dart';
@@ -43,7 +44,8 @@ GetBalancesUseCase getBalancesUseCase(GetBalancesUseCaseRef ref) {
 }
 
 @riverpod
-GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(GetPersonalFinanceSummaryUseCaseRef ref) {
+GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
+    GetPersonalFinanceSummaryUseCaseRef ref) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetPersonalFinanceSummaryUseCase(repo);
 }
@@ -78,7 +80,7 @@ class ExpenseBalances extends _$ExpenseBalances {
     final useCase = ref.watch(getBalancesUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (balances) => balances,
     );
   }
@@ -94,7 +96,7 @@ class ExpenseController extends _$ExpenseController {
     final useCase = ref.watch(getExpensesUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) => throw failure,
       (expenses) => expenses,
     );
   }
@@ -129,11 +131,12 @@ class ExpenseController extends _$ExpenseController {
       splits: splits,
     );
 
-    result.fold(
-      (failure) => throw Exception(failure.message),
-      (_) {},
-    );
-    
+    if (result.isLeft()) {
+      final failure = result.getLeft().toNullable()!;
+      log.w('Save expense failed: ${failure.message}');
+      throw failure;
+    }
+
     if (ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
@@ -144,7 +147,8 @@ class ExpenseController extends _$ExpenseController {
 
   Future<void> deleteExpense(String id) async {
     final previousExpenses = state.valueOrNull;
-    final combinedFeedNotifier = ref.read(combinedFeedControllerProvider.notifier);
+    final combinedFeedNotifier =
+        ref.read(combinedFeedControllerProvider.notifier);
     final previousFeed = ref.read(combinedFeedControllerProvider).valueOrNull;
 
     if (previousExpenses != null) {
@@ -159,17 +163,18 @@ class ExpenseController extends _$ExpenseController {
 
     result.fold(
       (failure) {
+        log.w('Delete expense failed: ${failure.message}');
         if (previousExpenses != null) {
           state = AsyncData(previousExpenses);
         }
         if (previousFeed != null) {
           combinedFeedNotifier.replaceLocalFeed(previousFeed);
         }
-        throw Exception(failure.message);
+        throw failure;
       },
       (_) {},
     );
-    
+
     if (ref.read(isOnlineProvider)) {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
@@ -195,15 +200,12 @@ class ExpenseController extends _$ExpenseController {
     );
 
     result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('Settle debt failed: ${failure.message}');
+        throw failure;
+      },
       (_) {},
     );
-    
-    if (ref.read(isOnlineProvider)) {
-      ref.invalidate(expenseBalancesProvider);
-      ref.invalidate(personalFinanceSummaryProvider);
-      ref.invalidate(combinedFeedControllerProvider);
-    }
     // Note: Do not invalidateSelf() here to avoid CircularDependencyError if this is called from within the same family or branch of providers
   }
 }
@@ -225,7 +227,10 @@ class CombinedFeedController extends _$CombinedFeedController {
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);
     final result = await useCase(householdId);
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('CombinedFeed build failed: ${failure.message}');
+        throw failure;
+      },
       (feed) => feed,
     );
   }
@@ -245,11 +250,15 @@ class CombinedFeedController extends _$CombinedFeedController {
     );
 
     return result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Pay planned expense failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
           ref.invalidate(recentActivityProvider);
@@ -263,10 +272,16 @@ class CombinedFeedController extends _$CombinedFeedController {
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.deletePlannedExpense(id);
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Discard planned expense failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
+          ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyPendingPlannedExpensesProvider);
+          ref.invalidate(monthlyProjectionProvider);
         }
       },
     );
@@ -301,9 +316,12 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
 
     final repo = ref.watch(expenseRepositoryProvider);
     final result = await repo.getTemplates(householdId);
-    
+
     return result.fold(
-      (failure) => throw Exception(failure.message),
+      (failure) {
+        log.w('ExpenseTemplateController build failed: ${failure.message}');
+        throw failure;
+      },
       (templates) => templates,
     );
   }
@@ -311,14 +329,17 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
   Future<void> saveTemplate(ExpenseTemplateModel template) async {
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.saveTemplate(template);
-    
+
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Save template failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
-          // Generar feed de nuevo porque puede afectar proyecciones
           ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
         }
       },
@@ -328,13 +349,17 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
   Future<void> deleteTemplate(String id) async {
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.toggleTemplateActivity(id, false);
-    
+
     result.fold(
-      (l) => throw Exception(l.message),
+      (l) {
+        log.w('Delete template failed: ${l.message}');
+        throw l;
+      },
       (r) {
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
+          ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
         }
       },
@@ -349,15 +374,56 @@ class MonthlyProjectionData {
   const MonthlyProjectionData({required this.spent, required this.pending});
 }
 
+double _projectedShareForUser({
+  required FeedItemModel item,
+  required String userId,
+  required int memberCount,
+}) {
+  final splitType = (item.splitType ?? 'equal').toLowerCase();
+
+  if (splitType == 'personal' || splitType == 'gift') {
+    return item.payerId == userId ? item.amount : 0.0;
+  }
+
+  final safeMemberCount = memberCount > 0 ? memberCount : 2;
+  return item.amount / safeMemberCount;
+}
+
 @riverpod
-Future<MonthlyProjectionData> monthlyProjection(MonthlyProjectionRef ref) async {
+Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
+    MonthlyPendingPlannedExpensesRef ref) async {
+  final householdId = await ref.watch(householdIdProvider.future);
+  if (householdId == null) return const <FeedItemModel>[];
+
+  final repo = ref.watch(expenseRepositoryProvider);
+  final result = await repo.getMonthlyPendingPlannedExpenses(
+    householdId,
+    month: DateTime.now(),
+  );
+
+  return result.fold(
+    (failure) {
+      log.w('Monthly pending planned expenses failed: ${failure.message}');
+      throw failure;
+    },
+    (items) => items,
+  );
+}
+
+@riverpod
+Future<MonthlyProjectionData> monthlyProjection(
+    MonthlyProjectionRef ref) async {
   final feedAsync = await ref.watch(combinedFeedControllerProvider.future);
+  final monthlyPendingItems =
+      await ref.watch(monthlyPendingPlannedExpensesProvider.future);
+  final members = await ref.watch(householdMembersProvider.future);
   final userId = ref.read(currentUserIdProvider);
   if (userId == null) return const MonthlyProjectionData(spent: 0, pending: 0);
 
   double spent = 0.0;
   double pending = 0.0;
   final now = DateTime.now();
+  final memberCount = members.isNotEmpty ? members.length : 2;
 
   for (final item in feedAsync) {
     // Only current month
@@ -369,12 +435,15 @@ Future<MonthlyProjectionData> monthlyProjection(MonthlyProjectionRef ref) async 
       if (item.payerId == userId) {
         spent += item.amount;
       }
-    } else if (item.isPlanned && item.status == 'pending') {
-      // For planned expenses, if the user is the default payer, it counts as "pending cashflow".
-      if (item.payerId == userId) {
-        pending += item.amount;
-      }
     }
+  }
+
+  for (final item in monthlyPendingItems) {
+    pending += _projectedShareForUser(
+      item: item,
+      userId: userId,
+      memberCount: memberCount,
+    );
   }
 
   return MonthlyProjectionData(spent: spent, pending: pending);
