@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/core/services/receipt_scan_service.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/receipt_preview_widget.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'expense_category_matcher.dart';
 import 'expense_form_components.dart';
 import 'expense_form_data.dart';
@@ -32,18 +40,22 @@ import 'expense_split_state.dart';
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
   final bool defaultOnlyMe;
+  final bool triggerScanOnOpen;
 
   const ExpenseFormSheet({
     super.key,
     this.expense,
     this.defaultOnlyMe = false,
+    this.triggerScanOnOpen = false,
   });
 
   @override
   ConsumerState<ExpenseFormSheet> createState() => _ExpenseFormSheetState();
 
   static Future<void> show(BuildContext context,
-      {ExpenseModel? expense, bool defaultOnlyMe = false}) {
+      {ExpenseModel? expense,
+      bool defaultOnlyMe = false,
+      bool triggerScanOnOpen = false}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -55,6 +67,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
           child: ExpenseFormSheet(
             expense: expense,
             defaultOnlyMe: defaultOnlyMe,
+            triggerScanOnOpen: triggerScanOnOpen,
           ),
         ),
       ),
@@ -65,6 +78,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _showSuccessState = false;
   bool _isIncome = false;
   Map<String, dynamic>? _selectedCategory;
 
@@ -76,6 +90,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   // Shopping items integration
   final Set<ShoppingItemModel> _selectedShoppingItems = {};
+  bool _isScanningReceipt = false;
+  ReceiptScanResult? _scanResult;
+  List<String> _unmatchedOcrItems = [];
+  final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
   // Split logic
   SplitType _splitMode = SplitType.equal;
@@ -118,6 +136,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
     if (widget.expense == null) {
       _initializeDefaultSelections();
+    }
+
+    if (widget.triggerScanOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scanReceipt(ImageSource.camera);
+      });
     }
   }
 
@@ -214,6 +238,98 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     }
   }
 
+  Future<void> _scanReceipt(ImageSource source) async {
+    if (_isScanningReceipt) return;
+    setState(() => _isScanningReceipt = true);
+    try {
+      final service = ReceiptScanService(Supabase.instance.client);
+      final result = await service.scan(source: source);
+      if (result == null || !mounted) return;
+      _prefillFromScan(result);
+
+      final canLink = ref.read(canUseReceiptShoppingLinkProvider);
+      if (canLink) {
+        _matchOcrItemsToShoppingList(result.detectedItems);
+      }
+    } catch (e, st) {
+      debugPrint('[ReceiptScan] ERROR: $e\n$st');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo leer el ticket: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isScanningReceipt = false);
+    }
+  }
+
+  void _prefillFromScan(ReceiptScanResult result) {
+    setState(() {
+      _scanResult = result;
+
+      if ((result.merchant ?? '').isNotEmpty) {
+        _titleController.text = result.merchant!;
+      }
+      if (result.amount != null) {
+        _amountController.text = result.amount!.toStringAsFixed(2);
+      }
+      if (result.date != null) {
+        _selectedDate = result.date!;
+      }
+      if (result.category != null) {
+        final matched = _expenseCategories
+            .where((c) => c['id'] == result.category)
+            .toList();
+        if (matched.isNotEmpty) {
+          _selectedCategory = matched.first;
+        }
+      }
+    });
+
+    if (result.hasLowConfidence && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ticket difícil de leer; revisá los datos antes de guardar'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _matchOcrItemsToShoppingList(List<String> ocrItems) {
+    final pending = ref
+            .read(shoppingItemsProvider)
+            .valueOrNull
+            ?.where((item) => !item.completed)
+            .toList() ??
+        const <ShoppingItemModel>[];
+
+    final result = ReceiptMatcher.match(
+      ocrItems: ocrItems,
+      pendingShoppingItems: pending,
+    );
+
+    setState(() {
+      _ocrMatchedShoppingItems
+        ..clear()
+        ..addAll(result.matched);
+      _selectedShoppingItems.addAll(result.matched);
+      _unmatchedOcrItems = result.unmatched;
+    });
+  }
+
+  void _clearScan() {
+    setState(() {
+      _scanResult = null;
+      _unmatchedOcrItems = [];
+      _selectedShoppingItems.removeAll(_ocrMatchedShoppingItems);
+      _ocrMatchedShoppingItems.clear();
+    });
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -298,6 +414,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
       final description = descriptionParts.join("\n\n");
 
+      String? receiptPath = widget.expense?.receiptPath;
+      if (_scanResult != null) {
+        try {
+          final receiptService = ReceiptScanService(Supabase.instance.client);
+          receiptPath = await receiptService.uploadReceipt(
+            localImagePath: _scanResult!.localImagePath,
+            householdId: householdId,
+          );
+        } catch (e) {
+          debugPrint('[ExpenseForm] Upload de ticket falló: $e');
+        }
+      }
+
       final saveResult = await repo.saveExpense(
         id: widget.expense?.id,
         householdId: householdId,
@@ -310,6 +439,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         splitType: !caps.showExpensesSplit ? SplitType.personal : _splitMode,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
+        receiptPath: receiptPath,
       );
       saveResult.fold(
         (failure) => throw failure,
@@ -359,6 +489,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       if (mounted) {
         HapticFeedback.mediumImpact();
+        setState(() => _showSuccessState = true);
+        await Future<void>.delayed(const Duration(milliseconds: 420));
+        if (!mounted) return;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -377,7 +510,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showSuccessState = false;
+        });
+      }
     }
   }
 
@@ -454,6 +592,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 14),
                           _buildTitleField(),
+                          if (!_isIncome && _scanResult != null) ...[
+                            const SizedBox(height: 10),
+                            _buildReceiptPreviewInline(),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Contexto',
@@ -472,6 +614,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
                               context, shoppingItemsAsync),
+                          if (_unmatchedOcrItems.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            NewItemsSuggestionBanner(
+                              items: _unmatchedOcrItems,
+                              onDismiss: () =>
+                                  setState(() => _unmatchedOcrItems = []),
+                            ),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Categoría',
@@ -710,9 +860,91 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildTitleField() {
-    return ExpenseTitleField(
-      isIncome: _isIncome,
-      controller: _titleController,
+    final theme = context.theme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.border.withValues(alpha: 0.82)),
+        boxShadow: theme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          if (!_isIncome)
+            GestureDetector(
+              onTap: _isScanningReceipt
+                  ? null
+                  : () => _scanReceipt(ImageSource.camera),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _scanResult != null
+                      ? AppColors.accentGreen.withValues(alpha: 0.12)
+                      : AppColors.accentBlue.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _isScanningReceipt
+                    ? const Padding(
+                        padding: EdgeInsets.all(9),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentBlue,
+                        ),
+                      )
+                    : Icon(
+                        _scanResult != null
+                            ? Icons.receipt_long_rounded
+                            : Icons.document_scanner_outlined,
+                        color: _scanResult != null
+                            ? AppColors.accentGreen
+                            : AppColors.accentBlue,
+                        size: 20,
+                      ),
+              ),
+            )
+          else
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              color: theme.textSecondary,
+              size: 24,
+            ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: TextField(
+              controller: _titleController,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              decoration: InputDecoration(
+                hintText: _isIncome
+                    ? '¿De qué es el ingreso? (Opcional)'
+                    : '¿Qué compraste? (Opcional)',
+                hintStyle: TextStyle(
+                  color: theme.textMuted,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                filled: false,
+                fillColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -849,6 +1081,77 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildReceiptPreviewInline() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ReceiptPreviewWidget(
+              localPath: _scanResult!.localImagePath,
+              onRemove: _clearScan,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ScanButton(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Re-escanear',
+                  isLoading: _isScanningReceipt,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.camera),
+                ),
+                const SizedBox(height: 6),
+                _ScanButton(
+                  icon: Icons.photo_library_outlined,
+                  label: 'Galería',
+                  isLoading: false,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ],
+        ),
+        if (_scanResult!.hasLowConfidence) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Confianza baja: revisá los datos antes de guardar.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1014,35 +1317,84 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return SizedBox(
       width: double.infinity,
       height: 60,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _saveExpense,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+      child: AnimatedPress(
+        scale: _isLoading ? 1 : 0.97,
+        onTap: _isLoading ? null : _saveExpense,
+        child: ElevatedButton(
+          onPressed: null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.primary,
+            disabledForegroundColor: Colors.white,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 0,
+            shadowColor: AppColors.primary.withValues(alpha: 0.22),
           ),
-          elevation: 0,
-          shadowColor: AppColors.primary.withValues(alpha: 0.22),
-        ),
-        child: _isLoading
-            ? const CircularProgressIndicator(
-                color: Colors.white, strokeWidth: 2)
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_rounded, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: animation,
+                  child: child,
+                ),
+              );
+            },
+            child: _isLoading
+                ? const SizedBox(
+                    key: ValueKey('loading'),
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
                     ),
-                  ),
-                ],
-              ),
+                  )
+                : _showSuccessState
+                    ? Row(
+                        key: const ValueKey('success'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.expense != null
+                                ? 'Actualizado'
+                                : (_isIncome
+                                    ? 'Ingreso guardado'
+                                    : 'Gasto guardado'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        key: const ValueKey('idle'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ),
       ),
     );
   }
@@ -1063,6 +1415,61 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           }
         });
       },
+    );
+  }
+}
+
+class _ScanButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  const _ScanButton({
+    required this.icon,
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.accentBlue.withValues(alpha: 0.07),
+          border: Border.all(
+            color: AppColors.accentBlue.withValues(alpha: 0.25),
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(icon, size: 18, color: AppColors.accentBlue),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
