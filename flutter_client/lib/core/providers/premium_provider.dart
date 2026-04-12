@@ -83,5 +83,5 @@ final premiumProductsProvider = FutureProvider((ref) async {
 ///
 /// Uso: `final canLink = ref.watch(canUseReceiptShoppingLinkProvider);`
 final canUseReceiptShoppingLinkProvider = Provider<bool>((ref) {
-  return ref.watch(premiumProvider);
+  return ref.watch(premiumProvider).valueOrNull ?? false;
 });
