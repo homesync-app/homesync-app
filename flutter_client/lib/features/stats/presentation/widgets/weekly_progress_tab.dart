@@ -8,6 +8,8 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'stats_shared_widgets.dart';
@@ -84,18 +86,37 @@ class WeeklyProgressTab extends ConsumerWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final content = controller.text.trim();
-              if (content.isNotEmpty) {
-                ref.read(loveNotesProvider.notifier).sendNote(
-                      content,
-                      ref.read(currentUserIdProvider) ?? 'me',
-                      'partner',
-                    );
-                Navigator.pop(ctx);
+              if (content.isEmpty) return;
+
+              final currentUserId = ref.read(currentUserIdProvider);
+              final householdId =
+                  await ref.read(householdIdProvider.future);
+              final members = ref
+                      .read(householdMembersNotifierProvider)
+                      .valueOrNull ??
+                  [];
+              final partner = members
+                  .where((m) => m.userId != currentUserId)
+                  .firstOrNull;
+
+              if (currentUserId == null ||
+                  householdId == null ||
+                  partner == null) return;
+
+              await ref.read(loveNotesProvider.notifier).sendNote(
+                    content: content,
+                    fromUserId: currentUserId,
+                    toUserId: partner.userId,
+                    householdId: householdId,
+                  );
+
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Nota enviada exitosamente'),
+                    content: Text('💌 Nota enviada con amor'),
                     backgroundColor: Color(0xFFEF4444),
                   ),
                 );

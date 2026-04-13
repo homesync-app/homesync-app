@@ -14,6 +14,8 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:intl/intl.dart';
@@ -106,7 +108,13 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           ],
         ),
         const SizedBox(height: 24),
-        _buildHomeWelcome(theme: theme, partnerMember: partnerMember),
+        _buildHomeWelcome(
+          theme: theme,
+          partnerMember: partnerMember,
+          senderName: partnerMember != null
+              ? (partnerMember.displayName.split(' ').first)
+              : 'tu pareja',
+        ),
       ],
     );
   }
@@ -114,58 +122,78 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildHomeWelcome({
     required AppThemeColors theme,
     required dynamic partnerMember,
+    required String senderName,
   }) {
     final partnerFirstName = _firstName(partnerMember?.displayName);
+    final pendingNote = ref.watch(pendingLoveNoteProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          'Todo lo importante',
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.55,
+        // Texto "Todo lo importante / del hogar / con X"
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Todo lo importante',
+                style: TextStyle(
+                  color: theme.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.55,
+                ),
+              ).animate().fadeIn(delay: 100.ms),
+              Text(
+                'del hogar',
+                style: TextStyle(
+                  color: theme.textPrimary.withValues(alpha: 0.7),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ).animate().fadeIn(delay: 200.ms),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 1.5,
+                    color: theme.primary.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'con ',
+                    style: TextStyle(
+                        color: theme.textSecondary, fontSize: 14),
+                  ),
+                  Text(
+                    partnerFirstName ?? 'tu pareja',
+                    style: TextStyle(
+                      color: theme.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.favorite_rounded,
+                    size: 12,
+                    color: AppColors.accentOrange,
+                  ),
+                ],
+              ).animate().fadeIn(delay: 300.ms),
+            ],
           ),
-        ).animate().fadeIn(delay: 100.ms),
-        Text(
-          'del hogar',
-          style: TextStyle(
-            color: theme.textPrimary.withValues(alpha: 0.7),
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+        ),
+
+        // Sobre animado — solo si hay nota pendiente
+        if (pendingNote != null) ...[
+          const SizedBox(width: 8),
+          LoveNoteEnvelope(
+            note: pendingNote,
+            senderName: senderName,
           ),
-        ).animate().fadeIn(delay: 200.ms),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 1.5,
-              color: theme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'con ',
-              style: TextStyle(color: theme.textSecondary, fontSize: 14),
-            ),
-            Text(
-              partnerFirstName ?? 'tu pareja',
-              style: TextStyle(
-                color: theme.primary,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.favorite_rounded,
-              size: 12,
-              color: AppColors.accentOrange,
-            ),
-          ],
-        ).animate().fadeIn(delay: 300.ms),
+        ],
       ],
     );
   }
