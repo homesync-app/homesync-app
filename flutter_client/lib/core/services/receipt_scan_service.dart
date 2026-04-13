@@ -68,6 +68,19 @@ class ReceiptScanService {
     }
 
     // 5. Llamar a la Edge Function (OCR, sin tocar Storage)
+    //    Verificar que el JWT no esté expirado antes de invocar.
+    //    functions.invoke no dispara el auto-refresh a diferencia de las llamadas
+    //    a PostgREST, y el timer de refresh puede perderse tras un backgrounding.
+    final session = _supabase.auth.currentSession;
+    if (session == null) {
+      throw Exception('Sesión expirada. Por favor iniciá sesión nuevamente.');
+    }
+    final nowSecs = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    if ((session.expiresAt ?? 0) <= nowSecs + 60) {
+      debugPrint('[ReceiptScan] JWT próximo a expirar, refrescando sesión...');
+      await _supabase.auth.refreshSession();
+    }
+
     debugPrint('[ReceiptScan] Invocando Edge Function scan-receipt...');
     final response = await _supabase.functions.invoke(
       'scan-receipt',
