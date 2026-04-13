@@ -251,6 +251,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (canLink) {
         _matchOcrItemsToShoppingList(result.detectedItems);
       }
+    } on ScanLimitException catch (e) {
+      debugPrint('[ReceiptScan] Límite alcanzado: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: AppColors.warning,
+          duration: const Duration(seconds: 8),
+        ),
+      );
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
@@ -274,7 +284,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         _titleController.text = result.merchant!;
       }
       if (result.amount != null) {
-        _amountController.text = result.amount!.toStringAsFixed(2);
+        // El parser espera formato es_ES: punto = miles, coma = decimal.
+        // toStringAsFixed usa punto como decimal → el parser lo borra como miles → bug.
+        // Fix: reemplazar el punto decimal por coma antes de asignar.
+        _amountController.text =
+            result.amount!.toStringAsFixed(2).replaceAll('.', ',');
       }
       if (result.date != null) {
         _selectedDate = result.date!;
