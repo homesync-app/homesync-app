@@ -68,6 +68,26 @@ class ReceiptScanService {
     }
 
     // 5. Llamar a la Edge Function (OCR, sin tocar Storage)
+    //
+    //    El FunctionsClient del SDK cachea el Authorization header internamente
+    //    y no lo actualiza dinámicamente como sí hace PostgREST. En modo
+    //    firebase_third_party, el token cacheado puede quedar inválido tras
+    //    un background/foreground aunque session.expiresAt parezca vigente.
+    //
+    //    Fix: forzar refresh de sesión y pasar el access token explícitamente
+    //    en los headers, ignorando el cache del SDK.
+    debugPrint('[ReceiptScan] Refrescando sesión antes de invocar Edge Function...');
+    try {
+      await _supabase.auth.refreshSession();
+    } catch (e) {
+      debugPrint('[ReceiptScan] refreshSession falló: $e');
+    }
+
+    final accessToken = _supabase.auth.currentSession?.accessToken;
+    if (accessToken == null) {
+      throw Exception('Sesión expirada. Por favor iniciá sesión nuevamente.');
+    }
+
     debugPrint('[ReceiptScan] Invocando Edge Function scan-receipt...');
     final response = await _supabase.functions.invoke(
       'scan-receipt',
@@ -75,6 +95,7 @@ class ReceiptScanService {
         'imageBase64': base64Image,
         'mimeType': 'image/webp',
       },
+      headers: {'Authorization': 'Bearer $accessToken'},
     );
 
     debugPrint('[ReceiptScan] Respuesta status=${response.status} data=${response.data}');
