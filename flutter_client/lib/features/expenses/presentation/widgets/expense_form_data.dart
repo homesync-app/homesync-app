@@ -65,6 +65,30 @@ List<Map<String, dynamic>> buildExpenseCategories() {
       'color': CategoryMapping.getCategoryColor('mercadolibre'),
     },
     {
+      'id': 'pets',
+      'name': 'Mascotas',
+      'icon': '🐾',
+      'color': CategoryMapping.getCategoryColor('pets'),
+    },
+    {
+      'id': 'clothing',
+      'name': 'Ropa y calzado',
+      'icon': '👗',
+      'color': CategoryMapping.getCategoryColor('clothing'),
+    },
+    {
+      'id': 'electronics',
+      'name': 'Tecnología',
+      'icon': '📱',
+      'color': CategoryMapping.getCategoryColor('electronics'),
+    },
+    {
+      'id': 'education',
+      'name': 'Educación',
+      'icon': '📚',
+      'color': CategoryMapping.getCategoryColor('education'),
+    },
+    {
       'id': 'other',
       'name': 'Otros gastos',
       'icon': '📦',

@@ -59,7 +59,13 @@ class CategoryMapping {
       case 'otros':
         return const Color(0xFF94A3B8);
       case 'ropa':
+      case 'clothing':
+      case 'indumentaria':
         return const Color(0xFF818CF8);
+      case 'electronics':
+      case 'tecnología':
+      case 'tecnologia':
+        return const Color(0xFF6366F1);
       case 'auto':
       case 'coche':
         return const Color(0xFFF87171);
@@ -72,6 +78,7 @@ class CategoryMapping {
         return const Color(0xFF2E8B7F);
       case 'estudio':
       case 'educación':
+      case 'education':
       case 'estudio / educación':
         return AppColors.iconYellow;
       case 'urgente':

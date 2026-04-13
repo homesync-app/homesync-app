@@ -92,6 +92,17 @@ class ReceiptScanService {
 
     debugPrint('[ReceiptScan] Respuesta status=${response.status} data=${response.data}');
 
+    if (response.status == 429) {
+      final body = response.data as Map<String, dynamic>?;
+      if (body?['error'] == 'scan_limit_reached') {
+        final used = body?['used'] ?? 0;
+        final limit = body?['limit'] ?? 10;
+        final tier = body?['tier'] ?? 'free';
+        final isPremium = tier == 'premium';
+        throw ScanLimitException(used: used, limit: limit, isPremium: isPremium);
+      }
+    }
+
     if (response.status != 200 || response.data == null) {
       throw Exception('Error en el escaneo (status ${response.status}): ${response.data}');
     }
@@ -147,5 +158,27 @@ class ReceiptScanService {
       debugPrint('[ReceiptScan] Ticket no disponible: $e');
       return null;
     }
+  }
+}
+
+/// Excepción lanzada cuando el household alcanzó su límite mensual de scans.
+class ScanLimitException implements Exception {
+  final int used;
+  final int limit;
+  final bool isPremium;
+
+  const ScanLimitException({
+    required this.used,
+    required this.limit,
+    required this.isPremium,
+  });
+
+  @override
+  String toString() {
+    if (isPremium) {
+      return 'Alcanzaste el límite de $limit escaneos mensuales de tu plan Premium.';
+    }
+    return 'Alcanzaste el límite de $limit escaneos gratuitos este mes. '
+        'Pasate a Premium para obtener hasta 40 escaneos.';
   }
 }
