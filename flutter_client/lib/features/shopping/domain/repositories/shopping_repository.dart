@@ -19,6 +19,14 @@ abstract class ShoppingRepository {
     bool shouldSync = true,
   });
 
+  Future<Either<Failure, void>> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
+  });
+
   Future<Either<Failure, void>> toggleItem({
     required String itemId,
     required bool completed,

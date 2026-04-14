@@ -13,6 +13,8 @@ import '../../domain/usecases/delete_shopping_item_usecase.dart';
 import '../../domain/usecases/clear_completed_shopping_items_usecase.dart';
 import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
 import '../../data/repositories/supabase_shopping_repository.dart';
+import '../../data/shopping_predefined.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:uuid/uuid.dart';
 
 part 'shopping_provider.g.dart';
@@ -186,12 +188,39 @@ class ShoppingItems extends _$ShoppingItems {
           state = AsyncValue.data(
             currentState.map((item) => item.id == tempItem.id ? newItem : item).toList()
           );
+          // Log si el item no está en el catálogo predefinido (para admin analytics)
+          _logCatalogRequestIfNeeded(name, emoji);
         },
       );
-    } catch (e) {
-      log.e('Error in addItem: $e');
+    } catch (e, stack) {
+      log.e('Error in addItem: $e', error: e, stackTrace: stack);
       state = AsyncValue.data(oldState);
     }
+  }
+
+  /// Registra el item en shopping_catalog_requests si no existe en el catálogo.
+  /// Fire-and-forget: nunca bloquea ni propaga errores al usuario.
+  void _logCatalogRequestIfNeeded(String name, String emoji) {
+    final match = ReceiptMatcher.findPredefined(name);
+    if (match != null) return; // Está en el catálogo, no hace falta loguear
+
+    // Verificar también coincidencia exacta por nombre (case insensitive)
+    final nameLower = name.toLowerCase().trim();
+    final inCatalog = ShoppingPredefined.itemsPerCategory.values
+        .expand((list) => list)
+        .any((item) => (item['name'] ?? '').toLowerCase() == nameLower);
+    if (inCatalog) return;
+
+    // Log async sin await — no bloquea el flujo
+    final client = ref.read(supabaseClientProvider);
+    client.rpc('upsert_catalog_request', params: {
+      'p_name': name.trim(),
+      'p_emoji': emoji,
+    }).then((_) {
+      log.d('Catalog request logged: $name');
+    }).catchError((e) {
+      log.w('Could not log catalog request: $e');
+    });
   }
 
   Future<void> toggleItem(String itemId, bool completed) async {
@@ -226,8 +255,60 @@ class ShoppingItems extends _$ShoppingItems {
         log.e('Failed to toggle item');
         state = AsyncValue.data(oldState); // Rollback
       }
+    } catch (e, stack) {
+      log.e('Error in toggleItem: $e', error: e, stackTrace: stack);
+      state = AsyncValue.data(oldState);
+    }
+  }
+
+  Future<void> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
+  }) async {
+    final oldState = state.value ?? [];
+
+    // Optimistic update
+    state = AsyncValue.data(
+      oldState.map((item) {
+        if (item.id != itemId) return item;
+        return ShoppingItemModel(
+          id: item.id,
+          householdId: item.householdId,
+          name: name,
+          quantity: item.quantity,
+          unit: item.unit,
+          category: category,
+          emoji: emoji,
+          note: note ?? item.note,
+          addedBy: item.addedBy,
+          addedByName: item.addedByName,
+          completed: item.completed,
+          completedBy: item.completedBy,
+          completedByName: item.completedByName,
+          completedAt: item.completedAt,
+          createdAt: item.createdAt,
+          shouldSync: item.shouldSync,
+        );
+      }).toList(),
+    );
+
+    try {
+      final result = await ref.read(shoppingRepositoryProvider).updateItem(
+            itemId: itemId,
+            name: name,
+            category: category,
+            emoji: emoji,
+            note: note,
+          );
+      if (result.isLeft()) {
+        log.e('Failed to update item');
+        state = AsyncValue.data(oldState);
+      }
     } catch (e) {
-      log.e('Error in toggleItem: $e');
+      log.e('Error in updateItem: $e');
       state = AsyncValue.data(oldState);
     }
   }
@@ -249,8 +330,8 @@ class ShoppingItems extends _$ShoppingItems {
         log.e('Failed to delete item');
         state = AsyncValue.data(oldState); // Rollback
       }
-    } catch (e) {
-      log.e('Error in deleteItem: $e');
+    } catch (e, stack) {
+      log.e('Error in deleteItem: $e', error: e, stackTrace: stack);
       state = AsyncValue.data(oldState);
     }
   }
@@ -275,8 +356,8 @@ class ShoppingItems extends _$ShoppingItems {
         log.e('Failed to clear completed items');
         state = AsyncValue.data(oldState); // Rollback
       }
-    } catch (e) {
-      log.e('Error in clearCompleted: $e');
+    } catch (e, stack) {
+      log.e('Error in clearCompleted: $e', error: e, stackTrace: stack);
       state = AsyncValue.data(oldState);
     }
   }
@@ -301,8 +382,8 @@ class ShoppingItems extends _$ShoppingItems {
         log.e('Failed to uncomplete items');
         state = AsyncValue.data(oldState); // Rollback
       }
-    } catch (e) {
-      log.e('Error in uncompleteAll: $e');
+    } catch (e, stack) {
+      log.e('Error in uncompleteAll: $e', error: e, stackTrace: stack);
       state = AsyncValue.data(oldState);
     }
   }

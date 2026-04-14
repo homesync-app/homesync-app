@@ -80,6 +80,11 @@ class ShoppingPredefined {
       {'name': 'Jugo', 'emoji': '🧃'},
       {'name': 'Soda', 'emoji': '🫧'},
       {'name': 'Fernet', 'emoji': '🥃'},
+      {'name': 'Terma', 'emoji': '🌿'},
+      {'name': 'Aperitivo', 'emoji': '🥃'},
+      {'name': 'Leche chocolatada', 'emoji': '🍫'},
+      {'name': 'Isotonico', 'emoji': '💪'},
+      {'name': 'Energizante', 'emoji': '⚡'},
     ],
     'snacks': [
       {'name': 'Papas fritas', 'emoji': '🍟'},

@@ -191,6 +191,24 @@ class SupabaseShoppingRepository
   }
 
   @override
+  Future<Either<Failure, void>> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
+  }) async {
+    return executeWithHandling(() async {
+      await _client.from('shopping_items').update({
+        'name': name.trim(),
+        'category': category,
+        'emoji': emoji,
+        if (note != null) 'note': note.trim().isEmpty ? null : note.trim(),
+      }).eq('id', itemId);
+    });
+  }
+
+  @override
   Future<Either<Failure, void>> toggleItem({
     required String itemId,
     required bool completed,

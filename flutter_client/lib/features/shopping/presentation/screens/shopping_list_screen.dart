@@ -8,7 +8,11 @@ import '../../domain/models/shopping_model.dart';
 import '../../domain/models/shopping_categories.dart';
 import '../providers/shopping_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import '../widgets/shopping_item_sheet.dart';
 
 // -----------------------------------------------------------------------------
@@ -27,11 +31,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   final _inputController = TextEditingController();
   final FocusNode _inputFocus = FocusNode();
 
-  final Set<String> _expandedSections = {};
+  // 'recent' empieza expandida para que los artículos recién comprados sean visibles
+  // inmediatamente (ej: después de vincular con un ticket escaneado).
+  final Set<String> _expandedSections = {'recent'};
+  final Set<String> _completedThisSession = {};
   final ValueNotifier<List<Map<String, String>>> _suggestionsVal =
       ValueNotifier([]);
   Timer? _debounce;
+  Timer? _addSuccessTimer;
   String _lastQuery = '';
+  bool _showAddSuccess = false;
 
   @override
   void initState() {
@@ -42,11 +51,23 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _addSuccessTimer?.cancel();
     _suggestionsVal.dispose();
     _scrollController.dispose();
     _inputController.dispose();
     _inputFocus.dispose();
     super.dispose();
+  }
+
+  void _triggerAddSuccessFeedback() {
+    if (!mounted) return;
+    _addSuccessTimer?.cancel();
+    HapticFeedback.mediumImpact();
+    setState(() => _showAddSuccess = true);
+    _addSuccessTimer = Timer(const Duration(milliseconds: 520), () {
+      if (!mounted) return;
+      setState(() => _showAddSuccess = false);
+    });
   }
 
   void _onSearchChanged() {
@@ -91,9 +112,18 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   Future<void> _toggleItem(ShoppingItemModel item) async {
     HapticFeedback.lightImpact();
-    ref
-        .read(shoppingItemsProvider.notifier)
-        .toggleItem(item.id, !item.completed);
+    final willBeCompleted = !item.completed;
+    ref.read(shoppingItemsProvider.notifier).toggleItem(
+          item.id,
+          willBeCompleted,
+        );
+    setState(() {
+      if (willBeCompleted) {
+        _completedThisSession.add(item.id);
+      } else {
+        _completedThisSession.remove(item.id);
+      }
+    });
   }
 
   Future<void> _deleteItem(ShoppingItemModel item) async {
@@ -147,6 +177,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         .firstOrNull;
     if (doneMatch != null) {
       await _toggleItem(doneMatch);
+      _triggerAddSuccessFeedback();
       return;
     }
 
@@ -171,6 +202,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           category: categoryId,
           emoji: finalEmoji,
         );
+    _triggerAddSuccessFeedback();
   }
 
   // -- Build -----------------------------------------------------------------
@@ -178,84 +210,100 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   Widget _buildSectionHeader(String title, String sectionId,
       {bool isAccent = false, String? emoji, int? count, Color? accentColor}) {
     final isExpanded = _expandedSections.contains(sectionId);
-    final highlightColor = accentColor ??
-        (isAccent ? AppColors.accentGreen : AppColors.textPrimary);
+    final theme = context.theme;
+    final highlightColor =
+        accentColor ?? (isAccent ? AppColors.accentGreen : theme.textPrimary);
+    final backgroundColor = isExpanded
+        ? highlightColor.withValues(alpha: theme.isDarkMode ? 0.14 : 0.10)
+        : theme.surface;
 
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
         child: InkWell(
           onTap: () => _toggleSection(sectionId),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(22),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isExpanded
+                    ? highlightColor.withValues(alpha: 0.26)
+                    : theme.border.withValues(alpha: 0.55),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowBase.withValues(
+                    alpha: theme.isDarkMode ? 0.12 : 0.025,
+                  ),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    if (emoji != null) ...[
-                      Text(
-                        emoji,
-                        style: TextStyle(
-                          fontSize: isExpanded ? 18 : 17,
+                if (emoji != null) ...[
+                  Container(
+                    width: 34,
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: highlightColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.25,
+                      color: isExpanded ? highlightColor : theme.textPrimary,
+                    ),
+                  ),
+                ),
+                if (count != null) ...[
+                  const SizedBox(width: 10),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: highlightColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: highlightColor.withValues(
+                          alpha: isExpanded ? 1 : 0.82,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.25,
-                                color: isExpanded
-                                    ? highlightColor
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          if (count != null) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              '$count',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: isExpanded
-                                    ? highlightColor.withValues(alpha: 0.72)
-                                    : AppColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
                     ),
-                    AnimatedRotation(
-                      turns: isExpanded ? 0.5 : 0.0,
-                      duration: const Duration(milliseconds: 180),
-                      curve: Curves.easeOutCubic,
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: isExpanded
-                            ? highlightColor
-                            : AppColors.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 1,
-                  margin: EdgeInsets.only(right: isExpanded ? 0 : 18),
-                  color: (isExpanded ? highlightColor : AppColors.divider)
-                      .withValues(alpha: isExpanded ? 0.22 : 0.18),
+                  ),
+                ],
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.5 : 0.0,
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: isExpanded ? highlightColor : theme.textSecondary,
+                    size: 22,
+                  ),
                 ),
               ],
             ),
@@ -271,11 +319,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     int? count,
     Color? accentColor,
   }) {
-    final color = accentColor ?? AppColors.textPrimary;
+    final color = accentColor ?? context.theme.textPrimary;
 
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
         child: Row(
           children: [
             if (emoji != null) ...[
@@ -372,11 +420,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             return Container(
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.theme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 10)
                 ],
               ),
@@ -386,8 +434,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           leading: Text(s['emoji']!,
                               style: const TextStyle(fontSize: 20)),
                           title: Text(s['name']!,
-                              style: const TextStyle(
-                                  color: AppColors.textPrimary)),
+                              style:
+                                  TextStyle(color: context.theme.textPrimary)),
                           trailing: const Icon(Icons.add_circle_outline,
                               color: AppColors.accentGreen),
                           onTap: () =>
@@ -402,10 +450,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           padding:
               const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.theme.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -4),
               )
@@ -418,14 +466,18 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   child: TextField(
                     controller: _inputController,
                     focusNode: _inputFocus,
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style: TextStyle(color: context.theme.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Necesito...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted),
+                      hintStyle: TextStyle(color: context.theme.textMuted),
                       filled: true,
-                      fillColor: AppColors.background,
-                      prefixIcon:
-                          const Icon(Icons.search, color: AppColors.textMuted),
+                      fillColor: context.theme.surfaceVariant.withValues(
+                        alpha: context.theme.isDarkMode ? 0.72 : 1,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_outlined,
+                        color: context.theme.textMuted,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 14),
                       border: OutlineInputBorder(
@@ -437,26 +489,68 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                InkWell(
+                AnimatedPress(
+                  scale: 0.93,
                   onTap: () =>
                       _handleSelection(_inputController.text, pending, done),
-                  borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    width: 48,
-                    height: 48,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: AppColors.accentGreen,
+                      color: _showAddSuccess
+                          ? AppColors.primary
+                          : context.theme.elevatedSurface,
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _showAddSuccess
+                            ? AppColors.primary.withValues(alpha: 0.82)
+                            : AppColors.primary.withValues(alpha: 0.20),
+                        width: 1.2,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accentGreen.withValues(alpha: 0.24),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          color: (_showAddSuccess
+                                  ? AppColors.primary
+                                  : context.theme.shadowBase)
+                              .withValues(
+                            alpha: _showAddSuccess
+                                ? 0.22
+                                : (context.theme.isDarkMode ? 0.18 : 0.06),
+                          ),
+                          blurRadius: _showAddSuccess ? 18 : 12,
+                          offset: Offset(0, _showAddSuccess ? 6 : 4),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.add_rounded,
-                        color: Colors.white, size: 28),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      switchInCurve: Curves.easeOutBack,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: _showAddSuccess
+                          ? const Icon(
+                              Icons.check_rounded,
+                              key: ValueKey('success'),
+                              color: Colors.white,
+                              size: 26,
+                            )
+                          : const Icon(
+                              Icons.add_rounded,
+                              key: ValueKey('idle'),
+                              color: AppColors.primary,
+                              size: 28,
+                            ),
+                    ),
                   ),
                 ),
               ],
@@ -472,7 +566,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final shoppingState = ref.watch(shoppingItemsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.theme.scaffoldBackground,
       body: shoppingState.when(
         loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
@@ -480,7 +574,12 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 style: const TextStyle(color: AppColors.error))),
         data: (items) {
           final pending = items.where((i) => !i.completed).toList();
-          final done = items.where((i) => i.completed).toList();
+          // Deduplicate completed items by name (case-insensitive), keeping the latest
+          final _seenNames = <String>{};
+          final done = items.where((i) => i.completed).where((i) {
+            final key = i.name.toLowerCase().trim();
+            return _seenNames.add(key);
+          }).toList();
 
           return Column(
             children: [
@@ -544,7 +643,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                         ],
                                       ),
                                       child: const Icon(
-                                        Icons.shopping_basket_rounded,
+                                        Icons.shopping_basket_outlined,
                                         size: 56,
                                         color: AppColors.primary,
                                       ),
@@ -579,8 +678,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                           ? 'Heladera lista.\nNecesitan algo hoy?'
                                           : 'Todo comprado.\nQueres anotar algo mas?',
                                       textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                      style: TextStyle(
+                                        color: context.theme.textPrimary,
                                         fontSize: 22,
                                         height: 1.3,
                                         fontWeight: FontWeight.w900,
@@ -588,11 +687,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    const Text(
+                                    Text(
                                       'Agrega productos usando las categorias\no el buscador de abajo.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: context.theme.textSecondary,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         height: 1.45,
@@ -642,12 +741,31 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             ),
                           ),
                         ],
+                        if (_completedThisSession.length >= 3)
+                          SliverToBoxAdapter(
+                            child: _PostShoppingBanner(
+                              completedCount: _completedThisSession.length,
+                              onScanTap: () {
+                                final canScan =
+                                    ref.read(canUseReceiptShoppingLinkProvider);
+                                if (canScan) {
+                                  ExpenseFormSheet.show(
+                                    context,
+                                    triggerScanOnOpen: true,
+                                  );
+                                } else {
+                                  PremiumPaywall.show(context);
+                                }
+                              },
+                            ),
+                          ),
 
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
                             'Volver a comprar',
                             'recent',
                             accentColor: AppColors.accentGreen,
+                            count: done.length,
                           ),
                           if (_expandedSections.contains('recent'))
                             SliverPadding(
@@ -733,7 +851,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         itemCount: 9,
         itemBuilder: (context, index) => Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.theme.surface,
             borderRadius: BorderRadius.circular(20),
           ),
         ),
@@ -770,18 +888,18 @@ class _PredefinedItemTile extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: isPending
-              ? AppColors.surfaceVariant.withValues(alpha: 0.22)
+              ? context.theme.surfaceContainer.withValues(alpha: 0.22)
               : catColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isPending
-                ? AppColors.divider.withValues(alpha: 0.40)
+                ? context.theme.border.withValues(alpha: 0.40)
                 : catColor.withValues(alpha: 0.28),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.025),
+              color: context.theme.shadow.withValues(alpha: 0.025),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -795,7 +913,7 @@ class _PredefinedItemTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 28,
                 color: isPending
-                    ? AppColors.textMuted.withValues(alpha: 0.5)
+                    ? context.theme.textMuted.withValues(alpha: 0.5)
                     : null,
               ),
             ),
@@ -811,8 +929,9 @@ class _PredefinedItemTile extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                   height: 1.1,
-                  color:
-                      isPending ? AppColors.textMuted : AppColors.textPrimary,
+                  color: isPending
+                      ? context.theme.textMuted
+                      : context.theme.textPrimary,
                 ),
               ),
             ),
@@ -838,11 +957,21 @@ class _ShoppingItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final catInfo = ShoppingCategories.all.firstWhere(
       (c) => c['id'] == item.category,
       orElse: () => ShoppingCategories.all.first,
     );
     final catColor = Color(catInfo['color'] as int);
+    final pendingBackground = theme.isDarkMode
+        ? theme.surface
+        : Color.alphaBlend(
+            theme.surfaceVariant.withValues(alpha: 0.72),
+            theme.surface,
+          );
+    final pendingBorder = theme.isDarkMode
+        ? theme.border.withValues(alpha: 0.72)
+        : theme.border.withValues(alpha: 0.85);
 
     return AnimatedPress(
       onTap: () {
@@ -856,25 +985,29 @@ class _ShoppingItemTile extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
           color: isCompleted
-              ? AppColors.surfaceVariant.withValues(alpha: 0.28)
-              : AppColors.surface,
+              ? theme.surfaceContainer.withValues(alpha: 0.28)
+              : pendingBackground,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: isCompleted
-                ? AppColors.divider.withValues(alpha: 0.52)
-                : catColor.withValues(alpha: 0.32),
-            width: isCompleted ? 1.0 : 1.4,
+                ? theme.border.withValues(alpha: 0.52)
+                : pendingBorder,
+            width: isCompleted ? 1.0 : 1.2,
           ),
           boxShadow: isCompleted
               ? []
               : [
                   BoxShadow(
-                    color: catColor.withValues(alpha: 0.08),
+                    color: theme.shadowBase.withValues(
+                      alpha: theme.isDarkMode ? 0.14 : 0.03,
+                    ),
                     blurRadius: 14,
                     offset: const Offset(0, 7),
                   ),
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
+                    color: catColor.withValues(
+                      alpha: theme.isDarkMode ? 0.04 : 0.018,
+                    ),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -893,7 +1026,7 @@ class _ShoppingItemTile extends StatelessWidget {
                         : catInfo['emoji'] as String,
                     style: TextStyle(
                       fontSize: isCompleted ? 20 : 32,
-                      color: isCompleted ? AppColors.textMuted : null,
+                      color: isCompleted ? theme.textMuted : null,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -908,9 +1041,8 @@ class _ShoppingItemTile extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: isCompleted ? 11 : 13,
                         height: 1.1,
-                        color: isCompleted
-                            ? AppColors.textMuted
-                            : AppColors.textPrimary,
+                        color:
+                            isCompleted ? theme.textMuted : theme.textPrimary,
                         decoration:
                             isCompleted ? TextDecoration.lineThrough : null,
                       ),
@@ -933,6 +1065,81 @@ class _ShoppingItemTile extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PostShoppingBanner extends StatelessWidget {
+  final int completedCount;
+  final VoidCallback onScanTap;
+
+  const _PostShoppingBanner({
+    required this.completedCount,
+    required this.onScanTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.12),
+            AppColors.accentBlue.withValues(alpha: 0.08),
+          ],
+        ),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.25),
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onScanTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                const Text('🧾', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '✅ $completedCount productos comprados',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Escanear ticket y registrar gasto',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.camera_alt_outlined,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
