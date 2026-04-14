@@ -66,7 +66,8 @@ class Category {
 class TemplateService {
   final SupabaseClient _client;
 
-  TemplateService() : _client = Supabase.instance.client;
+  TemplateService({required SupabaseClient supabaseClient})
+      : _client = supabaseClient;
 
   Future<List<Category>> getCategories() async {
     final response =
@@ -77,14 +78,23 @@ class TemplateService {
         .toList();
   }
 
-  Future<List<TaskTemplate>> getTemplates({String? categoryId}) async {
+  Future<List<TaskTemplate>> getTemplates({
+    String? categoryId,
+    int? limit,
+    int? offset,
+  }) async {
     var query = _client.from('task_templates').select();
 
     if (categoryId != null) {
       query = query.eq('category_id', categoryId);
     }
 
-    final response = await query.order('sort_order');
+    final orderedQuery = query.order('sort_order');
+    final response = await (offset != null && limit != null
+        ? orderedQuery.range(offset, offset + limit - 1)
+        : limit != null
+            ? orderedQuery.limit(limit)
+            : orderedQuery);
 
     return (response as List)
         .map((json) => TaskTemplate.fromJson(json as Map<String, dynamic>))

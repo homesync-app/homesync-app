@@ -8,10 +8,151 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
+import 'package:homesync_client/features/rewards/domain/usecases/get_rewards_usecase.dart';
 
 part 'reward_provider.g.dart';
+
+const _familyDefaultRewards = <Map<String, dynamic>>[
+  {
+    'title': 'Postre especial',
+    'description': 'Elegir un postre favorito para despues de cenar.',
+    'cost': 25,
+    'icon': '🍨',
+    'category': 'familia',
+    'target_type': 'child',
+  },
+  {
+    'title': 'Elegir la cena',
+    'description': 'Decidir el menu de una noche en casa.',
+    'cost': 40,
+    'icon': '🍕',
+    'category': 'familia',
+    'target_type': 'child',
+  },
+  {
+    'title': '15 minutos extra de pantalla',
+    'description': 'Un ratito mas para jugar o mirar algo.',
+    'cost': 35,
+    'icon': '📱',
+    'category': 'familia',
+    'target_type': 'child',
+  },
+  {
+    'title': 'Juguete o premio pequeno',
+    'description': 'Canje por algo simple elegido con un adulto.',
+    'cost': 90,
+    'icon': '🧩',
+    'category': 'familia',
+    'target_type': 'child',
+  },
+  {
+    'title': 'Cafe o mate preparado',
+    'description': 'Un mimo simple tomado del modo pareja.',
+    'cost': 30,
+    'icon': '☕',
+    'category': 'familia',
+    'target_type': 'adult',
+  },
+  {
+    'title': '15 minutos de masajes',
+    'description': 'Un premio corto para bajar un cambio.',
+    'cost': 60,
+    'icon': '💆',
+    'category': 'familia',
+    'target_type': 'adult',
+  },
+  {
+    'title': 'Vale por elegir la peli',
+    'description': 'Elegis que ver sin negociar esa noche.',
+    'cost': 55,
+    'icon': '🎬',
+    'category': 'familia',
+    'target_type': 'adult',
+  },
+  {
+    'title': 'Cena casera especial',
+    'description': 'Una noche distinta con algo rico hecho en casa.',
+    'cost': 95,
+    'icon': '🍽️',
+    'category': 'familia',
+    'target_type': 'adult',
+  },
+  {
+    'title': 'Noche de peli',
+    'description': 'Plan simple para disfrutar todos juntos.',
+    'cost': 80,
+    'icon': '🎥',
+    'category': 'familia',
+    'target_type': 'all',
+  },
+  {
+    'title': 'Helado para todos',
+    'description': 'Salida o pedido de helado familiar.',
+    'cost': 110,
+    'icon': '🍦',
+    'category': 'familia',
+    'target_type': 'all',
+  },
+  {
+    'title': 'Pedir comida',
+    'description': 'Una noche sin cocinar para toda la familia.',
+    'cost': 180,
+    'icon': '🥡',
+    'category': 'familia',
+    'target_type': 'all',
+  },
+  {
+    'title': 'Plan del fin de semana',
+    'description': 'Elegir una salida o actividad para hacer juntos.',
+    'cost': 160,
+    'icon': '🌟',
+    'category': 'familia',
+    'target_type': 'all',
+  },
+];
+
+const _rewardsPageSize = 20;
+
+class RewardsPageState {
+  final List<RewardModel> items;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  const RewardsPageState({
+    required this.items,
+    required this.hasMore,
+    required this.isLoadingMore,
+  });
+
+  RewardsPageState copyWith({
+    List<RewardModel>? items,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) {
+    return RewardsPageState(
+      items: items ?? this.items,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+}
+
+class _RewardsPageChunk {
+  final List<RewardModel> items;
+  final bool hasMore;
+
+  const _RewardsPageChunk({
+    required this.items,
+    required this.hasMore,
+  });
+}
+
+final getRewardsUseCaseProvider = Provider<GetRewardsUseCase>((ref) {
+  return GetRewardsUseCase(ref.read(rewardRepositoryProvider));
+});
 
 @riverpod
 class Rewards extends _$Rewards {
@@ -21,6 +162,7 @@ class Rewards extends _$Rewards {
   Future<List<RewardModel>> build() async {
     final admin = ref.watch(adminProvider);
     final householdId = await ref.watch(householdIdProvider.future);
+    final caps = ref.watch(householdCapabilitiesProvider);
     if (householdId == null) return [];
 
     _setupRealtime(householdId);
@@ -29,7 +171,7 @@ class Rewards extends _$Rewards {
     List<Map<String, dynamic>> rawRewards = [];
 
     if (admin.isAdminUser) {
-      final client = Supabase.instance.client;
+      final client = ref.read(supabaseClientProvider);
       final rewardsResponse = await client.rpc(
         'qa_admin_get_rewards',
         params: {'p_household_id': householdId},
@@ -37,9 +179,10 @@ class Rewards extends _$Rewards {
       rawRewards = List<Map<String, dynamic>>.from(rewardsResponse as List);
       if (rawRewards.isEmpty) {
         log.i('QA reward store empty, seeding default rewards...');
-        await client.rpc(
-          'qa_admin_seed_default_rewards',
-          params: {'p_household_id': householdId},
+        await _seedDefaultRewards(
+          householdId: householdId,
+          caps: caps,
+          isAdminQa: true,
         );
         final secondTry = await client.rpc(
           'qa_admin_get_rewards',
@@ -52,12 +195,14 @@ class Rewards extends _$Rewards {
       rawRewards = result.getOrElse((_) => []);
 
       if (rawRewards.isEmpty) {
-        log.i('Reward store empty, auto-cloning templates...');
-        final cloneResult = await repo.cloneTemplates();
-        if (cloneResult.isRight()) {
-          final secondTry = await repo.getRewards(householdId);
-          rawRewards = secondTry.getOrElse((_) => []);
-        }
+        log.i('Reward store empty, seeding defaults for ${caps.type.name}...');
+        await _seedDefaultRewards(
+          householdId: householdId,
+          caps: caps,
+          isAdminQa: false,
+        );
+        final secondTry = await repo.getRewards(householdId);
+        rawRewards = secondTry.getOrElse((_) => []);
       }
     }
 
@@ -94,6 +239,58 @@ class Rewards extends _$Rewards {
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
+  }
+
+  Future<void> _seedDefaultRewards({
+    required String householdId,
+    required HouseholdCapabilities caps,
+    required bool isAdminQa,
+  }) async {
+    if (caps.type == HouseholdType.family) {
+      if (isAdminQa) {
+        final client = ref.read(supabaseClientProvider);
+        await client.rpc(
+          'qa_admin_seed_default_rewards',
+          params: {'p_household_id': householdId},
+        );
+        return;
+      }
+
+      final currentUserId = ref.read(currentUserIdProvider);
+      if (currentUserId == null) return;
+
+      final client = ref.read(supabaseClientProvider);
+      final rows = _familyDefaultRewards
+          .map(
+            (reward) => {
+              'household_id': householdId,
+              'title': reward['title'],
+              'description': reward['description'],
+              'cost': reward['cost'],
+              'icon': reward['icon'],
+              'category': reward['category'],
+              'created_by': currentUserId,
+              'is_approved': true,
+              'is_active': true,
+              'target_type': reward['target_type'],
+            },
+          )
+          .toList();
+      await client.from('rewards').insert(rows);
+      return;
+    }
+
+    if (isAdminQa) {
+      final client = ref.read(supabaseClientProvider);
+      await client.rpc(
+        'qa_admin_seed_default_rewards',
+        params: {'p_household_id': householdId},
+      );
+      return;
+    }
+
+    final repo = ref.read(rewardRepositoryProvider);
+    await repo.cloneTemplates();
   }
 
   Future<Either<Failure, void>> suggestReward({
@@ -206,14 +403,15 @@ class Rewards extends _$Rewards {
         return const Left(ValidationFailure('Hogar QA no identificado'));
       }
       try {
-        final seeded = await Supabase.instance.client.rpc(
+        final client = ref.read(supabaseClientProvider);
+        final seeded = await client.rpc(
           'qa_admin_seed_default_rewards',
           params: {'p_household_id': householdId},
         );
         ref.invalidateSelf();
         return Right((seeded as num).toInt());
-      } catch (e) {
-        log.w('QA seed rewards failure: $e');
+      } catch (e, stack) {
+        log.w('QA seed rewards failure: $e', error: e, stackTrace: stack);
         return Left(ServerFailure(e.toString()));
       }
     }
@@ -233,6 +431,137 @@ class Rewards extends _$Rewards {
     );
   }
 }
+
+class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
+  @override
+  Future<RewardsPageState> build() async {
+    final chunk = await _fetchChunk(offset: 0);
+    return RewardsPageState(
+      items: chunk.items,
+      hasMore: chunk.hasMore,
+      isLoadingMore: false,
+    );
+  }
+
+  Future<_RewardsPageChunk> _fetchChunk({required int offset}) async {
+    final admin = ref.read(adminProvider);
+    final householdId = await ref.read(householdIdProvider.future);
+    final caps = ref.read(householdCapabilitiesProvider);
+    if (householdId == null) {
+      return const _RewardsPageChunk(items: [], hasMore: false);
+    }
+
+    if (admin.isAdminUser) {
+      final client = ref.read(supabaseClientProvider);
+      var rows = List<Map<String, dynamic>>.from(
+        await client.rpc(
+          'qa_admin_get_rewards',
+          params: {'p_household_id': householdId},
+        ) as List,
+      );
+
+      if (rows.isEmpty && offset == 0) {
+        await ref.read(rewardsProvider.notifier)._seedDefaultRewards(
+              householdId: householdId,
+              caps: caps,
+              isAdminQa: true,
+            );
+        rows = List<Map<String, dynamic>>.from(
+          await client.rpc(
+            'qa_admin_get_rewards',
+            params: {'p_household_id': householdId},
+          ) as List,
+        );
+      }
+
+      final activeRewards = rows
+          .map(RewardModel.fromJson)
+          .where((reward) => reward.isActive)
+          .toList();
+      final end = (offset + _rewardsPageSize).clamp(0, activeRewards.length);
+      final page = offset >= activeRewards.length
+          ? const <RewardModel>[]
+          : activeRewards.sublist(offset, end);
+      return _RewardsPageChunk(
+        items: page,
+        hasMore: end < activeRewards.length,
+      );
+    }
+
+    final useCase = ref.read(getRewardsUseCaseProvider);
+    var result = await useCase(
+      householdId,
+      limit: _rewardsPageSize,
+      offset: offset,
+    );
+
+    if (result.isRight() && result.getOrElse((_) => const []).isEmpty && offset == 0) {
+      await ref.read(rewardsProvider.notifier)._seedDefaultRewards(
+            householdId: householdId,
+            caps: caps,
+            isAdminQa: false,
+          );
+      result = await useCase(
+        householdId,
+        limit: _rewardsPageSize,
+        offset: offset,
+      );
+    }
+
+    return result.fold(
+      (failure) => throw failure,
+      (items) => _RewardsPageChunk(
+        items: items,
+        hasMore: items.length == _rewardsPageSize,
+      ),
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading<RewardsPageState>().copyWithPrevious(state);
+    state = await AsyncValue.guard(() async {
+      final chunk = await _fetchChunk(offset: 0);
+      return RewardsPageState(
+        items: chunk.items,
+        hasMore: chunk.hasMore,
+        isLoadingMore: false,
+      );
+    });
+  }
+
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || current.isLoadingMore || !current.hasMore) {
+      return;
+    }
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    try {
+      final chunk = await _fetchChunk(offset: current.items.length);
+      state = AsyncData(
+        current.copyWith(
+          items: [...current.items, ...chunk.items],
+          hasMore: chunk.hasMore,
+          isLoadingMore: false,
+        ),
+      );
+    } catch (error, stackTrace) {
+      state = AsyncData(current.copyWith(isLoadingMore: false));
+      log.e(
+        'Paginated rewards loadMore failed: $error',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+}
+
+final paginatedRewardsProvider =
+    AsyncNotifierProvider<PaginatedRewardsController, RewardsPageState>(
+      PaginatedRewardsController.new,
+    );
 
 @riverpod
 Future<List<RewardModel>> filteredRewards(FilteredRewardsRef ref) async {

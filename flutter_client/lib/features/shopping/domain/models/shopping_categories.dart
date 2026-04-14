@@ -13,7 +13,7 @@ class ShoppingCategories {
     {'id': 'pantry', 'name': 'Despensa', 'emoji': '🥫', 'color': 0xFFD97706},
     {'id': 'frozen', 'name': 'Congelados', 'emoji': '🧊', 'color': 0xFF0284C7},
     {'id': 'cleaning', 'name': 'Limpieza', 'emoji': '🧴', 'color': 0xFF8B5CF6},
-    {'id': 'drinks', 'name': 'Bebidas', 'emoji': '🧃', 'color': 0xFF06B6D4},
+    {'id': 'drinks', 'name': 'Bebidas', 'emoji': '🫙', 'color': 0xFF06B6D4},
     {'id': 'snacks', 'name': 'Snacks', 'emoji': '🍫', 'color': 0xFFEC4899},
     {'id': 'pharmacy', 'name': 'Farmacia', 'emoji': '💊', 'color': 0xFF10B981},
     {'id': 'pets', 'name': 'Mascotas', 'emoji': '🐕', 'color': 0xFFA16207},

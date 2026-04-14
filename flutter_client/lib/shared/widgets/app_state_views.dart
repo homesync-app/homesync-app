@@ -55,7 +55,8 @@ class AppErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 34),
+            const Icon(Icons.error_outline_rounded,
+                color: AppColors.error, size: 34),
             const SizedBox(height: 10),
             Text(
               message,
@@ -84,44 +85,105 @@ class AppEmptyState extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData icon;
+  final String? emoji;
+  final Color? accentColor;
 
   const AppEmptyState({
     super.key,
     required this.title,
     this.subtitle,
     this.icon = Icons.inbox_rounded,
+    this.emoji,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final highlight = accentColor ?? theme.colorScheme.primary;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.textMuted, size: 36),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 360),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: highlight.withValues(alpha: 0.12)),
+            boxShadow: [
+              BoxShadow(
+                color: highlight.withValues(alpha: 0.08),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
               ),
-              textAlign: TextAlign.center,
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          highlight.withValues(alpha: 0.22),
+                          highlight.withValues(alpha: 0.08),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.55),
+                    ),
+                    child: Center(
+                      child: emoji != null
+                          ? Text(
+                              emoji!,
+                              style: const TextStyle(fontSize: 28),
+                            )
+                          : Icon(icon, color: highlight, size: 34),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
               Text(
-                subtitle!,
+                title,
                 style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
                 ),
                 textAlign: TextAlign.center,
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  subtitle!,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

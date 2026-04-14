@@ -10,19 +10,16 @@ import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
   static final SupabaseAuthService _instance = SupabaseAuthService._internal();
-  factory SupabaseAuthService() => _instance;
+  factory SupabaseAuthService({required SupabaseClient client}) {
+    _instance._client = client;
+    return _instance;
+  }
   SupabaseAuthService._internal();
 
-  late final SupabaseClient _client;
+  late SupabaseClient _client;
   final fa.FirebaseAuth _firebaseAuth = fa.FirebaseAuth.instance;
 
   Future<void> initialize() async {
-    await Supabase.initialize(
-      url: AppEnvironment.supabaseUrl,
-      anonKey: AppEnvironment.supabaseAnonKey,
-    );
-    _client = Supabase.instance.client;
-
     // Inicializar GoogleSignIn con el Web Client ID (serverClientId)
     // Esto es necesario en google_sign_in v7+ para Credential Manager y Web.
     try {
@@ -30,11 +27,15 @@ class SupabaseAuthService {
       await GoogleSignIn.instance
           .initialize(
             clientId: kIsWeb ? AppEnvironment.googleWebClientId : null,
-            serverClientId: AppEnvironment.googleWebClientId,
+            serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
           )
           .timeout(const Duration(seconds: 5));
-    } catch (e) {
-      log.w('Error o timeout inicializando GoogleSignIn: $e', error: e);
+    } catch (e, stack) {
+      log.w(
+        'Error o timeout inicializando GoogleSignIn: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -148,8 +149,8 @@ class SupabaseAuthService {
       // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
       // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
-    } catch (e) {
-      log.e('Error en Google Sign-In: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error en Google Sign-In: $e', error: e, stackTrace: stack);
       return false;
     }
   }
@@ -178,10 +179,22 @@ class SupabaseAuthService {
   Future<void> signOut() async {
     try {
       await GoogleSignIn.instance.signOut();
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'Google sign-out cleanup failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     try {
       await _firebaseAuth.signOut();
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      log.w(
+        'Firebase sign-out cleanup failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     // Clear identity from Crashlytics (mobile only)
     if (!kIsWeb) {
       await FirebaseCrashlytics.instance.setUserIdentifier('');

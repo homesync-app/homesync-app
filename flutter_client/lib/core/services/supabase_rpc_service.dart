@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'rpc/admin_rpc_service.dart';
 import 'rpc/task_rpc_service.dart';
 import 'rpc/stats_rpc_service.dart';
@@ -18,9 +18,8 @@ class SupabaseRpcService {
   late final BalanceRpcService _balance;
   late final HouseholdRpcService _household;
 
-
-  SupabaseRpcService({SupabaseClient? clientOverride})
-      : _client = clientOverride ?? Supabase.instance.client {
+  SupabaseRpcService({required SupabaseClient clientOverride})
+      : _client = clientOverride {
     _admin = AdminRpcService(clientOverride: _client);
     _task = TaskRpcService(clientOverride: _client);
     _stats = StatsRpcService(clientOverride: _client);
@@ -31,7 +30,7 @@ class SupabaseRpcService {
 
   Future<void> initialize() async {
     // Initialization logic if any
-    debugPrint('SupabaseRpcService initialized');
+    log.d('SupabaseRpcService initialized');
   }
 
   // --- Admin ---

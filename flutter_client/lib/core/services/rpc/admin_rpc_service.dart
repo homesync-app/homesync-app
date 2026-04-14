@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 import 'base_rpc_service.dart';
 
 class AdminRpcService extends BaseRpcService {
-  AdminRpcService({super.clientOverride});
+  AdminRpcService({required super.clientOverride});
 
   Future<void> logApplicationError({
     required String message,
@@ -33,8 +34,8 @@ class AdminRpcService extends BaseRpcService {
       };
 
       await client.from('application_logs').insert(logData);
-    } catch (e) {
-      debugPrint('CRITICAL: Failed to log error to Supabase: $e');
+    } catch (e, stack) {
+      log.e('Failed to log error to Supabase', error: e, stackTrace: stack);
     }
   }
 

@@ -14,6 +14,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function getBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization');
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  return authHeader.slice('Bearer '.length).trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -85,7 +91,8 @@ serve(async (req) => {
       const body = await req.json();
       
       // 1. Detect if it's a Mercado Pago Webhook
-      if (body.type || body.topic || (body.action && body.action.includes('.'))) {
+      const isWebhookRequest = body.type || body.topic || (body.action && body.action.includes('.'));
+      if (isWebhookRequest) {
         console.log('Webhook received:', JSON.stringify(body));
         
         // Background process to handle calculations without blocking the response
@@ -205,6 +212,23 @@ serve(async (req) => {
         processWebhook();
         
         return new Response('OK', { status: 200, headers: corsHeaders });
+      }
+
+      const accessToken = getBearerToken(req);
+      if (!accessToken) {
+        return new Response(JSON.stringify({ error: 'Missing Authorization bearer token' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+      if (authError || !authData.user) {
+        console.error('Unauthorized mercadopago-api request:', authError);
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       // 2. Standard App actions

@@ -3,7 +3,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'base_rpc_service.dart';
 
 class StatsRpcService extends BaseRpcService {
-  StatsRpcService({super.clientOverride});
+  StatsRpcService({required super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getTaskStatsByCategory() async {
     final userId = await requireCurrentUserId();
@@ -23,7 +23,12 @@ class StatsRpcService extends BaseRpcService {
         params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getXpHistory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }
@@ -36,7 +41,12 @@ class StatsRpcService extends BaseRpcService {
         params: {'p_user_id': userId},
       );
       return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getCoinHistory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }
@@ -82,7 +92,12 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return response == true;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.isWeekProcessed fallback to false',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
@@ -108,7 +123,12 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return Map<String, dynamic>.from(response);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.checkShouldShowWinner fallback to hidden',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return {'show_winner': false};
     }
   }
@@ -122,8 +142,8 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      log.e('Error getting duel history: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error getting duel history: $e', error: e, stackTrace: stack);
       return [];
     }
   }
@@ -154,8 +174,8 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return Map<String, dynamic>.from(response);
-    } catch (e) {
-      log.e('Error saving duel result: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error saving duel result: $e', error: e, stackTrace: stack);
       return {'success': false, 'message': e.toString()};
     }
   }

@@ -1,41 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
-import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/core/services/receipt_scan_service.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
-import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
+import 'package:homesync_client/features/expenses/presentation/widgets/receipt_preview_widget.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'expense_category_matcher.dart';
+import 'expense_form_components.dart';
+import 'expense_form_data.dart';
+import 'expense_form_selectors.dart';
+import 'expense_shopping_components.dart';
+import 'expense_split_builder.dart';
+import 'expense_split_components.dart';
+import 'expense_split_state.dart';
 
 class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
   final bool defaultOnlyMe;
+  final bool triggerScanOnOpen;
 
   const ExpenseFormSheet({
     super.key,
     this.expense,
     this.defaultOnlyMe = false,
+    this.triggerScanOnOpen = false,
   });
 
   @override
   ConsumerState<ExpenseFormSheet> createState() => _ExpenseFormSheetState();
 
   static Future<void> show(BuildContext context,
-      {ExpenseModel? expense, bool defaultOnlyMe = false}) {
+      {ExpenseModel? expense,
+      bool defaultOnlyMe = false,
+      bool triggerScanOnOpen = false}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -47,6 +67,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
           child: ExpenseFormSheet(
             expense: expense,
             defaultOnlyMe: defaultOnlyMe,
+            triggerScanOnOpen: triggerScanOnOpen,
           ),
         ),
       ),
@@ -57,6 +78,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
 class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _showSuccessState = false;
   bool _isIncome = false;
   Map<String, dynamic>? _selectedCategory;
 
@@ -68,134 +90,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   // Shopping items integration
   final Set<ShoppingItemModel> _selectedShoppingItems = {};
+  bool _isScanningReceipt = false;
+  ReceiptScanResult? _scanResult;
+  List<String> _unmatchedOcrItems = [];
+  final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
   // Split logic
   SplitType _splitMode = SplitType.equal;
   Set<String> _selectedMembersForSplit = {}; // For 'equal'
-  final Map<String, double> _fixedSplitAmounts = {}; // For 'fixed'
-  final Map<String, TextEditingController> _fixedSplitControllers = {};
-  final Map<String, FocusNode> _fixedSplitFocusNodes = {};
-  bool _isProgrammaticFixedSplitUpdate = false;
-
-  final List<Map<String, dynamic>> _expenseCategories = [
-    {
-      'id': 'supermarket',
-      'name': 'Supermercado',
-      'icon': '🛒',
-      'color': AppColors.getCategoryColor('supermarket')
-    },
-    {
-      'id': 'utilities',
-      'name': 'Servicios',
-      'icon': '💡',
-      'color': AppColors.getCategoryColor('utilities')
-    },
-    {
-      'id': 'rent',
-      'name': 'Alquiler',
-      'icon': '🏠',
-      'color': AppColors.getCategoryColor('rent')
-    },
-    {
-      'id': 'restaurants',
-      'name': 'Restaurantes',
-      'icon': '🍽️',
-      'color': AppColors.getCategoryColor('restaurants')
-    },
-    {
-      'id': 'transport',
-      'name': 'Transporte',
-      'icon': '🚙',
-      'color': AppColors.getCategoryColor('transport')
-    },
-    {
-      'id': 'entertainment',
-      'name': 'Entretenimiento',
-      'icon': '🎬',
-      'color': AppColors.getCategoryColor('entertainment')
-    },
-    {
-      'id': 'health',
-      'name': 'Salud',
-      'icon': '💊',
-      'color': AppColors.getCategoryColor('health')
-    },
-    {
-      'id': 'finanzas',
-      'name': 'Ahorro / Inversión',
-      'icon': '🏦',
-      'color': AppColors.getCategoryColor('finanzas')
-    },
-    {
-      'id': 'settlement',
-      'name': 'Liquidación',
-      'icon': '🤝',
-      'color': AppColors.getCategoryColor('settlement')
-    },
-    {
-      'id': 'mercadolibre',
-      'name': 'Compras online',
-      'icon': '🛍️',
-      'color': AppColors.getCategoryColor('mercadolibre')
-    },
-    {
-      'id': 'other',
-      'name': 'Otros Gastos',
-      'icon': '📦',
-      'color': AppColors.getCategoryColor('other')
-    },
-  ];
-
-  final List<Map<String, dynamic>> _incomeCategories = [
-    {
-      'id': 'salary',
-      'name': 'Sueldo',
-      'icon': '💰',
-      'color': AppColors.success
-    },
-    {
-      'id': 'freelance',
-      'name': 'Freelance',
-      'icon': '💻',
-      'color': AppColors.accentBlue
-    },
-    {
-      'id': 'ventas',
-      'name': 'Ventas',
-      'icon': '📊',
-      'color': AppColors.accentTeal
-    },
-    {
-      'id': 'bonus',
-      'name': 'Bono / Premio',
-      'icon': '🎊',
-      'color': AppColors.accentPurple
-    },
-    {
-      'id': 'reembolso',
-      'name': 'Reembolso',
-      'icon': '🔙',
-      'color': AppColors.sage
-    },
-    {
-      'id': 'gift',
-      'name': 'Regalo',
-      'icon': '🎁',
-      'color': const Color(0xFFFF8A65)
-    },
-    {
-      'id': 'investment',
-      'name': 'Rendimiento',
-      'icon': '📈',
-      'color': const Color(0xFF4CAF50)
-    },
-    {
-      'id': 'other',
-      'name': 'Otros Ingresos',
-      'icon': '💵',
-      'color': AppColors.success
-    },
-  ];
+  late final ExpenseFixedSplitManager _fixedSplitManager;
+  final List<Map<String, dynamic>> _expenseCategories =
+      buildExpenseCategories();
+  final List<Map<String, dynamic>> _incomeCategories = buildIncomeCategories();
 
   List<Map<String, dynamic>> get _currentCategories =>
       _isIncome ? _incomeCategories : _expenseCategories;
@@ -213,6 +119,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     super.initState();
     _selectedCategory = _expenseCategories.first;
     _titleController.addListener(_onTitleChanged);
+    _fixedSplitManager = ExpenseFixedSplitManager(
+      formatAmount: _formatInputAmount,
+      parseAmount: _parseFormattedAmount,
+      readTotalInput: () => _amountController.text,
+      onStateChanged: () => setState(() {}),
+      isMounted: () => mounted,
+    );
 
     if (widget.expense != null) {
       _isIncome = widget.expense!.type == 'income';
@@ -224,6 +137,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (widget.expense == null) {
       _initializeDefaultSelections();
     }
+
+    if (widget.triggerScanOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scanReceipt(ImageSource.camera);
+      });
+    }
   }
 
   @override
@@ -231,12 +150,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     _titleController.removeListener(_onTitleChanged);
     _amountController.dispose();
     _titleController.dispose();
-    for (final controller in _fixedSplitControllers.values) {
-      controller.dispose();
-    }
-    for (final focusNode in _fixedSplitFocusNodes.values) {
-      focusNode.dispose();
-    }
+    _fixedSplitManager.dispose();
     super.dispose();
   }
 
@@ -250,107 +164,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   void _internalMatchCategory(String t) {
-    t = t.toLowerCase();
-    String? matchedId;
-    if (t.contains('supermercado') ||
-        t.contains('coto') ||
-        t.contains('carrefour') ||
-        t.contains('despensa') ||
-        t.contains('comida') ||
-        t.contains('alimento')) {
-      matchedId = 'supermarket';
-    } else if (t.contains('mercadolibre') || t.contains('mercado libre')) {
-      matchedId = 'mercadolibre';
-    } else if (t.contains('luz') ||
-        t.contains('agua') ||
-        t.contains('gas') ||
-        t.contains('internet') ||
-        t.contains('wifi') ||
-        t.contains('servicio')) {
-      matchedId = 'utilities';
-    } else if (t.contains('alquiler') ||
-        t.contains('expensas') ||
-        t.contains('renta')) {
-      matchedId = 'rent';
-    } else if (t.contains('restaurante') ||
-        t.contains('cena') ||
-        t.contains('pedidosya') ||
-        t.contains('delivery') ||
-        t.contains('mc') ||
-        t.contains('pizza')) {
-      matchedId = 'restaurants';
-    } else if (t.contains('liquidación') ||
-        t.contains('liquidacion') ||
-        t.contains('saldar') ||
-        t.contains('deuda') ||
-        t.contains('hogar')) {
-      matchedId = 'settlement';
-    } else if (t.contains('ahorro') ||
-        t.contains('banco') ||
-        t.contains('finanzas')) {
-      matchedId = 'finanzas';
-    } else if (t.contains('sueldo') ||
-        t.contains('nomina') ||
-        t.contains('salario') ||
-        t.contains('cobro')) {
-      matchedId = 'salary';
-    } else if (t.contains('freelance') ||
-        t.contains('venta') ||
-        t.contains('mercadopago') ||
-        t.contains('transferencia')) {
-      matchedId = 'freelance';
-    } else if (t.contains('regalo') ||
-        t.contains('premio') ||
-        t.contains('sorpresa')) {
-      matchedId = 'gift';
-    } else if (t.contains('inversion') ||
-        t.contains('plazo fijo') ||
-        t.contains('bono') ||
-        t.contains('bit') ||
-        t.contains('crypto')) {
-      matchedId = 'investment';
-    } else if (t.contains('transporte') ||
-        t.contains('uber') ||
-        t.contains('cabify') ||
-        t.contains('nafta') ||
-        t.contains('gasolina') ||
-        t.contains('sube') ||
-        t.contains('taxi') ||
-        t.contains('cole')) {
-      matchedId = 'transport';
-    } else if (t.contains('cine') ||
-        t.contains('teatro') ||
-        t.contains('juego') ||
-        t.contains('fiesta') ||
-        t.contains('salida')) {
-      matchedId = 'entertainment';
-    } else if (t.contains('farmacia') ||
-        t.contains('medico') ||
-        t.contains('salud') ||
-        t.contains('pastillas') ||
-        t.contains('remedio')) {
-      matchedId = 'health';
-    }
+    final match = resolveExpenseCategoryMatch(
+      title: t,
+      isIncome: _isIncome,
+      expenseCategories: _expenseCategories,
+      incomeCategories: _incomeCategories,
+      selectedCategory: _selectedCategory,
+    );
 
-    if (matchedId != null) {
-      final isIncomeMatch = _incomeCategories.any((c) => c['id'] == matchedId);
-      final isExpenseMatch =
-          _expenseCategories.any((c) => c['id'] == matchedId);
-
-      if (isIncomeMatch && !_isIncome) {
-        _isIncome = true;
-        _selectedCategory =
-            _incomeCategories.firstWhere((c) => c['id'] == matchedId);
-      } else if (isExpenseMatch && _isIncome) {
-        _isIncome = false;
-        _selectedCategory =
-            _expenseCategories.firstWhere((c) => c['id'] == matchedId);
-      } else if (_selectedCategory?['id'] != matchedId) {
-        _selectedCategory = _currentCategories.firstWhere(
-            (c) => c['id'] == matchedId,
-            orElse: () => _currentCategories.first);
-      }
-    }
+    _isIncome = match.isIncome;
+    _selectedCategory = match.selectedCategory;
   }
 
   void _loadExpenseData(ExpenseModel exp) {
@@ -377,9 +200,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (_splitMode == SplitType.equal) {
         _selectedMembersForSplit = splits.map((s) => s.userId).toSet();
       } else if (_splitMode == SplitType.fixed) {
+        final initialFixedAmounts = <String, double>{};
         for (final s in splits) {
-          _fixedSplitAmounts[s.userId] = s.amount;
+          initialFixedAmounts[s.userId] = s.amount;
         }
+        _fixedSplitManager.seedAmounts(initialFixedAmounts);
       }
     }
   }
@@ -403,9 +228,128 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               financeMembers.map((m) => m.userId).toSet();
         }
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'ExpenseFormSheet could not initialize default selections',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // Members provider will surface its own loading/error state in build.
     }
+  }
+
+  Future<void> _scanReceipt(ImageSource source) async {
+    if (_isScanningReceipt) return;
+    setState(() => _isScanningReceipt = true);
+    try {
+      final service = ReceiptScanService(Supabase.instance.client);
+      final result = await service.scan(source: source);
+      if (result == null || !mounted) return;
+      _prefillFromScan(result);
+
+      final canLink = ref.read(canUseReceiptShoppingLinkProvider);
+      if (canLink) {
+        _matchOcrItemsToShoppingList(result.detectedItems);
+      }
+    } on ScanLimitException catch (e) {
+      debugPrint('[ReceiptScan] Límite alcanzado: $e');
+      if (!mounted) return;
+      if (e.isPremium) {
+        // Usuario premium que agotó sus 50 scans: solo informar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      } else {
+        // Usuario free que agotó sus 10 scans: mostrar paywall
+        PremiumPaywall.show(context);
+      }
+    } catch (e, st) {
+      debugPrint('[ReceiptScan] ERROR: $e\n$st');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo leer el ticket: $e'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isScanningReceipt = false);
+    }
+  }
+
+  void _prefillFromScan(ReceiptScanResult result) {
+    setState(() {
+      _scanResult = result;
+
+      if ((result.merchant ?? '').isNotEmpty) {
+        _titleController.text = result.merchant!;
+      }
+      if (result.amount != null) {
+        _amountController.text = _formatAmountFromOcr(result.amount!);
+      }
+      if (result.date != null) {
+        _selectedDate = result.date!;
+      }
+      if (result.category != null) {
+        final matched = _expenseCategories
+            .where((c) => c['id'] == result.category)
+            .toList();
+        if (matched.isNotEmpty) {
+          _selectedCategory = matched.first;
+        }
+      }
+    });
+
+    if (result.hasLowConfidence && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ticket difícil de leer; revisá los datos antes de guardar'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _matchOcrItemsToShoppingList(List<String> ocrItems) {
+    final pending = ref
+            .read(shoppingItemsProvider)
+            .valueOrNull
+            ?.where((item) => !item.completed)
+            .toList() ??
+        const <ShoppingItemModel>[];
+
+    final householdId =
+        ref.read(currentHouseholdProvider).valueOrNull?.id ?? '';
+
+    final result = resolveScanItems(
+      ocrItems: ocrItems,
+      pendingShoppingItems: pending,
+      householdId: householdId,
+    );
+
+    setState(() {
+      _ocrMatchedShoppingItems
+        ..clear()
+        ..addAll(result.allLinked);
+      _selectedShoppingItems
+        ..removeAll(_ocrMatchedShoppingItems)
+        ..addAll(result.allLinked);
+      _unmatchedOcrItems = result.unrecognized;
+    });
+  }
+
+  void _clearScan() {
+    setState(() {
+      _scanResult = null;
+      _unmatchedOcrItems = [];
+      _selectedShoppingItems.removeAll(_ocrMatchedShoppingItems);
+      _ocrMatchedShoppingItems.clear();
+    });
   }
 
   Future<void> _selectDate() async {
@@ -456,69 +400,53 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final caps = ref.read(householdCapabilitiesProvider);
       final showSplit = caps.showExpensesSplit;
 
-      List<Map<String, dynamic>> splits = [];
+      final household = ref.read(currentHouseholdProvider).valueOrNull;
+      final splitResult = ExpenseSplitBuilder.build(
+        showSplit: showSplit,
+        splitMode: _splitMode,
+        amount: amountParsed,
+        paidByUserId: _paidByUserId,
+        financeMembers: financeMembers,
+        selectedMembers: _selectedMembersForSplit,
+        fixedAmounts: _fixedSplitManager.amounts,
+        defaultRatio: household?.defaultSplitRatio ?? 0.5,
+        currentUserId: ref.read(currentUserIdProvider),
+      );
 
-      if (!showSplit) {
-        splits = [
-          {'user_id': _paidByUserId, 'amount': amountParsed}
-        ];
-      } else if (_splitMode == SplitType.equal) {
-        final household = ref.read(currentHouseholdProvider).valueOrNull;
-        final defaultRatio = household?.defaultSplitRatio ?? 0.5;
-
-        if (financeMembers.length == 2 && defaultRatio != 0.5) {
-          final currentUserId = ref.read(currentUserIdProvider);
-          for (final mem in financeMembers) {
-            final isMe = mem.userId == currentUserId;
-            final memRatio = isMe ? defaultRatio : (1.0 - defaultRatio);
-            splits.add(
-                {'user_id': mem.userId, 'amount': amountParsed * memRatio});
-          }
-        } else {
-          if (_selectedMembersForSplit.isEmpty) {
-            throw Exception(
-                "Debes seleccionar al menos un miembro para dividir.");
-          }
-          final splitAmount = amountParsed / _selectedMembersForSplit.length;
-          for (final memId in _selectedMembersForSplit) {
-            splits.add({'user_id': memId, 'amount': splitAmount});
-          }
-        }
-      } else if (_splitMode == SplitType.fixed) {
-        double totalFixed = 0;
-        for (final mem in financeMembers) {
-          final amt = _fixedSplitAmounts[mem.userId] ?? 0.0;
-          if (amt > 0) {
-            totalFixed += amt;
-            splits.add({'user_id': mem.userId, 'amount': amt});
-          }
-        }
-        if ((totalFixed - amountParsed).abs() > 0.01) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'El reparto debe sumar el total (\$${amountParsed.toStringAsFixed(2)})'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-          setState(() => _isLoading = false);
-          return;
-        }
-      } else if (_splitMode == SplitType.gift) {
-        splits = [];
-      } else if (_splitMode == SplitType.personal) {
-        splits = [
-          {'user_id': _paidByUserId, 'amount': amountParsed}
-        ];
+      if (splitResult.hasValidationError) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(splitResult.validationMessage!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        setState(() => _isLoading = false);
+        return;
       }
 
-      String description = '';
+      final splits = splitResult.splits;
+
+      final descriptionParts = <String>[];
       if (_selectedShoppingItems.isNotEmpty) {
         final itemsStr = _selectedShoppingItems
             .map((e) => "- ${e.emoji} ${e.name}")
             .join("\n");
-        description = "Lista de compras:\n$itemsStr";
+        descriptionParts.add("Lista de compras:\n$itemsStr");
+      }
+      final description = descriptionParts.join("\n\n");
+
+      String? receiptPath = widget.expense?.receiptPath;
+      if (_scanResult != null) {
+        try {
+          final receiptService = ReceiptScanService(Supabase.instance.client);
+          receiptPath = await receiptService.uploadReceipt(
+            localImagePath: _scanResult!.localImagePath,
+            householdId: householdId,
+          );
+        } catch (e) {
+          debugPrint('[ExpenseForm] Upload de ticket falló: $e');
+        }
       }
 
       final saveResult = await repo.saveExpense(
@@ -533,18 +461,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         splitType: !caps.showExpensesSplit ? SplitType.personal : _splitMode,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
+        receiptPath: receiptPath,
       );
       saveResult.fold(
-        (failure) => throw Exception(failure.message),
+        (failure) => throw failure,
         (_) {},
       );
 
+      int shoppingItemsSynced = 0;
       if (_selectedShoppingItems.isNotEmpty) {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
         final userId = ref.read(currentUserIdProvider);
         for (final item in _selectedShoppingItems) {
           if (item.id.startsWith('temp_')) {
-            final result = await shoppingRepo.addItem(
+            // Nuevo item (detectado por OCR, no estaba en la lista):
+            // primero lo agrega, luego lo marca como comprado.
+            final addResult = await shoppingRepo.addItem(
               name: item.name,
               category: (item.category != 'general')
                   ? item.category
@@ -554,20 +486,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               householdId: householdId,
             );
 
-            await result.fold(
-              (l) async => null,
-              (newItem) async => await shoppingRepo.toggleItem(
+            // Usar match explícito para garantizar que el await del toggleItem
+            // se resuelve correctamente (fold con lambdas async no siempre await bien).
+            if (addResult.isRight()) {
+              final newItem = addResult.getRight().toNullable()!;
+              await shoppingRepo.toggleItem(
                 itemId: newItem.id,
                 completed: true,
                 userId: userId,
-              ),
-            );
+              );
+              shoppingItemsSynced++;
+            }
           } else {
-            await shoppingRepo.toggleItem(
+            final toggleResult = await shoppingRepo.toggleItem(
               itemId: item.id,
               completed: true,
               userId: userId,
             );
+            if (toggleResult.isRight()) shoppingItemsSynced++;
           }
         }
         ref.invalidate(shoppingItemsProvider);
@@ -582,12 +518,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       if (mounted) {
         HapticFeedback.mediumImpact();
+        setState(() => _showSuccessState = true);
+        await Future<void>.delayed(const Duration(milliseconds: 420));
+        if (!mounted) return;
         Navigator.pop(context);
+        final baseMsg = widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado';
+        final shoppingMsg = shoppingItemsSynced > 0
+            ? ' · $shoppingItemsSynced ${shoppingItemsSynced == 1 ? 'artículo' : 'artículos'} comprados ✅'
+            : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.expense != null
-                ? 'Gasto actualizado'
-                : 'Gasto guardado'),
+            content: Text('$baseMsg$shoppingMsg'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -600,7 +541,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showSuccessState = false;
+        });
+      }
     }
   }
 
@@ -677,6 +623,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 14),
                           _buildTitleField(),
+                          if (!_isIncome && _scanResult != null) ...[
+                            const SizedBox(height: 10),
+                            _buildReceiptPreviewInline(),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Contexto',
@@ -695,6 +645,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
                               context, shoppingItemsAsync),
+                          if (_unmatchedOcrItems.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            NewItemsSuggestionBanner(
+                              items: _unmatchedOcrItems,
+                              onDismiss: () =>
+                                  setState(() => _unmatchedOcrItems = []),
+                            ),
+                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Categoría',
@@ -702,7 +660,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                                 ? 'Cómo querés clasificarlo'
                                 : 'Dónde entra este gasto',
                             subtitle:
-                                'Elegí la categoría para mantener Finanzas más ordenado.',
+                                'Podés elegirla, pero también la sugerimos automáticamente según cómo lo describas.',
                           ),
                           const SizedBox(height: 14),
                           _buildCategorySelector(context),
@@ -737,46 +695,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final isEditing = widget.expense != null;
-    final theme = context.theme;
-    final title = isEditing
-        ? (_isIncome ? 'Modificar Ingreso' : 'Modificar Gasto')
-        : (_isIncome ? 'Nuevo Ingreso' : 'Nuevo Gasto');
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close_rounded,
-                    color: AppColors.textPrimary),
-                onPressed: () => Navigator.pop(context),
-              ),
-              if (isEditing)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      color: AppColors.accentRed),
-                  onPressed: () => _confirmDelete(),
-                )
-              else
-                const SizedBox(width: 48),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -0.7,
-            ),
-          ),
-        ],
-      ),
+    return ExpenseFormHeader(
+      isEditing: widget.expense != null,
+      isIncome: _isIncome,
+      onClose: () => Navigator.pop(context),
+      onDelete: widget.expense != null ? _confirmDelete : null,
     );
   }
 
@@ -785,29 +708,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     required String title,
     required String subtitle,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          eyebrow.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.4,
-          ),
-        ),
-      ],
+    return ExpenseSectionIntro(
+      eyebrow: eyebrow,
+      title: title,
     );
   }
 
@@ -885,84 +788,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return NumberFormat.decimalPattern('es_ES').format(value.round());
   }
 
-  TextEditingController _controllerForFixedMember(String userId) {
-    return _fixedSplitControllers.putIfAbsent(userId, () {
-      final initial = _formatInputAmount(_fixedSplitAmounts[userId] ?? 0.0);
-      return TextEditingController(text: initial);
-    });
-  }
-
-  FocusNode _focusNodeForFixedMember(String userId, List<MemberModel> members) {
-    return _fixedSplitFocusNodes.putIfAbsent(userId, () {
-      final node = FocusNode();
-      node.addListener(() {
-        if (!mounted) return;
-        setState(() {});
-        if (node.hasFocus) {
-          _applyFixedSplitIntelligentRemainder(userId, members);
-        }
-      });
-      return node;
-    });
-  }
-
-  void _setFixedControllerText(String userId, double amount) {
-    final controller = _controllerForFixedMember(userId);
-    final formatted = _formatInputAmount(amount);
-    if (controller.text == formatted) return;
-    _isProgrammaticFixedSplitUpdate = true;
-    controller.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-    _isProgrammaticFixedSplitUpdate = false;
-  }
-
-  void _applyFixedSplitIntelligentRemainder(
-      String userId, List<MemberModel> members) {
-    if (members.length != 2) return;
-    final total = _parseFormattedAmount(_amountController.text);
-    final entered = (_fixedSplitAmounts[userId] ?? 0.0).clamp(0.0, total);
-    final otherId = members.firstWhere((m) => m.userId != userId).userId;
-    final remaining = (total - entered).clamp(0.0, total);
-
-    _fixedSplitAmounts[userId] = entered;
-    _fixedSplitAmounts[otherId] = remaining;
-    _setFixedControllerText(otherId, remaining);
-  }
-
-  void _onFixedSplitChanged(
-      String userId, String value, List<MemberModel> members) {
-    if (_isProgrammaticFixedSplitUpdate) return;
-
-    final clean = value.replaceAll('.', '').replaceAll(',', '');
-    if (clean.isEmpty) {
-      setState(() {
-        _fixedSplitAmounts[userId] = 0.0;
-        _setFixedControllerText(userId, 0.0);
-        _applyFixedSplitIntelligentRemainder(userId, members);
-      });
-      return;
-    }
-
-    final parsed = int.tryParse(clean);
-    if (parsed == null) return;
-
-    setState(() {
-      final total = _parseFormattedAmount(_amountController.text);
-      final entered =
-          parsed.toDouble().clamp(0.0, total > 0 ? total : parsed.toDouble());
-      _fixedSplitAmounts[userId] = entered;
-      _setFixedControllerText(userId, entered);
-      _applyFixedSplitIntelligentRemainder(userId, members);
-    });
+  /// Formatea el monto detectado por OCR al estilo argentino: punto para miles,
+  /// coma para decimal. Ej: 10666.5 → "10.666,50"
+  String _formatAmountFromOcr(double amount) {
+    if (amount <= 0) return '';
+    final intPart = amount.truncate();
+    final decPart = ((amount - intPart) * 100).round().abs();
+    final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
+    return '$intFormatted,${decPart.toString().padLeft(2, '0')}';
   }
 
   void _dismissKeyboard() {
-    FocusManager.instance.primaryFocus?.unfocus();
-    for (final node in _fixedSplitFocusNodes.values) {
-      node.unfocus();
-    }
+    _fixedSplitManager.dismissKeyboard();
   }
 
   Widget _buildTypeToggle() {
@@ -1049,115 +886,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return ExpenseTypeOption(
+      label: label,
+      isSelected: isSelected,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: 52,
-        child: Center(
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-              fontSize: 16,
-              letterSpacing: isSelected ? -0.2 : 0,
-            ),
-            child: Text(label),
-          ),
-        ),
-      ),
     );
   }
 
   Widget _buildAmountField() {
-    final theme = context.theme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 14, 24, 14),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: theme.border.withValues(alpha: 0.82),
-          width: 1,
-        ),
-        boxShadow: theme.cardShadow,
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Monto total',
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10, top: 2),
-                child: Text(
-                  '\$',
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 150,
-                child: TextFormField(
-                  autofocus: true,
-                  controller: _amountController,
-                  onChanged: _onAmountChanged,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.2,
-                  ),
-                  textAlign: TextAlign.start,
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      color: theme.textMuted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    filled: false,
-                    fillColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Container(
-            width: 72,
-            height: 1,
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-        ],
-      ),
+    return ExpenseAmountField(
+      controller: _amountController,
+      onChanged: _onAmountChanged,
     );
   }
 
@@ -1173,13 +912,45 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ),
       child: Row(
         children: [
-          Icon(
-            _isIncome
-                ? Icons.account_balance_wallet_outlined
-                : Icons.shopping_bag_outlined,
-            color: theme.textSecondary,
-            size: 24,
-          ),
+          if (!_isIncome)
+            GestureDetector(
+              onTap: _isScanningReceipt
+                  ? null
+                  : () => _scanReceipt(ImageSource.camera),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _scanResult != null
+                      ? AppColors.accentGreen.withValues(alpha: 0.12)
+                      : AppColors.accentBlue.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _isScanningReceipt
+                    ? const Padding(
+                        padding: EdgeInsets.all(9),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentBlue,
+                        ),
+                      )
+                    : Icon(
+                        _scanResult != null
+                            ? Icons.receipt_long_rounded
+                            : Icons.document_scanner_outlined,
+                        color: _scanResult != null
+                            ? AppColors.accentGreen
+                            : AppColors.accentBlue,
+                        size: 20,
+                      ),
+              ),
+            )
+          else
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              color: theme.textSecondary,
+              size: 24,
+            ),
           const SizedBox(width: 14),
           Expanded(
             child: TextField(
@@ -1240,52 +1011,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               icon: Icons.person_outline_rounded,
               label: 'Pagó',
               value: payer.displayName,
-              onTap: () => _showMemberSelector(context, members),
+              onTap: () => showExpenseMemberSelectorSheet(
+                context: context,
+                members: members,
+                onSelected: (member) {
+                  setState(() => _paidByUserId = member.userId);
+                },
+              ),
             ),
           ),
         ],
       ],
-    );
-  }
-
-  void _showMemberSelector(BuildContext context, List<MemberModel> members) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Pagado por',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary)),
-                const SizedBox(height: 16),
-                ...members.map((member) => ListTile(
-                      leading: CustomUserAvatar(
-                          avatarUrl: member.avatarUrl,
-                          name: member.displayName,
-                          radius: 20),
-                      title: Text(member.displayName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary)),
-                      onTap: () {
-                        setState(() => _paidByUserId = member.userId);
-                        Navigator.pop(context);
-                      },
-                    )),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -1294,52 +1030,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       required String label,
       required String value,
       required VoidCallback onTap}) {
-    return GestureDetector(
+    return ExpenseActionTile(
+      icon: icon,
+      label: label,
+      value: value,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.divider.withValues(alpha: 0.85)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500)),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(icon, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: Text(value,
-                        style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700),
-                        overflow: TextOverflow.ellipsis)),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildCategorySelector(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showCategorySelector(context),
+      onTap: () => showExpenseCategorySelectorSheet(
+        context: context,
+        categories: _currentCategories,
+        selectedCategory: _selectedCategory!,
+        onSelected: (category) {
+          setState(() => _selectedCategory = category);
+        },
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -1364,7 +1072,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                AppColors.getCategoryMaterialIcon(_selectedCategory!['id']),
+                CategoryMapping.getCategoryMaterialIcon(
+                    _selectedCategory!['id']),
                 size: 24,
                 color: _selectedCategory!['color'] as Color,
               ),
@@ -1395,163 +1104,102 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
-  void _showCategorySelector(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('Seleccionar Categoría',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary)),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: _currentCategories.length,
-                  itemBuilder: (context, index) {
-                    final cat = _currentCategories[index];
-                    final isSelected = _selectedCategory!['id'] == cat['id'];
-                    return ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                            color:
-                                (cat['color'] as Color).withValues(alpha: 0.1),
-                            shape: BoxShape.circle),
-                        child: Icon(
-                          AppColors.getCategoryMaterialIcon(cat['id']),
-                          size: 20,
-                          color: cat['color'] as Color,
-                        ),
-                      ),
-                      title: Text(cat['name'],
-                          style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: isSelected
-                                  ? FontWeight.w800
-                                  : FontWeight.w500)),
-                      trailing: isSelected
-                          ? const Icon(Icons.check_circle,
-                              color: AppColors.primary)
-                          : null,
-                      onTap: () {
-                        setState(() => _selectedCategory = cat);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildShoppingIntegration(BuildContext context,
       AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
     if (_isIncome) return const SizedBox.shrink();
 
+    // Para usuarios no-premium, no mostrar la sección de vinculación.
+    // El scan solo pre-rellena monto y categoría.
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    if (!isPremium) return const SizedBox.shrink();
+
     return shoppingItemsAsync.when(
       data: (allItems) {
-        // Eliminamos el early return para que siempre sea visible
-        final isPremium = ref.watch(premiumProvider);
+        // Items auto-agregados por OCR (temp_) vs los que ya estaban en lista
+        final ocrAutoAdded = _ocrMatchedShoppingItems
+            .where((i) => i.id.startsWith('temp_'))
+            .toSet();
 
-        return Opacity(
-          opacity: isPremium ? 1.0 : 0.6,
-          child: InkWell(
-            onTap: isPremium
-                ? () => _showShoppingItemsSelector(context)
-                : () => PremiumPaywall.show(context),
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isPremium
-                    ? AppColors.primary.withValues(alpha: 0.05)
-                    : Colors.grey[100],
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isPremium
-                      ? AppColors.primary.withValues(alpha: 0.2)
-                      : AppColors.divider,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isPremium
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.grey[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isPremium
-                          ? Icons.shopping_cart_outlined
-                          : Icons.lock_rounded,
-                      color:
-                          isPremium ? AppColors.primary : AppColors.textMuted,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedShoppingItems.isEmpty
-                              ? 'Vincular con la lista'
-                              : '${_selectedShoppingItems.length} artículos vinculados',
-                          style: TextStyle(
-                              color: isPremium
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15),
-                        ),
-                        Text(
-                            isPremium
-                                ? 'Marca artículos como comprados'
-                                : 'Función Premium de HomeSync',
-                            style: const TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    isPremium
-                        ? Icons.add_circle_outline_rounded
-                        : Icons.chevron_right_rounded,
-                    color: isPremium ? AppColors.primary : AppColors.textMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        return ExpenseShoppingIntegrationCard(
+          isPremium: true,
+          linkedItems: _selectedShoppingItems.toList(),
+          autoAddedItems: ocrAutoAdded,
+          onTap: () => _showShoppingItemsSelector(context),
         );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildReceiptPreviewInline() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ReceiptPreviewWidget(
+              localPath: _scanResult!.localImagePath,
+              onRemove: _clearScan,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ScanButton(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Re-escanear',
+                  isLoading: _isScanningReceipt,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.camera),
+                ),
+                const SizedBox(height: 6),
+                _ScanButton(
+                  icon: Icons.photo_library_outlined,
+                  label: 'Galería',
+                  isLoading: false,
+                  onTap: _isScanningReceipt
+                      ? null
+                      : () => _scanReceipt(ImageSource.gallery),
+                ),
+              ],
+            ),
+          ],
+        ),
+        if (_scanResult!.hasLowConfidence) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Confianza baja: revisá los datos antes de guardar.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1560,7 +1208,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ShoppingItemsSelector(
+      builder: (context) => ShoppingItemsSelectorSheet(
         initialSelected: _selectedShoppingItems,
         onItemsSelected: (selected) {
           setState(() {
@@ -1577,7 +1225,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildSplitConfiguration(
       BuildContext context, List<MemberModel> members) {
-    final theme = context.theme;
     final splitModes = _isIncome
         ? const [SplitType.equal, SplitType.personal]
         : SplitType.values;
@@ -1627,45 +1274,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             }
             if (label.isEmpty) return const SizedBox.shrink();
 
-            return ChoiceChip(
-              label: Text(label),
-              selected: isSelected,
-              onSelected: (val) {
-                if (val) {
-                  _dismissKeyboard();
-                  setState(() => _splitMode = mode);
-                }
+            return ExpenseSplitModeChip(
+              label: label,
+              icon: icon,
+              isSelected: isSelected,
+              onTap: () {
+                _dismissKeyboard();
+                setState(() => _splitMode = mode);
               },
-              side: BorderSide(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.22)
-                    : theme.border.withValues(alpha: 0.78),
-                width: 1.15,
-              ),
-              showCheckmark: false,
-              avatar: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.12)
-                      : theme.elevatedSurface,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  size: 15,
-                  color: isSelected ? AppColors.primary : theme.textSecondary,
-                ),
-              ),
-              backgroundColor: theme.surface,
-              selectedColor: theme.primary.withValues(alpha: 0.08),
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.primary : theme.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              shape: const StadiumBorder(),
             );
           }).toList(),
         ),
@@ -1707,74 +1323,23 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } else if (_splitMode == SplitType.fixed) {
       return Column(
         children: members.map((m) {
-          final focusNode = _focusNodeForFixedMember(m.userId, members);
-          final controller = _controllerForFixedMember(m.userId);
-          final currentAmount = _fixedSplitAmounts[m.userId] ?? 0.0;
+          final focusNode =
+              _fixedSplitManager.focusNodeForMember(m.userId, members);
+          final controller = _fixedSplitManager.controllerForMember(m.userId);
+          final currentAmount = _fixedSplitManager.amountFor(m.userId);
           if (!focusNode.hasFocus) {
-            final formattedAmount = _formatInputAmount(currentAmount);
-            if (controller.text != formattedAmount) {
-              controller.text = formattedAmount;
-            }
+            _fixedSplitManager.syncControllerTextIfNeeded(
+              m.userId,
+              currentAmount,
+            );
           }
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: theme.surface,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: theme.border.withValues(alpha: 0.82)),
-              boxShadow: theme.cardShadow,
-            ),
-            child: Row(
-              children: [
-                CustomUserAvatar(
-                    avatarUrl: m.avatarUrl, name: m.displayName, radius: 16),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: Text(m.displayName,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary))),
-                Text('\$',
-                    style: TextStyle(
-                        color: theme.textMuted,
-                        fontWeight: FontWeight.bold)),
-                const SizedBox(width: 8),
-                Container(
-                  width: 132,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: theme.elevatedSurface,
-                    borderRadius: BorderRadius.circular(16),
-                    border:
-                        Border.all(color: theme.border.withValues(alpha: 0.7)),
-                  ),
-                  child: TextFormField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w800, color: theme.textPrimary),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      focusedErrorBorder: InputBorder.none,
-                      isDense: true,
-                      hintText: '0',
-                      hintStyle: TextStyle(color: theme.textMuted),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onChanged: (val) =>
-                        _onFixedSplitChanged(m.userId, val, members),
-                  ),
-                ),
-              ],
-            ),
+          return ExpenseFixedSplitRow(
+            member: m,
+            controller: controller,
+            focusNode: focusNode,
+            onChanged: (val) =>
+                _fixedSplitManager.onChanged(m.userId, val, members),
           );
         }).toList(),
       );
@@ -1790,21 +1355,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildInfoBox(String text, Color color) {
-    final theme = context.theme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.045),
-          border: Border.all(color: color.withValues(alpha: 0.12)),
-          borderRadius: BorderRadius.circular(18)),
-      child: Text(text,
-          style: TextStyle(
-              color: color == theme.textSecondary
-                  ? theme.textSecondary
-                  : color.withValues(alpha: 0.82),
-              fontSize: 13,
-              fontWeight: FontWeight.w500)),
+    return ExpenseInfoBox(
+      text: text,
+      color: color,
     );
   }
 
@@ -1812,406 +1365,157 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return SizedBox(
       width: double.infinity,
       height: 60,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _saveExpense,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+      child: AnimatedPress(
+        scale: _isLoading ? 1 : 0.97,
+        onTap: _isLoading ? null : _saveExpense,
+        child: ElevatedButton(
+          onPressed: null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.primary,
+            disabledForegroundColor: Colors.white,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 0,
+            shadowColor: AppColors.primary.withValues(alpha: 0.22),
           ),
-          elevation: 0,
-          shadowColor: AppColors.primary.withValues(alpha: 0.22),
-        ),
-        child: _isLoading
-            ? const CircularProgressIndicator(
-                color: Colors.white, strokeWidth: 2)
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_rounded, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutBack,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: animation,
+                  child: child,
+                ),
+              );
+            },
+            child: _isLoading
+                ? const SizedBox(
+                    key: ValueKey('loading'),
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
                     ),
-                  ),
-                ],
-              ),
+                  )
+                : _showSuccessState
+                    ? Row(
+                        key: const ValueKey('success'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_circle_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.expense != null
+                                ? 'Actualizado'
+                                : (_isIncome
+                                    ? 'Ingreso guardado'
+                                    : 'Gasto guardado'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        key: const ValueKey('idle'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.check_rounded, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            _isIncome ? 'Guardar Ingreso' : 'Guardar Gasto',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildEqualSelection(List<MemberModel> members) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: members.map((m) {
-        final isSelected = _selectedMembersForSplit.contains(m.userId);
-        return InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            setState(() {
-              if (isSelected) {
-                if (_selectedMembersForSplit.length > 1) {
-                  _selectedMembersForSplit.remove(m.userId);
-                }
-              } else {
-                _selectedMembersForSplit.add(m.userId);
-              }
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.08)
-                  : AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.24)
-                    : AppColors.divider.withValues(alpha: 0.9),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CustomUserAvatar(
-                  avatarUrl: m.avatarUrl,
-                  name: m.displayName,
-                  radius: 14,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  m.displayName,
-                  style: TextStyle(
-                    color:
-                        isSelected ? AppColors.primary : AppColors.textPrimary,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  ),
-                ),
-                if (isSelected) ...[
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.check_rounded,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+    return ExpenseEqualSplitSelection(
+      members: members,
+      selectedMembers: _selectedMembersForSplit,
+      onToggle: (userId) {
+        setState(() {
+          final isSelected = _selectedMembersForSplit.contains(userId);
+          if (isSelected) {
+            if (_selectedMembersForSplit.length > 1) {
+              _selectedMembersForSplit.remove(userId);
+            }
+          } else {
+            _selectedMembersForSplit.add(userId);
+          }
+        });
+      },
     );
   }
 }
 
-class _ShoppingItemsSelector extends ConsumerStatefulWidget {
-  final Set<ShoppingItemModel> initialSelected;
-  final Function(Set<ShoppingItemModel>) onItemsSelected;
+class _ScanButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onTap;
 
-  const _ShoppingItemsSelector({
-    required this.initialSelected,
-    required this.onItemsSelected,
+  const _ScanButton({
+    required this.icon,
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
   });
 
   @override
-  ConsumerState<_ShoppingItemsSelector> createState() =>
-      _ShoppingItemsSelectorState();
-}
-
-class _ShoppingItemsSelectorState
-    extends ConsumerState<_ShoppingItemsSelector> {
-  String _searchQuery = '';
-  final Set<ShoppingItemModel> _currentSelection = {};
-  final _searchController = TextEditingController();
-  final _searchFocus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _currentSelection.addAll(widget.initialSelected);
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _searchFocus.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final query = _searchQuery.toLowerCase().trim();
-    final householdItems = ref.watch(shoppingItemsProvider).value ?? [];
-    final pendingHouseholdItems =
-        householdItems.where((item) => !item.completed).toList();
-
-    final filteredPendingHouseholdItems = pendingHouseholdItems
-        .where((item) => item.name.toLowerCase().contains(query))
-        .toList();
-
-    final List<Map<String, String>> predefinedMatches = [];
-    if (query.isNotEmpty) {
-      ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
-        final catName = ShoppingCategories.nameFor(catId).toLowerCase();
-        final catMatchesQuery = catName.contains(query);
-
-        for (final item in catList) {
-          final itemName = item['name']!;
-          if (itemName.toLowerCase().contains(query) || catMatchesQuery) {
-            final existsInHousehold = pendingHouseholdItems
-                .any((ai) => ai.name.toLowerCase() == itemName.toLowerCase());
-            final existsInSelection = _currentSelection
-                .any((cs) => cs.name.toLowerCase() == itemName.toLowerCase());
-
-            if (!existsInHousehold &&
-                !existsInSelection &&
-                !predefinedMatches.any((pm) =>
-                    pm['name']!.toLowerCase() == itemName.toLowerCase())) {
-              predefinedMatches.add({...item, 'categoryId': catId});
-            }
-          }
-        }
-      });
-    }
-
-    final showAddOption = query.isNotEmpty &&
-        !filteredPendingHouseholdItems
-            .any((item) => item.name.toLowerCase() == query) &&
-        !predefinedMatches
-            .any((item) => item['name']!.toLowerCase() == query) &&
-        !_currentSelection.any((item) => item.name.toLowerCase() == query);
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75,
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  child: Text('Artículos de la Lista',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary)),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocus,
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar o agregar producto...',
-                        hintStyle:
-                            TextStyle(color: AppColors.textMuted, fontSize: 14),
-                        icon: Icon(Icons.search,
-                            size: 20, color: AppColors.textSecondary),
-                        border: InputBorder.none,
-                      ),
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      onSubmitted: (val) async {
-                        if (val.trim().isEmpty) return;
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                        _searchFocus.requestFocus();
-
-                        await ref
-                            .read(shoppingItemsProvider.notifier)
-                            .addItem(
-                              name: val.trim(),
-                              category: 'general',
-                              emoji: '🏷️',
-                            );
-
-                        final temp = ShoppingItemModel(
-                          id: 'selection_sync_${val.trim()}',
-                          name: val.trim(),
-                          householdId: '',
-                          createdAt: DateTime.now(),
-                          emoji: '🏷️',
-                          category: 'general',
-                        );
-                        setState(() => _currentSelection.add(temp));
-                        widget.onItemsSelected(_currentSelection);
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                      if (showAddOption)
-                        ListTile(
-                          leading:
-                              const Text('➕', style: TextStyle(fontSize: 24)),
-                          title: Text('Agregar "$_searchQuery"',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primary)),
-                          subtitle: const Text('Producto personalizado',
-                              style: TextStyle(fontSize: 12)),
-                          onTap: () async {
-                            final queryToSave = _searchQuery.trim();
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                            _searchFocus.requestFocus();
-
-                            await ref
-                                .read(shoppingItemsProvider.notifier)
-                                .addItem(
-                                  name: queryToSave,
-                                  category: 'general',
-                                  emoji: '🏷️',
-                                );
-
-                            final temp = ShoppingItemModel(
-                              id: 'selection_sync_$queryToSave',
-                              name: queryToSave,
-                              householdId: '',
-                              createdAt: DateTime.now(),
-                              emoji: '🏷️',
-                              category: 'general',
-                            );
-                            setState(() => _currentSelection.add(temp));
-                            widget.onItemsSelected(_currentSelection);
-                          },
-                        ),
-                      ...filteredPendingHouseholdItems.map((item) {
-                        final isSelected = _currentSelection.contains(item);
-                        return ListTile(
-                          leading: Text(item.emoji,
-                              style: const TextStyle(fontSize: 24)),
-                          title: Text(item.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary)),
-                          trailing: Icon(
-                              isSelected
-                                  ? Icons.check_circle
-                                  : Icons.circle_outlined,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.divider),
-                          onTap: () {
-                            if (_searchQuery.isNotEmpty) {
-                              _searchController.clear();
-                              _searchFocus.requestFocus();
-                            }
-                            setState(() {
-                              if (isSelected) {
-                                _currentSelection.remove(item);
-                              } else {
-                                _currentSelection.add(item);
-                              }
-                              if (_searchQuery.isNotEmpty) {
-                                _searchQuery = '';
-                              }
-                            });
-                            widget.onItemsSelected(_currentSelection);
-                          },
-                        );
-                      }),
-                      if (predefinedMatches.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-                          child: Text('Sugerencias globales',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textMuted,
-                                  letterSpacing: 1)),
-                        ),
-                        ...predefinedMatches.take(25).map((item) {
-                          return ListTile(
-                            leading: Text(item['emoji']!,
-                                style: const TextStyle(fontSize: 22)),
-                            title: Text(item['name']!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary)),
-                            trailing: const Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: AppColors.primary,
-                                size: 24),
-                            onTap: () async {
-                              final name = item['name']!;
-                              final cat = item['categoryId']!;
-                              final emoji = item['emoji']!;
-
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                              _searchFocus.requestFocus();
-
-                              await ref
-                                  .read(shoppingItemsProvider.notifier)
-                                  .addItem(
-                                    name: name,
-                                    category: cat,
-                                    emoji: emoji,
-                                  );
-
-                              final temp = ShoppingItemModel(
-                                id: 'selection_sync_$name',
-                                name: name,
-                                householdId: '',
-                                createdAt: DateTime.now(),
-                                emoji: emoji,
-                                category: cat,
-                              );
-                              setState(() => _currentSelection.add(temp));
-                              widget.onItemsSelected(_currentSelection);
-                            },
-                          );
-                        }),
-                      ],
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: const StadiumBorder(),
-                          elevation: 0),
-                      child: const Text('Listo',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.accentBlue.withValues(alpha: 0.07),
+          border: Border.all(
+            color: AppColors.accentBlue.withValues(alpha: 0.25),
           ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(icon, size: 18, color: AppColors.accentBlue),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ],
         ),
       ),
     );

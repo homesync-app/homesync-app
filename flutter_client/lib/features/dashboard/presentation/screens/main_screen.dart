@@ -5,17 +5,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_links/app_links.dart';
 
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
@@ -24,6 +28,7 @@ import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import '../../../household/presentation/providers/household_providers.dart';
 import '../widgets/in_app_notification_banner.dart';
 import 'package:intl/intl.dart';
@@ -44,17 +49,26 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool _showWeeklyWinner = false;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  int? _lastTrackedTabIndex;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
-  final _notifService = NotificationService.instance;
+  late final NotificationService _notifService;
 
   @override
   void initState() {
     super.initState();
+    _notifService = ref.read(notificationServiceProvider);
     _checkSetup();
     _initNotifications();
     _initDeepLinks();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _trackMainTabIfNeeded(
+        index: ref.read(bottomNavIndexProvider),
+        source: 'initial_load',
+      );
+    });
   }
 
   @override
@@ -67,7 +81,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void _initDeepLinks() {
     _appLinks = AppLinks();
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Deep Link received: $uri');
+      log.d('Deep link received: $uri');
 
       if (uri.scheme != 'homesync') return;
 
@@ -150,7 +164,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     try {
       _checkWeeklyWinner();
     } catch (e) {
-      debugPrint('Initialization error in MainScreen: $e');
+      log.e('MainScreen initialization failed', error: e);
     }
   }
 
@@ -178,7 +192,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         }
       }
     } catch (e) {
-      debugPrint('Error checking weekly winner: $e');
+      log.w('Weekly winner check failed', error: e);
     }
   }
 
@@ -198,6 +212,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final householdAsync = ref.watch(householdIdProvider);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final authControllerState = ref.watch(authControllerProvider);
+    final isAuthTransitioning = authControllerState.isLoading;
 
     return householdAsync.when(
       loading: () => Scaffold(
@@ -231,6 +248,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         ),
       ),
       data: (householdId) {
+        if (isAuthTransitioning) {
+          return const SplashScreen();
+        }
+
+        if ((householdId == null || householdId.isEmpty) &&
+            currentUserId == null) {
+          return const SplashScreen();
+        }
+
         final admin = ref.watch(adminProvider);
         if (admin.isAdminUser && (householdId == null || householdId.isEmpty)) {
           return const AdminWorkspaceScreen();
@@ -270,46 +296,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final theme = context.theme;
         final currentIndex = ref.watch(bottomNavIndexProvider);
         final caps = ref.watch(householdCapabilitiesProvider);
-
-        final navConfigs = [
-          NavItemConfig(
-            title: 'Inicio',
-            icon: Icons.home_rounded,
-            screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
-          ),
-          NavItemConfig(
-            title: 'Tareas',
-            icon: Icons.task_alt_rounded,
-            screen: const TasksScreen(),
-          ),
-          NavItemConfig(
-            title: 'Finanzas',
-            icon: Icons.account_balance_wallet_rounded,
-            screen: const ExpensesScreen(),
-          ),
-          if (caps.showPartnerTab)
-            NavItemConfig(
-              title: caps.socialTabLabel,
-              icon: caps.partnerIcon,
-              screen: caps.usesCoupleRewardsExperience
-                  ? const CoupleSpaceScreen()
-                  : const HouseholdSocialHubScreen(),
-            ),
-          NavItemConfig(
-            title: 'Progreso',
-            icon: Icons.bar_chart_rounded,
-            screen: const StatsScreen(),
-          ),
-          NavItemConfig(
-            title: 'Compras',
-            icon: Icons.shopping_cart_rounded,
-            screen: const ShoppingListScreen(),
-          ),
-        ];
+        final navConfigs = visibleMainTabs(caps)
+            .map((tab) => _navConfigForTab(tab, context))
+            .toList(growable: false);
 
         // Ensure currentIndex is within bounds
         final safeIndex = currentIndex >= navConfigs.length ? 0 : currentIndex;
         final currentConfig = navConfigs[safeIndex];
+        _trackMainTabIfNeeded(index: safeIndex, source: 'state_sync');
 
         return PopScope(
           canPop: currentIndex == 0,
@@ -318,7 +312,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
             // If not on the first tab, go to it
             if (safeIndex != 0) {
-              ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+              _setBottomNavIndex(0, source: 'system_back');
             }
           },
           child: Scaffold(
@@ -332,12 +326,29 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     ),
                     toolbarHeight: 86,
                     actions: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: theme.textSecondary,
+                      AnimatedPress(
+                        scale: 0.92,
+                        onTap: () => _openSettings(context),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.surface.withValues(
+                              alpha: theme.isDarkMode ? 0.72 : 0.9,
+                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: theme.border.withValues(
+                                alpha: theme.isDarkMode ? 0.46 : 0.72,
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.settings_outlined,
+                            color: theme.textSecondary,
+                            size: 22,
+                          ),
                         ),
-                        onPressed: () => _openSettings(context),
                       ),
                       const SizedBox(width: 8),
                     ],
@@ -409,6 +420,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _openSettings(BuildContext context) {
+    unawaited(
+      ref.read(analyticsServiceProvider).trackDashboardAction(
+            action: 'open_settings',
+            source: 'main_screen',
+          ),
+    );
     Navigator.push(
       context,
       AppTransitions.slideUp(
@@ -422,6 +439,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _goToNotifications(BuildContext context) {
+    unawaited(
+      ref.read(analyticsServiceProvider).trackDashboardAction(
+            action: 'open_notifications',
+            source: 'main_screen',
+          ),
+    );
     Navigator.push(
       context,
       AppTransitions.slideHorizontal(page: const NotificationsScreen()),
@@ -432,15 +455,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-
-    final navItems = [
-      (icon: Icons.home_rounded, label: 'Inicio', index: 0),
-      (icon: Icons.task_alt_rounded, label: 'Tareas', index: 1),
-      (icon: Icons.account_balance_wallet_rounded, label: 'Finanzas', index: 2),
-      if (caps.showPartnerTab)
-        (icon: caps.partnerIcon, label: caps.socialTabLabel, index: 3),
-      (icon: Icons.shopping_cart_rounded, label: 'Compras', index: 5),
-    ];
+    final navItems = visibleMainTabs(caps)
+        .where((tab) => tab != MainTab.stats)
+        .map(
+          (tab) => (
+            label: _labelForTab(tab, caps),
+            index: indexForMainTab(caps, tab),
+            tab: tab,
+          ),
+        )
+        .toList(growable: false);
 
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -467,11 +491,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           children: navItems.map((item) {
             final isSelected = currentIndex == item.index;
             return Expanded(
-              child: GestureDetector(
-                onTap: () => ref
-                    .read(bottomNavIndexProvider.notifier)
-                    .setIndex(item.index),
-                behavior: HitTestBehavior.opaque,
+              child: AnimatedPress(
+                scale: 0.94,
+                onTap: () => _setBottomNavIndex(
+                  item.index,
+                  source: 'bottom_nav',
+                ),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
@@ -487,10 +512,25 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        item.icon,
-                        color: isSelected ? theme.primary : theme.textMuted,
-                        size: 22,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          _iconForTab(item.tab, caps, isSelected: isSelected),
+                          key: ValueKey('${item.tab.name}_$isSelected'),
+                          color: isSelected ? theme.primary : theme.textMuted,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -513,6 +553,114 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           }).toList(),
         ),
       ),
+    );
+  }
+
+  NavItemConfig _navConfigForTab(MainTab tab, BuildContext context) {
+    final caps = ref.read(householdCapabilitiesProvider);
+
+    return switch (tab) {
+      MainTab.home => NavItemConfig(
+          title: 'Inicio',
+          icon: Icons.home_rounded,
+          screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
+        ),
+      MainTab.tasks => NavItemConfig(
+          title: 'Tareas',
+          icon: Icons.task_alt_rounded,
+          screen: const TasksScreen(),
+        ),
+      MainTab.expenses => NavItemConfig(
+          title: 'Finanzas',
+          icon: Icons.account_balance_wallet_rounded,
+          screen: const ExpensesScreen(),
+        ),
+      MainTab.social => NavItemConfig(
+          title: caps.socialTabLabel,
+          icon: caps.partnerIcon,
+          screen: caps.usesCoupleRewardsExperience
+              ? const CoupleSpaceScreen()
+              : const HouseholdSocialHubScreen(),
+        ),
+      MainTab.stats => NavItemConfig(
+          title: 'Progreso',
+          icon: Icons.bar_chart_rounded,
+          screen: const StatsScreen(),
+        ),
+      MainTab.shopping => NavItemConfig(
+          title: 'Compras',
+          icon: Icons.shopping_cart_rounded,
+          screen: const ShoppingListScreen(),
+        ),
+    };
+  }
+
+  IconData _iconForTab(
+    MainTab tab,
+    HouseholdCapabilities caps, {
+    required bool isSelected,
+  }) {
+    if (isSelected) {
+      return switch (tab) {
+        MainTab.home => Icons.home_rounded,
+        MainTab.tasks => Icons.task_alt_rounded,
+        MainTab.expenses => Icons.account_balance_wallet_rounded,
+        MainTab.social => caps.socialTabSelectedIcon,
+        MainTab.stats => Icons.bar_chart_rounded,
+        MainTab.shopping => Icons.shopping_cart_rounded,
+      };
+    }
+
+    return switch (tab) {
+      MainTab.home => Icons.home_outlined,
+      MainTab.tasks => Icons.task_alt_outlined,
+      MainTab.expenses => Icons.account_balance_wallet_outlined,
+      MainTab.social => caps.socialTabIcon,
+      MainTab.stats => Icons.bar_chart_outlined,
+      MainTab.shopping => Icons.shopping_cart_outlined,
+    };
+  }
+
+  String _labelForTab(MainTab tab, HouseholdCapabilities caps) {
+    return switch (tab) {
+      MainTab.home => 'Inicio',
+      MainTab.tasks => 'Tareas',
+      MainTab.expenses => 'Finanzas',
+      MainTab.social => caps.socialTabLabel,
+      MainTab.stats => 'Progreso',
+      MainTab.shopping => 'Compras',
+    };
+  }
+
+  void _setBottomNavIndex(int index, {required String source}) {
+    final currentIndex = ref.read(bottomNavIndexProvider);
+    if (currentIndex == index) {
+      _trackMainTabIfNeeded(index: index, source: '${source}_repeat');
+      return;
+    }
+
+    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+    _trackMainTabIfNeeded(index: index, source: source, force: true);
+  }
+
+  void _trackMainTabIfNeeded({
+    required int index,
+    required String source,
+    bool force = false,
+  }) {
+    if (!mounted) return;
+    if (!force && _lastTrackedTabIndex == index) return;
+
+    final caps = ref.read(householdCapabilitiesProvider);
+    final visibleTabs = visibleMainTabs(caps);
+    if (index < 0 || index >= visibleTabs.length) return;
+
+    _lastTrackedTabIndex = index;
+    unawaited(
+      ref.read(analyticsServiceProvider).trackMainTabOpened(
+            tab: visibleTabs[index].name,
+            source: source,
+          ),
     );
   }
 }

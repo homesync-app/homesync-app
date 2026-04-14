@@ -68,8 +68,12 @@ class LoggerService {
         reason: message.toString(),
         fatal: isFatal,
       );
-    } catch (e) {
-      _logger.e('Failed to report to Crashlytics: $e');
+    } catch (e, stack) {
+      _logger.e(
+        'Failed to report to Crashlytics: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -87,8 +91,12 @@ class LoggerService {
       } else if (value is double) {
         FirebaseCrashlytics.instance.setCustomKey(key, value);
       }
-    } catch (e) {
-      _logger.e('Failed to set Crashlytics key: $e');
+    } catch (e, stack) {
+      _logger.e(
+        'Failed to set Crashlytics key: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -98,8 +106,12 @@ class LoggerService {
 
     try {
       FirebaseCrashlytics.instance.setUserIdentifier(userId);
-    } catch (e) {
-      _logger.e('Failed to set Crashlytics userId: $e');
+    } catch (e, stack) {
+      _logger.e(
+        'Failed to set Crashlytics userId: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 

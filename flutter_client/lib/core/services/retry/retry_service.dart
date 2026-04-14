@@ -1,5 +1,7 @@
 import 'dart:math';
+
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class RetryPolicy {
   final int maxRetries;
@@ -55,10 +57,15 @@ class RetryService {
           policy: policy,
         );
         await Future.delayed(delay);
-      } catch (e) {
+      } catch (e, stack) {
         if (shouldRetry != null && shouldRetry(e as Exception)) {
           retryCount++;
           if (retryCount >= policy.maxRetries) rethrow;
+          log.w(
+            'RetryService retrying request after unexpected exception',
+            error: e,
+            stackTrace: stack,
+          );
           delay = _nextDelay(
             delay,
             retryCount: retryCount,
@@ -66,6 +73,11 @@ class RetryService {
           );
           await Future.delayed(delay);
         } else {
+          log.e(
+            'RetryService aborting request after unexpected exception',
+            error: e,
+            stackTrace: stack,
+          );
           rethrow;
         }
       }

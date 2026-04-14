@@ -1,15 +1,15 @@
-import '../repositories/rewards_repository_interface.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+
+import '../repositories/reward_repository.dart';
 
 /// Use case: redeem a reward.
 /// Business rules live HERE, not in the provider or screen.
 class RedeemRewardUseCase {
-  final RewardsRepositoryInterface _repository;
+  final RewardRepository _repository;
 
   const RedeemRewardUseCase(this._repository);
 
-  /// Throws [InsufficientCoinsFailure] if balance is too low (from repository).
-  /// Throws [ServerFailure] on network error.
-  Future<void> call(String rewardId) async {
-    await _repository.redeemReward(rewardId);
-  }
+  Future<Either<Failure, void>> call(String rewardId) =>
+      _repository.redeemReward(rewardId);
 }

@@ -5,7 +5,10 @@ import 'package:homesync_client/core/errors/failures.dart';
 abstract class RewardRepository {
   /// Fetch all rewards for a household.
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
-      String householdId);
+    String householdId, {
+    int? limit,
+    int? offset,
+  });
 
   /// Create or suggest a new reward.
   Future<Either<Failure, void>> suggestReward({

@@ -1,36 +1,31 @@
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationService {
-  static final NotificationService instance = NotificationService._();
-  NotificationService._();
+  NotificationService({required SupabaseClient supabaseClient})
+      : _supabase = supabaseClient;
 
-  final _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
   RealtimeChannel? _channel;
   NotificationCallback? _onNotification;
-  bool _isEnabled = true; // Default
-
-  // ── Initialization ─────────────────────────────────────────────────────────
+  bool _isEnabled = true;
 
   Future<void> initialize({NotificationCallback? onNotification}) async {
     _onNotification = onNotification;
 
-    // Load preference
     final prefs = await SharedPreferences.getInstance();
     _isEnabled = prefs.getBool('notifications_enabled') ?? true;
 
     await _setupRealtimeListener();
-    // === FIREBASE (Mobile Only) =============================================
     if (!kIsWeb && _isEnabled) {
       await _setupFirebase();
     }
-    // =======================================================================
   }
 
   bool get isEnabled => _isEnabled;
@@ -45,12 +40,9 @@ class NotificationService {
         await _setupFirebase();
       }
     } else {
-      // If disabled, we might want to tell the server to remove this token
       await _deleteFcmToken();
     }
   }
-
-  // ── Supabase Realtime (in-app notifications) ──────────────────────────────
 
   Future<void> _setupRealtimeListener() async {
     final appUserId = await AppIdentityService.instance.refresh();
@@ -71,13 +63,13 @@ class NotificationService {
             final record = payload.newRecord;
             final title = record['title'] as String? ?? 'HomeSync';
             final body = record['body'] as String? ?? '';
-            log.i('🔔 Nueva notificación: $title — $body');
+            log.i('Nueva notificacion: $title - $body');
             _onNotification?.call(title, body);
           },
         )
         .subscribe();
 
-    log.i('✅ NotificationService: Realtime listener activo');
+    log.i('NotificationService: Realtime listener activo');
   }
 
   void dispose() {
@@ -85,18 +77,13 @@ class NotificationService {
     _channel = null;
   }
 
-  // FCM Token Management
   Future<void> _setupFirebase() async {
-    // Check if Firebase is initialized to avoid [core/no-app] error
     if (Firebase.apps.isEmpty) {
-      log.w(
-          '⚠️ NotificationService: Firebase no inicializado. Push bloqueado.');
+      log.w('NotificationService: Firebase no inicializado. Push bloqueado.');
       return;
     }
 
     final messaging = FirebaseMessaging.instance;
-
-    // 1. Request permission (iOS requires explicit permission)
     final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
@@ -105,34 +92,30 @@ class NotificationService {
     log.i('Notification permission: ${settings.authorizationStatus}');
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      log.w('⚠️ Usuario denegó permiso de notificaciones');
+      log.w('Usuario denego permiso de notificaciones');
       return;
     }
 
-    // 2. Get the FCM token and save it to Supabase
     final token = await messaging.getToken();
     if (token != null) {
       await _saveFcmToken(token);
     }
 
-    // 3. Listen for token refresh
     messaging.onTokenRefresh.listen(_saveFcmToken);
 
-    // 4. Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      log.i('🔔 FCM Foreground: ${message.notification?.title}');
+      log.i('FCM foreground: ${message.notification?.title}');
       _onNotification?.call(
         message.notification?.title ?? 'HomeSync',
         message.notification?.body ?? '',
       );
     });
 
-    // 5. Handle background/terminated tap
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      log.i('📲 FCM tap from background: ${message.data}');
+      log.i('FCM tap from background: ${message.data}');
     });
 
-    log.i('✅ NotificationService: Firebase Messaging configurado');
+    log.i('NotificationService: Firebase Messaging configurado');
   }
 
   Future<void> _saveFcmToken(String token) async {
@@ -153,9 +136,9 @@ class NotificationService {
         'platform': defaultTargetPlatform.name,
         'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id,token');
-      log.i('✅ FCM token guardado');
-    } catch (e) {
-      log.e('Error guardando FCM token: $e', error: e);
+      log.i('FCM token guardado');
+    } catch (e, stack) {
+      log.e('Error guardando FCM token: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -175,9 +158,9 @@ class NotificationService {
           .delete()
           .eq('user_id', appUserId)
           .eq('platform', defaultTargetPlatform.name);
-      log.i('✅ FCM tokens eliminados del servidor');
-    } catch (e) {
-      log.e('Error eliminando FCM token: $e', error: e);
+      log.i('FCM tokens eliminados del servidor');
+    } catch (e, stack) {
+      log.e('Error eliminando FCM token: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -196,8 +179,8 @@ class NotificationService {
         'is_read': false,
         'created_at': DateTime.now().toIso8601String(),
       });
-    } catch (e) {
-      log.e('Error creando notificación: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error creando notificacion: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -217,8 +200,8 @@ class NotificationService {
           'type': type,
         },
       );
-    } catch (e) {
-      log.e('Error enviando notificación: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error enviando notificacion: $e', error: e, stackTrace: stack);
     }
   }
 }

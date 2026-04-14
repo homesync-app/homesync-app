@@ -1,27 +1,39 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
+import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+// Prefetching Providers
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,7 +106,7 @@ void main() async {
       }
     }
   } catch (e) {
-    debugPrint('Device info error: $e');
+    log.w('Device info initialization failed', error: e);
   }
 
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
@@ -123,6 +135,8 @@ void main() async {
   if (deviceContext['device'] != null) {
     log.setCustomKey('device_type', deviceContext['device']);
   }
+
+  AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
 
   // 1. Initialize Firebase
   try {
@@ -155,46 +169,20 @@ void main() async {
       }
     }
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    log.e('Firebase initialization failed', error: e);
   }
 
-  final auth = SupabaseAuthService();
+  await Supabase.initialize(
+    url: AppEnvironment.supabaseUrl,
+    anonKey: AppEnvironment.supabaseAnonKey,
+  );
+
+  final supabaseClient = Supabase.instance.client;
+  AppIdentityService.instance.configure(client: supabaseClient);
+  final auth = SupabaseAuthService(client: supabaseClient);
   await auth.initialize();
-  await AppIdentityService.instance.initialize();
 
-  if (!kIsWeb) {
-    final userId = AppIdentityService.instance.currentUserId;
-    if (userId != null && userId.isNotEmpty) {
-      FirebaseCrashlytics.instance.setUserIdentifier(userId);
-      FirebaseCrashlytics.instance.setCustomKey('user_id', userId);
-    }
-  }
-  final initialUserId = AppIdentityService.instance.currentUserId;
-  if (initialUserId != null && initialUserId.isNotEmpty) {
-    log.setUserId(initialUserId);
-    log.setCustomKey('user_id', initialUserId);
-  }
-
-  final authStateStream = AppEnvironment.usesFirebaseJwtForSupabase
-      ? fa.FirebaseAuth.instance.idTokenChanges().map((_) => null)
-      : Supabase.instance.client.auth.onAuthStateChange.map((_) => null);
-
-  authStateStream.listen((_) async {
-    final nextUserId = await AppIdentityService.instance.refresh();
-    if (!kIsWeb) {
-      FirebaseCrashlytics.instance.setUserIdentifier(nextUserId ?? '');
-      FirebaseCrashlytics.instance.setCustomKey('user_id', nextUserId ?? '');
-    }
-    if (nextUserId != null && nextUserId.isNotEmpty) {
-      log.setUserId(nextUserId);
-      log.setCustomKey('user_id', nextUserId);
-    } else {
-      log.setUserId('');
-      log.setCustomKey('user_id', '');
-    }
-  });
-
-  final rpc = SupabaseRpcService();
+  final rpc = SupabaseRpcService(clientOverride: supabaseClient);
   await rpc.initialize();
 
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
@@ -243,36 +231,23 @@ void main() async {
       overrides: [
         authServiceProvider.overrideWithValue(auth),
         rpcServiceProvider.overrideWithValue(rpc),
+        sharedPreferencesProvider.overrideWithValue(prefs),
       ],
       child: MyApp(
+        appVersion: packageInfo.version,
         prefs: prefs,
       ),
     ),
   );
 }
 
-// Helper to init theme after ProviderScope is ready
-class _ThemeInit extends ConsumerWidget {
-  final Widget child;
-  final SharedPreferences prefs;
-  const _ThemeInit({required this.child, required this.prefs});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Init once on first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await ref.read(themeModeProvider.notifier).init(prefs);
-      await ref.read(primaryColorProvider.notifier).init(prefs);
-    });
-    return child;
-  }
-}
-
 class MyApp extends ConsumerStatefulWidget {
+  final String appVersion;
   final SharedPreferences prefs;
 
   const MyApp({
     super.key,
+    required this.appVersion,
     required this.prefs,
   });
 
@@ -282,41 +257,192 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   static const _minimumSplashDuration = Duration(milliseconds: 2800);
+  static const _criticalBootstrapTimeout = Duration(seconds: 4);
   bool _startupReady = false;
+  late final FirebaseAnalyticsObserver _analyticsObserver;
+
+  // GlobalKey so we can imperatively navigate from outside the build() method.
+  static final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
     super.initState();
+    _analyticsObserver = FirebaseAnalyticsObserver(
+      analytics: FirebaseAnalytics.instance,
+    );
+    ref.read(authBootstrapProvider);
+    unawaited(_configureAnalytics());
+
+    if (AppEnvironment.adminTestingAutoLogin) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || ref.read(adminProvider).isAdminUser) return;
+        final scenarioId = AppEnvironment.adminTestingAutoScenarioId;
+        final viewerUserId = AppEnvironment.adminTestingAutoViewerUserId;
+        final scenario = AdminTestingConfig.scenarioById(scenarioId);
+        final qaUser = AdminTestingConfig.qaUserById(viewerUserId);
+
+        if (AppEnvironment.adminTestingAutoAdminSessionEnabled) {
+          ref.read(qaSessionServiceProvider).signInAsAdminPreviewSession(
+                email: AppEnvironment.adminTestingBaseEmail,
+                password: AppEnvironment.adminTestingBasePassword,
+                scenarioId: scenarioId,
+                viewerUserId: viewerUserId,
+              );
+          return;
+        }
+
+        if (AppEnvironment.adminTestingAutoRealQaLogin &&
+            scenario != null &&
+            qaUser != null) {
+          ref.read(qaSessionServiceProvider).signInAsQaUser(scenario, qaUser);
+          return;
+        }
+
+        ref.read(adminProvider.notifier).activateAutoQaSession(
+              scenarioId: scenarioId,
+              viewerUserId: viewerUserId,
+            );
+      });
+    }
     // Initialize premium service on app start
     ref.read(premiumServiceProvider);
     _completeStartupGate();
   }
 
+  Future<void> _configureAnalytics() async {
+    final analytics = ref.read(analyticsServiceProvider);
+    await analytics.setUserProperty(
+      name: 'environment',
+      value: AppEnvironment.current.name,
+    );
+    await analytics.setUserProperty(
+      name: 'platform',
+      value: kIsWeb ? 'web' : defaultTargetPlatform.name,
+    );
+    await analytics.trackAppOpened(
+      environment: AppEnvironment.current.name,
+      platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
+      appVersion: widget.appVersion,
+    );
+  }
+
   Future<void> _completeStartupGate() async {
+    log.i('🚀 StartupGate: waiting for authBootstrap...');
+    await ref.read(authBootstrapProvider.future).catchError((_) {});
+    log.i('🚀 StartupGate: authBootstrap done');
+
+    log.i('🚀 StartupGate: reading authStateProvider...');
     final authState = await ref.read(authStateProvider.future).catchError(
           (_) => const AppAuthState(
             isAuthenticated: false,
             source: 'bootstrap_error',
           ),
         );
-
-    final bootstrapTasks = <Future<void>>[
-      Future<void>.delayed(_minimumSplashDuration),
-    ];
-
-    if (authState.isAuthenticated) {
-      bootstrapTasks.add(
-        ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
-      );
-    }
-
-    await Future.wait(bootstrapTasks);
+    log.i(
+        '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}');
 
     if (!mounted) return;
 
+    await Future<void>.delayed(_minimumSplashDuration);
+
+    if (authState.isAuthenticated && authState.source != 'admin_testing') {
+      log.i('StartupGate: preloading home data before entering...');
+      await _warmCriticalProviders();
+    }
+
+    if (!mounted) return;
+
+    log.i('🚀 StartupGate: READY — setting _startupReady = true');
     setState(() {
       _startupReady = true;
     });
+  }
+
+  Future<void> _warmCriticalProviders() async {
+    final warmups = <String, Future<void>>{
+      'householdIdProvider':
+          ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
+      'userProfileProvider':
+          ref.read(userProfileProvider.future).then((_) {}).catchError((_) {}),
+      'householdMembersProvider': ref
+          .read(householdMembersProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'householdMembersNotifierProvider': ref
+          .read(householdMembersNotifierProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'expenseBalancesProvider': ref
+          .read(expenseBalancesProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'userBalanceProvider':
+          ref.read(userBalanceProvider.future).then((_) {}).catchError((_) {}),
+      'tasksProvider':
+          ref.read(tasksProvider.future).then((_) {}).catchError((_) {}),
+      'recentActivityProvider': ref
+          .read(recentActivityProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'statsControllerProvider': ref
+          .read(statsControllerProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'combinedFeedControllerProvider': ref
+          .read(combinedFeedControllerProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'shoppingItemsProvider': ref
+          .read(shoppingItemsProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+    };
+
+    await Future.wait(
+      warmups.entries.map((entry) async {
+        try {
+          await entry.value.timeout(_criticalBootstrapTimeout);
+        } on TimeoutException {
+          log.w('StartupGate: background preload timed out for ${entry.key}');
+        }
+      }),
+    );
+
+    await _precacheStartupImages();
+  }
+
+  Future<void> _precacheStartupImages() async {
+    if (!mounted) return;
+
+    final profile = ref.read(userProfileProvider).valueOrNull;
+    final members =
+        ref.read(householdMembersNotifierProvider).valueOrNull ?? const [];
+
+    final avatarUrls = <String>{
+      if (profile?['avatar_url'] is String) profile!['avatar_url'] as String,
+      ...members
+          .map((member) => member.avatarUrl)
+          .whereType<String>()
+          .where((url) => url.trim().isNotEmpty),
+    };
+
+    await Future.wait(
+      avatarUrls.map((url) async {
+        try {
+          if (url.startsWith('http')) {
+            await precacheImage(NetworkImage(url), context);
+          } else if (url.startsWith('assets/')) {
+            await precacheImage(AssetImage(url), context);
+          }
+        } catch (error, stackTrace) {
+          log.w(
+            'StartupGate: avatar precache failed for $url',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      }),
+    );
   }
 
   @override
@@ -325,30 +451,77 @@ class _MyAppState extends ConsumerState<MyApp> {
     final customPrimary = ref.watch(primaryColorProvider);
     final authState = ref.watch(authStateProvider);
 
-    return _ThemeInit(
-      prefs: widget.prefs,
-      child: MaterialApp(
-        title: 'HomeSync',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme(customPrimary: customPrimary),
-        darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
-        themeMode: themeMode,
-        home: !_startupReady
-            ? const SplashScreen()
-            : authState.when(
-                data: (state) {
-                  if (state.isAuthenticated) {
-                    return MainScreen(prefs: widget.prefs);
-                  }
-                  return LoginScreen(prefs: widget.prefs);
-                },
-                loading: () => const SplashScreen(),
-                error: (e, stack) {
-                  debugPrint('Auth error: $e');
-                  return LoginScreen(prefs: widget.prefs);
-                },
-              ),
-      ),
+    // ── Reactive sign-out: imperatively navigate when auth state changes to
+    // isAuthenticated=false, regardless of any route stack sitting on top.
+    ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
+      final prev = previous?.valueOrNull;
+      final curr = next.valueOrNull;
+
+      if (curr != null) {
+        log.i(
+            'Auth transition: prev=${prev?.isAuthenticated}, curr=${curr.isAuthenticated}, startupReady=$_startupReady');
+      }
+
+      if (!_startupReady) return;
+      if (curr == null) return;
+
+      if ((prev?.isAuthenticated ?? true) && !curr.isAuthenticated) {
+        log.i('Imperative sign-out: Navigating to Login');
+        Future.microtask(() {
+          final navigator = _navigatorKey.currentState;
+          if (navigator == null) {
+            log.e('Sign-out failed: _navigatorKey.currentState is NULL');
+            return;
+          }
+          navigator.pushNamedAndRemoveUntil('/__login__', (route) => false);
+        });
+        return;
+      }
+
+      if (!(prev?.isAuthenticated ?? false) && curr.isAuthenticated) {
+        log.i('Imperative sign-in: Navigating to Home');
+        Future.microtask(() {
+          final navigator = _navigatorKey.currentState;
+          if (navigator == null) {
+            log.e('Sign-in failed: _navigatorKey.currentState is NULL');
+            return;
+          }
+          navigator.pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => MainScreen(prefs: widget.prefs),
+            ),
+            (route) => false,
+          );
+        });
+      }
+    });
+
+    return MaterialApp(
+      title: 'HomeSync',
+      debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey,
+      navigatorObservers: [_analyticsObserver],
+      theme: AppTheme.lightTheme(customPrimary: customPrimary),
+      darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
+      themeMode: themeMode,
+      routes: {
+        '/__login__': (_) => LoginScreen(prefs: widget.prefs),
+      },
+      home: !_startupReady
+          ? const SplashScreen()
+          : authState.when(
+              data: (state) {
+                if (state.isAuthenticated) {
+                  return MainScreen(prefs: widget.prefs);
+                }
+                return LoginScreen(prefs: widget.prefs);
+              },
+              loading: () => const SplashScreen(),
+              error: (e, stack) {
+                log.e('Auth bootstrap failed', error: e, stackTrace: stack);
+                return LoginScreen(prefs: widget.prefs);
+              },
+            ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/offline/offline_action_processor.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class SyncResult {
   final int processed;
@@ -56,7 +57,7 @@ class SyncService {
 
           await _queueService.markCompleted(request.id!);
           successful++;
-        } catch (e) {
+        } catch (e, stack) {
           final retryCount =
               await _queueService.incrementRetryAndGet(request.id!);
           if (retryCount >= _maxRetries) {
@@ -66,6 +67,11 @@ class SyncService {
               retryCount: retryCount,
             );
           }
+          log.w(
+            'SyncService failed processing queued request ${request.id}',
+            error: e,
+            stackTrace: stack,
+          );
           failed++;
           errors.add('Request ${request.id} failed: $e');
         }
@@ -124,16 +130,12 @@ class SyncState {
   }
 }
 
-class SyncNotifier extends StateNotifier<SyncState> {
+class SyncNotifier extends Notifier<SyncState> {
   final SyncService _syncService = SyncService();
-  final Ref _ref;
 
-  SyncNotifier(this._ref) : super(const SyncState()) {
-    _init();
-  }
-
-  void _init() {
-    _ref.listen<bool>(
+  @override
+  SyncState build() {
+    ref.listen<bool>(
       isOnlineProvider,
       (previous, isOnline) {
         if (isOnline && !_syncService.isSyncing) {
@@ -141,6 +143,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
         }
       },
     );
+
+    return const SyncState();
   }
 
   Future<void> sync({
@@ -150,7 +154,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
     try {
       final processor =
-          processRequest ?? _ref.read(offlineActionProcessorProvider);
+          processRequest ?? ref.read(offlineActionProcessorProvider);
       final result = await _syncService.sync(processRequest: processor);
       state = state.copyWith(
         isSyncing: false,
@@ -158,7 +162,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
         lastError: result.errors.isNotEmpty ? result.errors.first : null,
         pendingCount: await _syncService.getPendingCount(),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      log.e('SyncNotifier.sync failed', error: e, stackTrace: stack);
       state = state.copyWith(
         isSyncing: false,
         lastError: e.toString(),
@@ -172,8 +177,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
   }
 }
 
-final syncProvider = StateNotifierProvider<SyncNotifier, SyncState>((ref) {
-  return SyncNotifier(ref);
+final syncProvider = NotifierProvider<SyncNotifier, SyncState>(() {
+  return SyncNotifier();
 });
 
 final pendingRequestsCountProvider = Provider<int>((ref) {

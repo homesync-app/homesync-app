@@ -8,12 +8,15 @@ import 'package:timeago/src/messages/es_messages.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
@@ -163,9 +166,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 break;
             }
             try {
-              await ref
-                  .read(tasksProvider.notifier)
-                  .updateSchedule(
+              await ref.read(tasksProvider.notifier).updateSchedule(
                     task,
                     recurrenceType,
                     recurrenceInterval: selection.recurrenceInterval,
@@ -183,134 +184,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _deleteTask(TaskModel task) async {
-    final theme = context.theme;
-    final confirm = await showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-          decoration: BoxDecoration(
-            color: theme.background,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.10),
-                blurRadius: 28,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentRed.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppColors.accentRed,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      'Eliminar tarea',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
-                        color: theme.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                'Se va a eliminar "${task.title}" y no se puede deshacer.',
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.4,
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          color: theme.textMuted,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            AppColors.accentRed.withValues(alpha: 0.86),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      await ref.read(tasksProvider.notifier).deleteTask(task);
-      if (mounted) _showSnack('Tarea eliminada', AppColors.accentGreen);
-    } catch (e) {
-      if (mounted) _showSnack('Error: $e', AppColors.error);
-    }
   }
 
   void _showCreateTaskDialog() async {
@@ -470,7 +343,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                   data: (catList) {
                                     final visibleCats = catList
                                         .where((c) => activeCats.contains(
-                                            AppColors.normaliseCategory(c.id)))
+                                            CategoryMapping.normaliseCategory(
+                                                c.id)))
                                         .toList();
 
                                     return Column(
@@ -763,7 +637,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final selectedCategories = ref.watch(taskCategoryFilterProvider);
     final isSelected = id == null
         ? selectedCategories.isEmpty
-        : selectedCategories.contains(AppColors.normaliseCategory(id));
+        : selectedCategories.contains(CategoryMapping.normaliseCategory(id));
     final theme = context.theme;
 
     return GestureDetector(
@@ -773,7 +647,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         } else {
           ref
               .read(taskCategoryFilterProvider.notifier)
-              .toggle(AppColors.normaliseCategory(id));
+              .toggle(CategoryMapping.normaliseCategory(id));
         }
       },
       child: AnimatedContainer(
@@ -802,7 +676,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              AppColors.getCategoryMaterialIcon(id ?? name),
+              CategoryMapping.getCategoryMaterialIcon(id ?? name),
               color: isSelected ? color : color.withValues(alpha: 0.85),
               size: 18,
             ),
@@ -822,17 +696,24 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   }
 
   Widget _buildEmptyState(String? filterStatus) {
-    final isSolo = ref.watch(currentHouseholdProvider).valueOrNull?.householdType == 'solo';
+    final isSolo =
+        ref.watch(currentHouseholdProvider).valueOrNull?.householdType ==
+            'solo';
     return AppEmptyState(
       title: filterStatus == null
-          ? (isSolo ? 'No hay tareas configuradas' : 'No hay tareas configuradas')
+          ? (isSolo
+              ? 'No hay tareas configuradas'
+              : 'No hay tareas configuradas')
           : 'No hay tareas con esos filtros',
       subtitle: filterStatus == null
-          ? (isSolo ? 'Agrega tu primera tarea para empezar a organizar tu hogar.' : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
+          ? (isSolo
+              ? 'Agrega tu primera tarea para empezar a organizar tu hogar.'
+              : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
           : 'Proba cambiar la categoria o crear una nueva tarea.',
       icon: filterStatus == null
           ? Icons.edit_note_rounded
           : Icons.filter_list_off_rounded,
+      emoji: filterStatus == null ? '📝' : '🔎',
     );
   }
 
@@ -849,7 +730,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};
     for (final c in categories) {
-      final norm = AppColors.normaliseCategory(c.id);
+      final norm = CategoryMapping.normaliseCategory(c.id);
       // If collision, keep existing (usually the first in sort order)
       if (!catLookup.containsKey(norm)) {
         catLookup[norm] = c;
@@ -861,14 +742,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     if (selectedCategories.isNotEmpty) {
       tasksToDisplay = deduped
           .where((t) => selectedCategories
-              .contains(AppColors.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)))
           .toList();
     }
 
     // 3. Group the tasks to display
     final grouped = <String, List<TaskModel>>{};
     for (final t in tasksToDisplay) {
-      final normCat = AppColors.normaliseCategory(t.category);
+      final normCat = CategoryMapping.normaliseCategory(t.category);
       (grouped[normCat] ??= []).add(t);
     }
 
@@ -892,7 +773,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               color: '#94A3B8');
 
       widgets.add(_SectionHeader(
-        icon: AppColors.getCategoryMaterialIcon(normCat),
+        icon: CategoryMapping.getCategoryMaterialIcon(normCat),
         title: catInfo.name,
         count: catTasks.length,
         color: AppColors.fromHex(catInfo.color),
@@ -906,7 +787,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           task: task,
           onSchedule: () => _showScheduleDialog(task),
           onEdit: () => _showEditDialog(task),
-          onDelete: () => _deleteTask(task),
         ).animateStaggered(index);
       }));
     }
@@ -991,14 +871,12 @@ class _TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
   final VoidCallback onSchedule;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
 
   const _TaskCard({
     super.key,
     required this.task,
     required this.onSchedule,
     required this.onEdit,
-    required this.onDelete,
   });
 
   @override
@@ -1007,28 +885,43 @@ class _TaskCard extends ConsumerStatefulWidget {
 
 class _TaskCardState extends ConsumerState<_TaskCard> {
   bool _isExpanded = false;
+  bool _isSubmitting = false;
 
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
     final theme = context.theme;
+    final caps = ref.watch(householdCapabilitiesProvider);
+    final members = ref.watch(householdMembersProvider).valueOrNull ??
+        const <MemberModel>[];
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final assignedMember =
+        members.where((member) => member.userId == task.assignedTo).firstOrNull;
+    final isFamilyMode = caps.type == HouseholdType.family;
+    final isChildView = isFamilyMode && (currentMember?.isChild ?? false);
+    final isAdultView = isFamilyMode && (currentMember?.isAdult ?? false);
+    final isOpenTask = task.assignedTo == null;
+    final isAssignedToCurrentUser = task.assignedTo == currentUserId;
 
     // Resolve dynamic category data
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere((c) => c.id == task.category);
-        } catch (_) {
-          return null;
+        for (final category in list) {
+          if (category.id == task.category) {
+            return category;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );
 
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
-        : AppColors.getCategoryColor(task.category);
+        : CategoryMapping.getCategoryColor(task.category);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
@@ -1114,6 +1007,14 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                 background:
                                     AppColors.accentRed.withValues(alpha: 0.16),
                               ),
+                            if (isFamilyMode && task.isPendingApproval)
+                              _pill(
+                                icon: Icons.hourglass_top_rounded,
+                                label: 'En revisión',
+                                color: AppColors.primary,
+                                background:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                              ),
                           ],
                         ),
                       ),
@@ -1136,7 +1037,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
-                        const Divider(color: Color(0xFFF1F5F9), height: 1),
+                        Divider(
+                          color: theme.divider.withValues(
+                            alpha: theme.isDarkMode ? 0.35 : 0.9,
+                          ),
+                          height: 1,
+                        ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
@@ -1159,12 +1065,24 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: _buildActionTilePremium(
-                                icon: Icons.delete_outline_rounded,
-                                label: 'Eliminar',
-                                color: AppColors.accentRed,
-                                onTap: widget.onDelete,
-                              ),
+                              child: isFamilyMode
+                                  ? _buildFamilyTaskAction(
+                                      isChildView: isChildView,
+                                      isAdultView: isAdultView,
+                                      isOpenTask: isOpenTask,
+                                      isAssignedToCurrentUser:
+                                          isAssignedToCurrentUser,
+                                      assignedMember: assignedMember,
+                                    )
+                                  : _buildActionTilePremium(
+                                      icon: Icons.check_rounded,
+                                      label: _isSubmitting
+                                          ? 'Completando...'
+                                          : 'Completar',
+                                      color: AppColors.accentGreen,
+                                      onTap:
+                                          _isSubmitting ? null : _completeTask,
+                                    ),
                             ),
                           ],
                         ),
@@ -1180,35 +1098,172 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     );
   }
 
+  Widget _buildFamilyTaskAction({
+    required bool isChildView,
+    required bool isAdultView,
+    required bool isOpenTask,
+    required bool isAssignedToCurrentUser,
+    required MemberModel? assignedMember,
+  }) {
+    if (widget.task.isPendingApproval) {
+      if (!isAdultView) {
+        return _buildInfoBanner(
+          icon: Icons.hourglass_top_rounded,
+          text: 'Esperando revisión de un adulto.',
+          color: AppColors.primary,
+        );
+      }
+
+      return Row(
+        children: [
+          Expanded(
+            child: _buildActionTilePremium(
+              icon: Icons.check_rounded,
+              label: _isSubmitting ? 'Aprobando...' : 'Aprobar',
+              color: AppColors.accentGreen,
+              onTap: _isSubmitting ? null : _approvePendingTask,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildActionTilePremium(
+              icon: Icons.reply_rounded,
+              label: _isSubmitting ? 'Devolviendo...' : 'Devolver',
+              color: AppColors.accentRed,
+              onTap: _isSubmitting ? null : _rejectPendingTask,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (isOpenTask) {
+      return _buildActionTilePremium(
+        icon: Icons.check_rounded,
+        label: _isSubmitting ? 'Completando...' : 'Completar',
+        color: AppColors.primary,
+        onTap: _isSubmitting
+            ? null
+            : () {
+                if (isChildView) {
+                  _confirmOpenTaskCompletion(isChildView: true);
+                } else {
+                  _completeTask();
+                }
+              },
+      );
+    }
+
+    if (isAssignedToCurrentUser) {
+      if (isChildView) {
+        return _buildActionTilePremium(
+          icon: Icons.send_rounded,
+          label: _isSubmitting ? 'Enviando...' : 'Enviar a revisión',
+          color: AppColors.primary,
+          onTap: _isSubmitting ? null : _submitTaskForApproval,
+        );
+      }
+
+      return _buildActionTilePremium(
+        icon: Icons.check_rounded,
+        label: _isSubmitting ? 'Completando...' : 'Completar',
+        color: AppColors.accentGreen,
+        onTap: _isSubmitting ? null : _completeTask,
+      );
+    }
+
+    final ownerName = assignedMember?.displayName ?? 'otra persona';
+    if (isAdultView) {
+      return _buildActionTilePremium(
+        icon: Icons.check_rounded,
+        label: _isSubmitting ? 'Completando...' : 'Completar',
+        color: AppColors.primary,
+        onTap: _isSubmitting
+            ? null
+            : () => _confirmAdultTakeoverCompletion(ownerName),
+      );
+    }
+
+    return _buildInfoBanner(
+      icon: Icons.lock_outline_rounded,
+      text: 'Le toca a $ownerName.',
+      color: AppColors.textMuted,
+    );
+  }
+
+  Widget _buildInfoBanner({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionTilePremium({
     required IconData icon,
     required String label,
     required Color color,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return InkWell(
-      onTap: () {
-        setState(() => _isExpanded = false);
-        onTap();
-      },
+      onTap: onTap == null
+          ? null
+          : () {
+              setState(() => _isExpanded = false);
+              onTap();
+            },
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
+          color: onTap == null
+              ? AppColors.textMuted.withValues(alpha: 0.08)
+              : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
+          border: Border.all(
+            color: onTap == null
+                ? AppColors.textMuted.withValues(alpha: 0.1)
+                : color.withValues(alpha: 0.1),
+          ),
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 20),
+            Icon(
+              icon,
+              color: onTap == null ? AppColors.textMuted : color,
+              size: 20,
+            ),
             const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: color,
+                color: onTap == null ? AppColors.textMuted : color,
                 letterSpacing: -0.2,
               ),
             ),
@@ -1216,6 +1271,252 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmOpenTaskCompletion({
+    required bool isChildView,
+  }) async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final members =
+        ref.read(householdMembersProvider).valueOrNull ?? const <MemberModel>[];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final actorName = currentMember?.displayName ?? 'vos';
+
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Marcar tarea'),
+            content: Text(
+              isChildView
+                  ? 'Se va a marcar "${widget.task.title}" como realizada por $actorName y se enviará a revisión.'
+                  : 'Se va a marcar "${widget.task.title}" como realizada por $actorName.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    if (isChildView) {
+      await _submitTaskForApproval();
+    } else {
+      await _completeTask();
+    }
+  }
+
+  Future<void> _confirmAdultTakeoverCompletion(String ownerName) async {
+    final theme = context.theme;
+    final confirmed = await showModalBottomSheet<bool>(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: theme.divider.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.handshake_rounded,
+                      size: 36,
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Esta tarea le toca a $ownerName',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: theme.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '¿Quieres darle una mano y completarla de todas formas?',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: theme.textSecondary,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            side: BorderSide(color: theme.border),
+                          ),
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            'Cerrar',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            'Completar igual',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+    await _completeTask();
+  }
+
+  Future<void> _submitTaskForApproval() async {
+    setState(() => _isSubmitting = true);
+    try {
+      await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enviada para revisión de un adulto.')),
+      );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(recentActivityProvider);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _completeTask() async {
+    setState(() => _isSubmitting = true);
+    try {
+      final result =
+          await ref.read(tasksProvider.notifier).completeTask(widget.task);
+      if (!mounted) return;
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No pudimos completar la tarea.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarea completada.')),
+        );
+        ref.invalidate(tasksProvider);
+        ref.invalidate(todayTasksProvider);
+        ref.invalidate(recentActivityProvider);
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _approvePendingTask() async {
+    setState(() => _isSubmitting = true);
+    try {
+      final result = await ref
+          .read(tasksProvider.notifier)
+          .approvePendingTask(widget.task);
+      if (!mounted) return;
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No pudimos aprobar la tarea.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tarea aprobada.')),
+        );
+        ref.invalidate(tasksProvider);
+        ref.invalidate(todayTasksProvider);
+        ref.invalidate(recentActivityProvider);
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _rejectPendingTask() async {
+    setState(() => _isSubmitting = true);
+    try {
+      await ref.read(tasksProvider.notifier).rejectPendingTask(widget.task);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La tarea volvió a quedar pendiente.')),
+      );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(recentActivityProvider);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Widget _pill({

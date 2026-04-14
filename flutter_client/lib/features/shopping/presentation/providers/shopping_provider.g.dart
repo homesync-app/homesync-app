@@ -7,7 +7,7 @@ part of 'shopping_provider.dart';
 // **************************************************************************
 
 String _$shoppingRepositoryHash() =>
-    r'abe0cbaaa24b1f20e8d58e0d325687e1afa1b98d';
+    r'fb6f2bbad2f60c7b06f19eb0d0a78b7ec6505d1d';
 
 /// See also [shoppingRepository].
 @ProviderFor(shoppingRepository)
@@ -145,7 +145,7 @@ final uncompleteAllShoppingItemsUseCaseProvider =
 // ignore: unused_element
 typedef UncompleteAllShoppingItemsUseCaseRef
     = AutoDisposeProviderRef<UncompleteAllShoppingItemsUseCase>;
-String _$shoppingItemsHash() => r'd54fd86b15799754d4a24be4d1074eb1ecba1535';
+String _$shoppingItemsHash() => r'd706fb082dc6300c83b26a9e45a7e7ac683658fc';
 
 /// See also [ShoppingItems].
 @ProviderFor(ShoppingItems)

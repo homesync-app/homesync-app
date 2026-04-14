@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -225,6 +228,48 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     }
   }
 
+  Future<void> _completeTaskFromEdit() async {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final members = ref.read(householdMembersProvider).valueOrNull ?? const [];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final isChildView = currentMember?.isChild ?? false;
+
+    setState(() => _isLoading = true);
+    try {
+      if (isChildView) {
+        await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
+      } else {
+        await ref.read(tasksProvider.notifier).completeTask(widget.task);
+      }
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isChildView
+                  ? 'Tarea enviada a revisión.'
+                  : 'Tarea completada.',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al completar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -378,7 +423,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      AppColors.getCategoryMaterialIcon(
+                                      CategoryMapping.getCategoryMaterialIcon(
                                           cat['name']),
                                       color: color,
                                       size: 18,
@@ -500,7 +545,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 17),
                         shape: RoundedRectangleBorder(
@@ -571,6 +617,13 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final isChildView = currentMember?.isChild ?? false;
+    final canComplete = widget.task.isPending;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -612,6 +665,39 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                 ),
               ),
               const SizedBox(height: 12),
+              if (canComplete) ...[
+                TextButton.icon(
+                  onPressed: _isLoading ? null : _completeTaskFromEdit,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: AppColors.primary.withValues(alpha: 0.16),
+                      ),
+                    ),
+                  ),
+                  icon: Icon(
+                    isChildView ? Icons.send_rounded : Icons.check_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    isChildView ? 'Enviar a revisión' : 'Completar tarea',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
               TextButton.icon(
                 onPressed: _isLoading ? null : _deleteTask,
                 style: TextButton.styleFrom(

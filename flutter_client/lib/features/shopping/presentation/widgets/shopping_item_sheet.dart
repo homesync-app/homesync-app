@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import '../providers/shopping_provider.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/models/shopping_categories.dart';
@@ -175,7 +176,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                       });
                     }
                   },
-                  backgroundColor: AppColors.background,
+                  backgroundColor: context.theme.scaffoldBackground,
                   selectedColor: AppColors.primary.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
                     color:
@@ -230,10 +231,12 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
             emoji: _emoji,
           );
     } else {
-      // For now, edit is handled by delete/add or we could implement updateItem
-      // But keeping it simple as per the current app architecture.
-      // If the item exists, we might just update the shouldSync locally or via a new repo method.
-      // The user mainly asked about the "form" gating.
+      ref.read(shoppingItemsProvider.notifier).updateItem(
+            itemId: widget.item!.id,
+            name: _nameController.text.trim(),
+            category: _category,
+            emoji: _emoji,
+          );
     }
 
     Navigator.pop(context);

@@ -8,10 +8,18 @@ class GetSavingsGoalsUseCase {
 
   GetSavingsGoalsUseCase(this.repository);
 
-  Future<Either<Failure, List<SavingsGoalModel>>> execute(String householdId) {
+  Future<Either<Failure, List<SavingsGoalModel>>> execute(
+    String householdId, {
+    int? limit,
+    int? offset,
+  }) {
     if (householdId.isEmpty) {
       return Future.value(const Left(ValidationFailure('householdId is required')));
     }
-    return repository.getGoals(householdId: householdId);
+    return repository.getGoals(
+      householdId: householdId,
+      limit: limit,
+      offset: offset,
+    );
   }
 }

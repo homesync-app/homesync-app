@@ -55,11 +55,31 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
+          backgroundColor: primary.withValues(alpha: 0.14),
+          foregroundColor: AppColors.primaryDark,
           elevation: 0,
           minimumSize: const Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+          side: BorderSide(color: primary.withValues(alpha: 0.16), width: 1.1),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary.withValues(alpha: 0.16),
+          foregroundColor: AppColors.primaryDark,
+          minimumSize: const Size(0, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+          side: BorderSide(color: primary.withValues(alpha: 0.18), width: 1.1),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
           ),
@@ -221,11 +241,31 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: primary.withValues(alpha: 0.24),
           foregroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size(0, 52),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+          side: BorderSide(color: primary.withValues(alpha: 0.22), width: 1.1),
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary.withValues(alpha: 0.26),
+          foregroundColor: Colors.white,
+          minimumSize: const Size(0, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+          side: BorderSide(color: primary.withValues(alpha: 0.22), width: 1.1),
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(999),
           ),

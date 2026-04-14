@@ -134,7 +134,7 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 250),
+    this.duration = const Duration(milliseconds: 200),
   });
 
   @override
@@ -143,45 +143,51 @@ class FadeIndexedStack extends StatefulWidget {
 
 class _FadeIndexedStackState extends State<FadeIndexedStack>
     with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.index;
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+      value: 1.0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.index != widget.index) {
+      _controller.forward(from: 0.0);
+      setState(() {
+        _currentIndex = widget.index;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final safeIndex = widget.index.clamp(0, widget.children.length - 1);
-
-    return AnimatedSwitcher(
-      duration: widget.duration,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      layoutBuilder: (currentChild, previousChildren) {
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            ...previousChildren,
-            if (currentChild != null) currentChild,
-          ],
-        );
-      },
-      transitionBuilder: (child, animation) {
-        final fade = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        final slide = Tween<Offset>(
-          begin: const Offset(0.0, 0.035),
-          end: Offset.zero,
-        ).animate(fade);
-
-        return FadeTransition(
-          opacity: fade,
-          child: SlideTransition(
-            position: slide,
-            child: child,
-          ),
-        );
-      },
-      child: KeyedSubtree(
-        key: ValueKey<int>(safeIndex),
-        child: widget.children[safeIndex],
-      ),
+    return IndexedStack(
+      index: _currentIndex,
+      children: List.generate(widget.children.length, (i) {
+        // Only animate the currently active child; the rest stay alive but hidden.
+        if (i == _currentIndex) {
+          return FadeTransition(
+            opacity: _controller,
+            child: widget.children[i],
+          );
+        }
+        return widget.children[i];
+      }),
     );
   }
 }

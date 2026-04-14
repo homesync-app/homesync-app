@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -10,6 +12,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import 'expense_category_matcher.dart';
 
 class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseTemplateModel? template;
@@ -51,12 +54,13 @@ class _RecurringExpenseFormSheetState
 
   final List<Map<String, String>> _categories = const [
     {'id': 'utilities', 'name': 'Servicios'},
-    {'id': 'rent', 'name': 'Alquiler'},
-    {'id': 'supermarket', 'name': 'Suscripciones'},
-    {'id': 'entertainment', 'name': 'Hobby'},
-    {'id': 'transport', 'name': 'Seguros'},
+    {'id': 'rent', 'name': 'Alquiler y hogar'},
+    {'id': 'restaurants', 'name': 'Salidas y comidas'},
+    {'id': 'transport', 'name': 'Transporte'},
+    {'id': 'entertainment', 'name': 'Ocio y planes'},
     {'id': 'health', 'name': 'Salud'},
-    {'id': 'finanzas', 'name': 'Ahorro / Inversion'},
+    {'id': 'finanzas', 'name': 'Ahorro e inversión'},
+    {'id': 'mercadolibre', 'name': 'Compras online'},
     {'id': 'other', 'name': 'Otros'},
   ];
 
@@ -74,14 +78,27 @@ class _RecurringExpenseFormSheetState
       _splitType = template.splitType;
       _payerDefault = template.payerDefault;
     }
+    _titleController.addListener(_onTitleChanged);
     _initializeDefaultPayer();
   }
 
   @override
   void dispose() {
+    _titleController.removeListener(_onTitleChanged);
     _amountController.dispose();
     _titleController.dispose();
     super.dispose();
+  }
+
+  void _onTitleChanged() {
+    if (widget.template != null) return;
+    final inferredCategory =
+        inferExpenseCategoryIdFromText(_titleController.text);
+    if (inferredCategory == null) return;
+    if (_category == inferredCategory) return;
+    if (_categories.any((category) => category['id'] == inferredCategory)) {
+      setState(() => _category = inferredCategory);
+    }
   }
 
   double? _parseAmount(String raw) {
@@ -95,7 +112,12 @@ class _RecurringExpenseFormSheetState
       final members = await ref.read(householdMembersProvider.future);
       if (!mounted || members.isEmpty || _payerDefault.isNotEmpty) return;
       setState(() => _payerDefault = members.first.userId);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'RecurringExpenseFormSheet could not initialize default payer',
+        error: error,
+        stackTrace: stackTrace,
+      );
       // If members are not available yet, the selector will show loading/error.
     }
   }
@@ -267,7 +289,8 @@ class _RecurringExpenseFormSheetState
                               width: 56,
                               height: 6,
                               decoration: BoxDecoration(
-                                color: AppColors.divider.withValues(alpha: 0.85),
+                                color:
+                                    AppColors.divider.withValues(alpha: 0.85),
                                 borderRadius: BorderRadius.circular(99),
                               ),
                             ),
@@ -487,7 +510,7 @@ class _RecurringExpenseFormSheetState
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.theme.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
@@ -520,7 +543,7 @@ class _RecurringExpenseFormSheetState
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.theme.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
@@ -609,13 +632,14 @@ class _RecurringExpenseFormSheetState
           runSpacing: 8,
           children: _categories.map((category) {
             final isSelected = _category == category['id'];
-            final categoryColor = AppColors.getCategoryColor(category['id']);
+            final categoryColor =
+                CategoryMapping.getCategoryColor(category['id']);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    AppColors.getCategoryMaterialIcon(category['id']),
+                    CategoryMapping.getCategoryMaterialIcon(category['id']),
                     size: 16,
                     color: categoryColor,
                   ),
@@ -815,7 +839,8 @@ class _RecurringExpenseFormSheetState
 
   Widget _buildBottomActions(double bottomInset) {
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
+      padding:
+          EdgeInsets.fromLTRB(24, 18, 24, bottomInset > 0 ? bottomInset : 18),
       decoration: BoxDecoration(
         color: context.theme.background.withValues(alpha: 0.98),
         border: Border(

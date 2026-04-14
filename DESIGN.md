@@ -18,7 +18,7 @@ The application embodies a "Scandi-warm" atmosphere—clean, minimalist, but hig
 
 ## 3. Typography Rules
 
-- **Font Family:** Plus Jakarta Sans (or similar modern, rounded sans-serif).
+- **Font Family:** Outfit (modern, rounded sans-serif with warm personality).
 - **Headers:** High emphasis, bold weight (700-800), tight letter-spacing (-0.5px) for a modern feel.
 - **Body/Secondary:** Regular or Medium weight (400-500) with generous line height (1.5) for readability.
 

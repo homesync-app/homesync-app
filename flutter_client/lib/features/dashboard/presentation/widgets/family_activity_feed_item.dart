@@ -35,7 +35,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad',
     );
     final amount = _parseAmount(data['amount']);
-    final xpReward = _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
+    final xpReward =
+        _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
     final coinsReward = _readInt(
       data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
     );
@@ -84,10 +85,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                             Text(
                               _headlineFor(type, userName),
                               style: TextStyle(
-                                color: theme.textPrimary,
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
+                                color: theme.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.05,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -96,10 +97,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: theme.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                height: 1.25,
+                                color: theme.textPrimary,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w800,
+                                height: 1.18,
                               ),
                             ),
                           ],
@@ -107,15 +108,15 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        width: 34,
-                        height: 34,
+                        width: 30,
+                        height: 30,
                         decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          color: accent.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(11),
                         ),
                         child: Icon(
                           _activityIcon(type, category),
-                          size: 18,
+                          size: 16,
                           color: accent,
                         ),
                       ),
@@ -172,7 +173,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     required String label,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
@@ -183,13 +184,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 11, color: color),
           const SizedBox(width: 5),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontSize: 10.5,
+              fontSize: 10,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -242,7 +243,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   String _headlineFor(String? type, String userName) {
     switch (type) {
       case 'task':
-        return '$userName completó una tarea';
+        return '$userName completó';
       case 'expense':
         return '$userName registró un gasto';
       default:
@@ -262,7 +263,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       case 'task':
         return dashboardCategoryIcon(category);
       default:
-        return Icons.bolt_rounded;
+        return Icons.star_rounded;
     }
   }
 

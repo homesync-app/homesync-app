@@ -168,6 +168,7 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
+    String? assignedTo,
   }) async =>
       const Right(null);
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,11 +21,19 @@ import 'package:fpdart/fpdart.dart';
 
 import 'tasks_flow_test.mocks.dart';
 
+/// Minimal [SupabaseClient] fake.
+///
+/// The widget tree may reach Supabase through realtime channels or
+/// `client.from(...)` calls (e.g. household repository).  We override every
+/// surface that tasks_screen's provider tree touches.
 class FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
   RealtimeChannel channel(String name,
           {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) =>
       FakeRealtimeChannel();
+
+  @override
+  SupabaseQueryBuilder from(String table) => FakeSupabaseQueryBuilder();
 }
 
 class FakeRealtimeChannel extends Fake implements RealtimeChannel {
@@ -46,6 +56,39 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 
   @override
   Future<String> unsubscribe([Duration? timeout]) async => 'ok';
+}
+
+/// Returns empty results for any chained query so the widget tree never
+/// crashes but also never gets real data.
+class FakeSupabaseQueryBuilder extends Fake implements SupabaseQueryBuilder {
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> select(
+          [String columns = '*']) =>
+      FakePostgrestFilterBuilder();
+}
+
+class FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> eq(
+    String column,
+    Object value,
+  ) =>
+      this;
+
+  @override
+  PostgrestTransformBuilder<Map<String, dynamic>?> maybeSingle() =>
+      FakePostgrestTransformBuilder();
+}
+
+class FakePostgrestTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<Map<String, dynamic>?> {
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(Map<String, dynamic>? value) onValue, {
+    Function? onError,
+  }) async =>
+      await onValue(null);
 }
 
 @GenerateMocks([TaskRepository])
@@ -79,7 +122,7 @@ void main() {
     householdId: 'h1',
   );
 
-  testWidgets('TasksScreen renders tasks and shows management actions',
+  testWidgets('TasksScreen renders tasks and shows inline actions on tap',
       (WidgetTester tester) async {
     when(mockTaskRepo.getTasks('h1',
             limit: anyNamed('limit'), offset: anyNamed('offset')))
@@ -101,6 +144,7 @@ void main() {
                 joinedAt: DateTime.now(),
                 fullName: 'User One',
                 email: 'u1@test.com',
+                type: MemberType.adult,
               )
             ])),
       ],
@@ -111,15 +155,20 @@ void main() {
     ));
 
     await tester.pumpAndSettle();
+
+    // ── Verify the task renders ──
     expect(find.text('Lavar platos'), findsOneWidget);
     expect(find.text('LIMPIEZA'), findsOneWidget);
 
+    // ── Tap the task card to expand inline actions ──
     await tester.tap(find.text('Lavar platos'));
     await tester.pumpAndSettle();
 
+    // The expanded card shows Editar, Programar (and Completar for non-family)
     expect(find.text('Editar'), findsOneWidget);
     expect(find.text('Programar'), findsOneWidget);
-    expect(find.text('Eliminar'), findsOneWidget);
+    // The current UI shows "Completar" instead of "Eliminar"
+    expect(find.text('Completar'), findsOneWidget);
   });
 }
 

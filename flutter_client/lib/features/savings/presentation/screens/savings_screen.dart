@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 
 final _fmt = NumberFormat.decimalPattern('es_AR');
@@ -16,51 +17,31 @@ class SavingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SavingsScreenState extends ConsumerState<SavingsScreen> {
-
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<List<SavingsGoalModel>>>(savingsGoalsProvider,
-        (previous, next) {
-      if (previous != null && previous.hasValue && next.hasValue) {
-        final prevGoals = previous.value!;
-        final nextGoals = next.value!;
-
-        for (final goal in nextGoals) {
-          final prevGoal = prevGoals.any((g) => g.id == goal.id)
-              ? prevGoals.firstWhere((g) => g.id == goal.id)
-              : null;
-
-          if (prevGoal != null &&
-              prevGoal.progress < 1.0 &&
-              goal.progress >= 1.0) {
-            _showGoalCompletionAnim(goal);
-          }
-        }
-      }
-    });
-
+    final theme = context.theme;
     final goalsAsync = ref.watch(savingsGoalsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackground,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary),
+          icon:
+              Icon(Icons.arrow_back_ios_new_rounded, color: theme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Metas de Ahorro',
           style: TextStyle(
-              color: AppColors.textPrimary,
+              color: theme.textPrimary,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5),
         ),
       ),
       body: goalsAsync.when(
-        data: (List<SavingsGoalModel> goals) => RefreshIndicator(
+        data: (goals) => RefreshIndicator(
           onRefresh: () => ref.refresh(savingsGoalsProvider.future),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -73,19 +54,19 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Nuestras Metas',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
+                        color: theme.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
                     Text(
                       '${goals.length} activas',
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 13),
+                      style:
+                          TextStyle(color: theme.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
@@ -108,7 +89,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             child: Container(
               height: 120,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.surface,
                 borderRadius: BorderRadius.circular(28),
               ),
             ),
@@ -131,27 +112,28 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               color: AppColors.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: const Text('🎯', style: TextStyle(fontSize: 46)).animatePulse(),
+            child:
+                const Text('🎯', style: TextStyle(fontSize: 46)).animatePulse(),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'No hay metas activas aún',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+              color: context.theme.textPrimary,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 10),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               'Empezá a guardar para algo que de verdad les entusiasme.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.theme.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
@@ -171,34 +153,31 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF8F2), Color(0xFFFFF3E8)],
+        gradient: LinearGradient(
+          colors: [
+            context.theme.surface,
+            context.theme.surfaceVariant,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A4A4443),
-            blurRadius: 40,
-            offset: Offset(0, 16),
-          ),
-        ],
+        boxShadow: context.theme.cardShadow,
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'Ahorro Total 🏦',
             style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.theme.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
             '\$${_fmt.format(total.round())}',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.theme.textPrimary,
               fontSize: 42,
               fontWeight: FontWeight.w900,
               letterSpacing: -1.5,
@@ -232,22 +211,22 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             style: TextStyle(
                 color: color, fontWeight: FontWeight.w800, fontSize: 18)),
         Text(label,
-            style:
-                const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            style: TextStyle(color: context.theme.textSecondary, fontSize: 12)),
       ],
     );
   }
 
   Widget _buildGoalCard(SavingsGoalModel goal) {
+    final theme = context.theme;
     final progress = goal.progress.clamp(0.0, 1.0);
     final color = _parseColor(goal.color);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: theme.surface,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: theme.border),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -266,14 +245,13 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 child: Text(goal.icon, style: const TextStyle(fontSize: 24))),
           ),
           title: Text(goal.title,
-              style: const TextStyle(
+              style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
-                  color: AppColors.textPrimary)),
+                  color: theme.textPrimary)),
           subtitle: Text(
               '\$${_fmt.format(goal.currentAmount.round())} de \$${_fmt.format(goal.targetAmount.round())}',
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 13)),
+              style: TextStyle(color: theme.textSecondary, fontSize: 13)),
           trailing: Text('${(progress * 100).toStringAsFixed(0)}%',
               style: TextStyle(
                   color: color, fontWeight: FontWeight.w900, fontSize: 15)),
@@ -285,7 +263,6 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 12,
-                backgroundColor: AppColors.divider,
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
@@ -327,22 +304,22 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Historial de Aportes',
           style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary),
+              color: context.theme.textPrimary),
         ),
         const SizedBox(height: 12),
         contributionsAsync.when(
           data: (list) {
             if (list.isEmpty) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text('Aún no hay aportes en este pocito.',
                     style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12)),
+                        color: context.theme.textSecondary, fontSize: 12)),
               );
             }
             return ListView.builder(
@@ -364,14 +341,14 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       Expanded(
                         child: Text(
                           '${contribution.userName?.split(' ')[0] ?? 'Alguien'} sumó \$${contribution.amount.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                              fontSize: 13, color: AppColors.textPrimary),
+                          style: TextStyle(
+                              fontSize: 13, color: context.theme.textPrimary),
                         ),
                       ),
                       Text(
                         DateFormat('dd MMM').format(contribution.createdAt),
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: context.theme.textSecondary),
                       ),
                     ],
                   ),
@@ -387,14 +364,9 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   }
 
   Color _parseColor(String colorStr) {
-    try {
-      if (colorStr.startsWith('#')) {
-        return Color(int.parse(colorStr.replaceFirst('#', '0xFF')));
-      }
-      return AppColors.primary;
-    } catch (_) {
-      return AppColors.primary;
-    }
+    if (!colorStr.startsWith('#')) return AppColors.primary;
+    final parsed = int.tryParse(colorStr.replaceFirst('#', '0xFF'));
+    return parsed != null ? Color(parsed) : AppColors.primary;
   }
 
   void _confirmDelete(SavingsGoalModel goal) {
@@ -433,17 +405,20 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           left: 32,
           right: 32,
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+        decoration: BoxDecoration(
+          color: context.theme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(36)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               '¿Cuánto querés aportar?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: context.theme.textPrimary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -451,10 +426,15 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               controller: controller,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: context.theme.textPrimary),
               decoration: InputDecoration(
                 prefixText: '\$ ',
                 hintText: '0.00',
+                filled: true,
+                fillColor: context.theme.surfaceVariant,
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               ),
@@ -465,10 +445,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 final amount = double.tryParse(controller.text);
                 if (amount != null && amount > 0) {
                   ref.read(savingsGoalsProvider.notifier).contribute(
-                    goal.id, 
-                    amount,
-                    goalTitle: goal.title,
-                  );
+                        goal.id,
+                        amount,
+                        goalTitle: goal.title,
+                      );
                   Navigator.pop(context);
                 }
               },
@@ -489,6 +469,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   }
 
   Widget _buildAddGoalButton() {
+    final theme = context.theme;
     return SizedBox(
       width: double.infinity,
       height: 62,
@@ -499,7 +480,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
-          backgroundColor: AppColors.surface,
+          backgroundColor: theme.surface,
           side: BorderSide(
             color: AppColors.primary.withValues(alpha: 0.12),
             width: 1.2,
@@ -524,6 +505,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
+          final theme = context.theme;
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
           return Align(
@@ -531,9 +513,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             child: FractionallySizedBox(
               heightFactor: 0.9,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackground,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(36)),
                 ),
                 child: SafeArea(
                   top: false,
@@ -544,7 +527,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                         width: 46,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: AppColors.divider,
+                          color: theme.divider,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -567,7 +550,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     width: 84,
                                     height: 84,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(28),
                                     ),
                                     child: const Icon(
@@ -579,14 +563,14 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                   const SizedBox(width: 18),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Nueva Meta',
                                           style: TextStyle(
                                             fontSize: 30,
                                             fontWeight: FontWeight.w900,
-                                            color: AppColors.textPrimary,
                                             letterSpacing: -1.2,
                                           ),
                                         ),
@@ -596,7 +580,6 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                           style: TextStyle(
                                             fontSize: 16,
                                             height: 1.4,
-                                            color: AppColors.textSecondary,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -606,32 +589,31 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                 ],
                               ),
                               const SizedBox(height: 32),
-                              const Text(
+                              Text(
                                 'DETALLE',
                                 style: TextStyle(
-                                  color: AppColors.textMuted,
+                                  color: theme.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const Text(
+                              Text(
                                 'Qué quieren alcanzar',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
                                   letterSpacing: -0.4,
                                 ),
                               ),
                               const SizedBox(height: 18),
                               TextField(
                                 controller: titleController,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 18,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   labelText: 'Nombre',
@@ -641,7 +623,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                     color: AppColors.primary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: theme.surfaceVariant,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -649,13 +631,15 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -671,22 +655,22 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                               TextField(
                                 controller: amountController,
                                 keyboardType: TextInputType.number,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22,
-                                  color: AppColors.textPrimary,
+                                  color: theme.textPrimary,
                                 ),
                                 decoration: InputDecoration(
                                   labelText: 'Monto objetivo',
                                   hintText: '¿Cuánto quieren juntar?',
                                   prefixText: '\$ ',
-                                  prefixStyle: const TextStyle(
+                                  prefixStyle: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 20,
-                                    color: AppColors.textSecondary,
+                                    color: theme.textSecondary,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: theme.surfaceVariant,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 22,
@@ -694,13 +678,15 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(28),
                                     borderSide: BorderSide(
-                                      color: AppColors.primary.withValues(alpha: 0.12),
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
@@ -713,22 +699,21 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              const Text(
+                              Text(
                                 'PERSONALIZACIÓN',
                                 style: TextStyle(
-                                  color: AppColors.textMuted,
+                                  color: theme.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.5,
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const Text(
+                              Text(
                                 'Dale personalidad',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
                                   letterSpacing: -0.4,
                                 ),
                               ),
@@ -755,7 +740,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                         context,
                                         'Elegí un ícono',
                                         emojis,
-                                        (e) => setModalState(() => selectedEmoji = e),
+                                        (e) => setModalState(
+                                            () => selectedEmoji = e),
                                       );
                                     },
                                   ),
@@ -783,7 +769,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                       _showColorPicker(
                                         context,
                                         colors,
-                                        (c) => setModalState(() => selectedColor = c),
+                                        (c) => setModalState(
+                                            () => selectedColor = c),
                                       );
                                     },
                                   ),
@@ -800,20 +787,20 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                           24,
                           20 + MediaQuery.of(context).padding.bottom,
                         ),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: theme.surface,
                           border: Border(
-                            top: BorderSide(color: AppColors.divider),
+                            top: BorderSide(color: theme.divider),
                           ),
                         ),
                         child: Row(
                           children: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text(
+                              child: Text(
                                 'Cancelar',
                                 style: TextStyle(
-                                  color: AppColors.textMuted,
+                                  color: theme.textMuted,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
                                 ),
@@ -827,11 +814,14 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                   onPressed: () {
                                     final title = titleController.text.trim();
                                     final amount = double.tryParse(
-                                          amountController.text.replaceAll(',', '.'),
+                                          amountController.text
+                                              .replaceAll(',', '.'),
                                         ) ??
                                         0;
                                     if (title.isNotEmpty && amount > 0) {
-                                      ref.read(savingsGoalsProvider.notifier).addGoal(
+                                      ref
+                                          .read(savingsGoalsProvider.notifier)
+                                          .addGoal(
                                             title,
                                             amount,
                                             '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
@@ -878,25 +868,26 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     Widget? customValue,
     required VoidCallback onTap,
   }) {
+    final theme = context.theme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: theme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.divider),
+            border: Border.all(color: theme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ),
               const SizedBox(height: 8),
@@ -907,10 +898,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   else
                     Text(value, style: const TextStyle(fontSize: 18)),
                   const Spacer(),
-                  const Icon(
+                  Icon(
                     Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: AppColors.textMuted,
+                    color: theme.textMuted,
                   ),
                 ],
               ),
@@ -927,9 +918,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     List<String> options,
     Function(String) onSelect,
   ) {
+    final theme = context.theme;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -940,7 +932,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: theme.textPrimary),
             ),
             const SizedBox(height: 20),
             GridView.builder(
@@ -958,7 +953,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: theme.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
@@ -982,7 +977,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -991,9 +986,12 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Elegí un color',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: context.theme.textPrimary),
             ),
             const SizedBox(height: 20),
             Row(

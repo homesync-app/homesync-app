@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/services/analytics_service.dart';
 
 class PremiumPaywall extends ConsumerWidget {
   const PremiumPaywall({super.key});
 
   static void show(BuildContext context) {
+    AnalyticsService().trackPaywallOpened(
+      source: 'shared_paywall',
+      variant: 'bottom_sheet',
+    );
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -38,7 +43,7 @@ class PremiumPaywall extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           Column(
             children: [
               const SizedBox(height: 12),
@@ -51,7 +56,7 @@ class PremiumPaywall extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Título
               const Text(
                 'HomeSync Premium',
@@ -70,9 +75,9 @@ class PremiumPaywall extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Beneficios
               Expanded(
                 child: ListView(
@@ -81,17 +86,20 @@ class PremiumPaywall extends ConsumerWidget {
                     _buildBenefitItem(
                       icon: Icons.sync_alt_rounded,
                       title: 'Sincronización Inteligente',
-                      description: 'Convierte tus compras en gastos automáticamente.',
+                      description:
+                          'Convierte tus compras en gastos automáticamente.',
                     ),
                     _buildBenefitItem(
                       icon: Icons.calendar_month_rounded,
                       title: 'Pagos Recurrentes',
-                      description: 'Gestiona Netflix, alquiler y más en equipo.',
+                      description:
+                          'Gestiona Netflix, alquiler y más en equipo.',
                     ),
                     _buildBenefitItem(
                       icon: Icons.favorite_rounded,
                       title: 'Notas de Amor',
-                      description: 'Mensajes especiales directo en tu Dashboard.',
+                      description:
+                          'Mensajes especiales directo en tu Dashboard.',
                     ),
                     _buildBenefitItem(
                       icon: Icons.face_retouching_natural_rounded,
@@ -101,12 +109,13 @@ class PremiumPaywall extends ConsumerWidget {
                     _buildBenefitItem(
                       icon: Icons.palette_rounded,
                       title: 'Temas Personalizados',
-                      description: 'Próximamente: Cambia los colores de tu app.',
+                      description:
+                          'Próximamente: Cambia los colores de tu app.',
                     ),
                   ],
                 ),
               ),
-              
+
               // Botón de acción
               Padding(
                 padding: const EdgeInsets.all(32),
@@ -115,19 +124,23 @@ class PremiumPaywall extends ConsumerWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () async {
-                        await ref.read(premiumProvider.notifier).togglePremiumMock();
+                        await ref
+                            .read(premiumProvider.notifier)
+                            .togglePremiumMock();
                         if (context.mounted) Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFF59E0B),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 20),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
                         elevation: 0,
                       ),
                       child: const Text(
                         'SIMULAR SUSCRIPCIÓN (TEST)',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 16),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -135,7 +148,9 @@ class PremiumPaywall extends ConsumerWidget {
                       onPressed: () => Navigator.pop(context),
                       child: const Text(
                         'Tal vez más tarde',
-                        style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -143,7 +158,7 @@ class PremiumPaywall extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           // Cerrar button
           Positioned(
             top: 20,

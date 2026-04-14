@@ -6,7 +6,7 @@ part of 'savings_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$savingsRepositoryHash() => r'57fe3e37cf7da8999c58163c88d392d0b766f7ea';
+String _$savingsRepositoryHash() => r'da0ce6235c56850f2f9daa064837a24866e65eee';
 
 /// See also [savingsRepository].
 @ProviderFor(savingsRepository)
@@ -124,7 +124,7 @@ final deleteSavingsGoalUseCaseProvider =
 // ignore: unused_element
 typedef DeleteSavingsGoalUseCaseRef
     = AutoDisposeProviderRef<DeleteSavingsGoalUseCase>;
-String _$goalContributionsHash() => r'97f44cc05c82e51f929fea3732a5fdd64d0acaca';
+String _$goalContributionsHash() => r'd2de50c6af608c72765db1d9ea394e697be0d5f8';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -300,7 +300,7 @@ final savingsSuggesterProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SavingsSuggesterRef = AutoDisposeFutureProviderRef<SavingsSuggestion?>;
-String _$savingsGoalsHash() => r'2af0c3eeb2f4085733808d31a3f6d64d03b0204b';
+String _$savingsGoalsHash() => r'2cd702ac51a75d2bac434418109c4fae9b159c87';
 
 /// See also [SavingsGoals].
 @ProviderFor(SavingsGoals)
@@ -315,5 +315,23 @@ final savingsGoalsProvider = AutoDisposeAsyncNotifierProvider<SavingsGoals,
 );
 
 typedef _$SavingsGoals = AutoDisposeAsyncNotifier<List<SavingsGoalModel>>;
+String _$paginatedSavingsGoalsHash() =>
+    r'e1da6d2859b6b410ac8d766f4d69f2dd9b76b733';
+
+/// See also [PaginatedSavingsGoals].
+@ProviderFor(PaginatedSavingsGoals)
+final paginatedSavingsGoalsProvider = AutoDisposeAsyncNotifierProvider<
+    PaginatedSavingsGoals, SavingsGoalsPageState>.internal(
+  PaginatedSavingsGoals.new,
+  name: r'paginatedSavingsGoalsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$paginatedSavingsGoalsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$PaginatedSavingsGoals
+    = AutoDisposeAsyncNotifier<SavingsGoalsPageState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

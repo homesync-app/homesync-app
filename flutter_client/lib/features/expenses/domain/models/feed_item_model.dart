@@ -1,4 +1,4 @@
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 class FeedItemModel {
   final String recordType; // 'expense' or 'planned'
@@ -67,10 +67,10 @@ class FeedItemModel {
   String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
 
   String get categoryIcon {
-    return AppColors.categoryIcons[category] ?? '📦';
+    return CategoryMapping.categoryIcons[category] ?? '📦';
   }
 
   String get categoryLabel {
-    return AppColors.categoryNames[category] ?? 'Otros';
+    return CategoryMapping.categoryNames[category] ?? 'Otros';
   }
 }

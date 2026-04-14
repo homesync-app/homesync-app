@@ -6,6 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function getBearerToken(req: Request): string | null {
+  const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) return null
+  return authHeader.slice('Bearer '.length).trim()
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -13,10 +19,9 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
     const payload = await req.json()
     console.log('Notification payload received:', JSON.stringify(payload))
@@ -24,6 +29,26 @@ serve(async (req) => {
     // Support both direct calls (from Flutter) and Webhook calls (from SQL)
     // When called from a standard Supabase Webhook, the data is in the 'record' field.
     const { to_user_id, title, body, record, data } = payload
+    const isWebhookCall = Boolean(record)
+
+    if (!isWebhookCall) {
+      const accessToken = getBearerToken(req)
+      if (!accessToken) {
+        return new Response(JSON.stringify({ error: 'Missing Authorization bearer token' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: authData, error: authError } = await supabaseClient.auth.getUser(accessToken)
+      if (authError || !authData.user) {
+        console.error('Unauthorized send-notification request', authError)
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
     
     const finalUserId = to_user_id || record?.user_id
     const finalTitle = title || record?.title

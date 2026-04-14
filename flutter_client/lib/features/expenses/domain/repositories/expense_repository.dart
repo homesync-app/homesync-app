@@ -33,6 +33,7 @@ abstract class ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   });
 
   Future<Either<Failure, void>> deleteExpense(String id);
@@ -44,10 +45,12 @@ abstract class ExpenseRepository {
     required double amount,
   });
 
-  Future<Map<String, dynamic>> getPersonalFinanceSummary(String userId, String householdId);
+  Future<Map<String, dynamic>> getPersonalFinanceSummary(
+      String userId, String householdId);
 
   // Template Management
-  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId);
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
+      String householdId);
   Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template);
   Future<Either<Failure, Unit>> toggleTemplateActivity(String id, bool active);
 
@@ -59,5 +62,9 @@ abstract class ExpenseRepository {
   });
 
   Future<Either<Failure, Unit>> processRecurringExpenses(String householdId);
+  Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
+    String householdId, {
+    required DateTime month,
+  });
   Future<Either<Failure, Unit>> deletePlannedExpense(String id);
 }

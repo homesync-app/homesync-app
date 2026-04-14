@@ -3,7 +3,7 @@ import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'base_rpc_service.dart';
 
 class TaskRpcService extends BaseRpcService {
-  TaskRpcService({super.clientOverride});
+  TaskRpcService({required super.clientOverride});
 
   Future<String> createTask({
     required String title,

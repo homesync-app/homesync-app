@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+
+import 'package:homesync_client/core/theme/app_colors.dart';
+
+import 'package:homesync_client/core/theme/app_spacing.dart';
+
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+
 import 'package:homesync_client/core/utils/app_animations.dart';
+
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 import '../../domain/models/couple_challenge.dart';
+
 import '../../domain/models/reward_model.dart';
+
 import '../providers/reward_provider.dart';
+
 import '../widgets/couple_challenge_card.dart';
+
 import '../../../household/presentation/providers/household_provider.dart';
+
 import '../../../tasks/presentation/providers/task_provider.dart';
+
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 
 class RewardsScreen extends ConsumerStatefulWidget {
@@ -29,19 +47,25 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   late TabController _tabController;
 
   bool _isStatsLoading = true;
+
   List<Map<String, dynamic>> _taskStats = [];
+
   List<Map<String, dynamic>> _memberStats = [];
+
   List<Map<String, dynamic>> _weeklyRanking = [];
+
   List<Map<String, dynamic>> _duelHistory = [];
 
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(
       length: 2,
       vsync: this,
       initialIndex: ref.read(parejaTabIndexProvider),
     );
+
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         ref
@@ -49,12 +73,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
             .setIndex(_tabController.index);
       }
     });
+
     _loadDuelStats();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+
     super.dispose();
   }
 
@@ -65,6 +91,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
     try {
       final rpc = ref.read(rpcServiceProvider);
+
       final results = await Future.wait([
         rpc.getTaskStatsByCategory(),
         rpc.getMemberActivityStats(),
@@ -73,15 +100,27 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       ]);
 
       if (!mounted) return;
+
       setState(() {
         _taskStats = results[0];
+
         _memberStats = results[1];
+
         _weeklyRanking = results[2];
+
         _duelHistory = results[3];
+
         _isStatsLoading = false;
       });
-    } catch (_) {
+    } catch (error, stackTrace) {
+      log.w(
+        'RewardsScreen failed to load duel stats',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
       if (!mounted) return;
+
       setState(() => _isStatsLoading = false);
     }
   }
@@ -91,6 +130,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       0,
       (sum, item) => sum + ((item['completed_count'] as num?)?.toInt() ?? 0),
     );
+
     if (fromTasks > 0) {
       return fromTasks;
     }
@@ -106,6 +146,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       0,
       (sum, item) => sum + ((item['total_xp'] as num?)?.toInt() ?? 0),
     );
+
     if (fromTasks > 0) {
       return fromTasks;
     }
@@ -123,8 +164,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   String _getWeekRange() {
     final now = DateTime.now();
+
     final monday = now.subtract(Duration(days: now.weekday - 1));
+
     final sunday = monday.add(const Duration(days: 6));
+
     return '${monday.day}/${monday.month} - ${sunday.day}/${sunday.month}';
   }
 
@@ -136,9 +180,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       }
     });
 
-    final rewardsAsync = ref.watch(rewardsProvider);
+    final rewardsAsync = ref.watch(paginatedRewardsProvider);
+
     final currentUserId = ref.read(currentUserIdProvider);
+
     final householdId = ref.watch(householdIdProvider).value;
+
     final theme = context.theme;
 
     return Scaffold(
@@ -166,21 +213,22 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   _buildDuelTab(),
                   rewardsAsync.when(
                     data: (rawRewards) {
-                      final rewards = rawRewards
-                          .map((r) => RewardModel.fromJson(r))
-                          .where((r) => r.isActive)
-                          .toList();
+                      final rewards = rawRewards.items;
+
                       final availableCoins =
                           ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+
                       final approvedRewards =
                           rewards.where((r) => r.isApproved == true).toList();
+
                       final suggestions =
                           rewards.where((r) => r.isApproved == false).toList();
 
                       return RefreshIndicator(
                         color: AppColors.primary,
-                        onRefresh: () =>
-                            ref.read(rewardsProvider.notifier).refresh(),
+                        onRefresh: () => ref
+                            .read(paginatedRewardsProvider.notifier)
+                            .refresh(),
                         child: ListView(
                           physics: const BouncingScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(
@@ -203,6 +251,24 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                               _buildPendingProposalsSection(
                                   suggestions, currentUserId),
                             ],
+                            if (rawRewards.isLoadingMore) ...[
+                              const SizedBox(height: 20),
+                              const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ] else if (rawRewards.hasMore) ...[
+                              const SizedBox(height: 20),
+                              Center(
+                                child: OutlinedButton(
+                                  onPressed: () => ref
+                                      .read(paginatedRewardsProvider.notifier)
+                                      .loadMore(),
+                                  child: const Text('Cargar mas'),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 32),
                             _buildActionButtons(),
                           ],
@@ -213,7 +279,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                         const AppLoadingState(message: 'Cargando premios...'),
                     error: (e, _) => AppErrorState(
                       message: 'No pudimos cargar premios.\n$e',
-                      onRetry: () => ref.invalidate(rewardsProvider),
+                      onRetry: () => ref.invalidate(paginatedRewardsProvider),
                     ),
                   ),
                 ],
@@ -304,9 +370,12 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       data: (household) {
         final challenge =
             CoupleChallenge.currentWeeklyChallenge(household?.createdAt);
+
         final challengeIndex =
             CoupleChallenge.currentWeeklyChallengeIndex(household?.createdAt);
+
         final totalChallenges = CoupleChallenge.allChallenges.length;
+
         return CoupleChallengeCard(
           challenge: challenge,
           challengeNumber: challengeIndex + 1,
@@ -321,6 +390,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildSectionHeader(String title, {String? subtitle, Widget? action}) {
     final theme = context.theme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -362,26 +432,36 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildGroupedRewards(List<RewardModel> rewards) {
     final theme = context.theme;
+
     final grouped = <String, List<RewardModel>>{};
+
     for (final reward in rewards) {
       final normalized = _getNormalizedCategory(reward.category);
+
       grouped.putIfAbsent(normalized, () => []).add(reward);
     }
 
     const order = ['mimos', 'momentos', 'libertades', 'experiencias', 'otros'];
+
     final categories = grouped.keys.toList()
       ..sort((a, b) {
         final ia = order.indexOf(a);
+
         final ib = order.indexOf(b);
+
         if (ia == -1 && ib == -1) return a.compareTo(b);
+
         if (ia == -1) return 1;
+
         if (ib == -1) return -1;
+
         return ia.compareTo(ib);
       });
 
     return Column(
       children: categories.map((category) {
         final catRewards = grouped[category] ?? const <RewardModel>[];
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
@@ -431,7 +511,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         _buildSectionHeader(
           'Propuestas',
           subtitle:
-              'Deseos pendientes de aprobacion. Toca una propuesta para revisarla.',
+              'Deseos pendientes de aprobaci\u00F3n. Toca una propuesta para revisarla.',
           action: _buildCountPill('${suggestions.length}'),
         ),
         const SizedBox(height: 14),
@@ -440,11 +520,15 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
             final viewportWidth = constraints.maxWidth.isFinite
                 ? constraints.maxWidth
                 : MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2);
+
             final columns = viewportWidth >= 280 ? 2 : 1;
+
             final cardWidth = (viewportWidth - (12 * (columns - 1)))
                     .clamp(0, double.infinity) /
                 columns;
+
             final cardHeight = columns == 2 ? 208.0 : 220.0;
+
             return Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -466,7 +550,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildProposalCard(RewardModel reward, String? currentUserId) {
     final theme = context.theme;
+
     final isMine = reward.createdBy == currentUserId;
+
     final accent = isMine ? AppColors.primary : AppColors.accentPurple;
 
     return Material(
@@ -528,8 +614,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  (reward.description ??
-                          'Esperando una decision de tu pareja.')
+                  (reward.description ?? 'Esperando una decision de tu pareja.')
                       .trim(),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
@@ -555,8 +640,8 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   ),
                   child: Text(
                     isMine
-                        ? '${reward.cost} coins � esperando respuesta'
-                        : '${reward.cost} coins � toca para aprobar o quitar',
+                        ? '${reward.cost} coins \u00B7 esperando respuesta'
+                        : '${reward.cost} coins \u00B7 toca para aprobar o quitar',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color:
@@ -624,11 +709,15 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         final viewportWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2);
+
         final columns = viewportWidth >= 280 ? 2 : 1;
+
         final cardWidth =
             (viewportWidth - (12 * (columns - 1))).clamp(0, double.infinity) /
                 columns;
+
         final cardHeight = columns == 2 ? 186.0 : 198.0;
+
         return Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -648,8 +737,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildRewardCard(RewardModel reward) {
     final theme = context.theme;
+
     final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+
     final canAfford = userBalance >= reward.cost;
+
     final buttonAccent = canAfford ? theme.primary : theme.textMuted;
 
     return Container(
@@ -779,6 +871,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildEmptyState() {
     final theme = context.theme;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -797,7 +890,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () =>
-                ref.read(rewardsProvider.notifier).cloneTemplates(),
+                ref.read(rewardsProvider.notifier).cloneTemplates().then((_) {
+              ref.read(paginatedRewardsProvider.notifier).refresh();
+            }),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary.withValues(alpha: 0.10),
               foregroundColor: AppColors.primary,
@@ -826,6 +921,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildActionButtons() {
     final theme = context.theme;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -846,7 +942,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '¿Querés sumar un deseo nuevo?',
+            'Â¿QuerÃ©s sumar un deseo nuevo?',
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 18,
@@ -856,7 +952,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Proponelo y tu compañero podrá aprobarlo para que aparezca en la tienda.',
+            'Proponelo y tu compaÃ±ero podrÃ¡ aprobarlo para que aparezca en la tienda.',
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 13,
@@ -902,15 +998,15 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('¿Completaron el desafío?'),
+        title: const Text('Â¿Completaron el desafÃ­o?'),
         content: Text(
-          'Qué alegría. Al confirmar, ambos recibirán ${challenge.coinReward} coins.',
+          'QuÃ© alegrÃ­a. Al confirmar, ambos recibirÃ¡n ${challenge.coinReward} coins.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text(
-              'Aún no',
+              'AÃºn no',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -923,7 +1019,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Sí, lo hicimos'),
+            child: const Text('SÃ­, lo hicimos'),
           ),
         ],
       ),
@@ -944,26 +1040,33 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
     try {
       final members = ref.read(householdMembersNotifierProvider).value ?? [];
+
       final userIds = members.map((m) => m.userId).toList();
+
       final currentUserId = ref.read(currentUserIdProvider);
+
       if (userIds.isEmpty && currentUserId != null) {
         userIds.add(currentUserId);
       }
 
-      final taskRpc = TaskRpcService();
+      final taskRpc = TaskRpcService(
+        clientOverride: ref.read(supabaseClientProvider),
+      );
+
       final newTaskId = await taskRpc.createTask(
-        title: 'Desafío: ${challenge.title}',
+        title: 'DesafÃ­o: ${challenge.title}',
         description: challenge.description,
-        category: 'Conexión',
+        category: 'ConexiÃ³n',
         coinReward: challenge.coinReward,
         xpReward: 10,
         type: 'one_time',
       );
 
       final rpc = ref.read(rpcServiceProvider);
+
       await rpc.completeTaskTransaction(
         taskId: newTaskId,
-        taskTitle: 'Desafío: ${challenge.title}',
+        taskTitle: 'DesafÃ­o: ${challenge.title}',
         xpReward: 10,
         coinReward: challenge.coinReward,
         householdId: householdId,
@@ -971,22 +1074,28 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       );
 
       if (!mounted) return;
+
       Navigator.pop(context);
+
       SuccessCelebration.show(
         context,
-        title: 'Desafío completado',
+        title: 'DesafÃ­o completado',
         message:
-            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexión.',
-        icon: '✨',
+            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexiÃ³n.',
+        icon: 'âœ¨',
       );
+
       ref.invalidate(userBalanceProvider);
+
       ref.invalidate(tasksProvider);
     } catch (e) {
       if (!mounted) return;
+
       Navigator.pop(context);
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al completar el desafío: $e'),
+          content: Text('Error al completar el desafÃ­o: $e'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -998,8 +1107,8 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Eliminar premio?'),
-        content: Text('Se eliminará "${reward.title}" de la boutique.'),
+        title: const Text('Â¿Eliminar premio?'),
+        content: Text('Se eliminarÃ¡ "${reward.title}" de la boutique.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1025,6 +1134,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
     if (confirm == true) {
       await ref.read(rewardsProvider.notifier).deleteReward(reward.id);
+      await ref.read(paginatedRewardsProvider.notifier).refresh();
     }
   }
 
@@ -1035,6 +1145,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           content: Text('Coins insuficientes. A completar tareas.'),
         ),
       );
+
       return;
     }
 
@@ -1042,7 +1153,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('¿Canjear este premio?'),
+        title: const Text('Â¿Canjear este premio?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1066,19 +1177,30 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogCtx);
-              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
+
+              ref
+                  .read(rewardsProvider.notifier)
+                  .redeem(reward.id)
+                  .then((_) async {
+                await ref.read(paginatedRewardsProvider.notifier).refresh();
+
                 if (!mounted) return;
+
                 ref.invalidate(userBalanceProvider);
+
                 _showSuccessAnim(reward);
               }).catchError((e) {
                 if (!mounted) return;
+
                 final errStr = e.toString().replaceFirst('Exception: ', '');
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error: $errStr'),
                     backgroundColor: AppColors.error,
                   ),
                 );
+
                 ref.invalidate(userBalanceProvider);
               });
             },
@@ -1098,7 +1220,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context,
       title: 'Premio canjeado',
       message:
-          'Disfruta de "${reward.title}". El amor también vive en los pequeños detalles.',
+          'Disfruta de "${reward.title}". El amor tambiÃ©n vive en los pequeÃ±os detalles.',
       icon: reward.icon,
     );
   }
@@ -1117,6 +1239,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       backgroundColor: Colors.transparent,
       builder: (context) {
         final theme = context.theme;
+
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           decoration: BoxDecoration(
@@ -1205,9 +1328,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       child: OutlinedButton(
                         onPressed: () async {
                           Navigator.pop(context);
+
                           await ref
                               .read(rewardsProvider.notifier)
                               .deleteReward(reward.id);
+
+                          await ref
+                              .read(paginatedRewardsProvider.notifier)
+                              .refresh();
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error,
@@ -1228,9 +1356,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       child: ElevatedButton(
                         onPressed: () async {
                           Navigator.pop(context);
+
                           await ref
                               .read(rewardsProvider.notifier)
                               .approveReward(reward.id);
+
+                          await ref
+                              .read(paginatedRewardsProvider.notifier)
+                              .refresh();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentPurple,
@@ -1259,10 +1392,15 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   void _showRewardEditor({required bool isSuggestion}) {
     final titleController = TextEditingController();
+
     final descriptionController = TextEditingController();
+
     final costController = TextEditingController();
+
     String selectedIcon = '??';
+
     String selectedCategory = 'mimos';
+
     const icons = [
       '??',
       '??',
@@ -1273,8 +1411,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       '??',
       '??',
       '??',
-      '???',
+      '\u2728',
     ];
+
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 
     showModalBottomSheet(
@@ -1291,7 +1430,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           ),
           decoration: BoxDecoration(
             color: context.theme.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -1336,7 +1475,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   decoration: InputDecoration(
                     hintText: 'Ej: Masaje de 20 minutos',
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.theme.surfaceVariant,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide.none,
@@ -1346,7 +1485,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isSuggestion ? 'POR QUE DEBERIA APROBARLO' : 'DESCRIPCION',
+                  isSuggestion
+                      ? 'POR QU\u00C9 DEBER\u00CDA APROBARLO'
+                      : 'DESCRIPCI\u00D3N',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 11,
@@ -1360,10 +1501,10 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   maxLines: 2,
                   decoration: InputDecoration(
                     hintText: isSuggestion
-                        ? 'Explica por que tu pareja deberia aprobar este deseo'
+                        ? 'Explica por qu\u00E9 tu pareja deber\u00EDa aprobar este deseo'
                         : 'Un detalle corto para describir el premio',
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.theme.surfaceVariant,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide.none,
@@ -1392,7 +1533,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       color: AppColors.sage,
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: context.theme.surfaceVariant,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide.none,
@@ -1416,13 +1557,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   runSpacing: 8,
                   children: categories.map((category) {
                     final selected = selectedCategory == category;
+
                     return ChoiceChip(
                       label: Text(_getCategoryDisplayTitle(category)),
                       selected: selected,
                       onSelected: (_) =>
                           setModalState(() => selectedCategory = category),
                       selectedColor: AppColors.primary.withValues(alpha: 0.14),
-                      backgroundColor: Colors.white,
+                      backgroundColor: context.theme.surface,
                       labelStyle: TextStyle(
                         color: selected
                             ? AppColors.primary
@@ -1453,6 +1595,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   child: Row(
                     children: icons.map((icon) {
                       final selected = selectedIcon == icon;
+
                       return GestureDetector(
                         onTap: () => setModalState(() => selectedIcon = icon),
                         child: Container(
@@ -1479,13 +1622,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final cost = int.tryParse(costController.text) ?? 0;
+
                     if (titleController.text.trim().isEmpty || cost <= 0) {
                       return;
                     }
 
-                    ref.read(rewardsProvider.notifier).suggestReward(
+                    await ref.read(rewardsProvider.notifier).suggestReward(
                           title: titleController.text.trim(),
                           description: descriptionController.text.trim().isEmpty
                               ? null
@@ -1494,7 +1638,13 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                           icon: selectedIcon,
                           category: selectedCategory,
                         );
+
+                    await ref.read(paginatedRewardsProvider.notifier).refresh();
+
+                    if (!context.mounted) return;
+
                     Navigator.pop(context);
+
                     _showSentToast(isSuggestion);
                   },
                   style: ElevatedButton.styleFrom(
@@ -1526,7 +1676,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isSuggestion ? 'Propuesta enviada.' : 'Premio creado con exito.',
+          isSuggestion ? 'Propuesta enviada.' : 'Premio creado con \u00E9xito.',
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
@@ -1537,16 +1687,21 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   String _getNormalizedCategory(String? category) {
     final lower = (category ?? 'otros').toLowerCase().trim();
+
     if (lower == 'mimos' || lower == 'caricias') return 'mimos';
+
     if (lower == 'momentos' || lower == 'momentos juntos' || lower == 'ocio') {
       return 'momentos';
     }
+
     if (lower == 'libertades' || lower == 'favores' || lower == 'comodidades') {
       return 'libertades';
     }
+
     if (lower == 'experiencias' || lower == 'experiencias grandes') {
       return 'experiencias';
     }
+
     return 'otros';
   }
 
@@ -1554,17 +1709,18 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
     switch (category) {
       case 'mimos':
         return 'Mimos';
+
       case 'momentos':
         return 'Momentos juntos';
+
       case 'libertades':
         return 'Libertades';
+
       case 'experiencias':
         return 'Experiencias grandes';
+
       default:
         return 'Otros';
     }
   }
 }
-
-
-

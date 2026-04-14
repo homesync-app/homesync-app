@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/domain/models/user_model.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,76 +29,126 @@ class AuthController extends _$AuthController {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   Future<void> signInWithEmail(String email, String password) async {
-    final isAdminTestingLogin = AppEnvironment.enableAdminTesting &&
-        email.trim().toLowerCase() ==
-            AppEnvironment.adminTestingUsername.toLowerCase() &&
-        password == AppEnvironment.adminTestingPassword;
+    final analytics = ref.read(analyticsServiceProvider);
+    final isAdminTestingLogin =
+        AppEnvironment.adminTestingPasswordLoginEnabled &&
+            email.trim().toLowerCase() ==
+                AppEnvironment.adminTestingUsername.toLowerCase() &&
+            password == AppEnvironment.adminTestingPassword;
 
     if (isAdminTestingLogin) {
       log.i('Admin Testing login detected');
-      ref.read(adminProvider.notifier).adminLogin();
-      state = const AsyncValue.data(
-        AuthState(AuthChangeEvent.signedIn, null),
-      );
+      state = const AsyncValue.loading();
+      try {
+        await analytics.trackAuthStarted(method: 'admin_testing');
+        if (AppEnvironment.adminTestingAutoAdminSessionEnabled) {
+          await ref.read(qaSessionServiceProvider).signInAsAdminPreviewSession(
+                email: AppEnvironment.adminTestingBaseEmail,
+                password: AppEnvironment.adminTestingBasePassword,
+              );
+        } else {
+          ref.read(adminProvider.notifier).adminLogin();
+        }
+        state = const AsyncValue.data(
+          AuthState(AuthChangeEvent.signedIn, null),
+        );
+        await analytics.trackAuthSucceeded(method: 'admin_testing');
+      } catch (error, stackTrace) {
+        log.e(
+          'Admin testing login error: $error',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        await analytics.trackAuthFailed(
+          method: 'admin_testing',
+          reason: error.toString(),
+        );
+        state = AsyncValue.error(error, stackTrace);
+      }
       return;
     }
 
     state = const AsyncValue.loading();
+    await analytics.trackAuthStarted(method: 'email');
     final result =
         await _repository.signInWithEmail(email: email, password: password);
 
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         log.setCustomKey('auth_flow', 'email_sign_in');
         log.setCustomKey('auth_email', email);
         log.e('Login error: ${failure.message}');
+        await analytics.trackAuthFailed(
+          method: 'email',
+          reason: failure.message,
+        );
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
-      (_) {
+      (_) async {
         // The stream will automatically update the state
         log.i('Login successful for $email');
+        await analytics.trackAuthSucceeded(method: 'email');
       },
     );
   }
 
   Future<void> signUpWithEmail(
       String email, String password, String? fullName) async {
+    final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
+    await analytics.trackAuthStarted(method: 'email', isSignUp: true);
     final result = await _repository.signUpWithEmail(
       email: email,
       password: password,
       fullName: fullName,
     );
 
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         log.setCustomKey('auth_flow', 'email_sign_up');
         log.setCustomKey('auth_email', email);
         log.e('Registration error: ${failure.message}');
+        await analytics.trackAuthFailed(
+          method: 'email',
+          reason: failure.message,
+          isSignUp: true,
+        );
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
-      (_) {
+      (_) async {
         log.i('Registration successful for $email');
+        await analytics.trackAuthSucceeded(method: 'email', isSignUp: true);
       },
     );
   }
 
   Future<bool> signInWithGoogle() async {
+    final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
+    await analytics.trackAuthStarted(method: 'google');
     final result = await _repository.signInWithGoogle();
 
     return result.fold(
-      (failure) {
+      (failure) async {
         log.setCustomKey('auth_flow', 'google_sign_in');
         log.e('Google Sign-In error: ${failure.message}');
+        await analytics.trackAuthFailed(
+          method: 'google',
+          reason: failure.message,
+        );
         state = AsyncValue.error(failure.message, StackTrace.current);
         return false;
       },
-      (success) {
+      (success) async {
         if (success) {
           log.i('Google Sign-In successful');
+          await analytics.trackAuthSucceeded(method: 'google');
         } else {
           // Case where user cancelled or something went wrong without a hard failure
+          await analytics.trackAuthFailed(
+            method: 'google',
+            reason: 'cancelled_or_incomplete',
+          );
           state = const AsyncValue.data(
               AuthState(AuthChangeEvent.initialSession, null));
         }
@@ -130,6 +181,27 @@ class AuthController extends _$AuthController {
         return;
       }
 
+      if (ref.read(adminProvider).useAdminPreviewBaseSession) {
+        state = const AsyncValue.loading();
+        final result = await _repository.signOut();
+
+        result.fold(
+          (failure) {
+            log.setCustomKey('auth_flow', 'qa_admin_preview_sign_out');
+            log.e('QA admin preview sign out error: ${failure.message}');
+            state = AsyncValue.error(failure.message, StackTrace.current);
+          },
+          (_) {
+            ref.read(adminProvider.notifier).clearAdminSession();
+            state = const AsyncValue.data(
+              AuthState(AuthChangeEvent.signedOut, null),
+            );
+            log.i('Admin testing session closed');
+          },
+        );
+        return;
+      }
+
       ref.read(adminProvider.notifier).clearAdminSession();
       state = const AsyncValue.data(
         AuthState(AuthChangeEvent.signedOut, null),
@@ -147,7 +219,14 @@ class AuthController extends _$AuthController {
         log.e('Sign out error: ${failure.message}');
         state = AsyncValue.error(failure.message, StackTrace.current);
       },
-      (_) => log.i('Sign out successful'),
+      (_) {
+        ref.invalidate(authStateProvider);
+        ref.invalidate(householdIdProvider);
+        ref.invalidate(userProfileProvider);
+        ref.invalidate(currentHouseholdProvider);
+        ref.invalidate(householdMembersProvider);
+        log.i('Sign out successful');
+      },
     );
   }
 
@@ -180,12 +259,8 @@ bool isAuthenticated(IsAuthenticatedRef ref) {
       AppEnvironment.enableAdminTesting && ref.watch(adminProvider).isAdminUser;
   if (isAdmin) return true;
 
-  final authState = ref.watch(authControllerProvider).value;
-  if (authState == null) return false;
-
-  return authState.event == AuthChangeEvent.signedIn ||
-      authState.event == AuthChangeEvent.tokenRefreshed ||
-      authState.event == AuthChangeEvent.userUpdated;
+  final authState = ref.watch(authStateProvider).valueOrNull;
+  return authState?.isAuthenticated ?? false;
 }
 
 /// Provides the user profile from the database, updated when the user changes.

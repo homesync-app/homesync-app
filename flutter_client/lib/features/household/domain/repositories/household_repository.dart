@@ -39,6 +39,10 @@ abstract class HouseholdRepository {
   Future<Either<Failure, void>> updateHouseholdType(
       String householdId, String type);
 
+  /// Enables or disables household tasks for this household.
+  Future<Either<Failure, void>> updateTasksEnabled(
+      String householdId, bool enabled);
+
   /// Updates the custom display role for a member (e.g. Padre, Madre)
   Future<Either<Failure, void>> updateMemberDisplayRole(
       String userId, String? displayRole);

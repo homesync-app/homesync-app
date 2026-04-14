@@ -6,7 +6,10 @@ import 'logger_service.dart';
 import 'rpc/admin_rpc_service.dart';
 
 class MercadoPagoService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  MercadoPagoService({required SupabaseClient supabaseClient})
+      : _supabase = supabaseClient;
+
+  final SupabaseClient _supabase;
 
   static const String publicKey =
       'APP_USR-c6c4925e-2e11-4fb3-980f-ac459a542677';
@@ -45,7 +48,7 @@ class MercadoPagoService {
       return null;
     } catch (e, stack) {
       log.e('Error creating MP preference: $e');
-      await AdminRpcService().logApplicationError(
+      await AdminRpcService(clientOverride: _supabase).logApplicationError(
         message: 'Error creating MP preference: $e',
         stackTrace: stack.toString(),
         context: {
@@ -92,7 +95,7 @@ class MercadoPagoService {
       }
     } catch (e, stack) {
       log.e('Error starting OAuth: $e');
-      await AdminRpcService().logApplicationError(
+      await AdminRpcService(clientOverride: _supabase).logApplicationError(
         message: 'Error starting OAuth: $e',
         stackTrace: stack.toString(),
         context: {'userId': userId},
@@ -120,7 +123,7 @@ class MercadoPagoService {
       return [];
     } catch (e, stack) {
       log.e('Error fetching MP movements: $e');
-      await AdminRpcService().logApplicationError(
+      await AdminRpcService(clientOverride: _supabase).logApplicationError(
         message: 'Error fetching MP movements: $e',
         stackTrace: stack.toString(),
         context: {'userId': userId},

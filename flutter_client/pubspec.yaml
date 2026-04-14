@@ -1,7 +1,7 @@
 name: homesync_client
 description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
 publish_to: "none"
-version: 1.0.0+48
+version: 1.0.0+51
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -45,6 +45,7 @@ dependencies:
   uuid: ^4.4.0
   permission_handler: ^12.0.1
   image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
   path_provider: ^2.1.4
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
@@ -68,8 +69,8 @@ dependencies:
   package_info_plus: ^8.0.0
   device_info_plus: ^10.1.0
 
-  # MCP Server (nuevo)
-  mcp_server: any
+  # MCP Server (removed - unused in client)
+  # mcp_server: any
   in_app_purchase: ^3.2.3
 
 dev_dependencies:
@@ -115,16 +116,16 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logo_premium_transparent.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#EE652B"
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_background: "#FFF7F0"
+  adaptive_icon_foreground: "assets/images/logo_premium_transparent.png"
 
 flutter_native_splash:
-  color: "#EE652B"
-  image: "assets/images/logo.png"
-  branding: "assets/images/logo.png"
+  color: "#FFF7F0"
+  image: "assets/images/logo_premium_transparent.png"
+  branding: "assets/images/logo_premium_transparent.png"
   android_12:
-    image: "assets/images/logo.png"
-    icon_background_color: "#EE652B"
+    image: "assets/images/logo_premium_transparent.png"
+    icon_background_color: "#FFF7F0"
   web: false

@@ -16,7 +16,9 @@ import '../../domain/models/user_model.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
-  return FirebaseAuthService();
+  return FirebaseAuthService(
+    supabaseClient: ref.read(supabaseClientProvider),
+  );
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -66,12 +68,40 @@ class SupabaseAuthRepository
   @override
   Stream<AuthState> get authStateChanges {
     if (AppEnvironment.usesFirebaseJwtForSupabase) {
-      return _firebaseAuthService.authStateChanges.map(
-        (fa.User? user) => AuthState(
-          user == null ? AuthChangeEvent.signedOut : AuthChangeEvent.signedIn,
-          _client.auth.currentSession,
-        ),
+      final seededState = AuthState(
+        _client.auth.currentSession == null
+            ? AuthChangeEvent.signedOut
+            : AuthChangeEvent.signedIn,
+        _client.auth.currentSession,
       );
+
+      return Stream<AuthState>.multi((controller) {
+        controller.add(seededState);
+        final firebaseSubscription =
+            _firebaseAuthService.authStateChanges.listen(
+          (fa.User? user) {
+            controller.add(
+              AuthState(
+                user == null
+                    ? AuthChangeEvent.signedOut
+                    : AuthChangeEvent.signedIn,
+                _client.auth.currentSession,
+              ),
+            );
+          },
+          onError: controller.addError,
+        );
+
+        final supabaseSubscription = _client.auth.onAuthStateChange.listen(
+          controller.add,
+          onError: controller.addError,
+        );
+
+        controller.onCancel = () async {
+          await firebaseSubscription.cancel();
+          await supabaseSubscription.cancel();
+        };
+      });
     }
 
     return _client.auth.onAuthStateChange;
@@ -142,7 +172,12 @@ class SupabaseAuthRepository
   @override
   Future<Either<Failure, void>> signOut() async {
     return executeWithHandling(() async {
-      await _firebaseAuthService.signOut();
+      if (AppEnvironment.usesFirebaseJwtForSupabase) {
+        await _firebaseAuthService.signOut();
+        return;
+      }
+
+      await _client.auth.signOut();
     }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline);
   }
 

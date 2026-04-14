@@ -1,4 +1,4 @@
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 
 class ExpenseSplitModel {
   final String userId;
@@ -49,6 +49,7 @@ class ExpenseModel {
   final String? description;
   final String type; // 'expense' or 'income'
   final List<ExpenseSplitModel>? splits;
+  final String? receiptPath;
 
   const ExpenseModel({
     required this.id,
@@ -67,13 +68,14 @@ class ExpenseModel {
     this.splitType,
     this.description,
     this.splits,
+    this.receiptPath,
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> map) {
     // Robustly handle joined user data
     Map<String, dynamic>? payerMap;
     final rawPayer = map['users'] ?? map['payer'];
-    
+
     if (rawPayer is Map<String, dynamic>) {
       payerMap = rawPayer;
     } else if (rawPayer is List && rawPayer.isNotEmpty) {
@@ -96,16 +98,15 @@ class ExpenseModel {
       payerFullName: payerMap?['full_name'] as String?,
       payerAvatarUrl: payerMap?['avatar_url'] as String?,
       isShared: (map['is_shared'] as bool?) ??
-          !({
-            'personal',
-            'gift'
-          }.contains((map['split_type'] as String?)?.toLowerCase())),
+          !({'personal', 'gift'}
+              .contains((map['split_type'] as String?)?.toLowerCase())),
       type: map['type'] as String? ?? 'expense',
       splitType: map['split_type'] as String?,
       description: map['description'] as String?,
       splits: (map['expense_splits'] as List<dynamic>?)
           ?.map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      receiptPath: map['receipt_path'] as String?,
     );
   }
 
@@ -122,6 +123,7 @@ class ExpenseModel {
         'type': type,
         'split_type': splitType,
         'description': description,
+        'receipt_path': receiptPath,
       };
 
   // ── Display helpers ────────────────────────────────────────────────────────
@@ -143,11 +145,11 @@ class ExpenseModel {
   String get formattedAmount => '\$${amount.toStringAsFixed(2)}';
 
   String get categoryIcon {
-    return AppColors.categoryIcons[category] ?? '📦';
+    return CategoryMapping.categoryIcons[category] ?? '📦';
   }
 
   String get categoryLabel {
-    return AppColors.categoryNames[category] ?? 'Otros';
+    return CategoryMapping.categoryNames[category] ?? 'Otros';
   }
 
   @override
@@ -160,7 +162,6 @@ class ExpenseModel {
   @override
   String toString() => 'ExpenseModel(id: $id, title: $title, amount: $amount)';
 }
-
 
 /// Represents a member's financial balance within the household
 class HouseholdBalanceModel {

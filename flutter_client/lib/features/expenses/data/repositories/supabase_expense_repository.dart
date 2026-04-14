@@ -253,6 +253,7 @@ class SupabaseExpenseRepository
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   }) async {
     return executeWithHandling(
         () async {
@@ -263,7 +264,9 @@ class SupabaseExpenseRepository
           if (userId == null || userId.isEmpty) throw const AuthFailure();
 
           await _client.rpc(
-            _isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4',
+            _isAdminTestingActive
+                ? 'qa_admin_save_expense_v1'
+                : 'save_expense_v4',
             params: {
               'p_id': id,
               'p_household_id': householdId,
@@ -278,13 +281,19 @@ class SupabaseExpenseRepository
                   splitType != SplitType.gift,
               'p_type': type,
               'p_splits': splits,
+              'p_receipt_path': receiptPath,
               if (_isAdminTestingActive) 'p_actor_user_id': userId,
             },
           );
           sw.stop();
           log.i(
-            'Finance RPC ${_isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4'} ok household=$householdId type=$type split=${splitType.name} amount=$amount ms=${sw.elapsedMilliseconds}',
+            'Finance RPC ${_isAdminTestingActive ? 'qa_admin_save_expense_v1' : 'save_expense_v4'} ok household=$householdId type=$type split=${splitType.name} amount=$amount receipt=${receiptPath != null} ms=${sw.elapsedMilliseconds}',
           );
+          await _ref.read(analyticsServiceProvider).trackExpenseCreated(
+                category: category,
+                splitType: splitType.name,
+                entryType: type,
+              );
         },
         context: 'SupabaseExpenseRepository.saveExpense',
         isOnline: _isOnline,
@@ -307,6 +316,7 @@ class SupabaseExpenseRepository
                     splitType != SplitType.gift,
                 'p_type': type,
                 'p_splits': splits,
+                'p_receipt_path': receiptPath,
               },
             ),
           );
@@ -544,13 +554,16 @@ class SupabaseExpenseRepository
     return executeWithHandling(
         () async {
           final sw = Stopwatch()..start();
+          final rpcName = _isAdminTestingActive
+              ? 'qa_admin_process_recurring_expenses'
+              : 'process_recurring_expenses';
           await _client.rpc(
-            'process_recurring_expenses',
+            rpcName,
             params: {'p_household_id': householdId},
           );
           sw.stop();
           log.i(
-            'Finance RPC process_recurring_expenses ok household=$householdId ms=${sw.elapsedMilliseconds}',
+            'Finance RPC $rpcName ok household=$householdId ms=${sw.elapsedMilliseconds}',
           );
           return unit;
         },
@@ -569,10 +582,71 @@ class SupabaseExpenseRepository
   }
 
   @override
+  Future<Either<Failure, List<FeedItemModel>>> getMonthlyPendingPlannedExpenses(
+    String householdId, {
+    required DateTime month,
+  }) async {
+    return executeWithHandling(() async {
+      final monthStart = DateTime(month.year, month.month, 1);
+      final nextMonthStart = DateTime(month.year, month.month + 1, 1);
+      final currentUserId = await AppIdentityService.instance.refresh();
+
+      final response = await _client
+          .from('planned_expenses')
+          .select('''
+            id,
+            title,
+            amount,
+            category,
+            split_type,
+            payer_default,
+            due_date,
+            status
+          ''')
+          .eq('household_id', householdId)
+          .eq('status', 'pending')
+          .gte('due_date', monthStart.toIso8601String().split('T').first)
+          .lt('due_date', nextMonthStart.toIso8601String().split('T').first)
+          .order('due_date');
+
+      return (response as List<dynamic>)
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .where((row) => _isVisibleFeedRowForUser(
+                {
+                  ...row,
+                  'record_type': 'planned',
+                  'payer_id': row['payer_default'],
+                },
+                currentUserId,
+              ))
+          .map(
+            (row) => FeedItemModel(
+              recordType: 'planned',
+              transactionType: 'expense',
+              id: row['id']?.toString() ?? '',
+              title: row['title'] as String? ?? 'Pendiente',
+              amount: (row['amount'] as num?)?.toDouble() ?? 0.0,
+              category: row['category'] as String?,
+              splitType: row['split_type'] as String?,
+              payerId: row['payer_default']?.toString() ?? '',
+              date: DateTime.tryParse('${row['due_date']}') ?? monthStart,
+              status: row['status'] as String? ?? 'pending',
+            ),
+          )
+          .toList();
+    },
+        context: 'SupabaseExpenseRepository.getMonthlyPendingPlannedExpenses',
+        isOnline: _isOnline);
+  }
+
+  @override
   Future<Either<Failure, Unit>> deletePlannedExpense(String id) async {
     return executeWithHandling(
         () async {
-          await _client.from('planned_expenses').delete().eq('id', id);
+          await _client
+              .from('planned_expenses')
+              .update({'status': 'skipped'}).eq('id', id);
           return unit;
         },
         context: 'SupabaseExpenseRepository.deletePlannedExpense',
@@ -580,8 +654,9 @@ class SupabaseExpenseRepository
         onOffline: () async {
           await _queueAction(
             OfflineAction(
-              type: OfflineActionType.tableDelete,
+              type: OfflineActionType.tableUpdate,
               target: 'planned_expenses',
+              values: {'status': 'skipped'},
               filters: [OfflineFilter(column: 'id', value: id)],
             ),
           );

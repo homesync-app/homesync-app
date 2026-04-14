@@ -46,13 +46,22 @@ class SupabaseRewardRepository
 
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>> getRewards(
-      String householdId) async {
+    String householdId, {
+    int? limit,
+    int? offset,
+  }) async {
     return executeWithHandling(() async {
-      final response = await _client
+      var query = _client
           .from('rewards')
           .select()
           .eq('household_id', householdId)
           .order('created_at', ascending: false);
+      if (offset != null && limit != null) {
+        query = query.range(offset, offset + limit - 1);
+      } else if (limit != null) {
+        query = query.limit(limit);
+      }
+      final response = await query;
       return List<Map<String, dynamic>>.from(response);
     }, context: 'SupabaseRewardRepository.getRewards', isOnline: _isOnline);
   }

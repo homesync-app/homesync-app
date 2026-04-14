@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
@@ -274,7 +275,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     // Apply filters
     final filteredTasks = _allTasks.where((task) {
-      final taskCatNorm = AppColors.normaliseCategory(task.category);
+      final taskCatNorm = CategoryMapping.normaliseCategory(task.category);
       if (_selectedCategories.isNotEmpty &&
           !_selectedCategories.contains(taskCatNorm)) {
         return false;
@@ -713,11 +714,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           height: 44,
           child: Builder(builder: (context) {
             final activeCats = _allTasks
-                .map((t) => AppColors.normaliseCategory(t.category))
+                .map((t) => CategoryMapping.normaliseCategory(t.category))
                 .toSet();
             final visibleCats = categories
-                .where((c) =>
-                    activeCats.contains(AppColors.normaliseCategory(c.id)))
+                .where((c) => activeCats
+                    .contains(CategoryMapping.normaliseCategory(c.id)))
                 .toList();
 
             return ListView(
@@ -736,7 +737,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   Widget _buildCategoryChip(String? id, String name, Color color) {
-    final normId = id != null ? AppColors.normaliseCategory(id) : null;
+    final normId = id != null ? CategoryMapping.normaliseCategory(id) : null;
     final isSelected = normId == null
         ? _selectedCategories.isEmpty
         : _selectedCategories.contains(normId);
@@ -805,13 +806,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     final catLookup = <String, CategoryModel>{};
     for (final c in categories) {
-      final norm = AppColors.normaliseCategory(c.id);
+      final norm = CategoryMapping.normaliseCategory(c.id);
       if (!catLookup.containsKey(norm)) catLookup[norm] = c;
     }
 
     final grouped = <String, List<TaskModel>>{};
     for (final t in tasks) {
-      final normCat = AppColors.normaliseCategory(t.category);
+      final normCat = CategoryMapping.normaliseCategory(t.category);
       (grouped[normCat] ??= []).add(t);
     }
 
@@ -834,7 +835,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               color: '#94A3B8');
 
       widgets.add(_buildCategoryDivider(
-        icon: AppColors.getCategoryMaterialIcon(normCat),
+        icon: CategoryMapping.getCategoryMaterialIcon(normCat),
         title: catInfo.name,
         color: AppColors.fromHex(catInfo.color),
       ));

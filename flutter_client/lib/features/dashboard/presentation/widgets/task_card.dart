@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 Color dashboardCategoryAccent(BuildContext context, String? category) {
-  final normalizedCategory = AppColors.normaliseCategory(category);
-  return AppColors.getCategoryColor(normalizedCategory);
+  final normalizedCategory = CategoryMapping.normaliseCategory(category);
+  return CategoryMapping.getCategoryColor(normalizedCategory);
 }
 
 /// Maps a task/activity category string to a representative icon.
 IconData dashboardCategoryIcon(String? category) {
-  final normalizedCategory = AppColors.normaliseCategory(category);
-  return AppColors.getCategoryMaterialIcon(normalizedCategory);
+  final normalizedCategory = CategoryMapping.normaliseCategory(category);
+  return CategoryMapping.getCategoryMaterialIcon(normalizedCategory);
 }
 
 /// A rich task card with category icon, title, category pill, XP display, and
@@ -34,17 +35,17 @@ class DashboardTaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final normalizedCategory = AppColors.normaliseCategory(task.category);
+    final normalizedCategory = CategoryMapping.normaliseCategory(task.category);
     final categoriesAsync = ref.watch(categoriesProvider);
     final categoryData = categoriesAsync.maybeWhen(
       data: (list) {
-        try {
-          return list.firstWhere(
-            (c) => AppColors.normaliseCategory(c.id) == normalizedCategory,
-          );
-        } catch (_) {
-          return null;
+        for (final category in list) {
+          if (CategoryMapping.normaliseCategory(category.id) ==
+              normalizedCategory) {
+            return category;
+          }
         }
+        return null;
       },
       orElse: () => null,
     );
@@ -116,7 +117,7 @@ class DashboardTaskCard extends ConsumerWidget {
                     runSpacing: 8,
                     children: [
                       _TaskMetricPill(
-                        icon: Icons.bolt_rounded,
+                        icon: Icons.star_rounded,
                         label: '${task.xpReward} XP',
                         color: const Color(0xFFF0A146),
                       ),

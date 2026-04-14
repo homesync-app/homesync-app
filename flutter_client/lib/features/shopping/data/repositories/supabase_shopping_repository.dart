@@ -16,12 +16,16 @@ import 'package:uuid/uuid.dart';
 class SupabaseShoppingRepository
     with RepositoryErrorHandler
     implements ShoppingRepository {
-  final SupabaseClient _client = Supabase.instance.client;
+  final SupabaseClient _client;
   final Ref _ref;
   final OfflineQueueService _offlineQueue = OfflineQueueService();
   static const Uuid _uuid = Uuid();
 
-  SupabaseShoppingRepository({required Ref ref}) : _ref = ref;
+  SupabaseShoppingRepository({
+    required SupabaseClient client,
+    required Ref ref,
+  })  : _client = client,
+        _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
   bool get _isAdminTestingActive {
@@ -184,6 +188,24 @@ class SupabaseShoppingRepository
             shouldSync: true,
           );
         });
+  }
+
+  @override
+  Future<Either<Failure, void>> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
+  }) async {
+    return executeWithHandling(() async {
+      await _client.from('shopping_items').update({
+        'name': name.trim(),
+        'category': category,
+        'emoji': emoji,
+        if (note != null) 'note': note.trim().isEmpty ? null : note.trim(),
+      }).eq('id', itemId);
+    });
   }
 
   @override
