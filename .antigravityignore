@@ -1,0 +1,7 @@
+.claude/
+.gemini/
+.antigravity/
+flutter_client/build/
+node_modules/
+dist/
+APK/

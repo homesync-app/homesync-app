@@ -510,7 +510,7 @@ class _RecurringExpenseFormSheetState
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.theme.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),
@@ -543,7 +543,7 @@ class _RecurringExpenseFormSheetState
           borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.theme.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       ),

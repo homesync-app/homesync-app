@@ -64,6 +64,42 @@ jobs:
           cd flutter_client
           flutter pub get
 
+      - name: Create production env file
+        env:
+          SUPABASE_URL_SECRET: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY_SECRET: ${{ secrets.SUPABASE_ANON_KEY }}
+          FIREBASE_PROJECT_ID_SECRET: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_API_KEY_SECRET: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID_SECRET: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID_SECRET: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN_SECRET: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET_SECRET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          GOOGLE_WEB_CLIENT_ID_SECRET: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          SUPABASE_URL_VALUE="${SUPABASE_URL_SECRET:-https://tfavamqszdkoeabpyxms.supabase.co}"
+          SUPABASE_ANON_KEY_VALUE="${SUPABASE_ANON_KEY_SECRET:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmYXZhbXFzemRrb2VhYnB5eG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjU5MTYsImV4cCI6MjA4NjkwMTkxNn0.AifBdMFJH14E-JisRcdjWPNpjAOuj6z3J4aYYRxBCSI}"
+          FIREBASE_PROJECT_ID_VALUE="${FIREBASE_PROJECT_ID_SECRET:-homesync-prod-r7-123}"
+          FIREBASE_API_KEY_VALUE="${FIREBASE_API_KEY_SECRET:-AIzaSyAOH6ZSuqIzI1qOUIynDbWGwOQRym_Wb1I}"
+          FIREBASE_APP_ID_VALUE="${FIREBASE_APP_ID_SECRET:-1:105041112830:web:da6228c6d202cdf567ffaf}"
+          FIREBASE_MESSAGING_SENDER_ID_VALUE="${FIREBASE_MESSAGING_SENDER_ID_SECRET:-105041112830}"
+          FIREBASE_AUTH_DOMAIN_VALUE="${FIREBASE_AUTH_DOMAIN_SECRET:-homesync-prod-r7-123.firebaseapp.com}"
+          FIREBASE_STORAGE_BUCKET_VALUE="${FIREBASE_STORAGE_BUCKET_SECRET:-homesync-prod-r7-123.firebasestorage.app}"
+          GOOGLE_WEB_CLIENT_ID_VALUE="${GOOGLE_WEB_CLIENT_ID_SECRET:-105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com}"
+
+          cat > flutter_client/.env.production <<EOF
+          APP_ENV=production
+          AUTH_MODE=firebase_third_party
+          SUPABASE_URL=${SUPABASE_URL_VALUE}
+          SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY_VALUE}
+          FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID_VALUE}
+          FIREBASE_API_KEY=${FIREBASE_API_KEY_VALUE}
+          FIREBASE_APP_ID=${FIREBASE_APP_ID_VALUE}
+          FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID_VALUE}
+          FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN_VALUE}
+          FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET_VALUE}
+          GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID_VALUE}
+          EOF
+
       - name: Decode Keystore
         run: |
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
@@ -93,10 +129,10 @@ jobs:
         run: |
           cd flutter_client
           if [ "${{ env.KEYSTORE_AVAILABLE }}" = "true" ]; then
-            flutter build appbundle --release
+            flutter build appbundle --release --dart-define-from-file=.env.production --dart-define=APP_ENV=production
           else
             echo "No keystore → building debug AAB (not deployable to Play)"
-            flutter build appbundle --debug
+            flutter build appbundle --debug --dart-define-from-file=.env.production --dart-define=APP_ENV=production
           fi
 
       - name: Upload AAB as Artifact

@@ -337,6 +337,20 @@ class SupabaseHouseholdRepository
   }
 
   @override
+  Future<Either<Failure, void>> updateTasksEnabled(
+    String householdId,
+    bool enabled,
+  ) async {
+    return executeWithHandling(() async {
+      await _client
+          .from(AppConstants.tableHouseholds)
+          .update({'tasks_enabled': enabled}).eq('id', householdId);
+    },
+        context: 'SupabaseHouseholdRepository.updateTasksEnabled',
+        isOnline: _isOnline);
+  }
+
+  @override
   Future<Either<Failure, void>> updateMemberDisplayRole(
     String userId,
     String? displayRole,

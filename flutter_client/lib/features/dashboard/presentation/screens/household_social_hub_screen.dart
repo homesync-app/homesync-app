@@ -361,11 +361,11 @@ class _HeaderCard extends StatelessWidget {
             runSpacing: 10,
             children: [
               _InfoChip(
-                icon: Icons.home_work_rounded,
+                icon: Icons.home_work_outlined,
                 label: household?.name ?? 'Mi hogar',
               ),
               _InfoChip(
-                icon: Icons.group_rounded,
+                icon: Icons.group_outlined,
                 label: canManageMembers ? 'Gestion activa' : 'Vista familiar',
               ),
             ],
@@ -377,24 +377,24 @@ class _HeaderCard extends StatelessWidget {
             children: [
               if (canManageMembers)
                 _QuickActionButton(
-                  icon: Icons.person_add_alt_1_rounded,
+                  icon: Icons.person_add_alt_1_outlined,
                   label: caps.type == HouseholdType.family
                       ? 'Invitar familia'
                       : 'Invitar',
                   onPressed: onInvite,
                 ),
               _QuickActionButton(
-                icon: Icons.task_alt_rounded,
+                icon: Icons.task_alt_outlined,
                 label: 'Tareas',
                 onPressed: onTasks,
               ),
               _QuickActionButton(
-                icon: Icons.account_balance_wallet_rounded,
+                icon: Icons.account_balance_wallet_outlined,
                 label: 'Finanzas',
                 onPressed: onFinances,
               ),
               _QuickActionButton(
-                icon: Icons.storefront_rounded,
+                icon: Icons.storefront_outlined,
                 label: 'Tienda',
                 onPressed: onRewards,
               ),
@@ -434,6 +434,7 @@ class _MembersSection extends StatelessWidget {
             ? 'Invita a tu familia para empezar a coordinar el hogar.'
             : 'Invita a tus companeros para empezar a organizar el piso.',
         icon: Icons.group_off_rounded,
+        emoji: caps.type == HouseholdType.family ? '👨‍👩‍👧‍👦' : '🫶',
       );
     }
 
@@ -853,6 +854,7 @@ class _InfoChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.surfaceVariant,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.border.withValues(alpha: 0.48)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

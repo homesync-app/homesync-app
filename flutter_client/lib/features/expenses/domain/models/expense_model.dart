@@ -49,6 +49,7 @@ class ExpenseModel {
   final String? description;
   final String type; // 'expense' or 'income'
   final List<ExpenseSplitModel>? splits;
+  final String? receiptPath;
 
   const ExpenseModel({
     required this.id,
@@ -67,6 +68,7 @@ class ExpenseModel {
     this.splitType,
     this.description,
     this.splits,
+    this.receiptPath,
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> map) {
@@ -104,6 +106,7 @@ class ExpenseModel {
       splits: (map['expense_splits'] as List<dynamic>?)
           ?.map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList(),
+      receiptPath: map['receipt_path'] as String?,
     );
   }
 
@@ -120,6 +123,7 @@ class ExpenseModel {
         'type': type,
         'split_type': splitType,
         'description': description,
+        'receipt_path': receiptPath,
       };
 
   // ── Display helpers ────────────────────────────────────────────────────────

@@ -713,6 +713,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       icon: filterStatus == null
           ? Icons.edit_note_rounded
           : Icons.filter_list_off_rounded,
+      emoji: filterStatus == null ? '📝' : '🔎',
     );
   }
 
@@ -1036,7 +1037,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
-                        const Divider(color: Color(0xFFF1F5F9), height: 1),
+                        Divider(
+                          color: theme.divider.withValues(
+                            alpha: theme.isDarkMode ? 0.35 : 0.9,
+                          ),
+                          height: 1,
+                        ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
@@ -1074,7 +1080,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                           ? 'Completando...'
                                           : 'Completar',
                                       color: AppColors.accentGreen,
-                                      onTap: _isSubmitting ? null : _completeTask,
+                                      onTap:
+                                          _isSubmitting ? null : _completeTask,
                                     ),
                             ),
                           ],
@@ -1133,7 +1140,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     if (isOpenTask) {
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
-        label: _isSubmitting ? 'Marcando...' : 'Marcar realizada',
+        label: _isSubmitting ? 'Completando...' : 'Completar',
         color: AppColors.primary,
         onTap: _isSubmitting
             ? null
@@ -1169,7 +1176,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     if (isAdultView) {
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
-        label: _isSubmitting ? 'Completando...' : 'Completar igual',
+        label: _isSubmitting ? 'Completando...' : 'Completar',
         color: AppColors.primary,
         onTap: _isSubmitting
             ? null
@@ -1309,23 +1316,122 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _confirmAdultTakeoverCompletion(String ownerName) async {
-    final confirmed = await showDialog<bool>(
+    final theme = context.theme;
+    final confirmed = await showModalBottomSheet<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Completar tarea'),
-            content: Text(
-              'Esta tarea estaba asignada a $ownerName. Si seguís, se va a marcar como realizada por vos.',
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => Container(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: theme.divider.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.handshake_rounded,
+                      size: 36,
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Esta tarea le toca a $ownerName',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: theme.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '¿Quieres darle una mano y completarla de todas formas?',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: theme.textSecondary,
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            side: BorderSide(color: theme.border),
+                          ),
+                          onPressed: () => Navigator.pop(context, false),
+                          child: Text(
+                            'Cerrar',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            'Completar igual',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Completar'),
-              ),
-            ],
+            ),
           ),
         ) ??
         false;

@@ -86,8 +86,12 @@ class ConnectivityNotifier extends _$ConnectivityNotifier {
                 _updateConnectionStatus,
               );
       await _checkConnection();
-    } catch (e) {
-      log.w('Failed to subscribe to connectivity changes: $e');
+    } catch (e, stack) {
+      log.w(
+        'Failed to subscribe to connectivity changes: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -95,8 +99,8 @@ class ConnectivityNotifier extends _$ConnectivityNotifier {
     try {
       final results = await ref.read(connectivityClientProvider).checkConnectivity();
       _applyConnectivityResult(results);
-    } catch (e) {
-      log.w('Connectivity check failed: $e');
+    } catch (e, stack) {
+      log.w('Connectivity check failed: $e', error: e, stackTrace: stack);
       state = state.copyWith(
         status: ConnectivityStatus.online,
         isOnline: true,

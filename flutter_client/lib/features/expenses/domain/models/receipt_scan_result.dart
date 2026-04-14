@@ -1,3 +1,5 @@
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
+
 /// Resultado del escaneo OCR de un ticket.
 ///
 /// En este punto la imagen solo existe localmente (localImagePath).
@@ -47,7 +49,7 @@ class ReceiptScanResult {
           : null,
       category: json['category'] as String?,
       detectedItems: (json['items'] as List<dynamic>?)
-              ?.map((e) => e.toString().trim())
+              ?.map((e) => ReceiptMatcher.cleanName(e.toString().trim()))
               .where((e) => e.isNotEmpty)
               .toList() ??
           [],

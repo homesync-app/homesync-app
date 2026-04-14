@@ -410,8 +410,8 @@ class Rewards extends _$Rewards {
         );
         ref.invalidateSelf();
         return Right((seeded as num).toInt());
-      } catch (e) {
-        log.w('QA seed rewards failure: $e');
+      } catch (e, stack) {
+        log.w('QA seed rewards failure: $e', error: e, stackTrace: stack);
         return Left(ServerFailure(e.toString()));
       }
     }

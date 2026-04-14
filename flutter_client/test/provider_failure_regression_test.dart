@@ -175,6 +175,8 @@ class _FailingSavingsRepository implements SavingsRepository {
   @override
   Future<Either<Failure, List<SavingsGoalModel>>> getGoals({
     required String householdId,
+    int? limit,
+    int? offset,
   }) async =>
       const Left(ServerFailure('savings repo boom'));
 

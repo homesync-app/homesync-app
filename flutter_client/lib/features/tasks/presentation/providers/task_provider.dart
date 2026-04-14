@@ -164,8 +164,8 @@ class Tasks extends _$Tasks {
           state = AsyncValue.data([...currentTasks, ...nextTasks]);
         },
       );
-    } catch (e) {
-      log.w('Error loading more tasks: $e');
+    } catch (e, stack) {
+      log.w('Error loading more tasks: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -223,8 +223,8 @@ class Tasks extends _$Tasks {
         },
         (data) => data,
       );
-    } catch (e) {
-      log.w('Complete task failure: $e');
+    } catch (e, stack) {
+      log.w('Complete task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
       return null;
     }
@@ -280,8 +280,8 @@ class Tasks extends _$Tasks {
         },
         (data) => data,
       );
-    } catch (e) {
-      log.w('Complete tasks batch failure: $e');
+    } catch (e, stack) {
+      log.w('Complete tasks batch failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState);
       return null;
     }
@@ -306,8 +306,8 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.verifyTask(task.id, userId);
-    } catch (e) {
-      log.w('Verify task failure: $e');
+    } catch (e, stack) {
+      log.w('Verify task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
     }
   }
@@ -331,8 +331,8 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.objectTask(task.id, userId);
-    } catch (e) {
-      log.w('Object task failure: $e');
+    } catch (e, stack) {
+      log.w('Object task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
     }
   }
@@ -354,8 +354,8 @@ class Tasks extends _$Tasks {
       // We use editTask to change status to active
       await repo.editTask(task.id, {'status': 'active'});
       silentRefresh();
-    } catch (e) {
-      log.w('Approve task failure: $e');
+    } catch (e, stack) {
+      log.w('Approve task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
     }
   }
@@ -365,8 +365,8 @@ class Tasks extends _$Tasks {
       final repo = ref.read(taskRepositoryProvider);
       await repo.deleteTask(task.id);
       silentRefresh();
-    } catch (e) {
-      log.w('Reject task failure: $e');
+    } catch (e, stack) {
+      log.w('Reject task failure: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -402,8 +402,12 @@ class Tasks extends _$Tasks {
         silentRefresh();
         ref.invalidate(recentActivityProvider);
       }
-    } catch (e) {
-      log.w('Submit task for approval failure: $e');
+    } catch (e, stack) {
+      log.w(
+        'Submit task for approval failure: $e',
+        error: e,
+        stackTrace: stack,
+      );
       if (oldState != null) state = AsyncValue.data(oldState);
       rethrow;
     }
@@ -448,8 +452,8 @@ class Tasks extends _$Tasks {
         silentRefresh();
         ref.invalidate(recentActivityProvider);
       }
-    } catch (e) {
-      log.w('Reject pending task failure: $e');
+    } catch (e, stack) {
+      log.w('Reject pending task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState);
       rethrow;
     }
@@ -464,8 +468,8 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.deleteTask(task.id);
-    } catch (e) {
-      log.w('Delete task failure: $e');
+    } catch (e, stack) {
+      log.w('Delete task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
     }
   }
@@ -491,8 +495,8 @@ class Tasks extends _$Tasks {
       if (ref.read(isOnlineProvider)) {
         refresh();
       }
-    } catch (e) {
-      log.w('Update schedule failure: $e');
+    } catch (e, stack) {
+      log.w('Update schedule failure: $e', error: e, stackTrace: stack);
     }
   }
 
@@ -527,8 +531,8 @@ class Tasks extends _$Tasks {
           }
         },
       );
-    } catch (e) {
-      log.w('Create task failure: $e');
+    } catch (e, stack) {
+      log.w('Create task failure: $e', error: e, stackTrace: stack);
       rethrow;
     }
   }
@@ -540,8 +544,8 @@ class Tasks extends _$Tasks {
       if (ref.read(isOnlineProvider)) {
         refresh();
       }
-    } catch (e) {
-      log.w('Edit task failure: $e');
+    } catch (e, stack) {
+      log.w('Edit task failure: $e', error: e, stackTrace: stack);
     }
   }
 }

@@ -160,6 +160,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   // --- Summary Tab ---
 
   Widget _buildMovimientosTab() {
+    final theme = context.theme;
     final summaryAsync = ref.watch(personalFinanceSummaryProvider);
     final feedAsync = ref.watch(combinedFeedControllerProvider);
     final projectionAsync = ref.watch(monthlyProjectionProvider);
@@ -238,12 +239,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.1),
+                                color:
+                                    theme.textSecondary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.history_rounded,
-                                  size: 12, color: AppColors.textSecondary),
+                              child: Icon(Icons.history_rounded,
+                                  size: 12, color: theme.textSecondary),
                             ),
                             const SizedBox(width: 10),
                             Text(
@@ -251,8 +252,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 12,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.7),
+                                color:
+                                    theme.textSecondary.withValues(alpha: 0.7),
                                 letterSpacing: 1.2,
                               ),
                             ),
@@ -278,10 +279,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                       const EdgeInsets.fromLTRB(24, 24, 24, 12),
                                   child: Text(
                                     _formatFeedDate(item.date),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 13,
-                                      color: AppColors.textMuted,
+                                      color: theme.textMuted,
                                       letterSpacing: 1.2,
                                     ),
                                   ),
@@ -328,6 +329,30 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     } else {
       return DateFormat('d MMMM y', 'es').format(date).toUpperCase();
     }
+  }
+
+  String _compactMovementTitle(String title, {String? category}) {
+    final normalized = title.trim();
+    final lower = normalized.toLowerCase();
+    final categoryId = category?.toLowerCase();
+
+    if (categoryId == 'supermarket' &&
+        (lower.contains('supermerc') || lower.contains('compras del'))) {
+      return 'Supermercado';
+    }
+
+    if (lower == 'compras del supermercado' ||
+        lower == 'compras de supermercado' ||
+        lower == 'compra del supermercado') {
+      return 'Supermercado';
+    }
+
+    if (categoryId == 'mercadolibre' &&
+        (lower.contains('mercado libre') || lower.contains('compras online'))) {
+      return 'Compras online';
+    }
+
+    return normalized;
   }
 
   List<FeedItemModel> _effectiveFeedForBreakdowns() {
@@ -727,7 +752,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   child: _buildProjectionStat(
                     'Tu parte pendiente',
                     projectedPending,
-                    AppColors.textSecondary,
+                    theme.textSecondary,
                     onTap: () => _showPendingBreakdownSheet(projectedPending),
                   ),
                 ),
@@ -741,7 +766,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   child: _buildProjectionStat(
                     'Balance estimado',
                     projectedBalance,
-                    AppColors.textPrimary,
+                    theme.textPrimary,
                     isBold: true,
                     onTap: () => _showProjectionBreakdownSheet(
                         balance, projectedPending, projectedBalance),
@@ -1382,13 +1407,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        item.title,
+                        _compactMovementTitle(
+                          item.title,
+                          category: item.category,
+                        ),
                         style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
-                            color: AppColors.textPrimary.withValues(alpha: 0.6),
+                            color: theme.textPrimary.withValues(
+                              alpha: theme.isDarkMode ? 0.92 : 0.6,
+                            ),
                             letterSpacing: -0.3),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1399,8 +1429,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 const SizedBox(height: 4),
                 Text(
                   'Previsto: ${DateFormat('d MMM', 'es').format(item.date)}',
-                  style: const TextStyle(
-                      color: AppColors.textMuted,
+                  style: TextStyle(
+                      color: theme.textMuted,
                       fontSize: 12,
                       fontWeight: FontWeight.w600),
                 ),
@@ -1416,7 +1446,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
-                  color: AppColors.textPrimary.withValues(alpha: 0.5),
+                  color: theme.textPrimary.withValues(
+                    alpha: theme.isDarkMode ? 0.88 : 0.5,
+                  ),
                   letterSpacing: -0.5,
                 ),
               ),
@@ -1450,7 +1482,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     .read(combinedFeedControllerProvider.notifier)
                     .discardPlannedExpense(item.id),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textMuted,
+                  foregroundColor: theme.textMuted,
                   minimumSize: Size.zero,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1591,14 +1623,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       child: AnimatedPress(
         onTap: () => _showExpenseDetailSheet(expense),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             color: theme.surface,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: theme.border.withValues(alpha: 0.4)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.018),
+                color: theme.shadowBase.withValues(
+                  alpha: theme.isDarkMode ? 0.18 : 0.018,
+                ),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -1618,19 +1652,23 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   color: color,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      expense.title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3),
-                      maxLines: 1,
+                      _compactMovementTitle(
+                        expense.title,
+                        category: expense.category,
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.5,
+                        color: theme.textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
@@ -1638,18 +1676,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       children: [
                         Text(
                           DateFormat('d MMM', 'es').format(expense.paidAt),
-                          style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: theme.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         if (expense.description != null &&
                             expense.description!.isNotEmpty) ...[
                           Icon(Icons.notes_rounded,
                               size: 14,
-                              color:
-                                  AppColors.textMuted.withValues(alpha: 0.5)),
+                              color: theme.textMuted.withValues(alpha: 0.65)),
                           if (expense.description!
                                   .toLowerCase()
                                   .contains('art?culos') ||
@@ -1671,14 +1709,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     '${isIncome ? '+' : ''}\$ ${_formatCurrency(expense.amount)}',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 17,
-                      color:
-                          isIncome ? AppColors.success : AppColors.textPrimary,
+                      fontSize: 16.5,
+                      color: isIncome ? AppColors.success : theme.textPrimary,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -1702,19 +1740,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildSettlementCard(ExpenseModel expense) {
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.accentBlue.withValues(alpha: 0.04),
+        color: AppColors.accentBlue.withValues(
+          alpha: theme.isDarkMode ? 0.12 : 0.04,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: AppColors.accentBlue.withValues(
+            alpha: theme.isDarkMode ? 0.24 : 0.1,
+          ),
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-                color: Colors.white, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: theme.surface,
+              shape: BoxShape.circle,
+            ),
             child: const Icon(
               Icons.sync_alt_rounded,
               size: 22,
@@ -1733,10 +1780,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         color: AppColors.accentBlue)),
                 Text(
                   '${expense.payerDisplayName} equilibró el balance',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -2401,7 +2449,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       List<String> options, Function(String) onSelect) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(
@@ -2443,7 +2491,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       BuildContext context, List<Color> colors, Function(Color) onSelect) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(

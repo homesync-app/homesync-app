@@ -74,43 +74,49 @@ class SupabaseTaskRepository
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
       {int limit = 100, int offset = 0}) async {
-    return executeWithHandling(() async {
-      final raw = _isAdminTestingActive
-          ? await _client.rpc(
-              'qa_admin_get_tasks',
-              params: {'p_household_id': _selectedAdminHouseholdId},
-            )
-          : await _rpc.getTasks(limit: limit, offset: offset);
-      final tasks = (raw as List)
-          .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
-          .toList();
-      log.i(
-        'TaskRepository.getTasks household=${_selectedAdminHouseholdId ?? householdId} count=${tasks.length} adminQa=$_isAdminTestingActive',
-      );
-      try {
-        await OfflineStorageService().set(
-          'tasks_cache_${_selectedAdminHouseholdId ?? householdId}',
-          {'tasks': raw},
-        );
-      } catch (error, stackTrace) {
-        log.w(
-          'TaskRepository.getTasks: cache persistence skipped: $error',
-          error: error,
-          stackTrace: stackTrace,
-        );
-      }
-      return tasks;
-    }, context: 'SupabaseTaskRepository.getTasks', isOnline: _isOnline,
-    onOffline: () async {
-      final cached = await OfflineStorageService().get('tasks_cache_${_selectedAdminHouseholdId ?? householdId}');
-      if (cached != null && cached['tasks'] != null) {
-        log.i('TaskRepository.getTasks: Recovered from persistent offline cache');
-        return (cached['tasks'] as List)
-            .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
-            .toList();
-      }
-      throw const NetworkFailure('No hay conexión y no existen datos locales en caché');
-    });
+    return executeWithHandling(
+        () async {
+          final raw = _isAdminTestingActive
+              ? await _client.rpc(
+                  'qa_admin_get_tasks',
+                  params: {'p_household_id': _selectedAdminHouseholdId},
+                )
+              : await _rpc.getTasks(limit: limit, offset: offset);
+          final tasks = (raw as List)
+              .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
+              .toList();
+          log.i(
+            'TaskRepository.getTasks household=${_selectedAdminHouseholdId ?? householdId} count=${tasks.length} adminQa=$_isAdminTestingActive',
+          );
+          try {
+            await OfflineStorageService().set(
+              'tasks_cache_${_selectedAdminHouseholdId ?? householdId}',
+              {'tasks': raw},
+            );
+          } catch (error, stackTrace) {
+            log.w(
+              'TaskRepository.getTasks: cache persistence skipped: $error',
+              error: error,
+              stackTrace: stackTrace,
+            );
+          }
+          return tasks;
+        },
+        context: 'SupabaseTaskRepository.getTasks',
+        isOnline: _isOnline,
+        onOffline: () async {
+          final cached = await OfflineStorageService()
+              .get('tasks_cache_${_selectedAdminHouseholdId ?? householdId}');
+          if (cached != null && cached['tasks'] != null) {
+            log.i(
+                'TaskRepository.getTasks: Recovered from persistent offline cache');
+            return (cached['tasks'] as List)
+                .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
+                .toList();
+          }
+          throw const NetworkFailure(
+              'No hay conexión y no existen datos locales en caché');
+        });
   }
 
   @override
@@ -170,12 +176,13 @@ class SupabaseTaskRepository
                     'offline_${DateTime.now().millisecondsSinceEpoch}',
                 'p_user_ids': userIds ?? [userId],
                 'p_task_id': task.id,
-                'p_household_id':
-                    _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
+                'p_household_id': _selectedAdminHouseholdId ??
+                    await _rpc.requireHouseholdId(),
                 'p_xp_reward': task.xpReward,
                 'p_coin_reward': task.coinReward,
                 'p_task_title': task.title,
-                if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+                if (completedAt != null)
+                  'p_completed_at': completedAt.toIso8601String(),
               },
             ),
           );
@@ -250,9 +257,10 @@ class SupabaseTaskRepository
                     'offline_${DateTime.now().millisecondsSinceEpoch}',
                 'p_user_ids': userIds ?? [userId],
                 'p_task_ids': taskIds,
-                'p_household_id':
-                    _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
-                if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+                'p_household_id': _selectedAdminHouseholdId ??
+                    await _rpc.requireHouseholdId(),
+                if (completedAt != null)
+                  'p_completed_at': completedAt.toIso8601String(),
               },
             ),
           );
@@ -469,8 +477,7 @@ class SupabaseTaskRepository
     return executeWithHandling(
         () async {
           if (_isAdminTestingActive) {
-            final userId =
-                _ref.read(currentUserIdProvider) ??
+            final userId = _ref.read(currentUserIdProvider) ??
                 await AppIdentityService.instance.refresh();
             if (userId == null || _selectedAdminHouseholdId == null) {
               throw Exception('QA admin sin viewer u hogar seleccionado');
@@ -499,6 +506,10 @@ class SupabaseTaskRepository
             log.i(
               'TaskRepository.createTask QA created household=$_selectedAdminHouseholdId title=$title assignedTo=$assignedTo',
             );
+            await _ref.read(analyticsServiceProvider).trackTaskCreated(
+                  category: category,
+                  difficulty: difficulty,
+                );
             return;
           }
 
@@ -528,6 +539,11 @@ class SupabaseTaskRepository
                 .update(updates)
                 .eq('id', taskId);
           }
+
+          await _ref.read(analyticsServiceProvider).trackTaskCreated(
+                category: category,
+                difficulty: difficulty,
+              );
         },
         context: 'SupabaseTaskRepository.createTask',
         isOnline: _isOnline,

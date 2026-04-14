@@ -45,7 +45,6 @@ class AppEnvironment {
   }
 
   static String get apiUrl {
-    // apiUrl can be overridden via environment variable, otherwise falls back to defaults per environment
     const overriddenApiUrl = String.fromEnvironment('API_URL');
     if (overriddenApiUrl.isNotEmpty) return overriddenApiUrl;
 
@@ -56,7 +55,7 @@ class AppEnvironment {
         return supabaseUrl;
       case Environment.production:
         return const String.fromEnvironment('API_URL_PROD',
-            defaultValue: 'https://api.homesync.com');
+            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co');
     }
   }
 
@@ -65,6 +64,7 @@ class AppEnvironment {
   static bool get isProduction => current == Environment.production;
   static bool get usesFirebaseJwtForSupabase =>
       authMode == AuthMode.firebaseThirdParty;
+
   static bool get enableAdminTesting {
     const override = String.fromEnvironment('ENABLE_ADMIN_TESTING');
     return !isProduction && override.toLowerCase() == 'true';
@@ -150,6 +150,14 @@ class AppEnvironment {
       adminTestingBaseEmail.trim().isNotEmpty &&
       adminTestingBasePassword.isNotEmpty;
 
+  // Validates that required runtime config is present
+  static void validateRuntimeConfig({required bool isWeb}) {
+    if (isProduction) {
+      assert(supabaseUrl.isNotEmpty, 'SUPABASE_URL is required in production');
+      assert(supabaseAnonKey.isNotEmpty, 'SUPABASE_ANON_KEY is required in production');
+    }
+  }
+
   // --- Firebase Config ---
   static String get firebaseProjectId {
     return const String.fromEnvironment(
@@ -168,7 +176,7 @@ class AppEnvironment {
   static String get firebaseAppId {
     return const String.fromEnvironment(
       'FIREBASE_APP_ID',
-      defaultValue: '1:105041112830:web:da6228c6d202cdf567ffaf',
+      defaultValue: '1:105041112830:android:581bf3abf4b65e9167ffaf',
     );
   }
 

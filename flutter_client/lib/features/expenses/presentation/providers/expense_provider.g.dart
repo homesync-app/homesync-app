@@ -193,7 +193,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'e93ec692c294903053347a2a4408e65903c414b1';
+    r'c40e1d1f25cda07611162b18534144e9e6a53ff7';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)

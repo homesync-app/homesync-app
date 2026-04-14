@@ -50,7 +50,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _setupTaskCompletionListener(ref);
+    final caps = ref.watch(householdCapabilitiesProvider);
+    if (caps.showTasks) {
+      _setupTaskCompletionListener(ref);
+    }
     final householdAsync = ref.watch(householdIdProvider);
     final theme = context.theme;
 
@@ -74,6 +77,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: 'No perteneces a un hogar todavía',
               subtitle: 'Crea o unite a un hogar para comenzar.',
               icon: Icons.home_work_outlined,
+              emoji: '🏠',
+              accentColor: AppColors.accentOrange,
             ),
           );
         }
@@ -116,6 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildMainContent(String householdId, AppThemeColors theme) {
+    final caps = ref.watch(householdCapabilitiesProvider);
+
     return Scaffold(
       backgroundColor: theme.background,
       body: Column(
@@ -129,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildFAB(householdId, theme),
+      floatingActionButton: _buildFAB(householdId, theme, caps),
     );
   }
 
@@ -159,7 +166,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
   }
 
-  Widget _buildFAB(String householdId, AppThemeColors theme) {
+  Widget _buildFAB(
+    String householdId,
+    AppThemeColors theme,
+    HouseholdCapabilities caps,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: DecoratedBox(
@@ -176,14 +187,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SizedBox(
           height: 56,
           child: FloatingActionButton.extended(
-            onPressed: () => _showQuickActionMenu(householdId),
+            onPressed: () => caps.showTasks
+                ? _showQuickActionMenu(householdId, caps)
+                : ExpenseFormSheet.show(context),
             backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
             foregroundColor: theme.primary,
             elevation: 0,
             extendedPadding:
                 const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
             label: Text(
-              'Nueva Acci\u00f3n',
+              caps.showTasks ? 'Acciones' : 'Gastos',
               style: TextStyle(
                 color: theme.primary,
                 fontWeight: FontWeight.w800,
@@ -200,7 +213,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-      ).animate(delay: 600.ms)
+      )
+          .animate(delay: 600.ms)
           .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)
           .scale(
             begin: const Offset(0.96, 0.96),
@@ -211,7 +225,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showQuickActionMenu(String householdId) {
+  void _showQuickActionMenu(
+    String householdId,
+    HouseholdCapabilities caps,
+  ) {
     final theme = context.theme;
     showModalBottomSheet(
       context: context,
@@ -239,8 +256,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Expanded(
                   child: _buildActionItem(
-                    icon: Icons.receipt_long_rounded,
-                    label: 'Nuevo Gasto',
+                    variant: _QuickActionVariant.expense,
+                    label: 'Gastos',
                     color: AppColors.primary,
                     onTap: () {
                       Navigator.pop(context);
@@ -248,18 +265,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildActionItem(
-                    icon: Icons.task_alt_rounded,
-                    label: 'Nueva Tarea',
-                    color: AppColors.accentBlue,
-                    onTap: () {
-                      Navigator.pop(context);
-                      CompleteTaskSheet.show(context);
-                    },
+                if (caps.showTasks) ...[
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildActionItem(
+                      variant: _QuickActionVariant.task,
+                      label: 'Tareas',
+                      color: AppColors.sage,
+                      onTap: () {
+                        Navigator.pop(context);
+                        CompleteTaskSheet.show(context);
+                      },
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ],
@@ -269,48 +288,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildActionItem({
-    required IconData icon,
+    required _QuickActionVariant variant,
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
     final theme = context.theme;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(28),
+        onTap: onTap,
+        child: Ink(
+          height: 96,
+          padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+          decoration: BoxDecoration(
+            color: theme.isDarkMode ? theme.surface : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: color.withValues(alpha: theme.isDarkMode ? 0.2 : 0.12),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowBase.withValues(
+                  alpha: theme.isDarkMode ? 0.14 : 0.045,
+                ),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 21,
+                        letterSpacing: -0.75,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: color.withValues(
+                        alpha: theme.isDarkMode ? 0.16 : 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: color.withValues(
+                        alpha: theme.isDarkMode ? 0.82 : 0.76,
+                      ),
+                      size: 16,
+                    ),
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 28),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 15,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -324,3 +375,5 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(expenseControllerProvider);
   }
 }
+
+enum _QuickActionVariant { expense, task }

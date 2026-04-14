@@ -117,7 +117,7 @@ class DashboardTaskCard extends ConsumerWidget {
                     runSpacing: 8,
                     children: [
                       _TaskMetricPill(
-                        icon: Icons.bolt_rounded,
+                        icon: Icons.star_rounded,
                         label: '${task.xpReward} XP',
                         color: const Color(0xFFF0A146),
                       ),

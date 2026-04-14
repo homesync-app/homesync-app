@@ -89,27 +89,33 @@ class ReceiptScanService {
     }
 
     debugPrint('[ReceiptScan] Invocando Edge Function scan-receipt...');
-    final response = await _supabase.functions.invoke(
-      'scan-receipt',
-      body: {
-        'imageBase64': base64Image,
-        'mimeType': 'image/webp',
-      },
-      headers: {'Authorization': 'Bearer $accessToken'},
-    );
+    late final FunctionResponse response;
+    try {
+      response = await _supabase.functions.invoke(
+        'scan-receipt',
+        body: {
+          'imageBase64': base64Image,
+          'mimeType': 'image/webp',
+        },
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+    } on FunctionException catch (e) {
+      // El SDK lanza FunctionException para respuestas no-2xx antes de que
+      // podamos ver response.status. Convertimos el 429 en ScanLimitException.
+      if (e.status == 429) {
+        final details = e.details;
+        if (details is Map && details['error'] == 'scan_limit_reached') {
+          throw ScanLimitException(
+            used: (details['used'] as num?)?.toInt() ?? 0,
+            limit: (details['limit'] as num?)?.toInt() ?? 10,
+            isPremium: (details['tier'] as String?) == 'premium',
+          );
+        }
+      }
+      rethrow;
+    }
 
     debugPrint('[ReceiptScan] Respuesta status=${response.status} data=${response.data}');
-
-    if (response.status == 429) {
-      final body = response.data as Map<String, dynamic>?;
-      if (body?['error'] == 'scan_limit_reached') {
-        final used = body?['used'] ?? 0;
-        final limit = body?['limit'] ?? 10;
-        final tier = body?['tier'] ?? 'free';
-        final isPremium = tier == 'premium';
-        throw ScanLimitException(used: used, limit: limit, isPremium: isPremium);
-      }
-    }
 
     if (response.status != 200 || response.data == null) {
       throw Exception('Error en el escaneo (status ${response.status}): ${response.data}');

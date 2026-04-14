@@ -57,8 +57,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
           _buildMembersSection(theme),
           const SizedBox(height: 32),
           _buildFinanceSummary(theme, caps),
-          const SizedBox(height: 32),
-          _buildTasksSection(theme, caps),
+          if (caps.showTasks) ...[
+            const SizedBox(height: 32),
+            _buildTasksSection(theme, caps),
+          ],
           const SizedBox(height: 32),
           _buildShoppingSection(theme),
           const SizedBox(height: 32),

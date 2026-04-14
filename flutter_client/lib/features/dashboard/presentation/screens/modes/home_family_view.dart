@@ -77,21 +77,25 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               delayMs: 60,
               child: _buildChildWallet(theme),
             ),
-            const SizedBox(height: 24),
-            _buildStaggeredSection(
-              delayMs: 120,
-              child: _buildWeeklySummaryBlock(theme, statsAsync),
-            ),
-            const SizedBox(height: 24),
-            _buildStaggeredSection(
-              delayMs: 180,
-              child: _buildWeeklyRankingBlock(theme, statsAsync),
-            ),
-            const SizedBox(height: 32),
-            _buildStaggeredSection(
-              delayMs: 240,
-              child: _buildTasksSection(theme, caps, isChild: true),
-            ),
+            if (caps.showStats) ...[
+              const SizedBox(height: 24),
+              _buildStaggeredSection(
+                delayMs: 120,
+                child: _buildWeeklySummaryBlock(theme, statsAsync),
+              ),
+              const SizedBox(height: 24),
+              _buildStaggeredSection(
+                delayMs: 180,
+                child: _buildWeeklyRankingBlock(theme, statsAsync),
+              ),
+            ],
+            if (caps.showTasks) ...[
+              const SizedBox(height: 32),
+              _buildStaggeredSection(
+                delayMs: 240,
+                child: _buildTasksSection(theme, caps, isChild: true),
+              ),
+            ],
             const SizedBox(height: 32),
             _buildStaggeredSection(
               delayMs: 300,
@@ -112,10 +116,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               delayMs: 140,
               child: _buildFinanceSection(theme, caps),
             ),
-            _buildStaggeredSection(
-              delayMs: 220,
-              child: _buildTasksSection(theme, caps, isChild: false),
-            ),
+            if (caps.showTasks)
+              _buildStaggeredSection(
+                delayMs: 220,
+                child: _buildTasksSection(theme, caps, isChild: false),
+              ),
             const SizedBox(height: 28),
             _buildStaggeredSection(
               delayMs: 300,
@@ -289,20 +294,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     }
 
     final stats = statsAsync.valueOrNull;
-    if (stats == null) {
-      return _buildStatsPlaceholder(
-        theme,
-        title: 'Esta semana en el hogar',
-        subtitle:
-            'Todavia no tenemos suficiente actividad para armar el resumen.',
-        icon: Icons.insights_rounded,
-      );
-    }
 
-    final completedTasks = stats.taskStats
-        .fold(0, (sum, cat) => sum + (cat['count'] as int? ?? 0));
-    final totalCoins = stats.weeklyRanking
-        .fold(0, (sum, member) => sum + (member['coins'] as int? ?? 0));
+    final completedTasks = stats?.taskStats
+            .fold(0, (sum, cat) => sum + (cat['count'] as int? ?? 0)) ??
+        0;
+    final totalCoins = stats?.weeklyRanking
+            .fold(0, (sum, member) => sum + (member['coins'] as int? ?? 0)) ??
+        0;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -479,31 +477,49 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     }
 
     final stats = statsAsync.valueOrNull;
-    if (stats == null) {
-      return _buildStatsPlaceholder(
-        theme,
-        title: 'Ranking semanal',
-        subtitle:
-            'Cuando empiecen a cerrar tareas, el ranking va a aparecer acá.',
-        icon: Icons.emoji_events_outlined,
-      );
-    }
+    final members = ref.watch(householdMembersNotifierProvider).valueOrNull ?? [];
 
-    final ranking = stats.weeklyRanking;
-    if (ranking.isEmpty) {
-      return _buildPlaceholderRanking(theme);
-    }
+    final ranking = stats?.weeklyRanking ?? [];
+    final displayRanking = ranking.isNotEmpty
+        ? ranking
+        : members
+            .where((m) => m.isAdult || m.isChild)
+            .map((m) => {
+                  'display_name': m.displayName,
+                  'coins': 0,
+                  'user_id': m.userId,
+                })
+            .toList();
+
+    final isLive = ranking.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ranking Semanal',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.textPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              'Ranking Semanal',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (!isLive)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Esta semana',
+                  style: TextStyle(fontSize: 10, color: theme.textSecondary),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         Container(
@@ -514,56 +530,86 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
           ),
           child: Column(
-            children: ranking.take(3).map((item) {
-              final isFirst = ranking.indexOf(item) == 0;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
+            children: [
+              ...displayRanking.take(5).toList().asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final isFirst = index == 0;
+                final coins = item['coins'] as int? ?? 0;
+                return Padding(
+                  padding: EdgeInsets.only(
+                      bottom: index < displayRanking.length - 1 ? 12 : 0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: isFirst && coins > 0
+                            ? AppColors.accentGold
+                            : theme.divider.withValues(alpha: 0.1),
+                        child: Text(
+                          (index + 1).toString(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: isFirst && coins > 0
+                                ? Colors.black
+                                : theme.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        item['display_name'] ?? 'Integrante',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isFirst && coins > 0
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          color: theme.textPrimary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: coins > 0
+                              ? theme.primary.withValues(alpha: 0.1)
+                              : theme.divider.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          coins > 0 ? '$coins pts' : '— pts',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: coins > 0
+                                ? theme.primary
+                                : theme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              if (!isLive) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: isFirst
-                          ? AppColors.accentGold
-                          : theme.divider.withValues(alpha: 0.1),
-                      child: Text(
-                        (ranking.indexOf(item) + 1).toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isFirst ? Colors.black : theme.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                    Icon(Icons.emoji_events_outlined,
+                        size: 14, color: theme.textMuted),
+                    const SizedBox(width: 6),
                     Text(
-                      item['display_name'] ?? 'Integrante',
+                      'Completen tareas para sumar puntos',
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: isFirst ? FontWeight.w800 : FontWeight.w600,
-                        color: theme.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: theme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${item['coins'] ?? 0} pts',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: theme.primary,
-                        ),
-                      ),
+                          fontSize: 12, color: theme.textSecondary),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              ],
+            ],
           ),
         ),
       ],
@@ -1179,8 +1225,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               .where((task) => task.isOverdue)
               .toList()
             ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+          final visibleOverdueTasks = overdueTasks.take(4).toList();
+          final remainingOverdueCount =
+              overdueTasks.length - visibleOverdueTasks.length;
+
           final visibleTasks = <TaskModel>[
             ...reviewTasks,
+            ...visibleOverdueTasks,
             ...todayTasks,
           ];
 
@@ -1244,7 +1296,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     return _buildTaskItem(task, theme);
                   },
                 ),
-                if (overdueTasks.isNotEmpty) ...[
+                if (remainingOverdueCount > 0) ...[
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
@@ -1269,9 +1321,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            overdueTasks.length == 1
-                                ? 'Hay 1 tarea atrasada pendiente.'
-                                : 'Hay ${overdueTasks.length} tareas atrasadas pendientes.',
+                            remainingOverdueCount == 1
+                                ? 'Hay 1 tarea atrasada más pendiente.'
+                                : 'Hay $remainingOverdueCount tareas atrasadas más pendientes.',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -1876,8 +1928,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                           size: 20,
                         ),
                         onTap: () {
-                          final index =
-                              indexForMainTab(caps, MainTab.shopping);
+                          final index = indexForMainTab(caps, MainTab.shopping);
                           if (index >= 0) {
                             ref
                                 .read(bottomNavIndexProvider.notifier)

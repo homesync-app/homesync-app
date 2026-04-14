@@ -132,6 +132,8 @@ class FakeSavingsRepository implements SavingsRepository {
   @override
   Future<Either<Failure, List<SavingsGoalModel>>> getGoals({
     required String householdId,
+    int? limit,
+    int? offset,
   }) async =>
       const Right([]);
 }
@@ -209,6 +211,13 @@ class FakeHouseholdRepository implements HouseholdRepository {
   Future<Either<Failure, void>> updateHouseholdType(
     String householdId,
     String type,
+  ) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateTasksEnabled(
+    String householdId,
+    bool enabled,
   ) async =>
       const Right(null);
 

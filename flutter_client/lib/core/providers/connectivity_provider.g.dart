@@ -60,7 +60,7 @@ final connectivityStatusProvider =
 // ignore: unused_element
 typedef ConnectivityStatusRef = AutoDisposeProviderRef<ConnectivityStatus>;
 String _$connectivityNotifierHash() =>
-    r'd5cd7f9ffe71604703c68929593d41b04cf19c89';
+    r'a8545c3466f6c696bd2ccdf9ec9d77f277b8af76';
 
 /// See also [ConnectivityNotifier].
 @ProviderFor(ConnectivityNotifier)

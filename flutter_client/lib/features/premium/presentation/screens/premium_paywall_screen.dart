@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
-class PremiumPaywallScreen extends ConsumerWidget {
+class PremiumPaywallScreen extends ConsumerStatefulWidget {
   const PremiumPaywallScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PremiumPaywallScreen> createState() =>
+      _PremiumPaywallScreenState();
+}
+
+class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(analyticsServiceProvider).trackPaywallOpened(
+            source: 'premium_screen',
+            variant: 'full_screen',
+          );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final productsAsync = ref.watch(premiumProductsProvider);
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
@@ -67,7 +85,7 @@ class PremiumPaywallScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // Logo
                   const HomeSyncLogo(size: 90)
                       .animate()
@@ -107,19 +125,22 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   const _BenefitCard(
                     icon: Icons.auto_graph_rounded,
                     title: 'Estadísticas Avanzadas',
-                    desc: 'Analiza tus gastos y tareas por categoría con gráficos detallados.',
+                    desc:
+                        'Analiza tus gastos y tareas por categoría con gráficos detallados.',
                   ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.2),
 
                   const _BenefitCard(
                     icon: Icons.home_work_rounded,
                     title: 'Hogares Ilimitados',
-                    desc: 'Crea múltiples hogares para tu pareja, familia, amigos o proyectos.',
+                    desc:
+                        'Crea múltiples hogares para tu pareja, familia, amigos o proyectos.',
                   ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.2),
 
                   const _BenefitCard(
                     icon: Icons.palette_rounded,
                     title: 'Personalización Total',
-                    desc: 'Acceso a temas premium, colores únicos y widgets personalizados.',
+                    desc:
+                        'Acceso a temas premium, colores únicos y widgets personalizados.',
                   ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.2),
 
                   const SizedBox(height: 48),
@@ -130,23 +151,23 @@ class PremiumPaywallScreen extends ConsumerWidget {
                   else
                     productsAsync.when(
                       data: (products) => _ProductList(products: products),
-                      loading: () => const CircularProgressIndicator(color: Colors.white),
+                      loading: () =>
+                          const CircularProgressIndicator(color: Colors.white),
                       error: (err, _) => _StoreError(error: err.toString()),
                     ),
 
                   const SizedBox(height: 32),
-                  
+
                   // Footer links
                   TextButton(
-                    onPressed: () => ref
-                        .read(restorePremiumPurchasesUseCaseProvider)
-                        .call(),
+                    onPressed: () =>
+                        ref.read(restorePremiumPurchasesUseCaseProvider).call(),
                     child: const Text(
                       'Restaurar compras',
                       style: TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20),
                 ],
               ),
@@ -163,7 +184,8 @@ class _BenefitCard extends StatelessWidget {
   final String title;
   final String desc;
 
-  const _BenefitCard({required this.icon, required this.title, required this.desc});
+  const _BenefitCard(
+      {required this.icon, required this.title, required this.desc});
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +251,8 @@ class _ProductList extends ConsumerWidget {
           children: [
             const Text(
               'Prueba Gratis disponible',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -237,7 +260,8 @@ class _ProductList extends ConsumerWidget {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
               ),
               onPressed: () async {
                 await ref.read(premiumProvider.notifier).togglePremiumMock();
@@ -251,7 +275,8 @@ class _ProductList extends ConsumerWidget {
     }
 
     return Column(
-      children: products.map((product) => _ProductCard(product: product)).toList(),
+      children:
+          products.map((product) => _ProductCard(product: product)).toList(),
     );
   }
 }
@@ -264,13 +289,13 @@ class _ProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isYearly = product.id.contains('yearly');
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isYearly 
-          ? AppColors.primary.withValues(alpha: 0.15) 
-          : Colors.white.withValues(alpha: 0.1),
+        color: isYearly
+            ? AppColors.primary.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isYearly ? AppColors.primary : Colors.white24,
@@ -278,10 +303,12 @@ class _ProductCard extends ConsumerWidget {
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         title: Text(
           product.title.split('(').first.trim(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         subtitle: Text(
           product.description,
@@ -293,10 +320,17 @@ class _ProductCard extends ConsumerWidget {
           children: [
             Text(
               product.price,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20),
             ),
             if (isYearly)
-              const Text('Ahorra 20%', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+              const Text('Ahorra 20%',
+                  style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
           ],
         ),
         onTap: () => ref.read(buyPremiumProductUseCaseProvider).call(product),
@@ -317,11 +351,13 @@ class _AlreadyPremiumCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.stars_rounded, color: AppColors.accentGold, size: 64),
+          const Icon(Icons.stars_rounded,
+              color: AppColors.accentGold, size: 64),
           const SizedBox(height: 16),
           const Text(
             '¡Ya eres Premium!',
-            style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+            style: TextStyle(
+                color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -336,7 +372,8 @@ class _AlreadyPremiumCard extends StatelessWidget {
               foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white24),
               minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
             ),
             child: const Text('Continuar'),
           ),
@@ -360,11 +397,13 @@ class _StoreError extends ConsumerWidget {
           'Error al conectar con la tienda',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        Text(error, style: const TextStyle(color: Colors.white30, fontSize: 10)),
+        Text(error,
+            style: const TextStyle(color: Colors.white30, fontSize: 10)),
         const SizedBox(height: 24),
         // Switch to allow dev toggle if store fails
         ElevatedButton(
-          onPressed: () => ref.read(premiumProvider.notifier).togglePremiumMock(),
+          onPressed: () =>
+              ref.read(premiumProvider.notifier).togglePremiumMock(),
           child: const Text('Modo Desarrollador: Activar Premium'),
         ),
       ],

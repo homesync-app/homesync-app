@@ -21,11 +21,20 @@ GetRecentActivityUseCase getRecentActivityUseCase(
 }
 
 @riverpod
-Future<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) async {
-  final householdId = await ref.watch(householdIdProvider.future);
-  final userId = ref.watch(currentUserIdProvider);
-  if (householdId == null || userId == null) return [];
+Stream<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) {
+  final householdIdAsync = ref.watch(householdIdProvider);
 
-  final useCase = ref.watch(getRecentActivityUseCaseProvider);
-  return useCase.execute(householdId, userId);
+  return householdIdAsync.when(
+    data: (householdId) {
+      final userId = ref.watch(currentUserIdProvider);
+      if (householdId == null || householdId.isEmpty || userId == null) {
+        return Stream.value([]);
+      }
+
+      final repository = ref.watch(dashboardRepositoryProvider);
+      return repository.watchRecentActivity(householdId, userId);
+    },
+    loading: () => const Stream.empty(),
+    error: (err, stack) => Stream.value([]),
+  );
 }

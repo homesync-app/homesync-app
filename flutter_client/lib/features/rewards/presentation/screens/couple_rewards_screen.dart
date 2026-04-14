@@ -21,10 +21,12 @@ import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
+  final bool showDuel;
 
   const CoupleRewardsScreen({
     super.key,
     required this.householdId,
+    this.showDuel = true,
   });
 
   @override
@@ -45,29 +47,51 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: widget.showDuel ? 2 : 1,
       vsync: this,
-      initialIndex: ref.read(parejaTabIndexProvider),
+      initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
     );
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        ref
-            .read(parejaTabIndexProvider.notifier)
-            .setIndex(_tabController.index);
-      }
-    });
-    _loadDuelStats();
+    if (widget.showDuel) {
+      _tabController.addListener(() {
+        if (!_tabController.indexIsChanging) {
+          ref
+              .read(parejaTabIndexProvider.notifier)
+              .setIndex(_tabController.index);
+        }
+      });
+      _loadDuelStats();
+    }
   }
 
   @override
   void didUpdateWidget(covariant CoupleRewardsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.showDuel != widget.showDuel) {
+      _tabController.dispose();
+      _tabController = TabController(
+        length: widget.showDuel ? 2 : 1,
+        vsync: this,
+        initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
+      );
+      if (widget.showDuel) {
+        _tabController.addListener(() {
+          if (!_tabController.indexIsChanging) {
+            ref
+                .read(parejaTabIndexProvider.notifier)
+                .setIndex(_tabController.index);
+          }
+        });
+        _loadDuelStats();
+      }
+    }
     if (oldWidget.householdId != widget.householdId) {
       _taskStats = [];
       _memberStats = [];
       _weeklyRanking = [];
       _duelHistory = [];
-      _loadDuelStats();
+      if (widget.showDuel) {
+        _loadDuelStats();
+      }
     }
   }
 
@@ -186,15 +210,68 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<int>(parejaTabIndexProvider, (previous, next) {
-      if (_tabController.index != next) {
-        _tabController.animateTo(next);
-      }
-    });
+    if (widget.showDuel) {
+      ref.listen<int>(parejaTabIndexProvider, (previous, next) {
+        if (_tabController.index != next) {
+          _tabController.animateTo(next);
+        }
+      });
+    }
 
     final rewardsAsync = ref.watch(rewardsProvider);
     final currentUserId = ref.read(currentUserIdProvider);
     final theme = context.theme;
+    final tabLabels =
+        widget.showDuel ? const ['Duelo', 'Premios'] : const ['Premios'];
+    final tabViews = [
+      if (widget.showDuel) _buildDuelTab(),
+      rewardsAsync.when(
+        data: (rewards) {
+          final activeRewards = rewards.where((r) => r.isActive).toList();
+          final availableCoins =
+              ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+          final approvedRewards =
+              activeRewards.where((r) => r.isApproved == true).toList();
+          final suggestions =
+              activeRewards.where((r) => r.isApproved == false).toList();
+
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                2,
+                AppSpacing.lg,
+                132,
+              ),
+              children: [
+                _buildCoinsDivider(availableCoins),
+                const SizedBox(height: 18),
+                _buildChallengeSection(widget.householdId),
+                const SizedBox(height: 28),
+                if (approvedRewards.isEmpty)
+                  _buildEmptyState()
+                else
+                  _buildGroupedRewards(approvedRewards),
+                if (suggestions.isNotEmpty) ...[
+                  const SizedBox(height: 28),
+                  _buildPendingProposalsSection(suggestions, currentUserId),
+                ],
+                const SizedBox(height: 32),
+                _buildActionButtons(),
+              ],
+            ),
+          );
+        },
+        loading: () => const AppLoadingState(message: 'Cargando premios...'),
+        error: (e, _) => AppErrorState(
+          message: 'No pudimos cargar premios.\n$e',
+          onRetry: () => ref.invalidate(rewardsProvider),
+        ),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -210,68 +287,14 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
               ),
               child: AppSegmentedTabs(
                 controller: _tabController,
-                labels: const ['Duelo', 'Premios'],
+                labels: tabLabels,
               ),
             ),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildDuelTab(),
-                  rewardsAsync.when(
-                    data: (rewards) {
-                      final activeRewards =
-                          rewards.where((r) => r.isActive).toList();
-                      final availableCoins =
-                          ref.watch(userBalanceProvider).value?['coins'] ?? 0;
-                      final approvedRewards = activeRewards
-                          .where((r) => r.isApproved == true)
-                          .toList();
-                      final suggestions = activeRewards
-                          .where((r) => r.isApproved == false)
-                          .toList();
-
-                      return RefreshIndicator(
-                        color: AppColors.primary,
-                        onRefresh: () =>
-                            ref.read(rewardsProvider.notifier).refresh(),
-                        child: ListView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            2,
-                            AppSpacing.lg,
-                            132,
-                          ),
-                          children: [
-                            _buildChallengeSection(widget.householdId),
-                            const SizedBox(height: 18),
-                            _buildCoinsDivider(availableCoins),
-                            const SizedBox(height: 32),
-                            if (approvedRewards.isEmpty)
-                              _buildEmptyState()
-                            else
-                              _buildGroupedRewards(approvedRewards),
-                            if (suggestions.isNotEmpty) ...[
-                              const SizedBox(height: 28),
-                              _buildPendingProposalsSection(
-                                  suggestions, currentUserId),
-                            ],
-                            const SizedBox(height: 32),
-                            _buildActionButtons(),
-                          ],
-                        ),
-                      );
-                    },
-                    loading: () =>
-                        const AppLoadingState(message: 'Cargando premios...'),
-                    error: (e, _) => AppErrorState(
-                      message: 'No pudimos cargar premios.\n$e',
-                      onRetry: () => ref.invalidate(rewardsProvider),
-                    ),
-                  ),
-                ],
+                children: tabViews,
               ),
             ),
           ],
@@ -634,19 +657,28 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: theme.border.withValues(alpha: 0.45),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowBase.withValues(
+              alpha: theme.isDarkMode ? 0.14 : 0.03,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppColors.accentGold.withValues(alpha: 0.14),
               shape: BoxShape.circle,
@@ -658,13 +690,47 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            '$availableCoins coins disponibles',
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.2,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$availableCoins coins',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.25,
+                    height: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Disponibles para canjear ahora',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Text(
+              'Saldo',
+              style: TextStyle(
+                color: AppColors.accentGold,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.2,
+              ),
             ),
           ),
         ],
@@ -711,7 +777,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         gradient: LinearGradient(
           colors: [
             theme.surface,
-            AppColors.surfaceVariant,
+            theme.surfaceVariant,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -883,11 +949,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFFBF7),
-            Color(0xFFFFF4EB),
-          ],
+        gradient: LinearGradient(
+          colors: theme.isDarkMode
+              ? [
+                  theme.elevatedSurface,
+                  theme.surface,
+                ]
+              : const [
+                  Color(0xFFFFFBF7),
+                  Color(0xFFFFF4EB),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1504,7 +1575,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                                 () => selectedCategory = category),
                         selectedColor:
                             AppColors.primary.withValues(alpha: 0.14),
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
                         labelStyle: TextStyle(
                           color: selected
                               ? AppColors.primary

@@ -12,6 +12,7 @@ import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'stats_shared_widgets.dart';

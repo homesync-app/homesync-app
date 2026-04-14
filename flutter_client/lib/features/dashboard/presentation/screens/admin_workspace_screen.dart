@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
@@ -608,6 +609,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+              _CatalogRequestsSection(theme: theme),
+              const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -766,6 +769,158 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
     return '$dd/$mon $hh:$mm';
   }
 }
+
+// ─── Catálogo Pendiente ──────────────────────────────────────────────────────
+
+class _CatalogRequestsSection extends ConsumerWidget {
+  final dynamic theme;
+  const _CatalogRequestsSection({required this.theme});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final requestsAsync = ref.watch(_catalogRequestsProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('📦', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Catálogo Pendiente',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Productos que los usuarios agregan y no están en el catálogo',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                onPressed: () => ref.invalidate(_catalogRequestsProvider),
+                tooltip: 'Actualizar',
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          requestsAsync.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return Text(
+                  'Sin productos pendientes aún 🎉',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                );
+              }
+              return Column(
+                children: items.map((item) {
+                  final name = item['name'] as String;
+                  final emoji = item['emoji'] as String? ?? '🛒';
+                  final count = item['total_count'] as int? ?? 1;
+                  final lastSeen = item['last_seen_at'] != null
+                      ? DateTime.tryParse(item['last_seen_at'] as String)
+                      : null;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Text(emoji, style: const TextStyle(fontSize: 22)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: theme.textPrimary,
+                                ),
+                              ),
+                              if (lastSeen != null)
+                                Text(
+                                  'Última vez: ${lastSeen.day}/${lastSeen.month}/${lastSeen.year}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.textSecondary,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: count >= 5
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : AppColors.divider.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '$count veces',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: count >= 5
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => const LinearProgressIndicator(minHeight: 3),
+            error: (e, _) => Text(
+              'Error cargando catálogo: $e',
+              style: TextStyle(color: theme.error, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final _catalogRequestsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final response = await client
+      .from('shopping_catalog_requests')
+      .select('name, emoji, total_count, last_seen_at')
+      .order('total_count', ascending: false)
+      .limit(50);
+  return List<Map<String, dynamic>>.from(response as List);
+});
 
 class _ScenarioCard extends StatelessWidget {
   const _ScenarioCard({

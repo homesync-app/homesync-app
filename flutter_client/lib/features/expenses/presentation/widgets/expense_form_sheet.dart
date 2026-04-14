@@ -254,13 +254,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } on ScanLimitException catch (e) {
       debugPrint('[ReceiptScan] Límite alcanzado: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: AppColors.warning,
-          duration: const Duration(seconds: 8),
-        ),
-      );
+      if (e.isPremium) {
+        // Usuario premium que agotó sus 50 scans: solo informar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      } else {
+        // Usuario free que agotó sus 10 scans: mostrar paywall
+        PremiumPaywall.show(context);
+      }
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
@@ -284,11 +290,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         _titleController.text = result.merchant!;
       }
       if (result.amount != null) {
-        // El parser espera formato es_ES: punto = miles, coma = decimal.
-        // toStringAsFixed usa punto como decimal → el parser lo borra como miles → bug.
-        // Fix: reemplazar el punto decimal por coma antes de asignar.
-        _amountController.text =
-            result.amount!.toStringAsFixed(2).replaceAll('.', ',');
+        _amountController.text = _formatAmountFromOcr(result.amount!);
       }
       if (result.date != null) {
         _selectedDate = result.date!;
@@ -321,17 +323,23 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             .toList() ??
         const <ShoppingItemModel>[];
 
-    final result = ReceiptMatcher.match(
+    final householdId =
+        ref.read(currentHouseholdProvider).valueOrNull?.id ?? '';
+
+    final result = resolveScanItems(
       ocrItems: ocrItems,
       pendingShoppingItems: pending,
+      householdId: householdId,
     );
 
     setState(() {
       _ocrMatchedShoppingItems
         ..clear()
-        ..addAll(result.matched);
-      _selectedShoppingItems.addAll(result.matched);
-      _unmatchedOcrItems = result.unmatched;
+        ..addAll(result.allLinked);
+      _selectedShoppingItems
+        ..removeAll(_ocrMatchedShoppingItems)
+        ..addAll(result.allLinked);
+      _unmatchedOcrItems = result.unrecognized;
     });
   }
 
@@ -460,12 +468,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         (_) {},
       );
 
+      int shoppingItemsSynced = 0;
       if (_selectedShoppingItems.isNotEmpty) {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
         final userId = ref.read(currentUserIdProvider);
         for (final item in _selectedShoppingItems) {
           if (item.id.startsWith('temp_')) {
-            final result = await shoppingRepo.addItem(
+            // Nuevo item (detectado por OCR, no estaba en la lista):
+            // primero lo agrega, luego lo marca como comprado.
+            final addResult = await shoppingRepo.addItem(
               name: item.name,
               category: (item.category != 'general')
                   ? item.category
@@ -475,20 +486,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               householdId: householdId,
             );
 
-            await result.fold(
-              (l) async => null,
-              (newItem) async => await shoppingRepo.toggleItem(
+            // Usar match explícito para garantizar que el await del toggleItem
+            // se resuelve correctamente (fold con lambdas async no siempre await bien).
+            if (addResult.isRight()) {
+              final newItem = addResult.getRight().toNullable()!;
+              await shoppingRepo.toggleItem(
                 itemId: newItem.id,
                 completed: true,
                 userId: userId,
-              ),
-            );
+              );
+              shoppingItemsSynced++;
+            }
           } else {
-            await shoppingRepo.toggleItem(
+            final toggleResult = await shoppingRepo.toggleItem(
               itemId: item.id,
               completed: true,
               userId: userId,
             );
+            if (toggleResult.isRight()) shoppingItemsSynced++;
           }
         }
         ref.invalidate(shoppingItemsProvider);
@@ -507,11 +522,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         await Future<void>.delayed(const Duration(milliseconds: 420));
         if (!mounted) return;
         Navigator.pop(context);
+        final baseMsg = widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado';
+        final shoppingMsg = shoppingItemsSynced > 0
+            ? ' · $shoppingItemsSynced ${shoppingItemsSynced == 1 ? 'artículo' : 'artículos'} comprados ✅'
+            : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.expense != null
-                ? 'Gasto actualizado'
-                : 'Gasto guardado'),
+            content: Text('$baseMsg$shoppingMsg'),
             backgroundColor: AppColors.primary,
           ),
         );
@@ -769,6 +786,16 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   String _formatInputAmount(double value) {
     if (value <= 0) return '';
     return NumberFormat.decimalPattern('es_ES').format(value.round());
+  }
+
+  /// Formatea el monto detectado por OCR al estilo argentino: punto para miles,
+  /// coma para decimal. Ej: 10666.5 → "10.666,50"
+  String _formatAmountFromOcr(double amount) {
+    if (amount <= 0) return '';
+    final intPart = amount.truncate();
+    final decPart = ((amount - intPart) * 100).round().abs();
+    final intFormatted = NumberFormat('#,##0', 'es_ES').format(intPart);
+    return '$intFormatted,${decPart.toString().padLeft(2, '0')}';
   }
 
   void _dismissKeyboard() {
@@ -1081,16 +1108,23 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
     if (_isIncome) return const SizedBox.shrink();
 
+    // Para usuarios no-premium, no mostrar la sección de vinculación.
+    // El scan solo pre-rellena monto y categoría.
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    if (!isPremium) return const SizedBox.shrink();
+
     return shoppingItemsAsync.when(
       data: (allItems) {
-        final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+        // Items auto-agregados por OCR (temp_) vs los que ya estaban en lista
+        final ocrAutoAdded = _ocrMatchedShoppingItems
+            .where((i) => i.id.startsWith('temp_'))
+            .toSet();
 
         return ExpenseShoppingIntegrationCard(
-          isPremium: isPremium,
-          linkedItemsCount: _selectedShoppingItems.length,
-          onTap: isPremium
-              ? () => _showShoppingItemsSelector(context)
-              : () => PremiumPaywall.show(context),
+          isPremium: true,
+          linkedItems: _selectedShoppingItems.toList(),
+          autoAddedItems: ocrAutoAdded,
+          onTap: () => _showShoppingItemsSelector(context),
         );
       },
       loading: () => const SizedBox.shrink(),

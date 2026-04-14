@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -7,6 +8,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? members;
@@ -34,6 +36,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   final Set<int> _selectedMonthDays = {};
   bool _customRewards = false;
   bool _isLoading = false;
+  bool _showSuccessState = false;
   List<Map<String, dynamic>> _members = [];
 
   final List<Map<String, dynamic>> _difficulties = [
@@ -196,6 +199,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             : null,
       });
 
+      if (!mounted) return;
+      HapticFeedback.mediumImpact();
+      setState(() => _showSuccessState = true);
+      await Future<void>.delayed(const Duration(milliseconds: 420));
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
@@ -207,7 +214,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _showSuccessState = false;
+        });
+      }
     }
   }
 
@@ -223,7 +235,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         _selectedCategory ?? (categories.isNotEmpty ? categories.first.id : '');
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       child: Container(
@@ -511,33 +523,76 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                             ),
                           ],
                         ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleSubmit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.textPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                        child: AnimatedPress(
+                          scale: _isLoading ? 1 : 0.97,
+                          onTap: _isLoading ? null : _handleSubmit,
+                          child: ElevatedButton(
+                            onPressed: null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.textPrimary,
+                              disabledBackgroundColor: AppColors.textPrimary,
+                              disabledForegroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              switchInCurve: Curves.easeOutBack,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      key: ValueKey('loading'),
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : _showSuccessState
+                                      ? const Row(
+                                          key: ValueKey('success'),
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle_rounded,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text(
+                                              'Tarea creada',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const Text(
+                                          key: ValueKey('idle'),
+                                          'Crear tarea',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                            ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Crear tarea',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
                         ),
                       ),
                     ),

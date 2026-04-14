@@ -12,6 +12,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 
@@ -35,6 +36,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -50,7 +52,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
           const SizedBox(height: AppSpacing.lg),
           _buildFinancialSummary(widget.householdId),
           const SizedBox(height: 32),
-          _buildTasksSection(theme),
+          if (caps.showTasks)
+            _buildTasksSection(theme)
+          else
+            const HomeShoppingPreviewCard(),
           const SizedBox(height: 32),
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),

@@ -34,16 +34,12 @@ flutter pub get
 
 ### 2. Configurar Entorno
 
-Editar `lib/config/app_environment.dart`:
-
-```dart
-static const Environment current = Environment.staging;
-```
+Copiar `.env.example` a `.env.local` y completar los valores reales.
 
 ### 3. Ejecutar App
 
 ```bash
-flutter run
+flutter run --dart-define-from-file=.env.local
 ```
 
 ---
@@ -53,23 +49,17 @@ flutter run
 ### Testing en Local
 
 ```bash
-# Configurar a local en lib/config/app_environment.dart
-static const Environment current = Environment.local;
-
 flutter clean
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=.env.local --dart-define=APP_ENV=local
 ```
 
 ### Testing en Staging
 
 ```bash
-# Configurar a staging en lib/config/app_environment.dart
-static const Environment current = Environment.staging;
-
 flutter clean
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=.env.local --dart-define=APP_ENV=staging
 ```
 
 Ver `STAGING_DEPLOY_CHECKLIST.md` para tests completos.

@@ -44,9 +44,8 @@ class FamilyTaskCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isPendingReview
-              ? accent.withValues(alpha: 0.08)
-              : theme.surface,
+          color:
+              isPendingReview ? accent.withValues(alpha: 0.08) : theme.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isPendingReview
@@ -115,7 +114,7 @@ class FamilyTaskCard extends StatelessWidget {
                                   : accent,
                         ),
                       _FamilyTaskPill(
-                        icon: Icons.bolt_rounded,
+                        icon: Icons.star_rounded,
                         label: '${task.xpReward} XP',
                         color: const Color(0xFFF0A146),
                       ),

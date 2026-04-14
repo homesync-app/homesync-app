@@ -300,7 +300,7 @@ final savingsSuggesterProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SavingsSuggesterRef = AutoDisposeFutureProviderRef<SavingsSuggestion?>;
-String _$savingsGoalsHash() => r'891a58e1b4a40bf6e7ce4f807b6336f51ed3caa5';
+String _$savingsGoalsHash() => r'2cd702ac51a75d2bac434418109c4fae9b159c87';
 
 /// See also [SavingsGoals].
 @ProviderFor(SavingsGoals)

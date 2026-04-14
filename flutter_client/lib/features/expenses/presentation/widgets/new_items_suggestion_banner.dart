@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
-import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
-/// Banner que aparece en el formulario de gasto cuando el OCR detectó productos
-/// que no están en la lista de compras activa.
-///
-/// Usa [shoppingItemsProvider.notifier.addItem] para agregar items —
-/// no baja al repositorio directamente.
+/// Banner que aparece en el formulario de gasto cuando el OCR detecto productos
+/// que no estan en la lista de compras activa.
 class NewItemsSuggestionBanner extends ConsumerStatefulWidget {
   final List<String> items;
   final VoidCallback onDismiss;
@@ -43,33 +39,35 @@ class _NewItemsSuggestionBannerState
     try {
       final notifier = ref.read(shoppingItemsProvider.notifier);
       for (final rawName in _selected) {
-        final cleanName = ReceiptMatcher.cleanName(rawName);
-        if (cleanName.isEmpty) continue;
-
-        // Buscar emoji y categoría en predefinidos para que el item quede bien
-        final predefined = ShoppingPredefined.findByName(rawName);
+        final predefined = ReceiptMatcher.findPredefined(rawName);
+        final displayName = predefined?.name ?? ReceiptMatcher.cleanName(rawName);
+        if (displayName.isEmpty) continue;
 
         await notifier.addItem(
-          name: cleanName,
-          emoji: predefined?['emoji'] ?? '🛒',
-          category: predefined?['category'] ?? 'general',
+          name: displayName,
+          emoji: predefined?.emoji ?? '🛒',
+          category: predefined?.category ?? 'general',
         );
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${_selected.length} productos agregados a la lista'),
-          backgroundColor: AppColors.success,
-          duration: const Duration(seconds: 2),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_selected.length} productos agregados a la lista'),
+            backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 2),
+          ),
+        );
         widget.onDismiss();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error al agregar: $e'),
-          backgroundColor: AppColors.error,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al agregar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);
@@ -84,8 +82,10 @@ class _NewItemsSuggestionBannerState
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.accentBlue.withOpacity(0.08),
-        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+        color: AppColors.accentBlue.withValues(alpha: 0.08),
+        border: Border.all(
+          color: AppColors.accentBlue.withValues(alpha: 0.3),
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -106,17 +106,19 @@ class _NewItemsSuggestionBannerState
               ),
               GestureDetector(
                 onTap: widget.onDismiss,
-                child: Icon(Icons.close,
-                    size: 18,
-                    color: theme.colorScheme.onSurface.withOpacity(0.4)),
+                child: Icon(
+                  Icons.close,
+                  size: 18,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            '¿Los agregamos a la lista para la próxima?',
+            'Los agregamos a la lista para la proxima?',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 10),
@@ -125,22 +127,28 @@ class _NewItemsSuggestionBannerState
             runSpacing: 6,
             children: widget.items.map((item) {
               final isSelected = _selected.contains(item);
+              final predefined = ReceiptMatcher.findPredefined(item);
+              final label = predefined != null
+                  ? '${predefined.emoji} ${predefined.name}'
+                  : ReceiptMatcher.cleanName(item);
               return FilterChip(
                 label: Text(
-                  ReceiptMatcher.cleanName(item),
+                  label,
                   style: const TextStyle(fontSize: 12),
                 ),
                 selected: isSelected,
                 onSelected: _isAdding
                     ? null
-                    : (val) => setState(() {
-                          if (val) {
+                    : (value) {
+                        setState(() {
+                          if (value) {
                             _selected.add(item);
                           } else {
                             _selected.remove(item);
                           }
-                        }),
-                selectedColor: AppColors.accentBlue.withOpacity(0.2),
+                        });
+                      },
+                selectedColor: AppColors.accentBlue.withValues(alpha: 0.2),
                 checkmarkColor: AppColors.accentBlue,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
               );

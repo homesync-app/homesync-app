@@ -63,7 +63,7 @@ final currentUserProfileProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CurrentUserProfileRef = AutoDisposeFutureProviderRef<UserModel?>;
-String _$authControllerHash() => r'0b7d5532bffa6059a2baefc292ec4a99bd85687e';
+String _$authControllerHash() => r'939c3808c8e20d3dd99ae6e3ea3e640965f9ef7e';
 
 /// Controller that manages the authentication state and actions.
 /// It wraps the AuthRepository and provides a unified interface for the UI.

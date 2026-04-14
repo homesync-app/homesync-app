@@ -160,9 +160,13 @@ class SavingsGoals extends _$SavingsGoals {
           splitType: SplitType.personal,
           type: 'expense',
         );
-      } catch (e) {
+      } catch (e, stack) {
         // Log error but don't fail the whole operation if ledger failed
-        log.w('Error creating expense for contribution', error: e);
+        log.w(
+          'Error creating expense for contribution',
+          error: e,
+          stackTrace: stack,
+        );
       }
       
       ref.invalidate(goalContributionsProvider(goalId));

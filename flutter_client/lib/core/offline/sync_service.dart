@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/offline/offline_action_processor.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 class SyncResult {
   final int processed;
@@ -56,7 +57,7 @@ class SyncService {
 
           await _queueService.markCompleted(request.id!);
           successful++;
-        } catch (e) {
+        } catch (e, stack) {
           final retryCount =
               await _queueService.incrementRetryAndGet(request.id!);
           if (retryCount >= _maxRetries) {
@@ -66,6 +67,11 @@ class SyncService {
               retryCount: retryCount,
             );
           }
+          log.w(
+            'SyncService failed processing queued request ${request.id}',
+            error: e,
+            stackTrace: stack,
+          );
           failed++;
           errors.add('Request ${request.id} failed: $e');
         }
@@ -156,7 +162,8 @@ class SyncNotifier extends Notifier<SyncState> {
         lastError: result.errors.isNotEmpty ? result.errors.first : null,
         pendingCount: await _syncService.getPendingCount(),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      log.e('SyncNotifier.sync failed', error: e, stackTrace: stack);
       state = state.copyWith(
         isSyncing: false,
         lastError: e.toString(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 
@@ -9,10 +10,12 @@ class CoupleSplitStrategyScreen extends ConsumerStatefulWidget {
   const CoupleSplitStrategyScreen({super.key});
 
   @override
-  ConsumerState<CoupleSplitStrategyScreen> createState() => _CoupleSplitStrategyScreenState();
+  ConsumerState<CoupleSplitStrategyScreen> createState() =>
+      _CoupleSplitStrategyScreenState();
 }
 
-class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyScreen> {
+class _CoupleSplitStrategyScreenState
+    extends ConsumerState<CoupleSplitStrategyScreen> {
   double _splitRatio = 0.5;
   bool _isSaving = false;
   final ScrollController _scrollController = ScrollController();
@@ -38,14 +41,14 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
 
     try {
       final household = ref.read(currentHouseholdProvider).valueOrNull;
-      
+
       if (household != null) {
         final result = await ref
             .read(updateDefaultSplitRatioUseCaseProvider)
             .call(household.id, _splitRatio);
         result.fold((failure) => throw failure, (_) {});
         ref.invalidate(currentHouseholdProvider);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -59,8 +62,9 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al guardar: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: AppColors.error));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -70,7 +74,7 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.theme.scaffoldBackground,
       body: Stack(
         children: [
           // Background Decor
@@ -86,7 +90,7 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
               ),
             ),
           ),
-          
+
           CustomScrollView(
             controller: _scrollController,
             slivers: [
@@ -94,7 +98,7 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                 expandedHeight: 200,
                 pinned: true,
                 stretch: true,
-                backgroundColor: AppColors.background,
+                backgroundColor: context.theme.scaffoldBackground,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
@@ -116,14 +120,14 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                             color: AppColors.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Text('⚖️', style: TextStyle(fontSize: 48)),
+                          child:
+                              const Text('⚖️', style: TextStyle(fontSize: 48)),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              
               SliverPadding(
                 padding: const EdgeInsets.all(24.0),
                 sliver: SliverList(
@@ -133,13 +137,12 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                       'No hay una única forma correcta. Cada pareja es un mundo y la mejor estrategia es la que les dé paz mental a ambos.',
                     ),
                     const SizedBox(height: 32),
-                    
                     const Text(
                       'Estrategias comunes',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 16),
-                    
                     _buildStrategyItem(
                       '50% / 50% (Igualitario)',
                       'Ideal cuando ambos tienen ingresos similares. Cada uno aporta la mitad de los gastos compartidos.',
@@ -147,7 +150,6 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                       isActive: _splitRatio == 0.5,
                       onTap: () => setState(() => _splitRatio = 0.5),
                     ),
-                    
                     _buildStrategyItem(
                       '60% / 40% (Equitativo)',
                       'Si hay una diferencia de ingresos, el que gana más aporta una parte mayor proporcionalmente.',
@@ -155,33 +157,31 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                       isActive: _splitRatio != 0.5,
                       onTap: () {}, // Handled by slider
                     ),
-                    
                     const SizedBox(height: 48),
-                    
                     const Text(
                       'Configuración personalizada',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'Ajusta el porcentaje que tú aportarás de forma predeterminada.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 14),
                     ),
-                    
                     const SizedBox(height: 32),
-                    
                     _buildSplitVisualizer(),
-                    
                     const SizedBox(height: 24),
-                    
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: AppColors.primary,
-                        inactiveTrackColor: AppColors.primary.withValues(alpha: 0.1),
+                        inactiveTrackColor:
+                            AppColors.primary.withValues(alpha: 0.1),
                         thumbColor: AppColors.primary,
                         overlayColor: AppColors.primary.withValues(alpha: 0.2),
                         trackHeight: 8,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 15),
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 15),
                       ),
                       child: Slider(
                         value: _splitRatio,
@@ -194,20 +194,20 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                         },
                       ),
                     ),
-                    
                     const SizedBox(height: 64),
-                    
                     ElevatedButton(
                       onPressed: _isSaving ? null : _saveRatio,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
                       ),
                       child: _isSaving
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Guardar Configuración', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Guardar Configuración',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w800)),
                     ),
-                    
                     const SizedBox(height: 100),
                   ]),
                 ),
@@ -232,19 +232,26 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
         children: [
           Row(
             children: [
-              const Icon(Icons.info_outline_rounded, color: AppColors.accentTeal, size: 20),
+              const Icon(Icons.info_outline_rounded,
+                  color: AppColors.accentTeal, size: 20),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.accentTeal)),
+              Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.accentTeal)),
             ],
           ),
           const SizedBox(height: 12),
-          Text(desc, style: const TextStyle(height: 1.5, color: AppColors.textPrimary)),
+          Text(desc,
+              style:
+                  const TextStyle(height: 1.5, color: AppColors.textPrimary)),
         ],
       ),
     );
   }
 
-  Widget _buildStrategyItem(String title, String desc, String emoji, {required bool isActive, required VoidCallback onTap}) {
+  Widget _buildStrategyItem(String title, String desc, String emoji,
+      {required bool isActive, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -254,8 +261,17 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isActive ? AppColors.primary : Colors.transparent, width: 2),
-          boxShadow: isActive ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))] : [],
+          border: Border.all(
+              color: isActive ? AppColors.primary : Colors.transparent,
+              width: 2),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))
+                ]
+              : [],
         ),
         child: Row(
           children: [
@@ -265,12 +281,16 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-                  Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(desc,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
                 ],
               ),
             ),
-            if (isActive) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+            if (isActive)
+              const Icon(Icons.check_circle_rounded, color: AppColors.primary),
           ],
         ),
       ),
@@ -280,7 +300,7 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
   Widget _buildSplitVisualizer() {
     final youPercent = (_splitRatio * 100).toInt();
     final partnerPercent = 100 - youPercent;
-    
+
     return Column(
       children: [
         Row(
@@ -289,15 +309,29 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('VOS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: AppColors.primary)),
-                Text('$youPercent%', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+                const Text('VOS',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                        color: AppColors.primary)),
+                Text('$youPercent%',
+                    style: const TextStyle(
+                        fontSize: 32, fontWeight: FontWeight.w900)),
               ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text('TU PAREJA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: AppColors.error)),
-                Text('$partnerPercent%', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900)),
+                const Text('TU PAREJA',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                        color: AppColors.error)),
+                Text('$partnerPercent%',
+                    style: const TextStyle(
+                        fontSize: 32, fontWeight: FontWeight.w900)),
               ],
             ),
           ],
@@ -316,12 +350,15 @@ class _CoupleSplitStrategyScreenState extends ConsumerState<CoupleSplitStrategyS
                 duration: const Duration(milliseconds: 300),
                 width: MediaQuery.of(context).size.width * 0.8 * _splitRatio,
                 color: AppColors.primary,
-                child: const Center(child: Icon(Icons.person, color: Colors.white, size: 16)),
+                child: const Center(
+                    child: Icon(Icons.person, color: Colors.white, size: 16)),
               ),
               Expanded(
                 child: Container(
                   color: AppColors.error.withValues(alpha: 0.7),
-                  child: const Center(child: Icon(Icons.favorite, color: Colors.white, size: 16)),
+                  child: const Center(
+                      child:
+                          Icon(Icons.favorite, color: Colors.white, size: 16)),
                 ),
               ),
             ],

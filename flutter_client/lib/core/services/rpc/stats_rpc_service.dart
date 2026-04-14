@@ -142,8 +142,8 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      log.e('Error getting duel history: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error getting duel history: $e', error: e, stackTrace: stack);
       return [];
     }
   }
@@ -174,8 +174,8 @@ class StatsRpcService extends BaseRpcService {
       );
 
       return Map<String, dynamic>.from(response);
-    } catch (e) {
-      log.e('Error saving duel result: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error saving duel result: $e', error: e, stackTrace: stack);
       return {'success': false, 'message': e.toString()};
     }
   }

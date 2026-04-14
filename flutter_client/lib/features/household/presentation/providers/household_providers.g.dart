@@ -25,7 +25,7 @@ final currentHouseholdProvider =
 // ignore: unused_element
 typedef CurrentHouseholdRef = AutoDisposeFutureProviderRef<HouseholdModel?>;
 String _$householdCapabilitiesHash() =>
-    r'87cb4b247af30837b93cdf79c8482e569b01eef5';
+    r'd4442a6f791432a6b81009bd4ce6e6b373a9dab7';
 
 /// See also [householdCapabilities].
 @ProviderFor(householdCapabilities)

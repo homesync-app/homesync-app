@@ -91,6 +91,8 @@ class SettingsAppearanceCard extends StatelessWidget {
   final bool isPremium;
   final ValueChanged<ThemePalette> onPaletteTap;
   final VoidCallback onLockedTap;
+  final ThemeMode currentThemeMode;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
 
   const SettingsAppearanceCard({
     super.key,
@@ -98,6 +100,8 @@ class SettingsAppearanceCard extends StatelessWidget {
     required this.isPremium,
     required this.onPaletteTap,
     required this.onLockedTap,
+    required this.currentThemeMode,
+    required this.onThemeModeChanged,
   });
 
   @override
@@ -159,6 +163,11 @@ class SettingsAppearanceCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          SettingsThemeModeSelector(
+            currentMode: currentThemeMode,
+            onModeChanged: onThemeModeChanged,
           ),
           const SizedBox(height: 16),
           SettingsThemePalettePicker(
@@ -284,6 +293,98 @@ class SettingsThemePalettePicker extends StatelessWidget {
               );
             },
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class SettingsThemeModeSelector extends StatelessWidget {
+  final ThemeMode currentMode;
+  final ValueChanged<ThemeMode> onModeChanged;
+
+  const SettingsThemeModeSelector({
+    super.key,
+    required this.currentMode,
+    required this.onModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    final options = [
+      (ThemeMode.light, Icons.light_mode_rounded, 'Claro'),
+      (ThemeMode.dark, Icons.dark_mode_rounded, 'Oscuro'),
+      (ThemeMode.system, Icons.brightness_auto_rounded, 'Sistema'),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Modo del Tema',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: theme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: options.map((opt) {
+            final (mode, icon, label) = opt;
+            final isSelected = currentMode == mode;
+            return Expanded(
+              child: Padding(
+                padding:
+                    EdgeInsets.only(right: mode != ThemeMode.system ? 8 : 0),
+                child: GestureDetector(
+                  onTap: () => onModeChanged(mode),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.primary.withValues(alpha: 0.12)
+                          : theme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.primary
+                            : theme.border.withValues(alpha: 0.3),
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 16,
+                          color:
+                              isSelected ? theme.primary : theme.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.w800 : FontWeight.w600,
+                            color: isSelected
+                                ? theme.primary
+                                : theme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

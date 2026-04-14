@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -25,17 +26,18 @@ class AvatarPickerSheet extends ConsumerWidget {
   Future<void> _updateAvatar(
     BuildContext context,
     WidgetRef ref,
-    String emoji,
+    String avatarValue,
   ) async {
     try {
-      final normalizedEmoji = UserAvatar.normalizeAvatarValue(emoji) ?? emoji;
+      final normalizedAvatar =
+          UserAvatar.normalizeAvatarValue(avatarValue) ?? avatarValue;
       final userId = ref.read(currentUserIdProvider);
       if (userId == null || userId.isEmpty) throw Exception('No autenticado');
 
       final client = ref.read(supabaseClientProvider);
       await client
           .from('users')
-          .update({'avatar_url': normalizedEmoji}).eq('id', userId);
+          .update({'avatar_url': normalizedAvatar}).eq('id', userId);
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersNotifierProvider);
@@ -70,6 +72,7 @@ class AvatarPickerSheet extends ConsumerWidget {
         data: (p) => p?['avatar_url'] as String?,
       ),
     );
+    final googlePhotoUrl = _resolveGooglePhotoUrl();
 
     return Container(
       constraints: BoxConstraints(
@@ -121,6 +124,15 @@ class AvatarPickerSheet extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Column(
                   children: [
+                    if (googlePhotoUrl != null) ...[
+                      _GoogleAvatarOption(
+                        photoUrl: googlePhotoUrl,
+                        isSelected: currentAvatar == googlePhotoUrl,
+                        onTap: () =>
+                            _updateAvatar(context, ref, googlePhotoUrl),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     Wrap(
                       spacing: 16,
                       runSpacing: 16,
@@ -146,7 +158,8 @@ class AvatarPickerSheet extends ConsumerWidget {
                     const SizedBox(height: 24),
                     Consumer(
                       builder: (context, ref, _) {
-final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+                        final isPremium =
+                            ref.watch(premiumProvider).valueOrNull ?? false;
                         return OutlinedButton.icon(
                           onPressed: isPremium
                               ? () => _showCustomAvatarDialog(context, ref)
@@ -168,6 +181,30 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
         ),
       ),
     );
+  }
+
+  String? _resolveGooglePhotoUrl() {
+    final currentUser = fa.FirebaseAuth.instance.currentUser;
+    final directPhotoUrl = currentUser?.photoURL?.trim();
+    if (_isValidNetworkAvatar(directPhotoUrl)) {
+      return directPhotoUrl;
+    }
+
+    for (final profile in currentUser?.providerData ?? const <fa.UserInfo>[]) {
+      if (profile.providerId != 'google.com') continue;
+
+      final providerPhotoUrl = profile.photoURL?.trim();
+      if (_isValidNetworkAvatar(providerPhotoUrl)) {
+        return providerPhotoUrl;
+      }
+    }
+
+    return null;
+  }
+
+  bool _isValidNetworkAvatar(String? value) {
+    if (value == null || value.isEmpty) return false;
+    return value.startsWith('http://') || value.startsWith('https://');
   }
 
   void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
@@ -199,6 +236,80 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
             child: const Text('Guardar'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GoogleAvatarOption extends StatelessWidget {
+  const _GoogleAvatarOption({
+    required this.photoUrl,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String photoUrl;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Ink(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.45,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            CustomUserAvatar(
+              avatarUrl: photoUrl,
+              radius: 28,
+              showBorder: true,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Foto de Google',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Usa la imagen de tu cuenta de Google como avatar.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Icon(
+              isSelected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: isSelected
+                  ? AppColors.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
       ),
     );
   }

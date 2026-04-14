@@ -33,17 +33,25 @@ final authStateProvider = StreamProvider<AppAuthState>((ref) {
   }
 
   final repository = ref.watch(authRepositoryProvider);
-  return repository.authStateChanges.map(
-    (state) => AppAuthState(
-      isAuthenticated: state.session != null ||
-          state.event == AuthChangeEvent.signedIn ||
-          state.event == AuthChangeEvent.tokenRefreshed ||
-          state.event == AuthChangeEvent.userUpdated,
-      source: AppEnvironment.usesFirebaseJwtForSupabase
-          ? 'firebase'
-          : 'supabase',
-    ),
-  );
+  return repository.authStateChanges
+      .map(
+        (state) => AppAuthState(
+          isAuthenticated: AppEnvironment.usesFirebaseJwtForSupabase
+              ? state.session != null
+              : state.session != null ||
+                  state.event == AuthChangeEvent.signedIn ||
+                  state.event == AuthChangeEvent.tokenRefreshed ||
+                  state.event == AuthChangeEvent.userUpdated,
+          source: AppEnvironment.usesFirebaseJwtForSupabase
+              ? 'firebase+supabase'
+              : 'supabase',
+        ),
+      )
+      .distinct(
+        (previous, next) =>
+            previous.isAuthenticated == next.isAuthenticated &&
+            previous.source == next.source,
+      );
 });
 
 Future<void> _applySessionDiagnostics(String? userId) async {

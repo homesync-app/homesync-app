@@ -34,8 +34,8 @@ class AdminRpcService extends BaseRpcService {
       };
 
       await client.from('application_logs').insert(logData);
-    } catch (e) {
-      log.e('Failed to log error to Supabase', error: e);
+    } catch (e, stack) {
+      log.e('Failed to log error to Supabase', error: e, stackTrace: stack);
     }
   }
 

@@ -220,8 +220,13 @@ class CombinedFeedController extends _$CombinedFeedController {
     final repo = ref.watch(expenseRepositoryProvider);
     try {
       await repo.processRecurringExpenses(householdId);
-    } catch (e) {
+    } catch (e, stack) {
       // Ignore background processing errors to not block the feed
+      log.w(
+        'CombinedFeed recurring expense processing failed: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
 
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);

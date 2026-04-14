@@ -33,11 +33,16 @@ class AIFaceoffWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFFBF7),
-            Color(0xFFFFF4EB),
-          ],
+        gradient: LinearGradient(
+          colors: theme.isDarkMode
+              ? [
+                  theme.elevatedSurface,
+                  theme.surface,
+                ]
+              : const [
+                  Color(0xFFFFFBF7),
+                  Color(0xFFFFF4EB),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

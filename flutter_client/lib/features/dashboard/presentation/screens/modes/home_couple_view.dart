@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -10,6 +11,7 @@ import 'package:homesync_client/features/dashboard/presentation/main_navigation.
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
@@ -42,6 +44,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final caps = ref.watch(householdCapabilitiesProvider);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -60,7 +63,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           const SizedBox(height: AppSpacing.lg),
           _buildFinancialSummary(widget.householdId),
           const SizedBox(height: 28),
-          _buildTasksSection(theme),
+          if (caps.showTasks)
+            _buildTasksSection(theme)
+          else
+            const HomeShoppingPreviewCard(title: 'Lista actual'),
           const SizedBox(height: 18),
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -548,74 +554,146 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     final formattedAmount =
         NumberFormat.decimalPattern('es_AR').format(amount.round());
 
-    showDialog<bool>(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         final theme = dialogContext.theme;
-        return AlertDialog(
-          backgroundColor: theme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            isOwedByMe ? 'Equilibrar con $partnerName' : 'Registrar equilibrio',
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          content: Text(
-            isOwedByMe
-                ? 'Se va a registrar un pago de \$ $formattedAmount para saldar el balance con $partnerName.'
-                : 'Se va a registrar que $partnerName te compenso \$ $formattedAmount para dejar el balance al dia.',
-            style: TextStyle(
-              color: theme.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(
-                'Cancelar',
+        var isSubmitting = false;
+        var showSuccess = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: theme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: Text(
+                isOwedByMe
+                    ? 'Equilibrar con $partnerName'
+                    : 'Registrar equilibrio',
                 style: TextStyle(
-                  color: theme.textSecondary,
-                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: theme.primary,
-                foregroundColor: Colors.white,
+              content: Text(
+                isOwedByMe
+                    ? 'Se va a registrar un pago de \$ $formattedAmount para saldar el balance con $partnerName.'
+                    : 'Se va a registrar que $partnerName te compenso \$ $formattedAmount para dejar el balance al dia.',
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  height: 1.4,
+                ),
               ),
-              child: const Text('Confirmar'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      color: theme.textSecondary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                FilledButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setDialogState(() => isSubmitting = true);
+
+                          try {
+                            await ref
+                                .read(expenseControllerProvider.notifier)
+                                .settleDebt(
+                                  fromUserId: payerId,
+                                  toUserId: receiverId,
+                                  amount: amount,
+                                );
+
+                            HapticFeedback.mediumImpact();
+                            setDialogState(() {
+                              isSubmitting = false;
+                              showSuccess = true;
+                            });
+
+                            await Future<void>.delayed(
+                              const Duration(milliseconds: 420),
+                            );
+
+                            if (!mounted || !dialogContext.mounted) return;
+                            Navigator.of(dialogContext).pop();
+                            _showMessage(
+                              isOwedByMe
+                                  ? 'Balance equilibrado con $partnerName.'
+                                  : 'Registramos el equilibrio con $partnerName.',
+                            );
+                          } catch (e) {
+                            if (!dialogContext.mounted) return;
+                            setDialogState(() => isSubmitting = false);
+                            _showMessage(
+                                'No se pudo equilibrar el balance: $e');
+                          }
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor:
+                        showSuccess ? AppColors.sage : theme.primary,
+                    disabledBackgroundColor:
+                        showSuccess ? AppColors.sage : theme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: isSubmitting
+                        ? const SizedBox(
+                            key: ValueKey('loading'),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : showSuccess
+                            ? const Row(
+                                key: ValueKey('success'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_rounded, size: 18),
+                                  SizedBox(width: 8),
+                                  Text('Listo'),
+                                ],
+                              )
+                            : const Text(
+                                'Confirmar',
+                                key: ValueKey('idle'),
+                              ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
-    ).then((confirmed) async {
-      if (confirmed != true || !mounted) return;
-
-      try {
-        await ref.read(expenseControllerProvider.notifier).settleDebt(
-              fromUserId: payerId,
-              toUserId: receiverId,
-              amount: amount,
-            );
-
-        if (!mounted) return;
-        _showMessage(
-          isOwedByMe
-              ? 'Balance equilibrado con $partnerName.'
-              : 'Registramos el equilibrio con $partnerName.',
-        );
-      } catch (e) {
-        if (!mounted) return;
-        _showMessage('No se pudo equilibrar el balance: $e');
-      }
-    });
+    );
   }
 
   void _showMessage(String message) {

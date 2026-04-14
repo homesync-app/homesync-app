@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/couple_rewards_screen.dart';
 
 class CoupleSpaceScreen extends ConsumerWidget {
@@ -9,6 +10,7 @@ class CoupleSpaceScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final householdId = ref.watch(householdIdProvider).value;
+    final caps = ref.watch(householdCapabilitiesProvider);
     if (householdId == null || householdId.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -16,6 +18,7 @@ class CoupleSpaceScreen extends ConsumerWidget {
     return CoupleRewardsScreen(
       key: ValueKey<String>('couple_rewards_$householdId'),
       householdId: householdId,
+      showDuel: caps.showTasks,
     );
   }
 }

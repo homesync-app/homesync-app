@@ -73,3 +73,13 @@ final restorePremiumPurchasesUseCaseProvider =
 final premiumProductsProvider = FutureProvider((ref) async {
   return ref.read(getPremiumProductsUseCaseProvider).call();
 });
+
+/// Gate para la integración OCR + lista de compras.
+///
+/// Regla de producto:
+/// - Escanear ticket para pre-rellenar gasto: GRATIS para todos.
+/// - Vincular el ticket con la lista de compras (auto-match, sugerencia de
+///   items nuevos, flujo desde shopping): PREMIUM.
+final canUseReceiptShoppingLinkProvider = Provider<bool>((ref) {
+  return ref.watch(premiumProvider).valueOrNull ?? false;
+});

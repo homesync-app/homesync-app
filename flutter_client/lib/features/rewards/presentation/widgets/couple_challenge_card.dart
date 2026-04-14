@@ -259,7 +259,9 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.surface,
+              color: theme.surfaceVariant.withValues(
+                alpha: theme.isDarkMode ? 0.52 : 0.5,
+              ),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: theme.border.withValues(alpha: 0.6),
@@ -284,26 +286,26 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                         'Si lo completan, ambos reciben ${widget.challenge.coinReward} coins.',
                         style: TextStyle(
                           color: theme.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
                           height: 1.3,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 FilledButton(
                   onPressed: widget.onComplete,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.94),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
+                      horizontal: 16,
+                      vertical: 13,
                     ),
-                    minimumSize: const Size(0, 46),
+                    minimumSize: const Size(0, 44),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
@@ -312,7 +314,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     'Lo hicimos',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 13,
+                      fontSize: 12.5,
                     ),
                   ),
                 ),

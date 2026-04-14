@@ -96,6 +96,8 @@ class SettingsHouseholdCard extends StatelessWidget {
   final String householdTypeLabel;
   final Widget membersContent;
   final VoidCallback onEdit;
+  final bool tasksEnabled;
+  final ValueChanged<bool>? onTasksEnabledChanged;
 
   const SettingsHouseholdCard({
     super.key,
@@ -103,6 +105,8 @@ class SettingsHouseholdCard extends StatelessWidget {
     required this.householdTypeLabel,
     required this.membersContent,
     required this.onEdit,
+    required this.tasksEnabled,
+    this.onTasksEnabledChanged,
   });
 
   @override
@@ -208,7 +212,69 @@ class SettingsHouseholdCard extends StatelessWidget {
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: membersContent,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                membersContent,
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackground,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: theme.border.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.primary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.task_alt_rounded,
+                          color: theme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tareas del hogar',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: theme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              tasksEnabled
+                                  ? 'Mostrar tareas, progreso y accesos rapidos.'
+                                  : 'Ocultar tareas y dejar solo finanzas y compras.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.35,
+                                color: theme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch.adaptive(
+                        value: tasksEnabled,
+                        onChanged: onTasksEnabledChanged,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -472,11 +538,15 @@ Widget buildSettingsCombinedHouseholdCard(
   required int memberCount,
   required VoidCallback onEdit,
   required List<SettingsHouseholdMemberData> members,
+  required bool tasksEnabled,
+  ValueChanged<bool>? onTasksEnabledChanged,
 }) {
   return SettingsHouseholdCard(
     householdName: householdName,
     householdTypeLabel: householdTypeLabel,
     onEdit: onEdit,
+    tasksEnabled: tasksEnabled,
+    onTasksEnabledChanged: onTasksEnabledChanged,
     membersContent: SettingsHouseholdMembersSection(
       memberCount: memberCount,
       memberRows: members

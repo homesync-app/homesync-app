@@ -33,6 +33,7 @@ abstract class ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   });
 
   Future<Either<Failure, void>> deleteExpense(String id);

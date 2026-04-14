@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -139,7 +140,7 @@ class WeeklyProgressTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -180,7 +181,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                     color: AppColors.primary,
                   ),
                 ),
-                _metricDivider(),
+                _metricDivider(context),
                 Expanded(
                   child: _SummaryMetric(
                     icon: '✨',
@@ -189,7 +190,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                     color: AppColors.accentGold,
                   ),
                 ),
-                _metricDivider(),
+                _metricDivider(context),
                 Expanded(
                   child: _SummaryMetric(
                     icon: '💰',
@@ -216,7 +217,15 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isPremium
-                      ? [const Color(0xFFFFF1F1), const Color(0xFFFFFBFB)]
+                      ? theme.isDarkMode
+                          ? [
+                              const Color(0xFF3A2424),
+                              const Color(0xFF2C1D1D),
+                            ]
+                          : [
+                              const Color(0xFFFFF1F1),
+                              const Color(0xFFFFFBFB),
+                            ]
                       : [theme.surface, theme.surface],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -224,7 +233,10 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
                   color: isPremium
-                      ? const Color(0xFFFCA5A5).withValues(alpha: 0.4)
+                      ? (theme.isDarkMode
+                              ? const Color(0xFFFCA5A5)
+                              : const Color(0xFFFCA5A5))
+                          .withValues(alpha: theme.isDarkMode ? 0.18 : 0.4)
                       : theme.border.withValues(alpha: 0.45),
                 ),
                 boxShadow: theme.cardShadow,
@@ -235,8 +247,10 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: isPremium
-                          ? const Color(0xFFFECACA)
-                          : Colors.black.withValues(alpha: 0.05),
+                          ? (theme.isDarkMode
+                              ? const Color(0xFF5B2B2B)
+                              : const Color(0xFFFECACA))
+                          : theme.textMuted.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -258,7 +272,9 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: isPremium
-                                ? const Color(0xFF991B1B)
+                                ? (theme.isDarkMode
+                                    ? const Color(0xFFFFD6D6)
+                                    : const Color(0xFF991B1B))
                                 : theme.textPrimary,
                           ),
                         ),
@@ -271,7 +287,11 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: isPremium
-                                ? const Color(0xFFB91C1C).withValues(alpha: 0.7)
+                                ? (theme.isDarkMode
+                                        ? const Color(0xFFFECACA)
+                                        : const Color(0xFFB91C1C))
+                                    .withValues(
+                                        alpha: theme.isDarkMode ? 0.82 : 0.7)
                                 : theme.textSecondary,
                           ),
                         ),
@@ -304,11 +324,12 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     );
   }
 
-  Widget _metricDivider() {
+  Widget _metricDivider(BuildContext context) {
+    final theme = context.theme;
     return Container(
       width: 1,
       height: 50,
-      color: Colors.black.withValues(alpha: 0.06),
+      color: theme.divider.withValues(alpha: theme.isDarkMode ? 0.35 : 0.6),
     );
   }
 }
@@ -324,11 +345,16 @@ class _WeeklyHeaderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFFFFBF7),
-            Color(0xFFFFF4EB),
-          ],
+        gradient: LinearGradient(
+          colors: theme.isDarkMode
+              ? [
+                  theme.elevatedSurface,
+                  theme.surface,
+                ]
+              : const [
+                  Color(0xFFFFFBF7),
+                  Color(0xFFFFF4EB),
+                ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -366,7 +392,9 @@ class _WeeklyHeaderCard extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: theme.isDarkMode
+                  ? theme.surfaceVariant.withValues(alpha: 0.72)
+                  : Colors.white.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(

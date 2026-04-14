@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -11,7 +12,7 @@ Future<void> showExpenseMemberSelectorSheet({
 }) {
   return showModalBottomSheet(
     context: context,
-    backgroundColor: AppColors.background,
+    backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
@@ -67,7 +68,7 @@ Future<void> showExpenseCategorySelectorSheet({
 }) {
   return showModalBottomSheet(
     context: context,
-    backgroundColor: AppColors.background,
+    backgroundColor: context.theme.scaffoldBackground,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
@@ -97,8 +98,8 @@ Future<void> showExpenseCategorySelectorSheet({
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: (category['color'] as Color)
-                            .withValues(alpha: 0.1),
+                        color:
+                            (category['color'] as Color).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

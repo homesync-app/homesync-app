@@ -30,8 +30,12 @@ class SupabaseAuthService {
             serverClientId: kIsWeb ? null : AppEnvironment.googleWebClientId,
           )
           .timeout(const Duration(seconds: 5));
-    } catch (e) {
-      log.w('Error o timeout inicializando GoogleSignIn: $e', error: e);
+    } catch (e, stack) {
+      log.w(
+        'Error o timeout inicializando GoogleSignIn: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -145,8 +149,8 @@ class SupabaseAuthService {
       // En el caso de OAuth con redirect, la sesión se actualizará una vez que el usuario vuelva a la app.
       // Retornamos true para indicar que el proceso se inició correctamente.
       return true;
-    } catch (e) {
-      log.e('Error en Google Sign-In: $e', error: e);
+    } catch (e, stack) {
+      log.e('Error en Google Sign-In: $e', error: e, stackTrace: stack);
       return false;
     }
   }

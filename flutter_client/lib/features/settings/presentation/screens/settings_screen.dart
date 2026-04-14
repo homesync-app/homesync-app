@@ -28,6 +28,7 @@ import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -52,6 +53,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Map<String, dynamic>> _members = [];
   String? _householdName;
   String? _householdType;
+  bool _tasksEnabled = true;
 
   @override
   void initState() {
@@ -106,7 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final supabaseClient = ref.read(supabaseClientProvider);
       final householdFuture = supabaseClient
           .from('households')
-          .select('name, household_type')
+          .select('name, household_type, tasks_enabled')
           .eq('id', hId)
           .maybeSingle();
       final invitationFuture = supabaseClient
@@ -140,6 +142,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         setState(() {
           _householdName = household?['name'];
           _householdType = household?['household_type'];
+          _tasksEnabled = household?['tasks_enabled'] as bool? ?? true;
           _invitationCode = invitation?['code'];
           _members = List<Map<String, dynamic>>.from(membersList);
           _isLoading = false;
@@ -220,7 +223,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } else if (_householdType == 'family') {
       intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
     } else if (_householdType == 'friends') {
-      intro = '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
+      intro =
+          '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
     }
 
     final text =
@@ -398,6 +402,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 32),
                           _buildResetAccountButton(),
                           const SizedBox(height: 48),
+                          _buildSectionLabel(
+                            eyebrow: 'LEGAL',
+                            title: 'Privacidad',
+                            subtitle:
+                                'Politica de privacidad y terminos de uso.',
+                          ),
+                          const SizedBox(height: 14),
+                          _buildLegalCard(),
+                          const SizedBox(height: 48),
                           SettingsVersionFooter(
                             isAdminEnabled: AppEnvironment.enableAdminTesting &&
                                 ref.watch(adminProvider).isAdminUser,
@@ -499,7 +512,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onEdit: _showEditHouseholdMenu,
       memberCount: memberCount,
       members: members,
+      tasksEnabled: _tasksEnabled,
+      onTasksEnabledChanged:
+          isOwner || isAdminQaUser ? _updateTasksEnabled : null,
     );
+  }
+
+  Future<void> _updateTasksEnabled(bool enabled) async {
+    final householdId = _householdId;
+    if (householdId == null || _tasksEnabled == enabled) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref
+          .read(householdRepositoryProvider)
+          .updateTasksEnabled(householdId, enabled);
+      result.fold((failure) => throw failure, (_) {});
+
+      ref.invalidate(currentHouseholdProvider);
+      ref.invalidate(householdCapabilitiesProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(tasksProvider);
+      ref.invalidate(statsControllerProvider);
+      ref.invalidate(recentActivityProvider);
+
+      if (!enabled) {
+        ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+      }
+
+      if (mounted) {
+        setState(() => _tasksEnabled = enabled);
+      }
+      await _loadData();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            enabled
+                ? '✅ Tareas del hogar activadas'
+                : '✅ Modo finanzas y compras activado',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (error, stackTrace) {
+      log.e(
+        'Error updating household tasks visibility',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo actualizar la configuracion: $error'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _confirmRemoveMember(String userId, String name) async {
@@ -828,6 +902,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
   void _showEditHouseholdMenu() {
     showSettingsEditHouseholdMenu(
       context,
@@ -869,9 +944,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       orElse: () => ThemePalette.all.first,
     );
     final selectedPalette = ThemePalette.all.cast<ThemePalette?>().firstWhere(
-      (palette) => palette?.primary.toARGB32() == currentColor.toARGB32(),
-      orElse: () => null,
-    );
+          (palette) => palette?.primary.toARGB32() == currentColor.toARGB32(),
+          orElse: () => null,
+        );
     final isFreeSelected = selectedPalette != null &&
         const {'Naranja (Original)'}.contains(selectedPalette.name);
     final effectiveColor =
@@ -880,6 +955,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return SettingsAppearanceCard(
       effectiveColor: effectiveColor,
       isPremium: isPremium,
+      currentThemeMode: ref.watch(themeModeProvider),
+      onThemeModeChanged: (mode) {
+        HapticFeedback.lightImpact();
+        ref.read(themeModeProvider.notifier).setMode(mode);
+      },
       onLockedTap: () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
         HapticFeedback.lightImpact();
@@ -963,7 +1043,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              value ? '🔔 Notificaciones activadas' : '🔕 Notificaciones desactivadas',
+              value
+                  ? '🔔 Notificaciones activadas'
+                  : '🔕 Notificaciones desactivadas',
             ),
             duration: const Duration(seconds: 2),
             backgroundColor: value ? theme.success : theme.textMuted,
@@ -972,6 +1054,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
     );
   }
+
   Widget _buildAdminTestingCard() {
     final admin = ref.watch(adminProvider);
     final selectedScenario =
@@ -1115,7 +1198,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (confirm == true) {
           await ref.read(authControllerProvider.notifier).signOut();
           if (!mounted) return;
-          Navigator.of(context).pop();
+          // Pop ALL routes to root so the auth state change can drive
+          // MyApp to show LoginScreen cleanly, without stale routes on stack.
+          Navigator.of(context).popUntil((route) => route.isFirst);
           widget.onLogout();
         }
       },
@@ -1128,6 +1213,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         HapticFeedback.vibrate();
         _resetAccount();
       },
+    );
+  }
+
+  Widget _buildLegalCard() {
+    final theme = context.theme;
+
+    Future<void> openUrl(String url) async {
+      HapticFeedback.lightImpact();
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
+            title: Text(
+              'Politica de Privacidad',
+              style: TextStyle(color: theme.textPrimary, fontSize: 15),
+            ),
+            trailing: Icon(Icons.open_in_new_rounded, color: theme.textMuted, size: 18),
+            onTap: () => openUrl('https://megablas.github.io/homesync-privacy/'),
+          ),
+          Divider(height: 1, color: theme.divider.withValues(alpha: 0.1), indent: 16, endIndent: 16),
+          ListTile(
+            leading: Icon(Icons.description_outlined, color: theme.textSecondary),
+            title: Text(
+              'Terminos de Uso',
+              style: TextStyle(color: theme.textPrimary, fontSize: 15),
+            ),
+            trailing: Icon(Icons.open_in_new_rounded, color: theme.textMuted, size: 18),
+            onTap: () => openUrl('https://megablas.github.io/homesync-privacy/terms'),
+          ),
+        ],
+      ),
     );
   }
 

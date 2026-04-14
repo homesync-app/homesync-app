@@ -92,8 +92,11 @@ class ActivityChatBubble extends ConsumerWidget {
                 constraints: const BoxConstraints(minHeight: 84),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 decoration: BoxDecoration(
-                  color:
-                      isMe ? const Color(0xFFFFFCF8) : const Color(0xFFFFFEFD),
+                  color: isMe
+                      ? theme.elevatedSurface
+                      : theme.surfaceVariant.withValues(
+                          alpha: theme.isDarkMode ? 0.72 : 0.92,
+                        ),
                   border: Border.all(
                     color: isMe
                         ? theme.primary.withValues(alpha: 0.1)
