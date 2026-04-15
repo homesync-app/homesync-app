@@ -107,11 +107,6 @@ class TemplateService {
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final user = _client.auth.currentUser;
-      if (user != null) return user.id;
-    }
-
     throw Exception('Usuario no autenticado');
   }
 

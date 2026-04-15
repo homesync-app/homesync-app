@@ -19,10 +19,7 @@ class MercadoPagoService {
     if (appUserId != null && appUserId.isNotEmpty) {
       return appUserId;
     }
-
-    final user = _supabase.auth.currentUser;
-    if (user == null) throw 'Usuario no autenticado';
-    return user.id;
+    throw 'Usuario no autenticado';
   }
 
   Future<String?> createPaymentPreference({

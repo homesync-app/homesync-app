@@ -1,15 +1,12 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/admin_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:homesync_client/core/services/firebase_auth_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppAuthState {
   const AppAuthState({
@@ -32,26 +29,38 @@ final authStateProvider = StreamProvider<AppAuthState>((ref) {
     );
   }
 
-  final repository = ref.watch(authRepositoryProvider);
-  return repository.authStateChanges
-      .map(
-        (state) => AppAuthState(
-          isAuthenticated: AppEnvironment.usesFirebaseJwtForSupabase
-              ? state.session != null
-              : state.session != null ||
-                  state.event == AuthChangeEvent.signedIn ||
-                  state.event == AuthChangeEvent.tokenRefreshed ||
-                  state.event == AuthChangeEvent.userUpdated,
-          source: AppEnvironment.usesFirebaseJwtForSupabase
-              ? 'firebase+supabase'
-              : 'supabase',
-        ),
-      )
-      .distinct(
-        (previous, next) =>
-            previous.isAuthenticated == next.isAuthenticated &&
-            previous.source == next.source,
+  return Stream.multi((controller) {
+    AppAuthState? lastEmitted;
+
+    void emit() {
+      final firebaseUser = fa.FirebaseAuth.instance.currentUser;
+      final appUserId = AppIdentityService.instance.currentUserId;
+      final next = AppAuthState(
+        isAuthenticated: firebaseUser != null && appUserId != null,
+        source: 'firebase',
       );
+
+      if (lastEmitted != null &&
+          lastEmitted!.isAuthenticated == next.isAuthenticated &&
+          lastEmitted!.source == next.source) {
+        return;
+      }
+
+      lastEmitted = next;
+      controller.add(next);
+    }
+
+    final authSub =
+        fa.FirebaseAuth.instance.authStateChanges().listen((_) => emit());
+    AppIdentityService.instance.addListener(emit);
+
+    emit();
+
+    controller.onCancel = () {
+      authSub.cancel();
+      AppIdentityService.instance.removeListener(emit);
+    };
+  });
 });
 
 Future<void> _applySessionDiagnostics(String? userId) async {
@@ -65,14 +74,7 @@ Future<void> _applySessionDiagnostics(String? userId) async {
   }
 }
 
-Future<void> _syncSessionContextFromAuth(
-  AppAuthState authState,
-  FirebaseAuthService firebaseAuthService,
-) async {
-  if (AppEnvironment.usesFirebaseJwtForSupabase && authState.isAuthenticated) {
-    await firebaseAuthService.syncSupabaseSessionIfNeeded();
-  }
-
+Future<void> _syncSessionContextFromAuth(AppAuthState authState) async {
   if (!authState.isAuthenticated) {
     await AppIdentityService.instance.refresh();
     await _applySessionDiagnostics(null);
@@ -84,12 +86,11 @@ Future<void> _syncSessionContextFromAuth(
 }
 
 final authBootstrapProvider = FutureProvider<void>((ref) async {
-  final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
   await AppIdentityService.instance.initialize();
 
   ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
     next.whenData((authState) {
-      unawaited(_syncSessionContextFromAuth(authState, firebaseAuthService));
+      unawaited(_syncSessionContextFromAuth(authState));
     });
   });
 
@@ -100,5 +101,5 @@ final authBootstrapProvider = FutureProvider<void>((ref) async {
         ),
       );
 
-  await _syncSessionContextFromAuth(initialAuthState, firebaseAuthService);
+  await _syncSessionContextFromAuth(initialAuthState);
 });

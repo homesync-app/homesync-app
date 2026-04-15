@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
@@ -49,11 +47,6 @@ class SupabaseAuthRepository
   bool get _isOnline => _ref.read(isOnlineProvider);
 
   Future<String?> _resolveCurrentUserId() async {
-    final authUserId = _client.auth.currentUser?.id;
-    if (authUserId != null && authUserId.isNotEmpty) {
-      return authUserId;
-    }
-
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId != null && appUserId.isNotEmpty) {
       return appUserId;
@@ -63,48 +56,19 @@ class SupabaseAuthRepository
   }
 
   @override
-  User? get currentUser => _client.auth.currentUser;
+  // In Firebase Third-Party Auth mode there is no Supabase session; return null.
+  User? get currentUser => null;
 
   @override
   Stream<AuthState> get authStateChanges {
-    if (AppEnvironment.usesFirebaseJwtForSupabase) {
-      final seededState = AuthState(
-        _client.auth.currentSession == null
-            ? AuthChangeEvent.signedOut
-            : AuthChangeEvent.signedIn,
-        _client.auth.currentSession,
+    return fa.FirebaseAuth.instance.authStateChanges().map((firebaseUser) {
+      return AuthState(
+        firebaseUser != null
+            ? AuthChangeEvent.signedIn
+            : AuthChangeEvent.signedOut,
+        null, // no Supabase session in Third-Party Auth mode
       );
-
-      return Stream<AuthState>.multi((controller) {
-        controller.add(seededState);
-        final firebaseSubscription =
-            _firebaseAuthService.authStateChanges.listen(
-          (fa.User? user) {
-            controller.add(
-              AuthState(
-                user == null
-                    ? AuthChangeEvent.signedOut
-                    : AuthChangeEvent.signedIn,
-                _client.auth.currentSession,
-              ),
-            );
-          },
-          onError: controller.addError,
-        );
-
-        final supabaseSubscription = _client.auth.onAuthStateChange.listen(
-          controller.add,
-          onError: controller.addError,
-        );
-
-        controller.onCancel = () async {
-          await firebaseSubscription.cancel();
-          await supabaseSubscription.cancel();
-        };
-      });
-    }
-
-    return _client.auth.onAuthStateChange;
+    });
   }
 
   @override
@@ -114,18 +78,9 @@ class SupabaseAuthRepository
     String? fullName,
   }) async {
     return executeWithHandling(() async {
-      if (AppEnvironment.usesFirebaseJwtForSupabase) {
-        await _firebaseAuthService.signUpWithEmail(
-          email: email,
-          password: password,
-        );
-        return;
-      }
-
-      await _client.auth.signUp(
+      await _firebaseAuthService.signUpWithEmail(
         email: email,
         password: password,
-        data: fullName != null ? {'full_name': fullName} : {},
       );
     }, context: 'SupabaseAuthRepository.signUpWithEmail', isOnline: _isOnline);
   }
@@ -136,15 +91,10 @@ class SupabaseAuthRepository
     required String password,
   }) async {
     return executeWithHandling(() async {
-      if (AppEnvironment.usesFirebaseJwtForSupabase) {
-        await _firebaseAuthService.signInWithEmail(
-          email: email,
-          password: password,
-        );
-        return;
-      }
-
-      await _client.auth.signInWithPassword(email: email, password: password);
+      await _firebaseAuthService.signInWithEmail(
+        email: email,
+        password: password,
+      );
     }, context: 'SupabaseAuthRepository.signInWithEmail', isOnline: _isOnline);
   }
 
@@ -152,15 +102,6 @@ class SupabaseAuthRepository
   Future<Either<Failure, bool>> signInWithGoogle() async {
     log.i('SupabaseAuthRepository: starting signInWithGoogle');
     return executeWithHandling(() async {
-      if (kIsWeb && !AppEnvironment.usesFirebaseJwtForSupabase) {
-        log.i('SupabaseAuthRepository: using Supabase OAuth on web');
-        await _client.auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: Uri.base.origin,
-        );
-        return true;
-      }
-
       log.i('SupabaseAuthRepository: using Firebase Auth flow');
       final success = await _firebaseAuthService.signInWithGoogle();
       log.i(
@@ -172,24 +113,14 @@ class SupabaseAuthRepository
   @override
   Future<Either<Failure, void>> signOut() async {
     return executeWithHandling(() async {
-      if (AppEnvironment.usesFirebaseJwtForSupabase) {
-        await _firebaseAuthService.signOut();
-        return;
-      }
-
-      await _client.auth.signOut();
+      await _firebaseAuthService.signOut();
     }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline);
   }
 
   @override
   Future<Either<Failure, void>> resetPassword(String email) async {
     return executeWithHandling(() async {
-      if (AppEnvironment.usesFirebaseJwtForSupabase) {
-        await _firebaseAuthService.resetPassword(email);
-        return;
-      }
-
-      await _client.auth.resetPasswordForEmail(email);
+      await _firebaseAuthService.resetPassword(email);
     }, context: 'SupabaseAuthRepository.resetPassword', isOnline: _isOnline);
   }
 

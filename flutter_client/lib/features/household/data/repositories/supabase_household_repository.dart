@@ -57,10 +57,6 @@ class SupabaseHouseholdRepository
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final user = _client.auth.currentUser;
-      if (user != null) return user.id;
-    }
     throw const AuthFailure();
   }
 
@@ -138,84 +134,91 @@ class SupabaseHouseholdRepository
   @override
   Future<Either<Failure, List<Map<String, dynamic>>>>
       getHouseholdMembersRaw() async {
-    return executeWithHandling(() async {
-      final householdMember = await _requireCurrentHouseholdMembership();
-      final resolvedHouseholdId = householdMember['household_id'] as String?;
-      final resolvedViewerId = householdMember['user_id'] as String?;
+    return executeWithHandling(
+        () async {
+          final householdMember = await _requireCurrentHouseholdMembership();
+          final resolvedHouseholdId =
+              householdMember['household_id'] as String?;
+          final resolvedViewerId = householdMember['user_id'] as String?;
 
-      late final List<Map<String, dynamic>> members;
-      if (_isAdminTestingActive) {
-        final response = await _client.rpc(
-          'qa_admin_get_household_members',
-          params: {'p_household_id': resolvedHouseholdId},
-        );
+          late final List<Map<String, dynamic>> members;
+          if (_isAdminTestingActive) {
+            final response = await _client.rpc(
+              'qa_admin_get_household_members',
+              params: {'p_household_id': resolvedHouseholdId},
+            );
 
-        members = List<Map<String, dynamic>>.from((response as List).map(
-          (row) {
-            final map = Map<String, dynamic>.from(row as Map);
-            return {
-              'id': map['id'],
-              'user_id': map['user_id'],
-              'household_id': map['household_id'],
-              'role': map['role'],
-              'joined_at': map['joined_at'],
-              'display_role': map['display_role'],
-              'users': {
-                'email': map['email'],
-                'full_name': map['full_name'],
-                'avatar_url': map['avatar_url'],
-                'mercadopago_alias': map['mercadopago_alias'],
+            members = List<Map<String, dynamic>>.from((response as List).map(
+              (row) {
+                final map = Map<String, dynamic>.from(row as Map);
+                return {
+                  'id': map['id'],
+                  'user_id': map['user_id'],
+                  'household_id': map['household_id'],
+                  'role': map['role'],
+                  'joined_at': map['joined_at'],
+                  'display_role': map['display_role'],
+                  'users': {
+                    'email': map['email'],
+                    'full_name': map['full_name'],
+                    'avatar_url': map['avatar_url'],
+                    'mercadopago_alias': map['mercadopago_alias'],
+                  },
+                };
               },
-            };
-          },
-        ));
-      } else {
-        final response = await _client
-            .from(AppConstants.tableHouseholdMembers)
-            .select(
-              'id, user_id, household_id, role, joined_at, display_role, users(full_name, email, avatar_url, mercadopago_alias)',
-            )
-            .eq('household_id', resolvedHouseholdId!);
+            ));
+          } else {
+            final response = await _client
+                .from(AppConstants.tableHouseholdMembers)
+                .select(
+                  'id, user_id, household_id, role, joined_at, display_role, users(full_name, email, avatar_url, mercadopago_alias)',
+                )
+                .eq('household_id', resolvedHouseholdId!);
 
-        members = List<Map<String, dynamic>>.from(response);
-      }
+            members = List<Map<String, dynamic>>.from(response);
+          }
 
-      final names = members
-          .map((member) => (member['users'] as Map<String, dynamic>?)?['full_name'])
-          .whereType<String>()
-          .toList();
+          final names = members
+              .map((member) =>
+                  (member['users'] as Map<String, dynamic>?)?['full_name'])
+              .whereType<String>()
+              .toList();
 
-      log.i(
-        'Household members raw fetched household=$resolvedHouseholdId viewer=$resolvedViewerId count=${members.length} names=$names adminQa=$_isAdminTestingActive',
-      );
-
-      // Save to persistence
-      if (resolvedHouseholdId != null) {
-        try {
-          await OfflineStorageService().set(
-            'household_members_$resolvedHouseholdId',
-            {'members': members},
+          log.i(
+            'Household members raw fetched household=$resolvedHouseholdId viewer=$resolvedViewerId count=${members.length} names=$names adminQa=$_isAdminTestingActive',
           );
-        } catch (error, stackTrace) {
-          log.w(
-            'SupabaseHouseholdRepository.getHouseholdMembersRaw: cache persistence skipped: $error',
-            error: error,
-            stackTrace: stackTrace,
-          );
-        }
-      }
 
-      return members;
-    },
+          // Save to persistence
+          if (resolvedHouseholdId != null) {
+            try {
+              await OfflineStorageService().set(
+                'household_members_$resolvedHouseholdId',
+                {'members': members},
+              );
+            } catch (error, stackTrace) {
+              log.w(
+                'SupabaseHouseholdRepository.getHouseholdMembersRaw: cache persistence skipped: $error',
+                error: error,
+                stackTrace: stackTrace,
+              );
+            }
+          }
+
+          return members;
+        },
         context: 'SupabaseHouseholdRepository.getHouseholdMembersRaw',
         isOnline: _isOnline,
         onOffline: () async {
           final householdMember = await _requireCurrentHouseholdMembership();
-          final resolvedHouseholdId = householdMember['household_id'] as String?;
-          final cached = await OfflineStorageService().get('household_members_$resolvedHouseholdId');
+          final resolvedHouseholdId =
+              householdMember['household_id'] as String?;
+          final cached = await OfflineStorageService()
+              .get('household_members_$resolvedHouseholdId');
           if (cached != null && cached['members'] != null) {
-            log.i('SupabaseHouseholdRepository.getHouseholdMembersRaw: Recovered from cache');
-            return List<Map<String, dynamic>>.from((cached['members'] as List).map((e) => Map<String, dynamic>.from(e as Map)));
+            log.i(
+                'SupabaseHouseholdRepository.getHouseholdMembersRaw: Recovered from cache');
+            return List<Map<String, dynamic>>.from((cached['members'] as List)
+                .map((e) => Map<String, dynamic>.from(e as Map)));
           }
           throw const NetworkFailure('No data in cache');
         });

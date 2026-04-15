@@ -54,13 +54,6 @@ abstract class BaseRpcService {
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final authUser = client.auth.currentUser;
-      if (authUser != null) {
-        return authUser.id;
-      }
-    }
-
     throw Exception('Usuario no autenticado');
   }
 
@@ -85,11 +78,7 @@ abstract class BaseRpcService {
   }
 
   String? currentAuthEmail() {
-    if (AppEnvironment.usesFirebaseJwtForSupabase) {
-      return fa.FirebaseAuth.instance.currentUser?.email;
-    }
-    return fa.FirebaseAuth.instance.currentUser?.email ??
-        client.auth.currentUser?.email;
+    return fa.FirebaseAuth.instance.currentUser?.email;
   }
 
   bool _isRateLimitError(PostgrestException e) {

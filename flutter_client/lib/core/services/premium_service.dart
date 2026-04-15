@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/services/analytics_service.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import '../services/logger_service.dart';
@@ -50,8 +51,8 @@ class PremiumService {
   }
 
   Future<bool> getPremiumStatus() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) {
+    final userId = AppIdentityService.instance.currentUserId;
+    if (userId == null) {
       return false;
     }
 
@@ -59,7 +60,7 @@ class PremiumService {
       final data = await _supabase
           .from('users')
           .select('is_premium')
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       return data != null && data['is_premium'] == true;
@@ -125,9 +126,8 @@ class PremiumService {
     try {
       log.i('Verifying purchase ${purchase.productID}...');
 
-      // Professional step: Verify current user
-      final user = _supabase.auth.currentUser;
-      if (user == null) return false;
+      final userId = AppIdentityService.instance.currentUserId;
+      if (userId == null) return false;
 
       // Update Supabase
       // In a real app, this should be a backend function that verifies the store token
@@ -138,10 +138,10 @@ class PremiumService {
                 .add(const Duration(days: 30))
                 .toIso8601String() // Simple mock logic for presentation
             : null,
-      }).eq('id', user.id);
+      }).eq('id', userId);
 
       onPremiumStatusChanged?.call(true);
-      log.i('Premium activated for user ${user.id}');
+      log.i('Premium activated for user $userId');
       return true;
     } catch (e, stack) {
       log.e('Verification failed: $e', error: e, stackTrace: stack);
@@ -160,8 +160,8 @@ class PremiumService {
   }
 
   Future<void> togglePremiumMock() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) {
+    final userId = AppIdentityService.instance.currentUserId;
+    if (userId == null) {
       log.w('togglePremiumMock skipped: no authenticated user');
       return;
     }
@@ -174,10 +174,10 @@ class PremiumService {
         'premium_until': next
             ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
             : null,
-      }).eq('id', user.id);
+      }).eq('id', userId);
 
       onPremiumStatusChanged?.call(next);
-      log.i('Premium mock toggled for user ${user.id}: $next');
+      log.i('Premium mock toggled for user $userId: $next');
     } catch (e, stack) {
       log.e('Error toggling premium mock: $e', error: e, stackTrace: stack);
       rethrow;

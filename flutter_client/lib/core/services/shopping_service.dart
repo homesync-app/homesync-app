@@ -122,9 +122,6 @@ class ShoppingService {
     if (appUserId != null && appUserId.isNotEmpty) {
       return appUserId;
     }
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      return _client.auth.currentUser?.id;
-    }
     return null;
   }
 

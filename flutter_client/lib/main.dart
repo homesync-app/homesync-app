@@ -18,6 +18,7 @@ import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -175,6 +176,14 @@ void main() async {
   await Supabase.initialize(
     url: AppEnvironment.supabaseUrl,
     anonKey: AppEnvironment.supabaseAnonKey,
+    // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
+    // Supabase validates it against Firebase's JWKS endpoint automatically.
+    // This replaces the manual session sync (_syncSupabaseSession).
+    accessToken: () async {
+      final user = fa.FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+      return await user.getIdToken(false);
+    },
   );
 
   final supabaseClient = Supabase.instance.client;

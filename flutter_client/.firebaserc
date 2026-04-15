@@ -1,5 +1,7 @@
 {
-  "projects": {},
+  "projects": {
+    "default": "homesync-prod-r7-123"
+  },
   "targets": {},
   "etags": {}
 }

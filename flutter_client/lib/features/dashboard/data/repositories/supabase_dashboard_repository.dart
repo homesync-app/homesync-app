@@ -33,9 +33,14 @@ class SupabaseDashboardRepository implements DashboardRepository {
         .from('household_activities')
         .stream(primaryKey: ['id'])
         .eq('household_id', householdId)
-        .gte('created_at', since)
         .order('created_at', ascending: false)
         .asyncMap((rows) async {
+          // Filtrar por fecha en cliente porque SupabaseStreamBuilder no soporta .gte()
+          rows = rows.where((r) {
+            final createdAt = r['created_at'] as String?;
+            if (createdAt == null) return false;
+            return DateTime.tryParse(createdAt)?.isAfter(DateTime.parse(since)) ?? false;
+          }).toList();
           // Obtener los IDs de usuario únicos para buscar sus datos
           final userIds = rows
               .map((r) => r['user_id'] as String?)

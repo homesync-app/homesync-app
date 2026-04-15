@@ -16,10 +16,6 @@ class SupabaseSettingsRepository implements SettingsRepository {
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final user = _client.auth.currentUser;
-      if (user != null) return user.id;
-    }
     throw Exception('No autenticado');
   }
 
