@@ -27,6 +27,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -139,6 +141,11 @@ void main() async {
 
   AppEnvironment.validateRuntimeConfig(isWeb: kIsWeb);
 
+  await Posthog().setup(
+    'phc_rYKLrdPcVWEgs7Q69boQ46kS5afqYkwUKPLJWDJepauU',
+    host: 'https://us.i.posthog.com',
+  );
+
   // 1. Initialize Firebase
   try {
     await Firebase.initializeApp(
@@ -201,7 +208,9 @@ void main() async {
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
-    // 2. Send to Supabase for the admin panel logs page (all platforms)
+    // 2. Sentry
+    Sentry.captureException(details.exception, stackTrace: details.stack);
+    // 3. Send to Supabase for the admin panel logs page (all platforms)
     rpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
@@ -219,7 +228,9 @@ void main() async {
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     }
-    // 2. Supabase admin logs (all platforms)
+    // 2. Sentry
+    Sentry.captureException(error, stackTrace: stack);
+    // 3. Supabase admin logs (all platforms)
     rpc.logApplicationError(
       message: error.toString(),
       stackTrace: stack.toString(),
@@ -235,16 +246,26 @@ void main() async {
   await initializeDateFormatting('es', null);
   final prefs = await SharedPreferences.getInstance();
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        authServiceProvider.overrideWithValue(auth),
-        rpcServiceProvider.overrideWithValue(rpc),
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
-      child: MyApp(
-        appVersion: packageInfo.version,
-        prefs: prefs,
+  await SentryFlutter.init(
+    (options) {
+      options.dsn =
+          'https://a95584322023d808663a76556f0f8c26@o4511202083405824.ingest.us.sentry.io/4511202140553216';
+      options.environment = AppEnvironment.current.name;
+      options.release =
+          'homesync@${packageInfo.version}+${packageInfo.buildNumber}';
+      options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
+    },
+    appRunner: () => runApp(
+      ProviderScope(
+        overrides: [
+          authServiceProvider.overrideWithValue(auth),
+          rpcServiceProvider.overrideWithValue(rpc),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+        child: MyApp(
+          appVersion: packageInfo.version,
+          prefs: prefs,
+        ),
       ),
     ),
   );

@@ -69,9 +69,11 @@ dependencies:
   package_info_plus: ^8.0.0
   device_info_plus: ^10.1.0
 
-  # MCP Server (removed - unused in client)
-  # mcp_server: any
   in_app_purchase: ^3.2.3
+
+  # Monitoring & Analytics
+  sentry_flutter: ^8.11.0
+  posthog_flutter: ^4.0.1
 
 dev_dependencies:
   flutter_test:

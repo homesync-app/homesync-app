@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:homesync_client/config/app_environment.dart';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
   const PremiumPaywallScreen({super.key});
@@ -255,20 +256,43 @@ class _ProductList extends ConsumerWidget {
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+            if (AppEnvironment.enableAdminTesting)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () async {
+                  await ref.read(premiumProvider.notifier).togglePremiumMock();
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: const Text('Activar Mock Premium (DEV)'),
+              )
+            else
+              Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Icon(Icons.rocket_launch_rounded,
+                      size: 40, color: AppColors.primary),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '¡Muy pronto!',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Las suscripciones Premium estarán disponibles en la próxima actualización.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
               ),
-              onPressed: () async {
-                await ref.read(premiumProvider.notifier).togglePremiumMock();
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text('Activar Mock Premium (Demo Mode)'),
-            ),
           ],
         ),
       );
