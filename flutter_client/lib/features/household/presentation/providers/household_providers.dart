@@ -9,7 +9,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'household_providers.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class HouseholdMembers extends _$HouseholdMembers {
   @override
   Future<List<MemberModel>> build() async {

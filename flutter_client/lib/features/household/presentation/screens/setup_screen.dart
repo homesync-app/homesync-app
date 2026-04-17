@@ -3431,60 +3431,63 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: Column(
-              children: [
-                ..._modes.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final mode = entry.value;
-                  return TweenAnimationBuilder<double>(
-                    duration: Duration(milliseconds: 280 + (index * 60)),
-                    tween: Tween(begin: 0, end: 1),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, child) => Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(18 * (1 - value), 0),
-                        child: child,
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                children: [
+                  ..._modes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final mode = entry.value;
+                    return TweenAnimationBuilder<double>(
+                      duration: Duration(milliseconds: 280 + (index * 60)),
+                      tween: Tween(begin: 0, end: 1),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) => Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(18 * (1 - value), 0),
+                          child: child,
+                        ),
                       ),
-                    ),
-                    child: _buildModeCardV3(mode),
-                  );
-                }),
-                const Spacer(),
-                _buildPrimaryButton(
-                  text: 'Continuar',
-                  onPressed: _selectedMode != null ? _onModeSelected : null,
-                ),
-                const SizedBox(height: 6),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      ref.read(authControllerProvider.notifier).signOut();
-                    },
-                    child: Text(
-                      'Cerrar sesión',
-                      style: TextStyle(
-                        color: AppColors.textSecondary.withValues(alpha: 0.68),
-                        fontWeight: FontWeight.w600,
+                      child: _buildModeCardV3(mode),
+                    );
+                  }),
+                  const SizedBox(height: 16),
+                  _buildPrimaryButton(
+                    text: 'Continuar',
+                    onPressed: _selectedMode != null ? _onModeSelected : null,
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        ref.read(authControllerProvider.notifier).signOut();
+                      },
+                      child: Text(
+                        'Cerrar sesión',
+                        style: TextStyle(
+                          color: AppColors.textSecondary.withValues(alpha: 0.68),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() => _currentStep = 0),
-                    child: Text(
-                      'Ver características de la app',
-                      style: TextStyle(
-                        color: AppColors.textSecondary.withValues(alpha: 0.52),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                  Center(
+                    child: TextButton(
+                      onPressed: () => setState(() => _currentStep = 0),
+                      child: Text(
+                        'Ver características de la app',
+                        style: TextStyle(
+                          color: AppColors.textSecondary.withValues(alpha: 0.52),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 4),
-              ],
+                  const SizedBox(height: 4),
+                ],
+              ),
             ),
           ),
         ],

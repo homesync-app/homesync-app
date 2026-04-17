@@ -4,6 +4,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/providers/supabase_provider.dart';
 import '../../data/repositories/supabase_expense_repository.dart';
@@ -71,7 +72,7 @@ class PersonalFinanceSummary extends _$PersonalFinanceSummary {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ExpenseBalances extends _$ExpenseBalances {
   @override
   Future<List<HouseholdBalanceModel>> build() async {
@@ -220,9 +221,18 @@ class CombinedFeedController extends _$CombinedFeedController {
 
     final repo = ref.watch(expenseRepositoryProvider);
     try {
-      await repo.processRecurringExpenses(householdId);
+      final now = DateTime.now();
+      const storageKey = 'homesync_last_recurring_run';
+      final prefs = await SharedPreferences.getInstance();
+      final lastRunStr = prefs.getString(storageKey);
+      final lastRun = lastRunStr != null ? DateTime.tryParse(lastRunStr) : null;
+      final shouldRun = lastRun == null ||
+          now.difference(lastRun).inHours >= 24;
+      if (shouldRun) {
+        await repo.processRecurringExpenses(householdId);
+        await prefs.setString(storageKey, now.toIso8601String());
+      }
     } catch (e, stack) {
-      // Ignore background processing errors to not block the feed
       log.w(
         'CombinedFeed recurring expense processing failed: $e',
         error: e,

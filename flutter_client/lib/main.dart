@@ -264,7 +264,7 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  static const _minimumSplashDuration = Duration(milliseconds: 2800);
+  static const _minimumSplashDuration = Duration(milliseconds: 800);
   static const _criticalBootstrapTimeout = Duration(seconds: 4);
   bool _startupReady = false;
   late final FirebaseAnalyticsObserver _analyticsObserver;

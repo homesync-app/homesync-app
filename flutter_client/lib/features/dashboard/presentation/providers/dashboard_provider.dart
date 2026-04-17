@@ -20,7 +20,7 @@ GetRecentActivityUseCase getRecentActivityUseCase(
   return GetRecentActivityUseCase(repository);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) {
   final householdIdAsync = ref.watch(householdIdProvider);
 
