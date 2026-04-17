@@ -71,9 +71,6 @@ dependencies:
 
   in_app_purchase: ^3.2.3
 
-  # Monitoring & Analytics
-  sentry_flutter: ^8.11.0
-  posthog_flutter: ^4.0.1
 
 dev_dependencies:
   flutter_test:

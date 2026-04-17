@@ -649,8 +649,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
                               items: _unmatchedOcrItems,
+                              householdId: ref
+                                      .read(currentHouseholdProvider)
+                                      .valueOrNull
+                                      ?.id ??
+                                  '',
                               onDismiss: () =>
                                   setState(() => _unmatchedOcrItems = []),
+                              onItemsAdded: (addedItems) {
+                                setState(() {
+                                  _selectedShoppingItems.addAll(addedItems);
+                                  _ocrMatchedShoppingItems.addAll(addedItems);
+                                });
+                              },
                             ),
                           ],
                           const SizedBox(height: 28),
