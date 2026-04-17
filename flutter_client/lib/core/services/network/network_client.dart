@@ -1,6 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/services/retry/retry_service.dart';
 
 class RetryConfig {

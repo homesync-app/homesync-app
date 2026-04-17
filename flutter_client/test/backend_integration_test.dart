@@ -121,7 +121,7 @@ void main() {
           id: '1',
           title: 'Lavar platos',
           status: 'active',
-          category: 'kitchen');
+          category: 'kitchen',);
       expect(task.canComplete, isTrue);
     });
 
@@ -130,7 +130,7 @@ void main() {
           id: '2',
           title: 'Limpiar baño',
           status: 'pending_verification',
-          category: 'bathroom');
+          category: 'bathroom',);
       expect(task.canComplete, isFalse);
     });
 
@@ -139,7 +139,7 @@ void main() {
           id: '3',
           title: 'Hacer cama',
           status: 'verified',
-          category: 'bedroom');
+          category: 'bedroom',);
       expect(task.canComplete, isFalse);
     });
 
@@ -148,7 +148,7 @@ void main() {
           id: '4',
           title: 'Sacar basura',
           status: 'objected',
-          category: 'general');
+          category: 'general',);
       expect(task.canRedo, isTrue);
     });
 
@@ -160,7 +160,7 @@ void main() {
         'bedroom',
         'general',
         'outdoor',
-        'pets'
+        'pets',
       ];
       for (final cat in validCategories) {
         expect(TaskCategory.isValid(cat), isTrue);
@@ -175,7 +175,7 @@ void main() {
           status: 'active',
           category: 'general',
           xpReward: 20,
-          coinReward: 10);
+          coinReward: 10,);
       expect(task.xpReward, greaterThanOrEqualTo(0));
       expect(task.coinReward, greaterThanOrEqualTo(0));
     });
@@ -224,7 +224,7 @@ void main() {
 
     test('Non-recurring task has no recurrenceType', () {
       final task = TaskModel(
-          id: '1', title: 'One-time', status: 'active', category: 'general');
+          id: '1', title: 'One-time', status: 'active', category: 'general',);
       expect(task.isRecurring, isFalse);
     });
 
@@ -234,7 +234,7 @@ void main() {
           title: 'Weekly',
           status: 'active',
           category: 'general',
-          recurrenceType: 'weekly');
+          recurrenceType: 'weekly',);
       expect(task.isRecurring, isTrue);
     });
 
@@ -300,7 +300,7 @@ void main() {
         'health',
         'shopping',
         'utilities',
-        'other'
+        'other',
       ];
       for (final cat in validCategories) {
         expect(ExpenseCategory.isValid(cat), isTrue);
@@ -332,7 +332,7 @@ void main() {
   group('🎁 Rewards — Store Logic', () {
     test('User can afford reward if coins >= cost', () {
       final reward = Reward(
-          id: '1', title: 'Pizza', cost: 50, icon: '🍕', isCustom: false);
+          id: '1', title: 'Pizza', cost: 50, icon: '🍕', isCustom: false,);
       expect(reward.canAfford(100), isTrue);
       expect(reward.canAfford(50), isTrue);
       expect(reward.canAfford(49), isFalse);
@@ -429,9 +429,9 @@ void main() {
         {'category': 'cleaning', 'completed_count': 2, 'total_xp': 40},
       ];
       final totalTasks = taskStats.fold<int>(
-          0, (s, e) => s + ((e['completed_count'] as num).toInt()));
+          0, (s, e) => s + ((e['completed_count'] as num).toInt()),);
       final totalXp = taskStats.fold<int>(
-          0, (s, e) => s + ((e['total_xp'] as num).toInt()));
+          0, (s, e) => s + ((e['total_xp'] as num).toInt()),);
       expect(totalTasks, equals(10));
       expect(totalXp, equals(200));
     });
@@ -457,7 +457,7 @@ void main() {
       final mvp = members.reduce((a, b) =>
           (a['tasks_completed'] as int) >= (b['tasks_completed'] as int)
               ? a
-              : b);
+              : b,);
       expect(mvp['user'], equals('u2'));
     });
   });
@@ -477,13 +477,13 @@ void main() {
 
     test('getLabel returns readable text for each type', () {
       expect(TransactionHelper.getLabel('coins_earned', null),
-          equals('Tarea completada'));
+          equals('Tarea completada'),);
       expect(TransactionHelper.getLabel('coin_transfer', null),
-          equals('Coins enviados'));
+          equals('Coins enviados'),);
       expect(TransactionHelper.getLabel('coin_received', null),
-          equals('Coins recibidos'));
+          equals('Coins recibidos'),);
       expect(TransactionHelper.getLabel('reward_redemption', null),
-          equals('Canje de premio'));
+          equals('Canje de premio'),);
     });
 
     test('Positive transaction amount returns isPositive=true', () {
@@ -603,7 +603,7 @@ class HouseholdJoinSimulator {
     }
     if (user.householdId == targetHouseholdId) {
       return JoinResult(
-          success: false, errorMessage: 'ya perteneces a este hogar');
+          success: false, errorMessage: 'ya perteneces a este hogar',);
     }
     return JoinResult(
       success: true,
@@ -665,7 +665,7 @@ class TaskCategory {
     'bedroom',
     'general',
     'outdoor',
-    'pets'
+    'pets',
   };
   static bool isValid(String cat) => _valid.contains(cat);
 }
@@ -699,7 +699,7 @@ class RecurrenceCalculator {
         return current.add(Duration(days: interval * 7));
       case 'monthly':
         return DateTime(
-            current.year, current.month + interval, current.day, current.hour);
+            current.year, current.month + interval, current.day, current.hour,);
       default:
         return current;
     }
@@ -729,7 +729,7 @@ class ExpenseSplit {
   ExpenseSplit._({required this.perPerson});
 
   static ExpenseSplit equal(
-          {required double amount, required int memberCount}) =>
+          {required double amount, required int memberCount,}) =>
       ExpenseSplit._(perPerson: amount / memberCount);
 }
 
@@ -739,7 +739,7 @@ class FakeExpense {
   final List<String> splitBetween;
 
   FakeExpense(
-      {required this.amount, required this.paidBy, required this.splitBetween});
+      {required this.amount, required this.paidBy, required this.splitBetween,});
 
   double amountOwedBy(String userId) {
     final share = amount / splitBetween.length;
@@ -762,7 +762,7 @@ class ExpenseCategory {
     'health',
     'shopping',
     'utilities',
-    'other'
+    'other',
   };
   static bool isValid(String cat) => _valid.contains(cat);
 }
@@ -780,7 +780,7 @@ class BalanceCalculator {
   }
 
   static double afterSettlement(
-          {required double currentBalance, required double settledAmount}) =>
+          {required double currentBalance, required double settledAmount,}) =>
       currentBalance + settledAmount;
 }
 
@@ -813,7 +813,7 @@ class CustomRewardInput {
   final String icon;
 
   CustomRewardInput(
-      {required this.title, required this.cost, required this.icon});
+      {required this.title, required this.cost, required this.icon,});
 
   bool get isValid => title.trim().isNotEmpty && cost > 0;
 }

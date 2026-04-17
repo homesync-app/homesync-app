@@ -241,7 +241,7 @@ class TaskRpcService extends BaseRpcService {
   }
 
   Future<Map<String, dynamic>> restoreTaskCoins(
-      {required String taskId}) async {
+      {required String taskId,}) async {
     final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'restore_task_coins',

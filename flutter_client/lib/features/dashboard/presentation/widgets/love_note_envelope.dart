@@ -282,11 +282,11 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
               ),
             ),
             // Footer
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Text('❤️', style: TextStyle(fontSize: 11)),
                   SizedBox(width: 4),
                   Text(

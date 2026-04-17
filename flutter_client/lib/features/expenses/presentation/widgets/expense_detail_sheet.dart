@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:intl/intl.dart';
 
 class ExpenseDetailSheet {
   static void show(BuildContext context, ExpenseModel expense) {
@@ -450,7 +450,7 @@ class _ExpenseDetailSheetContentState
   }
 
   static Widget _buildTypeBadge(String label, Color color,
-      {bool isSmall = false}) {
+      {bool isSmall = false,}) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmall ? 10 : 12,
@@ -476,7 +476,7 @@ class _ExpenseDetailSheetContentState
     final items = lines
         .map((e) => e.trim().replaceAll(RegExp(r'^[-*•]\s*'), ''))
         .where(
-            (e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'))
+            (e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'),)
         .toList();
 
     if (items.isEmpty) {

@@ -30,7 +30,7 @@ class AdminRpcService extends BaseRpcService {
           'timestamp': DateTime.now().toIso8601String(),
           'operating_system':
               kIsWeb ? 'Browser' : defaultTargetPlatform.toString(),
-        }
+        },
       };
 
       await client.from('application_logs').insert(logData);

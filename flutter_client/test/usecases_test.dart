@@ -1,16 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/expenses/domain/usecases/save_expense_usecase.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/usecases/complete_task_usecase.dart';
 import 'package:homesync_client/features/tasks/domain/usecases/create_task_usecase.dart';
-import 'package:homesync_client/core/models/task_completion_result.dart';
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/expenses/domain/usecases/save_expense_usecase.dart';
-import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:homesync_client/core/errors/failures.dart';
 
 // Manual Mock for TaskRepository
 class MockTaskRepository implements TaskRepository {
@@ -38,26 +38,26 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds, DateTime? completedAt}) async {
+      {List<String>? userIds, DateTime? completedAt,}) async {
     completeTaskCalled = true;
     return right(const TaskCompletionResult(
       success: true,
       message: 'ok',
       queued: false,
       xpEarned: 20,
-    ));
+    ),);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
       List<TaskModel> tasks,
-      {List<String>? userIds, DateTime? completedAt}) async {
+      {List<String>? userIds, DateTime? completedAt,}) async {
     return right({'success': true});
   }
 
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-          {int limit = 100, int offset = 0}) async =>
+          {int limit = 100, int offset = 0,}) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async =>
@@ -73,20 +73,20 @@ class MockTaskRepository implements TaskRepository {
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> verifyTask(
-          String taskId, String verifiedByUserId) async =>
+          String taskId, String verifiedByUserId,) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> objectTask(
-          String taskId, String objectedByUserId) async =>
+          String taskId, String objectedByUserId,) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> editTask(
-          String taskId, Map<String, dynamic> updates) async =>
+          String taskId, Map<String, dynamic> updates,) async =>
       throw UnimplementedError();
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-          String activityId) async =>
+          String activityId,) async =>
       throw UnimplementedError();
 }
 
@@ -107,6 +107,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   }) async {
     saveExpenseCalled = true;
     return const Right(null);
@@ -117,15 +118,15 @@ class MockExpenseRepository implements ExpenseRepository {
       throw UnimplementedError();
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-          String householdId) async =>
+          String householdId,) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-          String expenseId) async =>
+          String expenseId,) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-          String householdId) async =>
+          String householdId,) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> deleteExpense(String expenseId) async =>
@@ -141,7 +142,7 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-          String userId, String householdId) async =>
+          String userId, String householdId,) async =>
       throw UnimplementedError();
 
   @override
@@ -211,7 +212,7 @@ void main() {
           xpReward: 10,
           coinReward: 5,
           householdId: 'h',
-          createdAt: DateTime.now());
+          createdAt: DateTime.now(),);
 
       await useCase.call(task);
 
@@ -226,7 +227,7 @@ void main() {
           xpReward: 10,
           coinReward: 5,
           householdId: 'h',
-          createdAt: DateTime.now());
+          createdAt: DateTime.now(),);
 
       final result = await useCase.call(task);
       expect(result.isLeft(), isTrue);
@@ -249,7 +250,7 @@ void main() {
           category: 'kitchen',
           difficulty: 'easy',
           xpReward: 10,
-          coinReward: 5);
+          coinReward: 5,);
 
       expect(mockRepo.createTaskCalled, isTrue);
     });
@@ -260,7 +261,7 @@ void main() {
           category: '',
           difficulty: 'easy',
           xpReward: 10,
-          coinReward: 5);
+          coinReward: 5,);
       expect(result.isLeft(), isTrue);
     });
 
@@ -270,7 +271,7 @@ void main() {
           category: 'kitchen',
           difficulty: 'easy',
           xpReward: 10,
-          coinReward: 5);
+          coinReward: 5,);
       expect(result.isLeft(), isTrue);
     });
   });
@@ -292,7 +293,7 @@ void main() {
           category: 'food',
           paidBy: 'u1',
           paidAt: DateTime.now(),
-          splitType: SplitType.equal);
+          splitType: SplitType.equal,);
 
       expect(mockRepo.saveExpenseCalled, isTrue);
     });
@@ -305,7 +306,7 @@ void main() {
           category: 'food',
           paidBy: 'u1',
           paidAt: DateTime.now(),
-          splitType: SplitType.equal);
+          splitType: SplitType.equal,);
       expect(result.isLeft(), isTrue);
     });
 
@@ -317,7 +318,7 @@ void main() {
           category: 'food',
           paidBy: 'u1',
           paidAt: DateTime.now(),
-          splitType: SplitType.equal);
+          splitType: SplitType.equal,);
       expect(result.isLeft(), isTrue);
     });
   });

@@ -386,7 +386,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                               color: isSelected
                                                   ? color
                                                   : color.withValues(
-                                                      alpha: 0.8),
+                                                      alpha: 0.8,),
                                               size: 24,
                                             ),
                                           ),

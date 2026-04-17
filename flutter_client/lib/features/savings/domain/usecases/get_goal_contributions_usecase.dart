@@ -1,7 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import '../models/savings_model.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
+
+import '../models/savings_model.dart';
 
 class GetGoalContributionsUseCase {
   final SavingsRepository repository;

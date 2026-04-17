@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
-import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -365,7 +365,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildFinanceSummary(
-      AppThemeColors theme, HouseholdCapabilities caps) {
+      AppThemeColors theme, HouseholdCapabilities caps,) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
 
     return Column(
@@ -559,7 +559,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                         ? Text('${item.quantity} ${item.unit ?? ''}')
                         : null,
                     trailing: Icon(Icons.chevron_right_rounded,
-                        color: theme.textMuted, size: 20),
+                        color: theme.textMuted, size: 20,),
                     onTap: () {
                       final index = indexForMainTab(caps, MainTab.shopping);
                       if (index >= 0) {
@@ -671,6 +671,6 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
           };
     final currentUserId = ref.watch(currentUserIdProvider);
     return ActivityChatBubble(
-        activity: activityMap, currentUserId: currentUserId);
+        activity: activityMap, currentUserId: currentUserId,);
   }
 }

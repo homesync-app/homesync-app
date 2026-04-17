@@ -40,7 +40,7 @@ class ReceiptScanResult {
   });
 
   factory ReceiptScanResult.fromJson(
-      Map<String, dynamic> json, String localImagePath) {
+      Map<String, dynamic> json, String localImagePath,) {
     return ReceiptScanResult(
       merchant: json['merchant'] as String?,
       amount: (json['amount'] as num?)?.toDouble(),

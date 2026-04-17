@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../core/providers/connectivity_provider.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/savings_model.dart';
@@ -33,7 +34,7 @@ class SupabaseSavingsRepository
 
   @override
   Future<Either<Failure, List<SavingsGoalModel>>> getGoals(
-      {required String householdId, int? limit, int? offset}) async {
+      {required String householdId, int? limit, int? offset,}) async {
     return executeWithHandling(() async {
       var query = _client
           .from('savings_goals')
@@ -50,12 +51,12 @@ class SupabaseSavingsRepository
       return (response as List)
           .map((json) => SavingsGoalModel.fromJson(json))
           .toList();
-    }, context: 'SupabaseSavingsRepository.getGoals', isOnline: _isOnline);
+    }, context: 'SupabaseSavingsRepository.getGoals', isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions(
-      {required String goalId}) async {
+      {required String goalId,}) async {
     return executeWithHandling(() async {
       final response = await _client
           .from('savings_contributions')
@@ -66,7 +67,7 @@ class SupabaseSavingsRepository
       return (response as List)
           .map((json) => SavingsContributionModel.fromJson(json))
           .toList();
-    }, context: 'SupabaseSavingsRepository.getGoalContributions', isOnline: _isOnline);
+    }, context: 'SupabaseSavingsRepository.getGoalContributions', isOnline: _isOnline,);
   }
 
   @override
@@ -102,7 +103,7 @@ class SupabaseSavingsRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -135,7 +136,7 @@ class SupabaseSavingsRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -153,6 +154,6 @@ class SupabaseSavingsRepository
               filters: [OfflineFilter(column: 'id', value: goalId)],
             ),
           );
-        });
+        },);
   }
 }

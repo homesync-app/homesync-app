@@ -1,40 +1,39 @@
 import 'dart:async';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/constants/admin_testing_config.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
-import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
+import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/premium_service.dart';
-import 'package:homesync_client/core/constants/admin_testing_config.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fa;
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -348,7 +347,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           ),
         );
     log.i(
-        '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}');
+        '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}',);
 
     if (!mounted) return;
 
@@ -468,7 +467,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
       if (curr != null) {
         log.i(
-            'Auth transition: prev=${prev?.isAuthenticated}, curr=${curr.isAuthenticated}, startupReady=$_startupReady');
+            'Auth transition: prev=${prev?.isAuthenticated}, curr=${curr.isAuthenticated}, startupReady=$_startupReady',);
       }
 
       if (!_startupReady) return;

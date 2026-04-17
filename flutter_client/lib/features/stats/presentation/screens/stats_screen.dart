@@ -32,7 +32,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   }
 
   int _totalTasksCompleted(List<Map<String, dynamic>> taskStats,
-      List<Map<String, dynamic>> memberStats) {
+      List<Map<String, dynamic>> memberStats,) {
     final fromTasks = taskStats.fold(
       0,
       (s, e) => s + ((e['completed_count'] as num?)?.toInt() ?? 0),
@@ -48,7 +48,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   }
 
   int _totalXpEarned(
-      List<Map<String, dynamic>> taskStats, List<Map<String, dynamic>> memberStats) {
+      List<Map<String, dynamic>> taskStats, List<Map<String, dynamic>> memberStats,) {
     final fromTasks = taskStats.fold(
       0,
       (s, e) => s + ((e['total_xp'] as num?)?.toInt() ?? 0),

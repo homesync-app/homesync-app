@@ -73,7 +73,7 @@ class AppIdentityService extends ChangeNotifier {
           'p_email': firebaseUser.email ?? '',
           'p_full_name': firebaseUser.displayName,
           'p_avatar_url': firebaseUser.photoURL,
-        });
+        },);
         final userId = result?.toString();
         if (userId != null && userId.isNotEmpty) {
           _currentUserId = userId;

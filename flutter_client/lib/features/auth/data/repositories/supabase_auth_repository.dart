@@ -82,7 +82,7 @@ class SupabaseAuthRepository
         email: email,
         password: password,
       );
-    }, context: 'SupabaseAuthRepository.signUpWithEmail', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.signUpWithEmail', isOnline: _isOnline,);
   }
 
   @override
@@ -95,7 +95,7 @@ class SupabaseAuthRepository
         email: email,
         password: password,
       );
-    }, context: 'SupabaseAuthRepository.signInWithEmail', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.signInWithEmail', isOnline: _isOnline,);
   }
 
   @override
@@ -105,23 +105,23 @@ class SupabaseAuthRepository
       log.i('SupabaseAuthRepository: using Firebase Auth flow');
       final success = await _firebaseAuthService.signInWithGoogle();
       log.i(
-          'SupabaseAuthRepository: Firebase Google sign-in returned: $success');
+          'SupabaseAuthRepository: Firebase Google sign-in returned: $success',);
       return success;
-    }, context: 'SupabaseAuthRepository.signInWithGoogle', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.signInWithGoogle', isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, void>> signOut() async {
     return executeWithHandling(() async {
       await _firebaseAuthService.signOut();
-    }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, void>> resetPassword(String email) async {
     return executeWithHandling(() async {
       await _firebaseAuthService.resetPassword(email);
-    }, context: 'SupabaseAuthRepository.resetPassword', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.resetPassword', isOnline: _isOnline,);
   }
 
   @override
@@ -135,7 +135,7 @@ class SupabaseAuthRepository
 
       if (data == null) return null;
       return UserModel.fromJson(data);
-    }, context: 'SupabaseAuthRepository.getUserProfile', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.getUserProfile', isOnline: _isOnline,);
   }
 
   @override
@@ -158,6 +158,6 @@ class SupabaseAuthRepository
       if (updates.isEmpty) return;
 
       await _client.from('users').update(updates).eq('id', userId);
-    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline);
+    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline,);
   }
 }

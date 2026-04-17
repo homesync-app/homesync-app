@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 class AppEnvironment {
@@ -60,7 +59,7 @@ class AppEnvironment {
         return supabaseUrl;
       case Environment.production:
         return const String.fromEnvironment('API_URL_PROD',
-            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co');
+            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co',);
     }
   }
 

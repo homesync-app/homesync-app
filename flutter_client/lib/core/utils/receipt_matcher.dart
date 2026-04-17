@@ -35,7 +35,7 @@ class ReceiptMatcher {
               name: item['name'] ?? '',
               emoji: item['emoji'] ?? '🛒',
               category: entry.key,
-            )))
+            ),),)
         .toList();
   }
 
@@ -162,8 +162,12 @@ class ReceiptMatcher {
     // Optimización: si la diferencia de largo ya supera el threshold, descartamos
     if ((m - n).abs() > 3) return 99;
     final dp = List.generate(m + 1, (i) => List.filled(n + 1, 0));
-    for (var i = 0; i <= m; i++) dp[i][0] = i;
-    for (var j = 0; j <= n; j++) dp[0][j] = j;
+    for (var i = 0; i <= m; i++) {
+      dp[i][0] = i;
+    }
+    for (var j = 0; j <= n; j++) {
+      dp[0][j] = j;
+    }
     for (var i = 1; i <= m; i++) {
       for (var j = 1; j <= n; j++) {
         if (a[i - 1] == b[j - 1]) {
@@ -340,7 +344,7 @@ ScanMatchResult resolveScanItems({
         category: catalog.category,
         householdId: householdId,
         createdAt: DateTime.now(),
-      ));
+      ),);
     }
   }
 

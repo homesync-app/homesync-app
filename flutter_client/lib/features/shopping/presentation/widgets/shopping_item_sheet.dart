@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import '../providers/shopping_provider.dart';
-import '../../domain/models/shopping_model.dart';
+
 import '../../domain/models/shopping_categories.dart';
+import '../../domain/models/shopping_model.dart';
+import '../providers/shopping_provider.dart';
 
 class ShoppingItemSheet extends ConsumerStatefulWidget {
   final ShoppingItemModel? item;
@@ -142,7 +143,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 IconButton(
                   onPressed: _delete,
                   icon: const Icon(Icons.delete_outline_rounded,
-                      color: AppColors.error),
+                      color: AppColors.error,),
                 ),
             ],
           ),

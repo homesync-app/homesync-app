@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
 /// Centralized logging service for the application.
@@ -58,7 +58,7 @@ class LoggerService {
   /// Reports errors to Crashlytics in production (mobile only).
   void _reportToCrashlytics(
       dynamic message, Object? error, StackTrace? stackTrace,
-      {required bool isFatal}) {
+      {required bool isFatal,}) {
     if (kDebugMode || kIsWeb) return;
 
     try {

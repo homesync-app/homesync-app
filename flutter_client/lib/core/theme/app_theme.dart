@@ -49,7 +49,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
           side: const BorderSide(
-              color: AppColors.cardGhostBorderLight, width: 1.0),
+              color: AppColors.cardGhostBorderLight, width: 1.0,),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       ),
@@ -235,7 +235,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
           side: const BorderSide(
-              color: AppColors.cardGhostBorderDark, width: 1.0),
+              color: AppColors.cardGhostBorderDark, width: 1.0,),
         ),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       ),

@@ -6,14 +6,14 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/shared/widgets/admin_panel.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/shared/widgets/admin_panel.dart';
 
 class AdminWorkspaceScreen extends ConsumerStatefulWidget {
   const AdminWorkspaceScreen({super.key});
@@ -420,7 +420,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                             icon: const Icon(Icons.restart_alt_rounded),
                             label: Text(_isBusy
                                 ? 'Trabajando...'
-                                : 'Resetear escenario'),
+                                : 'Resetear escenario',),
                           ),
                         ),
                         SizedBox(
@@ -875,7 +875,7 @@ class _CatalogRequestsSection extends ConsumerWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                              horizontal: 10, vertical: 4,),
                           decoration: BoxDecoration(
                             color: count >= 5
                                 ? AppColors.primary.withValues(alpha: 0.15)

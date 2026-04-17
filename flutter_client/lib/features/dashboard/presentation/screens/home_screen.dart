@@ -1,24 +1,24 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
-import 'package:homesync_client/shared/widgets/app_state_views.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_solo_view.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_couple_view.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_family_view.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_friends_view.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_solo_view.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
-import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:confetti/confetti.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   final VoidCallback? onAvatarTap;

@@ -1,21 +1,22 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import '../../domain/models/shopping_model.dart';
-import '../../domain/repositories/shopping_repository.dart';
-import '../../domain/usecases/get_shopping_items_usecase.dart';
-import '../../domain/usecases/add_shopping_item_usecase.dart';
-import '../../domain/usecases/toggle_shopping_item_usecase.dart';
-import '../../domain/usecases/delete_shopping_item_usecase.dart';
-import '../../domain/usecases/clear_completed_shopping_items_usecase.dart';
-import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
 import '../../data/repositories/supabase_shopping_repository.dart';
 import '../../data/shopping_predefined.dart';
-import 'package:homesync_client/core/utils/receipt_matcher.dart';
-import 'package:uuid/uuid.dart';
+import '../../domain/models/shopping_model.dart';
+import '../../domain/repositories/shopping_repository.dart';
+import '../../domain/usecases/add_shopping_item_usecase.dart';
+import '../../domain/usecases/clear_completed_shopping_items_usecase.dart';
+import '../../domain/usecases/delete_shopping_item_usecase.dart';
+import '../../domain/usecases/get_shopping_items_usecase.dart';
+import '../../domain/usecases/toggle_shopping_item_usecase.dart';
+import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
 
 part 'shopping_provider.g.dart';
 
@@ -186,7 +187,7 @@ class ShoppingItems extends _$ShoppingItems {
           // Replace temp item with real one to get the proper ID
           final currentState = state.value ?? [];
           state = AsyncValue.data(
-            currentState.map((item) => item.id == tempItem.id ? newItem : item).toList()
+            currentState.map((item) => item.id == tempItem.id ? newItem : item).toList(),
           );
           // Log si el item no está en el catálogo predefinido (para admin analytics)
           _logCatalogRequestIfNeeded(name, emoji);
@@ -216,7 +217,7 @@ class ShoppingItems extends _$ShoppingItems {
     client.rpc('upsert_catalog_request', params: {
       'p_name': name.trim(),
       'p_emoji': emoji,
-    }).then((_) {
+    },).then((_) {
       log.d('Catalog request logged: $name');
     }).catchError((e) {
       log.w('Could not log catalog request: $e');

@@ -24,7 +24,7 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
       _RecurringExpenseFormSheetState();
 
   static Future<void> show(BuildContext context,
-      {ExpenseTemplateModel? template}) {
+      {ExpenseTemplateModel? template,}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,

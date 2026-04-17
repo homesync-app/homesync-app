@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 
 class XPToggleButton extends StatelessWidget {
   final String label;
@@ -82,7 +82,7 @@ class PrivacyBadge extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.shield_rounded,
-                color: AppColors.primary, size: 24),
+                color: AppColors.primary, size: 24,),
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -144,7 +144,7 @@ class MiniStatCard extends StatelessWidget {
     final theme = context.theme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.lg, horizontal: AppSpacing.sm),
+          vertical: AppSpacing.lg, horizontal: AppSpacing.sm,),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
@@ -246,13 +246,13 @@ class DuelHistoryWidget extends StatelessWidget {
                       colors: userResult == 'win'
                           ? [
                               AppColors.success,
-                              AppColors.success.withValues(alpha: 0.8)
+                              AppColors.success.withValues(alpha: 0.8),
                             ]
                           : userResult == 'loss'
                               ? [Colors.red.shade400, Colors.red.shade300]
                               : [
                                   AppColors.textMuted.withValues(alpha: 0.3),
-                                  AppColors.textMuted.withValues(alpha: 0.2)
+                                  AppColors.textMuted.withValues(alpha: 0.2),
                                 ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -289,7 +289,7 @@ class DuelHistoryWidget extends StatelessWidget {
                           ),
                           const Text(' vs ',
                               style: TextStyle(
-                                  color: AppColors.textMuted, fontSize: 12)),
+                                  color: AppColors.textMuted, fontSize: 12,),),
                           Text(
                             loserName,
                             style: const TextStyle(
@@ -313,7 +313,7 @@ class DuelHistoryWidget extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+                      horizontal: AppSpacing.sm, vertical: AppSpacing.xs,),
                   decoration: BoxDecoration(
                     color: userResult == 'win'
                         ? AppColors.success.withValues(alpha: 0.1)

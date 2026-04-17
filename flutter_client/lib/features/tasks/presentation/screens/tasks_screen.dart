@@ -1,32 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:timeago/timeago.dart' as timeago;
-// ignore: implementation_imports
-import 'package:timeago/src/messages/es_messages.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
-
+import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
     show ScheduleDialog, TaskRepeatMode;
-import 'package:homesync_client/shared/widgets/app_state_views.dart';
-import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+// ignore: implementation_imports
+import 'package:timeago/src/messages/es_messages.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
@@ -144,7 +143,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                       'email': m.email,
                       'avatar_url': m.avatarUrl,
                     },
-                  })
+                  },)
               .toList(),
           onSave: (selection) async {
             String? recurrenceType;
@@ -344,7 +343,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                     final visibleCats = catList
                                         .where((c) => activeCats.contains(
                                             CategoryMapping.normaliseCategory(
-                                                c.id)))
+                                                c.id,),),)
                                         .toList();
 
                                     return Column(
@@ -371,9 +370,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                       e.value.id,
                                                       e.value.name,
                                                       AppColors.fromHex(
-                                                          e.value.color),
+                                                          e.value.color,),
                                                     ).animateStaggered(
-                                                        e.key + 2),
+                                                        e.key + 2,),
                                                   ),
                                             ],
                                           ),
@@ -386,17 +385,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                               ? Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                          top: 10),
+                                                          top: 10,),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: theme.surface,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              20),
+                                                              20,),
                                                       border: Border.all(
                                                         color: theme.border
                                                             .withValues(
-                                                                alpha: 0.88),
+                                                                alpha: 0.88,),
                                                       ),
                                                       boxShadow:
                                                           theme.cardShadow,
@@ -413,7 +412,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                         ref
                                                             .read(
                                                                 taskSearchQueryProvider
-                                                                    .notifier)
+                                                                    .notifier,)
                                                             .setQuery(val);
                                                         setState(() {});
                                                       },
@@ -443,11 +442,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                           .clear();
                                                                       ref
                                                                           .read(taskSearchQueryProvider
-                                                                              .notifier)
+                                                                              .notifier,)
                                                                           .setQuery(
-                                                                              '');
+                                                                              '',);
                                                                       setState(
-                                                                          () {});
+                                                                          () {},);
                                                                       _searchFocusNode
                                                                           .requestFocus();
                                                                     },
@@ -517,7 +516,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                               if (tasks.isEmpty)
                                 _buildEmptyState(selectedCategories.isEmpty
                                     ? null
-                                    : 'filtered'),
+                                    : 'filtered',),
                               ..._buildGroupedTasks(
                                 tasks,
                                 categoriesAsync.maybeWhen(
@@ -545,16 +544,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                   icon: const Icon(Icons.add_rounded),
                                   label: const Text('Cargar mas tareas',
                                       style: TextStyle(
-                                          fontWeight: FontWeight.w700)),
+                                          fontWeight: FontWeight.w700,),),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.primary,
                                     side: const BorderSide(
-                                        color: AppColors.primary, width: 1.5),
+                                        color: AppColors.primary, width: 1.5,),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 32, vertical: 16),
+                                        horizontal: 32, vertical: 16,),
                                     shape: RoundedRectangleBorder(
                                         borderRadius:
-                                            BorderRadius.circular(24)),
+                                            BorderRadius.circular(24),),
                                   ),
                                 ),
                               ),
@@ -668,7 +667,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                     color: color.withValues(alpha: 0.10),
                     blurRadius: 14,
                     offset: const Offset(0, 6),
-                  )
+                  ),
                 ]
               : theme.cardShadow,
         ),
@@ -742,7 +741,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     if (selectedCategories.isNotEmpty) {
       tasksToDisplay = deduped
           .where((t) => selectedCategories
-              .contains(CategoryMapping.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)),)
           .toList();
     }
 
@@ -770,14 +769,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               name:
                   normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
               icon: 'home',
-              color: '#94A3B8');
+              color: '#94A3B8',);
 
       widgets.add(_SectionHeader(
         icon: CategoryMapping.getCategoryMaterialIcon(normCat),
         title: catInfo.name,
         count: catTasks.length,
         color: AppColors.fromHex(catInfo.color),
-      ).animateEntrance());
+      ).animateEntrance(),);
 
       widgets.addAll(catTasks.asMap().entries.map((entry) {
         final index = entry.key;
@@ -788,7 +787,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           onSchedule: () => _showScheduleDialog(task),
           onEdit: () => _showEditDialog(task),
         ).animateStaggered(index);
-      }));
+      }),);
     }
 
     return widgets;
@@ -1021,7 +1020,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       if (!_isExpanded && task.coinReward > 0) ...[
                         const SizedBox(width: 10),
                         _badge(
-                            'Coins ${task.coinReward}', AppColors.accentGreen),
+                            'Coins ${task.coinReward}', AppColors.accentGreen,),
                       ],
                     ],
                   ),

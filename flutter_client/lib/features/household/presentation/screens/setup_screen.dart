@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:homesync_client/core/widgets/homesync_logo.dart';
-import 'package:homesync_client/core/theme/app_theme.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/core/services/template_service.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/homesync_logo.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
+import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -305,7 +305,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                '¡Te has unido con éxito! ?? Ahora personaliza tus tareas.'),
+                '¡Te has unido con éxito! ?? Ahora personaliza tus tareas.',),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -418,7 +418,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+                  content: Text('No se pudo abrir WhatsApp. Código copiado.'),),
             );
           }
         }
@@ -483,7 +483,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                             Container(
                               margin: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 12),
+                                  horizontal: 14, vertical: 12,),
                               decoration: BoxDecoration(
                                 color:
                                     AppColors.primary.withValues(alpha: 0.10),
@@ -496,7 +496,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                               child: const Row(
                                 children: [
                                   Icon(Icons.auto_fix_high_rounded,
-                                      color: AppColors.primary, size: 18),
+                                      color: AppColors.primary, size: 18,),
                                   SizedBox(width: 10),
                                   Expanded(
                                     child: Text(
@@ -583,7 +583,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           color: AppColors.primary.withValues(alpha: 0.18),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ]
                     : null,
               ),
@@ -896,7 +896,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.edit_rounded,
-                        color: Colors.white, size: 20),
+                        color: Colors.white, size: 20,),
                   ),
                 ],
               ),
@@ -1277,7 +1277,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     color: AppColors.primary.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -1468,7 +1468,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                   ),
                                   if (_isGeneratingCode)
                                     const CircularProgressIndicator(
-                                        color: AppColors.primary)
+                                        color: AppColors.primary,)
                                   else
                                     FittedBox(
                                       child: Text(
@@ -1500,7 +1500,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                      color: AppColors.border.withValues(alpha: 0.85)),
+                      color: AppColors.border.withValues(alpha: 0.85),),
                 ),
                 child: Row(
                   children: [
@@ -1512,7 +1512,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(Icons.info_outline_rounded,
-                          color: AppColors.sage, size: 18),
+                          color: AppColors.sage, size: 18,),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -1882,7 +1882,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 2)),
+                          letterSpacing: 2,),),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1891,15 +1891,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           style: const TextStyle(
                               fontSize: 48,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.primary)),
+                              color: AppColors.primary,),),
                       const Text(' / ',
                           style: TextStyle(
-                              fontSize: 32, fontWeight: FontWeight.w300)),
+                              fontSize: 32, fontWeight: FontWeight.w300,),),
                       Text('${(100 - (_tempRatio * 100)).toInt()}%',
                           style: const TextStyle(
                               fontSize: 48,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.error)),
+                              color: AppColors.error,),),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -1931,9 +1931,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       _selectedMode == 'couple'
                           ? '?? Ideal para ingresos similares.'
                           : '?? Ideal para ingresos similares o gastos divididos por igual.',
-                      _tempRatio == 0.5),
+                      _tempRatio == 0.5,),
                   _buildStrategyTip('Proporcional',
-                      '?? Ajustado a lo que cada uno gana.', _tempRatio != 0.5),
+                      '?? Ajustado a lo que cada uno gana.', _tempRatio != 0.5,),
                 ],
               ),
             ),
@@ -1982,12 +1982,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         border: Border.all(
             color: active
                 ? AppColors.primary.withValues(alpha: 0.28)
-                : AppColors.cardBorder.withValues(alpha: 0.85)),
+                : AppColors.cardBorder.withValues(alpha: 0.85),),
       ),
       child: Row(
         children: [
           Icon(active ? Icons.check_circle_rounded : Icons.circle_outlined,
-              color: active ? AppColors.primary : AppColors.textMuted),
+              color: active ? AppColors.primary : AppColors.textMuted,),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -1996,12 +1996,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 Text(title,
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: active ? AppColors.primary : null)),
+                        color: active ? AppColors.primary : null,),),
                 Text(desc,
                     style: TextStyle(
                         fontSize: 12,
                         color:
-                            AppColors.textSecondary.withValues(alpha: 0.82))),
+                            AppColors.textSecondary.withValues(alpha: 0.82),),),
               ],
             ),
           ),
@@ -2131,7 +2131,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -3406,7 +3406,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               ),
               child: isSelected
                   ? const Icon(Icons.check_rounded,
-                      color: Colors.white, size: 18)
+                      color: Colors.white, size: 18,)
                   : null,
             ),
           ],
@@ -3584,7 +3584,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               ),
               child: isSelected
                   ? const Icon(Icons.check_rounded,
-                      color: Colors.white, size: 15)
+                      color: Colors.white, size: 15,)
                   : null,
             ),
           ],
@@ -3741,7 +3741,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               ),
               child: isSelected
                   ? const Icon(Icons.check_rounded,
-                      color: Colors.white, size: 18)
+                      color: Colors.white, size: 18,)
                   : null,
             ),
           ],
@@ -3931,7 +3931,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               ),
               child: isSelected
                   ? const Icon(Icons.check_rounded,
-                      color: Colors.white, size: 14)
+                      color: Colors.white, size: 14,)
                   : null,
             ),
           ],
@@ -4070,7 +4070,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                   ),
                                   if (_isGeneratingCode)
                                     const CircularProgressIndicator(
-                                        color: AppColors.primary)
+                                        color: AppColors.primary,)
                                   else
                                     FittedBox(
                                       child: Text(
@@ -4102,7 +4102,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   color: Colors.white.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                      color: AppColors.border.withValues(alpha: 0.85)),
+                      color: AppColors.border.withValues(alpha: 0.85),),
                 ),
                 child: Row(
                   children: [
@@ -4645,7 +4645,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     color: AppColors.primary.withValues(alpha: 0.12),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -4663,7 +4663,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             if (isSelected) ...[
               const SizedBox(width: 8),
               const Icon(Icons.check_rounded,
-                  color: AppColors.primary, size: 16),
+                  color: AppColors.primary, size: 16,),
             ],
           ],
         ),
@@ -4716,7 +4716,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   color: AppColors.primary.withValues(alpha: 0.16),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
-                )
+                ),
               ]
             : null,
       ),
@@ -4746,7 +4746,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                    color: AppColors.primary, strokeWidth: 2.5),
+                    color: AppColors.primary, strokeWidth: 2.5,),
               )
             : Text(
                 text,

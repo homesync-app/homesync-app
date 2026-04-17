@@ -135,7 +135,7 @@ class NotificationService {
         'token': token,
         'platform': defaultTargetPlatform.name,
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,token');
+      }, onConflict: 'user_id,token',);
       log.i('FCM token guardado');
     } catch (e, stack) {
       log.e('Error guardando FCM token: $e', error: e, stackTrace: stack);

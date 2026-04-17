@@ -52,41 +52,41 @@ class UserAvatar {
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
-      'color': Color(0xFFE3F2FD)
+      'color': Color(0xFFE3F2FD),
     },
     {
       'id': 'premium_girl',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
-      'color': Color(0xFFFCE4EC)
+      'color': Color(0xFFFCE4EC),
     },
     {
       'id': 'premium_cat',
       'url': 'assets/images/gato_premium_v2.mp4',
       'name': 'Gato Animado',
-      'color': Color(0xFFFFF3E0)
+      'color': Color(0xFFFFF3E0),
     },
     {
       'id': 'premium_dog',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
-      'color': Color(0xFFE8EAF6)
+      'color': Color(0xFFE8EAF6),
     },
     {
       'id': 'premium_robot',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
-      'color': Color(0xFFE0F2F1)
+      'color': Color(0xFFE0F2F1),
     },
     {
       'id': 'premium_bird',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'P\u00E1jaro 3D',
-      'color': Color(0xFFF3E5F5)
+      'color': Color(0xFFF3E5F5),
     },
   ];
 
@@ -379,7 +379,7 @@ class _AvatarContent extends StatelessWidget {
                   color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ]
             : null,
       ),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:intl/intl.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   final Function(TaskModel) onEdit;
@@ -84,10 +84,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       backgroundColor: context.theme.scaffoldBackground,
       body: tasksAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
+            child: CircularProgressIndicator(color: AppColors.primary),),
         error: (err, _) => Center(
             child: Text('Error: $err',
-                style: const TextStyle(color: AppColors.error))),
+                style: const TextStyle(color: AppColors.error),),),
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);
 
@@ -142,7 +142,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -186,7 +186,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     onTap: _nextWeek,
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ],
@@ -195,7 +195,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildArrowButton(
-      {required IconData icon, required VoidCallback onTap}) {
+      {required IconData icon, required VoidCallback onTap,}) {
     final theme = context.theme;
     return AnimatedPress(
       onTap: onTap,
@@ -295,7 +295,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 task: task,
                 onEdit: () => widget.onEdit(task),
                 onSchedule: () => widget.onSchedule(task),
-              )),
+              ),),
       ],
     );
   }
@@ -437,7 +437,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             if (task.recurrenceType != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                    horizontal: 6, vertical: 2,),
                                 decoration: BoxDecoration(
                                   color: AppColors.accentTeal
                                       .withValues(alpha: 0.1),
@@ -459,7 +459,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                   ),
                   if (isCompleted && !_isExpanded)
                     const Icon(Icons.check_circle_rounded,
-                        color: AppColors.accentGreen, size: 24),
+                        color: AppColors.accentGreen, size: 24,),
                 ],
               ),
               ClipRect(

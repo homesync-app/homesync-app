@@ -53,6 +53,7 @@ class _FailingExpenseRepository implements ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   }) async =>
       throw UnimplementedError();
 
@@ -151,6 +152,16 @@ class _FailingShoppingRepository implements ShoppingRepository {
       throw UnimplementedError();
 
   @override
+  Future<Either<Failure, void>> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
   Future<Either<Failure, void>> toggleItem({
     required String itemId,
     required bool completed,
@@ -213,7 +224,7 @@ class _FailingSavingsRepository implements SavingsRepository {
 class _FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
   RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) =>
+          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
       _FakeRealtimeChannel();
 }
 
@@ -232,7 +243,7 @@ class _FakeRealtimeChannel extends Fake implements RealtimeChannel {
   RealtimeChannel subscribe(
           [void Function(RealtimeSubscribeStatus status, Object? error)?
               callback,
-          Duration? timeout]) =>
+          Duration? timeout,]) =>
       this;
 
   @override

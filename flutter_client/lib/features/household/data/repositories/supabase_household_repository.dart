@@ -1,13 +1,13 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/offline/offline_storage_service.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
-import 'package:homesync_client/core/offline/offline_storage_service.dart';
-import 'package:homesync_client/config/app_environment.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -27,7 +27,7 @@ class SupabaseHouseholdRepository
   final Ref _ref;
 
   SupabaseHouseholdRepository(
-      {required SupabaseClient client, required Ref ref})
+      {required SupabaseClient client, required Ref ref,})
       : _client = client,
         _ref = ref;
 
@@ -99,12 +99,12 @@ class SupabaseHouseholdRepository
       return result?['household_id'] as String?;
     },
         context: 'SupabaseHouseholdRepository.getHouseholdId',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, HouseholdModel?>> getHousehold(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final result = await _client
           .from(AppConstants.tableHouseholds)
@@ -115,7 +115,7 @@ class SupabaseHouseholdRepository
       return HouseholdModel.fromJson(result);
     },
         context: 'SupabaseHouseholdRepository.getHousehold',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -128,7 +128,7 @@ class SupabaseHouseholdRepository
       return (result as List).map((e) => e['user_id'] as String).toList();
     },
         context: 'SupabaseHouseholdRepository.getMemberIds',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -166,7 +166,7 @@ class SupabaseHouseholdRepository
                   },
                 };
               },
-            ));
+            ),);
           } else {
             final response = await _client
                 .from(AppConstants.tableHouseholdMembers)
@@ -180,7 +180,7 @@ class SupabaseHouseholdRepository
 
           final names = members
               .map((member) =>
-                  (member['users'] as Map<String, dynamic>?)?['full_name'])
+                  (member['users'] as Map<String, dynamic>?)?['full_name'],)
               .whereType<String>()
               .toList();
 
@@ -216,12 +216,12 @@ class SupabaseHouseholdRepository
               .get('household_members_$resolvedHouseholdId');
           if (cached != null && cached['members'] != null) {
             log.i(
-                'SupabaseHouseholdRepository.getHouseholdMembersRaw: Recovered from cache');
+                'SupabaseHouseholdRepository.getHouseholdMembersRaw: Recovered from cache',);
             return List<Map<String, dynamic>>.from((cached['members'] as List)
-                .map((e) => Map<String, dynamic>.from(e as Map)));
+                .map((e) => Map<String, dynamic>.from(e as Map)),);
           }
           throw const NetworkFailure('No data in cache');
-        });
+        },);
   }
 
   @override
@@ -237,12 +237,12 @@ class SupabaseHouseholdRepository
       return response as String;
     },
         context: 'SupabaseHouseholdRepository.generateInvitationCode',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> joinHousehold(
-      String code) async {
+      String code,) async {
     return executeWithHandling(() async {
       await _requireCurrentUserId();
 
@@ -258,7 +258,7 @@ class SupabaseHouseholdRepository
       return result;
     },
         context: 'SupabaseHouseholdRepository.joinHousehold',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -268,7 +268,7 @@ class SupabaseHouseholdRepository
       return Map<String, dynamic>.from(response);
     },
         context: 'SupabaseHouseholdRepository.resetUserAccount',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -287,7 +287,7 @@ class SupabaseHouseholdRepository
           .eq('household_id', householdMember['household_id']);
     },
         context: 'SupabaseHouseholdRepository.removeMember',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -308,7 +308,7 @@ class SupabaseHouseholdRepository
       return result;
     },
         context: 'SupabaseHouseholdRepository.resetAndClearHousehold',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -322,7 +322,7 @@ class SupabaseHouseholdRepository
           .update({'default_split_ratio': ratio}).eq('id', householdId);
     },
         context: 'SupabaseHouseholdRepository.updateDefaultSplitRatio',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -336,7 +336,7 @@ class SupabaseHouseholdRepository
           .update({'household_type': type.toLowerCase()}).eq('id', householdId);
     },
         context: 'SupabaseHouseholdRepository.updateHouseholdType',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -350,7 +350,7 @@ class SupabaseHouseholdRepository
           .update({'tasks_enabled': enabled}).eq('id', householdId);
     },
         context: 'SupabaseHouseholdRepository.updateTasksEnabled',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -367,7 +367,7 @@ class SupabaseHouseholdRepository
           .eq('household_id', householdMember['household_id']);
     },
         context: 'SupabaseHouseholdRepository.updateMemberDisplayRole',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -382,7 +382,7 @@ class SupabaseHouseholdRepository
       return Map<String, dynamic>.from(response as Map);
     },
         context: 'SupabaseHouseholdRepository.qaResetScenario',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -407,7 +407,7 @@ class SupabaseHouseholdRepository
       return Map<String, dynamic>.from(response as Map);
     },
         context: 'SupabaseHouseholdRepository.qaAddDummyMember',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -426,6 +426,6 @@ class SupabaseHouseholdRepository
       return Map<String, dynamic>.from(response as Map);
     },
         context: 'SupabaseHouseholdRepository.qaDeleteDummyMember',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 }

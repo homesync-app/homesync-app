@@ -1,9 +1,10 @@
 import 'dart:developer' as dev;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseDashboardRepository implements DashboardRepository {
   final SupabaseClient _client;
@@ -21,7 +22,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
   @override
   Stream<List<Map<String, dynamic>>> watchRecentActivity(
-      String householdId, String userId) {
+      String householdId, String userId,) {
     final now = DateTime.now();
     final since = DateTime(
       now.year,
@@ -148,7 +149,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getRecentActivity(
-      String householdId, String userId) async {
+      String householdId, String userId,) async {
     try {
       final now = DateTime.now();
       final since = DateTime(
@@ -255,7 +256,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
           final shouldShow = isShared || isGift || creatorId == userId;
 
           dev.log(
-              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow');
+              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',);
 
           return shouldShow;
         }

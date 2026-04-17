@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
@@ -12,6 +11,7 @@ import 'package:homesync_client/features/expenses/presentation/widgets/expense_d
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
 
 class ActivityChatBubble extends ConsumerWidget {
   final Map<String, dynamic> activity;
@@ -44,7 +44,7 @@ class ActivityChatBubble extends ConsumerWidget {
     final xpReward =
         _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
     final coinsReward = _readInt(
-        data['coins_reward'] ?? data['coins_per_user'] ?? data['coins']);
+        data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],);
     final category = data['category'] as String?;
     final amount = _parseAmount(data['amount']);
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
@@ -177,7 +177,7 @@ class ActivityChatBubble extends ConsumerWidget {
                           children: [
                             Icon(Icons.access_time_rounded,
                                 size: 12,
-                                color: theme.textMuted.withValues(alpha: 0.72)),
+                                color: theme.textMuted.withValues(alpha: 0.72),),
                             const SizedBox(width: 4),
                             Text(
                               _formatTime(createdAt),

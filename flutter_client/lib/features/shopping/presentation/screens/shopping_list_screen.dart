@@ -1,18 +1,19 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../data/shopping_predefined.dart';
-import '../../domain/models/shopping_model.dart';
-import '../../domain/models/shopping_categories.dart';
-import '../providers/shopping_provider.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+
+import '../../data/shopping_predefined.dart';
+import '../../domain/models/shopping_categories.dart';
+import '../../domain/models/shopping_model.dart';
+import '../providers/shopping_provider.dart';
 import '../widgets/shopping_item_sheet.dart';
 
 // -----------------------------------------------------------------------------
@@ -208,7 +209,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   // -- Build -----------------------------------------------------------------
 
   Widget _buildSectionHeader(String title, String sectionId,
-      {bool isAccent = false, String? emoji, int? count, Color? accentColor}) {
+      {bool isAccent = false, String? emoji, int? count, Color? accentColor,}) {
     final isExpanded = _expandedSections.contains(sectionId);
     final theme = context.theme;
     final highlightColor =
@@ -365,7 +366,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   Widget _buildPredefinedGrid(Map<String, dynamic> cat,
-      List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
+      List<ShoppingItemModel> pending, List<ShoppingItemModel> done,) {
     final predefined = ShoppingPredefined.itemsPerCategory[cat['id']] ?? [];
     if (predefined.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox());
@@ -409,7 +410,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
   }
 
   Widget _buildBottomOverlay(
-      List<ShoppingItemModel> pending, List<ShoppingItemModel> done) {
+      List<ShoppingItemModel> pending, List<ShoppingItemModel> done,) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -425,22 +426,22 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 boxShadow: [
                   BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10)
+                      blurRadius: 10,),
                 ],
               ),
               child: Column(
                 children: suggestions
                     .map((s) => ListTile(
                           leading: Text(s['emoji']!,
-                              style: const TextStyle(fontSize: 20)),
+                              style: const TextStyle(fontSize: 20),),
                           title: Text(s['name']!,
                               style:
-                                  TextStyle(color: context.theme.textPrimary)),
+                                  TextStyle(color: context.theme.textPrimary),),
                           trailing: const Icon(Icons.add_circle_outline,
-                              color: AppColors.accentGreen),
+                              color: AppColors.accentGreen,),
                           onTap: () =>
                               _handleSelection(s['name']!, pending, done),
-                        ))
+                        ),)
                     .toList(),
               ),
             );
@@ -456,7 +457,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, -4),
-              )
+              ),
             ],
           ),
           child: SafeArea(
@@ -479,7 +480,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         color: context.theme.textMuted,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
+                          horizontal: 20, vertical: 14,),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
@@ -571,14 +572,14 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
             child: Text('Error: $err',
-                style: const TextStyle(color: AppColors.error))),
+                style: const TextStyle(color: AppColors.error),),),
         data: (items) {
           final pending = items.where((i) => !i.completed).toList();
           // Deduplicate completed items by name (case-insensitive), keeping the latest
-          final _seenNames = <String>{};
+          final seenNames = <String>{};
           final done = items.where((i) => i.completed).where((i) {
             final key = i.name.toLowerCase().trim();
-            return _seenNames.add(key);
+            return seenNames.add(key);
           }).toList();
 
           return Column(
@@ -594,7 +595,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     child: CustomScrollView(
                       controller: _scrollController,
                       physics: const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics()),
+                          parent: AlwaysScrollableScrollPhysics(),),
                       slivers: [
                         _buildStaticSectionTitle(
                           'Lista actual',
@@ -819,7 +820,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                               count: (ShoppingPredefined
                                           .itemsPerCategory[cat['id']] ??
                                       [])
-                                  .length),
+                                  .length,),
                           if (_expandedSections.contains(cat['id']))
                             _buildPredefinedGrid(cat, pending, done),
                         ],
@@ -830,7 +831,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   ),
                 ),
               ),
-              _buildBottomOverlay(pending, done)
+              _buildBottomOverlay(pending, done),
             ],
           );
         },

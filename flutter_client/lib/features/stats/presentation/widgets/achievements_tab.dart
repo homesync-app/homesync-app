@@ -21,14 +21,14 @@ class AchievementsTab extends StatelessWidget {
     final totalTasks = taskStats.fold<int>(
         0,
         (sum, item) =>
-            sum + ((item['completed_count'] as num?)?.toInt() ?? 0));
+            sum + ((item['completed_count'] as num?)?.toInt() ?? 0),);
     final totalXp = memberStats.fold<int>(
-        0, (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0));
+        0, (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),);
 
     // Contar desafíos de conexión
     final connectionTasks = taskStats.firstWhere(
         (e) => e['category'] == 'Conexión',
-        orElse: () => {'completed_count': 0})['completed_count'] as int;
+        orElse: () => {'completed_count': 0},)['completed_count'] as int;
 
     return RefreshIndicator(
       onRefresh: onRefresh,

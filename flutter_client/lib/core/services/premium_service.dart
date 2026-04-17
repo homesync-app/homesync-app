@@ -1,12 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homesync_client/core/providers/service_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/analytics_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/providers/service_providers.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../services/logger_service.dart';
 
 class PremiumService {

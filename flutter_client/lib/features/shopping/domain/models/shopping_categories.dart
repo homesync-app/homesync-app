@@ -5,7 +5,7 @@ class ShoppingCategories {
       'id': 'fruits',
       'name': 'Frutas y verd.',
       'emoji': '🥦',
-      'color': 0xFF22C55E
+      'color': 0xFF22C55E,
     },
     {'id': 'meat', 'name': 'Carnes', 'emoji': '🥩', 'color': 0xFFEF4444},
     {'id': 'dairy', 'name': 'Lácteos', 'emoji': '🥛', 'color': 0xFF3B82F6},

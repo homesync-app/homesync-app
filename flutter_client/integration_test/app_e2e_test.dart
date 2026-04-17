@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-
 import 'package:homesync_client/main.dart' as app;
+import 'package:integration_test/integration_test.dart';
 
 void main() {
   // Inicializamos el motor de pruebas de integración (El "Autómata")
@@ -24,9 +23,9 @@ void main() {
       // Ingresar Credenciales (Debe usarse una cuenta real existente de testeo en Supabase)
       await tester.enterText(
           find.widgetWithText(TextFormField, 'Correo electrónico'),
-          'tu_pareja@gmail.com');
+          'tu_pareja@gmail.com',);
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Contraseña'), '123456');
+          find.widgetWithText(TextFormField, 'Contraseña'), '123456',);
 
       // Tocar en Login
       await tester.tap(find.text('Iniciar sesión'));
@@ -37,7 +36,7 @@ void main() {
 
     // 2. VERIFICACIÓN: LLEGAMOS AL HOME / DASHBOARD ("Inicio")
     expect(find.text('Inicio'), findsWidgets,
-        reason: 'Deberíamos haber navegado al HomeScreen principal');
+        reason: 'Deberíamos haber navegado al HomeScreen principal',);
 
     // 3. CAMBIAR A LA PESTAÑA TIENDA (Navegación Táctil a "Tienda" en la BottomNavigationBar)
     await tester.tap(find.text('Tienda'));
@@ -62,14 +61,14 @@ void main() {
       // Aprobar canje en el popup
       await tester.tap(find.text('Confirmar'));
       await tester.pumpAndSettle(
-          const Duration(seconds: 4)); // Espera petición al servidor
+          const Duration(seconds: 4),); // Espera petición al servidor
 
       // Verificar que el backend o app reaccionaron y arrojaron el mensaje visual
       // Nota: Si no hay saldo saldrá mensaje de error de saldo en su lugar
       final snackBarText = find.byType(SnackBar);
       expect(snackBarText, findsOneWidget,
           reason:
-              'Se esperaba un mensaje Toast (SnackBar) de confirmación/error de Supabase');
+              'Se esperaba un mensaje Toast (SnackBar) de confirmación/error de Supabase',);
     }
   });
 }

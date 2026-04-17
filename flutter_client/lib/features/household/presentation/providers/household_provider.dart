@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -5,8 +6,8 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../data/repositories/supabase_household_repository.dart';
 
 part 'household_provider.g.dart';

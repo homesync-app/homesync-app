@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
-import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:intl/intl.dart';
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
-import '../widgets/expense_form_sheet.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:intl/intl.dart';
+
 import '../widgets/expense_detail_sheet.dart';
+import '../widgets/expense_form_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
 import '../widgets/recurring_expense_form_sheet.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 
 class ExpensesScreen extends ConsumerStatefulWidget {
   const ExpensesScreen({super.key});
@@ -177,7 +178,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       color: AppColors.primary,
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics()),
+            parent: AlwaysScrollableScrollPhysics(),),
         slivers: [
           // 1. SUMMARY WIDGET WITH PROJECTION
           SliverToBoxAdapter(
@@ -188,7 +189,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     child: Padding(
                         padding: EdgeInsets.all(32),
                         child: CircularProgressIndicator(
-                            color: AppColors.primary))),
+                            color: AppColors.primary,),),),
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (summary) {
                   final income = (summary['income'] as num?)?.toDouble() ?? 0.0;
@@ -202,7 +203,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     error: (_, __) =>
                         _buildUnifiedSummaryCard(balance, income, expense, 0),
                     data: (proj) => _buildUnifiedSummaryCard(
-                        balance, income, expense, proj.pending),
+                        balance, income, expense, proj.pending,),
                   );
                 },
               ),
@@ -221,7 +222,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               ),
             ),
             error: (e, _) => SliverFillRemaining(
-                hasScrollBody: false, child: Center(child: Text('Error: $e'))),
+                hasScrollBody: false, child: Center(child: Text('Error: $e')),),
             data: (feedItems) {
               final filteredItems =
                   feedItems.where(_shouldShowFeedItem).toList();
@@ -244,7 +245,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(Icons.history_rounded,
-                                  size: 12, color: theme.textSecondary),
+                                  size: 12, color: theme.textSecondary,),
                             ),
                             const SizedBox(width: 10),
                             Text(
@@ -289,7 +290,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 6),
+                                    horizontal: 24, vertical: 6,),
                                 child: _buildFeedItemCard(item)
                                     .animateStaggered(index),
                               ),
@@ -394,7 +395,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             item.isPlanned &&
             item.status == 'pending' &&
             item.date.month == now.month &&
-            item.date.year == now.year)
+            item.date.year == now.year,)
         .toList();
   }
 
@@ -439,7 +440,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildProjectionStat(String label, num amount, Color color,
-      {bool isBold = false, VoidCallback? onTap}) {
+      {bool isBold = false, VoidCallback? onTap,}) {
     final theme = context.theme;
 
     return InkWell(
@@ -489,7 +490,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           color: AppColors.primary,
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics()),
+                parent: AlwaysScrollableScrollPhysics(),),
             slivers: [
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
               if (templates.isEmpty)
@@ -506,7 +507,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.update_rounded,
-                                  size: 64, color: AppColors.primary)
+                                  size: 64, color: AppColors.primary,)
                               .animatePulse(),
                         ),
                         const SizedBox(height: 24),
@@ -516,7 +517,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
                               color: AppColors.textPrimary,
-                              letterSpacing: -0.5),
+                              letterSpacing: -0.5,),
                         ),
                         const SizedBox(height: 8),
                         const Padding(
@@ -527,7 +528,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 14,
-                                fontWeight: FontWeight.w500),
+                                fontWeight: FontWeight.w500,),
                           ),
                         ),
                         const SizedBox(height: 48),
@@ -568,7 +569,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
                                     color: AppColors.divider
-                                        .withValues(alpha: 0.3)),
+                                        .withValues(alpha: 0.3),),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.02),
@@ -602,7 +603,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 16,
-                                              color: AppColors.textPrimary),
+                                              color: AppColors.textPrimary,),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
@@ -610,7 +611,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                           style: const TextStyle(
                                               color: AppColors.textSecondary,
                                               fontSize: 13,
-                                              fontWeight: FontWeight.w600),
+                                              fontWeight: FontWeight.w600,),
                                         ),
                                       ],
                                     ),
@@ -623,12 +624,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         style: const TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 18,
-                                            color: AppColors.textPrimary),
+                                            color: AppColors.textPrimary,),
                                       ),
                                       const SizedBox(height: 4),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
+                                            horizontal: 8, vertical: 4,),
                                         decoration: BoxDecoration(
                                           color: AppColors.sage
                                               .withValues(alpha: 0.1),
@@ -642,7 +643,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                           style: const TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w800,
-                                              color: AppColors.sage),
+                                              color: AppColors.sage,),
                                         ),
                                       ),
                                     ],
@@ -665,7 +666,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildUnifiedSummaryCard(
-      num balance, num income, num expense, num projectedPending) {
+      num balance, num income, num expense, num projectedPending,) {
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
 
@@ -769,7 +770,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     theme.textPrimary,
                     isBold: true,
                     onTap: () => _showProjectionBreakdownSheet(
-                        balance, projectedPending, projectedBalance),
+                        balance, projectedPending, projectedBalance,),
                   ),
                 ),
               ],
@@ -781,7 +782,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showProjectionBreakdownSheet(
-      num balance, num pendingTotal, num estimated) {
+      num balance, num pendingTotal, num estimated,) {
     final pendingFeed = _effectiveMonthlyPendingForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final theme = context.theme;
@@ -840,15 +841,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
                   // Equation Section
                   _buildBreakdownRow(
-                      'Balance actual', balance, AppColors.textPrimary),
+                      'Balance actual', balance, AppColors.textPrimary,),
                   const SizedBox(height: 16),
                   _buildBreakdownRow(
-                      'Tu parte pendiente', -pendingTotal, AppColors.primary),
+                      'Tu parte pendiente', -pendingTotal, AppColors.primary,),
                   const Divider(
-                      height: 40, thickness: 1, color: AppColors.divider),
+                      height: 40, thickness: 1, color: AppColors.divider,),
                   _buildBreakdownRow(
                       'Balance estimado', estimated, AppColors.accentTeal,
-                      isFinal: true),
+                      isFinal: true,),
 
                   if (pendingItems.isNotEmpty) ...[
                     const SizedBox(height: 48),
@@ -861,7 +862,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(Icons.pending_actions_rounded,
-                              size: 12, color: AppColors.primary),
+                              size: 12, color: AppColors.primary,),
                         ),
                         const SizedBox(width: 10),
                         const Text(
@@ -888,7 +889,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(item.categoryIcon,
-                                    style: const TextStyle(fontSize: 16)),
+                                    style: const TextStyle(fontSize: 16),),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -911,7 +912,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               ),
                             ],
                           ),
-                        )),
+                        ),),
                   ],
 
                   const SizedBox(height: 32),
@@ -924,12 +925,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
+                            borderRadius: BorderRadius.circular(20),),
                         elevation: 0,
                       ),
                       child: const Text('Entendido',
                           style: TextStyle(
-                              fontWeight: FontWeight.w900, fontSize: 16)),
+                              fontWeight: FontWeight.w900, fontSize: 16,),),
                     ),
                   ),
                 ],
@@ -942,7 +943,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildBreakdownRow(String label, num amount, Color color,
-      {bool isFinal = false}) {
+      {bool isFinal = false,}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -970,7 +971,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildPremiumStatTile(
       String label, num amount, Color color, IconData icon,
-      {VoidCallback? onTap}) {
+      {VoidCallback? onTap,}) {
     final theme = context.theme;
 
     return AnimatedPress(
@@ -1042,12 +1043,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             item.date.year == now.year &&
             ((item.transactionType == 'income' && item.payerId == userId) ||
                 (item.transactionType == 'settlement' &&
-                    item.payerId != userId)))
+                    item.payerId != userId)),)
         .map(_expenseFromFeedItem)
         .toList();
 
     _showGenericBreakdownSheet('Detalle de Ingresos',
-        'Tus ingresos registrados este mes.', total, items, AppColors.success);
+        'Tus ingresos registrados este mes.', total, items, AppColors.success,);
   }
 
   void _showExpensesBreakdownSheet(num total) {
@@ -1062,12 +1063,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             item.date.year == now.year &&
             ((item.transactionType == 'expense' && item.payerId == userId) ||
                 (item.transactionType == 'settlement' &&
-                    item.payerId == userId)))
+                    item.payerId == userId)),)
         .map(_expenseFromFeedItem)
         .toList();
 
     _showGenericBreakdownSheet('Detalle de Gastos',
-        'Tus gastos pagados este mes.', total, items, AppColors.primary);
+        'Tus gastos pagados este mes.', total, items, AppColors.primary,);
   }
 
   void _showPendingBreakdownSheet(num total) {
@@ -1103,7 +1104,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       splitType: item.splitType,
                     ),
                     color: AppColors.primary,
-                  ))
+                  ),)
               .toList(),
         ),
       ),
@@ -1111,7 +1112,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showGenericBreakdownSheet(String title, String subtitle, num total,
-      List<ExpenseModel> items, Color accentColor) {
+      List<ExpenseModel> items, Color accentColor,) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1128,7 +1129,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   const Padding(
                       padding: EdgeInsets.symmetric(vertical: 32),
                       child: Text('No hay movimientos registrados',
-                          style: TextStyle(color: AppColors.textMuted)))
+                          style: TextStyle(color: AppColors.textMuted),),),
                 ]
               : items
                   .map((e) => _buildMovementDetailRow(
@@ -1143,7 +1144,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           splitType: e.splitType,
                         ),
                         color: accentColor,
-                      ))
+                      ),)
                   .toList(),
         ),
       ),
@@ -1241,7 +1242,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(Icons.list_alt_rounded,
-                          size: 12, color: accentColor),
+                          size: 12, color: accentColor,),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -1267,12 +1268,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                          borderRadius: BorderRadius.circular(20),),
                       elevation: 0,
                     ),
                     child: const Text('Entendido',
                         style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 16)),
+                            fontWeight: FontWeight.w900, fontSize: 16,),),
                   ),
                 ),
               ],
@@ -1298,7 +1299,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),),
             child: Icon(icon, size: 18, color: color),
           ),
           const SizedBox(width: 14),
@@ -1310,12 +1311,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
-                        color: AppColors.textPrimary)),
+                        color: AppColors.textPrimary,),),
                 Text(DateFormat('d MMM', 'es').format(date),
                     style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
-                        fontWeight: FontWeight.w600)),
+                        fontWeight: FontWeight.w600,),),
               ],
             ),
           ),
@@ -1323,7 +1324,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
-                  color: AppColors.textPrimary)),
+                  color: AppColors.textPrimary,),),
         ],
       ),
     );
@@ -1417,7 +1418,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             color: theme.textPrimary.withValues(
                               alpha: theme.isDarkMode ? 0.92 : 0.6,
                             ),
-                            letterSpacing: -0.3),
+                            letterSpacing: -0.3,),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1432,7 +1433,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   style: TextStyle(
                       color: theme.textMuted,
                       fontSize: 12,
-                      fontWeight: FontWeight.w600),
+                      fontWeight: FontWeight.w600,),
                 ),
               ],
             ),
@@ -1470,11 +1471,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),),
                 ),
                 child: const Text('Pagar',
                     style:
-                        TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                        TextStyle(fontWeight: FontWeight.w900, fontSize: 12),),
               ),
               const SizedBox(height: 4),
               TextButton(
@@ -1490,7 +1491,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 child: const Text('Omitir',
                     style:
-                        TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+                        TextStyle(fontSize: 10, fontWeight: FontWeight.w700),),
               ),
             ],
           ),
@@ -1540,7 +1541,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 fontSize: 9,
                 fontWeight: FontWeight.w900,
                 color: badgeColor,
-                letterSpacing: 0.5),
+                letterSpacing: 0.5,),
           ),
         ],
       ),
@@ -1594,7 +1595,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           borderRadius: BorderRadius.circular(24),
         ),
         child: const Icon(Icons.delete_sweep_rounded,
-            color: Colors.white, size: 28),
+            color: Colors.white, size: 28,),
       ),
       confirmDismiss: (direction) async {
         return await showDialog(
@@ -1605,7 +1606,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar')),
+                  child: const Text('Cancelar'),),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -1618,7 +1619,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       onDismissed: (_) {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Movimiento eliminado')));
+            const SnackBar(content: Text('Movimiento eliminado')),);
       },
       child: AnimatedPress(
         onTap: () => _showExpenseDetailSheet(expense),
@@ -1687,7 +1688,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             expense.description!.isNotEmpty) ...[
                           Icon(Icons.notes_rounded,
                               size: 14,
-                              color: theme.textMuted.withValues(alpha: 0.65)),
+                              color: theme.textMuted.withValues(alpha: 0.65),),
                           if (expense.description!
                                   .toLowerCase()
                                   .contains('art?culos') ||
@@ -1699,7 +1700,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               child: Icon(Icons.shopping_bag_rounded,
                                   size: 14,
                                   color: AppColors.accentTeal
-                                      .withValues(alpha: 0.7)),
+                                      .withValues(alpha: 0.7),),
                             ),
                         ],
                       ],
@@ -1777,7 +1778,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
-                        color: AppColors.accentBlue)),
+                        color: AppColors.accentBlue,),),
                 Text(
                   '${expense.payerDisplayName} equilibró el balance',
                   style: TextStyle(
@@ -1795,7 +1796,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
                 color: AppColors.accentBlue,
-                letterSpacing: -0.5),
+                letterSpacing: -0.5,),
           ),
         ],
       ),
@@ -1805,7 +1806,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   Widget _buildTypeBadge(String label, Color color, {bool isSmall = false}) {
     return Container(
       padding: EdgeInsets.symmetric(
-          horizontal: isSmall ? 6 : 8, vertical: isSmall ? 2 : 4),
+          horizontal: isSmall ? 6 : 8, vertical: isSmall ? 2 : 4,),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
@@ -1865,7 +1866,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03), blurRadius: 15)
+                color: Colors.black.withValues(alpha: 0.03), blurRadius: 15,),
           ],
         ),
         child: Column(
@@ -1887,14 +1888,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     children: [
                       Text(goal.title,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w900, fontSize: 18)),
+                              fontWeight: FontWeight.w900, fontSize: 18,),),
                       const SizedBox(height: 4),
                       Text(
                         'Meta: \$ ${_formatCurrency(goal.targetAmount)}',
                         style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
-                            fontWeight: FontWeight.w600),
+                            fontWeight: FontWeight.w600,),
                       ),
                     ],
                   ),
@@ -1907,13 +1908,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 20,
-                          color: AppColors.textPrimary),
+                          color: AppColors.textPrimary,),
                     ),
                     const Text('objetivo',
                         style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                            fontWeight: FontWeight.bold,),),
                   ],
                 ),
               ],
@@ -1935,7 +1936,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       color: AppColors.textSecondary,
-                      fontSize: 14),
+                      fontSize: 14,),
                 ),
                 Container(
                   padding:
@@ -1947,12 +1948,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   child: const Row(
                     children: [
                       Icon(Icons.add_circle_outline_rounded,
-                          color: AppColors.primary, size: 16),
+                          color: AppColors.primary, size: 16,),
                       SizedBox(width: 6),
                       Text('Aportar',
                           style: TextStyle(
                               color: AppColors.primary,
-                              fontWeight: FontWeight.w800)),
+                              fontWeight: FontWeight.w800,),),
                     ],
                   ),
                 ),
@@ -2026,7 +2027,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showTemplateForm(BuildContext context,
-      {ExpenseTemplateModel? template}) {
+      {ExpenseTemplateModel? template,}) {
     RecurringExpenseFormSheet.show(context, template: template);
   }
 
@@ -2281,7 +2282,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         'Elegí un ícono',
                                         emojis,
                                         (e) => setModalState(
-                                            () => selectedEmoji = e),
+                                            () => selectedEmoji = e,),
                                       );
                                     },
                                   ),
@@ -2310,7 +2311,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                         context,
                                         colors,
                                         (c) => setModalState(
-                                            () => selectedColor = c),
+                                            () => selectedColor = c,),
                                       );
                                     },
                                   ),
@@ -2407,7 +2408,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       {required String label,
       required String value,
       Widget? customValue,
-      required VoidCallback onTap}) {
+      required VoidCallback onTap,}) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -2425,7 +2426,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted)),
+                      color: AppColors.textMuted,),),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -2435,7 +2436,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     Text(value, style: const TextStyle(fontSize: 18)),
                   const Spacer(),
                   const Icon(Icons.keyboard_arrow_down_rounded,
-                      size: 20, color: AppColors.textMuted),
+                      size: 20, color: AppColors.textMuted,),
                 ],
               ),
             ],
@@ -2446,12 +2447,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showSimplePicker(BuildContext context, String title,
-      List<String> options, Function(String) onSelect) {
+      List<String> options, Function(String) onSelect,) {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),),
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -2459,12 +2460,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           children: [
             Text(title,
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),),
             const SizedBox(height: 20),
             GridView.builder(
               shrinkWrap: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5, mainAxisSpacing: 16, crossAxisSpacing: 16),
+                  crossAxisCount: 5, mainAxisSpacing: 16, crossAxisSpacing: 16,),
               itemCount: options.length,
               itemBuilder: (context, index) => GestureDetector(
                 onTap: () {
@@ -2474,10 +2475,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 child: Container(
                   decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),),
                   alignment: Alignment.center,
                   child: Text(options[index],
-                      style: const TextStyle(fontSize: 24)),
+                      style: const TextStyle(fontSize: 24),),
                 ),
               ),
             ),
@@ -2488,19 +2489,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   void _showColorPicker(
-      BuildContext context, List<Color> colors, Function(Color) onSelect) {
+      BuildContext context, List<Color> colors, Function(Color) onSelect,) {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),),
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Elegí un color',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -2517,9 +2518,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               color: c,
                               shape: BoxShape.circle,
                               border:
-                                  Border.all(color: Colors.white, width: 2)),
+                                  Border.all(color: Colors.white, width: 2),),
                         ),
-                      ))
+                      ),)
                   .toList(),
             ),
             const SizedBox(height: 20),
@@ -2573,12 +2574,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             style: TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600)),
+                                fontWeight: FontWeight.w600,),),
                         Text(goal.title,
                             style: const TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 18,
-                                color: AppColors.textPrimary)),
+                                color: AppColors.textPrimary,),),
                       ],
                     ),
                   ),
@@ -2592,14 +2593,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary),
+                    color: AppColors.textPrimary,),
                 decoration: InputDecoration(
                   hintText: '0',
                   prefixText: '\$ ',
                   prefixStyle: const TextStyle(color: AppColors.textMuted),
                   border: InputBorder.none,
                   hintStyle: TextStyle(
-                      color: AppColors.textMuted.withValues(alpha: 0.3)),
+                      color: AppColors.textMuted.withValues(alpha: 0.3),),
                 ),
               ),
               const SizedBox(height: 32),
@@ -2619,7 +2620,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),),
                     elevation: 0,
                   ),
                   child: const Text(
@@ -2627,7 +2628,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
-                        fontSize: 18),
+                        fontSize: 18,),
                   ),
                 ),
               ),

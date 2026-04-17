@@ -1,37 +1,38 @@
 import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app_links/app_links.dart';
-
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
-import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../household/presentation/providers/household_providers.dart';
 import '../widgets/in_app_notification_banner.dart';
-import 'package:intl/intl.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   final SharedPreferences prefs;
@@ -94,7 +95,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           _showToast('✅ Mercado Pago conectado con éxito', Colors.green);
         } else if (status == 'error') {
           _showToast(
-              '❌ Error al conectar: ${message ?? "Desconocido"}', Colors.red);
+              '❌ Error al conectar: ${message ?? "Desconocido"}', Colors.red,);
         }
       }
 
@@ -102,7 +103,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (uri.host == 'payment-success' ||
           uri.path.contains('payment-success')) {
         _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
-            Colors.green);
+            Colors.green,);
 
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
@@ -119,7 +120,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (uri.host == 'payment-pending' ||
           uri.path.contains('payment-pending')) {
         _showToast(
-            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange);
+            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange,);
       }
     });
   }
@@ -130,7 +131,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       SnackBar(
         content: Text(message,
             style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white)),
+                fontWeight: FontWeight.bold, color: Colors.white,),),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

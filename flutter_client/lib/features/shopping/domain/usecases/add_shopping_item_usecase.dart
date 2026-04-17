@@ -1,7 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import '../models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/domain/repositories/shopping_repository.dart';
+
+import '../models/shopping_model.dart';
 
 class AddShoppingItemUseCase {
   final ShoppingRepository repository;

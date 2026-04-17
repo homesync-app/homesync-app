@@ -1,23 +1,24 @@
 import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'stats_shared_widgets.dart';
-import 'personal_metric_card.dart';
+
 import 'category_widgets.dart';
+import 'personal_metric_card.dart';
+import 'stats_shared_widgets.dart';
 
 class WeeklyTab extends ConsumerWidget {
   final List<Map<String, dynamic>> weeklyRanking;
@@ -42,7 +43,7 @@ class WeeklyTab extends ConsumerWidget {
   });
 
   void _showLoveNoteDialog(
-      BuildContext context, WidgetRef ref, AppThemeColors theme) {
+      BuildContext context, WidgetRef ref, AppThemeColors theme,) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -57,7 +58,7 @@ class WeeklyTab extends ConsumerWidget {
             Text(
               'Nueva Nota de Amor',
               style: TextStyle(
-                  fontWeight: FontWeight.w900, color: theme.textPrimary),
+                  fontWeight: FontWeight.w900, color: theme.textPrimary,),
             ),
           ],
         ),
@@ -98,7 +99,9 @@ class WeeklyTab extends ConsumerWidget {
 
               if (currentUserId == null ||
                   householdId == null ||
-                  partner == null) return;
+                  partner == null) {
+                return;
+              }
 
               await ref.read(loveNotesProvider.notifier).sendNote(
                     content: content,
@@ -121,7 +124,7 @@ class WeeklyTab extends ConsumerWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),),
             ),
             child: const Text('Enviar'),
           ),
@@ -139,7 +142,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
           const SectionLabel(label: 'Duelo de la semana', icon: '⚔️'),
@@ -288,7 +291,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                   ),
                   if (!isPremium)
                     const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 16, color: AppColors.textMuted),
+                        size: 16, color: AppColors.textMuted,),
                 ],
               ),
             ),
@@ -306,7 +309,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
           // ── Activity Placeholder ──────────────────────────────────────────
           const PrivacyBadge(
               text:
-                  'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.'),
+                  'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.',),
         ],
       ),
     );
@@ -408,7 +411,7 @@ class _ProgressTabState extends State<ProgressTab> {
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Header ───────────────────────────────────────────────────────
           const SectionLabel(label: 'Tu evolución personal', icon: '📈'),
@@ -438,7 +441,7 @@ class _ProgressTabState extends State<ProgressTab> {
           Container(
             height: 240,
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md),
+                AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md,),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
@@ -496,13 +499,13 @@ class _ProgressTabState extends State<ProgressTab> {
                       ),
                       titlesData: const FlTitlesData(
                         bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                            sideTitles: SideTitles(showTitles: false),),
                         leftTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                            sideTitles: SideTitles(showTitles: false),),
                         rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                            sideTitles: SideTitles(showTitles: false),),
                         topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false)),
+                            sideTitles: SideTitles(showTitles: false),),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
@@ -611,15 +614,15 @@ class CategoriesTab extends StatelessWidget {
               children: [
                 Icon(Icons.insights_outlined,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5)),
+                    color: AppColors.textMuted.withValues(alpha: 0.5),),
                 const SizedBox(width: AppSpacing.xs),
                 Icon(Icons.favorite_border_rounded,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5)),
+                    color: AppColors.textMuted.withValues(alpha: 0.5),),
                 const SizedBox(width: AppSpacing.xs),
                 Icon(Icons.auto_graph_outlined,
                     size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5)),
+                    color: AppColors.textMuted.withValues(alpha: 0.5),),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -628,7 +631,7 @@ class CategoriesTab extends StatelessWidget {
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5),
+                  letterSpacing: -0.5,),
             ),
             const SizedBox(height: AppSpacing.xs),
             const Text(
@@ -643,9 +646,9 @@ class CategoriesTab extends StatelessWidget {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                    horizontal: AppSpacing.lg, vertical: AppSpacing.sm,),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(16),),
               ),
               child: const Text('Actualizar datos'),
             ),
@@ -659,7 +662,7 @@ class CategoriesTab extends StatelessWidget {
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo),
+            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Premium Dominance Header ─────────────────────────────────────
           const SectionLabel(label: 'Dominio de Categorías', icon: '💎'),
@@ -699,7 +702,7 @@ class CategoriesTab extends StatelessWidget {
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
-                      )
+                      ),
                     ],
                   ),
                   child: const Text('💡', style: TextStyle(fontSize: 20)),

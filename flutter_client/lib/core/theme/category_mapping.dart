@@ -747,7 +747,7 @@ class CategoryMapping {
       'Sep',
       'Oct',
       'Nov',
-      'Dic'
+      'Dic',
     ];
     if (month >= 1 && month <= 12) return months[month - 1];
     return '';

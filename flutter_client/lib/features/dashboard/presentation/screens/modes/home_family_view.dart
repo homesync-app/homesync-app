@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:intl/intl.dart';
 
 class HomeFamilyView extends ConsumerStatefulWidget {
@@ -488,7 +487,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   'display_name': m.displayName,
                   'coins': 0,
                   'user_id': m.userId,
-                })
+                },)
             .toList();
 
     final isLive = ranking.isNotEmpty;
@@ -538,7 +537,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 final coins = item['coins'] as int? ?? 0;
                 return Padding(
                   padding: EdgeInsets.only(
-                      bottom: index < displayRanking.length - 1 ? 12 : 0),
+                      bottom: index < displayRanking.length - 1 ? 12 : 0,),
                   child: Row(
                     children: [
                       CircleAvatar(
@@ -571,7 +570,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                            horizontal: 10, vertical: 4,),
                         decoration: BoxDecoration(
                           color: coins > 0
                               ? theme.primary.withValues(alpha: 0.1)
@@ -599,12 +598,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.emoji_events_outlined,
-                        size: 14, color: theme.textMuted),
+                        size: 14, color: theme.textMuted,),
                     const SizedBox(width: 6),
                     Text(
                       'Completen tareas para sumar puntos',
                       style: TextStyle(
-                          fontSize: 12, color: theme.textSecondary),
+                          fontSize: 12, color: theme.textSecondary,),
                     ),
                   ],
                 ),
@@ -686,7 +685,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildFinanceSection(
-      AppThemeColors theme, HouseholdCapabilities caps) {
+      AppThemeColors theme, HouseholdCapabilities caps,) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
     final walletAsync = ref.watch(userBalanceProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
@@ -990,7 +989,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   // ignore: unused_element
   Widget _buildFinanceSummary(
-      AppThemeColors theme, HouseholdCapabilities caps) {
+      AppThemeColors theme, HouseholdCapabilities caps,) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
     final walletAsync = ref.watch(userBalanceProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
@@ -1047,10 +1046,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     .firstOrNull;
                 return BalanceCard(
                   coins: walletAsync.whenOrNull(
-                          data: (data) => data?['coins'] as int?) ??
+                          data: (data) => data?['coins'] as int?,) ??
                       0,
                   xp: walletAsync.whenOrNull(
-                          data: (data) => data?['xp'] as int?) ??
+                          data: (data) => data?['xp'] as int?,) ??
                       0,
                   userBalance: 0,
                   partnerName: partner?.displayName,
@@ -1076,10 +1075,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     .firstOrNull;
                 return BalanceCard(
                   coins: walletAsync.whenOrNull(
-                          data: (data) => data?['coins'] as int?) ??
+                          data: (data) => data?['coins'] as int?,) ??
                       0,
                   xp: walletAsync.whenOrNull(
-                          data: (data) => data?['xp'] as int?) ??
+                          data: (data) => data?['xp'] as int?,) ??
                       0,
                   userBalance: 0,
                   partnerName: partner?.displayName,
@@ -1103,10 +1102,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
               return BalanceCard(
                 coins: walletAsync.whenOrNull(
-                        data: (data) => data?['coins'] as int?) ??
+                        data: (data) => data?['coins'] as int?,) ??
                     0,
                 xp: walletAsync.whenOrNull(
-                        data: (data) => data?['xp'] as int?) ??
+                        data: (data) => data?['xp'] as int?,) ??
                     0,
                 userBalance: myBalance,
                 partnerName: partner?.displayName,
@@ -1280,7 +1279,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           }
           return KeyedSubtree(
             key: ValueKey(
-                'tasks-data-${visibleTasks.length}-${overdueTasks.length}'),
+                'tasks-data-${visibleTasks.length}-${overdueTasks.length}',),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

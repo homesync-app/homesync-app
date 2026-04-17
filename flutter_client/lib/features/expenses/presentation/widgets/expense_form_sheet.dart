@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/receipt_scan_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
-import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
-
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:homesync_client/core/services/receipt_scan_service.dart';
-import 'package:homesync_client/core/utils/receipt_matcher.dart';
-import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/receipt_preview_widget.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
+import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'expense_category_matcher.dart';
 import 'expense_form_components.dart';
 import 'expense_form_data.dart';
@@ -55,7 +55,7 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
   static Future<void> show(BuildContext context,
       {ExpenseModel? expense,
       bool defaultOnlyMe = false,
-      bool triggerScanOnOpen = false}) {
+      bool triggerScanOnOpen = false,}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -373,12 +373,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (amountParsed == null || amountParsed <= 0) {
       // This case should ideally be caught by the validator, but as a fallback
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ingresa un monto válido.')));
+          const SnackBar(content: Text('Ingresa un monto válido.')),);
       return;
     }
 
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) throw Exception("No pertenecés a un hogar");
+    if (householdId == null) throw Exception('No pertenecés a un hogar');
 
     final members = await ref.read(householdMembersProvider.future);
     final financeMembers = _financeMembers(members);
@@ -430,11 +430,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       final descriptionParts = <String>[];
       if (_selectedShoppingItems.isNotEmpty) {
         final itemsStr = _selectedShoppingItems
-            .map((e) => "- ${e.emoji} ${e.name}")
-            .join("\n");
-        descriptionParts.add("Lista de compras:\n$itemsStr");
+            .map((e) => '- ${e.emoji} ${e.name}')
+            .join('\n');
+        descriptionParts.add('Lista de compras:\n$itemsStr');
       }
-      final description = descriptionParts.join("\n\n");
+      final description = descriptionParts.join('\n\n');
 
       String? receiptPath = widget.expense?.receiptPath;
       if (_scanResult != null) {
@@ -538,7 +538,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error: $e'),
           backgroundColor: AppColors.error,
-        ));
+        ),);
       }
     } finally {
       if (mounted) {
@@ -597,7 +597,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     height: 4,
                     decoration: BoxDecoration(
                         color: AppColors.divider,
-                        borderRadius: BorderRadius.circular(2))),
+                        borderRadius: BorderRadius.circular(2),),),
                 _buildHeader(context),
                 Expanded(
                   child: SingleChildScrollView(
@@ -644,7 +644,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
-                              context, shoppingItemsAsync),
+                              context, shoppingItemsAsync,),
                           if (_unmatchedOcrItems.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
@@ -732,19 +732,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         title: const Text('¿Eliminar gasto?',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+            style: TextStyle(fontWeight: FontWeight.w900),),
         content: const Text('Esta acción no se puede deshacer.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar',
-                style: TextStyle(color: AppColors.textSecondary)),
+                style: TextStyle(color: AppColors.textSecondary),),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.accentRed),
             child: const Text('Eliminar',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+                style: TextStyle(fontWeight: FontWeight.bold),),
           ),
         ],
       ),
@@ -1001,7 +1001,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildDateAndPayerRow(
-      BuildContext context, MemberModel payer, List<MemberModel> members) {
+      BuildContext context, MemberModel payer, List<MemberModel> members,) {
     final caps = ref.watch(householdCapabilitiesProvider);
     final showSplit = caps.showExpensesSplit;
 
@@ -1040,7 +1040,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       {required IconData icon,
       required String label,
       required String value,
-      required VoidCallback onTap}) {
+      required VoidCallback onTap,}) {
     return ExpenseActionTile(
       icon: icon,
       label: label,
@@ -1084,7 +1084,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
               child: Icon(
                 CategoryMapping.getCategoryMaterialIcon(
-                    _selectedCategory!['id']),
+                    _selectedCategory!['id'],),
                 size: 24,
                 color: _selectedCategory!['color'] as Color,
               ),
@@ -1098,17 +1098,17 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
-                          fontWeight: FontWeight.w500)),
+                          fontWeight: FontWeight.w500,),),
                   Text(_selectedCategory!['name'],
                       style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
-                          fontWeight: FontWeight.w800)),
+                          fontWeight: FontWeight.w800,),),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textSecondary),
+                color: AppColors.textSecondary,),
           ],
         ),
       ),
@@ -1116,7 +1116,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildShoppingIntegration(BuildContext context,
-      AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync) {
+      AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync,) {
     if (_isIncome) return const SizedBox.shrink();
 
     // Para usuarios no-premium, no mostrar la sección de vinculación.
@@ -1189,15 +1189,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 color: AppColors.warning.withValues(alpha: 0.3),
               ),
             ),
-            child: Row(
+            child: const Row(
               children: [
                 Icon(
                   Icons.info_outline_rounded,
                   size: 16,
                   color: AppColors.warning,
                 ),
-                const SizedBox(width: 8),
-                const Expanded(
+                SizedBox(width: 8),
+                Expanded(
                   child: Text(
                     'Confianza baja: revisá los datos antes de guardar.',
                     style: TextStyle(
@@ -1235,7 +1235,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildSplitConfiguration(
-      BuildContext context, List<MemberModel> members) {
+      BuildContext context, List<MemberModel> members,) {
     final splitModes = _isIncome
         ? const [SplitType.equal, SplitType.personal]
         : SplitType.values;
@@ -1321,11 +1321,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             return ListTile(
               dense: true,
               leading: CustomUserAvatar(
-                  avatarUrl: m.avatarUrl, name: m.displayName, radius: 14),
+                  avatarUrl: m.avatarUrl, name: m.displayName, radius: 14,),
               title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
               trailing: Text('${(memRatio * 100).toInt()}%',
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, color: theme.primary)),
+                      fontWeight: FontWeight.bold, color: theme.primary,),),
             );
           }).toList(),
         );
@@ -1357,10 +1357,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
           'Este gasto no afectará el balance ${caps.actionMemberLabel}.',
-          AppColors.primary);
+          AppColors.primary,);
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
-          'Registrado como gasto personal.', theme.textSecondary);
+          'Registrado como gasto personal.', theme.textSecondary,);
     }
     return const SizedBox.shrink();
   }

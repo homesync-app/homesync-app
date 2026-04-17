@@ -4,7 +4,7 @@ import '../models/shopping_model.dart';
 
 abstract class ShoppingRepository {
   Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
-      String householdId);
+      String householdId,);
 
   Future<Either<Failure, ShoppingItemModel>> addItem({
     required String householdId,

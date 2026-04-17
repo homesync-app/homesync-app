@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
 import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/providers/rpc_providers.dart';
-import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/offline/offline_action.dart';
-import 'package:homesync_client/core/offline/offline_queue_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
 
 part 'supabase_reward_repository.g.dart';
 
@@ -30,7 +30,7 @@ class SupabaseRewardRepository
   final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseRewardRepository(
-      {required SupabaseClient client, required dynamic rpc, required Ref ref})
+      {required SupabaseClient client, required dynamic rpc, required Ref ref,})
       : _client = client,
         _rpc = rpc,
         _ref = ref;
@@ -63,7 +63,7 @@ class SupabaseRewardRepository
       }
       final response = await query;
       return List<Map<String, dynamic>>.from(response);
-    }, context: 'SupabaseRewardRepository.getRewards', isOnline: _isOnline);
+    }, context: 'SupabaseRewardRepository.getRewards', isOnline: _isOnline,);
   }
 
   @override
@@ -112,7 +112,7 @@ class SupabaseRewardRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -134,7 +134,7 @@ class SupabaseRewardRepository
               filters: [OfflineFilter(column: 'id', value: rewardId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -157,7 +157,7 @@ class SupabaseRewardRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -176,13 +176,13 @@ class SupabaseRewardRepository
               filters: [OfflineFilter(column: 'id', value: rewardId)],
             ),
           );
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, int>> cloneTemplates() async {
     return executeWithHandling(() async {
       return await _rpc.cloneRewardTemplates();
-    }, context: 'SupabaseRewardRepository.cloneTemplates', isOnline: _isOnline);
+    }, context: 'SupabaseRewardRepository.cloneTemplates', isOnline: _isOnline,);
   }
 }

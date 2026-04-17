@@ -1,23 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
-import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
-import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/errors/failures.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'tasks_flow_test.mocks.dart';
 
@@ -29,7 +29,7 @@ import 'tasks_flow_test.mocks.dart';
 class FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
   RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) =>
+          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
       FakeRealtimeChannel();
 
   @override
@@ -51,7 +51,7 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
   RealtimeChannel subscribe(
           [void Function(RealtimeSubscribeStatus status, Object? error)?
               callback,
-          Duration? timeout]) =>
+          Duration? timeout,]) =>
       this;
 
   @override
@@ -63,7 +63,7 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 class FakeSupabaseQueryBuilder extends Fake implements SupabaseQueryBuilder {
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select(
-          [String columns = '*']) =>
+          [String columns = '*',]) =>
       FakePostgrestFilterBuilder();
 }
 
@@ -125,7 +125,7 @@ void main() {
   testWidgets('TasksScreen renders tasks and shows inline actions on tap',
       (WidgetTester tester) async {
     when(mockTaskRepo.getTasks('h1',
-            limit: anyNamed('limit'), offset: anyNamed('offset')))
+            limit: anyNamed('limit'), offset: anyNamed('offset'),),)
         .thenAnswer((_) async => Right([testTask]));
 
     await tester.pumpWidget(ProviderScope(
@@ -145,14 +145,14 @@ void main() {
                 fullName: 'User One',
                 email: 'u1@test.com',
                 type: MemberType.adult,
-              )
-            ])),
+              ),
+            ]),),
       ],
       child: MaterialApp(
         theme: ThemeData(useMaterial3: true),
         home: const TasksScreen(),
       ),
-    ));
+    ),);
 
     await tester.pumpAndSettle();
 

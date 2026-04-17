@@ -1,19 +1,20 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/providers/supabase_provider.dart';
-import '../../domain/models/expense_model.dart';
-import '../../domain/repositories/expense_repository.dart';
-import '../../data/repositories/supabase_expense_repository.dart';
-import '../../domain/usecases/get_expenses_usecase.dart';
-import '../../domain/usecases/get_combined_feed_usecase.dart';
-import '../../domain/usecases/get_balances_usecase.dart';
-import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
-import '../../domain/models/feed_item_model.dart';
-import '../../domain/models/expense_template_model.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../core/providers/supabase_provider.dart';
+import '../../data/repositories/supabase_expense_repository.dart';
+import '../../domain/models/expense_model.dart';
+import '../../domain/models/expense_template_model.dart';
+import '../../domain/models/feed_item_model.dart';
+import '../../domain/repositories/expense_repository.dart';
+import '../../domain/usecases/get_balances_usecase.dart';
+import '../../domain/usecases/get_combined_feed_usecase.dart';
+import '../../domain/usecases/get_expenses_usecase.dart';
+import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
 
 part 'expense_provider.g.dart';
 
@@ -45,7 +46,7 @@ GetBalancesUseCase getBalancesUseCase(GetBalancesUseCaseRef ref) {
 
 @riverpod
 GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
-    GetPersonalFinanceSummaryUseCaseRef ref) {
+    GetPersonalFinanceSummaryUseCaseRef ref,) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetPersonalFinanceSummaryUseCase(repo);
 }
@@ -396,7 +397,7 @@ double _projectedShareForUser({
 
 @riverpod
 Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
-    MonthlyPendingPlannedExpensesRef ref) async {
+    MonthlyPendingPlannedExpensesRef ref,) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return const <FeedItemModel>[];
 
@@ -417,7 +418,7 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
 
 @riverpod
 Future<MonthlyProjectionData> monthlyProjection(
-    MonthlyProjectionRef ref) async {
+    MonthlyProjectionRef ref,) async {
   final feedAsync = await ref.watch(combinedFeedControllerProvider.future);
   final monthlyPendingItems =
       await ref.watch(monthlyPendingPlannedExpensesProvider.future);

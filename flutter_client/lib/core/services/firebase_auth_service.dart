@@ -205,7 +205,7 @@ class FirebaseAuthService {
         'p_email': email,
         'p_full_name': fullName,
         'p_avatar_url': avatarUrl,
-      });
+      },);
 
       final userId = result?.toString();
       if (userId != null && userId.isNotEmpty) {
@@ -218,7 +218,7 @@ class FirebaseAuthService {
       }
     } catch (e, stack) {
       log.e('Error in _createUserProfileIfNeeded: $e',
-          error: e, stackTrace: stack);
+          error: e, stackTrace: stack,);
     }
   }
 
@@ -231,7 +231,7 @@ class FirebaseAuthService {
           await GoogleSignIn.instance.signOut();
         } catch (e, stack) {
           log.w('Error signing out from Google: $e',
-              error: e, stackTrace: stack);
+              error: e, stackTrace: stack,);
         }
       }
 

@@ -36,7 +36,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
           ThemeMode.light => 'light',
           ThemeMode.dark => 'dark',
           ThemeMode.system => 'system',
-        });
+        },);
   }
 
   void toggle() {

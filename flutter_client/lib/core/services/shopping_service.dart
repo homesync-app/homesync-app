@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/config/app_environment.dart';
 
 class ShoppingItem {
   final String id;

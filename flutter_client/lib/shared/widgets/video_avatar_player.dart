@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:video_player/video_player.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:video_player/video_player.dart';
 
 class VideoAvatarPlayer extends StatefulWidget {
   final String url;

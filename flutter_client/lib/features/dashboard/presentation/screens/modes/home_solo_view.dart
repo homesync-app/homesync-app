@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
+import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -44,9 +44,9 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       edgeOffset: 20,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics()),
+            parent: BouncingScrollPhysics(),),
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+            horizontal: AppSpacing.lg, vertical: AppSpacing.lg,),
         children: [
           _buildHeader(theme),
           const SizedBox(height: AppSpacing.lg),
@@ -95,7 +95,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
             CustomUserAvatar(
                     name: currentMember?.displayName,
                     avatarUrl: currentMember?.avatarUrl,
-                    radius: 26)
+                    radius: 26,)
                 .animateScaleIn(delay: 70),
           ],
         ),
@@ -132,10 +132,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
             Container(
                 width: 24,
                 height: 1.5,
-                color: theme.primary.withValues(alpha: 0.5)),
+                color: theme.primary.withValues(alpha: 0.5),),
             const SizedBox(width: 8),
             Text('Enfocate en tus objetivos hoy 🚀',
-                style: TextStyle(color: theme.textSecondary, fontSize: 14)),
+                style: TextStyle(color: theme.textSecondary, fontSize: 14),),
           ],
         ).animate().fadeIn(delay: 300.ms),
       ],
@@ -154,11 +154,11 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
     return TextSpan(
       children: [
         TextSpan(
-            text: '$welcome, ', style: TextStyle(color: theme.textPrimary)),
+            text: '$welcome, ', style: TextStyle(color: theme.textPrimary),),
         TextSpan(
             text: firstName ?? 'Usuario',
             style:
-                TextStyle(color: theme.primary, fontWeight: FontWeight.w900)),
+                TextStyle(color: theme.primary, fontWeight: FontWeight.w900),),
       ],
     );
   }
@@ -200,7 +200,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: theme.textPrimary,
-                    letterSpacing: -0.7)),
+                    letterSpacing: -0.7,),),
             TextButton(
               onPressed: () {
                 final index = indexForMainTab(caps, MainTab.tasks);
@@ -210,7 +210,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
               },
               child: Text('Ver Semana',
                   style: TextStyle(
-                      color: theme.primary, fontWeight: FontWeight.w700)),
+                      color: theme.primary, fontWeight: FontWeight.w700,),),
             ),
           ],
         ),
@@ -271,7 +271,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
-                letterSpacing: -0.7)),
+                letterSpacing: -0.7,),),
         const SizedBox(height: AppSpacing.md),
         activityAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -285,7 +285,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                   .map((a) => ActivityChatBubble(
                         activity: a,
                         currentUserId: currentUserId,
-                      ))
+                      ),)
                   .toList(),
             );
           },
@@ -304,7 +304,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                         color: theme.surface,
-                        borderRadius: BorderRadius.circular(20))))));
+                        borderRadius: BorderRadius.circular(20),),),),),);
   }
 
   Widget _buildEmptyState(String message, AppThemeColors theme) {
@@ -312,14 +312,14 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-          color: theme.surface, borderRadius: BorderRadius.circular(24)),
+          color: theme.surface, borderRadius: BorderRadius.circular(24),),
       child: Column(children: [
         const Text('🎯', style: TextStyle(fontSize: 32)),
         const SizedBox(height: 8),
         Text(message,
             style: TextStyle(
-                fontWeight: FontWeight.w800, color: theme.textPrimary))
-      ]),
+                fontWeight: FontWeight.w800, color: theme.textPrimary,),),
+      ],),
     );
   }
 }

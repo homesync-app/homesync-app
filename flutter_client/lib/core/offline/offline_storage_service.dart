@@ -1,7 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class OfflineStorageService {
   static final OfflineStorageService _instance =
@@ -47,7 +48,7 @@ class OfflineStorageService {
   }
 
   Future<void> set(String key, Map<String, dynamic> data,
-      {Duration? expiresIn}) async {
+      {Duration? expiresIn,}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final expiresAt = expiresIn != null ? now + expiresIn.inMilliseconds : null;
 
@@ -157,7 +158,7 @@ class OfflineStorageService {
       await clearExpired();
       return _webCache.values
           .map((row) =>
-              jsonDecode(row['value'] as String) as Map<String, dynamic>)
+              jsonDecode(row['value'] as String) as Map<String, dynamic>,)
           .toList();
     }
 
@@ -165,7 +166,7 @@ class OfflineStorageService {
     final results = await db.query('offline_cache', orderBy: 'created_at ASC');
     return results
         .map(
-            (row) => jsonDecode(row['value'] as String) as Map<String, dynamic>)
+            (row) => jsonDecode(row['value'] as String) as Map<String, dynamic>,)
         .toList();
   }
 }

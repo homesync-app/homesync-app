@@ -15,7 +15,7 @@ DashboardRepository dashboardRepository(DashboardRepositoryRef ref) {
 
 @riverpod
 GetRecentActivityUseCase getRecentActivityUseCase(
-    GetRecentActivityUseCaseRef ref) {
+    GetRecentActivityUseCaseRef ref,) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return GetRecentActivityUseCase(repository);
 }

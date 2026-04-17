@@ -9,15 +9,15 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:intl/intl.dart';
@@ -170,7 +170,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                   Text(
                     'con ',
                     style: TextStyle(
-                        color: theme.textSecondary, fontSize: 14),
+                        color: theme.textSecondary, fontSize: 14,),
                   ),
                   Text(
                     partnerFirstName ?? 'tu pareja',
@@ -635,7 +635,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                             if (!dialogContext.mounted) return;
                             setDialogState(() => isSubmitting = false);
                             _showMessage(
-                                'No se pudo equilibrar el balance: $e');
+                                'No se pudo equilibrar el balance: $e',);
                           }
                         },
                   style: FilledButton.styleFrom(

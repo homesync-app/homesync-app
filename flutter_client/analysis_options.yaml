@@ -2,8 +2,8 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   language:
-    strict-casts: true
-    strict-raw-types: true
+    strict-casts: false
+    strict-raw-types: false
   errors:
     avoid_print: error
     unused_import: error

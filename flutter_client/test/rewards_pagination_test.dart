@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
+import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
 
 class FakePaginatedRewardRepository implements RewardRepository {

@@ -1,21 +1,23 @@
-import 'package:fpdart/fpdart.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
-import '../../domain/models/expense_model.dart';
-import '../../domain/models/feed_item_model.dart';
-import '../../domain/models/expense_template_model.dart';
-import '../../domain/repositories/expense_repository.dart';
-import '../../../../core/constants/app_constants.dart';
-import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
-import '../../../../core/services/repository_error_handler.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/offline/offline_queue_service.dart';
-import 'package:homesync_client/core/offline/offline_action.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/connectivity_provider.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/providers/connectivity_provider.dart';
+import '../../../../core/services/repository_error_handler.dart';
+import '../../domain/models/expense_model.dart';
+import '../../domain/models/expense_template_model.dart';
+import '../../domain/models/feed_item_model.dart';
+import '../../domain/repositories/expense_repository.dart';
 
 class SupabaseExpenseRepository
     with RepositoryErrorHandler
@@ -127,12 +129,12 @@ class SupabaseExpenseRepository
       return memberData['household_id'] as String;
     },
         context: 'SupabaseExpenseRepository.getHouseholdId',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
       final currentUserId = await AppIdentityService.instance.refresh();
@@ -161,12 +163,12 @@ class SupabaseExpenseRepository
       return expenses;
     },
         context: 'SupabaseExpenseRepository.getRecentExpenses',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
       final currentUserId = await AppIdentityService.instance.refresh();
@@ -193,12 +195,12 @@ class SupabaseExpenseRepository
       return feed;
     },
         context: 'SupabaseExpenseRepository.getCombinedFeed',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-      String expenseId) async {
+      String expenseId,) async {
     return executeWithHandling(() async {
       if (_isAdminTestingActive) {
         final response = await _client.rpc(
@@ -214,12 +216,12 @@ class SupabaseExpenseRepository
           ''').eq('id', expenseId).single();
     },
         context: 'SupabaseExpenseRepository.getExpenseWithSplits',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final sw = Stopwatch()..start();
       final response = await _client.rpc(
@@ -237,7 +239,7 @@ class SupabaseExpenseRepository
       return balances;
     },
         context: 'SupabaseExpenseRepository.getHouseholdBalances',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -320,7 +322,7 @@ class SupabaseExpenseRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -339,7 +341,7 @@ class SupabaseExpenseRepository
               filters: [OfflineFilter(column: 'id', value: id)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -366,7 +368,7 @@ class SupabaseExpenseRepository
               'p_is_shared': true,
               'p_type': 'settlement',
               'p_splits': [
-                {'user_id': toUserId, 'amount': amount}
+                {'user_id': toUserId, 'amount': amount},
               ],
             },
           );
@@ -391,17 +393,17 @@ class SupabaseExpenseRepository
                 'p_is_shared': true,
                 'p_type': 'settlement',
                 'p_splits': [
-                  {'user_id': toUserId, 'amount': amount}
+                  {'user_id': toUserId, 'amount': amount},
                 ],
               },
             ),
           );
-        });
+        },);
   }
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-      String userId, String householdId) async {
+      String userId, String householdId,) async {
     final sw = Stopwatch()..start();
     final response = await _client.rpc(
       'get_personal_finance_summary',
@@ -420,7 +422,7 @@ class SupabaseExpenseRepository
 
   @override
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final response = await _client
           .from('expense_templates')
@@ -431,14 +433,14 @@ class SupabaseExpenseRepository
 
       return (response as List<dynamic>)
           .map((json) =>
-              ExpenseTemplateModel.fromJson(json as Map<String, dynamic>))
+              ExpenseTemplateModel.fromJson(json as Map<String, dynamic>),)
           .toList();
-    }, context: 'SupabaseExpenseRepository.getTemplates', isOnline: _isOnline);
+    }, context: 'SupabaseExpenseRepository.getTemplates', isOnline: _isOnline,);
   }
 
   @override
   Future<Either<Failure, Unit>> saveTemplate(
-      ExpenseTemplateModel template) async {
+      ExpenseTemplateModel template,) async {
     return executeWithHandling(
         () async {
           await _client.from('expense_templates').upsert(template.toJson());
@@ -455,12 +457,12 @@ class SupabaseExpenseRepository
             ),
           );
           return unit;
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, Unit>> toggleTemplateActivity(
-      String id, bool active) async {
+      String id, bool active,) async {
     return executeWithHandling(
         () async {
           await _client
@@ -480,7 +482,7 @@ class SupabaseExpenseRepository
             ),
           );
           return unit;
-        });
+        },);
   }
 
   @override
@@ -545,12 +547,12 @@ class SupabaseExpenseRepository
             ),
           );
           return {'success': true, 'queued': true};
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(
         () async {
           final sw = Stopwatch()..start();
@@ -578,7 +580,7 @@ class SupabaseExpenseRepository
             ),
           );
           return unit;
-        });
+        },);
   }
 
   @override
@@ -619,7 +621,7 @@ class SupabaseExpenseRepository
                   'payer_id': row['payer_default'],
                 },
                 currentUserId,
-              ))
+              ),)
           .map(
             (row) => FeedItemModel(
               recordType: 'planned',
@@ -637,7 +639,7 @@ class SupabaseExpenseRepository
           .toList();
     },
         context: 'SupabaseExpenseRepository.getMonthlyPendingPlannedExpenses',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override
@@ -661,6 +663,6 @@ class SupabaseExpenseRepository
             ),
           );
           return unit;
-        });
+        },);
   }
 }

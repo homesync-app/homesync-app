@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:homesync_client/shared/widgets/premium_paywall.dart';
-import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
+import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
+import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
+import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
+import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -171,7 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text('Error: ${failure.message}'),
-                  backgroundColor: AppColors.error),
+                  backgroundColor: AppColors.error,),
             );
           },
           (code) => setState(() => _invitationCode = code),
@@ -191,8 +191,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  'Error: ${e.toString().replaceFirst("Exception: ", "")}'),
-              backgroundColor: AppColors.error),
+                  'Error: ${e.toString().replaceFirst("Exception: ", "")}',),
+              backgroundColor: AppColors.error,),
         );
       }
     }
@@ -213,7 +213,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _shareViaWhatsApp() async {
     if (_invitationCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Genera un codigo primero')));
+          const SnackBar(content: Text('Genera un codigo primero')),);
       return;
     }
     String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
@@ -244,7 +244,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('No se pudo abrir WhatsApp. Codigo copiado.')),
+                  content: Text('No se pudo abrir WhatsApp. Codigo copiado.'),),
             );
           }
         }
@@ -307,7 +307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.surface,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics()),
+                    parent: BouncingScrollPhysics(),),
                 slivers: [
                   SliverAppBar(
                     expandedHeight: 140,
@@ -584,7 +584,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('¿Quitar miembro?',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+            style: TextStyle(fontWeight: FontWeight.w900),),
         content:
             Text('¿Estás seguro de que quieres quitar a $name de este hogar?'),
         actions: [
@@ -598,7 +598,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),),
               minimumSize: const Size(100, 48), // Prevents infinite width error
             ),
             child: const Text('Quitar'),
@@ -616,14 +616,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text('✅ $name ha sido quitado del hogar'),
-                backgroundColor: theme.success),
+                backgroundColor: theme.success,),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'), backgroundColor: AppColors.error),
+                content: Text('Error: $e'), backgroundColor: AppColors.error,),
           );
         }
       } finally {
@@ -718,7 +718,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Nombre del hogar',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
         content: TextField(
           controller: ctrl,
           autofocus: true,
@@ -733,7 +733,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+              child: const Text('Cancelar'),),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: ElevatedButton.styleFrom(
@@ -763,14 +763,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('✅ Hogar renombrado'),
-              backgroundColor: AppColors.success),
+              backgroundColor: AppColors.success,),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error),
+              content: Text('Error: $e'), backgroundColor: AppColors.error,),
         );
       }
     }
@@ -820,7 +820,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Asignar Rol / Apodo',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold),),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -843,7 +843,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (suggestions.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Text('Sugerencias:',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -851,7 +851,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     .map((s) => ActionChip(
                           label: Text(s, style: const TextStyle(fontSize: 12)),
                           onPressed: () => ctrl.text = s,
-                        ))
+                        ),)
                     .toList(),
               ),
             ],
@@ -860,7 +860,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
+              child: const Text('Cancelar'),),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('Confirmar'),
@@ -886,7 +886,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                   content: Text('✅ Rol actualizado'),
-                  backgroundColor: AppColors.success),
+                  backgroundColor: AppColors.success,),
             );
           }
         },
@@ -895,7 +895,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error),
+              content: Text('Error: $e'), backgroundColor: AppColors.error,),
         );
       }
     } finally {
@@ -1025,7 +1025,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error),
+              content: Text('Error: $e'), backgroundColor: AppColors.error,),
         );
       }
     }

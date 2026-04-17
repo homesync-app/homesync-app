@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -11,13 +11,13 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
+import '../../../household/presentation/providers/household_provider.dart';
+import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
+import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
 import '../providers/reward_provider.dart';
 import '../widgets/couple_challenge_card.dart';
-import '../../../household/presentation/providers/household_provider.dart';
-import '../../../tasks/presentation/providers/task_provider.dart';
-import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
   final String householdId;
@@ -502,7 +502,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Widget _buildPendingProposalsSection(
-      List<RewardModel> suggestions, String? currentUserId) {
+      List<RewardModel> suggestions, String? currentUserId,) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1022,7 +1022,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Future<void> _handleChallengeCompletion(
-      CoupleChallenge challenge, String householdId) async {
+      CoupleChallenge challenge, String householdId,) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1060,7 +1060,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Future<void> _executeChallengeCompletion(
-      CoupleChallenge challenge, String householdId) async {
+      CoupleChallenge challenge, String householdId,) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1572,7 +1572,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                         onSelected: isSubmitting
                             ? null
                             : (_) => setModalState(
-                                () => selectedCategory = category),
+                                () => selectedCategory = category,),
                         selectedColor:
                             AppColors.primary.withValues(alpha: 0.14),
                         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1626,7 +1626,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                               ),
                             ),
                             child: Text(icon,
-                                style: const TextStyle(fontSize: 30)),
+                                style: const TextStyle(fontSize: 30),),
                           ),
                         );
                       }).toList(),

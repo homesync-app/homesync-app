@@ -62,7 +62,7 @@ class _NewItemsSuggestionBannerState
           category: predefined?.category ?? 'general',
           householdId: widget.householdId,
           createdAt: DateTime.now(),
-        ));
+        ),);
       }
 
       if (mounted) {

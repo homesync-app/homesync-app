@@ -1,4 +1,3 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/features/stats/data/repositories/supabase_stats_repository.dart';
@@ -12,6 +11,7 @@ import 'package:homesync_client/features/stats/domain/usecases/get_weekly_duel_h
 import 'package:homesync_client/features/stats/domain/usecases/get_weekly_ranking_usecase.dart';
 import 'package:homesync_client/features/stats/domain/usecases/get_xp_history_usecase.dart';
 import 'package:homesync_client/features/stats/domain/usecases/save_weekly_duel_result_usecase.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'stats_provider.g.dart';
 

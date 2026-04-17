@@ -1,18 +1,18 @@
 import 'package:flutter/foundation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
-import 'package:homesync_client/features/savings/domain/usecases/get_savings_goals_usecase.dart';
-import 'package:homesync_client/features/savings/domain/usecases/get_goal_contributions_usecase.dart';
-import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/add_contribution_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/delete_savings_goal_usecase.dart';
-import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
+import 'package:homesync_client/features/savings/domain/usecases/get_goal_contributions_usecase.dart';
+import 'package:homesync_client/features/savings/domain/usecases/get_savings_goals_usecase.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'savings_provider.g.dart';
 
