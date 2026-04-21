@@ -483,7 +483,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final displayRanking = ranking.isNotEmpty
         ? ranking
         : members
-            .where((m) => m.isAdult || m.isChild)
+            .where((m) => m.isAdult || m.isTeen || m.isChild)
             .map((m) => {
                   'display_name': m.displayName,
                   'coins': 0,
@@ -1428,7 +1428,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
-    final isAdultView = currentMember?.isAdult ?? false;
+    // Parents and guardians can approve; teens and children cannot.
+    // Default to adult permissions when the viewer is missing from the
+    // member list so the review flow stays reachable.
+    final isAdultView = currentMember?.canApprove ?? true;
+    // Teens and children must send completions to the adult review queue
+    // instead of marking tasks done directly.
+    final requiresApprovalSubmission =
+        currentMember?.submissionRequiresApproval ?? false;
     final assignedMember =
         members.where((member) => member.userId == task.assignedTo).firstOrNull;
     final completedMember = members
@@ -1453,14 +1460,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     } else if (isOpenTask) {
       actionIcon = Icons.check_rounded;
       onTap = () {
-        if (isChildView) {
-          _confirmOpenTaskCompletion(task, isChildView: true);
+        if (requiresApprovalSubmission) {
+          _confirmOpenTaskCompletion(task, requiresApproval: true);
         } else {
           _completeTask(task);
         }
       };
     } else if (isAssignedToCurrentUser) {
-      if (isChildView) {
+      if (requiresApprovalSubmission) {
         actionIcon = Icons.send_rounded;
         onTap = () => _submitTaskForApproval(task);
       } else {
@@ -1492,7 +1499,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Future<void> _confirmOpenTaskCompletion(
     TaskModel task, {
-    required bool isChildView,
+    required bool requiresApproval,
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
     final members = ref.read(householdMembersNotifierProvider).valueOrNull ??
@@ -1506,7 +1513,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           builder: (context) => AlertDialog(
             title: const Text('Marcar tarea'),
             content: Text(
-              isChildView
+              requiresApproval
                   ? 'Se va a marcar "${task.title}" como realizada por $actorName y se enviará a revisión.'
                   : 'Se va a marcar "${task.title}" como realizada por $actorName.',
             ),
@@ -1526,7 +1533,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
     if (!confirmed) return;
 
-    if (isChildView) {
+    if (requiresApproval) {
       await _submitTaskForApproval(task);
     } else {
       await _completeTask(task);
