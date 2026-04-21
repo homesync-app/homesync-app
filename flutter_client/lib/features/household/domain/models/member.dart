@@ -1,4 +1,4 @@
-enum MemberType { adult, child }
+enum MemberType { parent, guardian, teen, child }
 
 class MemberModel {
   final String id;
@@ -35,17 +35,28 @@ class MemberModel {
 
     final MemberType type;
     if (rawType != null) {
-      type = MemberType.values.firstWhere(
-        (value) => value.name == rawType,
-        orElse: () => MemberType.adult,
-      );
+      // Legacy 'adult' rows map to parent until the migration flips them.
+      if (rawType == 'adult') {
+        type = MemberType.parent;
+      } else {
+        type = MemberType.values.firstWhere(
+          (value) => value.name == rawType,
+          orElse: () => MemberType.parent,
+        );
+      }
     } else if (displayRole.contains('hijo') ||
         displayRole.contains('hija') ||
         displayRole.contains('nino') ||
         displayRole.contains('nin')) {
       type = MemberType.child;
+    } else if (displayRole.contains('adolesc') ||
+        displayRole.contains('teen')) {
+      type = MemberType.teen;
+    } else if (displayRole.contains('tutor') ||
+        displayRole.contains('guard')) {
+      type = MemberType.guardian;
     } else {
-      type = MemberType.adult;
+      type = MemberType.parent;
     }
 
     return MemberModel(
@@ -99,19 +110,47 @@ class MemberModel {
 
   bool get isOwner => role == 'owner';
   bool get isAdmin => isOwner;
-  bool get isAdult => type == MemberType.adult;
+  bool get isParent => type == MemberType.parent;
+  bool get isGuardian => type == MemberType.guardian;
+  bool get isTeen => type == MemberType.teen;
   bool get isChild => type == MemberType.child;
+  // Adults in the permissions sense: parents and guardians. Teens and
+  // children are minors whose completions still need adult review.
+  bool get isAdult => isParent || isGuardian;
+  // Parents and guardians can approve / reject pending tasks.
+  bool get canApprove => isAdult;
+  // Teens and children must route their task completions through the
+  // adult approval queue instead of marking tasks done directly.
+  bool get submissionRequiresApproval => isTeen || isChild;
 
   String get visibleRoleLabel {
     if (displayRole != null && displayRole!.trim().isNotEmpty) {
       return displayRole!.trim();
     }
-    if (isChild) return 'Hijo/a';
-    if (isAdult) return 'Adulto';
-    return 'Integrante';
+    switch (type) {
+      case MemberType.parent:
+        return 'Padre/Madre';
+      case MemberType.guardian:
+        return 'Tutor/a';
+      case MemberType.teen:
+        return 'Adolescente';
+      case MemberType.child:
+        return 'Hijo/a';
+    }
   }
 
-  String get typeLabel => isChild ? 'Hijo' : 'Adulto';
+  String get typeLabel {
+    switch (type) {
+      case MemberType.parent:
+        return 'Padre/Madre';
+      case MemberType.guardian:
+        return 'Tutor';
+      case MemberType.teen:
+        return 'Adolescente';
+      case MemberType.child:
+        return 'Hijo';
+    }
+  }
 
   String get permissionLabel => isAdmin ? 'Admin' : 'Participa';
 

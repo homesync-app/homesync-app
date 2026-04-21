@@ -615,12 +615,18 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       }
 
       // Completed-today tasks should leave "today" and remain only in activity.
-      if (isTaskCompletedOnLocalDate(task, now)) {
+      // Exception: pending-approval tasks still need adult review visibility
+      // on the same day the child marked them done.
+      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }
 
       // Only actionable tasks belong in this list.
       if (!task.isActive) return false;
+
+      // Pending-approval tasks must surface for adult review regardless
+      // of the original due date — the child already acted on them.
+      if (task.isPendingApproval) return true;
 
       if (task.isDueToday) return true;
 
@@ -642,7 +648,9 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
     // instead of leaving the home empty.
     final householdFallback = tasks.where((task) {
       if (!task.isActive) return false;
-      if (isTaskCompletedOnLocalDate(task, now)) return false;
+      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
+        return false;
+      }
       return true;
     }).toList()
       ..sort((a, b) {

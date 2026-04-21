@@ -47,6 +47,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   String _familyStructure = 'mixed';
   String _familyRole = 'Adulto responsable';
 
+  // Email resolved from auth on init — used as name fallback when Supabase
+  // session isn't ready yet (Firebase fires signedIn before session syncs).
+  String? _authEmail;
+
   // Invite code shown to "create" users
   String? _myInviteCode;
   bool _isGeneratingCode = false;
@@ -110,6 +114,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   void _prefillIdentityFromAuth() {
     final currentUser = ref.read(currentUserProvider);
+    // currentUser may be null if the Supabase session is still being established
+    // (Firebase auth fires signedIn before _syncSupabaseWithEmailPassword completes).
+    // We store the email as a fallback so _saveAndComplete can still derive a name.
+    _authEmail = currentUser?.email;
+
     if (currentUser == null) return;
 
     final metadata = currentUser.userMetadata ?? const <String, dynamic>{};
@@ -341,24 +350,48 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     try {
       final householdId = await ref.read(householdIdProvider.future);
-      if (householdId != null && _selectedMode != null) {
+      // Only update household type when the user CREATED the household.
+      // Joiners don't own the household and RLS blocks the update.
+      if (householdId != null && _selectedMode != null && _createNew) {
         final result = await ref
             .read(updateHouseholdTypeUseCaseProvider)
             .call(householdId, _selectedMode!);
         result.fold((failure) => throw failure, (_) {});
       }
 
-      // Update user profile with name and avatar
-      if (!widget.isAdminPreview && _nameController.text.trim().isNotEmpty) {
-        final profileResult =
-            await ref.read(authRepositoryProvider).updateProfile(
-                  fullName: _nameController.text.trim(),
-                  avatarUrl: _resolvedAvatarValue,
-                );
-        profileResult.fold(
-          (failure) => throw failure,
-          (_) {},
+      // Update user profile with name and avatar.
+      // When the Supabase session isn't ready at init time (Firebase fires
+      // signedIn before _syncSupabaseWithEmailPassword completes), the name
+      // field may be empty — fall back to the email username so we always
+      // persist something meaningful.
+      if (!widget.isAdminPreview) {
+        final typedName = _nameController.text.trim();
+        final fallbackName = (_authEmail ?? ref.read(currentUserProvider)?.email)
+            ?.split('@')
+            .first
+            .trim();
+        final nameToSave =
+            typedName.isNotEmpty ? typedName : fallbackName;
+        log.i(
+          'SetupScreen._saveAndComplete: saving profile '
+          'typed="$typedName" fallback="$fallbackName" saving="$nameToSave"',
         );
+        if (nameToSave != null && nameToSave.isNotEmpty) {
+          final profileResult =
+              await ref.read(authRepositoryProvider).updateProfile(
+                    fullName: nameToSave,
+                    avatarUrl: _resolvedAvatarValue,
+                  );
+          profileResult.fold(
+            (failure) {
+              log.e(
+                'SetupScreen._saveAndComplete: updateProfile failed: ${failure.message}',
+              );
+              throw failure;
+            },
+            (_) => log.i('SetupScreen._saveAndComplete: updateProfile ok'),
+          );
+        }
       }
 
       if (tasksEnabled) {

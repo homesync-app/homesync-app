@@ -251,10 +251,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       orElse: () => <MemberModel>[],
     );
     final categoriesAsync = ref.watch(categoriesProvider);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember =
+        members.where((m) => m.userId == currentUserId).firstOrNull;
+    // Children cannot create tasks; teens and adults can.
+    final canCreateTasks = !(currentMember?.isChild ?? false);
 
     return Scaffold(
       backgroundColor: theme.background,
-      floatingActionButton: Padding(
+      floatingActionButton: !canCreateTasks
+          ? null
+          : Padding(
         padding: const EdgeInsets.only(bottom: 18),
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -899,8 +906,15 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final assignedMember =
         members.where((member) => member.userId == task.assignedTo).firstOrNull;
     final isFamilyMode = caps.type == HouseholdType.family;
-    final isChildView = isFamilyMode && (currentMember?.isChild ?? false);
-    final isAdultView = isFamilyMode && (currentMember?.isAdult ?? false);
+    // Parents and guardians can approve; teens and children cannot.
+    // When the current viewer is missing from the member list we default to
+    // adult permissions so the review flow stays reachable.
+    final isAdultView =
+        isFamilyMode && (currentMember?.canApprove ?? true);
+    // Teens and children must send completions through the adult review
+    // queue instead of marking tasks done directly.
+    final requiresApprovalSubmission = isFamilyMode &&
+        (currentMember?.submissionRequiresApproval ?? false);
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
 
@@ -1045,29 +1059,34 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Expanded(
-                              child: _buildActionTilePremium(
-                                icon: Icons.edit_rounded,
-                                label: 'Editar',
-                                color: AppColors.accentGold,
-                                onTap: widget.onEdit,
+                            // Minors (teens + children) cannot edit, schedule,
+                            // or reshape tasks. Only adults manage them.
+                            if (!requiresApprovalSubmission) ...[
+                              Expanded(
+                                child: _buildActionTilePremium(
+                                  icon: Icons.edit_rounded,
+                                  label: 'Editar',
+                                  color: AppColors.accentGold,
+                                  onTap: widget.onEdit,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _buildActionTilePremium(
-                                icon: Icons.schedule_rounded,
-                                label: 'Programar',
-                                color: AppColors.primary,
-                                onTap: widget.onSchedule,
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildActionTilePremium(
+                                  icon: Icons.schedule_rounded,
+                                  label: 'Programar',
+                                  color: AppColors.primary,
+                                  onTap: widget.onSchedule,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
+                              const SizedBox(width: 8),
+                            ],
                             Expanded(
                               child: isFamilyMode
                                   ? _buildFamilyTaskAction(
-                                      isChildView: isChildView,
                                       isAdultView: isAdultView,
+                                      requiresApprovalSubmission:
+                                          requiresApprovalSubmission,
                                       isOpenTask: isOpenTask,
                                       isAssignedToCurrentUser:
                                           isAssignedToCurrentUser,
@@ -1098,8 +1117,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Widget _buildFamilyTaskAction({
-    required bool isChildView,
     required bool isAdultView,
+    required bool requiresApprovalSubmission,
     required bool isOpenTask,
     required bool isAssignedToCurrentUser,
     required MemberModel? assignedMember,
@@ -1144,8 +1163,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         onTap: _isSubmitting
             ? null
             : () {
-                if (isChildView) {
-                  _confirmOpenTaskCompletion(isChildView: true);
+                if (requiresApprovalSubmission) {
+                  _confirmOpenTaskCompletion(requiresApproval: true);
                 } else {
                   _completeTask();
                 }
@@ -1154,7 +1173,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     }
 
     if (isAssignedToCurrentUser) {
-      if (isChildView) {
+      if (requiresApprovalSubmission) {
         return _buildActionTilePremium(
           icon: Icons.send_rounded,
           label: _isSubmitting ? 'Enviando...' : 'Enviar a revisión',
@@ -1273,7 +1292,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _confirmOpenTaskCompletion({
-    required bool isChildView,
+    required bool requiresApproval,
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
     final members =
@@ -1287,7 +1306,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           builder: (context) => AlertDialog(
             title: const Text('Marcar tarea'),
             content: Text(
-              isChildView
+              requiresApproval
                   ? 'Se va a marcar "${widget.task.title}" como realizada por $actorName y se enviará a revisión.'
                   : 'Se va a marcar "${widget.task.title}" como realizada por $actorName.',
             ),
@@ -1307,7 +1326,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
     if (!confirmed) return;
 
-    if (isChildView) {
+    if (requiresApproval) {
       await _submitTaskForApproval();
     } else {
       await _completeTask();

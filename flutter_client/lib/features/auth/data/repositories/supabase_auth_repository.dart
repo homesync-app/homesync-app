@@ -144,20 +144,14 @@ class SupabaseAuthRepository
     String? avatarUrl,
   }) async {
     return executeWithHandling(() async {
-      final userId = await _resolveCurrentUserId();
-      if (userId == null) {
-        throw const AuthFailure(
-          'No hay una identidad activa para actualizar el perfil',
-        );
-      }
+      if (fullName == null && avatarUrl == null) return;
 
-      final updates = <String, dynamic>{};
-      if (fullName != null) updates['full_name'] = fullName;
-      if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
-
-      if (updates.isEmpty) return;
-
-      await _client.from('users').update(updates).eq('id', userId);
-    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline,);
+      // Use the SECURITY DEFINER RPC so the update bypasses RLS and
+      // resolves the caller via current_app_user_id() (works with Firebase JWTs).
+      await _client.rpc('update_own_profile', params: {
+        'p_full_name': fullName,
+        'p_avatar_url': avatarUrl,
+      });
+    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline);
   }
 }

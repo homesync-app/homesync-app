@@ -47,6 +47,11 @@ abstract class HouseholdRepository {
   Future<Either<Failure, void>> updateMemberDisplayRole(
       String userId, String? displayRole,);
 
+  /// Updates the permission type for a member.
+  /// [type] must be one of `parent`, `guardian`, `teen`, `child`.
+  Future<Either<Failure, void>> updateMemberType(
+      String userId, String type);
+
   /// QA admin: restores a testing scenario to its seeded baseline.
   Future<Either<Failure, Map<String, dynamic>>> qaResetScenario(
       String householdId,);

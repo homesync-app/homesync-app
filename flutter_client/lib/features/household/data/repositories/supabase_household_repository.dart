@@ -371,6 +371,23 @@ class SupabaseHouseholdRepository
   }
 
   @override
+  Future<Either<Failure, void>> updateMemberType(
+    String userId,
+    String type,
+  ) async {
+    return executeWithHandling(() async {
+      final householdMember = await _requireCurrentHouseholdMembership();
+      await _client
+          .from(AppConstants.tableHouseholdMembers)
+          .update({'member_type': type})
+          .eq('user_id', userId)
+          .eq('household_id', householdMember['household_id']);
+    },
+        context: 'SupabaseHouseholdRepository.updateMemberType',
+        isOnline: _isOnline);
+  }
+
+  @override
   Future<Either<Failure, Map<String, dynamic>>> qaResetScenario(
     String householdId,
   ) async {
