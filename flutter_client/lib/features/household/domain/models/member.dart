@@ -12,6 +12,7 @@ class MemberModel {
   final MemberType type;
   final String? avatarUrl;
   final String? mercadopagoAlias;
+  final bool onboardingCompleted;
 
   const MemberModel({
     required this.id,
@@ -25,13 +26,14 @@ class MemberModel {
     required this.type,
     this.avatarUrl,
     this.mercadopagoAlias,
+    this.onboardingCompleted = true,
   });
 
   factory MemberModel.fromMap(Map<String, dynamic> map) {
     final userMap = map['users'] as Map<String, dynamic>?;
     final rawType = map['member_type'] as String?;
     final role = (map['role'] as String? ?? 'member').toLowerCase();
-    final displayRole = (map['display_role'] as String? ?? '').toLowerCase();
+    final rawDisplayRole = map['display_role'] as String?;
 
     final MemberType type;
     if (rawType != null) {
@@ -44,19 +46,21 @@ class MemberModel {
           orElse: () => MemberType.parent,
         );
       }
-    } else if (displayRole.contains('hijo') ||
-        displayRole.contains('hija') ||
-        displayRole.contains('nino') ||
-        displayRole.contains('nin')) {
-      type = MemberType.child;
-    } else if (displayRole.contains('adolesc') ||
-        displayRole.contains('teen')) {
-      type = MemberType.teen;
-    } else if (displayRole.contains('tutor') ||
-        displayRole.contains('guard')) {
-      type = MemberType.guardian;
     } else {
-      type = MemberType.parent;
+      // Fallback: derive type from display_role text
+      final lower = (rawDisplayRole ?? '').toLowerCase();
+      if (lower.contains('hijo') ||
+          lower.contains('hija') ||
+          lower.contains('nino') ||
+          lower.contains('nin')) {
+        type = MemberType.child;
+      } else if (lower.contains('adolesc') || lower.contains('teen')) {
+        type = MemberType.teen;
+      } else if (lower.contains('tutor') || lower.contains('guard')) {
+        type = MemberType.guardian;
+      } else {
+        type = MemberType.parent;
+      }
     }
 
     return MemberModel(
@@ -64,14 +68,15 @@ class MemberModel {
       userId: map['user_id'] as String? ?? '',
       householdId: map['household_id'] as String? ?? '',
       role: role,
-      joinedAt:
-          DateTime.tryParse(map['joined_at'] as String? ?? '') ?? DateTime.now(),
+      joinedAt: DateTime.tryParse(map['joined_at'] as String? ?? '') ??
+          DateTime.now(),
       email: userMap?['email'] as String?,
       fullName: userMap?['full_name'] as String?,
-      displayRole: map['display_role'] as String?,
+      displayRole: rawDisplayRole,
       type: type,
       avatarUrl: userMap?['avatar_url'] as String?,
       mercadopagoAlias: userMap?['mercadopago_alias'] as String?,
+      onboardingCompleted: map['onboarding_completed'] as bool? ?? true,
     );
   }
 
@@ -84,6 +89,7 @@ class MemberModel {
       'member_type': type.name,
       'joined_at': joinedAt.toIso8601String(),
       'display_role': displayRole,
+      'onboarding_completed': onboardingCompleted,
       'users': {
         'full_name': fullName,
         'email': email,
@@ -114,14 +120,16 @@ class MemberModel {
   bool get isGuardian => type == MemberType.guardian;
   bool get isTeen => type == MemberType.teen;
   bool get isChild => type == MemberType.child;
-  // Adults in the permissions sense: parents and guardians. Teens and
-  // children are minors whose completions still need adult review.
+  // Adults in the permissions sense: parents and guardians.
   bool get isAdult => isParent || isGuardian;
   // Parents and guardians can approve / reject pending tasks.
   bool get canApprove => isAdult;
-  // Teens and children must route their task completions through the
-  // adult approval queue instead of marking tasks done directly.
+  // Teens and children must route completions through the approval queue.
   bool get submissionRequiresApproval => isTeen || isChild;
+
+  bool get canSeeSharedExpenses => isAdult;
+  bool get canSeePersonalFinance => isAdult || isTeen;
+  bool get canSeeFinanceTab => canSeePersonalFinance;
 
   String get visibleRoleLabel {
     if (displayRole != null && displayRole!.trim().isNotEmpty) {

@@ -171,8 +171,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           (failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text('Error: ${failure.message}'),
-                  backgroundColor: AppColors.error,),
+                content: Text('Error: ${failure.message}'),
+                backgroundColor: AppColors.error,
+              ),
             );
           },
           (code) => setState(() => _invitationCode = code),
@@ -191,9 +192,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Error: ${e.toString().replaceFirst("Exception: ", "")}',),
-              backgroundColor: AppColors.error,),
+            content: Text(
+              'Error: ${e.toString().replaceFirst("Exception: ", "")}',
+            ),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -214,7 +217,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _shareViaWhatsApp() async {
     if (_invitationCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Genera un codigo primero')),);
+        const SnackBar(content: Text('Genera un codigo primero')),
+      );
       return;
     }
     String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
@@ -245,7 +249,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('No se pudo abrir WhatsApp. Codigo copiado.'),),
+                content: Text('No se pudo abrir WhatsApp. Codigo copiado.'),
+              ),
             );
           }
         }
@@ -308,7 +313,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.surface,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),),
+                  parent: BouncingScrollPhysics(),
+                ),
                 slivers: [
                   SliverAppBar(
                     expandedHeight: 140,
@@ -584,8 +590,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('¿Quitar miembro?',
-            style: TextStyle(fontWeight: FontWeight.w900),),
+        title: const Text(
+          '¿Quitar miembro?',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         content:
             Text('¿Estás seguro de que quieres quitar a $name de este hogar?'),
         actions: [
@@ -599,7 +607,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               backgroundColor: theme.error,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),),
+                borderRadius: BorderRadius.circular(12),
+              ),
               minimumSize: const Size(100, 48), // Prevents infinite width error
             ),
             child: const Text('Quitar'),
@@ -616,15 +625,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('✅ $name ha sido quitado del hogar'),
-                backgroundColor: theme.success,),
+              content: Text('✅ $name ha sido quitado del hogar'),
+              backgroundColor: theme.success,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $e'), backgroundColor: AppColors.error,),
+              content: Text('Error: $e'),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       } finally {
@@ -718,8 +730,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Nombre del hogar',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: const Text(
+          'Nombre del hogar',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: ctrl,
           autofocus: true,
@@ -733,8 +747,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: ElevatedButton.styleFrom(
@@ -763,15 +778,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         setState(() => _householdName = newName);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('✅ Hogar renombrado'),
-              backgroundColor: AppColors.success,),
+            content: Text('✅ Hogar renombrado'),
+            backgroundColor: AppColors.success,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error,),
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -801,10 +819,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final suggestions = <String>[];
     if (_householdType == 'family') {
       suggestions.addAll([
-        'Adulto responsable',
-        'Madre',
         'Padre',
+        'Madre',
         'Tutor/a',
+        'Adolescente',
         'Hijo/a',
         'Abuelo/a',
       ]);
@@ -820,8 +838,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Asignar Rol / Apodo',
-            style: TextStyle(fontWeight: FontWeight.bold),),
+        title: const Text(
+          'Asignar Rol / Apodo',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -843,16 +863,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             if (suggestions.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const Text('Sugerencias:',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),),
+              const Text(
+                'Sugerencias:',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: suggestions
-                    .map((s) => ActionChip(
-                          label: Text(s, style: const TextStyle(fontSize: 12)),
-                          onPressed: () => ctrl.text = s,
-                        ),)
+                    .map(
+                      (s) => ActionChip(
+                        label: Text(s, style: const TextStyle(fontSize: 12)),
+                        onPressed: () => ctrl.text = s,
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -860,8 +884,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('Confirmar'),
@@ -886,8 +911,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('✅ Rol actualizado'),
-                  backgroundColor: AppColors.success,),
+                content: Text('✅ Rol actualizado'),
+                backgroundColor: AppColors.success,
+              ),
             );
           }
         },
@@ -896,7 +922,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error,),
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
@@ -1027,7 +1055,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error,),
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     }
@@ -1237,23 +1267,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Column(
         children: [
           ListTile(
-            leading: Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
+            leading:
+                Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
             title: Text(
               'Politica de Privacidad',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded, color: theme.textMuted, size: 18),
-            onTap: () => openUrl('https://megablas.github.io/homesync-privacy/'),
+            trailing: Icon(Icons.open_in_new_rounded,
+                color: theme.textMuted, size: 18),
+            onTap: () =>
+                openUrl('https://megablas.github.io/homesync-privacy/'),
           ),
-          Divider(height: 1, color: theme.divider.withValues(alpha: 0.1), indent: 16, endIndent: 16),
+          Divider(
+              height: 1,
+              color: theme.divider.withValues(alpha: 0.1),
+              indent: 16,
+              endIndent: 16),
           ListTile(
-            leading: Icon(Icons.description_outlined, color: theme.textSecondary),
+            leading:
+                Icon(Icons.description_outlined, color: theme.textSecondary),
             title: Text(
               'Terminos de Uso',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded, color: theme.textMuted, size: 18),
-            onTap: () => openUrl('https://megablas.github.io/homesync-privacy/terms'),
+            trailing: Icon(Icons.open_in_new_rounded,
+                color: theme.textMuted, size: 18),
+            onTap: () =>
+                openUrl('https://megablas.github.io/homesync-privacy/terms'),
           ),
         ],
       ),

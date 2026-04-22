@@ -26,7 +26,6 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -196,19 +195,31 @@ void main() async {
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    // 1. Only send to Crashlytics on mobile (not supported on web)
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(details);
     }
-    // 2. Send to Supabase for the admin panel logs page (all platforms)
+    final diagnosticLines = <String>[
+      details.exceptionAsString(),
+    ];
+    for (final node
+        in details.informationCollector?.call() ?? <DiagnosticsNode>[]) {
+      diagnosticLines.add(node.toString());
+    }
+    final fullContext = <String, dynamic>{
+      ...richContext,
+      'library': details.library,
+      'context': details.context?.toString(),
+      'summary': details.summary.toString(),
+      'full_diagnostics': diagnosticLines.join('\n'),
+    };
+    if (details.stack != null) {
+      fullContext['stack_frames_head'] =
+          details.stack.toString().split('\n').take(20).join('\n');
+    }
     rpc.logApplicationError(
       message: details.exceptionAsString(),
       stackTrace: details.stack?.toString(),
-      context: {
-        ...richContext,
-        'library': details.library,
-        'context': details.context?.toString(),
-      },
+      context: fullContext,
     );
   };
 
@@ -265,7 +276,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   static const _minimumSplashDuration = Duration(milliseconds: 800);
-  static const _criticalBootstrapTimeout = Duration(seconds: 4);
+  static const _criticalBootstrapTimeout = Duration(milliseconds: 2500);
   bool _startupReady = false;
   late final FirebaseAnalyticsObserver _analyticsObserver;
 
@@ -347,7 +358,8 @@ class _MyAppState extends ConsumerState<MyApp> {
           ),
         );
     log.i(
-        '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}',);
+      '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}',
+    );
 
     if (!mounted) return;
 
@@ -367,15 +379,14 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _warmCriticalProviders() async {
-    final warmups = <String, Future<void>>{
+    // Blocking set: strictly needed to render the home above the fold without
+    // skeletons. Everything else is kicked off fire-and-forget so it streams in
+    // once the user is already past the splash.
+    final blocking = <String, Future<void>>{
       'householdIdProvider':
           ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
       'userProfileProvider':
           ref.read(userProfileProvider.future).then((_) {}).catchError((_) {}),
-      'householdMembersProvider': ref
-          .read(householdMembersProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
       'householdMembersNotifierProvider': ref
           .read(householdMembersNotifierProvider.future)
           .then((_) {})
@@ -384,34 +395,37 @@ class _MyAppState extends ConsumerState<MyApp> {
           .read(expenseBalancesProvider.future)
           .then((_) {})
           .catchError((_) {}),
-      'userBalanceProvider':
-          ref.read(userBalanceProvider.future).then((_) {}).catchError((_) {}),
       'tasksProvider':
           ref.read(tasksProvider.future).then((_) {}).catchError((_) {}),
-      'recentActivityProvider': ref
-          .read(recentActivityProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
-      'statsControllerProvider': ref
-          .read(statsControllerProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
-      'combinedFeedControllerProvider': ref
+    };
+
+    // Non-blocking: kick them off so the warm cache is ready by the time the
+    // user scrolls, but don't hold the splash for them.
+    // - recentActivityProvider: occasionally times out on cold RPC, not above
+    //   the fold, can resolve lazily.
+    // - combinedFeedController: runs recurring expense processing internally.
+    // - statsController / shopping / householdMembers (legacy) / userBalance:
+    //   secondary views.
+    // Kicked off, but not awaited — we only use the side effect of populating
+    // the provider cache so subsequent watchers resolve synchronously.
+    // ignore: unused_local_variable
+    final nonBlocking = <Future<void>>[
+      ref.read(recentActivityProvider.future).then((_) {}).catchError((_) {}),
+      ref
           .read(combinedFeedControllerProvider.future)
           .then((_) {})
           .catchError((_) {}),
-      'shoppingItemsProvider': ref
-          .read(shoppingItemsProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
-    };
+      ref.read(statsControllerProvider.future).then((_) {}).catchError((_) {}),
+      ref.read(shoppingItemsProvider.future).then((_) {}).catchError((_) {}),
+      ref.read(userBalanceProvider.future).then((_) {}).catchError((_) {}),
+    ];
 
     await Future.wait(
-      warmups.entries.map((entry) async {
+      blocking.entries.map((entry) async {
         try {
           await entry.value.timeout(_criticalBootstrapTimeout);
         } on TimeoutException {
-          log.w('StartupGate: background preload timed out for ${entry.key}');
+          log.w('StartupGate: blocking preload timed out for ${entry.key}');
         }
       }),
     );
@@ -467,7 +481,8 @@ class _MyAppState extends ConsumerState<MyApp> {
 
       if (curr != null) {
         log.i(
-            'Auth transition: prev=${prev?.isAuthenticated}, curr=${curr.isAuthenticated}, startupReady=$_startupReady',);
+          'Auth transition: prev=${prev?.isAuthenticated}, curr=${curr.isAuthenticated}, startupReady=$_startupReady',
+        );
       }
 
       if (!_startupReady) return;

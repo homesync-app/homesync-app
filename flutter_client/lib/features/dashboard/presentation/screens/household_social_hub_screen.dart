@@ -4,14 +4,13 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
+import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -154,7 +153,7 @@ class _HouseholdSocialHubScreenState
           : const ['Padre', 'Madre', 'Tutor/a', 'Abuelo/a'];
     }
     if (caps.type == HouseholdType.friends) {
-      return const ['Compañero', 'Roommate', 'Responsable'];
+      return const ['Compañero', 'Roommate', 'Invitado', 'Responsable'];
     }
     if (caps.type == HouseholdType.couple) {
       return const ['Pareja', 'Novio', 'Novia', 'Esposo', 'Esposa'];
@@ -194,18 +193,20 @@ class _HouseholdSocialHubScreenState
                 caps: caps,
                 householdAsync: householdAsync,
                 canManageMembers: canManageMembers,
-                onInvite: () => InvitationSheet.show(context),
-                onTasks: () {
-                  final index = indexForMainTab(caps, MainTab.tasks);
-                  if (index >= 0) {
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
-                  }
-                },
-                onFinances: () {
-                  final index = indexForMainTab(caps, MainTab.expenses);
-                  if (index >= 0) {
-                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
-                  }
+                onRanking: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Ranking'),
+                        ),
+                        body: const SafeArea(
+                          child: StatsScreen(),
+                        ),
+                      ),
+                    ),
+                  );
                 },
                 onRewards: () {
                   Navigator.push(
@@ -265,24 +266,19 @@ class _HeaderCard extends StatelessWidget {
     required this.caps,
     required this.householdAsync,
     required this.canManageMembers,
-    required this.onInvite,
-    required this.onTasks,
-    required this.onFinances,
+    required this.onRanking,
     required this.onRewards,
   });
 
   final HouseholdCapabilities caps;
   final AsyncValue<dynamic> householdAsync;
   final bool canManageMembers;
-  final VoidCallback onInvite;
-  final VoidCallback onTasks;
-  final VoidCallback onFinances;
+  final VoidCallback onRanking;
   final VoidCallback onRewards;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final household = householdAsync.valueOrNull;
 
     final title = switch (caps.type) {
       HouseholdType.family => 'Familia',
@@ -360,38 +356,10 @@ class _HeaderCard extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _InfoChip(
-                icon: Icons.home_work_outlined,
-                label: household?.name ?? 'Mi hogar',
-              ),
-              _InfoChip(
-                icon: Icons.group_outlined,
-                label: canManageMembers ? 'Gestion activa' : 'Vista familiar',
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              if (canManageMembers)
-                _QuickActionButton(
-                  icon: Icons.person_add_alt_1_outlined,
-                  label: caps.type == HouseholdType.family
-                      ? 'Invitar familia'
-                      : 'Invitar',
-                  onPressed: onInvite,
-                ),
               _QuickActionButton(
-                icon: Icons.task_alt_outlined,
-                label: 'Tareas',
-                onPressed: onTasks,
-              ),
-              _QuickActionButton(
-                icon: Icons.account_balance_wallet_outlined,
-                label: 'Finanzas',
-                onPressed: onFinances,
+                icon: Icons.emoji_events_outlined,
+                label: 'Ranking',
+                onPressed: onRanking,
               ),
               _QuickActionButton(
                 icon: Icons.storefront_outlined,
@@ -536,10 +504,12 @@ class _MembersSection extends StatelessWidget {
                         children: [
                           _RoleChip(
                             label: member.typeLabel,
-                            color: member.isChild
+                            color: member.isChild &&
+                                    caps.type == HouseholdType.family
                                 ? AppColors.accentOrange
                                 : AppColors.primary,
-                            background: member.isChild
+                            background: member.isChild &&
+                                    caps.type == HouseholdType.family
                                 ? AppColors.accentOrange.withValues(alpha: 0.12)
                                 : AppColors.primaryLight,
                           ),

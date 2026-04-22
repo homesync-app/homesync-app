@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 
 enum HouseholdType {
   solo,
@@ -18,6 +19,14 @@ enum HouseholdType {
       case 'roommates':
         return HouseholdType.friends;
       default:
+        // Only warn for genuinely unknown string values. A null input means the
+        // household is still loading (valueOrNull) — that's expected during
+        // startup and shouldn't pollute logs or signal a backend bug.
+        if (type != null) {
+          log.w(
+            'Unknown HouseholdType received from backend: "$type", falling back to couple',
+          );
+        }
         return HouseholdType.couple;
     }
   }
@@ -76,7 +85,8 @@ class HouseholdCapabilities {
     return switch (type) {
       HouseholdType.solo => 'Mi Progreso',
       HouseholdType.couple => 'Nuestro Hogar',
-      _ => 'Hogar Familiar',
+      HouseholdType.family => 'Hogar Familiar',
+      HouseholdType.friends => 'Convivencia',
     };
   }
 

@@ -46,6 +46,24 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
   return result?['household_id'] as String?;
 });
 
+final memberOnboardingProvider = FutureProvider<bool>((ref) async {
+  final admin = ref.watch(adminProvider);
+  if (isAdminPreviewActive(admin)) return true;
+
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return true;
+
+  final client = ref.read(supabaseClientProvider);
+  final result = await client
+      .from('household_members')
+      .select('onboarding_completed')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+  if (result == null) return true;
+  return result['onboarding_completed'] as bool? ?? true;
+});
+
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final admin = ref.watch(adminProvider);
   if (isAdminPreviewActive(admin) &&

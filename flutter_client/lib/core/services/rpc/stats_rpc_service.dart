@@ -6,13 +6,22 @@ class StatsRpcService extends BaseRpcService {
   StatsRpcService({required super.clientOverride});
 
   Future<List<Map<String, dynamic>>> getTaskStatsByCategory() async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'get_task_stats_by_category',
-      params: {'p_user_id': userId},
-    );
+    try {
+      final userId = await requireCurrentUserId();
+      final response = await client.rpc(
+        'get_task_stats_by_category',
+        params: {'p_user_id': userId},
+      );
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getTaskStatsByCategory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> getXpHistory() async {
@@ -52,34 +61,61 @@ class StatsRpcService extends BaseRpcService {
   }
 
   Future<List<Map<String, dynamic>>> getExpenseStatsByCategory() async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'get_expense_stats_by_category',
-      params: {'p_user_id': userId},
-    );
+    try {
+      final userId = await requireCurrentUserId();
+      final response = await client.rpc(
+        'get_expense_stats_by_category',
+        params: {'p_user_id': userId},
+      );
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getExpenseStatsByCategory fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> getMemberActivityStats() async {
-    final userId = await requireCurrentUserId();
-    final response = await client.rpc(
-      'get_member_activity_stats',
-      params: {'p_user_id': userId},
-    );
+    try {
+      final userId = await requireCurrentUserId();
+      final response = await client.rpc(
+        'get_member_activity_stats',
+        params: {'p_user_id': userId},
+      );
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getMemberActivityStats fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyRanking() async {
-    final householdId = await requireHouseholdId();
+    try {
+      final householdId = await requireHouseholdId();
 
-    final response = await client.rpc(
-      'get_weekly_ranking',
-      params: {'p_household_id': householdId},
-    );
+      final response = await client.rpc(
+        'get_weekly_ranking',
+        params: {'p_household_id': householdId},
+      );
 
-    return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.getWeeklyRanking fallback to empty list',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
   }
 
   Future<bool> isWeekProcessed() async {

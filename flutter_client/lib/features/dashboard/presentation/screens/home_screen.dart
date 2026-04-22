@@ -141,6 +141,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildModeDispatcher(String householdId) {
+    // The capabilities provider falls back to `couple` while the current
+    // household is still loading (valueOrNull == null). Without this guard
+    // the user sees a ~1s flash of HomeCoupleView before flipping to the
+    // correct mode. Wait until currentHouseholdProvider actually resolves —
+    // unless an admin has forced a type from dev tools, in which case caps
+    // are already authoritative.
+    final admin = ref.watch(adminProvider);
+    final householdAsync = ref.watch(currentHouseholdProvider);
+    final isForcedByAdmin =
+        admin.isDeveloperMode && admin.forcedHouseholdType != null;
+
+    if (!isForcedByAdmin &&
+        householdAsync.isLoading &&
+        !householdAsync.hasValue) {
+      return const AppLoadingState(message: 'Cargando hogar...');
+    }
+
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return switch (caps.type) {
@@ -171,44 +188,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AppThemeColors theme,
     HouseholdCapabilities caps,
   ) {
+    // Friends view has less vertical content; the FAB overlaps the nav bar
+    // label text without this offset due to shorter bottom padding.
+    final fabOffsetY = caps.type == HouseholdType.friends ? 28.0 : 0.0;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowBase.withValues(alpha: 0.032),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: SizedBox(
-          height: 56,
-          child: FloatingActionButton.extended(
-            onPressed: () => caps.showTasks
-                ? _showQuickActionMenu(householdId, caps)
-                : ExpenseFormSheet.show(context),
-            backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
-            foregroundColor: theme.primary,
-            elevation: 0,
-            extendedPadding:
-                const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-            label: Text(
-              caps.showTasks ? 'Acciones' : 'Gastos',
-              style: TextStyle(
-                color: theme.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 14.5,
-                letterSpacing: -0.15,
+      child: Transform.translate(
+        offset: Offset(0, fabOffsetY),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowBase.withValues(alpha: 0.032),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
-            ),
-            icon: Icon(Icons.add_rounded, color: theme.primary, size: 19),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: BorderSide(
-                color: theme.primary.withValues(alpha: 0.075),
+            ],
+          ),
+          child: SizedBox(
+            height: 56,
+            child: FloatingActionButton.extended(
+              onPressed: () => caps.showTasks
+                  ? _showQuickActionMenu(householdId, caps)
+                  : ExpenseFormSheet.show(context),
+              backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
+              foregroundColor: theme.primary,
+              elevation: 0,
+              extendedPadding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
+              label: Text(
+                caps.showTasks ? 'Acciones' : 'Gastos',
+                style: TextStyle(
+                  color: theme.primary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.5,
+                  letterSpacing: -0.15,
+                ),
+              ),
+              icon: Icon(Icons.add_rounded, color: theme.primary, size: 19),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(
+                  color: theme.primary.withValues(alpha: 0.075),
+                ),
               ),
             ),
           ),

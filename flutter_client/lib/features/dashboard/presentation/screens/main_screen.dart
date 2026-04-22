@@ -20,6 +20,8 @@ import 'package:homesync_client/features/dashboard/presentation/screens/househol
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/screens/member_onboarding_screen.dart';
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
@@ -51,6 +53,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   int? _lastTrackedTabIndex;
+  MemberModel? _currentMember;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
@@ -95,15 +98,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           _showToast('✅ Mercado Pago conectado con éxito', Colors.green);
         } else if (status == 'error') {
           _showToast(
-              '❌ Error al conectar: ${message ?? "Desconocido"}', Colors.red,);
+            '❌ Error al conectar: ${message ?? "Desconocido"}',
+            Colors.red,
+          );
         }
       }
 
       // 2. Mercado Pago Payment callbacks
       if (uri.host == 'payment-success' ||
           uri.path.contains('payment-success')) {
-        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
-            Colors.green,);
+        _showToast(
+          '🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
+          Colors.green,
+        );
 
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
@@ -120,7 +127,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (uri.host == 'payment-pending' ||
           uri.path.contains('payment-pending')) {
         _showToast(
-            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange,);
+          '⏳ Pago en proceso. Te avisaremos al acreditarse.',
+          Colors.orange,
+        );
       }
     });
   }
@@ -129,9 +138,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white,),),
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -284,6 +297,32 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             onComplete: () async {
               await widget.prefs.setBool('setup_completed', true);
               ref.invalidate(householdIdProvider);
+              ref.invalidate(memberOnboardingProvider);
+            },
+          );
+        }
+
+        final onboardingDone = ref.watch(memberOnboardingProvider);
+        if (onboardingDone.isLoading) {
+          return Scaffold(
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: AppBackground(isDarkMode: context.theme.isDarkMode),
+                ),
+                Center(
+                  child:
+                      CircularProgressIndicator(color: context.theme.primary),
+                ),
+              ],
+            ),
+          );
+        }
+        if (onboardingDone.valueOrNull == false) {
+          return MemberOnboardingScreen(
+            onComplete: () {
+              ref.invalidate(memberOnboardingProvider);
+              ref.invalidate(householdIdProvider);
             },
           );
         }
@@ -297,7 +336,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final theme = context.theme;
         final currentIndex = ref.watch(bottomNavIndexProvider);
         final caps = ref.watch(householdCapabilitiesProvider);
-        final navConfigs = visibleMainTabs(caps)
+        final membersAsync = ref.watch(householdMembersProvider);
+        final currentMember = membersAsync.whenOrNull<MemberModel?>(
+          data: (members) =>
+              members.where((m) => m.userId == currentUserId).firstOrNull,
+        );
+        _currentMember = currentMember;
+        final navConfigs = visibleMainTabs(caps, currentMember: currentMember)
             .map((tab) => _navConfigForTab(tab, context))
             .toList(growable: false);
 
@@ -456,12 +501,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-    final navItems = visibleMainTabs(caps)
+    final navItems = visibleMainTabs(caps, currentMember: _currentMember)
         .where((tab) => tab != MainTab.stats)
         .map(
           (tab) => (
             label: _labelForTab(tab, caps),
-            index: indexForMainTab(caps, tab),
+            index: indexForMainTab(caps, tab, currentMember: _currentMember),
             tab: tab,
           ),
         )
@@ -653,7 +698,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (!force && _lastTrackedTabIndex == index) return;
 
     final caps = ref.read(householdCapabilitiesProvider);
-    final visibleTabs = visibleMainTabs(caps);
+    final visibleTabs = visibleMainTabs(caps, currentMember: _currentMember);
     if (index < 0 || index >= visibleTabs.length) return;
 
     _lastTrackedTabIndex = index;

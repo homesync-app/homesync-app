@@ -1,0 +1,14 @@
+-- Reorder categories: important daily ones first, niche ones last
+UPDATE categories SET sort_order = 1  WHERE id = 'limpieza';
+UPDATE categories SET sort_order = 2  WHERE id = 'cocina';
+UPDATE categories SET sort_order = 3  WHERE id = 'baño';
+UPDATE categories SET sort_order = 4  WHERE id = 'sala';
+UPDATE categories SET sort_order = 5  WHERE id = 'ropa';
+UPDATE categories SET sort_order = 6  WHERE id = 'residuos';
+UPDATE categories SET sort_order = 7  WHERE id = 'compras';
+UPDATE categories SET sort_order = 8  WHERE id = 'dormitorio';
+UPDATE categories SET sort_order = 9  WHERE id = 'mascotas';
+UPDATE categories SET sort_order = 10 WHERE id = 'exterior';
+UPDATE categories SET sort_order = 11 WHERE id = 'mantenimiento';
+UPDATE categories SET sort_order = 12 WHERE id = 'niños';
+UPDATE categories SET sort_order = 13 WHERE id = 'administracion';

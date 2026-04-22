@@ -33,6 +33,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeVideo() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
     try {
       var assetPath = _videoAsset;
       if (kIsWeb && assetPath.startsWith('assets/')) {
@@ -41,6 +45,12 @@ class _SplashScreenState extends State<SplashScreen>
 
       final controller = VideoPlayerController.asset(assetPath);
       await controller.initialize();
+
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+
       await controller.setLooping(true);
       await controller.setVolume(0);
       await controller.play();

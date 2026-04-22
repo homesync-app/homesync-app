@@ -634,7 +634,7 @@ class CategoryMapping {
     'finanzas': 'Finanzas',
     'savings': 'Ahorro',
     'income': 'Ingreso',
-    'settlement': 'Liquidación de pareja',
+    'settlement': 'Liquidación de balance',
     'rent': 'Alquiler y hogar',
     'utilities': 'Servicios',
     'restaurants': 'Salidas y comidas',

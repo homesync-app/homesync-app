@@ -331,7 +331,7 @@ class _RecurringExpenseFormSheetState
                             eyebrow: 'REPARTO',
                             title: 'Cómo se reparte',
                             subtitle:
-                                'Define si se divide entre ambos o si queda como personal.',
+                                'Define si se comparte en el hogar o si queda como personal.',
                           ),
                           const SizedBox(height: 16),
                           _buildSplitTypeSelector(),
@@ -683,7 +683,7 @@ class _RecurringExpenseFormSheetState
         const SizedBox(height: 12),
         Row(
           children: [
-            _buildSplitOption('equal', 'Dividir 50/50', Icons.groups_rounded),
+            _buildSplitOption('equal', 'Compartido', Icons.groups_rounded),
             const SizedBox(width: 12),
             _buildSplitOption('personal', 'Solo mio', Icons.person_rounded),
           ],

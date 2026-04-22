@@ -5,6 +5,7 @@ import 'package:homesync_client/features/household/data/repositories/supabase_ho
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'household_providers.g.dart';
@@ -13,46 +14,19 @@ part 'household_providers.g.dart';
 class HouseholdMembers extends _$HouseholdMembers {
   @override
   Future<List<MemberModel>> build() async {
-    final householdId = await ref.watch(householdIdProvider.future);
-    final currentUserId = ref.read(currentUserIdProvider);
-    final admin = ref.read(adminProvider);
-    if (householdId == null) {
-      log.w(
-        'HouseholdMembers.build without householdId viewer=$currentUserId adminQa=${admin.isAdminUser} selectedHousehold=${admin.selectedHouseholdId}',
-      );
-      return [];
-    }
-
-    final repo = ref.read(householdRepositoryProvider);
-    final result = await repo.getHouseholdMembersRaw();
-    final members = result.fold(
-      (failure) => <MemberModel>[],
-      (raw) => raw.map((m) => MemberModel.fromMap(m)).toList(),
-    );
+    final notifierMembers =
+        await ref.watch(householdMembersNotifierProvider.future);
     log.i(
-      'HouseholdMembers.build resolved household=$householdId viewer=$currentUserId count=${members.length} members=${members.map((m) => m.fullDisplayName).toList()} adminQa=${admin.isAdminUser}',
+      'HouseholdMembers.build (delegated) count=${notifierMembers.length} members=${notifierMembers.map((m) => m.fullDisplayName).toList()}',
     );
-    return members;
+    return notifierMembers;
   }
 
   Future<void> refresh() async {
-    final householdId = await ref.read(householdIdProvider.future);
-    final currentUserId = ref.read(currentUserIdProvider);
-    log.i(
-      'HouseholdMembers.refresh requested household=$householdId viewer=$currentUserId',
-    );
+    ref.invalidate(householdMembersNotifierProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final repo = ref.read(householdRepositoryProvider);
-      final result = await repo.getHouseholdMembersRaw();
-      final members = result.fold(
-        (failure) => <MemberModel>[],
-        (raw) => raw.map((m) => MemberModel.fromMap(m)).toList(),
-      );
-      log.i(
-        'HouseholdMembers.refresh resolved household=$householdId viewer=$currentUserId count=${members.length} members=${members.map((m) => m.fullDisplayName).toList()}',
-      );
-      return members;
+      return await ref.read(householdMembersNotifierProvider.future);
     });
   }
 }

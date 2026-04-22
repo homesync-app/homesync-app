@@ -161,8 +161,13 @@ class Rewards extends _$Rewards {
   Future<List<RewardModel>> build() async {
     final admin = ref.watch(adminProvider);
     final householdId = await ref.watch(householdIdProvider.future);
-    final caps = ref.watch(householdCapabilitiesProvider);
     if (householdId == null) return [];
+
+    final household = await ref.watch(currentHouseholdProvider.future);
+    final caps = HouseholdCapabilities(
+      type: HouseholdType.fromString(household?.householdType),
+      tasksEnabled: household?.tasksEnabled ?? true,
+    );
 
     _setupRealtime(householdId);
 
@@ -445,10 +450,15 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
   Future<_RewardsPageChunk> _fetchChunk({required int offset}) async {
     final admin = ref.read(adminProvider);
     final householdId = await ref.read(householdIdProvider.future);
-    final caps = ref.read(householdCapabilitiesProvider);
     if (householdId == null) {
       return const _RewardsPageChunk(items: [], hasMore: false);
     }
+
+    final household = await ref.read(currentHouseholdProvider.future);
+    final caps = HouseholdCapabilities(
+      type: HouseholdType.fromString(household?.householdType),
+      tasksEnabled: household?.tasksEnabled ?? true,
+    );
 
     if (admin.isAdminUser) {
       final client = ref.read(supabaseClientProvider);

@@ -13,6 +13,7 @@ class FamilyTaskCard extends StatelessWidget {
   final bool isChildView;
   final MemberModel? assignedMember;
   final MemberModel? completedMember;
+  final String? currentUserId;
   final VoidCallback? onTap;
   final IconData actionIcon;
   final bool isActionEnabled;
@@ -25,9 +26,13 @@ class FamilyTaskCard extends StatelessWidget {
     required this.actionIcon,
     this.assignedMember,
     this.completedMember,
+    this.currentUserId,
     this.onTap,
     this.isActionEnabled = true,
   });
+
+  bool get _isAssignedToCurrentUser =>
+      task.assignedTo == null || task.assignedTo == currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +209,24 @@ class FamilyTaskCard extends StatelessWidget {
       }
       return 'Pendiente de aprobación';
     }
-    if (task.isOverdue) return 'Te quedó pendiente';
-    if (task.isDueToday) return 'Te toca hoy';
+    if (task.isOverdue) {
+      if (!_isAssignedToCurrentUser && assignedMember != null) {
+        final name = assignedMember!.displayName;
+        return name.isNotEmpty
+            ? 'Le quedó pendiente a $name'
+            : 'Le quedó pendiente a otro integrante';
+      }
+      return 'Te quedó pendiente';
+    }
+    if (task.isDueToday) {
+      if (!_isAssignedToCurrentUser && assignedMember != null) {
+        final name = assignedMember!.displayName;
+        return name.isNotEmpty
+            ? 'Le toca hoy a $name'
+            : 'Le toca hoy a otro integrante';
+      }
+      return 'Te toca hoy';
+    }
     return null;
   }
 

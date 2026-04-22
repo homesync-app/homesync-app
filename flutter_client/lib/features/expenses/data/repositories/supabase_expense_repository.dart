@@ -358,7 +358,7 @@ class SupabaseExpenseRepository
             params: {
               'p_id': null,
               'p_household_id': householdId,
-              'p_title': 'Liquidación de pareja',
+              'p_title': 'Liquidación de balance',
               'p_amount': amount,
               'p_category': 'other',
               'p_paid_by': fromUserId,
@@ -383,7 +383,7 @@ class SupabaseExpenseRepository
               params: {
                 'p_id': null,
                 'p_household_id': householdId,
-                'p_title': 'Liquidación de pareja',
+                'p_title': 'Liquidación de balance',
                 'p_amount': amount,
                 'p_category': 'other',
                 'p_paid_by': fromUserId,

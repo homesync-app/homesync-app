@@ -47,6 +47,13 @@ class HomeFamilyView extends ConsumerStatefulWidget {
 class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   final Set<String> _completedTaskIds = {};
 
+  MemberModel? get _currentMember {
+    final membersAsync = ref.read(householdMembersNotifierProvider);
+    final currentUserId = ref.read(currentUserIdProvider) ?? '';
+    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    return members.where((m) => m.userId == currentUserId).firstOrNull;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -59,6 +66,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
+    final isTeen = currentMember?.isTeen ?? false;
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     return RefreshIndicator(
@@ -115,6 +123,44 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             _buildStaggeredSection(
               delayMs: 300,
               child: _buildActivitySection(theme),
+            ),
+          ] else if (isTeen) ...[
+            _buildStaggeredSection(
+              delayMs: 60,
+              child: _buildAdultHomeWelcome(theme),
+            ),
+            const SizedBox(height: 28),
+            _buildStaggeredSection(
+              delayMs: 80,
+              child: _buildPersonalFinanceCard(theme),
+            ),
+            if (caps.showStats) ...[
+              const SizedBox(height: 24),
+              _buildStaggeredSection(
+                delayMs: 120,
+                child: _buildWeeklySummaryBlock(theme, statsAsync),
+              ),
+              const SizedBox(height: 24),
+              _buildStaggeredSection(
+                delayMs: 150,
+                child: _buildWeeklyRankingBlock(theme, statsAsync),
+              ),
+            ],
+            if (caps.showTasks)
+              _buildStaggeredSection(
+                delayMs: 180,
+                child: _buildTasksSection(theme, caps, isChild: false),
+              ),
+            const SizedBox(height: 28),
+            _buildStaggeredSection(
+              delayMs: 240,
+              child: _buildShoppingSection(theme),
+            ),
+            const SizedBox(height: 28),
+            _buildStaggeredSection(
+              delayMs: 300,
+              child:
+                  _buildActivitySection(theme, title: 'Movimientos del hogar'),
             ),
           ] else ...[
             _buildStaggeredSection(
@@ -647,6 +693,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         _RankingCategoryFilter(
           ranking: displayRanking,
           isLive: isLive,
+          theme: theme,
         ),
       ],
     );
@@ -698,9 +745,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
+    final isTeen = currentMember?.isTeen ?? false;
     final adultMembers = members.where((m) => m.isAdult).toList();
     final shouldShowSection =
-        currentMember != null && !isChild && adultMembers.length > 1;
+        currentMember != null && !isChild && !isTeen && adultMembers.length > 1;
     final sectionTitle =
         adultMembers.length == 2 ? 'Balance del hogar' : 'Finanzas familiares';
 
@@ -877,7 +925,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         ),
         TextButton(
           onPressed: () {
-            final index = indexForMainTab(caps, MainTab.expenses);
+            final index = indexForMainTab(caps, MainTab.expenses,
+                currentMember: _currentMember);
             if (index >= 0) {
               ref.read(bottomNavIndexProvider.notifier).setIndex(index);
             }
@@ -1113,7 +1162,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
               TextButton(
                 onPressed: () {
-                  final index = indexForMainTab(caps, MainTab.tasks);
+                  final index = indexForMainTab(caps, MainTab.tasks,
+                      currentMember: _currentMember);
                   if (index >= 0) {
                     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                   }
@@ -1728,7 +1778,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
               TextButton(
                 onPressed: () {
-                  final index = indexForMainTab(caps, MainTab.shopping);
+                  final index = indexForMainTab(caps, MainTab.shopping,
+                      currentMember: _currentMember);
                   if (index >= 0) {
                     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                   }
@@ -1808,7 +1859,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                           size: 20,
                         ),
                         onTap: () {
-                          final index = indexForMainTab(caps, MainTab.shopping);
+                          final index = indexForMainTab(caps, MainTab.shopping,
+                              currentMember: _currentMember);
                           if (index >= 0) {
                             ref
                                 .read(bottomNavIndexProvider.notifier)
@@ -2023,6 +2075,16 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
+  Widget _buildPersonalFinanceCard(AppThemeColors theme) {
+    final balanceAsync = ref.watch(userBalanceProvider);
+
+    return BalanceCard(
+      coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
+      xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+      userBalance: 0.0,
+    );
+  }
+
   Widget _buildChildWallet(AppThemeColors theme) {
     final balance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
 
@@ -2160,10 +2222,12 @@ class _RankingLoadingRow extends StatelessWidget {
 class _RankingCategoryFilter extends StatefulWidget {
   final List<Map<String, dynamic>> ranking;
   final bool isLive;
+  final AppThemeColors theme;
 
   const _RankingCategoryFilter({
     required this.ranking,
     required this.isLive,
+    required this.theme,
   });
 
   @override
@@ -2192,7 +2256,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).extension<AppThemeColors>()!;
+    final theme = widget.theme;
     final filtered = _filteredRanking();
     final hasAdults = widget.ranking.any((i) => i['member_type'] == 'adult');
     final hasChildren = widget.ranking.any((i) => i['member_type'] == 'child');

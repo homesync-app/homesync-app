@@ -439,6 +439,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return item.amount / _householdMemberCount();
   }
 
+  String _templateSplitLabel(String splitType) {
+    switch (splitType.toLowerCase()) {
+      case 'equal':
+        return 'Compartido';
+      case 'fixed':
+        return 'Monto fijo';
+      case 'gift':
+        return 'Regalo';
+      case 'personal':
+        return 'Personal';
+      default:
+        return 'Compartido';
+    }
+  }
+
   Widget _buildProjectionStat(String label, num amount, Color color,
       {bool isBold = false, VoidCallback? onTap,}) {
     final theme = context.theme;
@@ -637,9 +652,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                               BorderRadius.circular(8),
                                         ),
                                         child: Text(
-                                          template.splitType == 'equal'
-                                              ? '50/50'
-                                              : 'Personal',
+                                          _templateSplitLabel(
+                                              template.splitType,),
                                           style: const TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.w800,
@@ -686,7 +700,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'BALANCE ACTUAL',
+                  'TU BALANCE ACTUAL',
                   style: TextStyle(
                     color: theme.textMuted,
                     fontSize: 11.5,
@@ -765,7 +779,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 Expanded(
                   child: _buildProjectionStat(
-                    'Balance estimado',
+                    'Cierre estimado',
                     projectedBalance,
                     theme.textPrimary,
                     isBold: true,
@@ -830,7 +844,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Así llegamos a tu balance estimado para fin de mes.',
+                    'Así llegamos a tu cierre estimado para fin de mes.',
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 14,
@@ -841,14 +855,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
                   // Equation Section
                   _buildBreakdownRow(
-                      'Balance actual', balance, AppColors.textPrimary,),
+                      'Tu balance actual', balance, AppColors.textPrimary,),
                   const SizedBox(height: 16),
                   _buildBreakdownRow(
                       'Tu parte pendiente', -pendingTotal, AppColors.primary,),
                   const Divider(
                       height: 40, thickness: 1, color: AppColors.divider,),
                   _buildBreakdownRow(
-                      'Balance estimado', estimated, AppColors.accentTeal,
+                      'Tu cierre estimado', estimated, AppColors.accentTeal,
                       isFinal: true,),
 
                   if (pendingItems.isNotEmpty) ...[

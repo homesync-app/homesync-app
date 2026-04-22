@@ -77,12 +77,16 @@ class SupabaseAuthRepository
     required String password,
     String? fullName,
   }) async {
-    return executeWithHandling(() async {
-      await _firebaseAuthService.signUpWithEmail(
-        email: email,
-        password: password,
-      );
-    }, context: 'SupabaseAuthRepository.signUpWithEmail', isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        await _firebaseAuthService.signUpWithEmail(
+          email: email,
+          password: password,
+        );
+      },
+      context: 'SupabaseAuthRepository.signUpWithEmail',
+      isOnline: _isOnline,
+    );
   }
 
   @override
@@ -90,52 +94,73 @@ class SupabaseAuthRepository
     required String email,
     required String password,
   }) async {
-    return executeWithHandling(() async {
-      await _firebaseAuthService.signInWithEmail(
-        email: email,
-        password: password,
-      );
-    }, context: 'SupabaseAuthRepository.signInWithEmail', isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        await _firebaseAuthService.signInWithEmail(
+          email: email,
+          password: password,
+        );
+      },
+      context: 'SupabaseAuthRepository.signInWithEmail',
+      isOnline: _isOnline,
+    );
   }
 
   @override
   Future<Either<Failure, bool>> signInWithGoogle() async {
     log.i('SupabaseAuthRepository: starting signInWithGoogle');
-    return executeWithHandling(() async {
-      log.i('SupabaseAuthRepository: using Firebase Auth flow');
-      final success = await _firebaseAuthService.signInWithGoogle();
-      log.i(
-          'SupabaseAuthRepository: Firebase Google sign-in returned: $success',);
-      return success;
-    }, context: 'SupabaseAuthRepository.signInWithGoogle', isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        log.i('SupabaseAuthRepository: using Firebase Auth flow');
+        final success = await _firebaseAuthService.signInWithGoogle();
+        log.i(
+          'SupabaseAuthRepository: Firebase Google sign-in returned: $success',
+        );
+        return success;
+      },
+      context: 'SupabaseAuthRepository.signInWithGoogle',
+      isOnline: _isOnline,
+    );
   }
 
   @override
   Future<Either<Failure, void>> signOut() async {
-    return executeWithHandling(() async {
-      await _firebaseAuthService.signOut();
-    }, context: 'SupabaseAuthRepository.signOut', isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        await _firebaseAuthService.signOut();
+      },
+      context: 'SupabaseAuthRepository.signOut',
+      isOnline: _isOnline,
+    );
   }
 
   @override
   Future<Either<Failure, void>> resetPassword(String email) async {
-    return executeWithHandling(() async {
-      await _firebaseAuthService.resetPassword(email);
-    }, context: 'SupabaseAuthRepository.resetPassword', isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        await _firebaseAuthService.resetPassword(email);
+      },
+      context: 'SupabaseAuthRepository.resetPassword',
+      isOnline: _isOnline,
+    );
   }
 
   @override
   Future<Either<Failure, UserModel?>> getUserProfile(String userId) async {
-    return executeWithHandling(() async {
-      final data = await _client
-          .from('users')
-          .select('id, full_name, email, avatar_url, mercadopago_alias')
-          .eq('id', userId)
-          .maybeSingle();
+    return executeWithHandling(
+      () async {
+        final data = await _client
+            .from('users')
+            .select('id, full_name, email, avatar_url, mercadopago_alias')
+            .eq('id', userId)
+            .maybeSingle();
 
-      if (data == null) return null;
-      return UserModel.fromJson(data);
-    }, context: 'SupabaseAuthRepository.getUserProfile', isOnline: _isOnline,);
+        if (data == null) return null;
+        return UserModel.fromJson(data);
+      },
+      context: 'SupabaseAuthRepository.getUserProfile',
+      isOnline: _isOnline,
+    );
   }
 
   @override

@@ -97,6 +97,8 @@ class FirebaseAuthService {
         await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       }
 
+      await user.getIdToken(true);
+
       // With accessToken mode, Supabase uses the Firebase JWT automatically.
       // No manual session sync needed — just provision the user profile.
       await _createUserProfileIfNeeded(
@@ -130,6 +132,8 @@ class FirebaseAuthService {
       if (!kIsWeb) {
         await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       }
+
+      await user.getIdToken(true);
 
       await _createUserProfileIfNeeded(
         firebaseUid: user.uid,
@@ -248,23 +252,18 @@ class FirebaseAuthService {
     }
   }
 
-  Future<void> ensureHouseholdExists() async {
+  Future<void> ensureUserProfile() async {
     try {
       final appUserId = AppIdentityService.instance.currentUserId;
-      if (appUserId == null || appUserId.isEmpty) {
-        log.w('ensureHouseholdExists: no app user id available yet');
-        return;
+      if (appUserId != null && appUserId.isNotEmpty) {
+        final existing = await _client
+            .from('user_profiles')
+            .select('id')
+            .eq('id', appUserId)
+            .maybeSingle();
+        if (existing != null) return;
       }
 
-      final existing = await _client
-          .from('household_members')
-          .select('id')
-          .eq('user_id', appUserId)
-          .maybeSingle();
-
-      if (existing != null) return;
-
-      log.i('ensureHouseholdExists: creating profile and household');
       final firebaseUser = _auth.currentUser;
       if (firebaseUser == null) return;
 
@@ -275,7 +274,30 @@ class FirebaseAuthService {
         avatarUrl: firebaseUser.photoURL,
       );
     } catch (e, stack) {
-      log.e('Error in ensureHouseholdExists: $e', error: e, stackTrace: stack);
+      log.e('Error in ensureUserProfile: $e', error: e, stackTrace: stack);
+    }
+  }
+
+  Future<String?> createHouseholdForUser(String householdType) async {
+    try {
+      final result = await _client.rpc<dynamic>(
+        'ensure_household_for_user',
+        params: {'p_household_type': householdType},
+      );
+
+      final householdId = result?.toString();
+      if (householdId != null && householdId.isNotEmpty) {
+        log.i('createHouseholdForUser: created $householdId ($householdType)');
+        return householdId;
+      }
+      return null;
+    } catch (e, stack) {
+      log.e(
+        'Error in createHouseholdForUser: $e',
+        error: e,
+        stackTrace: stack,
+      );
+      return null;
     }
   }
 

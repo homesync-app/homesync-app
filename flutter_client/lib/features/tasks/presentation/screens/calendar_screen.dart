@@ -52,28 +52,113 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Map<DateTime, List<TaskModel>> _groupTasks(List<TaskModel> tasks) {
     final Map<DateTime, List<TaskModel>> groupedTasks = {};
-    for (var task in tasks) {
-      if (task.recurrenceType != null || task.dueAt != null) {
-        if (task.dueAt != null) {
-          final date = task.dueAt!.toLocal();
-          final normalizedDate = DateTime(date.year, date.month, date.day);
-          (groupedTasks[normalizedDate] ??= []).add(task);
-        } else if (task.recurrenceType == 'daily') {
-          for (int i = 0; i < 30; i++) {
-            final d = DateTime.now().add(Duration(days: i));
-            final normalizedDate = DateTime(d.year, d.month, d.day);
-            (groupedTasks[normalizedDate] ??= []).add(task);
-          }
-        } else if (task.recurrenceType == 'weekly') {
-          for (int i = 0; i < 4; i++) {
-            final d = DateTime.now().add(Duration(days: i * 7));
-            final normalizedDate = DateTime(d.year, d.month, d.day);
-            (groupedTasks[normalizedDate] ??= []).add(task);
-          }
+    final visibleDays = List.generate(
+      7,
+      (index) => _normalizeDate(_weekStart.add(Duration(days: index))),
+    );
+
+    for (final task in tasks) {
+      for (final day in visibleDays) {
+        if (_occursOnDay(task, day)) {
+          (groupedTasks[day] ??= []).add(task);
         }
       }
     }
+
+    for (final entry in groupedTasks.entries) {
+      entry.value.sort((a, b) {
+        final aDue = a.dueAt?.toLocal();
+        final bDue = b.dueAt?.toLocal();
+        if (aDue == null && bDue == null) return a.title.compareTo(b.title);
+        if (aDue == null) return 1;
+        if (bDue == null) return -1;
+        return aDue.compareTo(bDue);
+      });
+    }
+
     return groupedTasks;
+  }
+
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  bool _occursOnDay(TaskModel task, DateTime day) {
+    if (!task.isActive && !task.isPendingVerification && !task.isVerified) {
+      return false;
+    }
+
+    final normalizedDay = _normalizeDate(day);
+    final anchor = _normalizeDate(
+      (task.dueAt ?? task.createdAt).toLocal(),
+    );
+
+    if (task.recurrenceEndAt != null) {
+      final recurrenceEnd = _normalizeDate(task.recurrenceEndAt!.toLocal());
+      if (normalizedDay.isAfter(recurrenceEnd)) {
+        return false;
+      }
+    }
+
+    if (task.recurrenceType == null) {
+      return task.dueAt != null && _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
+    }
+
+    if (normalizedDay.isBefore(anchor)) {
+      return false;
+    }
+
+    final interval = task.recurrenceInterval <= 0 ? 1 : task.recurrenceInterval;
+
+    switch (task.recurrenceType) {
+      case 'daily':
+        final diffDays = normalizedDay.difference(anchor).inDays;
+        return diffDays >= 0 && diffDays % interval == 0;
+      case 'weekly':
+        final weekdays = task.recurrenceWeekdays.isNotEmpty
+            ? task.recurrenceWeekdays
+            : [anchor.weekday];
+        if (!weekdays.contains(normalizedDay.weekday)) {
+          return false;
+        }
+        final anchorWeekStart = anchor.subtract(Duration(days: anchor.weekday - 1));
+        final dayWeekStart =
+            normalizedDay.subtract(Duration(days: normalizedDay.weekday - 1));
+        final diffWeeks =
+            dayWeekStart.difference(anchorWeekStart).inDays ~/ 7;
+        return diffWeeks >= 0 && diffWeeks % interval == 0;
+      case 'monthly':
+        final monthDays = task.recurrenceMonthDays.isNotEmpty
+            ? task.recurrenceMonthDays
+            : [anchor.day];
+        if (!monthDays.contains(normalizedDay.day)) {
+          return false;
+        }
+        final diffMonths = (normalizedDay.year - anchor.year) * 12 +
+            (normalizedDay.month - anchor.month);
+        return diffMonths >= 0 && diffMonths % interval == 0;
+      case 'custom':
+        if (task.recurrenceWeekdays.isNotEmpty) {
+          final anchorWeekStart = anchor.subtract(Duration(days: anchor.weekday - 1));
+          final dayWeekStart =
+              normalizedDay.subtract(Duration(days: normalizedDay.weekday - 1));
+          final diffWeeks =
+              dayWeekStart.difference(anchorWeekStart).inDays ~/ 7;
+          return task.recurrenceWeekdays.contains(normalizedDay.weekday) &&
+              diffWeeks >= 0 &&
+              diffWeeks % interval == 0;
+        }
+        if (task.recurrenceMonthDays.isNotEmpty) {
+          final diffMonths = (normalizedDay.year - anchor.year) * 12 +
+              (normalizedDay.month - anchor.month);
+          return task.recurrenceMonthDays.contains(normalizedDay.day) &&
+              diffMonths >= 0 &&
+              diffMonths % interval == 0;
+        }
+        final diffDays = normalizedDay.difference(anchor).inDays;
+        return diffDays >= 0 && diffDays % interval == 0;
+      default:
+        return task.dueAt != null && _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
+    }
   }
 
   @override
@@ -241,8 +326,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        theme.divider.withValues(alpha: 0.9),
-                        theme.divider.withValues(alpha: 0),
+                        AppColors.primary.withValues(
+                          alpha: theme.isDarkMode ? 0.22 : 0.18,
+                        ),
+                        AppColors.primary.withValues(alpha: 0),
                       ],
                     ),
                   ),
@@ -474,8 +561,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                       children: [
                         Divider(
                           height: 1,
-                          color: theme.divider.withValues(
-                            alpha: theme.isDarkMode ? 0.35 : 0.9,
+                          color: AppColors.primary.withValues(
+                            alpha: theme.isDarkMode ? 0.18 : 0.12,
                           ),
                         ),
                         const SizedBox(height: 16),

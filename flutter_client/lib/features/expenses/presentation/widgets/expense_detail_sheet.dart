@@ -135,7 +135,7 @@ class _ExpenseDetailSheetContentState
                         expense.isIncome
                             ? 'Detalle de ingreso'
                             : (expense.isSettlement
-                                ? 'Detalle de liquidación'
+                                ? 'Detalle de liquidación de balance'
                                 : 'Detalle de gasto'),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
@@ -436,7 +436,7 @@ class _ExpenseDetailSheetContentState
 
   static String _primaryBadgeLabel(ExpenseModel expense) {
     if (expense.isIncome) return 'Ingreso';
-    if (expense.isSettlement) return 'Liquidación';
+    if (expense.isSettlement) return 'Liquidación de balance';
     if (expense.splitType == 'gift') return 'Regalo';
     if (expense.splitType == 'equal') return 'Dividido equitativamente';
     if (expense.splitType == 'fixed') return 'División';

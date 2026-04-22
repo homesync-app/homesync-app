@@ -88,6 +88,13 @@ Future<void> _syncSessionContextFromAuth(AppAuthState authState) async {
 final authBootstrapProvider = FutureProvider<void>((ref) async {
   await AppIdentityService.instance.initialize();
 
+  final firebaseUser = fa.FirebaseAuth.instance.currentUser;
+  if (firebaseUser != null) {
+    try {
+      await firebaseUser.getIdToken(true);
+    } catch (_) {}
+  }
+
   ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
     next.whenData((authState) {
       unawaited(_syncSessionContextFromAuth(authState));
