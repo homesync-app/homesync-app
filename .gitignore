@@ -60,7 +60,13 @@ bg_removal/node_modules/
 
 # ─── Agent brain (local AI context, not needed in repo) ──────────────────────
 .agents/
+.agent/
 .claude/
+.kilo/
+.antigravity/
+
+# ─── Decompiled/extracted APK artifacts ──────────────────────────────────────
+APK/
 
 # ─── Data exports (PII) ──────────────────────────────────────────────────────
 *.csv
