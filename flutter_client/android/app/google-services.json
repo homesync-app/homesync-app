@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:105041112830:android:581bf3abf4b65e9167ffaf",
         "android_client_info": {
-          "package_name": "com.homesync.app"
+          "package_name": "com.blas.homesync"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "105041112830-cg9jq7uom4m19g9sg4qmnjureguludft.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.homesync.app",
+            "package_name": "com.blas.homesync",
             "certificate_hash": "d9dcdbda33a5cf48efc69a43109f1a316f765a99"
           }
         },
@@ -25,7 +25,7 @@
           "client_id": "105041112830-poa0814j84tcc8guh643rk3ns5kcoglm.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.homesync.app",
+            "package_name": "com.blas.homesync",
             "certificate_hash": "8590bc914f5282853a2593929fbbef11e3c0881f"
           }
         }
