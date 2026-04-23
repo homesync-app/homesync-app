@@ -7,7 +7,6 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/core/providers/identity_providers.dart';
@@ -113,7 +112,14 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   void _updateMemberTypeFromRole(String displayRole) {
-    _selectedMemberType = DisplayRoleMapping.fromDisplayRole(displayRole).name;
+    final lower = displayRole.toLowerCase();
+    if (lower.contains('adolesc')) {
+      _selectedMemberType = 'teen';
+    } else if (lower.contains('hij')) {
+      _selectedMemberType = 'child';
+    } else {
+      _selectedMemberType = 'parent';
+    }
   }
 
   @override

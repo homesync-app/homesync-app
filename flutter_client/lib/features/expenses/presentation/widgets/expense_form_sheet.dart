@@ -52,10 +52,12 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
   @override
   ConsumerState<ExpenseFormSheet> createState() => _ExpenseFormSheetState();
 
-  static Future<void> show(BuildContext context,
-      {ExpenseModel? expense,
-      bool defaultOnlyMe = false,
-      bool triggerScanOnOpen = false,}) {
+  static Future<void> show(
+    BuildContext context, {
+    ExpenseModel? expense,
+    bool defaultOnlyMe = false,
+    bool triggerScanOnOpen = false,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -308,7 +310,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (result.hasLowConfidence && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Ticket difícil de leer; revisá los datos antes de guardar'),
+          content:
+              Text('Ticket difícil de leer; revisá los datos antes de guardar'),
           duration: Duration(seconds: 3),
         ),
       );
@@ -373,7 +376,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (amountParsed == null || amountParsed <= 0) {
       // This case should ideally be caught by the validator, but as a fallback
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ingresa un monto válido.')),);
+        const SnackBar(content: Text('Ingresa un monto válido.')),
+      );
       return;
     }
 
@@ -522,7 +526,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         await Future<void>.delayed(const Duration(milliseconds: 420));
         if (!mounted) return;
         Navigator.pop(context);
-        final baseMsg = widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado';
+        final baseMsg =
+            widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado';
         final shoppingMsg = shoppingItemsSynced > 0
             ? ' · $shoppingItemsSynced ${shoppingItemsSynced == 1 ? 'artículo' : 'artículos'} comprados ✅'
             : '';
@@ -535,10 +540,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.error,
-        ),);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -593,11 +600,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               children: [
                 const SizedBox(height: 12),
                 Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: AppColors.divider,
-                        borderRadius: BorderRadius.circular(2),),),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
                 _buildHeader(context),
                 Expanded(
                   child: SingleChildScrollView(
@@ -644,7 +653,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 28),
                           _buildShoppingIntegration(
-                              context, shoppingItemsAsync,),
+                            context,
+                            shoppingItemsAsync,
+                          ),
                           if (_unmatchedOcrItems.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
@@ -731,20 +742,26 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('¿Eliminar gasto?',
-            style: TextStyle(fontWeight: FontWeight.w900),),
+        title: const Text(
+          '¿Eliminar gasto?',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         content: const Text('Esta acción no se puede deshacer.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar',
-                style: TextStyle(color: AppColors.textSecondary),),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.accentRed),
-            child: const Text('Eliminar',
-                style: TextStyle(fontWeight: FontWeight.bold),),
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -1001,7 +1018,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildDateAndPayerRow(
-      BuildContext context, MemberModel payer, List<MemberModel> members,) {
+    BuildContext context,
+    MemberModel payer,
+    List<MemberModel> members,
+  ) {
     final caps = ref.watch(householdCapabilitiesProvider);
     final showSplit = caps.showExpensesSplit;
 
@@ -1036,11 +1056,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 
-  Widget _buildActionTile(
-      {required IconData icon,
-      required String label,
-      required String value,
-      required VoidCallback onTap,}) {
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
     return ExpenseActionTile(
       icon: icon,
       label: label,
@@ -1084,7 +1105,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
               child: Icon(
                 CategoryMapping.getCategoryMaterialIcon(
-                    _selectedCategory!['id'],),
+                  _selectedCategory!['id'],
+                ),
                 size: 24,
                 color: _selectedCategory!['color'] as Color,
               ),
@@ -1094,29 +1116,39 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Categoría',
-                      style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,),),
-                  Text(_selectedCategory!['name'],
-                      style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,),),
+                  const Text(
+                    'Categoría',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    _selectedCategory!['name'],
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildShoppingIntegration(BuildContext context,
-      AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync,) {
+  Widget _buildShoppingIntegration(
+    BuildContext context,
+    AsyncValue<List<ShoppingItemModel>> shoppingItemsAsync,
+  ) {
     if (_isIncome) return const SizedBox.shrink();
 
     // Para usuarios no-premium, no mostrar la sección de vinculación.
@@ -1157,7 +1189,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ScanButton(
+                ExpenseScanButton(
                   icon: Icons.camera_alt_outlined,
                   label: 'Re-escanear',
                   isLoading: _isScanningReceipt,
@@ -1166,7 +1198,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       : () => _scanReceipt(ImageSource.camera),
                 ),
                 const SizedBox(height: 6),
-                _ScanButton(
+                ExpenseScanButton(
                   icon: Icons.photo_library_outlined,
                   label: 'Galería',
                   isLoading: false,
@@ -1235,7 +1267,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildSplitConfiguration(
-      BuildContext context, List<MemberModel> members,) {
+    BuildContext context,
+    List<MemberModel> members,
+  ) {
     final splitModes = _isIncome
         ? const [SplitType.equal, SplitType.personal]
         : SplitType.values;
@@ -1321,11 +1355,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             return ListTile(
               dense: true,
               leading: CustomUserAvatar(
-                  avatarUrl: m.avatarUrl, name: m.displayName, radius: 14,),
+                avatarUrl: m.avatarUrl,
+                name: m.displayName,
+                radius: 14,
+              ),
               title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
-              trailing: Text('${(memRatio * 100).toInt()}%',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold, color: theme.primary,),),
+              trailing: Text(
+                '${(memRatio * 100).toInt()}%',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primary,
+                ),
+              ),
             );
           }).toList(),
         );
@@ -1356,11 +1397,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
-          'Este gasto no afectará el balance ${caps.actionMemberLabel}.',
-          AppColors.primary,);
+        'Este gasto no afectará el balance ${caps.actionMemberLabel}.',
+        AppColors.primary,
+      );
     } else if (_splitMode == SplitType.personal) {
       return _buildInfoBox(
-          'Registrado como gasto personal.', theme.textSecondary,);
+        'Registrado como gasto personal.',
+        theme.textSecondary,
+      );
     }
     return const SizedBox.shrink();
   }
@@ -1474,61 +1518,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           }
         });
       },
-    );
-  }
-}
-
-class _ScanButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isLoading;
-  final VoidCallback? onTap;
-
-  const _ScanButton({
-    required this.icon,
-    required this.label,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-        decoration: BoxDecoration(
-          color: AppColors.accentBlue.withValues(alpha: 0.07),
-          border: Border.all(
-            color: AppColors.accentBlue.withValues(alpha: 0.25),
-          ),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(icon, size: 18, color: AppColors.accentBlue),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accentBlue,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -346,6 +346,62 @@ class ExpenseAmountField extends StatelessWidget {
   }
 }
 
+class ExpenseScanButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  const ExpenseScanButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.accentBlue.withValues(alpha: 0.07),
+          border: Border.all(
+            color: AppColors.accentBlue.withValues(alpha: 0.25),
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(icon, size: 18, color: AppColors.accentBlue),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ExpenseTitleField extends StatelessWidget {
   final bool isIncome;
   final TextEditingController controller;

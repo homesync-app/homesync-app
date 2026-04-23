@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
 
@@ -100,114 +101,115 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     return AnimatedPress(
       onPressed: tappable ? () => _openRolePicker(member) : null,
       child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Stack(
-            children: [
-              CustomUserAvatar(
-                avatarUrl: member.avatarUrl,
-                name: member.fullDisplayName,
-                radius: 26,
-                showBorder: true,
-              ),
-              if (member.isAdmin)
-                Positioned(
-                  right: -1,
-                  top: -1,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      color: AppColors.accentGold,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.workspace_premium_rounded,
-                      size: 8,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.surfaceContainer,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: theme.divider.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          children: [
+            Stack(
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        member.fullDisplayName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: theme.textPrimary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: member.isChild
-                            ? AppColors.accentOrange.withValues(alpha: 0.1)
-                            : theme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        member.typeLabel,
-                        style: TextStyle(
-                          color: member.isChild
-                              ? AppColors.accentOrange
-                              : theme.primary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                CustomUserAvatar(
+                  avatarUrl: member.avatarUrl,
+                  name: member.fullDisplayName,
+                  radius: 26,
+                  showBorder: true,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  member.visibleRoleLabel,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                if (member.isAdmin)
+                  Positioned(
+                    right: -1,
+                    top: -1,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentGold,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        size: 8,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
-          ),
-          if (member.isAdmin)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Admin',
-                style: TextStyle(
-                  color: theme.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          member.fullDisplayName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: theme.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: member.isChild
+                              ? AppColors.accentOrange.withValues(alpha: 0.1)
+                              : theme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          member.typeLabel,
+                          style: TextStyle(
+                            color: member.isChild
+                                ? AppColors.accentOrange
+                                : theme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    member.visibleRoleLabel,
+                    style: TextStyle(
+                      color: theme.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
+            if (member.isAdmin)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Admin',
+                  style: TextStyle(
+                    color: theme.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -293,10 +295,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       MemberType.parent ||
       MemberType.guardian =>
         'Aprueba tareas, gestiona el hogar.',
-      MemberType.teen =>
-        'Crea sus tareas, pero las completa bajo revisión.',
-      MemberType.child =>
-        'Solo completa sus tareas, siempre bajo revisión.',
+      MemberType.teen => 'Crea sus tareas, pero las completa bajo revisión.',
+      MemberType.child => 'Solo completa sus tareas, siempre bajo revisión.',
     };
     return AnimatedPress(
       onPressed: () => Navigator.pop(context, type),

@@ -1,14 +1,11 @@
-# HomeSync — Guia para agentes IA
+# HomeSync — Guía para agentes IA
 
 ## Stack
 
 - **Frontend**: Flutter 3.41+ / Dart 3.11+ con Riverpod 2.x
 - **Backend**: Supabase (Postgres + Edge Functions + Storage + Realtime)
 - **Auth**: Firebase Auth (Google + email/password) → Supabase Third-Party Auth (JWT de Firebase como access token de Supabase)
-- **Analytics/Crashlytics**: Firebase Analytics + Crashlytics
-- **Notifications**: Firebase Cloud Messaging
 - **OCR**: Edge Function `scan-receipt` → Gemini 2.5 Flash
-- **CI**: GitHub Actions (`.github/workflows/`)
 
 ## Estructura
 
@@ -29,61 +26,53 @@ flutter_client/lib/
         screens/     # Pantallas
         widgets/     # Componentes reutilizables
 supabase/
-  migrations/        # 62+ migraciones SQL (orden cronologico)
+  migrations/        # 72+ migraciones SQL (orden cronológico)
   functions/         # Edge Functions (Deno/TypeScript)
-    scan-receipt/
-    send-notification/
-    cleanup-old-receipts/
 ```
 
 ## Comandos
 
 ```bash
-# Run en dispositivo fisico
-.\scripts\run_device.bat
-
-# Build APK debug
-cd flutter_client && flutter build apk --debug
-
-# Build release (para Play Store)
-cd flutter_client && flutter build appbundle --release \
-  --dart-define=APP_ENV=production \
-  --dart-define=SUPABASE_URL=<url> \
-  --dart-define=SUPABASE_ANON_KEY=<key>
-
-# Deploy Edge Function
+flutter test                                          # Tests
+cd flutter_client && flutter build apk --debug         # Build debug
+.\scripts\run_device.bat                               # Run en dispositivo
 cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyxms
-
-# Tests
-cd flutter_client && flutter test
 ```
 
-## Convenciones
+## Convenciones (OBLIGATORIO)
 
-- **Codigo**: nombres en ingles (`expenses`, `household`, `settings`)
-- **Strings UI**: en espanol (argentino)
-- **State management**: Riverpod con `@riverpod` annotation cuando sea posible
-- **Auth flow**: Firebase Auth → JWT → Supabase `accessToken` callback. NUNCA usar `supabase.auth.signIn()` directamente
-- **Current user ID**: usar `currentUserIdProvider` (resuelve Firebase UID → Supabase UUID via `AppIdentityService`), NO `auth.uid()` en SQL
-- **SQL**: usar `current_app_user_id()` en funciones/migraciones (maneja Firebase JWTs)
-- **Storage**: policies deben usar `current_app_user_id()` no `auth.uid()` (esta ultima crashea con Firebase UIDs)
-- **Edge Functions**: verificar Firebase JWT con `jose` + `createRemoteJWKSet`, NO con `supabase.auth.getUser()`
+- **Código**: nombres en inglés (`expenses`, `household`, `settings`)
+- **Strings UI**: en español (argentino)
+- **State management**: Riverpod con `@riverpod` annotation
+- **Auth**: Firebase Auth → JWT → Supabase `accessToken` callback. NUNCA `supabase.auth.signIn()`
+- **Current user ID**: usar `currentUserIdProvider` (Firebase UID → Supabase UUID via `AppIdentityService`), NO `auth.uid()` en SQL
+- **SQL**: usar `current_app_user_id()` (maneja Firebase JWTs)
+- **Storage policies**: usar `current_app_user_id()` no `auth.uid()`
+- **Edge Functions**: verificar Firebase JWT con `jose` + `createRemoteJWKSet`
+- **Updates en tabla users**: SIEMPRE usar RPC security-definer (`update_own_profile`). RLS directo falla con Firebase JWTs
 
-## Proyecto Supabase
+## Proyecto
 
-- **Project ref**: `tfavamqszdkoeabpyxms`
-- **Firebase project**: `homesync-prod-r7-123`
-- **Package name**: `com.homesync.app`
-- Un solo proyecto Supabase para staging + produccion (diferenciar por `APP_ENV`)
+- **Supabase ref**: `tfavamqszdkoeabpyxms`
+- **Firebase**: `homesync-prod-r7-123`
+- **Package**: `com.homesync.app`
 
-## Archivos grandes (god files)
+## Reglas de contexto
 
-Evitar editar estos archivos enteros — usar offset/limit al leer:
-- `setup_screen.dart` (~4650 LOC)
-- `expenses_screen.dart` (~2600 LOC)
-- `home_family_view.dart` (~2250 LOC)
-- `expense_form_sheet.dart` (~1500 LOC)
+- **NO LEER** `docs/archive/` salvo que se pida explícitamente
+- **NO LEER** god files enteros. Usar grep/offset para encontrar la sección relevante. Archivos grandes:
+  - `setup_screen.dart` (~2243 LOC) — wizard steps con estado compartido
+  - `expenses_screen.dart` (~1834 LOC) — tab Movimientos + helpers
+  - `home_family_view.dart` (~1051 LOC) — dashboard shell
+  - `expense_form_sheet.dart` (~1523 LOC) — formulario de gastos
+- Para tareas recurrentes, seguir el playbook correspondiente en `docs/playbooks/`
+- Schema de la BD: `docs/schema.md`
+- Provider map: `docs/provider-map.md`
 
-## Admin Testing
+## Gotchas
 
-Solo activo cuando `APP_ENV != production` Y `ENABLE_ADMIN_TESTING=true`. En produccion, `enableAdminTesting` siempre retorna `false`.
+- Avatar puede ser: emoji (1-2 runes), URL http, `premium://id`, o null
+- `_prefillIdentityFromAuth` solo pre-llena nombre para Google sign-in
+- `ensure_user_profile` usa `coalesce` — no sobreescribe datos existentes con nulls
+- Tipos de hogar: `couple` (max 2, código single-use), `family`/`friends` (sin límite, código multi-use)
+- Admin testing solo cuando `APP_ENV != production` Y `ENABLE_ADMIN_TESTING=true`
