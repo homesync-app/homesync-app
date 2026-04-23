@@ -13,16 +13,55 @@ import 'package:homesync_client/features/shopping/domain/models/shopping_model.d
 class ReceiptMatcher {
   ReceiptMatcher._();
 
+  /// Threshold para matching OCR↔lista pendiente del usuario (flujo legado `match`).
   static const double _minScore = 0.4;
 
+  /// Threshold para matching contra el catálogo predefinido.
+  /// 1.0 exige que TODOS los tokens del nombre de catálogo aparezcan en OCR.
+  /// Evita falsos positivos como "CARNE VACUNA" → "Carne picada" (score 0.5).
+  static const double _catalogMinScore = 1.0;
+
   static final _quantityPattern = RegExp(
-    r'\b\d+[\.,]?\d*\s*(ml|l|kg|g|gr|un|x\d+|pack|paq|caja|lt|lts|cc)\b',
+    r'\b\d+[\.,]?\d*\s*(ml|l|kg|g|gr|un|x\d+|pack|paq|caja|lt|lts|cc|cm3|cmc)\b',
     caseSensitive: false,
+  );
+
+  /// Precios habituales en tickets AR: "$1.250,00", "250,00", trailing "1250".
+  static final _pricePattern = RegExp(
+    r'\$\s*[\d\.,]+|\b\d+[\.,]\d{2}\b|\s+\d{3,}\s*$',
   );
 
   static final _stopWords = {
     'de', 'la', 'el', 'los', 'las', 'un', 'una', 'con', 'sin',
     'del', 'al', 'por', 'para', 'en', 'y', 'o', 'the',
+  };
+
+  /// Palabras que indican que la línea es metadata del ticket, no un producto.
+  /// Si alguna aparece en la línea, se descarta por completo.
+  static const _blacklistWords = {
+    'total', 'subtotal', 'iva', 'efectivo', 'vuelto', 'cambio',
+    'tarjeta', 'credito', 'debito', 'cuotas', 'descuento', 'descuentos',
+    'promo', 'promocion', 'bonif', 'bonificacion', 'ticket', 'factura',
+    'cuit', 'cuil', 'dni', 'gracias', 'operacion', 'caja', 'cajero',
+    'vendedor', 'atencion', 'cliente', 'fecha', 'hora', 'neto',
+    'importe', 'precio',
+  };
+
+  static final _blacklistPattern = RegExp(
+    r'\b(?:' + _blacklistWords.join('|') + r')\b',
+    caseSensitive: false,
+  );
+
+  /// Marcas argentinas comunes. Como tokens sueltos son ruido; se filtran al
+  /// tokenizar. Si una línea es SOLO marca (ej: "MOLINOS SA"), queda vacía y
+  /// se descarta.
+  static const _brandWords = {
+    'sancor', 'serenisima', 'ilolay', 'milkaut', 'tregar', 'nestle',
+    'molinos', 'arcor', 'bagley', 'terrabusi', 'marolio', 'cocacola',
+    'pepsi', 'quilmes', 'brahma', 'imperial', 'stella', 'heineken',
+    'corona', 'patagonia', 'manaos', 'cunnington', 'bimbo', 'fargo',
+    'knorr', 'maggi', 'hellmanns', 'natura', 'cocinero', 'canuelas',
+    'matarazzo', 'luchetti', 'ledesma', 'chango', 'celusal',
   };
 
   // ─── Catálogo predefinido aplanado (lazy) ──────────────────────────────────
@@ -51,18 +90,23 @@ class ReceiptMatcher {
 
     CatalogEntry? best;
     double bestScore = 0;
+    int bestCatLen = 0; // tie-breaker: preferimos nombres más específicos
 
     for (final entry in _flatCatalog) {
       final catTokens = _tokenize(entry.name);
       if (catTokens.isEmpty) continue;
       final s = _scoreByCatalog(ocrTokens, catTokens);
-      if (s > bestScore) {
+      // Gana score mayor; en empate, gana el nombre con más tokens.
+      // Ej: "PAN LACTAL BIMBO" → Pan lactal (2 tokens) le gana a Pan (1 token).
+      if (s > bestScore ||
+          (s == bestScore && s >= _catalogMinScore && catTokens.length > bestCatLen)) {
         bestScore = s;
+        bestCatLen = catTokens.length;
         best = entry;
       }
     }
 
-    return (best != null && bestScore >= _minScore) ? best : null;
+    return (best != null && bestScore >= _catalogMinScore) ? best : null;
   }
 
   /// Resultado del match: items de la lista que matchearon y los que no.
@@ -195,6 +239,7 @@ class ReceiptMatcher {
 
   static List<String> _tokenize(String raw) {
     final cleaned = raw
+        .replaceAll(_pricePattern, ' ')
         .replaceAll(_quantityPattern, ' ')
         .toLowerCase()
         .replaceAll('á', 'a').replaceAll('é', 'e').replaceAll('í', 'i')
@@ -205,8 +250,36 @@ class ReceiptMatcher {
     return cleaned
         .split(RegExp(r'\s+'))
         .map((t) => t.trim())
-        .where((t) => t.length >= 3 && !_stopWords.contains(t))
+        .where((t) =>
+            t.length >= 3 &&
+            !_stopWords.contains(t) &&
+            !_brandWords.contains(t),)
+        .map(_stem)
         .toList();
+  }
+
+  /// Stemming suave para español: normaliza plurales (-s, -es) y diminutivos
+  /// (-ito/-ita/-itos/-itas/-cito/-cita/-citos/-citas) para que "Galletitas"
+  /// matchee "Galletas" y "Tomates" matchee "Tomate".
+  ///
+  /// Conservador: solo toca tokens de 5+ chars y deja margen ≥3 chars tras stem.
+  static String _stem(String token) {
+    if (token.length < 5) return token;
+    const diminutives = [
+      'citos', 'citas', 'cito', 'cita', 'itos', 'itas', 'ito', 'ita',
+    ];
+    for (final suf in diminutives) {
+      if (token.endsWith(suf) && token.length > suf.length + 2) {
+        return token.substring(0, token.length - suf.length);
+      }
+    }
+    if (token.endsWith('es') && token.length > 4) {
+      return token.substring(0, token.length - 2);
+    }
+    if (token.endsWith('s') && token.length > 3) {
+      return token.substring(0, token.length - 1);
+    }
+    return token;
   }
 
   // ─── Limpieza de nombre para mostrar ──────────────────────────────────────
@@ -239,6 +312,39 @@ class ReceiptMatcher {
       return word[0].toUpperCase() + word.substring(1).toLowerCase();
     }
     return word;
+  }
+
+  /// Valida si una línea OCR parece un nombre de producto real (no ruido del
+  /// ticket como totales, descuentos, códigos internos, etc.).
+  ///
+  /// Descarta automáticamente:
+  /// - Líneas con `%` (promos: "2do50%-MOLINOS")
+  /// - Strings que empiezan con guión, símbolo o dígito ("-arcor-golos1")
+  /// - Líneas que contienen palabras de metadata del ticket (total, iva, etc.)
+  /// - Strings con menos de 3 letras reales
+  /// - Strings donde las letras son menos del 40% del total (muy ruidosos)
+  static bool looksLikeValidProduct(String raw) {
+    final t = raw.trim();
+    if (t.isEmpty) return false;
+
+    // Descarta líneas de descuento/promo con porcentaje
+    if (t.contains('%')) return false;
+
+    // Descarta si empieza con símbolo, guión o dígito
+    if (RegExp(r'^[-_*/\\@#!+=\d]').hasMatch(t)) return false;
+
+    // Descarta si contiene una palabra de blacklist (total, descuento, etc.)
+    if (_blacklistPattern.hasMatch(t)) return false;
+
+    // Cuenta letras reales (con acentos)
+    final letters =
+        RegExp(r'[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]').allMatches(t).length;
+    if (letters < 3) return false;
+
+    // Al menos 40% del string deben ser letras (filtra "golos1", "SERR-C1")
+    if (letters / t.length < 0.4) return false;
+
+    return true;
   }
 }
 
@@ -290,7 +396,16 @@ ScanMatchResult resolveScanItems({
   final unrecognized = <String>[];
 
   for (final ocrRaw in ocrItems) {
+    // ── Paso 0: quality gate ─────────────────────────────────────────────────
+    // Descartar ruido del ticket (totales, descuentos, códigos, marcas sueltas).
+    // Previene que "DESCUENTO LECHE 10%" matchee "Leche" por error.
+    if (!ReceiptMatcher.looksLikeValidProduct(ocrRaw)) continue;
+
     final rawTokens = ReceiptMatcher.tokenize(ocrRaw);
+
+    // Si después de limpiar (precios, marcas, cantidades) no queda nada con
+    // sentido, la línea es solo ruido (ej: "MOLINOS SA $1.250,00").
+    if (rawTokens.isEmpty) continue;
 
     // ── Paso 1: buscar directamente en la lista pendiente ────────────────────
     // Pregunta: "¿aparece el nombre del item pendiente dentro del texto OCR?"
@@ -317,6 +432,8 @@ ScanMatchResult resolveScanItems({
     final catalog = ReceiptMatcher.findPredefined(ocrRaw);
 
     if (catalog == null) {
+      // La línea ya pasó el quality gate del Paso 0 → es un candidato genuino
+      // a producto nuevo (ej: "Chicle"), lo ofrecemos al usuario.
       unrecognized.add(ocrRaw);
       continue;
     }

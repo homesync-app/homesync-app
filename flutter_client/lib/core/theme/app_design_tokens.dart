@@ -22,6 +22,35 @@ class AppRadii {
       );
 }
 
+class AppInsets {
+  static const double screenHorizontal = 20;
+  static const double screenTop = 16;
+  static const double screenBottom = 120;
+  static const double sectionGap = 24;
+  static const double itemGap = 12;
+
+  static const EdgeInsets screen = EdgeInsets.fromLTRB(
+    screenHorizontal,
+    screenTop,
+    screenHorizontal,
+    screenBottom,
+  );
+  static const EdgeInsets card = EdgeInsets.all(20);
+  static const EdgeInsets compactCard = EdgeInsets.all(16);
+  static const EdgeInsets section = EdgeInsets.symmetric(
+    horizontal: screenHorizontal,
+  );
+}
+
+class AppControlSizes {
+  static const double iconSm = 16;
+  static const double iconMd = 20;
+  static const double iconLg = 24;
+  static const double minTapTarget = 44;
+  static const double buttonHeight = 52;
+  static const double fabHeight = 54;
+}
+
 class AppElevation {
   static List<BoxShadow> card({
     required Color color,

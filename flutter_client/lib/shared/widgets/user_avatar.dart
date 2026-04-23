@@ -48,40 +48,22 @@ class UserAvatar {
 
   static const List<Map<String, dynamic>> premiumAvatars = [
     {
-      'id': 'pixel_mate_home',
-      'url': 'assets/images/premium_pixel_avatars/pixel_mate_home.png',
-      'name': 'Casita Mate',
+      'id': 'premium_mate_boy',
+      'url': 'assets/images/premium_3d_avatars/premium_mate_boy.png',
+      'name': 'Matecito',
       'color': Color(0xFFFFE7BA),
     },
     {
-      'id': 'pixel_couple_mate',
-      'url': 'assets/images/premium_pixel_avatars/pixel_couple_mate.png',
-      'name': 'Mate de a Dos',
+      'id': 'premium_keys_girl',
+      'url': 'assets/images/premium_3d_avatars/premium_keys_girl.png',
+      'name': 'Llaves de Casa',
       'color': Color(0xFFFFD3E0),
     },
     {
-      'id': 'pixel_market_bag',
-      'url': 'assets/images/premium_pixel_avatars/pixel_market_bag.png',
-      'name': 'Super Sync',
+      'id': 'premium_market_dog',
+      'url': 'assets/images/premium_3d_avatars/premium_market_dog.png',
+      'name': 'Perrito Super',
       'color': Color(0xFFD8ECFA),
-    },
-    {
-      'id': 'pixel_clean_team',
-      'url': 'assets/images/premium_pixel_avatars/pixel_clean_team.png',
-      'name': 'Equipo Orden',
-      'color': Color(0xFFFFE4B5),
-    },
-    {
-      'id': 'pixel_plant_parent',
-      'url': 'assets/images/premium_pixel_avatars/pixel_plant_parent.png',
-      'name': 'Plantita Feliz',
-      'color': Color(0xFFD8F0D2),
-    },
-    {
-      'id': 'pixel_night_home',
-      'url': 'assets/images/premium_pixel_avatars/pixel_night_home.png',
-      'name': 'Noche en Casa',
-      'color': Color(0xFFDDE2FF),
     },
     {
       'id': 'premium_boy',
@@ -229,8 +211,9 @@ class CustomUserAvatar extends ConsumerWidget {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Admin: Impersonaci\u00F3n'),
-              content:
-                  Text('\u00BFDeseas ver la app como ${name ?? 'este usuario'}?'),
+              content: Text(
+                '\u00BFDeseas ver la app como ${name ?? 'este usuario'}?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
