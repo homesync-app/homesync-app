@@ -95,6 +95,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/premium_pixel_avatars/
     - assets/fonts/outfit/
 
   fonts:

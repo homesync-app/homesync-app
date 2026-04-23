@@ -342,7 +342,13 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
 
   List<Map<String, dynamic>> _filteredRanking() {
     if (_selectedTab == 0) return widget.ranking;
-    final targetType = _selectedTab == 1 ? 'adult' : 'child';
+    if (_selectedTab == 1) {
+      return widget.ranking.where((item) {
+        final type = item['member_type'] as String?;
+        return type == 'parent' || type == 'guardian';
+      }).toList();
+    }
+    final targetType = 'child';
     return widget.ranking
         .where((item) => (item['member_type'] as String?) == targetType)
         .toList();
@@ -360,7 +366,10 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
   Widget build(BuildContext context) {
     final theme = widget.theme;
     final filtered = _filteredRanking();
-    final hasAdults = widget.ranking.any((i) => i['member_type'] == 'adult');
+    final hasAdults = widget.ranking.any((i) {
+      final type = i['member_type'] as String?;
+      return type == 'parent' || type == 'guardian';
+    });
     final hasChildren = widget.ranking.any((i) => i['member_type'] == 'child');
     final showTabs = hasAdults && hasChildren;
 

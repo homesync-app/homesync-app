@@ -12,6 +12,7 @@ import 'package:homesync_client/features/expenses/domain/models/feed_item_model.
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
@@ -90,7 +91,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return AnimatedBuilder(
       animation: _tabController,
       builder: (context, child) {
-        final theme = context.theme;
         String label = 'Movimiento';
         VoidCallback onPressed = () => _showExpenseSheet();
 
@@ -105,57 +105,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           onPressed = () => SavingsTab.showGoalSheet(context, ref);
         }
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.shadowBase.withValues(alpha: 0.032),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-                BoxShadow(
-                  color: theme.primary.withValues(alpha: 0.022),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: FloatingActionButton.extended(
-              heroTag: 'expenses_fab',
-              onPressed: onPressed,
-              backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
-              foregroundColor: AppColors.primary,
-              elevation: 0,
-              highlightElevation: 0,
-              splashColor: theme.primary.withValues(alpha: 0.08),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-                side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.075),
-                  width: 1,
-                ),
-              ),
-              extendedPadding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-              icon: const Icon(
-                Icons.add_rounded,
-                size: 19,
-                color: AppColors.primary,
-              ),
-              label: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                  letterSpacing: -0.15,
-                ),
-              ),
-            ),
-          ).animateEntrance(),
+        return AppFloatingActionButton(
+          label: label,
+          icon: Icons.add_rounded,
+          onPressed: onPressed,
+          heroTag: 'expenses_fab',
+          margin: const EdgeInsets.only(bottom: 20),
+          animateIn: true,
         );
       },
     );

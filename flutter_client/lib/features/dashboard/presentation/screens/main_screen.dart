@@ -23,6 +23,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/screens/member_onboarding_screen.dart';
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
+import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
@@ -30,6 +31,7 @@ import 'package:homesync_client/features/shopping/presentation/screens/shopping_
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:homesync_client/shared/widgets/custom_bottom_nav.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -499,106 +501,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   Widget _buildBottomNav() {
     final currentIndex = ref.watch(bottomNavIndexProvider);
-    final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
     final navItems = visibleMainTabs(caps, currentMember: _currentMember)
         .where((tab) => tab != MainTab.stats)
         .map(
-          (tab) => (
+          (tab) => CustomBottomNavItem(
             label: _labelForTab(tab, caps),
             index: indexForMainTab(caps, tab, currentMember: _currentMember),
-            tab: tab,
+            icon: _iconForTab(tab, caps, isSelected: false),
+            selectedIcon: _iconForTab(tab, caps, isSelected: true),
           ),
         )
         .toList(growable: false);
 
-    return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.navigationSurface
-              .withValues(alpha: theme.isDarkMode ? 0.94 : 0.98),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: theme.border.withValues(alpha: theme.isDarkMode ? 0.5 : 0.8),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadow
-                  .withValues(alpha: theme.isDarkMode ? 0.34 : 0.12),
-              blurRadius: 28,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: navItems.map((item) {
-            final isSelected = currentIndex == item.index;
-            return Expanded(
-              child: AnimatedPress(
-                scale: 0.94,
-                onTap: () => _setBottomNavIndex(
-                  item.index,
-                  source: 'bottom_nav',
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.primary
-                            .withValues(alpha: theme.isDarkMode ? 0.22 : 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        switchInCurve: Curves.easeOutBack,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Icon(
-                          _iconForTab(item.tab, caps, isSelected: isSelected),
-                          key: ValueKey('${item.tab.name}_$isSelected'),
-                          color: isSelected ? theme.primary : theme.textMuted,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? theme.primary : theme.textMuted,
-                          letterSpacing: -0.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+    return CustomBottomNav(
+      currentIndex: currentIndex,
+      items: navItems,
+      onTap: (index) => _setBottomNavIndex(index, source: 'bottom_nav'),
     );
   }
 
@@ -634,9 +553,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           screen: const StatsScreen(),
         ),
       MainTab.shopping => NavItemConfig(
-          title: 'Compras',
-          icon: Icons.shopping_cart_rounded,
-          screen: const ShoppingListScreen(),
+          title: _currentMember?.isChild == true ? 'Tienda' : 'Compras',
+          icon: _currentMember?.isChild == true
+              ? Icons.storefront_rounded
+              : Icons.shopping_cart_rounded,
+          screen: _currentMember?.isChild == true
+              ? const FamilyRewardsScreen()
+              : const ShoppingListScreen(),
         ),
     };
   }
@@ -653,7 +576,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         MainTab.expenses => Icons.account_balance_wallet_rounded,
         MainTab.social => caps.socialTabSelectedIcon,
         MainTab.stats => Icons.bar_chart_rounded,
-        MainTab.shopping => Icons.shopping_cart_rounded,
+        MainTab.shopping => _currentMember?.isChild == true
+            ? Icons.storefront_rounded
+            : Icons.shopping_cart_rounded,
       };
     }
 
@@ -663,7 +588,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       MainTab.expenses => Icons.account_balance_wallet_outlined,
       MainTab.social => caps.socialTabIcon,
       MainTab.stats => Icons.bar_chart_outlined,
-      MainTab.shopping => Icons.shopping_cart_outlined,
+      MainTab.shopping => _currentMember?.isChild == true
+          ? Icons.storefront_outlined
+          : Icons.shopping_cart_outlined,
     };
   }
 
@@ -674,7 +601,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       MainTab.expenses => 'Finanzas',
       MainTab.social => caps.socialTabLabel,
       MainTab.stats => 'Progreso',
-      MainTab.shopping => 'Compras',
+      MainTab.shopping =>
+        _currentMember?.isChild == true ? 'Tienda' : 'Compras',
     };
   }
 

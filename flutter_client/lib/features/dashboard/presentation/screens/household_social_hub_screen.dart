@@ -4,13 +4,13 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
-import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -193,21 +193,6 @@ class _HouseholdSocialHubScreenState
                 caps: caps,
                 householdAsync: householdAsync,
                 canManageMembers: canManageMembers,
-                onRanking: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Ranking'),
-                        ),
-                        body: const SafeArea(
-                          child: StatsScreen(),
-                        ),
-                      ),
-                    ),
-                  );
-                },
                 onRewards: () {
                   Navigator.push(
                     context,
@@ -217,6 +202,8 @@ class _HouseholdSocialHubScreenState
                   );
                 },
               ),
+              const SizedBox(height: 18),
+              const FamilyRankingSection(),
               const SizedBox(height: 18),
               _FamilyStoreCard(
                 caps: caps,
@@ -266,14 +253,12 @@ class _HeaderCard extends StatelessWidget {
     required this.caps,
     required this.householdAsync,
     required this.canManageMembers,
-    required this.onRanking,
     required this.onRewards,
   });
 
   final HouseholdCapabilities caps;
   final AsyncValue<dynamic> householdAsync;
   final bool canManageMembers;
-  final VoidCallback onRanking;
   final VoidCallback onRewards;
 
   @override
@@ -356,11 +341,6 @@ class _HeaderCard extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _QuickActionButton(
-                icon: Icons.emoji_events_outlined,
-                label: 'Ranking',
-                onPressed: onRanking,
-              ),
               _QuickActionButton(
                 icon: Icons.storefront_outlined,
                 label: 'Tienda',
@@ -801,45 +781,6 @@ class _QuickActionButton extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: theme.surfaceVariant,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: theme.border.withValues(alpha: 0.48)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: theme.textSecondary),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }

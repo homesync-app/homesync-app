@@ -1,10 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
@@ -31,13 +30,13 @@ class AvatarPickerSheet extends ConsumerWidget {
     try {
       final normalizedAvatar =
           UserAvatar.normalizeAvatarValue(avatarValue) ?? avatarValue;
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null || userId.isEmpty) throw Exception('No autenticado');
-
-      final client = ref.read(supabaseClientProvider);
-      await client
-          .from('users')
-          .update({'avatar_url': normalizedAvatar}).eq('id', userId);
+      final result = await ref
+          .read(authRepositoryProvider)
+          .updateProfile(avatarUrl: normalizedAvatar);
+      result.match(
+        (failure) => throw Exception(failure.message),
+        (_) {},
+      );
 
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersNotifierProvider);
@@ -155,6 +154,65 @@ class AvatarPickerSheet extends ConsumerWidget {
                         );
                       }).toList(),
                     ),
+                    const SizedBox(height: 28),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final isPremium =
+                            ref.watch(premiumProvider).valueOrNull ?? false;
+                        return Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome_rounded,
+                                  color: AppColors.accentGold,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Avatares premium',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 14,
+                              runSpacing: 16,
+                              alignment: WrapAlignment.center,
+                              children: UserAvatar.premiumAvatars.map((avatar) {
+                                final value =
+                                    UserAvatar.premiumAvatarValue(avatar);
+                                final legacyValue =
+                                    'premium://${avatar['url'] as String}';
+                                final isSelected = currentAvatar == value ||
+                                    currentAvatar == legacyValue;
+                                return _PremiumAvatarOption(
+                                  avatarValue: value,
+                                  name: avatar['name'] as String,
+                                  color: avatar['color'] as Color,
+                                  isLocked: !isPremium,
+                                  isSelected: isSelected,
+                                  onTap: isPremium
+                                      ? () => _updateAvatar(
+                                            context,
+                                            ref,
+                                            value,
+                                          )
+                                      : () => PremiumPaywall.show(context),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                     const SizedBox(height: 24),
                     Consumer(
                       builder: (context, ref, _) {
@@ -236,6 +294,101 @@ class AvatarPickerSheet extends ConsumerWidget {
             child: const Text('Guardar'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PremiumAvatarOption extends StatelessWidget {
+  final String avatarValue;
+  final String name;
+  final Color color;
+  final bool isLocked;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _PremiumAvatarOption({
+    required this.avatarValue,
+    required this.name,
+    required this.color,
+    required this.isLocked,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 96,
+        padding: const EdgeInsets.fromLTRB(8, 10, 8, 9),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isLocked ? 0.35 : 0.7),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: isLocked ? 0.18 : 0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 9),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Opacity(
+                  opacity: isLocked ? 0.42 : 1,
+                  child: CustomUserAvatar(
+                    avatarUrl: avatarValue,
+                    radius: 26,
+                    isAnimated: !isLocked,
+                  ),
+                ),
+                if (isLocked)
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.38),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.lock_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isLocked
+                    ? Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.74)
+                    : Theme.of(context).colorScheme.onSurface,
+                fontSize: 11,
+                height: 1.05,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

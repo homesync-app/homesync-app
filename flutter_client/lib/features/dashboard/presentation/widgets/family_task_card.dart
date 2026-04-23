@@ -203,7 +203,7 @@ class FamilyTaskCard extends StatelessWidget {
 
   String? _contextLabel() {
     if (task.isPendingApproval) {
-      if (isChildView) return 'Esperando revisión';
+      if (isChildView) return 'Pendiente de aprobación';
       if (completedMember != null) {
         return '${completedMember!.displayName} la marcó como hecha';
       }
@@ -231,7 +231,9 @@ class FamilyTaskCard extends StatelessWidget {
   }
 
   String? _urgencyLabel() {
-    if (task.isPendingApproval) return 'Revisar';
+    if (task.isPendingApproval) {
+      return isChildView ? 'Pendiente' : 'Revisar';
+    }
     if (task.isOverdue) return 'Vencida';
     if (task.isDueToday) return 'Hoy';
     if (task.dueAt != null) return 'Próxima';

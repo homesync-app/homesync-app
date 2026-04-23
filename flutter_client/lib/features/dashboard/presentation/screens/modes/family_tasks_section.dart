@@ -329,6 +329,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       if (isAdultView) {
         actionIcon = Icons.fact_check_rounded;
         onTap = () => _showApprovalActions(task, members);
+      } else if (isChildView) {
+        actionIcon = Icons.check_circle_outline_rounded;
+        isActionEnabled = false;
+        onTap = null;
       } else {
         actionIcon = Icons.hourglass_top_rounded;
         isActionEnabled = false;

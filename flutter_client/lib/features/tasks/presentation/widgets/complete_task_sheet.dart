@@ -24,8 +24,10 @@ class CompleteTaskSheet extends ConsumerStatefulWidget {
     required this.onTasksCompleted,
   });
 
-  static Future<void> show(BuildContext context,
-      {VoidCallback? onTasksCompleted,}) {
+  static Future<void> show(
+    BuildContext context, {
+    VoidCallback? onTasksCompleted,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -170,23 +172,62 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       final onlyMe = _selectedMemberIds.length == 1 &&
           _selectedMemberIds.contains(currentUserId);
 
-      await ref.read(tasksProvider.notifier).completeTasksBatch(
-            selectedTasks,
-            userIds: _selectedMemberIds.toList(),
-            completedAt: _isRightNow ? null : _customDate,
-          );
+      final selectedMembersRequiringApproval = _members
+          .where((m) =>
+              _selectedMemberIds.contains(m['user_id']) &&
+              _requiresApproval(m['member_type'] as String?))
+          .toList();
+
+      if (selectedMembersRequiringApproval.isNotEmpty) {
+        for (final task in selectedTasks) {
+          for (final member in selectedMembersRequiringApproval) {
+            await ref.read(tasksProvider.notifier).submitTaskForApproval(
+                  task.copyWith(
+                    assignedTo: member['user_id'] as String,
+                  ),
+                );
+          }
+        }
+        _selectedMemberIds.removeWhere((id) =>
+            selectedMembersRequiringApproval.any((m) => m['user_id'] == id));
+      }
+
+      final remainingTasks =
+          _selectedMemberIds.isNotEmpty ? selectedTasks : <TaskModel>[];
+      final remainingMemberIds = _selectedMemberIds.toList();
+
+      if (remainingTasks.isNotEmpty && remainingMemberIds.isNotEmpty) {
+        await ref.read(tasksProvider.notifier).completeTasksBatch(
+              remainingTasks,
+              userIds: remainingMemberIds,
+              completedAt: _isRightNow ? null : _customDate,
+            );
+      }
 
       if (mounted) {
         _confettiController.play();
         HapticFeedback.heavyImpact();
-        Navigator.pop(context); // Pop the sheet first
+        Navigator.pop(context);
 
-        final String verb = onlyMe ? 'Ganaste' : 'Ganaron';
+        final approvalCount = selectedMembersRequiringApproval.length;
+        final directCount = remainingMemberIds.length;
+
+        String message;
+        if (approvalCount > 0 && directCount > 0) {
+          message =
+              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} pendiente${approvalCount > 1 ? "s" : ""} de aprobacion, ⭐ $totalXp XP y $totalCoins Coins!';
+        } else if (approvalCount > 0) {
+          message =
+              '$approvalCount tarea${approvalCount > 1 ? "s" : ""} enviada${approvalCount > 1 ? "s" : ""} para aprobacion';
+        } else {
+          final String verb = onlyMe ? 'Ganaste' : 'Ganaron';
+          message = '⭐ $verb $totalXp XP y $totalCoins Coins!';
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '⭐ $verb $totalXp XP y $totalCoins Coins!',
+              message,
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             backgroundColor: AppColors.primary,
@@ -206,10 +247,18 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.accentRed,),
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.accentRed,
+          ),
         );
       }
     }
+  }
+
+  static bool _requiresApproval(String? memberType) {
+    if (memberType == null) return false;
+    final lower = memberType.toLowerCase();
+    return lower == 'teen' || lower == 'child';
   }
 
   Future<void> _selectCustomDate() async {
@@ -331,7 +380,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       ),
       child: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),)
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : Column(
               children: [
                 const SizedBox(height: 12),
@@ -350,8 +400,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.task_alt_rounded,
-                              color: AppColors.primary, size: 28,),
+                          Icon(
+                            Icons.task_alt_rounded,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
                           SizedBox(width: 12),
                           Text(
                             'Completar tareas',
@@ -387,18 +440,25 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
                     ),
                     children: [
-                      _buildSectionHeader(Icons.people_alt_rounded,
-                          '¿Quién lo hizo?', 'Selecciona quiénes ayudaron',),
+                      _buildSectionHeader(
+                        Icons.people_alt_rounded,
+                        '¿Quién lo hizo?',
+                        'Selecciona quiénes ayudaron',
+                      ),
                       _buildMembersSelection(),
                       const SizedBox(height: 32),
-                      _buildSectionHeader(Icons.schedule_rounded, '¿Cuándo?',
-                          'Elige el momento de finalización',),
+                      _buildSectionHeader(
+                        Icons.schedule_rounded,
+                        '¿Cuándo?',
+                        'Elige el momento de finalización',
+                      ),
                       _buildDateSelection(),
                       const SizedBox(height: 32),
                       _buildSectionHeader(
-                          Icons.layers_rounded,
-                          'Seleccionar Tareas',
-                          'Busca y selecciona lo terminado',),
+                        Icons.layers_rounded,
+                        'Seleccionar Tareas',
+                        'Busca y selecciona lo terminado',
+                      ),
                       _buildCategoryAndSearch(categories),
                       const SizedBox(height: 16),
                       Padding(
@@ -652,9 +712,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                size: 18,),
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -700,9 +762,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               decoration: InputDecoration(
                 hintText: 'Buscar tarea...',
                 hintStyle: TextStyle(
-                    color: const Color(0xFF94A3B8).withValues(alpha: 0.8),),
-                prefixIcon: const Icon(Icons.search_rounded,
-                    size: 22, color: Color(0xFF64748B),),
+                  color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  size: 22,
+                  color: Color(0xFF64748B),
+                ),
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -713,25 +779,34 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         const SizedBox(height: 20),
         SizedBox(
           height: 44,
-          child: Builder(builder: (context) {
-            final activeCats = _allTasks
-                .map((t) => CategoryMapping.normaliseCategory(t.category))
-                .toSet();
-            final visibleCats = categories
-                .where((c) => activeCats
-                    .contains(CategoryMapping.normaliseCategory(c.id)),)
-                .toList();
+          child: Builder(
+            builder: (context) {
+              final activeCats = _allTasks
+                  .map((t) => CategoryMapping.normaliseCategory(t.category))
+                  .toSet();
+              final visibleCats = categories
+                  .where(
+                    (c) => activeCats
+                        .contains(CategoryMapping.normaliseCategory(c.id)),
+                  )
+                  .toList();
 
-            return ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              children: [
-                _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
-                ...visibleCats.map((c) => _buildCategoryChip(
-                    c.id, c.name, AppColors.fromHex(c.color),),),
-              ],
-            );
-          },),
+              return ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
+                  ...visibleCats.map(
+                    (c) => _buildCategoryChip(
+                      c.id,
+                      c.name,
+                      AppColors.fromHex(c.color),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -795,13 +870,17 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   }
 
   List<Widget> _buildGroupedTasksInFull(
-      List<TaskModel> tasks, List<CategoryModel> categories,) {
+    List<TaskModel> tasks,
+    List<CategoryModel> categories,
+  ) {
     if (tasks.isEmpty) {
       return [
         const Center(
-            child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text('No hay tareas disponibles'),),),
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Text('No hay tareas disponibles'),
+          ),
+        ),
       ];
     }
 
@@ -829,27 +908,35 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       final catTasks = grouped[normCat]!;
       final catInfo = catLookup[normCat] ??
           CategoryModel(
-              id: normCat,
-              name:
-                  normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
-              icon: '🏠',
-              color: '#94A3B8',);
+            id: normCat,
+            name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+            icon: '🏠',
+            color: '#94A3B8',
+          );
 
-      widgets.add(_buildCategoryDivider(
-        icon: CategoryMapping.getCategoryMaterialIcon(normCat),
-        title: catInfo.name,
-        color: AppColors.fromHex(catInfo.color),
-      ),);
+      widgets.add(
+        _buildCategoryDivider(
+          icon: CategoryMapping.getCategoryMaterialIcon(normCat),
+          title: catInfo.name,
+          color: AppColors.fromHex(catInfo.color),
+        ),
+      );
 
-      widgets.addAll(catTasks.map(
-          (t) => _buildTaskSelectionItem(t, AppColors.fromHex(catInfo.color)),),);
+      widgets.addAll(
+        catTasks.map(
+          (t) => _buildTaskSelectionItem(t, AppColors.fromHex(catInfo.color)),
+        ),
+      );
     }
 
     return widgets;
   }
 
-  Widget _buildCategoryDivider(
-      {required IconData icon, required String title, required Color color,}) {
+  Widget _buildCategoryDivider({
+    required IconData icon,
+    required String title,
+    required Color color,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 12),
       child: Row(
@@ -867,8 +954,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           ),
           const SizedBox(width: 8),
           Expanded(
-              child:
-                  Divider(color: color.withValues(alpha: 0.1), thickness: 1),),
+            child: Divider(color: color.withValues(alpha: 0.1), thickness: 1),
+          ),
         ],
       ),
     );

@@ -18,6 +18,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
@@ -136,14 +137,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           currentInterval: task.recurrenceInterval,
           currentAssignedTo: task.assignedTo,
           members: members
-              .map((m) => {
-                    'user_id': m.userId,
-                    'users': {
-                      'full_name': m.fullName,
-                      'email': m.email,
-                      'avatar_url': m.avatarUrl,
-                    },
-                  },)
+              .map(
+                (m) => {
+                  'user_id': m.userId,
+                  'users': {
+                    'full_name': m.fullName,
+                    'email': m.email,
+                    'avatar_url': m.avatarUrl,
+                  },
+                },
+              )
               .toList(),
           onSave: (selection) async {
             String? recurrenceType;
@@ -261,54 +264,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       backgroundColor: theme.background,
       floatingActionButton: !canCreateTasks
           ? null
-          : Padding(
-        padding: const EdgeInsets.only(bottom: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: theme.shadowBase.withValues(alpha: 0.032),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: SizedBox(
-            height: 56,
-            child: FloatingActionButton.extended(
-              heroTag: null,
+          : AppFloatingActionButton(
+              label: 'Nueva tarea',
+              icon: Icons.add_rounded,
               onPressed: _showCreateTaskDialog,
-              backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
-              foregroundColor: AppColors.primary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-                side: BorderSide(
-                  color: AppColors.primary.withValues(alpha: 0.075),
-                  width: 1,
-                ),
-              ),
-              extendedPadding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-              icon: const Icon(
-                Icons.add_rounded,
-                size: 19,
-                color: AppColors.primary,
-              ),
-              label: const Text(
-                'Nueva tarea',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.5,
-                  letterSpacing: -0.15,
-                ),
-              ),
+              heroTag: 'tasks_fab',
+              margin: const EdgeInsets.only(bottom: 18),
+              animateIn: true,
             ),
-          ),
-        ).animateScaleIn(delay: 400),
-      ),
       body: Column(
         children: [
           Padding(
@@ -348,9 +311,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                 return categoriesAsync.when(
                                   data: (catList) {
                                     final visibleCats = catList
-                                        .where((c) => activeCats.contains(
+                                        .where(
+                                          (c) => activeCats.contains(
                                             CategoryMapping.normaliseCategory(
-                                                c.id,),),)
+                                              c.id,
+                                            ),
+                                          ),
+                                        )
                                         .toList();
 
                                     return Column(
@@ -377,9 +344,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                       e.value.id,
                                                       e.value.name,
                                                       AppColors.fromHex(
-                                                          e.value.color,),
+                                                        e.value.color,
+                                                      ),
                                                     ).animateStaggered(
-                                                        e.key + 2,),
+                                                      e.key + 2,
+                                                    ),
                                                   ),
                                             ],
                                           ),
@@ -392,17 +361,20 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                               ? Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                          top: 10,),
+                                                    top: 10,
+                                                  ),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                       color: theme.surface,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              20,),
+                                                        20,
+                                                      ),
                                                       border: Border.all(
                                                         color: theme.border
                                                             .withValues(
-                                                                alpha: 0.88,),
+                                                          alpha: 0.88,
+                                                        ),
                                                       ),
                                                       boxShadow:
                                                           theme.cardShadow,
@@ -418,8 +390,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                       onChanged: (val) {
                                                         ref
                                                             .read(
-                                                                taskSearchQueryProvider
-                                                                    .notifier,)
+                                                              taskSearchQueryProvider
+                                                                  .notifier,
+                                                            )
                                                             .setQuery(val);
                                                         setState(() {});
                                                       },
@@ -448,12 +421,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                       _searchController
                                                                           .clear();
                                                                       ref
-                                                                          .read(taskSearchQueryProvider
-                                                                              .notifier,)
+                                                                          .read(
+                                                                            taskSearchQueryProvider.notifier,
+                                                                          )
                                                                           .setQuery(
-                                                                              '',);
+                                                                            '',
+                                                                          );
                                                                       setState(
-                                                                          () {},);
+                                                                        () {},
+                                                                      );
                                                                       _searchFocusNode
                                                                           .requestFocus();
                                                                     },
@@ -521,9 +497,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
                               if (tasks.isEmpty)
-                                _buildEmptyState(selectedCategories.isEmpty
-                                    ? null
-                                    : 'filtered',),
+                                _buildEmptyState(
+                                  selectedCategories.isEmpty
+                                      ? null
+                                      : 'filtered',
+                                ),
                               ..._buildGroupedTasks(
                                 tasks,
                                 categoriesAsync.maybeWhen(
@@ -549,18 +527,25 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                       .read(tasksProvider.notifier)
                                       .loadMore(),
                                   icon: const Icon(Icons.add_rounded),
-                                  label: const Text('Cargar mas tareas',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700,),),
+                                  label: const Text(
+                                    'Cargar mas tareas',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.primary,
                                     side: const BorderSide(
-                                        color: AppColors.primary, width: 1.5,),
+                                      color: AppColors.primary,
+                                      width: 1.5,
+                                    ),
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 32, vertical: 16,),
+                                      horizontal: 32,
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(24),),
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -747,8 +732,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     List<TaskModel> tasksToDisplay = deduped;
     if (selectedCategories.isNotEmpty) {
       tasksToDisplay = deduped
-          .where((t) => selectedCategories
-              .contains(CategoryMapping.normaliseCategory(t.category)),)
+          .where(
+            (t) => selectedCategories
+                .contains(CategoryMapping.normaliseCategory(t.category)),
+          )
           .toList();
     }
 
@@ -772,29 +759,33 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       final catTasks = grouped[normCat]!;
       final catInfo = catLookup[normCat] ??
           CategoryModel(
-              id: normCat,
-              name:
-                  normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
-              icon: 'home',
-              color: '#94A3B8',);
+            id: normCat,
+            name: normCat.substring(0, 1).toUpperCase() + normCat.substring(1),
+            icon: 'home',
+            color: '#94A3B8',
+          );
 
-      widgets.add(_SectionHeader(
-        icon: CategoryMapping.getCategoryMaterialIcon(normCat),
-        title: catInfo.name,
-        count: catTasks.length,
-        color: AppColors.fromHex(catInfo.color),
-      ).animateEntrance(),);
+      widgets.add(
+        _SectionHeader(
+          icon: CategoryMapping.getCategoryMaterialIcon(normCat),
+          title: catInfo.name,
+          count: catTasks.length,
+          color: AppColors.fromHex(catInfo.color),
+        ).animateEntrance(),
+      );
 
-      widgets.addAll(catTasks.asMap().entries.map((entry) {
-        final index = entry.key;
-        final task = entry.value;
-        return _TaskCard(
-          key: ValueKey(task.id),
-          task: task,
-          onSchedule: () => _showScheduleDialog(task),
-          onEdit: () => _showEditDialog(task),
-        ).animateStaggered(index);
-      }),);
+      widgets.addAll(
+        catTasks.asMap().entries.map((entry) {
+          final index = entry.key;
+          final task = entry.value;
+          return _TaskCard(
+            key: ValueKey(task.id),
+            task: task,
+            onSchedule: () => _showScheduleDialog(task),
+            onEdit: () => _showEditDialog(task),
+          ).animateStaggered(index);
+        }),
+      );
     }
 
     return widgets;
@@ -909,12 +900,11 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     // Parents and guardians can approve; teens and children cannot.
     // When the current viewer is missing from the member list we default to
     // adult permissions so the review flow stays reachable.
-    final isAdultView =
-        isFamilyMode && (currentMember?.canApprove ?? true);
+    final isAdultView = isFamilyMode && (currentMember?.canApprove ?? true);
     // Teens and children must send completions through the adult review
     // queue instead of marking tasks done directly.
-    final requiresApprovalSubmission = isFamilyMode &&
-        (currentMember?.submissionRequiresApproval ?? false);
+    final requiresApprovalSubmission =
+        isFamilyMode && (currentMember?.submissionRequiresApproval ?? false);
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
 
@@ -1034,7 +1024,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                       if (!_isExpanded && task.coinReward > 0) ...[
                         const SizedBox(width: 10),
                         _badge(
-                            'Coins ${task.coinReward}', AppColors.accentGreen,),
+                          'Coins ${task.coinReward}',
+                          AppColors.accentGreen,
+                        ),
                       ],
                     ],
                   ),

@@ -142,50 +142,21 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          member.fullDisplayName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: theme.textPrimary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: member.isChild
-                              ? AppColors.accentOrange.withValues(alpha: 0.1)
-                              : theme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          member.typeLabel,
-                          style: TextStyle(
-                            color: member.isChild
-                                ? AppColors.accentOrange
-                                : theme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    member.fullDisplayName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: theme.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     member.visibleRoleLabel,
                     style: TextStyle(
-                      color: theme.textPrimary,
+                      color: theme.textSecondary,
                       fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_design_tokens.dart';
 import 'app_colors.dart';
 
 extension AppThemeExtension on BuildContext {
@@ -40,21 +41,11 @@ class AppThemeColors {
 
   Color get shadowBase => isDarkMode ? Colors.black : AppColors.shadowBase;
 
-  List<BoxShadow> get cardShadow => [
-        BoxShadow(
-          color: shadowBase.withValues(alpha: isDarkMode ? 0.34 : 0.09),
-          blurRadius: isDarkMode ? 26 : 22,
-          offset: const Offset(0, 12),
-        ),
-      ];
+  List<BoxShadow> get cardShadow =>
+      AppElevation.card(color: shadowBase, isDarkMode: isDarkMode);
 
-  List<BoxShadow> get modalShadow => [
-        BoxShadow(
-          color: shadowBase.withValues(alpha: isDarkMode ? 0.5 : 0.12),
-          blurRadius: isDarkMode ? 36 : 30,
-          offset: const Offset(0, 16),
-        ),
-      ];
+  List<BoxShadow> get modalShadow =>
+      AppElevation.modal(color: shadowBase, isDarkMode: isDarkMode);
 
   Color get success => AppColors.success;
   Color get error => AppColors.error;
@@ -62,7 +53,8 @@ class AppThemeColors {
   Color get info => AppColors.info;
 
   Color get scaffoldBackground => background;
-  Color get surfaceContainer => isDarkMode ? AppColors.surfaceVariantDark : AppColors.surfaceVariant;
+  Color get surfaceContainer =>
+      isDarkMode ? AppColors.surfaceVariantDark : AppColors.surfaceVariant;
   Color get divider => isDarkMode ? Colors.white12 : Colors.black12;
 
   Color get glassWhite =>

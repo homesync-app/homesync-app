@@ -9,7 +9,6 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -23,7 +22,6 @@ import 'package:homesync_client/features/stats/presentation/providers/stats_prov
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
 import 'family_tasks_section.dart';
-import 'family_weekly_summary_section.dart';
 
 class HomeFamilyView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -85,21 +83,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ),
           if (memberNotFound) const SizedBox(height: 16),
           if (isChild) ...[
-            _buildStaggeredSection(
-              delayMs: 60,
-              child: _buildChildWallet(theme),
-            ),
-            if (caps.showStats) ...[
-              const SizedBox(height: 24),
-              _buildStaggeredSection(
-                delayMs: 120,
-                child: const FamilyWeeklySummarySection(),
-              ),
-            ],
             if (caps.showTasks) ...[
-              const SizedBox(height: 32),
               _buildStaggeredSection(
-                delayMs: 180,
+                delayMs: 60,
                 child: FamilyTasksSection(
                   caps: caps,
                   currentMember: currentMember,
@@ -109,12 +95,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ],
             const SizedBox(height: 32),
             _buildStaggeredSection(
-              delayMs: 240,
-              child: _buildShoppingSection(theme),
-            ),
-            const SizedBox(height: 32),
-            _buildStaggeredSection(
-              delayMs: 300,
+              delayMs: 120,
               child: _buildActivitySection(theme),
             ),
           ] else if (isTeen) ...[
@@ -127,16 +108,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               delayMs: 80,
               child: _buildPersonalFinanceCard(theme),
             ),
-            if (caps.showStats) ...[
-              const SizedBox(height: 24),
-              _buildStaggeredSection(
-                delayMs: 120,
-                child: const FamilyWeeklySummarySection(),
-              ),
-            ],
             if (caps.showTasks)
               _buildStaggeredSection(
-                delayMs: 180,
+                delayMs: 140,
                 child: FamilyTasksSection(
                   caps: caps,
                   currentMember: currentMember,
@@ -145,12 +119,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
             const SizedBox(height: 28),
             _buildStaggeredSection(
-              delayMs: 240,
+              delayMs: 200,
               child: _buildShoppingSection(theme),
             ),
             const SizedBox(height: 28),
             _buildStaggeredSection(
-              delayMs: 300,
+              delayMs: 260,
               child:
                   _buildActivitySection(theme, title: 'Movimientos del hogar'),
             ),
@@ -160,13 +134,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               child: _buildAdultHomeWelcome(theme),
             ),
             const SizedBox(height: 28),
-            if (caps.showStats) ...[
-              const SizedBox(height: 24),
-              _buildStaggeredSection(
-                delayMs: 100,
-                child: const FamilyWeeklySummarySection(),
-              ),
-            ],
             const SizedBox(height: 28),
             _buildStaggeredSection(
               delayMs: 140,
@@ -838,78 +805,99 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildPersonalFinanceCard(AppThemeColors theme) {
     final balanceAsync = ref.watch(userBalanceProvider);
-
-    return BalanceCard(
-      coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-      xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
-      userBalance: 0.0,
-    );
-  }
-
-  Widget _buildChildWallet(AppThemeColors theme) {
-    final balance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+    final coins =
+        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
+    final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.accentGold.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.3),
-          width: 2,
+        gradient: LinearGradient(
+          colors: [theme.surface, theme.elevatedSurface],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: theme.border.withValues(alpha: 0.68),
+          width: 1.05,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowBase.withValues(alpha: 0.048),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
+          Expanded(
+            child: _buildInlineMetric(
+              context,
+              icon: Icons.monetization_on_rounded,
+              label: 'Monedas',
+              value: '$coins',
               color: AppColors.accentGold,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.monetization_on_rounded,
-              color: Colors.white,
-              size: 32,
             ),
           ),
-          const SizedBox(width: 16),
+          Container(
+            width: 1,
+            height: 48,
+            color: theme.border.withValues(alpha: 0.32),
+          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Mi Monedero',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                Text(
-                  '$balance monedas',
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Tus tareas suman monedas para canjear premios.',
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            child: _buildInlineMetric(
+              context,
+              icon: Icons.star_rounded,
+              label: 'XP',
+              value: '$xp',
+              color: AppColors.accentPurple,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInlineMetric(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    final theme = context.theme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: theme.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
