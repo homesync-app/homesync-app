@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/retry/retry_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/config/app_environment.dart';
 
 import '../../errors/failures.dart';
 
@@ -54,13 +53,6 @@ abstract class BaseRpcService {
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final authUser = client.auth.currentUser;
-      if (authUser != null) {
-        return authUser.id;
-      }
-    }
-
     throw Exception('Usuario no autenticado');
   }
 
@@ -85,11 +77,7 @@ abstract class BaseRpcService {
   }
 
   String? currentAuthEmail() {
-    if (AppEnvironment.usesFirebaseJwtForSupabase) {
-      return fa.FirebaseAuth.instance.currentUser?.email;
-    }
-    return fa.FirebaseAuth.instance.currentUser?.email ??
-        client.auth.currentUser?.email;
+    return fa.FirebaseAuth.instance.currentUser?.email;
   }
 
   bool _isRateLimitError(PostgrestException e) {

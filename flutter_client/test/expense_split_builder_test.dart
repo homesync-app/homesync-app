@@ -39,7 +39,7 @@ void main() {
 
       expect(result.hasValidationError, isFalse);
       expect(result.splits, [
-        {'user_id': memberA.userId, 'amount': 120.0}
+        {'user_id': memberA.userId, 'amount': 120.0},
       ]);
     });
 
@@ -58,7 +58,7 @@ void main() {
 
       expect(result.hasValidationError, isFalse);
       expect(result.splits, [
-        {'user_id': memberB.userId, 'amount': 85.0}
+        {'user_id': memberB.userId, 'amount': 85.0},
       ]);
     });
 

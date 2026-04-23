@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
+import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 
-/// Banner que aparece en el formulario de gasto cuando el OCR detecto productos
-/// que no estan en la lista de compras activa.
 class NewItemsSuggestionBanner extends ConsumerStatefulWidget {
   final List<String> items;
+  final String householdId;
   final VoidCallback onDismiss;
+  final void Function(List<ShoppingItemModel> added)? onItemsAdded;
 
   const NewItemsSuggestionBanner({
     super.key,
     required this.items,
+    required this.householdId,
     required this.onDismiss,
+    this.onItemsAdded,
   });
 
   @override
@@ -38,9 +41,12 @@ class _NewItemsSuggestionBannerState
 
     try {
       final notifier = ref.read(shoppingItemsProvider.notifier);
+      final addedItems = <ShoppingItemModel>[];
+
       for (final rawName in _selected) {
         final predefined = ReceiptMatcher.findPredefined(rawName);
-        final displayName = predefined?.name ?? ReceiptMatcher.cleanName(rawName);
+        final displayName =
+            predefined?.name ?? ReceiptMatcher.cleanName(rawName);
         if (displayName.isEmpty) continue;
 
         await notifier.addItem(
@@ -48,9 +54,19 @@ class _NewItemsSuggestionBannerState
           emoji: predefined?.emoji ?? '🛒',
           category: predefined?.category ?? 'general',
         );
+
+        addedItems.add(ShoppingItemModel(
+          id: 'temp_${displayName.toLowerCase().replaceAll(' ', '_')}',
+          name: displayName,
+          emoji: predefined?.emoji ?? '🛒',
+          category: predefined?.category ?? 'general',
+          householdId: widget.householdId,
+          createdAt: DateTime.now(),
+        ),);
       }
 
       if (mounted) {
+        widget.onItemsAdded?.call(addedItems);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${_selected.length} productos agregados a la lista'),

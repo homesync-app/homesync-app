@@ -35,7 +35,7 @@ class _AnimatedPressState extends State<AnimatedPress>
     super.initState();
     _controller = AnimationController(
         vsync: this, 
-        duration: widget.duration
+        duration: widget.duration,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scale).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),

@@ -15,7 +15,7 @@ class CategoryBarChart extends StatelessWidget {
     final totalValue = taskStats.fold<double>(
         0,
         (sum, item) =>
-            sum + ((item['completed_count'] as num?)?.toDouble() ?? 0));
+            sum + ((item['completed_count'] as num?)?.toDouble() ?? 0),);
 
     return Container(
       padding: const EdgeInsets.all(28),
@@ -170,7 +170,7 @@ class CategoryDetailCard extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   color.withValues(alpha: 0.12),
-                  color.withValues(alpha: 0.04)
+                  color.withValues(alpha: 0.04),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -199,7 +199,7 @@ class CategoryDetailCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.check_circle_rounded,
-                        size: 14, color: color.withValues(alpha: 0.5)),
+                        size: 14, color: color.withValues(alpha: 0.5),),
                     const SizedBox(width: 4),
                     Text(
                       '$count completadas',

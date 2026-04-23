@@ -80,7 +80,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                         if (hasItems && newCount > 0)
                           Text(
                             '$newCount nuevo${newCount == 1 ? '' : 's'} · se agregan a tu lista',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
                               height: 1.4,
@@ -187,7 +187,7 @@ class _ItemChip extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text(
+              child: const Text(
                 'nuevo',
                 style: TextStyle(
                   fontSize: 9,
@@ -270,7 +270,7 @@ class _ShoppingItemsSelectorSheetState
             if (!existsInHousehold &&
                 !existsInSelection &&
                 !predefinedMatches.any((pm) =>
-                    pm['name']!.toLowerCase() == itemName.toLowerCase())) {
+                    pm['name']!.toLowerCase() == itemName.toLowerCase(),)) {
               predefinedMatches.add({...item, 'categoryId': catId});
             }
           }

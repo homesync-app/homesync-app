@@ -163,7 +163,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       final sameTitle = task.title.toLowerCase().trim() == title.toLowerCase();
       final sameCategory = task.category == _selectedCategory;
       final sameAssignee = task.assignedTo == _selectedMemberId;
-      return !task.isVerified && sameTitle && sameCategory && sameAssignee;
+      return task.isActive && sameTitle && sameCategory && sameAssignee;
     });
 
     if (isDuplicate) {
@@ -386,7 +386,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                               color: isSelected
                                                   ? color
                                                   : color.withValues(
-                                                      alpha: 0.8),
+                                                      alpha: 0.8,
+                                                    ),
                                               size: 24,
                                             ),
                                           ),

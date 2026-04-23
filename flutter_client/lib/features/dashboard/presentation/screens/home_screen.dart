@@ -1,24 +1,25 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
-import 'package:homesync_client/shared/widgets/app_state_views.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_solo_view.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_couple_view.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_family_view.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_friends_view.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/modes/home_solo_view.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
-import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:confetti/confetti.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   final VoidCallback? onAvatarTap;
@@ -136,11 +137,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _buildFAB(householdId, theme, caps),
+      floatingActionButton: _buildFAB(householdId, caps),
     );
   }
 
   Widget _buildModeDispatcher(String householdId) {
+    // The capabilities provider falls back to `couple` while the current
+    // household is still loading (valueOrNull == null). Without this guard
+    // the user sees a ~1s flash of HomeCoupleView before flipping to the
+    // correct mode. Wait until currentHouseholdProvider actually resolves —
+    // unless an admin has forced a type from dev tools, in which case caps
+    // are already authoritative.
+    final admin = ref.watch(adminProvider);
+    final householdAsync = ref.watch(currentHouseholdProvider);
+    final isForcedByAdmin =
+        admin.isDeveloperMode && admin.forcedHouseholdType != null;
+
+    if (!isForcedByAdmin &&
+        householdAsync.isLoading &&
+        !householdAsync.hasValue) {
+      return const AppLoadingState(message: 'Cargando hogar...');
+    }
+
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return switch (caps.type) {
@@ -168,61 +186,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildFAB(
     String householdId,
-    AppThemeColors theme,
     HouseholdCapabilities caps,
   ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadowBase.withValues(alpha: 0.032),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: SizedBox(
-          height: 56,
-          child: FloatingActionButton.extended(
-            onPressed: () => caps.showTasks
-                ? _showQuickActionMenu(householdId, caps)
-                : ExpenseFormSheet.show(context),
-            backgroundColor: theme.elevatedSurface.withValues(alpha: 0.94),
-            foregroundColor: theme.primary,
-            elevation: 0,
-            extendedPadding:
-                const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-            label: Text(
-              caps.showTasks ? 'Acciones' : 'Gastos',
-              style: TextStyle(
-                color: theme.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 14.5,
-                letterSpacing: -0.15,
-              ),
-            ),
-            icon: Icon(Icons.add_rounded, color: theme.primary, size: 19),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(22),
-              side: BorderSide(
-                color: theme.primary.withValues(alpha: 0.075),
-              ),
-            ),
-          ),
-        ),
-      )
-          .animate(delay: 600.ms)
-          .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)
-          .scale(
-            begin: const Offset(0.96, 0.96),
-            end: const Offset(1, 1),
-            duration: 420.ms,
-            curve: Curves.easeOutBack,
-          ),
-    );
+    // Friends view has less vertical content; the FAB overlaps the nav bar
+    // label text without this offset due to shorter bottom padding.
+    final fabOffsetY = caps.type == HouseholdType.friends ? 28.0 : 0.0;
+
+    return Transform.translate(
+      offset: Offset(0, fabOffsetY),
+      child: AppFloatingActionButton(
+        label: caps.showTasks ? 'Acciones' : 'Gastos',
+        icon: Icons.add_rounded,
+        onPressed: () => caps.showTasks
+            ? _showQuickActionMenu(householdId, caps)
+            : ExpenseFormSheet.show(context),
+        heroTag: 'home_fab',
+        margin: const EdgeInsets.only(bottom: 2),
+      ),
+    )
+        .animate(delay: 600.ms)
+        .fadeIn(duration: 320.ms, curve: Curves.easeOutCubic)
+        .scale(
+          begin: const Offset(0.96, 0.96),
+          end: const Offset(1, 1),
+          duration: 420.ms,
+          curve: Curves.easeOutBack,
+        );
   }
 
   void _showQuickActionMenu(

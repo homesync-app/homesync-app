@@ -119,12 +119,12 @@ class NotificationService {
   }
 
   Future<void> _saveFcmToken(String token) async {
-    final appUserId = await AppIdentityService.instance.refresh();
+    final appUserId = AppIdentityService.instance.currentUserId;
     if (appUserId == null || !_isEnabled) return;
-    final authUserId = _supabase.auth.currentUser?.id;
-    if (AppEnvironment.enableAdminTesting &&
-        authUserId != null &&
-        authUserId != appUserId) {
+    // In Firebase-auth mode, use AppIdentityService instead of supabase.auth
+    // to avoid AuthException when accessToken mode is not configured.
+    final authUserId = appUserId;
+    if (AppEnvironment.enableAdminTesting && authUserId != appUserId) {
       log.i('QA admin mode activo: omitimos guardado de FCM token');
       return;
     }
@@ -135,7 +135,7 @@ class NotificationService {
         'token': token,
         'platform': defaultTargetPlatform.name,
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,token');
+      }, onConflict: 'user_id,token',);
       log.i('FCM token guardado');
     } catch (e, stack) {
       log.e('Error guardando FCM token: $e', error: e, stackTrace: stack);
@@ -145,12 +145,6 @@ class NotificationService {
   Future<void> _deleteFcmToken() async {
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId == null) return;
-    final authUserId = _supabase.auth.currentUser?.id;
-    if (AppEnvironment.enableAdminTesting &&
-        authUserId != null &&
-        authUserId != appUserId) {
-      return;
-    }
 
     try {
       await _supabase

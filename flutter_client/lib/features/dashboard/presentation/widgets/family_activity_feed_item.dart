@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
@@ -10,6 +9,7 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:intl/intl.dart';
 
 class FamilyActivityFeedItem extends ConsumerWidget {
   final Map<String, dynamic> activity;

@@ -132,7 +132,7 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
           notification.copyWith(isRead: true)
         else
           notification,
-    ]));
+    ],),);
 
     try {
       await ref.read(markNotificationReadUseCaseProvider).call(notificationId);

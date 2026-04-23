@@ -1,11 +1,12 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'rpc/admin_rpc_service.dart';
-import 'rpc/task_rpc_service.dart';
-import 'rpc/stats_rpc_service.dart';
 import 'rpc/balance_rpc_service.dart';
 import 'rpc/household_rpc_service.dart';
+import 'rpc/stats_rpc_service.dart';
+import 'rpc/task_rpc_service.dart';
 
 /// One-stop-shop for access to all legacy RPC functionality
 /// while the app transitions to the new split services.
@@ -43,7 +44,7 @@ class SupabaseRpcService {
     message: message, 
     stackTrace: stackTrace, 
     level: level, 
-    context: context
+    context: context,
   );
 
   // --- Stats / Weekly ---

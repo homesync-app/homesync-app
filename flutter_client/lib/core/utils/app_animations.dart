@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:confetti/confetti.dart';
 import 'dart:math';
+
+import 'package:confetti/confetti.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
 export 'package:homesync_client/shared/widgets/animated_press.dart';
 export 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 export 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -58,7 +60,7 @@ class AppTransitions {
   }
 
   static Route<T> slideHorizontal<T>(
-      {required Widget page, bool fromRight = true}) {
+      {required Widget page, bool fromRight = true,}) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -96,7 +98,7 @@ extension AppAnimationsExtension on Widget {
             end: 0,
             duration: 400.ms,
             delay: delay.ms,
-            curve: Curves.easeOutCubic);
+            curve: Curves.easeOutCubic,);
   }
 
   Widget animateStaggered(int index) {
@@ -121,7 +123,7 @@ extension AppAnimationsExtension on Widget {
         .scale(
             begin: const Offset(1, 1),
             end: const Offset(1.02, 1.02),
-            duration: 1000.ms);
+            duration: 1000.ms,);
   }
 }
 
@@ -235,7 +237,7 @@ class CelebrationOverlay extends StatelessWidget {
 
 class SuccessCelebration {
   static void show(BuildContext context,
-      {required String title, required String message, String? icon}) {
+      {required String title, required String message, String? icon,}) {
     final confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
     confettiController.play();
@@ -280,7 +282,7 @@ class _CelebrationDialog extends StatelessWidget {
             Colors.blue,
             Colors.pink,
             Colors.orange,
-            Colors.purple
+            Colors.purple,
           ],
         ),
         Dialog(
@@ -321,14 +323,14 @@ class _CelebrationDialog extends StatelessWidget {
                   style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF166534)),
+                      color: Color(0xFF166534),),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   message,
                   style: TextStyle(
-                      fontSize: 16, color: Colors.grey[600], height: 1.5),
+                      fontSize: 16, color: Colors.grey[600], height: 1.5,),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -344,12 +346,12 @@ class _CelebrationDialog extends StatelessWidget {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                          borderRadius: BorderRadius.circular(20),),
                       elevation: 0,
                     ),
                     child: const Text('¡GENIAL!',
                         style: TextStyle(
-                            fontWeight: FontWeight.w900, letterSpacing: 1)),
+                            fontWeight: FontWeight.w900, letterSpacing: 1,),),
                   ),
                 ),
               ],

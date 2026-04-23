@@ -24,7 +24,7 @@ class CreateTaskUseCase {
   }) async {
     if (title.trim().isEmpty) {
       return left(const ValidationFailure(
-          'El título de la tarea no puede estar vacío'));
+          'El título de la tarea no puede estar vacío',),);
     }
     if (category.trim().isEmpty) {
       return left(const ValidationFailure('La categoría no puede estar vacía'));

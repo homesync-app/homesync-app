@@ -54,7 +54,7 @@ List<Map<String, dynamic>> buildExpenseCategories() {
     },
     {
       'id': 'settlement',
-      'name': 'Liquidación',
+      'name': 'Liquidación de balance',
       'icon': '🤝',
       'color': CategoryMapping.getCategoryColor('settlement'),
     },

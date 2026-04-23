@@ -28,7 +28,7 @@ class ExpenseSplitBuilder {
     if (!showSplit || splitMode == SplitType.personal) {
       return ExpenseSplitBuildResult(
         splits: [
-          {'user_id': paidByUserId, 'amount': amount}
+          {'user_id': paidByUserId, 'amount': amount},
         ],
       );
     }
@@ -63,7 +63,7 @@ class ExpenseSplitBuilder {
           .map((memberId) => {
                 'user_id': memberId,
                 'amount': splitAmount,
-              })
+              },)
           .toList();
 
       return ExpenseSplitBuildResult(splits: splits);

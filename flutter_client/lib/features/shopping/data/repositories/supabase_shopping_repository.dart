@@ -1,17 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/config/app_environment.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
+
 import '../../../../core/providers/connectivity_provider.dart';
 import '../../../../core/services/repository_error_handler.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../domain/repositories/shopping_repository.dart';
-import 'package:uuid/uuid.dart';
 
 class SupabaseShoppingRepository
     with RepositoryErrorHandler
@@ -45,7 +46,7 @@ class SupabaseShoppingRepository
 
   @override
   Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
-      String householdId) async {
+      String householdId,) async {
     return executeWithHandling(() async {
       final response = await _fetchItemsResponse(householdId);
 
@@ -56,7 +57,7 @@ class SupabaseShoppingRepository
         'ShoppingRepository.fetchItems household=$householdId count=${items.length} adminQa=$_isAdminTestingActive',
       );
       return items;
-    }, context: 'SupabaseShoppingRepository.fetchItems', isOnline: _isOnline);
+    }, context: 'SupabaseShoppingRepository.fetchItems', isOnline: _isOnline,);
   }
 
   Future<dynamic> _fetchItemsResponse(String householdId) async {
@@ -84,7 +85,7 @@ class SupabaseShoppingRepository
     return _client
         .from('shopping_items')
         .select(
-            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',)
         .eq('household_id', householdId)
         .order('completed', ascending: true)
         .order('created_at', ascending: false);
@@ -141,7 +142,7 @@ class SupabaseShoppingRepository
                 'completed': false,
               })
               .select(
-                  '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)')
+                  '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',)
               .single();
 
       final mapped = response is List ? _mapShoppingRow(response.first) : _mapShoppingRow(response);
@@ -187,7 +188,7 @@ class SupabaseShoppingRepository
             createdAt: DateTime.now(),
             shouldSync: true,
           );
-        });
+        },);
   }
 
   @override
@@ -252,7 +253,7 @@ class SupabaseShoppingRepository
               filters: [OfflineFilter(column: 'id', value: itemId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -281,7 +282,7 @@ class SupabaseShoppingRepository
               filters: [OfflineFilter(column: 'id', value: itemId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -313,7 +314,7 @@ class SupabaseShoppingRepository
               ],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -354,7 +355,7 @@ class SupabaseShoppingRepository
               ],
             ),
           );
-        });
+        },);
   }
 
   Map<String, dynamic> _mapShoppingRow(dynamic raw) {

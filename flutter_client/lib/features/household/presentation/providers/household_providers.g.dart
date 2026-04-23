@@ -44,12 +44,12 @@ final householdCapabilitiesProvider =
 // ignore: unused_element
 typedef HouseholdCapabilitiesRef
     = AutoDisposeProviderRef<HouseholdCapabilities>;
-String _$householdMembersHash() => r'1aa60ae2b3685910aad6e284ba9b99c9b0292818';
+String _$householdMembersHash() => r'22098bf9455a40129f6ebb9c65afea9439c40f95';
 
 /// See also [HouseholdMembers].
 @ProviderFor(HouseholdMembers)
-final householdMembersProvider = AutoDisposeAsyncNotifierProvider<
-    HouseholdMembers, List<MemberModel>>.internal(
+final householdMembersProvider =
+    AsyncNotifierProvider<HouseholdMembers, List<MemberModel>>.internal(
   HouseholdMembers.new,
   name: r'householdMembersProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -59,6 +59,6 @@ final householdMembersProvider = AutoDisposeAsyncNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$HouseholdMembers = AutoDisposeAsyncNotifier<List<MemberModel>>;
+typedef _$HouseholdMembers = AsyncNotifier<List<MemberModel>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

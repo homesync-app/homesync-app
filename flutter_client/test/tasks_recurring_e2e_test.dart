@@ -105,7 +105,7 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
       message: 'Task completed',
       queued: false,
       status: 'ok',
-    ));
+    ),);
   }
 
   @override
@@ -131,7 +131,7 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId) async {
+      String activityId,) async {
     if (_task == null || _lastActivityId != activityId) {
       return const Left(ServerFailure('Activity not found'));
     }

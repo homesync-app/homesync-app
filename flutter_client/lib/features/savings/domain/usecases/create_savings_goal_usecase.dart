@@ -22,7 +22,7 @@ class CreateSavingsGoalUseCase {
     }
     if (targetAmount <= 0) {
       return Future.value(
-          const Left(ValidationFailure('targetAmount must be greater than zero')));
+          const Left(ValidationFailure('targetAmount must be greater than zero')),);
     }
 
     return repository.createGoal(

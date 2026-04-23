@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/offline/sync_service.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 
 class OfflineIndicator extends ConsumerWidget {
   const OfflineIndicator({super.key});
@@ -79,7 +79,7 @@ class OfflineIndicator extends ConsumerWidget {
   }
 
   Color _getBackgroundColor(
-      ConnectivityState connectivity, SyncState syncState) {
+      ConnectivityState connectivity, SyncState syncState,) {
     if (!connectivity.isOnline) {
       return Colors.red.shade600;
     } else if (syncState.isSyncing) {

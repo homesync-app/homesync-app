@@ -630,7 +630,7 @@ Future<void> showSettingsJoinHouseholdDialog(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ingresa el codigo de invitacion que te compartio tu pareja:',
+                'Ingresa el codigo de invitacion que te compartieron para unirte al hogar:',
                 style: TextStyle(
                   color: context.theme.textSecondary,
                   fontSize: 14,

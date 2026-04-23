@@ -145,7 +145,7 @@ final uncompleteAllShoppingItemsUseCaseProvider =
 // ignore: unused_element
 typedef UncompleteAllShoppingItemsUseCaseRef
     = AutoDisposeProviderRef<UncompleteAllShoppingItemsUseCase>;
-String _$shoppingItemsHash() => r'd706fb082dc6300c83b26a9e45a7e7ac683658fc';
+String _$shoppingItemsHash() => r'b33545f0c791ccec0b5fcb32a52419fa010fca46';
 
 /// See also [ShoppingItems].
 @ProviderFor(ShoppingItems)

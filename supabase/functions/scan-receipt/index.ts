@@ -1,11 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+const FIREBASE_PROJECT_ID = "homesync-prod-r7-123";
+
+interface FirebaseJWTPayload {
+  sub: string;
+  email?: string;
+  aud: string;
+  iss: string;
+}
 
 interface OcrResult {
   merchant: string | null;
@@ -113,25 +123,54 @@ serve(async (req) => {
       });
     }
 
+    const token = authHeader.replace("Bearer ", "");
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
-    if (authError || !user) {
+    let firebaseUid: string;
+    try {
+      const JWKS = createRemoteJWKSet(
+        new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
+      );
+
+      const { payload } = await jwtVerify(token, JWKS, {
+        issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+        audience: FIREBASE_PROJECT_ID,
+      });
+
+      const fb = payload as FirebaseJWTPayload;
+      if (!fb.sub) throw new Error("Missing sub claim");
+      firebaseUid = fb.sub;
+    } catch (e) {
+      console.error("Firebase JWT verification failed:", e);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const { data: userRow, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("firebase_uid", firebaseUid)
+      .limit(1)
+      .single();
+
+    if (userError || !userRow) {
+      console.error("User lookup failed for firebase_uid:", firebaseUid, userError);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userRow.id;
+
     // Obtener household y tier del usuario
     const { data: memberRow, error: memberError } = await supabase
       .from("household_members")
       .select("household_id, households(subscription_tier)")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .limit(1)
       .single();
 
@@ -271,7 +310,7 @@ serve(async (req) => {
     // Registrar el scan exitoso
     await supabase.from("receipt_scan_logs").insert({
       household_id: householdId,
-      user_id: user.id,
+      user_id: userId,
     });
 
     return new Response(

@@ -22,8 +22,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
     final currentMember = membersAsync.valueOrNull
         ?.where((member) => member.userId == currentUserId)
         .firstOrNull;
-    final isAdult = currentMember?.isAdult ?? true;
-    final isAdmin = currentMember?.isAdmin ?? isAdult;
+    final isAdult = currentMember?.isAdult ?? false;
+    final isAdmin = currentMember?.isAdmin ?? false;
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -341,7 +341,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
   }
 
   Future<void> _approveReward(
-      BuildContext context, WidgetRef ref, RewardModel reward) async {
+    BuildContext context,
+    WidgetRef ref,
+    RewardModel reward,
+  ) async {
     final result = await ref.read(rewardsProvider.notifier).approveReward(
           reward.id,
         );
@@ -385,7 +388,10 @@ class FamilyRewardsScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmRedeem(
-      BuildContext context, WidgetRef ref, RewardModel reward) async {
+    BuildContext context,
+    WidgetRef ref,
+    RewardModel reward,
+  ) async {
     final balance = ref.read(userBalanceProvider).value?['coins'] ?? 0;
     if (balance < reward.cost) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -399,7 +405,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Canjear premio'),
         content: Text(
-            'Queres canjear "${reward.title}" por ${reward.cost} monedas?'),
+          'Queres canjear "${reward.title}" por ${reward.cost} monedas?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

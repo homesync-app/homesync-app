@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 
 /// Servicio de escaneo de tickets.
 ///
@@ -51,7 +53,7 @@ class ReceiptScanService {
     final imageBytes = await imageFile.readAsBytes();
 
     debugPrint(
-        '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB');
+        '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',);
 
     // 3. Convertir a base64 para mandar a la Edge Function
     final base64Image = base64Encode(imageBytes);
@@ -71,19 +73,9 @@ class ReceiptScanService {
     //
     //    El FunctionsClient del SDK cachea el Authorization header internamente
     //    y no lo actualiza dinámicamente como sí hace PostgREST. En modo
-    //    firebase_third_party, el token cacheado puede quedar inválido tras
-    //    un background/foreground aunque session.expiresAt parezca vigente.
-    //
-    //    Fix: forzar refresh de sesión y pasar el access token explícitamente
-    //    en los headers, ignorando el cache del SDK.
-    debugPrint('[ReceiptScan] Refrescando sesión antes de invocar Edge Function...');
-    try {
-      await _supabase.auth.refreshSession();
-    } catch (e) {
-      debugPrint('[ReceiptScan] refreshSession falló: $e');
-    }
-
-    final accessToken = _supabase.auth.currentSession?.accessToken;
+    debugPrint('[ReceiptScan] Getting Firebase ID token for Edge Function...');
+    final accessToken =
+        await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
     if (accessToken == null) {
       throw Exception('Sesión expirada. Por favor iniciá sesión nuevamente.');
     }
@@ -115,18 +107,22 @@ class ReceiptScanService {
       rethrow;
     }
 
-    debugPrint('[ReceiptScan] Respuesta status=${response.status} data=${response.data}');
+    debugPrint(
+        '[ReceiptScan] Respuesta status=${response.status} data=${response.data}',);
 
     if (response.status != 200 || response.data == null) {
-      throw Exception('Error en el escaneo (status ${response.status}): ${response.data}');
+      throw Exception(
+          'Error en el escaneo (status ${response.status}): ${response.data}',);
     }
 
     final data = response.data['data'] as Map<String, dynamic>?;
     if (data == null) {
-      throw Exception('Respuesta inválida del servidor de OCR: ${response.data}');
+      throw Exception(
+          'Respuesta inválida del servidor de OCR: ${response.data}',);
     }
 
-    debugPrint('[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}');
+    debugPrint(
+        '[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}',);
     return ReceiptScanResult.fromJson(data, imageFile.path);
   }
 
@@ -144,13 +140,13 @@ class ReceiptScanService {
     final imageBytes = await File(localImagePath).readAsBytes();
 
     await _supabase.storage.from('receipts').uploadBinary(
-      storagePath,
-      imageBytes,
-      fileOptions: const FileOptions(
-        contentType: 'image/webp',
-        upsert: true,
-      ),
-    );
+          storagePath,
+          imageBytes,
+          fileOptions: const FileOptions(
+            contentType: 'image/webp',
+            upsert: true,
+          ),
+        );
 
     debugPrint('[ReceiptScan] Imagen subida a Storage: receipts/$storagePath');
     return storagePath;
@@ -161,7 +157,7 @@ class ReceiptScanService {
   /// No persistir esta URL. Siempre generarla fresh al abrir el detalle.
   /// [expiresIn] en segundos (default: 1 hora).
   Future<String?> getSignedUrl(String receiptPath,
-      {int expiresIn = 3600}) async {
+      {int expiresIn = 3600,}) async {
     try {
       final signedUrl = await _supabase.storage
           .from('receipts')

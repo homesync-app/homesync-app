@@ -4,12 +4,12 @@
 // Run with: flutter test test/expense_e2e_test.dart
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
-import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
+import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 
 class ExpenseFlowSimulator {
   final ExpenseRepository repository;
@@ -48,7 +48,7 @@ class ExpenseFlowSimulator {
   }
 
   Future<void> settleDebt(
-      String fromUserId, String toUserId, double amount) async {
+      String fromUserId, String toUserId, double amount,) async {
     await repository.settleDebt(
       householdId: 'household-1',
       fromUserId: fromUserId,
@@ -70,12 +70,12 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-          String householdId) async =>
+          String householdId,) async =>
       right(_expenses);
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-      String expenseId) async {
+      String expenseId,) async {
     try {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
       return right({'expense': expense, 'splits': []});
@@ -86,7 +86,7 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-      String householdId) async {
+      String householdId,) async {
     final balances = <String, double>{};
     for (final expense in _expenses) {
       final splitAmount = expense.amount / 2;
@@ -99,8 +99,8 @@ class MockExpenseRepository implements ExpenseRepository {
         .map((e) => HouseholdBalanceModel(
               userId: e.key,
               balance: e.value,
-            ))
-        .toList());
+            ),)
+        .toList(),);
   }
 
   @override
@@ -118,6 +118,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required SplitType splitType,
     String type = 'expense',
     List<Map<String, dynamic>>? splits,
+    String? receiptPath,
   }) async {
     _expenses.add(ExpenseModel(
       id: id ?? 'expense-${_expenses.length + 1}',
@@ -129,7 +130,7 @@ class MockExpenseRepository implements ExpenseRepository {
       paidAt: paidAt,
       createdAt: DateTime.now(),
       splitType: splitType.name,
-    ));
+    ),);
     return const Right(null);
   }
 
@@ -151,7 +152,7 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-      String userId, String householdId) async {
+      String userId, String householdId,) async {
     return {
       'total_spent': 0.0,
       'personal_balance': 0.0,

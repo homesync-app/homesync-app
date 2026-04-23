@@ -15,12 +15,12 @@ DashboardRepository dashboardRepository(DashboardRepositoryRef ref) {
 
 @riverpod
 GetRecentActivityUseCase getRecentActivityUseCase(
-    GetRecentActivityUseCaseRef ref) {
+    GetRecentActivityUseCaseRef ref,) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return GetRecentActivityUseCase(repository);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) {
   final householdIdAsync = ref.watch(householdIdProvider);
 

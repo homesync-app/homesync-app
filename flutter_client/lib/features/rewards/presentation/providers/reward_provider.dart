@@ -1,17 +1,16 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/domain/usecases/get_rewards_usecase.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'reward_provider.g.dart';
 
@@ -162,8 +161,13 @@ class Rewards extends _$Rewards {
   Future<List<RewardModel>> build() async {
     final admin = ref.watch(adminProvider);
     final householdId = await ref.watch(householdIdProvider.future);
-    final caps = ref.watch(householdCapabilitiesProvider);
     if (householdId == null) return [];
+
+    final household = await ref.watch(currentHouseholdProvider.future);
+    final caps = HouseholdCapabilities(
+      type: HouseholdType.fromString(household?.householdType),
+      tasksEnabled: household?.tasksEnabled ?? true,
+    );
 
     _setupRealtime(householdId);
 
@@ -446,10 +450,15 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
   Future<_RewardsPageChunk> _fetchChunk({required int offset}) async {
     final admin = ref.read(adminProvider);
     final householdId = await ref.read(householdIdProvider.future);
-    final caps = ref.read(householdCapabilitiesProvider);
     if (householdId == null) {
       return const _RewardsPageChunk(items: [], hasMore: false);
     }
+
+    final household = await ref.read(currentHouseholdProvider.future);
+    final caps = HouseholdCapabilities(
+      type: HouseholdType.fromString(household?.householdType),
+      tasksEnabled: household?.tasksEnabled ?? true,
+    );
 
     if (admin.isAdminUser) {
       final client = ref.read(supabaseClientProvider);

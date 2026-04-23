@@ -10,7 +10,7 @@ abstract class SavingsRepository {
   });
 
   Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions(
-      {required String goalId});
+      {required String goalId,});
 
   Future<Either<Failure, void>> createGoal({
     required String householdId,

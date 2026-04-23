@@ -1,6 +1,5 @@
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/config/app_environment.dart';
 
 class TaskTemplate {
   final String id;
@@ -105,11 +104,6 @@ class TemplateService {
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId != null && appUserId.isNotEmpty) {
       return appUserId;
-    }
-
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final user = _client.auth.currentUser;
-      if (user != null) return user.id;
     }
 
     throw Exception('Usuario no autenticado');

@@ -255,15 +255,15 @@ void main() {
         await simulator.createTask(
             title: 'Tarea 1',
             category: 'kitchen',
-            difficulty: TaskDifficulty.easy),
+            difficulty: TaskDifficulty.easy,),
         await simulator.createTask(
             title: 'Tarea 2',
             category: 'cleaning',
-            difficulty: TaskDifficulty.medium),
+            difficulty: TaskDifficulty.medium,),
         await simulator.createTask(
             title: 'Tarea 3',
             category: 'other',
-            difficulty: TaskDifficulty.hard),
+            difficulty: TaskDifficulty.hard,),
       ];
 
       for (final task in tasks) {

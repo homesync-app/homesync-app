@@ -97,7 +97,7 @@ class ShoppingItemModel {
   }
 
   ShoppingItemModel copyWith(
-      {bool? completed, String? completedBy, DateTime? completedAt, bool? shouldSync}) {
+      {bool? completed, String? completedBy, DateTime? completedAt, bool? shouldSync,}) {
     return ShoppingItemModel(
       id: id,
       householdId: householdId,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 
 class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
   const MercadoPagoSettingsCard({super.key});
@@ -53,7 +53,7 @@ class _MercadoPagoSettingsCardState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Error: $e'), backgroundColor: AppColors.error),
+              content: Text('Error: $e'), backgroundColor: AppColors.error,),
         );
       }
     } finally {
@@ -90,7 +90,7 @@ class _MercadoPagoSettingsCardState
               BoxShadow(
                   color: AppColors.shadow,
                   blurRadius: 12,
-                  offset: Offset(0, 4)),
+                  offset: Offset(0, 4),),
             ],
           ),
           child: Column(
@@ -105,7 +105,7 @@ class _MercadoPagoSettingsCardState
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.account_balance_wallet_rounded,
-                        color: Colors.lightBlue, size: 22),
+                        color: Colors.lightBlue, size: 22,),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
@@ -114,10 +114,10 @@ class _MercadoPagoSettingsCardState
                       children: [
                         Text('Pagos y Mercado Pago',
                             style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w700)),
+                                fontSize: 16, fontWeight: FontWeight.w700,),),
                         Text('Configura cómo recibir y pagar gastos',
                             style: TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12)),
+                                color: AppColors.textSecondary, fontSize: 12,),),
                       ],
                     ),
                   ),
@@ -131,7 +131,7 @@ class _MercadoPagoSettingsCardState
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textMuted,
-                      letterSpacing: 1.2)),
+                      letterSpacing: 1.2,),),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -144,9 +144,9 @@ class _MercadoPagoSettingsCardState
                         fillColor: AppColors.primary.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none),
+                            borderSide: BorderSide.none,),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                            horizontal: 16, vertical: 12,),
                       ),
                     ),
                   ),
@@ -157,9 +157,9 @@ class _MercadoPagoSettingsCardState
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12),
+                          horizontal: 12, vertical: 12,),
                       minimumSize: const Size(80, 48),
                     ),
                     child: _isSaving
@@ -167,7 +167,7 @@ class _MercadoPagoSettingsCardState
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
+                                color: Colors.white, strokeWidth: 2,),)
                         : const Text('Guardar'),
                   ),
                 ],
@@ -177,7 +177,7 @@ class _MercadoPagoSettingsCardState
                 child: Text(
                     'Esto permite que tu pareja te transfiera directamente sin comisiones.',
                     style: TextStyle(
-                        fontSize: 11, color: AppColors.textSecondary)),
+                        fontSize: 11, color: AppColors.textSecondary,),),
               ),
 
               const SizedBox(height: 24),
@@ -192,12 +192,12 @@ class _MercadoPagoSettingsCardState
                   color: AppColors.success.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: AppColors.success.withValues(alpha: 0.25)),
+                      color: AppColors.success.withValues(alpha: 0.25),),
                 ),
                 child: const Row(
                   children: [
                     Icon(Icons.check_circle_outline_rounded,
-                        color: AppColors.success, size: 20),
+                        color: AppColors.success, size: 20,),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -205,7 +205,7 @@ class _MercadoPagoSettingsCardState
                         style: TextStyle(
                             fontSize: 12,
                             color: AppColors.success,
-                            fontWeight: FontWeight.w600),
+                            fontWeight: FontWeight.w600,),
                       ),
                     ),
                   ],

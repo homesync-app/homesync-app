@@ -1,6 +1,5 @@
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/config/app_environment.dart';
 
 import '../../domain/repositories/settings_repository.dart';
 
@@ -16,10 +15,6 @@ class SupabaseSettingsRepository implements SettingsRepository {
       return appUserId;
     }
 
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      final user = _client.auth.currentUser;
-      if (user != null) return user.id;
-    }
     throw Exception('No autenticado');
   }
 

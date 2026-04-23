@@ -159,12 +159,12 @@ final personalFinanceSummaryProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$PersonalFinanceSummary
     = AutoDisposeAsyncNotifier<Map<String, dynamic>>;
-String _$expenseBalancesHash() => r'1726eaee36cfa3bf82470443b8253a4caa436147';
+String _$expenseBalancesHash() => r'ed9878a7b5b3e783c8a3a043b39aab15dd2753fa';
 
 /// See also [ExpenseBalances].
 @ProviderFor(ExpenseBalances)
-final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
-    ExpenseBalances, List<HouseholdBalanceModel>>.internal(
+final expenseBalancesProvider = AsyncNotifierProvider<ExpenseBalances,
+    List<HouseholdBalanceModel>>.internal(
   ExpenseBalances.new,
   name: r'expenseBalancesProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -174,8 +174,7 @@ final expenseBalancesProvider = AutoDisposeAsyncNotifierProvider<
   allTransitiveDependencies: null,
 );
 
-typedef _$ExpenseBalances
-    = AutoDisposeAsyncNotifier<List<HouseholdBalanceModel>>;
+typedef _$ExpenseBalances = AsyncNotifier<List<HouseholdBalanceModel>>;
 String _$expenseControllerHash() => r'fe922b49f6b34ce389139bf27fe411b7e2eab4c2';
 
 /// See also [ExpenseController].
@@ -193,7 +192,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'c40e1d1f25cda07611162b18534144e9e6a53ff7';
+    r'0042d335a7d4e5a21ca3c7d46b2d26b9823dd320';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)

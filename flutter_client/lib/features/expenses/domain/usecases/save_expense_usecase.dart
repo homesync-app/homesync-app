@@ -28,7 +28,7 @@ class SaveExpenseUseCase {
     }
     if (householdId.isEmpty) {
       return left(
-          const ValidationFailure('El ID del hogar no puede estar vacío'));
+          const ValidationFailure('El ID del hogar no puede estar vacío'),);
     }
 
     return await _repository.saveExpense(

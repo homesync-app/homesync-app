@@ -1,24 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/offline/offline_action.dart';
+import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/offline/offline_storage_service.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/services/repository_error_handler.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/repository_error_handler.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
-import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/core/errors/failures.dart';
-import 'package:homesync_client/core/offline/offline_queue_service.dart';
-import 'package:homesync_client/core/offline/offline_action.dart';
-import 'package:homesync_client/core/offline/offline_storage_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
 
 part 'supabase_task_repository.g.dart';
 
@@ -73,7 +73,7 @@ class SupabaseTaskRepository
 
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-      {int limit = 100, int offset = 0}) async {
+      {int limit = 100, int offset = 0,}) async {
     return executeWithHandling(
         () async {
           final raw = _isAdminTestingActive
@@ -109,14 +109,14 @@ class SupabaseTaskRepository
               .get('tasks_cache_${_selectedAdminHouseholdId ?? householdId}');
           if (cached != null && cached['tasks'] != null) {
             log.i(
-                'TaskRepository.getTasks: Recovered from persistent offline cache');
+                'TaskRepository.getTasks: Recovered from persistent offline cache',);
             return (cached['tasks'] as List)
                 .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
                 .toList();
           }
           throw const NetworkFailure(
-              'No hay conexión y no existen datos locales en caché');
-        });
+              'No hay conexión y no existen datos locales en caché',);
+        },);
   }
 
   @override
@@ -191,7 +191,7 @@ class SupabaseTaskRepository
             message: 'Encolado offline',
             queued: true,
           );
-        });
+        },);
   }
 
   @override
@@ -269,12 +269,12 @@ class SupabaseTaskRepository
             'message': 'Lote encolado offline',
             'queued': true,
           };
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, void>> verifyTask(
-      String taskId, String verifiedByUserId) async {
+      String taskId, String verifiedByUserId,) async {
     return executeWithHandling(
         () async {
           final updates = {
@@ -302,12 +302,12 @@ class SupabaseTaskRepository
               filters: [OfflineFilter(column: 'id', value: taskId)],
             ),
           );
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, void>> objectTask(
-      String taskId, String objectedByUserId) async {
+      String taskId, String objectedByUserId,) async {
     return executeWithHandling(
         () async {
           final updates = {
@@ -337,7 +337,7 @@ class SupabaseTaskRepository
               filters: [OfflineFilter(column: 'id', value: taskId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -356,7 +356,7 @@ class SupabaseTaskRepository
               filters: [OfflineFilter(column: 'id', value: taskId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -456,7 +456,7 @@ class SupabaseTaskRepository
               filters: [OfflineFilter(column: 'id', value: taskId)],
             ),
           );
-        });
+        },);
   }
 
   @override
@@ -574,12 +574,12 @@ class SupabaseTaskRepository
               },
             ),
           );
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId) async {
+      String activityId,) async {
     return executeWithHandling(
         () async {
           return _rpc.undoTaskCompletion(activityId: activityId);
@@ -607,12 +607,12 @@ class SupabaseTaskRepository
             'message': 'Queued while offline',
             'request_id': requestId,
           };
-        });
+        },);
   }
 
   @override
   Future<Either<Failure, void>> editTask(
-      String taskId, Map<String, dynamic> updates) async {
+      String taskId, Map<String, dynamic> updates,) async {
     return executeWithHandling(
         () async {
           updates['updated_at'] = DateTime.now().toIso8601String();
@@ -664,6 +664,6 @@ class SupabaseTaskRepository
               filters: [OfflineFilter(column: 'id', value: taskId)],
             ),
           );
-        });
+        },);
   }
 }

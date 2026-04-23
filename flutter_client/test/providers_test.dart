@@ -1,13 +1,13 @@
 // Tests Riverpod providers with mocked dependencies
 // Run with: flutter test test/providers_test.dart
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/core/models/task_completion_result.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:homesync_client/core/errors/failures.dart';
 
 class MockTaskRepository implements TaskRepository {
   final List<TaskModel> _tasks = [];
@@ -20,14 +20,14 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-      {int limit = 100, int offset = 0}) async {
+      {int limit = 100, int offset = 0,}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right(_tasks.skip(offset).take(limit).toList());
   }
 
   @override
   Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds, DateTime? completedAt}) async {
+      {List<String>? userIds, DateTime? completedAt,}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right(TaskCompletionResult(
       success: true,
@@ -35,7 +35,7 @@ class MockTaskRepository implements TaskRepository {
       queued: false,
       xpEarned: task.xpReward,
       coinsEarned: task.coinReward,
-    ));
+    ),);
   }
 
   @override
@@ -49,14 +49,14 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> verifyTask(
-      String taskId, String verifiedByUserId) async {
+      String taskId, String verifiedByUserId,) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> objectTask(
-      String taskId, String objectedByUserId) async {
+      String taskId, String objectedByUserId,) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -101,20 +101,20 @@ class MockTaskRepository implements TaskRepository {
       coinReward: coinReward,
       householdId: 'household-1',
       createdAt: DateTime.now(),
-    ));
+    ),);
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> editTask(
-      String taskId, Map<String, dynamic> updates) async {
+      String taskId, Map<String, dynamic> updates,) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId) async {
+      String activityId,) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right({'success': true});
   }
@@ -282,7 +282,7 @@ void main() {
             xpReward: 10,
             coinReward: 5,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
         TaskModel(
             id: '2',
             title: 'Task 2',
@@ -290,7 +290,7 @@ void main() {
             xpReward: 10,
             coinReward: 5,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
         TaskModel(
             id: '3',
             title: 'Task 3',
@@ -298,7 +298,7 @@ void main() {
             xpReward: 10,
             coinReward: 5,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
         TaskModel(
             id: '4',
             title: 'Task 4',
@@ -306,7 +306,7 @@ void main() {
             xpReward: 10,
             coinReward: 5,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
       ];
 
       final counts = <String, int>{};

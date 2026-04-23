@@ -1,9 +1,10 @@
 import 'dart:developer' as dev;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseDashboardRepository implements DashboardRepository {
   final SupabaseClient _client;
@@ -21,7 +22,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
   @override
   Stream<List<Map<String, dynamic>>> watchRecentActivity(
-      String householdId, String userId) {
+      String householdId, String userId,) {
     final now = DateTime.now();
     final since = DateTime(
       now.year,
@@ -33,9 +34,14 @@ class SupabaseDashboardRepository implements DashboardRepository {
         .from('household_activities')
         .stream(primaryKey: ['id'])
         .eq('household_id', householdId)
-        .gte('created_at', since)
         .order('created_at', ascending: false)
         .asyncMap((rows) async {
+          // Filtrar por fecha en cliente porque SupabaseStreamBuilder no soporta .gte()
+          rows = rows.where((r) {
+            final createdAt = r['created_at'] as String?;
+            if (createdAt == null) return false;
+            return DateTime.tryParse(createdAt)?.isAfter(DateTime.parse(since)) ?? false;
+          }).toList();
           // Obtener los IDs de usuario únicos para buscar sus datos
           final userIds = rows
               .map((r) => r['user_id'] as String?)
@@ -143,7 +149,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getRecentActivity(
-      String householdId, String userId) async {
+      String householdId, String userId,) async {
     try {
       final now = DateTime.now();
       final since = DateTime(
@@ -250,7 +256,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
           final shouldShow = isShared || isGift || creatorId == userId;
 
           dev.log(
-              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow');
+              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',);
 
           return shouldShow;
         }

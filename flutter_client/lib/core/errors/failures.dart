@@ -39,7 +39,7 @@ class InsufficientCoinsFailure extends Failure {
   final int available;
   final int required;
   const InsufficientCoinsFailure(
-      {required this.available, required this.required})
+      {required this.available, required this.required,})
       : super('Coins insuficientes: tenés $available, necesitás $required');
 }
 

@@ -9,15 +9,15 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:intl/intl.dart';
@@ -89,6 +89,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Column(
@@ -101,9 +102,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                     ),
                     style: TextStyle(
                       color: theme.textPrimary,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1.2,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w900,
+                      height: 1.02,
+                      letterSpacing: -0.8,
                     ),
                   ).animateEntrance(),
                 ],
@@ -113,7 +115,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
             _buildProfileAvatar(currentMember).animateScaleIn(delay: 70),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
         _buildHomeWelcome(
           theme: theme,
           partnerMember: partnerMember,
@@ -134,7 +136,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     final pendingNote = ref.watch(pendingLoveNoteProvider);
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         // Texto "Todo lo importante / del hogar / con X"
         Expanded(
@@ -145,56 +147,71 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                 'Todo lo importante',
                 style: TextStyle(
                   color: theme.textPrimary,
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: -0.55,
+                  height: 1.02,
+                  letterSpacing: -0.45,
                 ),
               ).animate().fadeIn(delay: 100.ms),
+              const SizedBox(height: 3),
               Text(
                 'del hogar',
                 style: TextStyle(
-                  color: theme.textPrimary.withValues(alpha: 0.7),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                  color: theme.textPrimary.withValues(alpha: 0.62),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  height: 1.02,
+                  letterSpacing: -0.35,
                 ),
-              ).animate().fadeIn(delay: 200.ms),
-              const SizedBox(height: 10),
+              ).animate().fadeIn(delay: 170.ms),
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Container(
-                    width: 24,
-                    height: 1.5,
-                    color: theme.primary.withValues(alpha: 0.5),
+                    width: 54,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.primary.withValues(alpha: 0.55),
+                          theme.primary.withValues(alpha: 0.08),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Text(
                     'con ',
                     style: TextStyle(
-                        color: theme.textSecondary, fontSize: 14),
+                      color: theme.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     partnerFirstName ?? 'tu pareja',
                     style: TextStyle(
                       color: theme.primary,
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(
+                  const SizedBox(width: 5),
+                  Icon(
                     Icons.favorite_rounded,
-                    size: 12,
-                    color: AppColors.accentOrange,
+                    size: 13,
+                    color: theme.primary.withValues(alpha: 0.82),
                   ),
                 ],
-              ).animate().fadeIn(delay: 300.ms),
+              ).animate().fadeIn(delay: 240.ms),
             ],
           ),
         ),
 
         // Sobre animado — solo si hay nota pendiente
         if (pendingNote != null) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           LoveNoteEnvelope(
             note: pendingNote,
             senderName: senderName,
@@ -635,7 +652,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                             if (!dialogContext.mounted) return;
                             setDialogState(() => isSubmitting = false);
                             _showMessage(
-                                'No se pudo equilibrar el balance: $e');
+                              'No se pudo equilibrar el balance: $e',
+                            );
                           }
                         },
                   style: FilledButton.styleFrom(

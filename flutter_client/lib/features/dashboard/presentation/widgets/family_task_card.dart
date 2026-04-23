@@ -13,6 +13,7 @@ class FamilyTaskCard extends StatelessWidget {
   final bool isChildView;
   final MemberModel? assignedMember;
   final MemberModel? completedMember;
+  final String? currentUserId;
   final VoidCallback? onTap;
   final IconData actionIcon;
   final bool isActionEnabled;
@@ -25,9 +26,13 @@ class FamilyTaskCard extends StatelessWidget {
     required this.actionIcon,
     this.assignedMember,
     this.completedMember,
+    this.currentUserId,
     this.onTap,
     this.isActionEnabled = true,
   });
+
+  bool get _isAssignedToCurrentUser =>
+      task.assignedTo == null || task.assignedTo == currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -198,19 +203,37 @@ class FamilyTaskCard extends StatelessWidget {
 
   String? _contextLabel() {
     if (task.isPendingApproval) {
-      if (isChildView) return 'Esperando revisión';
+      if (isChildView) return 'Pendiente de aprobación';
       if (completedMember != null) {
         return '${completedMember!.displayName} la marcó como hecha';
       }
       return 'Pendiente de aprobación';
     }
-    if (task.isOverdue) return 'Te quedó pendiente';
-    if (task.isDueToday) return 'Te toca hoy';
+    if (task.isOverdue) {
+      if (!_isAssignedToCurrentUser && assignedMember != null) {
+        final name = assignedMember!.displayName;
+        return name.isNotEmpty
+            ? 'Le quedó pendiente a $name'
+            : 'Le quedó pendiente a otro integrante';
+      }
+      return 'Te quedó pendiente';
+    }
+    if (task.isDueToday) {
+      if (!_isAssignedToCurrentUser && assignedMember != null) {
+        final name = assignedMember!.displayName;
+        return name.isNotEmpty
+            ? 'Le toca hoy a $name'
+            : 'Le toca hoy a otro integrante';
+      }
+      return 'Te toca hoy';
+    }
     return null;
   }
 
   String? _urgencyLabel() {
-    if (task.isPendingApproval) return 'Revisar';
+    if (task.isPendingApproval) {
+      return isChildView ? 'Pendiente' : 'Revisar';
+    }
     if (task.isOverdue) return 'Vencida';
     if (task.isDueToday) return 'Hoy';
     if (task.dueAt != null) return 'Próxima';

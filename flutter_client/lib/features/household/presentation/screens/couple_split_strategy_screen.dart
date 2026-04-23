@@ -64,7 +64,7 @@ class _CoupleSplitStrategyScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Error al guardar: $e'),
-            backgroundColor: AppColors.error));
+            backgroundColor: AppColors.error,),);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -167,7 +167,7 @@ class _CoupleSplitStrategyScreenState
                     const Text(
                       'Ajusta el porcentaje que tú aportarás de forma predeterminada.',
                       style: TextStyle(
-                          color: AppColors.textSecondary, fontSize: 14),
+                          color: AppColors.textSecondary, fontSize: 14,),
                     ),
                     const SizedBox(height: 32),
                     _buildSplitVisualizer(),
@@ -200,13 +200,13 @@ class _CoupleSplitStrategyScreenState
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
+                            borderRadius: BorderRadius.circular(20),),
                       ),
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text('Guardar Configuración',
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w800)),
+                                  fontSize: 16, fontWeight: FontWeight.w800,),),
                     ),
                     const SizedBox(height: 100),
                   ]),
@@ -233,25 +233,25 @@ class _CoupleSplitStrategyScreenState
           Row(
             children: [
               const Icon(Icons.info_outline_rounded,
-                  color: AppColors.accentTeal, size: 20),
+                  color: AppColors.accentTeal, size: 20,),
               const SizedBox(width: 10),
               Text(title,
                   style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.accentTeal)),
+                      color: AppColors.accentTeal,),),
             ],
           ),
           const SizedBox(height: 12),
           Text(desc,
               style:
-                  const TextStyle(height: 1.5, color: AppColors.textPrimary)),
+                  const TextStyle(height: 1.5, color: AppColors.textPrimary),),
         ],
       ),
     );
   }
 
   Widget _buildStrategyItem(String title, String desc, String emoji,
-      {required bool isActive, required VoidCallback onTap}) {
+      {required bool isActive, required VoidCallback onTap,}) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -263,13 +263,13 @@ class _CoupleSplitStrategyScreenState
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
               color: isActive ? AppColors.primary : Colors.transparent,
-              width: 2),
+              width: 2,),
           boxShadow: isActive
               ? [
                   BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       blurRadius: 10,
-                      offset: const Offset(0, 4))
+                      offset: const Offset(0, 4),),
                 ]
               : [],
         ),
@@ -282,10 +282,10 @@ class _CoupleSplitStrategyScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                      style: const TextStyle(fontWeight: FontWeight.w800),),
                   Text(desc,
                       style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary)),
+                          fontSize: 12, color: AppColors.textSecondary,),),
                 ],
               ),
             ),
@@ -314,10 +314,10 @@ class _CoupleSplitStrategyScreenState
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1,
-                        color: AppColors.primary)),
+                        color: AppColors.primary,),),
                 Text('$youPercent%',
                     style: const TextStyle(
-                        fontSize: 32, fontWeight: FontWeight.w900)),
+                        fontSize: 32, fontWeight: FontWeight.w900,),),
               ],
             ),
             Column(
@@ -328,10 +328,10 @@ class _CoupleSplitStrategyScreenState
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1,
-                        color: AppColors.error)),
+                        color: AppColors.error,),),
                 Text('$partnerPercent%',
                     style: const TextStyle(
-                        fontSize: 32, fontWeight: FontWeight.w900)),
+                        fontSize: 32, fontWeight: FontWeight.w900,),),
               ],
             ),
           ],
@@ -351,14 +351,14 @@ class _CoupleSplitStrategyScreenState
                 width: MediaQuery.of(context).size.width * 0.8 * _splitRatio,
                 color: AppColors.primary,
                 child: const Center(
-                    child: Icon(Icons.person, color: Colors.white, size: 16)),
+                    child: Icon(Icons.person, color: Colors.white, size: 16),),
               ),
               Expanded(
                 child: Container(
                   color: AppColors.error.withValues(alpha: 0.7),
                   child: const Center(
                       child:
-                          Icon(Icons.favorite, color: Colors.white, size: 16)),
+                          Icon(Icons.favorite, color: Colors.white, size: 16),),
                 ),
               ),
             ],

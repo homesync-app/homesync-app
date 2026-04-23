@@ -83,7 +83,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     } else if (caps.type == HouseholdType.family) {
       intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
     } else if (caps.type == HouseholdType.friends) {
-      intro = '¡Hola! Únete a nuestro grupo en HomeSync para convivir mejor.';
+      intro = '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
     }
 
     final text = '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
@@ -139,9 +139,11 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            caps.type == HouseholdType.family 
-              ? 'Comparte este código con los miembros de tu familia.'
-              : 'Comparte este código para que alguien se una a tu hogar.',
+            caps.type == HouseholdType.family
+                ? 'Comparte este código con los miembros de tu familia.'
+                : caps.type == HouseholdType.friends
+                    ? 'Comparte este código con tus compañeros para sumarlos a la convivencia.'
+                    : 'Comparte este código para que alguien se una a tu hogar.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,

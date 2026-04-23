@@ -45,12 +45,12 @@ final getRecentActivityUseCaseProvider =
 // ignore: unused_element
 typedef GetRecentActivityUseCaseRef
     = AutoDisposeProviderRef<GetRecentActivityUseCase>;
-String _$recentActivityHash() => r'3e0cc022f3569251f0d2f5023bb920a8dc957180';
+String _$recentActivityHash() => r'a6dd8959bb8d4e924a5394f0e9c03e6c51f58923';
 
 /// See also [recentActivity].
 @ProviderFor(recentActivity)
 final recentActivityProvider =
-    AutoDisposeFutureProvider<List<Map<String, dynamic>>>.internal(
+    StreamProvider<List<Map<String, dynamic>>>.internal(
   recentActivity,
   name: r'recentActivityProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -62,7 +62,6 @@ final recentActivityProvider =
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef RecentActivityRef
-    = AutoDisposeFutureProviderRef<List<Map<String, dynamic>>>;
+typedef RecentActivityRef = StreamProviderRef<List<Map<String, dynamic>>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

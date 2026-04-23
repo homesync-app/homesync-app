@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
-import '../repositories/auth_repository.dart';
-
 import 'package:homesync_client/core/services/logger_service.dart';
+
+import '../repositories/auth_repository.dart';
 
 class SignInWithGoogleUseCase {
   final AuthRepository _repository;

@@ -1,11 +1,11 @@
-import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/domain/models/user_model.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -93,7 +93,7 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signUpWithEmail(
-      String email, String password, String? fullName) async {
+      String email, String password, String? fullName,) async {
     final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
     await analytics.trackAuthStarted(method: 'email', isSignUp: true);
@@ -150,7 +150,7 @@ class AuthController extends _$AuthController {
             reason: 'cancelled_or_incomplete',
           );
           state = const AsyncValue.data(
-              AuthState(AuthChangeEvent.initialSession, null));
+              AuthState(AuthChangeEvent.initialSession, null),);
         }
         return success;
       },

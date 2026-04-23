@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/analytics_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 
 class PremiumPaywall extends ConsumerWidget {
   const PremiumPaywall({super.key});
@@ -134,13 +134,13 @@ class PremiumPaywall extends ConsumerWidget {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
+                            borderRadius: BorderRadius.circular(20),),
                         elevation: 0,
                       ),
                       child: const Text(
                         'SIMULAR SUSCRIPCIÓN (TEST)',
                         style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 16),
+                            fontWeight: FontWeight.w900, fontSize: 16,),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -150,7 +150,7 @@ class PremiumPaywall extends ConsumerWidget {
                         'Tal vez más tarde',
                         style: TextStyle(
                             color: AppColors.textSecondary,
-                            fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,),
                       ),
                     ),
                   ],

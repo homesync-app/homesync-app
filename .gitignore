@@ -15,6 +15,7 @@ flutter_client/coverage/
 flutter_client/android/app/debug/
 flutter_client/android/app/profile/
 flutter_client/android/app/release/
+flutter_client/android/build/
 
 # ─── SIGNING SECRETS — NEVER COMMIT ─────────────────────────────────────────
 *.keystore
@@ -26,9 +27,19 @@ flutter_client/android/key.properties
 *.log
 analyze.log
 analysis_output*.txt
-build_error.log
+analyze_output*.txt
+build_output*.txt
+test_output.txt
+test_results.txt
+analysis.txt
 tmp/
 nul
+
+# ─── Certs & secrets ─────────────────────────────────────────────────────────
+*.pem
+*.crt
+cert.*/
+release.*/
 
 # ─── IDE ─────────────────────────────────────────────────────────────────────
 .idea/
@@ -49,3 +60,13 @@ bg_removal/node_modules/
 
 # ─── Agent brain (local AI context, not needed in repo) ──────────────────────
 .agents/
+.agent/
+.claude/
+.kilo/
+.antigravity/
+
+# ─── Decompiled/extracted APK artifacts ──────────────────────────────────────
+APK/
+
+# ─── Data exports (PII) ──────────────────────────────────────────────────────
+*.csv

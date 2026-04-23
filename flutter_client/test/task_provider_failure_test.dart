@@ -1,20 +1,20 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
-import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
   RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig()}) =>
+          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
       _FakeRealtimeChannel();
 }
 
@@ -33,7 +33,7 @@ class _FakeRealtimeChannel extends Fake implements RealtimeChannel {
   RealtimeChannel subscribe(
           [void Function(RealtimeSubscribeStatus status, Object? error)?
               callback,
-          Duration? timeout]) =>
+          Duration? timeout,]) =>
       this;
 
   @override

@@ -1,19 +1,23 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../core/providers/supabase_provider.dart';
-import '../../domain/models/expense_model.dart';
-import '../../domain/repositories/expense_repository.dart';
-import '../../data/repositories/supabase_expense_repository.dart';
-import '../../domain/usecases/get_expenses_usecase.dart';
-import '../../domain/usecases/get_combined_feed_usecase.dart';
-import '../../domain/usecases/get_balances_usecase.dart';
-import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
-import '../../domain/models/feed_item_model.dart';
-import '../../domain/models/expense_template_model.dart';
+import 'dart:async';
+
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../core/providers/supabase_provider.dart';
+import '../../data/repositories/supabase_expense_repository.dart';
+import '../../domain/models/expense_model.dart';
+import '../../domain/models/expense_template_model.dart';
+import '../../domain/models/feed_item_model.dart';
+import '../../domain/repositories/expense_repository.dart';
+import '../../domain/usecases/get_balances_usecase.dart';
+import '../../domain/usecases/get_combined_feed_usecase.dart';
+import '../../domain/usecases/get_expenses_usecase.dart';
+import '../../domain/usecases/get_personal_finance_summary_usecase.dart';
 
 part 'expense_provider.g.dart';
 
@@ -45,7 +49,7 @@ GetBalancesUseCase getBalancesUseCase(GetBalancesUseCaseRef ref) {
 
 @riverpod
 GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
-    GetPersonalFinanceSummaryUseCaseRef ref) {
+    GetPersonalFinanceSummaryUseCaseRef ref,) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetPersonalFinanceSummaryUseCase(repo);
 }
@@ -70,7 +74,7 @@ class PersonalFinanceSummary extends _$PersonalFinanceSummary {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ExpenseBalances extends _$ExpenseBalances {
   @override
   Future<List<HouseholdBalanceModel>> build() async {
@@ -218,16 +222,42 @@ class CombinedFeedController extends _$CombinedFeedController {
     if (householdId == null) return [];
 
     final repo = ref.watch(expenseRepositoryProvider);
-    try {
-      await repo.processRecurringExpenses(householdId);
-    } catch (e, stack) {
-      // Ignore background processing errors to not block the feed
-      log.w(
-        'CombinedFeed recurring expense processing failed: $e',
-        error: e,
-        stackTrace: stack,
-      );
-    }
+    // Fire-and-forget: recurring expense processing is a DB-writing RPC that
+    // takes ~700ms on cold start. Awaiting it blocked the feed query behind it
+    // and added roughly a second to TTI. We still throttle it to once every
+    // 24h via SharedPreferences, but let the feed load in parallel and refresh
+    // itself if new rows land.
+    unawaited(() async {
+      try {
+        final now = DateTime.now();
+        const storageKey = 'homesync_last_recurring_run';
+        final prefs = await SharedPreferences.getInstance();
+        final lastRunStr = prefs.getString(storageKey);
+        final lastRun =
+            lastRunStr != null ? DateTime.tryParse(lastRunStr) : null;
+        final shouldRun =
+            lastRun == null || now.difference(lastRun).inHours >= 24;
+        if (!shouldRun) return;
+        await repo.processRecurringExpenses(householdId);
+        await prefs.setString(storageKey, now.toIso8601String());
+        // If processing generated new entries, refresh the feed + balances so
+        // the user sees them without a manual pull-to-refresh. Guard against
+        // the provider being disposed mid-flight (user signed out, etc.).
+        try {
+          ref.invalidateSelf();
+          ref.invalidate(expenseBalancesProvider);
+          ref.invalidate(recentActivityProvider);
+        } catch (_) {
+          // Provider disposed before recurring processing finished; ignore.
+        }
+      } catch (e, stack) {
+        log.w(
+          'CombinedFeed recurring expense processing failed: $e',
+          error: e,
+          stackTrace: stack,
+        );
+      }
+    }());
 
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);
     final result = await useCase(householdId);
@@ -396,7 +426,7 @@ double _projectedShareForUser({
 
 @riverpod
 Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
-    MonthlyPendingPlannedExpensesRef ref) async {
+    MonthlyPendingPlannedExpensesRef ref,) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return const <FeedItemModel>[];
 
@@ -417,7 +447,7 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
 
 @riverpod
 Future<MonthlyProjectionData> monthlyProjection(
-    MonthlyProjectionRef ref) async {
+    MonthlyProjectionRef ref,) async {
   final feedAsync = await ref.watch(combinedFeedControllerProvider.future);
   final monthlyPendingItems =
       await ref.watch(monthlyPendingPlannedExpensesProvider.future);

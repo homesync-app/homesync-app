@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
-import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
@@ -281,7 +281,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                 'name': c.name,
                 'icon': c.icon,
                 'color': c.color,
-              })
+              },)
           .toList(),
       orElse: () => <Map<String, dynamic>>[],
     );
@@ -424,7 +424,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                     ),
                                     child: Icon(
                                       CategoryMapping.getCategoryMaterialIcon(
-                                          cat['name']),
+                                          cat['name'],),
                                       color: color,
                                       size: 18,
                                     ),

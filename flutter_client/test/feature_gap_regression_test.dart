@@ -3,15 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
 import 'package:homesync_client/features/household/domain/repositories/household_repository.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
-import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/savings/domain/repositories/savings_repository.dart';
 import 'package:homesync_client/features/savings/domain/usecases/add_contribution_usecase.dart';
 import 'package:homesync_client/features/savings/domain/usecases/create_savings_goal_usecase.dart';
+import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/domain/repositories/settings_repository.dart';
 import 'package:homesync_client/features/settings/domain/usecases/update_avatar_usecase.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
@@ -20,7 +21,6 @@ import 'package:homesync_client/features/shopping/domain/repositories/shopping_r
 import 'package:homesync_client/features/shopping/domain/usecases/add_shopping_item_usecase.dart';
 import 'package:homesync_client/features/shopping/domain/usecases/get_shopping_items_usecase.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
-import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 
 class FakeSettingsRepository implements SettingsRepository {
   String? lastAvatarUrl;
@@ -91,6 +91,16 @@ class FakeShoppingRepository implements ShoppingRepository {
     required String itemId,
     required bool completed,
     required String? userId,
+  }) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateItem({
+    required String itemId,
+    required String name,
+    required String category,
+    required String emoji,
+    String? note,
   }) async =>
       const Right(null);
 

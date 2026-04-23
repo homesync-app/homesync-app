@@ -4,9 +4,9 @@
 // Run with: flutter test test/models_test.dart
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 
 void main() {
   // ───────────────────────────────────────────────────────────────────────────
@@ -270,18 +270,18 @@ void main() {
   group('✅ TaskModel — equality & hashCode', () {
     test('Two tasks with same id are equal', () {
       final t1 = TaskModel(id: 'x', title: 'A', status: TaskStatus.active, xpReward: 10,
-          coinReward: 5, householdId: 'h', createdAt: DateTime(2026));
+          coinReward: 5, householdId: 'h', createdAt: DateTime(2026),);
       final t2 = TaskModel(id: 'x', title: 'B', status: TaskStatus.verified, xpReward: 99,
-          coinReward: 0, householdId: 'h2', createdAt: DateTime(2025));
+          coinReward: 0, householdId: 'h2', createdAt: DateTime(2025),);
       expect(t1, equals(t2));
       expect(t1.hashCode, equals(t2.hashCode));
     });
 
     test('Tasks with different ids are not equal', () {
       final t1 = TaskModel(id: 'a', title: 'T', status: TaskStatus.active, xpReward: 0,
-          coinReward: 0, householdId: 'h', createdAt: DateTime(2026));
+          coinReward: 0, householdId: 'h', createdAt: DateTime(2026),);
       final t2 = TaskModel(id: 'b', title: 'T', status: TaskStatus.active, xpReward: 0,
-          coinReward: 0, householdId: 'h', createdAt: DateTime(2026));
+          coinReward: 0, householdId: 'h', createdAt: DateTime(2026),);
       expect(t1, isNot(equals(t2)));
     });
   });

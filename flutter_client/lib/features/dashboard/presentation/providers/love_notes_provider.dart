@@ -1,10 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
   final _supabase = Supabase.instance.client;

@@ -1,11 +1,12 @@
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
+
 import '../../config/app_environment.dart';
 
 class SupabaseAuthService {
@@ -59,14 +60,14 @@ class SupabaseAuthService {
 
     if (response.user != null) {
       await _createUserProfile(
-          response.user!.id, email, fullName, householdType);
+          response.user!.id, email, fullName, householdType,);
     }
 
     return response;
   }
 
   Future<void> _createUserProfile(String userId, String email, String? fullName,
-      String householdType) async {
+      String householdType,) async {
     // 1. Generate household ID beforehand
     final householdId = const Uuid().v4();
 

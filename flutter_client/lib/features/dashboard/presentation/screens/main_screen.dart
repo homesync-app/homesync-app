@@ -1,37 +1,42 @@
 import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app_links/app_links.dart';
-
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
-import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
-import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
-import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/admin_workspace_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/couple_space_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/screens/household_social_hub_screen.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/screens/expenses_screen.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/features/household/presentation/screens/member_onboarding_screen.dart';
+import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
+import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
+import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
+import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
-import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/screens/home_screen.dart';
-import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/shared/widgets/custom_bottom_nav.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../household/presentation/providers/household_providers.dart';
 import '../widgets/in_app_notification_banner.dart';
-import 'package:intl/intl.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   final SharedPreferences prefs;
@@ -50,6 +55,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   int? _lastTrackedTabIndex;
+  MemberModel? _currentMember;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
@@ -94,15 +100,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           _showToast('✅ Mercado Pago conectado con éxito', Colors.green);
         } else if (status == 'error') {
           _showToast(
-              '❌ Error al conectar: ${message ?? "Desconocido"}', Colors.red);
+            '❌ Error al conectar: ${message ?? "Desconocido"}',
+            Colors.red,
+          );
         }
       }
 
       // 2. Mercado Pago Payment callbacks
       if (uri.host == 'payment-success' ||
           uri.path.contains('payment-success')) {
-        _showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
-            Colors.green);
+        _showToast(
+          '🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
+          Colors.green,
+        );
 
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
@@ -119,7 +129,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (uri.host == 'payment-pending' ||
           uri.path.contains('payment-pending')) {
         _showToast(
-            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange);
+          '⏳ Pago en proceso. Te avisaremos al acreditarse.',
+          Colors.orange,
+        );
       }
     });
   }
@@ -128,9 +140,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.white)),
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -283,6 +299,32 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             onComplete: () async {
               await widget.prefs.setBool('setup_completed', true);
               ref.invalidate(householdIdProvider);
+              ref.invalidate(memberOnboardingProvider);
+            },
+          );
+        }
+
+        final onboardingDone = ref.watch(memberOnboardingProvider);
+        if (onboardingDone.isLoading) {
+          return Scaffold(
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: AppBackground(isDarkMode: context.theme.isDarkMode),
+                ),
+                Center(
+                  child:
+                      CircularProgressIndicator(color: context.theme.primary),
+                ),
+              ],
+            ),
+          );
+        }
+        if (onboardingDone.valueOrNull == false) {
+          return MemberOnboardingScreen(
+            onComplete: () {
+              ref.invalidate(memberOnboardingProvider);
+              ref.invalidate(householdIdProvider);
             },
           );
         }
@@ -296,7 +338,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final theme = context.theme;
         final currentIndex = ref.watch(bottomNavIndexProvider);
         final caps = ref.watch(householdCapabilitiesProvider);
-        final navConfigs = visibleMainTabs(caps)
+        final membersAsync = ref.watch(householdMembersProvider);
+        final currentMember = membersAsync.whenOrNull<MemberModel?>(
+          data: (members) =>
+              members.where((m) => m.userId == currentUserId).firstOrNull,
+        );
+        _currentMember = currentMember;
+        final navConfigs = visibleMainTabs(caps, currentMember: currentMember)
             .map((tab) => _navConfigForTab(tab, context))
             .toList(growable: false);
 
@@ -453,106 +501,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   Widget _buildBottomNav() {
     final currentIndex = ref.watch(bottomNavIndexProvider);
-    final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-    final navItems = visibleMainTabs(caps)
+    final navItems = visibleMainTabs(caps, currentMember: _currentMember)
         .where((tab) => tab != MainTab.stats)
         .map(
-          (tab) => (
+          (tab) => CustomBottomNavItem(
             label: _labelForTab(tab, caps),
-            index: indexForMainTab(caps, tab),
-            tab: tab,
+            index: indexForMainTab(caps, tab, currentMember: _currentMember),
+            icon: _iconForTab(tab, caps, isSelected: false),
+            selectedIcon: _iconForTab(tab, caps, isSelected: true),
           ),
         )
         .toList(growable: false);
 
-    return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.navigationSurface
-              .withValues(alpha: theme.isDarkMode ? 0.94 : 0.98),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: theme.border.withValues(alpha: theme.isDarkMode ? 0.5 : 0.8),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: theme.shadow
-                  .withValues(alpha: theme.isDarkMode ? 0.34 : 0.12),
-              blurRadius: 28,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: navItems.map((item) {
-            final isSelected = currentIndex == item.index;
-            return Expanded(
-              child: AnimatedPress(
-                scale: 0.94,
-                onTap: () => _setBottomNavIndex(
-                  item.index,
-                  source: 'bottom_nav',
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.primary
-                            .withValues(alpha: theme.isDarkMode ? 0.22 : 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        switchInCurve: Curves.easeOutBack,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Icon(
-                          _iconForTab(item.tab, caps, isSelected: isSelected),
-                          key: ValueKey('${item.tab.name}_$isSelected'),
-                          color: isSelected ? theme.primary : theme.textMuted,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? theme.primary : theme.textMuted,
-                          letterSpacing: -0.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
+    return CustomBottomNav(
+      currentIndex: currentIndex,
+      items: navItems,
+      onTap: (index) => _setBottomNavIndex(index, source: 'bottom_nav'),
     );
   }
 
@@ -588,9 +553,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           screen: const StatsScreen(),
         ),
       MainTab.shopping => NavItemConfig(
-          title: 'Compras',
-          icon: Icons.shopping_cart_rounded,
-          screen: const ShoppingListScreen(),
+          title: _currentMember?.isChild == true ? 'Tienda' : 'Compras',
+          icon: _currentMember?.isChild == true
+              ? Icons.storefront_rounded
+              : Icons.shopping_cart_rounded,
+          screen: _currentMember?.isChild == true
+              ? const FamilyRewardsScreen()
+              : const ShoppingListScreen(),
         ),
     };
   }
@@ -607,7 +576,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         MainTab.expenses => Icons.account_balance_wallet_rounded,
         MainTab.social => caps.socialTabSelectedIcon,
         MainTab.stats => Icons.bar_chart_rounded,
-        MainTab.shopping => Icons.shopping_cart_rounded,
+        MainTab.shopping => _currentMember?.isChild == true
+            ? Icons.storefront_rounded
+            : Icons.shopping_cart_rounded,
       };
     }
 
@@ -617,7 +588,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       MainTab.expenses => Icons.account_balance_wallet_outlined,
       MainTab.social => caps.socialTabIcon,
       MainTab.stats => Icons.bar_chart_outlined,
-      MainTab.shopping => Icons.shopping_cart_outlined,
+      MainTab.shopping => _currentMember?.isChild == true
+          ? Icons.storefront_outlined
+          : Icons.shopping_cart_outlined,
     };
   }
 
@@ -628,7 +601,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       MainTab.expenses => 'Finanzas',
       MainTab.social => caps.socialTabLabel,
       MainTab.stats => 'Progreso',
-      MainTab.shopping => 'Compras',
+      MainTab.shopping =>
+        _currentMember?.isChild == true ? 'Tienda' : 'Compras',
     };
   }
 
@@ -652,7 +626,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     if (!force && _lastTrackedTabIndex == index) return;
 
     final caps = ref.read(householdCapabilitiesProvider);
-    final visibleTabs = visibleMainTabs(caps);
+    final visibleTabs = visibleMainTabs(caps, currentMember: _currentMember);
     if (index < 0 || index >= visibleTabs.length) return;
 
     _lastTrackedTabIndex = index;

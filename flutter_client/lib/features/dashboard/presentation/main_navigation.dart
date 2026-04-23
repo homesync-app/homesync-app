@@ -1,4 +1,5 @@
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 
 enum MainTab {
   home,
@@ -9,24 +10,35 @@ enum MainTab {
   shopping,
 }
 
-bool isMainTabVisible(HouseholdCapabilities caps, MainTab tab) {
+bool isMainTabVisible(
+  HouseholdCapabilities caps,
+  MainTab tab, {
+  MemberModel? currentMember,
+}) {
   return switch (tab) {
     MainTab.home => true,
     MainTab.tasks => caps.showTasks,
-    MainTab.expenses => true,
+    MainTab.expenses => currentMember?.canSeeFinanceTab ?? true,
     MainTab.social => caps.showPartnerTab,
     MainTab.stats => caps.showStats,
-    MainTab.shopping => true,
+    MainTab.shopping => !(currentMember?.isChild ?? false),
   };
 }
 
-List<MainTab> visibleMainTabs(HouseholdCapabilities caps) {
+List<MainTab> visibleMainTabs(
+  HouseholdCapabilities caps, {
+  MemberModel? currentMember,
+}) {
   return MainTab.values
-      .where((tab) => isMainTabVisible(caps, tab))
+      .where((tab) => isMainTabVisible(caps, tab, currentMember: currentMember))
       .toList(growable: false);
 }
 
-int indexForMainTab(HouseholdCapabilities caps, MainTab tab) {
-  final tabs = visibleMainTabs(caps);
+int indexForMainTab(
+  HouseholdCapabilities caps,
+  MainTab tab, {
+  MemberModel? currentMember,
+}) {
+  final tabs = visibleMainTabs(caps, currentMember: currentMember);
   return tabs.indexOf(tab);
 }

@@ -6,14 +6,14 @@ import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/admin_testing_provider.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/shared/widgets/admin_panel.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/shared/widgets/admin_panel.dart';
 
 class AdminWorkspaceScreen extends ConsumerStatefulWidget {
   const AdminWorkspaceScreen({super.key});
@@ -418,9 +418,9 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                                 ? null
                                 : () => _resetScenario(selectedScenario),
                             icon: const Icon(Icons.restart_alt_rounded),
-                            label: Text(_isBusy
-                                ? 'Trabajando...'
-                                : 'Resetear escenario'),
+                            label: Text(
+                              _isBusy ? 'Trabajando...' : 'Resetear escenario',
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -754,6 +754,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              _ErrorLogsSection(theme: theme),
             ],
           ),
         ),
@@ -875,7 +877,9 @@ class _CatalogRequestsSection extends ConsumerWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: count >= 5
                                 ? AppColors.primary.withValues(alpha: 0.15)
@@ -1008,5 +1012,412 @@ class _ScenarioCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+final _errorLogsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final response = await client
+      .from('application_logs')
+      .select(
+          'id, level, message, stack_trace, context, device_info, created_at')
+      .order('created_at', ascending: false)
+      .limit(50);
+  return List<Map<String, dynamic>>.from(response as List);
+});
+
+class _ErrorLogsSection extends ConsumerStatefulWidget {
+  final dynamic theme;
+  const _ErrorLogsSection({required this.theme});
+
+  @override
+  ConsumerState<_ErrorLogsSection> createState() => _ErrorLogsSectionState();
+}
+
+class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
+  String? _expandedLogId;
+  String _levelFilter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final logsAsync = ref.watch(_errorLogsProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.bug_report_rounded,
+                  size: 18,
+                  color: AppColors.error,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Logs de Error',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Errores capturados por la app en tiempo real',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                onPressed: () => ref.invalidate(_errorLogsProvider),
+                tooltip: 'Actualizar',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _levelChip('all', 'Todos'),
+                _levelChip('error', 'Error'),
+                _levelChip('critical', 'Critical'),
+                _levelChip('warning', 'Warning'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          logsAsync.when(
+            data: (logs) {
+              final filtered = _levelFilter == 'all'
+                  ? logs
+                  : logs
+                      .where((l) => (l['level'] as String?) == _levelFilter)
+                      .toList();
+              if (filtered.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      _levelFilter == 'all'
+                          ? 'Sin errores registrados'
+                          : 'Sin errores de nivel $_levelFilter',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                children: filtered.map((log) {
+                  final id = log['id'] as String;
+                  final isExpanded = _expandedLogId == id;
+                  return _ErrorLogTile(
+                    log: log,
+                    theme: theme,
+                    isExpanded: isExpanded,
+                    onToggle: () =>
+                        setState(() => _expandedLogId = isExpanded ? null : id),
+                  );
+                }).toList(),
+              );
+            },
+            loading: () => const LinearProgressIndicator(minHeight: 3),
+            error: (e, _) => Text(
+              'Error cargando logs: $e',
+              style: TextStyle(color: theme.error, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _levelChip(String value, String label) {
+    final selected = _levelFilter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        selected: selected,
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        onSelected: (_) => setState(() => _levelFilter = value),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+}
+
+class _ErrorLogTile extends StatelessWidget {
+  final Map<String, dynamic> log;
+  final dynamic theme;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
+  const _ErrorLogTile({
+    required this.log,
+    required this.theme,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final level = log['level'] as String? ?? 'error';
+    final message = log['message'] as String? ?? 'Unknown error';
+    final createdAt = log['created_at'] as String?;
+    final contextData = log['context'] as Map<String, dynamic>?;
+    final stackTrace = log['stack_trace'] as String?;
+    final diagnostics = contextData?['full_diagnostics'] as String?;
+    final stackHead = contextData?['stack_frames_head'] as String?;
+    final errorContext = contextData?['context'] as String?;
+    final library = contextData?['library'] as String?;
+    final email = contextData?['email'] as String?;
+
+    final levelColor = switch (level) {
+      'critical' => AppColors.error,
+      'error' => AppColors.warning,
+      'warning' => AppColors.accentOrange,
+      _ => AppColors.textSecondary,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isExpanded
+                ? levelColor.withValues(alpha: 0.5)
+                : theme.border.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onToggle,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: levelColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: levelColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          level.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: levelColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (library != null) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: theme.surfaceContainer,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            library,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: theme.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      if (email != null) ...[
+                        const Spacer(),
+                        Text(
+                          email,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    maxLines: isExpanded ? null : 2,
+                    overflow: isExpanded ? null : TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: theme.textPrimary,
+                      height: 1.35,
+                    ),
+                  ),
+                  if (createdAt != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatLogTime(createdAt),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.textMuted,
+                      ),
+                    ),
+                  ],
+                  if (isExpanded) ...[
+                    const SizedBox(height: 12),
+                    if (errorContext != null && errorContext.isNotEmpty) ...[
+                      _buildDetailBlock('Contexto', errorContext, theme),
+                      const SizedBox(height: 8),
+                    ],
+                    if (diagnostics != null && diagnostics.isNotEmpty) ...[
+                      _buildDetailBlock('Diagnostics', diagnostics, theme),
+                      const SizedBox(height: 8),
+                    ],
+                    if (stackHead != null && stackHead.isNotEmpty) ...[
+                      _buildDetailBlock('Stack (top 20)', stackHead, theme),
+                      const SizedBox(height: 8),
+                    ],
+                    if (stackTrace != null && stackTrace.isNotEmpty) ...[
+                      _buildDetailBlock(
+                          'Stack trace completo', stackTrace, theme),
+                    ],
+                    if (contextData != null) ...[
+                      const SizedBox(height: 8),
+                      _buildDetailBlock(
+                        'Context JSON',
+                        contextData.entries
+                            .where((e) =>
+                                e.key != 'full_diagnostics' &&
+                                e.key != 'stack_frames_head' &&
+                                e.key != 'context' &&
+                                e.key != 'library')
+                            .map((e) => '${e.key}: ${e.value}')
+                            .join('\n'),
+                        theme,
+                      ),
+                    ],
+                  ],
+                  if (!isExpanded) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Spacer(),
+                        Icon(
+                          Icons.expand_more_rounded,
+                          size: 14,
+                          color: theme.textMuted,
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailBlock(String label, String content, dynamic theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: theme.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.surfaceContainer.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SelectableText(
+            content,
+            style: TextStyle(
+              fontSize: 10,
+              fontFamily: 'monospace',
+              height: 1.4,
+              color: theme.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatLogTime(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return iso;
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    final ss = dt.second.toString().padLeft(2, '0');
+    final dd = dt.day.toString().padLeft(2, '0');
+    final mon = dt.month.toString().padLeft(2, '0');
+    return '$dd/$mon $hh:$mm:$ss';
   }
 }

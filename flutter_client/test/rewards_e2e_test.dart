@@ -166,7 +166,7 @@ void main() {
             xpReward: 10,
             coinReward: 5,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
         TaskModel(
             id: 't2',
             title: 'Tarea 2',
@@ -176,7 +176,7 @@ void main() {
             xpReward: 20,
             coinReward: 10,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
         TaskModel(
             id: 't3',
             title: 'Tarea 3',
@@ -186,7 +186,7 @@ void main() {
             xpReward: 40,
             coinReward: 20,
             householdId: 'h1',
-            createdAt: DateTime.now()),
+            createdAt: DateTime.now(),),
       ];
 
       for (final task in tasks) {

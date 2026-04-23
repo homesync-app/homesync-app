@@ -6,6 +6,11 @@ class AppEnvironment {
   static const String _authModeName =
       String.fromEnvironment('AUTH_MODE', defaultValue: 'firebase_third_party');
 
+  static const String _kDefaultSupabaseUrl =
+      'https://tfavamqszdkoeabpyxms.supabase.co';
+  static const String _kDefaultSupabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmYXZhbXFzemRrb2VhYnB5eG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjU5MTYsImV4cCI6MjA4NjkwMTkxNn0.AifBdMFJH14E-JisRcdjWPNpjAOuj6z3J4aYYRxBCSI';
+
   static Environment get current {
     switch (_environmentName) {
       case 'local':
@@ -32,15 +37,14 @@ class AppEnvironment {
   static String get supabaseUrl {
     return const String.fromEnvironment(
       'SUPABASE_URL',
-      defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co',
+      defaultValue: _kDefaultSupabaseUrl,
     );
   }
 
   static String get supabaseAnonKey {
     return const String.fromEnvironment(
       'SUPABASE_ANON_KEY',
-      defaultValue:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmYXZhbXFzemRrb2VhYnB5eG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjU5MTYsImV4cCI6MjA4NjkwMTkxNn0.AifBdMFJH14E-JisRcdjWPNpjAOuj6z3J4aYYRxBCSI',
+      defaultValue: _kDefaultSupabaseAnonKey,
     );
   }
 
@@ -55,7 +59,7 @@ class AppEnvironment {
         return supabaseUrl;
       case Environment.production:
         return const String.fromEnvironment('API_URL_PROD',
-            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co');
+            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co',);
     }
   }
 
@@ -152,9 +156,21 @@ class AppEnvironment {
 
   // Validates that required runtime config is present
   static void validateRuntimeConfig({required bool isWeb}) {
-    if (isProduction) {
-      assert(supabaseUrl.isNotEmpty, 'SUPABASE_URL is required in production');
-      assert(supabaseAnonKey.isNotEmpty, 'SUPABASE_ANON_KEY is required in production');
+    if (!isProduction) return;
+
+    final violations = <String>[];
+    if (supabaseUrl == _kDefaultSupabaseUrl) {
+      violations.add('SUPABASE_URL');
+    }
+    if (supabaseAnonKey == _kDefaultSupabaseAnonKey) {
+      violations.add('SUPABASE_ANON_KEY');
+    }
+    if (violations.isNotEmpty) {
+      throw StateError(
+        'Production build has default staging values for: ${violations.join(", ")}. '
+        'Rebuild with: flutter build appbundle --dart-define=APP_ENV=production '
+        '--dart-define=SUPABASE_URL=<prod_url> --dart-define=SUPABASE_ANON_KEY=<prod_key>',
+      );
     }
   }
 

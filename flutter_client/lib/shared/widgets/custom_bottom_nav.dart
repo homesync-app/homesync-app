@@ -1,113 +1,136 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
+import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/shared/widgets/animated_press.dart';
 
-class CustomBottomNav extends ConsumerWidget {
+class CustomBottomNavItem {
+  final int index;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+
+  const CustomBottomNavItem({
+    required this.index,
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+  });
+}
+
+class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final List<CustomBottomNavItem> items;
+  final ValueChanged<int> onTap;
 
   const CustomBottomNav({
     super.key,
     required this.currentIndex,
+    required this.items,
     required this.onTap,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = context.theme;
-    final caps = ref.watch(householdCapabilitiesProvider);
-    return Container(
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 12, bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowBase.withValues(alpha: theme.isDarkMode ? 0.35 : 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+
+    return SafeArea(
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 68),
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: theme.navigationSurface.withValues(
+            alpha: theme.isDarkMode ? 0.95 : 0.98,
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _NavItem(
-            icon: Icons.home_outlined,
-            selectedIcon: Icons.home_rounded,
-            label: 'Inicio',
-            isSelected: currentIndex == 0,
-            onTap: () => onTap(0),
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+          border: Border.all(
+            color:
+                theme.border.withValues(alpha: theme.isDarkMode ? 0.48 : 0.72),
           ),
-          _NavItem(
-            icon: Icons.format_list_bulleted_rounded,
-            selectedIcon: Icons.format_list_bulleted_rounded,
-            label: 'Tareas',
-            isSelected: currentIndex == 1,
-            onTap: () => onTap(1),
+          boxShadow: AppElevation.floating(
+            color: theme.shadowBase,
+            isDarkMode: theme.isDarkMode,
           ),
-          const SizedBox(width: 48),
-          _NavItem(
-            icon: Icons.account_balance_wallet_outlined,
-            selectedIcon: Icons.account_balance_wallet_rounded,
-            label: 'Finanzas',
-            isSelected: currentIndex == 2,
-            onTap: () => onTap(2),
-          ),
-          _NavItem(
-            icon: caps.socialTabIcon,
-            selectedIcon: caps.socialTabSelectedIcon,
-            label: caps.socialTabLabel,
-            isSelected: currentIndex == 3,
-            onTap: () => onTap(3),
-          ),
-        ],
+        ),
+        child: Row(
+          children: [
+            for (final item in items)
+              Expanded(
+                child: _CustomBottomNavTile(
+                  item: item,
+                  isSelected: currentIndex == item.index,
+                  onTap: () => onTap(item.index),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
+class _CustomBottomNavTile extends StatelessWidget {
+  final CustomBottomNavItem item;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _NavItem({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
+  const _CustomBottomNavTile({
+    required this.item,
     required this.isSelected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final theme = context.theme;
+    final foreground = isSelected ? theme.primary : theme.textMuted;
+
+    return AnimatedPress(
+      scale: 0.94,
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isSelected ? selectedIcon : icon,
-            color: isSelected ? AppColors.primary : const Color(0xFF94A3B8),
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              color: isSelected ? AppColors.primary : const Color(0xFF94A3B8),
+      child: AnimatedContainer(
+        duration: AppMotion.normal,
+        curve: AppMotion.standard,
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.primary.withValues(alpha: theme.isDarkMode ? 0.18 : 0.10)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedSwitcher(
+              duration: AppMotion.fast,
+              switchInCurve: Curves.easeOutBack,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              ),
+              child: Icon(
+                isSelected ? item.selectedIcon : item.icon,
+                key: ValueKey('${item.label}-$isSelected'),
+                color: foreground,
+                size: 21,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 5),
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -69,9 +69,8 @@ dependencies:
   package_info_plus: ^8.0.0
   device_info_plus: ^10.1.0
 
-  # MCP Server (removed - unused in client)
-  # mcp_server: any
   in_app_purchase: ^3.2.3
+
 
 dev_dependencies:
   flutter_test:
@@ -96,6 +95,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/premium_3d_avatars/
     - assets/fonts/outfit/
 
   fonts:

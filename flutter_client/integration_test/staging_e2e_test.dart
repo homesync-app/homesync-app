@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import 'package:homesync_client/main.dart' as app;
-import 'package:homesync_client/core/services/supabase_auth_service.dart';
-import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
 import 'package:homesync_client/core/offline/offline_queue_service.dart';
+import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
+import 'package:homesync_client/core/services/supabase_auth_service.dart';
+import 'package:homesync_client/main.dart' as app;
+import 'package:integration_test/integration_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
@@ -26,15 +26,15 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
 
       expect(find.text('Inicio'), findsWidgets,
-          reason: 'Should navigate to home after login');
+          reason: 'Should navigate to home after login',);
 
       // Navigate to tasks to trigger API calls
       await tester.tap(find.text('Tareas'));
@@ -65,9 +65,9 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -162,9 +162,9 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -213,9 +213,9 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -266,9 +266,9 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }
@@ -283,7 +283,7 @@ void main() {
         'Concurrent B',
         'Concurrent C',
         'Concurrent D',
-        'Concurrent E'
+        'Concurrent E',
       ];
 
       for (final taskName in tasks) {
@@ -423,9 +423,9 @@ void main() {
       if (loginTitleFinder.evaluate().isNotEmpty) {
         await tester.enterText(
             find.widgetWithText(TextFormField, 'Correo electrónico'),
-            testEmail);
+            testEmail,);
         await tester.enterText(
-            find.widgetWithText(TextFormField, 'Contraseña'), testPassword);
+            find.widgetWithText(TextFormField, 'Contraseña'), testPassword,);
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle(const Duration(seconds: 5));
       }

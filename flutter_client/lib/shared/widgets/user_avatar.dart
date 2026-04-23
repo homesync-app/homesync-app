@@ -48,45 +48,63 @@ class UserAvatar {
 
   static const List<Map<String, dynamic>> premiumAvatars = [
     {
+      'id': 'premium_mate_boy',
+      'url': 'assets/images/premium_3d_avatars/premium_mate_boy.png',
+      'name': 'Matecito',
+      'color': Color(0xFFFFE7BA),
+    },
+    {
+      'id': 'premium_keys_girl',
+      'url': 'assets/images/premium_3d_avatars/premium_keys_girl.png',
+      'name': 'Llaves de Casa',
+      'color': Color(0xFFFFD3E0),
+    },
+    {
+      'id': 'premium_market_dog',
+      'url': 'assets/images/premium_3d_avatars/premium_market_dog.png',
+      'name': 'Perrito Super',
+      'color': Color(0xFFD8ECFA),
+    },
+    {
       'id': 'premium_boy',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
       'name': 'Chico 3D',
-      'color': Color(0xFFE3F2FD)
+      'color': Color(0xFFE3F2FD),
     },
     {
       'id': 'premium_girl',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
       'name': 'Chica 3D',
-      'color': Color(0xFFFCE4EC)
+      'color': Color(0xFFFCE4EC),
     },
     {
       'id': 'premium_cat',
       'url': 'assets/images/gato_premium_v2.mp4',
       'name': 'Gato Animado',
-      'color': Color(0xFFFFF3E0)
+      'color': Color(0xFFFFF3E0),
     },
     {
       'id': 'premium_dog',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
       'name': 'Perro 3D',
-      'color': Color(0xFFE8EAF6)
+      'color': Color(0xFFE8EAF6),
     },
     {
       'id': 'premium_robot',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
       'name': 'Robot 3D',
-      'color': Color(0xFFE0F2F1)
+      'color': Color(0xFFE0F2F1),
     },
     {
       'id': 'premium_bird',
       'url':
           'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
       'name': 'P\u00E1jaro 3D',
-      'color': Color(0xFFF3E5F5)
+      'color': Color(0xFFF3E5F5),
     },
   ];
 
@@ -103,6 +121,26 @@ class UserAvatar {
     final trimmed = raw?.trim();
     if (trimmed == null || trimmed.isEmpty) return trimmed;
     return _legacyAvatarAliases[trimmed] ?? trimmed;
+  }
+
+  static Map<String, dynamic>? premiumAvatarById(String id) {
+    for (final avatar in premiumAvatars) {
+      if (avatar['id'] == id) return avatar;
+    }
+    return null;
+  }
+
+  static String resolvePremiumAvatarUrl(String value) {
+    final cleanValue = value.startsWith('premium://')
+        ? value.replaceFirst('premium://', '')
+        : value;
+    final byId = premiumAvatarById(cleanValue);
+    if (byId != null) return byId['url'] as String;
+    return cleanValue;
+  }
+
+  static String premiumAvatarValue(Map<String, dynamic> avatar) {
+    return 'premium://${avatar['id']}';
   }
 }
 
@@ -138,7 +176,7 @@ class CustomUserAvatar extends ConsumerWidget {
     Widget avatarContent;
     if (isPremium && !forceCircular) {
       avatarContent = _PremiumCharacterAvatar(
-        url: avatarUrl!.replaceFirst('premium://', ''),
+        url: avatarUrl!,
         radius: radius,
         isAnimated: isAnimated,
         isPriority: isPriority,
@@ -173,8 +211,9 @@ class CustomUserAvatar extends ConsumerWidget {
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Admin: Impersonaci\u00F3n'),
-              content:
-                  Text('\u00BFDeseas ver la app como ${name ?? 'este usuario'}?'),
+              content: Text(
+                '\u00BFDeseas ver la app como ${name ?? 'este usuario'}?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -379,7 +418,7 @@ class _AvatarContent extends StatelessWidget {
                   color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
-                )
+                ),
               ]
             : null,
       ),
@@ -469,8 +508,7 @@ class _PremiumCharacterAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String cleanUrl =
-        url.startsWith('premium://') ? url.replaceFirst('premium://', '') : url;
+    final String cleanUrl = UserAvatar.resolvePremiumAvatarUrl(url);
 
     final bool isVideo = cleanUrl.toLowerCase().endsWith('.mp4');
     final bool shouldPlayVideo =
@@ -560,7 +598,11 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     Widget content = contentWidget;
 
     if (isAnimated || isPriority) {
-      content = _FloatingAnimation(child: content);
+      content = _PremiumAvatarMotion(
+        size: size,
+        isPriority: isPriority,
+        child: content,
+      );
     }
 
     if (onTap != null) {
@@ -605,19 +647,27 @@ class _PremiumCharacterAvatar extends StatelessWidget {
   }
 }
 
-class _FloatingAnimation extends StatefulWidget {
+class _PremiumAvatarMotion extends StatefulWidget {
   final Widget child;
+  final double size;
+  final bool isPriority;
 
-  const _FloatingAnimation({required this.child});
+  const _PremiumAvatarMotion({
+    required this.child,
+    required this.size,
+    required this.isPriority,
+  });
 
   @override
-  State<_FloatingAnimation> createState() => _FloatingAnimationState();
+  State<_PremiumAvatarMotion> createState() => _PremiumAvatarMotionState();
 }
 
-class _FloatingAnimationState extends State<_FloatingAnimation>
+class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _offsetAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
@@ -628,6 +678,12 @@ class _FloatingAnimationState extends State<_FloatingAnimation>
     )..repeat(reverse: true);
 
     _offsetAnimation = Tween<double>(begin: 0.0, end: -6.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.98, end: 1.03).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _glowAnimation = Tween<double>(begin: 0.18, end: 0.42).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -641,11 +697,36 @@ class _FloatingAnimationState extends State<_FloatingAnimation>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _offsetAnimation,
+      animation: _controller,
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _offsetAnimation.value),
-          child: child,
+        return Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: widget.size * 0.92,
+              height: widget.size * 0.92,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.accentGold.withValues(
+                      alpha: _glowAnimation.value,
+                    ),
+                    blurRadius: widget.isPriority ? 22 : 16,
+                    spreadRadius: widget.isPriority ? 3 : 1,
+                  ),
+                ],
+              ),
+            ),
+            Transform.translate(
+              offset: Offset(0, _offsetAnimation.value),
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: child,
+              ),
+            ),
+          ],
         );
       },
       child: widget.child,

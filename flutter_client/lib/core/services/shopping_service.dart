@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:homesync_client/config/app_environment.dart';
 
 class ShoppingItem {
   final String id;
@@ -121,9 +120,6 @@ class ShoppingService {
     final appUserId = await AppIdentityService.instance.refresh();
     if (appUserId != null && appUserId.isNotEmpty) {
       return appUserId;
-    }
-    if (!AppEnvironment.usesFirebaseJwtForSupabase) {
-      return _client.auth.currentUser?.id;
     }
     return null;
   }

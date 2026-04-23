@@ -167,7 +167,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
     final currentTasks = tasksAsync.value ?? [];
     final activeKeys = currentTasks
-        .where((task) => !task.isVerified)
+        .where((task) => task.isActive)
         .map(
           (task) =>
               "${task.title.toLowerCase().trim()}|${(task.category ?? 'none').toLowerCase().trim()}",
@@ -176,7 +176,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
 
     final availableTemplates = _templates.where((template) {
       final key =
-          "${template.title.toLowerCase().trim()}|${template.categoryId.toLowerCase().trim()}";
+          '${template.title.toLowerCase().trim()}|${template.categoryId.toLowerCase().trim()}';
       return !activeKeys.contains(key);
     }).toList();
 
@@ -271,7 +271,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   _buildCategoryChip(null, 'Todas', null),
                   ...displayCategories.map(
                     (category) => _buildCategoryChip(
-                        category.id, category.name, category),
+                      category.id,
+                      category.name,
+                      category,
+                    ),
                   ),
                 ],
               ),

@@ -32,7 +32,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1500))
+        vsync: this, duration: const Duration(milliseconds: 1500),)
       ..repeat();
     _animation = Tween<double>(begin: -2.0, end: 2.0).animate(_controller);
   }

@@ -8,7 +8,7 @@ class SignInUseCase {
   SignInUseCase(this._repository);
 
   Future<Either<Failure, void>> execute(
-      {required String email, required String password}) async {
+      {required String email, required String password,}) async {
     return _repository.signInWithEmail(email: email, password: password);
   }
 }

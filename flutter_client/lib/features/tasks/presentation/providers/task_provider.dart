@@ -1,23 +1,24 @@
 import 'dart:async';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:homesync_client/core/constants/app_constants.dart';
+import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/theme/category_mapping.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/constants/app_constants.dart';
-import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:homesync_client/core/models/task_completion_result.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/repositories/supabase_task_repository.dart';
 import '../../domain/models/task_model.dart';
-import '../../domain/utils/task_completion_utils.dart';
-import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
+import '../../domain/usecases/get_tasks_usecase.dart';
+import '../../domain/utils/task_completion_utils.dart';
 
 part 'task_provider.g.dart';
 
@@ -191,8 +192,8 @@ class Tasks extends _$Tasks {
                   completedBy: primaryUserId,
                   completedAt: effectiveCompletedAt,
                 )
-              : t)
-          .toList());
+              : t,)
+          .toList(),);
     }
 
     try {
@@ -252,8 +253,8 @@ class Tasks extends _$Tasks {
                   completedBy: primaryUserId,
                   completedAt: effectiveCompletedAt,
                 )
-              : t)
-          .toList());
+              : t,)
+          .toList(),);
     }
 
     try {
@@ -298,9 +299,9 @@ class Tasks extends _$Tasks {
               ? t.copyWith(
                   status: TaskStatus.verified,
                   verifiedBy: userId,
-                  verifiedAt: DateTime.now())
-              : t)
-          .toList());
+                  verifiedAt: DateTime.now(),)
+              : t,)
+          .toList(),);
     }
 
     try {
@@ -323,9 +324,9 @@ class Tasks extends _$Tasks {
               ? t.copyWith(
                   status: TaskStatus.active,
                   completedBy: null,
-                  completedAt: null)
-              : t)
-          .toList());
+                  completedAt: null,)
+              : t,)
+          .toList(),);
     }
 
     try {
@@ -345,8 +346,8 @@ class Tasks extends _$Tasks {
     if (oldState != null) {
       state = AsyncValue.data(oldState
           .map((t) =>
-              t.id == task.id ? t.copyWith(status: TaskStatus.active) : t)
-          .toList());
+              t.id == task.id ? t.copyWith(status: TaskStatus.active) : t,)
+          .toList(),);
     }
 
     try {
@@ -385,7 +386,7 @@ class Tasks extends _$Tasks {
                     completedBy: userId,
                     completedAt: submittedAt,
                   )
-                : t)
+                : t,)
             .toList(),
       );
     }
@@ -435,7 +436,7 @@ class Tasks extends _$Tasks {
                     completedBy: null,
                     completedAt: null,
                   )
-                : t)
+                : t,)
             .toList(),
       );
     }
@@ -563,7 +564,7 @@ AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
     if (selectedCategories.isNotEmpty) {
       result = result
           .where((t) => selectedCategories
-              .contains(CategoryMapping.normaliseCategory(t.category)))
+              .contains(CategoryMapping.normaliseCategory(t.category)),)
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -614,12 +615,18 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
       }
 
       // Completed-today tasks should leave "today" and remain only in activity.
-      if (isTaskCompletedOnLocalDate(task, now)) {
+      // Exception: pending-approval tasks still need adult review visibility
+      // on the same day the child marked them done.
+      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }
 
       // Only actionable tasks belong in this list.
       if (!task.isActive) return false;
+
+      // Pending-approval tasks must surface for adult review regardless
+      // of the original due date — the child already acted on them.
+      if (task.isPendingApproval) return true;
 
       if (task.isDueToday) return true;
 
@@ -641,7 +648,9 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
     // instead of leaving the home empty.
     final householdFallback = tasks.where((task) {
       if (!task.isActive) return false;
-      if (isTaskCompletedOnLocalDate(task, now)) return false;
+      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
+        return false;
+      }
       return true;
     }).toList()
       ..sort((a, b) {
