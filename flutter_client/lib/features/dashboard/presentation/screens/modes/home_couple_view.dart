@@ -115,7 +115,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
             _buildProfileAvatar(currentMember).animateScaleIn(delay: 70),
           ],
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 8),
         _buildHomeWelcome(
           theme: theme,
           partnerMember: partnerMember,
@@ -259,10 +259,23 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildProfileAvatar(dynamic member) {
     return AnimatedPress(
       onTap: widget.onAvatarTap,
-      child: CustomUserAvatar(
-        name: member?.displayName,
-        avatarUrl: member?.avatarUrl,
-        radius: 26,
+      child: Transform.translate(
+        offset: const Offset(6, 0),
+        child: SizedBox(
+          width: 88,
+          height: 58,
+          child: OverflowBox(
+            alignment: Alignment.topRight,
+            maxWidth: 104,
+            maxHeight: 104,
+            child: CustomUserAvatar(
+              name: member?.displayName,
+              avatarUrl: member?.avatarUrl,
+              radius: 26,
+              isAnimated: true,
+            ),
+          ),
+        ),
       ),
     );
   }

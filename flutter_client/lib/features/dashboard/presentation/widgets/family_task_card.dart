@@ -176,6 +176,7 @@ class FamilyTaskCard extends StatelessWidget {
         radius: 22,
         showBorder: true,
         userId: memberForAvatar.userId,
+        forceCircular: true,
       );
     }
 

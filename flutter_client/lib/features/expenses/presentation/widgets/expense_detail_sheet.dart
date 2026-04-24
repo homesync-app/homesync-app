@@ -384,6 +384,7 @@ class _ExpenseDetailSheetContentState
                                 avatarUrl: split.avatarUrl,
                                 name: split.fullName ?? 'Usuario',
                                 radius: 20,
+                                forceCircular: true,
                               ),
                               title: Text(
                                 (split.fullName ?? 'Usuario').split(' ').first,
@@ -449,8 +450,11 @@ class _ExpenseDetailSheetContentState
     return NumberFormat.decimalPattern('es_AR').format(amount);
   }
 
-  static Widget _buildTypeBadge(String label, Color color,
-      {bool isSmall = false,}) {
+  static Widget _buildTypeBadge(
+    String label,
+    Color color, {
+    bool isSmall = false,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isSmall ? 10 : 12,
@@ -476,7 +480,8 @@ class _ExpenseDetailSheetContentState
     final items = lines
         .map((e) => e.trim().replaceAll(RegExp(r'^[-*•]\s*'), ''))
         .where(
-            (e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'),)
+          (e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'),
+        )
         .toList();
 
     if (items.isEmpty) {

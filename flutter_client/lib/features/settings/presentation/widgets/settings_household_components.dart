@@ -38,7 +38,8 @@ class SettingsNoHouseholdCard extends StatelessWidget {
               color: theme.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.group_add_rounded, size: 40, color: theme.primary),
+            child:
+                Icon(Icons.group_add_rounded, size: 40, color: theme.primary),
           ),
           const SizedBox(height: 24),
           Text(
@@ -153,7 +154,8 @@ class SettingsHouseholdCard extends StatelessWidget {
                     color: theme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(Icons.home_rounded, color: theme.primary, size: 26),
+                  child:
+                      Icon(Icons.home_rounded, color: theme.primary, size: 26),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -358,6 +360,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
             name: name,
             avatarUrl: avatarUrl,
             radius: 18,
+            forceCircular: true,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -372,7 +375,8 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
                         fontWeight:
                             isCurrentUser ? FontWeight.w700 : FontWeight.w600,
                         fontSize: 14,
-                        color: isCurrentUser ? theme.primary : theme.textPrimary,
+                        color:
+                            isCurrentUser ? theme.primary : theme.textPrimary,
                       ),
                     ),
                     if (isCurrentUser) ...[
@@ -776,7 +780,8 @@ void showSettingsEditHouseholdMenu(
                   color: AppColors.accentBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.share_rounded, color: AppColors.accentBlue),
+                child: const Icon(Icons.share_rounded,
+                    color: AppColors.accentBlue),
               ),
               title: const Text('Codigo de invitacion'),
               subtitle: Text(
@@ -797,7 +802,8 @@ void showSettingsEditHouseholdMenu(
                     color: AppColors.accentTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.balance_rounded, color: AppColors.accentTeal),
+                  child: const Icon(Icons.balance_rounded,
+                      color: AppColors.accentTeal),
                 ),
                 title: const Text('DivisiÃ³n de gastos'),
                 subtitle: const Text('Ajustar porcentaje de pareja'),

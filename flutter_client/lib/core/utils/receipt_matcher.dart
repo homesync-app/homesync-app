@@ -64,6 +64,20 @@ class ReceiptMatcher {
     'matarazzo', 'luchetti', 'ledesma', 'chango', 'celusal',
   };
 
+  /// Genéricos ambiguos: si el OCR no matcheó ningún item del catálogo y el
+  /// primer token (ya stemmeado) es uno de estos, NO ofrecemos el producto
+  /// como "nuevo detectado". Son palabras que requieren un calificador para
+  /// tener sentido en una lista de compras.
+  ///
+  /// Ejemplo: "JABON LIQUIDO REP KARITE" no matchea "Jabón ropa" ni
+  /// "Jabón tocador" del catálogo; sin esta regla se ofrecería solo "Jabón",
+  /// que sería un duplicado ambiguo si el ticket también trae Jabón ropa/tocador.
+  /// Tokens ya pasados por `_stem`.
+  static const _ambiguousGenerics = {
+    'jabon', // requiere 'ropa' o 'tocador'
+    'queso', // requiere 'fresco', 'rallado' o 'crema'
+  };
+
   // ─── Catálogo predefinido aplanado (lazy) ──────────────────────────────────
 
   static List<CatalogEntry>? _catalog;
@@ -333,6 +347,11 @@ class ReceiptMatcher {
     // Descarta si empieza con símbolo, guión o dígito
     if (RegExp(r'^[-_*/\\@#!+=\d]').hasMatch(t)) return false;
 
+    // Descarta si contiene guión en cualquier posición: es código interno del
+    // ticket (ARCOR-GOLOS1, SERR-C1, 2do50%-MOLINOS). Los productos reales en
+    // tickets argentinos no usan guión.
+    if (t.contains('-')) return false;
+
     // Descarta si contiene una palabra de blacklist (total, descuento, etc.)
     if (_blacklistPattern.hasMatch(t)) return false;
 
@@ -343,6 +362,21 @@ class ReceiptMatcher {
 
     // Al menos 40% del string deben ser letras (filtra "golos1", "SERR-C1")
     if (letters / t.length < 0.4) return false;
+
+    // Requiere al menos un token puramente alfabético tras limpiar marcas,
+    // stopwords, precios y cantidades. Descarta códigos internos del ticket
+    // donde solo sobrevive basura con dígitos embebidos.
+    //
+    // Ej: "ARCOR-GOLOS1" → se filtra "arcor" (marca), queda solo "golos1"
+    // (mezcla letras+dígitos) → rechazado.
+    // Ej: "MOLINOS 2do50%" → ya cae antes por el '%'.
+    // Ej: "SODA COOPERATIVA SIFON 1750Cm" → quedan "soda", "cooperativa",
+    // "sifon" (puro alfabéticos) → aceptado.
+    final cleanTokens = _tokenize(t);
+    final hasPureLetterToken = cleanTokens.any(
+      (tok) => RegExp(r'^[a-z]+$').hasMatch(tok),
+    );
+    if (!hasPureLetterToken) return false;
 
     return true;
   }
@@ -395,6 +429,14 @@ ScanMatchResult resolveScanItems({
   final toAddAndMark = <ShoppingItemModel>[];
   final unrecognized = <String>[];
 
+  // Claves de deduplicación. Si dos líneas OCR resuelven al mismo item
+  // (ej: "POROTOS NEGROS..." y "POROTO SECO..." → ambos al catálogo "Porotos"),
+  // queremos ofrecerlo una sola vez. Para unrecognized comparamos por la
+  // firma de tokens stemmeados, que colapsa singular/plural.
+  final seenMarked = <String>{};
+  final seenAdded = <String>{};
+  final seenUnrecognized = <String>{};
+
   for (final ocrRaw in ocrItems) {
     // ── Paso 0: quality gate ─────────────────────────────────────────────────
     // Descartar ruido del ticket (totales, descuentos, códigos, marcas sueltas).
@@ -424,7 +466,9 @@ ScanMatchResult resolveScanItems({
     }
 
     if (directMatch != null && bestDirectScore >= 0.5) {
-      toMarkPurchased.add(directMatch);
+      if (seenMarked.add(directMatch.id)) {
+        toMarkPurchased.add(directMatch);
+      }
       continue;
     }
 
@@ -432,9 +476,19 @@ ScanMatchResult resolveScanItems({
     final catalog = ReceiptMatcher.findPredefined(ocrRaw);
 
     if (catalog == null) {
+      // Genéricos ambiguos (ej: "jabon" sin qualifier ropa/tocador) no se
+      // ofrecen como producto nuevo — evita agregar "Jabón" cuando el ticket
+      // también tiene Jabón ropa y Jabón tocador bien detectados.
+      if (ReceiptMatcher._ambiguousGenerics.contains(rawTokens.first)) {
+        continue;
+      }
       // La línea ya pasó el quality gate del Paso 0 → es un candidato genuino
       // a producto nuevo (ej: "Chicle"), lo ofrecemos al usuario.
-      unrecognized.add(ocrRaw);
+      // Dedupe por firma de tokens stemmeados para colapsar singular/plural.
+      final sig = rawTokens.join(' ');
+      if (sig.isNotEmpty && seenUnrecognized.add(sig)) {
+        unrecognized.add(ocrRaw);
+      }
       continue;
     }
 
@@ -452,16 +506,23 @@ ScanMatchResult resolveScanItems({
     }
 
     if (pendingMatch != null && bestScore >= 0.4) {
-      toMarkPurchased.add(pendingMatch);
+      if (seenMarked.add(pendingMatch.id)) {
+        toMarkPurchased.add(pendingMatch);
+      }
     } else {
-      toAddAndMark.add(ShoppingItemModel(
-        id: 'temp_${catalog.name.toLowerCase().replaceAll(' ', '_')}',
-        name: catalog.name,
-        emoji: catalog.emoji,
-        category: catalog.category,
-        householdId: householdId,
-        createdAt: DateTime.now(),
-      ),);
+      // Dedupe por nombre canónico: "POROTOS NEGROS..." y "POROTO SECO..."
+      // ambos resuelven al catálogo "Porotos" → se ofrece una sola vez.
+      final key = catalog.name.toLowerCase();
+      if (seenAdded.add(key)) {
+        toAddAndMark.add(ShoppingItemModel(
+          id: 'temp_${key.replaceAll(' ', '_')}',
+          name: catalog.name,
+          emoji: catalog.emoji,
+          category: catalog.category,
+          householdId: householdId,
+          createdAt: DateTime.now(),
+        ),);
+      }
     }
   }
 

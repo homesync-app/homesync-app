@@ -104,14 +104,14 @@ class ExpenseEqualSplitSelection extends StatelessWidget {
                   avatarUrl: member.avatarUrl,
                   name: member.displayName,
                   radius: 14,
+                  forceCircular: true,
                 ),
                 const SizedBox(width: 10),
                 Text(
                   member.displayName,
                   style: TextStyle(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textPrimary,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   ),
                 ),
@@ -164,6 +164,7 @@ class ExpenseFixedSplitRow extends StatelessWidget {
             avatarUrl: member.avatarUrl,
             name: member.displayName,
             radius: 16,
+            forceCircular: true,
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -23,11 +23,12 @@ class FamilyRewardsScreen extends ConsumerWidget {
         ?.where((member) => member.userId == currentUserId)
         .firstOrNull;
     final isAdult = currentMember?.isAdult ?? false;
+    final isChild = currentMember?.isChild ?? false;
     final isAdmin = currentMember?.isAdmin ?? false;
 
     return Scaffold(
       backgroundColor: theme.background,
-      appBar: AppBar(title: const Text('Tienda del hogar')),
+      appBar: AppBar(title: Text(isChild ? 'Mi tienda' : 'Tienda del hogar')),
       floatingActionButton: isAdmin
           ? FloatingActionButton.extended(
               onPressed: () => _showRewardComposer(context, ref, isAdmin),
@@ -60,7 +61,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
               children: [
-                _BalanceHero(balance: balance, isAdult: isAdult),
+                _BalanceHero(
+                  balance: balance,
+                  isAdult: isAdult,
+                  isChild: isChild,
+                ),
                 const SizedBox(height: 18),
                 _CoinsDivider(balance: balance),
                 if (isAdmin && pendingRewards.isNotEmpty) ...[
@@ -131,18 +136,18 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   ),
                 ] else ...[
                   _RewardSection(
-                    title: 'Premios para mi',
-                    subtitle: 'Lo que podes canjear con tus monedas.',
+                    title: 'Premios para vos',
+                    subtitle: 'Elegí qué querés conseguir con tus coins.',
                     rewards: childRewards,
-                    emptyText: 'Todavia no hay premios para vos.',
+                    emptyText: 'Todavia no hay premios en tu tienda.',
                     canDelete: false,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
                     onDelete: (_) {},
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
-                    title: 'Planes familiares',
-                    subtitle: 'Experiencias compartidas del hogar.',
+                    title: 'Planes en familia',
+                    subtitle: 'Premios para disfrutar juntos.',
                     rewards: familyRewards,
                     emptyText: 'Todavia no hay planes familiares disponibles.',
                     canDelete: false,
@@ -432,10 +437,15 @@ class FamilyRewardsScreen extends ConsumerWidget {
 }
 
 class _BalanceHero extends StatelessWidget {
-  const _BalanceHero({required this.balance, required this.isAdult});
+  const _BalanceHero({
+    required this.balance,
+    required this.isAdult,
+    required this.isChild,
+  });
 
   final int balance;
   final bool isAdult;
+  final bool isChild;
 
   @override
   Widget build(BuildContext context) {
@@ -444,12 +454,17 @@ class _BalanceHero extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.accentGold.withValues(alpha: 0.22),
-            AppColors.accentGold.withValues(alpha: 0.08),
-          ],
+          colors: isChild
+              ? const [
+                  Color(0xFFFFF2DF),
+                  Color(0xFFEAF7F4),
+                ]
+              : [
+                  AppColors.accentGold.withValues(alpha: 0.22),
+                  AppColors.accentGold.withValues(alpha: 0.08),
+                ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(isChild ? 28 : 24),
         border: Border.all(
           color: AppColors.accentGold.withValues(alpha: 0.3),
         ),
@@ -467,7 +482,11 @@ class _BalanceHero extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAdult ? 'Balance actual' : 'Tus monedas',
+                  isChild
+                      ? 'Tu bolsita de coins'
+                      : isAdult
+                          ? 'Balance actual'
+                          : 'Tus monedas',
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontWeight: FontWeight.w700,
@@ -482,6 +501,18 @@ class _BalanceHero extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+                if (isChild) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    'Cuando un adulto aprueba tus misiones, crece.',
+                    style: TextStyle(
+                      color: theme.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

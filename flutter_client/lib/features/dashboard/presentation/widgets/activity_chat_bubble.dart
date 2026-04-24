@@ -44,7 +44,8 @@ class ActivityChatBubble extends ConsumerWidget {
     final xpReward =
         _readInt(data['xp_reward'] ?? data['xp_per_user'] ?? data['xp']);
     final coinsReward = _readInt(
-        data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],);
+      data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
+    );
     final category = data['category'] as String?;
     final amount = _parseAmount(data['amount']);
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
@@ -84,6 +85,7 @@ class ActivityChatBubble extends ConsumerWidget {
                 name: userName,
                 avatarUrl: avatarUrl,
                 radius: 16,
+                forceCircular: true,
               ),
               const SizedBox(width: 4),
             ],
@@ -175,9 +177,11 @@ class ActivityChatBubble extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.access_time_rounded,
-                                size: 12,
-                                color: theme.textMuted.withValues(alpha: 0.72),),
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 12,
+                              color: theme.textMuted.withValues(alpha: 0.72),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               _formatTime(createdAt),
@@ -222,6 +226,7 @@ class ActivityChatBubble extends ConsumerWidget {
                 name: userName,
                 avatarUrl: avatarUrl,
                 radius: 16,
+                forceCircular: true,
               ),
             ],
           ],

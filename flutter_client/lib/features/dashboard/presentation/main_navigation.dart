@@ -21,7 +21,7 @@ bool isMainTabVisible(
     MainTab.expenses => currentMember?.canSeeFinanceTab ?? true,
     MainTab.social => caps.showPartnerTab,
     MainTab.stats => caps.showStats,
-    MainTab.shopping => !(currentMember?.isChild ?? false),
+    MainTab.shopping => true,
   };
 }
 

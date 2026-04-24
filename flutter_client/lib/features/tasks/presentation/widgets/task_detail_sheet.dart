@@ -65,8 +65,12 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   bool get _hasCompletionRecord =>
       _activityId != null || widget.taskData['completed_at'] != null;
 
-  int _readInt(dynamic primary,
-      [dynamic fallback1, dynamic fallback2, dynamic fallback3,]) {
+  int _readInt(
+    dynamic primary, [
+    dynamic fallback1,
+    dynamic fallback2,
+    dynamic fallback3,
+  ]) {
     for (final candidate in [primary, fallback1, fallback2, fallback3]) {
       if (candidate is num && candidate.toInt() > 0) return candidate.toInt();
       final parsed = int.tryParse(candidate?.toString() ?? '');
@@ -98,7 +102,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   Future<void> _undoTask() async {
     if (_activityId == null) {
       _showSnack(
-          'No se puede deshacer: actividad no encontrada', AppColors.error,);
+        'No se puede deshacer: actividad no encontrada',
+        AppColors.error,
+      );
       return;
     }
 
@@ -234,7 +240,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 24,),
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(28),
@@ -260,8 +268,11 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   color: categoryColor.withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(categoryIcon,
-                                    size: 26, color: categoryColor,),
+                                child: Icon(
+                                  categoryIcon,
+                                  size: 26,
+                                  color: categoryColor,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -309,7 +320,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                     const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 20,),
+                        horizontal: 18,
+                        vertical: 20,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(22),
@@ -348,7 +361,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12,),
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.background,
                               borderRadius: BorderRadius.circular(18),
@@ -359,6 +374,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   name: _completedByName,
                                   avatarUrl: _completedByAvatar,
                                   radius: 16,
+                                  forceCircular: true,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -393,8 +409,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                 if (completedAt != null)
                                   Text(
                                     DateFormat('HH:mm').format(
-                                        DateTime.parse(completedAt as String)
-                                            .toLocal(),),
+                                      DateTime.parse(completedAt as String)
+                                          .toLocal(),
+                                    ),
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 12,
@@ -499,6 +516,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
             name: avatarName,
             avatarUrl: avatarUrl,
             radius: 18,
+            forceCircular: true,
           )
         else
           Icon(icon, size: 24, color: iconColor),
@@ -529,7 +547,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   Widget _buildActions() {
     if (_isLoading) {
       return const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),);
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
     }
 
     if (_isAuthor && _activityId != null) {

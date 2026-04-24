@@ -17,8 +17,7 @@ class WeeklyWinnerScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WeeklyWinnerScreen> createState() =>
-      _WeeklyWinnerScreenState();
+  ConsumerState<WeeklyWinnerScreen> createState() => _WeeklyWinnerScreenState();
 }
 
 class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
@@ -54,15 +53,15 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                     .subtract(Duration(days: weekStart.weekday - 1));
 
             await ref.read(weeklyDuelResultSaveUseCaseProvider).call(
-              householdId: householdId,
-              weekStartDate: weekStartDate,
-              winnerUserId: winner['user_id'] ?? '',
-              winnerName: winner['user_name'] ?? 'Ganador',
-              loserUserId: loser['user_id'] ?? '',
-              loserName: loser['user_name'] ?? 'Perdedor',
-              winnerXp: (winner['xp_earned'] as num?)?.toInt() ?? 0,
-              loserXp: (loser['xp_earned'] as num?)?.toInt() ?? 0,
-            );
+                  householdId: householdId,
+                  weekStartDate: weekStartDate,
+                  winnerUserId: winner['user_id'] ?? '',
+                  winnerName: winner['user_name'] ?? 'Ganador',
+                  loserUserId: loser['user_id'] ?? '',
+                  loserName: loser['user_name'] ?? 'Perdedor',
+                  winnerXp: (winner['xp_earned'] as num?)?.toInt() ?? 0,
+                  loserXp: (loser['xp_earned'] as num?)?.toInt() ?? 0,
+                );
           }
         }
       }
@@ -374,6 +373,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
             name: runnerUp['user_name'],
             avatarUrl: runnerUp['avatar_url'],
             radius: 26,
+            forceCircular: true,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -477,6 +477,7 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                     name: player['user_name'],
                     avatarUrl: player['avatar_url'],
                     radius: 18,
+                    forceCircular: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -492,9 +493,8 @@ class _WeeklyWinnerScreenState extends ConsumerState<WeeklyWinnerScreen> {
                   Text(
                     '$xp XP',
                     style: TextStyle(
-                      color: isWinner
-                          ? AppColors.accentGold
-                          : theme.textSecondary,
+                      color:
+                          isWinner ? AppColors.accentGold : theme.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
                     ),

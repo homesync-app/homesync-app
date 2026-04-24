@@ -37,8 +37,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final tasksAsync = ref.watch(todayTasksProvider);
-    final sectionTitle = widget.isChild ? 'Tareas de hoy' : 'Hoy en casa';
-    final ctaLabel = widget.isChild ? 'Ver panel' : 'Ver semana';
+    final sectionTitle = widget.isChild ? 'Mis misiones' : 'Hoy en casa';
+    final ctaLabel = widget.isChild ? 'Ver todas' : 'Ver semana';
     return _buildSectionStateSwitcher(
       child: tasksAsync.when(
         loading: () => KeyedSubtree(
@@ -124,7 +124,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                   _buildEmptyState(
                     theme,
                     widget.isChild
-                        ? 'No hay tareas para hoy.'
+                        ? 'Hoy podes descansar o mirar la tienda.'
                         : 'No hay tareas programadas para hoy.',
                   ),
                 ],
@@ -327,8 +327,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
     if (task.isPendingApproval) {
       if (isAdultView) {
-        actionIcon = Icons.fact_check_rounded;
-        onTap = () => _showApprovalActions(task, members);
+        actionIcon = Icons.history_rounded;
+        isActionEnabled = false;
+        onTap = null;
       } else if (isChildView) {
         actionIcon = Icons.check_circle_outline_rounded;
         isActionEnabled = false;
@@ -671,39 +672,59 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   }
 
   Widget _buildEmptyState(AppThemeColors theme, String subtitle) {
+    final isChild = widget.isChild;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.fromLTRB(22, isChild ? 22 : 32, 22, 22),
       decoration: BoxDecoration(
-        color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        color: isChild
+            ? const Color(0xFFFFF7ED)
+            : theme.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(isChild ? 28 : 24),
         border: Border.all(
-          color: theme.divider.withValues(alpha: 0.05),
+          color: isChild
+              ? const Color(0xFFFFD7B3)
+              : theme.divider.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.task_alt_rounded,
-            size: 48,
-            color: theme.textSecondary.withValues(alpha: 0.2),
+          Container(
+            width: isChild ? 58 : 48,
+            height: isChild ? 58 : 48,
+            decoration: BoxDecoration(
+              color: isChild
+                  ? Colors.white.withValues(alpha: 0.8)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Icon(
+              isChild ? Icons.celebration_rounded : Icons.task_alt_rounded,
+              size: isChild ? 30 : 48,
+              color: isChild
+                  ? const Color(0xFFF08B49)
+                  : theme.textSecondary.withValues(alpha: 0.2),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             'Todo al día',
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
               color: theme.textPrimary,
+              letterSpacing: -0.35,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: isChild ? 13 : 14,
+              height: 1.25,
+              fontWeight: isChild ? FontWeight.w700 : FontWeight.w400,
               color: theme.textSecondary,
             ),
           ),

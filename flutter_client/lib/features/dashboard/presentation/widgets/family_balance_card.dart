@@ -254,6 +254,7 @@ class FamilyBalanceCard extends StatelessWidget {
             avatarUrl: balance.avatarUrl,
             name: balance.displayName,
             radius: 18,
+            forceCircular: true,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -346,6 +347,7 @@ class FamilyBalanceCard extends StatelessWidget {
             avatarUrl: balance.avatarUrl,
             name: balance.displayName,
             radius: 18,
+            forceCircular: true,
           ),
           const SizedBox(width: 12),
           Expanded(

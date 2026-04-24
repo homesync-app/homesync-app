@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +30,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final theme = context.theme;
     final type = activity['type'] as String?;
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final isPendingApproval = type == 'task_pending_approval' ||
+        data['approval_status'] == 'pending_approval';
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
@@ -42,17 +50,26 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     );
     final category = data['category'] as String?;
     final accent = _activityAccent(context, type, category);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember = ref.watch(householdMembersProvider).whenOrNull(
+          data: (members) => members
+              .where((member) => member.userId == currentUserId)
+              .firstOrNull,
+        );
+    final canReview = isPendingApproval && (currentMember?.canApprove ?? false);
 
     return InkWell(
       onTap: () => _openDetail(context, ref, type, data),
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isPendingApproval ? 14 : 16),
         decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(22),
+          color: isPendingApproval ? const Color(0xFFFFF8ED) : theme.surface,
+          borderRadius: BorderRadius.circular(isPendingApproval ? 24 : 22),
           border: Border.all(
-            color: theme.divider.withValues(alpha: 0.08),
+            color: isPendingApproval
+                ? const Color(0xFFE59A2F).withValues(alpha: 0.2)
+                : theme.divider.withValues(alpha: 0.08),
           ),
           boxShadow: [
             BoxShadow(
@@ -69,6 +86,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
               name: userName,
               avatarUrl: avatarUrl,
               radius: 20,
+              forceCircular: true,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -134,6 +152,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                         icon: Icons.access_time_rounded,
                         label: _formatTime(createdAt),
                       ),
+                      if (isPendingApproval)
+                        _metaPill(
+                          theme: theme,
+                          color: const Color(0xFFE59A2F),
+                          icon: Icons.hourglass_top_rounded,
+                          label: 'En revision',
+                        ),
                       if (amount != null)
                         _metaPill(
                           theme: theme,
@@ -146,17 +171,25 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           theme: theme,
                           color: const Color(0xFFE8943A),
                           icon: Icons.star_rounded,
-                          label: '+$xpReward XP',
+                          label: isPendingApproval
+                              ? '$xpReward XP por aprobar'
+                              : '+$xpReward XP',
                         ),
                       if (coinsReward != null && coinsReward > 0)
                         _metaPill(
                           theme: theme,
                           color: AppColors.sage,
                           icon: Icons.monetization_on_rounded,
-                          label: '+$coinsReward coins',
+                          label: isPendingApproval
+                              ? '$coinsReward coins por aprobar'
+                              : '+$coinsReward coins',
                         ),
                     ],
                   ),
+                  if (canReview) ...[
+                    const SizedBox(height: 14),
+                    _approvalActions(context, ref, data, accent),
+                  ],
                 ],
               ),
             ),
@@ -205,7 +238,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     String? type,
     Map<String, dynamic> data,
   ) async {
-    if (type == 'task') {
+    if (type == 'task' || type == 'task_pending_approval') {
       final taskData = <String, dynamic>{
         ...data,
         'title': data['task_title'] ?? data['title'],
@@ -242,6 +275,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
 
   String _headlineFor(String? type, String userName) {
     switch (type) {
+      case 'task_pending_approval':
+        return '$userName la dejo lista';
       case 'task':
         return '$userName completó';
       case 'expense':
@@ -253,6 +288,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
 
   Color _activityAccent(BuildContext context, String? type, String? category) {
     if (type == 'expense') return const Color(0xFFF08B49);
+    if (type == 'task_pending_approval') return const Color(0xFFE59A2F);
     return dashboardCategoryAccent(context, category);
   }
 
@@ -260,6 +296,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     switch (type) {
       case 'expense':
         return Icons.receipt_long_rounded;
+      case 'task_pending_approval':
+        return Icons.fact_check_rounded;
       case 'task':
         return dashboardCategoryIcon(category);
       default:
@@ -304,5 +342,110 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
     if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
     return DateFormat('d MMM', 'es_AR').format(time);
+  }
+
+  Widget _approvalActions(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> data,
+    Color accent,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: () => _approvePendingTask(context, ref, data),
+            icon: const Icon(Icons.check_rounded, size: 18),
+            label: const Text('Aprobar'),
+            style: FilledButton.styleFrom(
+              backgroundColor: accent,
+              foregroundColor: Colors.white,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _rejectPendingTask(context, ref, data),
+            icon: const Icon(Icons.reply_rounded, size: 18),
+            label: const Text('Devolver'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: accent,
+              side: BorderSide(color: accent.withValues(alpha: 0.35)),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _approvePendingTask(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> data,
+  ) async {
+    final task = _findTask(ref, data['task_id']?.toString());
+    if (task == null) {
+      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      return;
+    }
+
+    try {
+      final result =
+          await ref.read(tasksProvider.notifier).approvePendingTask(task);
+      if (!context.mounted) return;
+      if (result == null) {
+        _showSnackBar(context, 'No pudimos aprobar la tarea.');
+        return;
+      }
+      _refreshAfterReview(ref);
+      _showSnackBar(context, 'Tarea aprobada.');
+    } catch (error) {
+      if (!context.mounted) return;
+      _showSnackBar(context, 'No pudimos aprobar la tarea: $error');
+    }
+  }
+
+  Future<void> _rejectPendingTask(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> data,
+  ) async {
+    final task = _findTask(ref, data['task_id']?.toString());
+    if (task == null) {
+      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      return;
+    }
+
+    try {
+      await ref.read(tasksProvider.notifier).rejectPendingTask(task);
+      if (!context.mounted) return;
+      _refreshAfterReview(ref);
+      _showSnackBar(context, 'La tarea volvio para corregir.');
+    } catch (error) {
+      if (!context.mounted) return;
+      _showSnackBar(context, 'No pudimos devolver la tarea: $error');
+    }
+  }
+
+  TaskModel? _findTask(WidgetRef ref, String? taskId) {
+    if (taskId == null || taskId.isEmpty) return null;
+    final tasks = ref.read(tasksProvider).valueOrNull ?? const <TaskModel>[];
+    return tasks.where((task) => task.id == taskId).firstOrNull;
+  }
+
+  void _refreshAfterReview(WidgetRef ref) {
+    ref.invalidate(tasksProvider);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(statsControllerProvider);
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }
