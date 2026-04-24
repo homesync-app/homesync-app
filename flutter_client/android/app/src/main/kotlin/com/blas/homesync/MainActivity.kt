@@ -1,4 +1,4 @@
-package com.homesync.app
+package com.blas.homesync
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
