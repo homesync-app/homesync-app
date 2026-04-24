@@ -35,9 +35,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         title: Text(
           'Metas de Ahorro',
           style: TextStyle(
-              color: theme.textPrimary,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,),
+            color: theme.textPrimary,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+          ),
         ),
       ),
       body: goalsAsync.when(
@@ -169,9 +170,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           Text(
             'Ahorro Total 🏦',
             style: TextStyle(
-                color: context.theme.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,),
+              color: context.theme.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -188,14 +190,16 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildSimpleStat(
-                  label: 'Metas',
-                  value: goals.length.toString(),
-                  color: AppColors.sage,),
+                label: 'Metas',
+                value: goals.length.toString(),
+                color: AppColors.sage,
+              ),
               const SizedBox(width: 40),
               _buildSimpleStat(
-                  label: 'Cumplidas',
-                  value: goals.where((g) => g.progress >= 1).length.toString(),
-                  color: AppColors.primary,),
+                label: 'Cumplidas',
+                value: goals.where((g) => g.progress >= 1).length.toString(),
+                color: AppColors.primary,
+              ),
             ],
           ),
         ],
@@ -203,15 +207,25 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     );
   }
 
-  Widget _buildSimpleStat(
-      {required String label, required String value, required Color color,}) {
+  Widget _buildSimpleStat({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.w800, fontSize: 18,),),
-        Text(label,
-            style: TextStyle(color: context.theme.textSecondary, fontSize: 12),),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(color: context.theme.textSecondary, fontSize: 12),
+        ),
       ],
     );
   }
@@ -242,19 +256,29 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               shape: BoxShape.circle,
             ),
             child: Center(
-                child: Text(goal.icon, style: const TextStyle(fontSize: 24)),),
+              child: Text(goal.icon, style: const TextStyle(fontSize: 24)),
+            ),
           ),
-          title: Text(goal.title,
-              style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: theme.textPrimary,),),
+          title: Text(
+            goal.title,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: theme.textPrimary,
+            ),
+          ),
           subtitle: Text(
-              '\$${_fmt.format(goal.currentAmount.round())} de \$${_fmt.format(goal.targetAmount.round())}',
-              style: TextStyle(color: theme.textSecondary, fontSize: 13),),
-          trailing: Text('${(progress * 100).toStringAsFixed(0)}%',
-              style: TextStyle(
-                  color: color, fontWeight: FontWeight.w900, fontSize: 15,),),
+            '\$${_fmt.format(goal.currentAmount.round())} de \$${_fmt.format(goal.targetAmount.round())}',
+            style: TextStyle(color: theme.textSecondary, fontSize: 13),
+          ),
+          trailing: Text(
+            '${(progress * 100).toStringAsFixed(0)}%',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+            ),
+          ),
           children: [
             const Divider(),
             const SizedBox(height: 12),
@@ -279,7 +303,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: const Text('Ingresar Ahorro'),
                   ),
@@ -307,9 +332,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         Text(
           'Historial de Aportes',
           style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: context.theme.textPrimary,),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: context.theme.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         contributionsAsync.when(
@@ -317,9 +343,13 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             if (list.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Aún no hay aportes en este pocito.',
-                    style: TextStyle(
-                        color: context.theme.textSecondary, fontSize: 12,),),
+                child: Text(
+                  'Aún no hay aportes en este pocito.',
+                  style: TextStyle(
+                    color: context.theme.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
               );
             }
             return ListView.builder(
@@ -336,19 +366,24 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                         name: contribution.userName ?? '?',
                         avatarUrl: contribution.userAvatar,
                         radius: 12,
+                        forceCircular: true,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           '${contribution.userName?.split(' ')[0] ?? 'Alguien'} sumó \$${contribution.amount.toStringAsFixed(0)}',
                           style: TextStyle(
-                              fontSize: 13, color: context.theme.textPrimary,),
+                            fontSize: 13,
+                            color: context.theme.textPrimary,
+                          ),
                         ),
                       ),
                       Text(
                         DateFormat('dd MMM').format(contribution.createdAt),
                         style: TextStyle(
-                            fontSize: 11, color: context.theme.textSecondary,),
+                          fontSize: 11,
+                          color: context.theme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -377,15 +412,18 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         content: Text('Se perderá el registro de "${goal.title}".'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           TextButton(
             onPressed: () {
               ref.read(savingsGoalsProvider.notifier).removeGoal(goal.id);
               Navigator.pop(context);
             },
-            child: const Text('Eliminar',
-                style: TextStyle(color: AppColors.error),),
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -416,9 +454,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             Text(
               '¿Cuánto querés aportar?',
               style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: context.theme.textPrimary,),
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: context.theme.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -427,9 +466,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               keyboardType: TextInputType.number,
               autofocus: true,
               style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: context.theme.textPrimary,),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: context.theme.textPrimary,
+              ),
               decoration: InputDecoration(
                 prefixText: '\$ ',
                 hintText: '0.00',
@@ -457,10 +497,13 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-              child: const Text('Confirmar Ahorro',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),),
+              child: const Text(
+                'Confirmar Ahorro',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -476,8 +519,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       child: OutlinedButton.icon(
         onPressed: _showAddGoalDialog,
         icon: const Icon(Icons.add_rounded, size: 24),
-        label: const Text('Nueva Meta',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),),
+        label: const Text(
+          'Nueva Meta',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           backgroundColor: theme.surface,
@@ -741,7 +786,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                         'Elegí un ícono',
                                         emojis,
                                         (e) => setModalState(
-                                            () => selectedEmoji = e,),
+                                          () => selectedEmoji = e,
+                                        ),
                                       );
                                     },
                                   ),
@@ -770,7 +816,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                         context,
                                         colors,
                                         (c) => setModalState(
-                                            () => selectedColor = c,),
+                                          () => selectedColor = c,
+                                        ),
                                       );
                                     },
                                   ),
@@ -933,9 +980,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             Text(
               title,
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: theme.textPrimary,),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: theme.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
             GridView.builder(
@@ -989,9 +1037,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             Text(
               'Elegí un color',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: context.theme.textPrimary,),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: context.theme.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
             Row(

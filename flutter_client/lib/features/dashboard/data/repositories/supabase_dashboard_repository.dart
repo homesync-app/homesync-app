@@ -22,7 +22,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
   @override
   Stream<List<Map<String, dynamic>>> watchRecentActivity(
-      String householdId, String userId,) {
+    String householdId,
+    String userId,
+  ) {
     final now = DateTime.now();
     final since = DateTime(
       now.year,
@@ -40,7 +42,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
           rows = rows.where((r) {
             final createdAt = r['created_at'] as String?;
             if (createdAt == null) return false;
-            return DateTime.tryParse(createdAt)?.isAfter(DateTime.parse(since)) ?? false;
+            return DateTime.tryParse(createdAt)
+                    ?.isAfter(DateTime.parse(since)) ??
+                false;
           }).toList();
           // Obtener los IDs de usuario únicos para buscar sus datos
           final userIds = rows
@@ -143,13 +147,17 @@ class SupabaseDashboardRepository implements DashboardRepository {
             return true;
           }).toList();
 
-          return _dedupeActivities(filtered);
+          final pendingApprovals =
+              await _getPendingApprovalActivities(householdId, since);
+          return _dedupeActivities([...filtered, ...pendingApprovals]);
         });
   }
 
   @override
   Future<List<Map<String, dynamic>>> getRecentActivity(
-      String householdId, String userId,) async {
+    String householdId,
+    String userId,
+  ) async {
     try {
       final now = DateTime.now();
       final since = DateTime(
@@ -195,7 +203,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         if (eventType == 'task_completed') {
           uiType = 'task';
-          final taskTitle = metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
+          final taskTitle =
+              metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
           data['title'] = taskTitle;
           data['task_title'] = taskTitle;
           data['task_id'] = metadata['task_id'] ?? metadata['id'];
@@ -228,7 +237,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
           uiType = 'task';
           data['title'] = item['title'] ?? 'Premio';
         } else {
-          data['title'] = item['title'] ?? item['description'] ?? 'Realiz\u00f3 una acci\u00f3n';
+          data['title'] = item['title'] ??
+              item['description'] ??
+              'Realiz\u00f3 una acci\u00f3n';
         }
 
         return {
@@ -256,7 +267,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
           final shouldShow = isShared || isGift || creatorId == userId;
 
           dev.log(
-              'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',);
+            'Activity Filter Trace [Expense]: title="${data['title']}", isShared=$isShared, isGift=$isGift, creatorId=$creatorId, currentUserId=$userId, results SHOW=$shouldShow',
+          );
 
           return shouldShow;
         }
@@ -264,7 +276,12 @@ class SupabaseDashboardRepository implements DashboardRepository {
         return true;
       }).toList();
 
-      final activities = _dedupeActivities(mappedActivities);
+      final pendingApprovals =
+          await _getPendingApprovalActivities(householdId, since);
+      final activities = _dedupeActivities([
+        ...mappedActivities,
+        ...pendingApprovals,
+      ]);
 
       dev.log(
         'SupabaseDashboardRepository: Fetched ${activities.length} activities '
@@ -306,6 +323,82 @@ class SupabaseDashboardRepository implements DashboardRepository {
     return 'Gasto del hogar';
   }
 
+  Future<List<Map<String, dynamic>>> _getPendingApprovalActivities(
+    String householdId,
+    String since,
+  ) async {
+    try {
+      final response = await _client
+          .from('tasks')
+          .select(
+            'id, title, category, xp_reward, coin_reward, completed_at, completed_by, assigned_to, status',
+          )
+          .eq('household_id', householdId)
+          .eq('status', 'pending_approval')
+          .order('completed_at', ascending: false)
+          .limit(20);
+
+      final sinceDate = DateTime.tryParse(since);
+      final rows = List<Map<String, dynamic>>.from(response).where((task) {
+        final completedAt = DateTime.tryParse(
+          task['completed_at'] as String? ?? '',
+        );
+        if (completedAt == null || sinceDate == null) return true;
+        return completedAt.isAfter(sinceDate);
+      }).toList();
+
+      final userIds = rows
+          .map((task) => task['completed_by'] as String?)
+          .whereType<String>()
+          .toSet();
+
+      var usersMap = <String, Map<String, dynamic>>{};
+      if (userIds.isNotEmpty) {
+        final usersResponse = await _client
+            .from('users')
+            .select('id, full_name, avatar_url')
+            .inFilter('id', userIds.toList());
+        usersMap = {
+          for (final user in usersResponse)
+            user['id'] as String: Map<String, dynamic>.from(user),
+        };
+      }
+
+      return rows.map((task) {
+        final completedBy = task['completed_by'] as String?;
+        final user = completedBy != null ? usersMap[completedBy] : null;
+        final title = task['title']?.toString() ?? 'Tarea del hogar';
+
+        return {
+          'id': 'pending-task-${task['id']}',
+          'type': 'task_pending_approval',
+          'data': {
+            'user_name': user?['full_name'] ?? 'Alguien',
+            'avatar_url': user?['avatar_url'],
+            'title': title,
+            'task_title': title,
+            'task_id': task['id'],
+            'category': task['category'],
+            'xp_reward': task['xp_reward'],
+            'coins_reward': task['coin_reward'],
+            'approval_status': 'pending_approval',
+            'task_status': 'pending_approval',
+          },
+          'created_at':
+              task['completed_at'] ?? DateTime.now().toIso8601String(),
+          'creator_id': completedBy,
+        };
+      }).toList();
+    } catch (error, stackTrace) {
+      dev.log(
+        'SupabaseDashboardRepository: pending approval activity skipped',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
+  }
+
   List<Map<String, dynamic>> _dedupeActivities(
     List<Map<String, dynamic>> activities,
   ) {
@@ -317,6 +410,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
       final stableId = switch (type) {
         'expense' => data['expense_id']?.toString(),
         'task' => data['task_id']?.toString(),
+        'task_pending_approval' => data['task_id']?.toString(),
         _ => null,
       };
 
@@ -325,7 +419,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
           : '${activity['id']}';
 
       final current = unique[key];
-      if (current == null || _activityScore(activity) > _activityScore(current)) {
+      if (current == null ||
+          _activityScore(activity) > _activityScore(current)) {
         unique[key] = activity;
       }
     }
@@ -345,14 +440,18 @@ class SupabaseDashboardRepository implements DashboardRepository {
   int _activityScore(Map<String, dynamic> activity) {
     final data = (activity['data'] as Map<String, dynamic>?) ?? const {};
     final title = (data['title'] ?? '').toString().trim().toLowerCase();
-    final description = (data['description'] ?? '').toString().trim().toLowerCase();
+    final description =
+        (data['description'] ?? '').toString().trim().toLowerCase();
 
     var score = 0;
-    if (title.isNotEmpty && title != 'nuevo movimiento' && title != 'gasto del hogar') {
+    if (title.isNotEmpty &&
+        title != 'nuevo movimiento' &&
+        title != 'gasto del hogar') {
       score += 3;
     }
     if (description.isNotEmpty) score += 1;
     if (data['expense_id'] != null || data['task_id'] != null) score += 1;
+    if (data['approval_status'] == 'pending_approval') score += 2;
     return score;
   }
 }

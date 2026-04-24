@@ -38,6 +38,7 @@ Future<void> showExpenseMemberSelectorSheet({
                     avatarUrl: member.avatarUrl,
                     name: member.displayName,
                     radius: 20,
+                    forceCircular: true,
                   ),
                   title: Text(
                     member.displayName,

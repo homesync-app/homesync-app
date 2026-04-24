@@ -249,26 +249,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (result == null || !mounted) return;
       _prefillFromScan(result);
 
-      final canLink = ref.read(canUseReceiptShoppingLinkProvider);
-      if (canLink) {
-        _matchOcrItemsToShoppingList(result.detectedItems);
-      }
-    } on ScanLimitException catch (e) {
-      debugPrint('[ReceiptScan] Límite alcanzado: $e');
-      if (!mounted) return;
-      if (e.isPremium) {
-        // Usuario premium que agotó sus 50 scans: solo informar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.warning,
-            duration: const Duration(seconds: 8),
-          ),
-        );
-      } else {
-        // Usuario free que agotó sus 10 scans: mostrar paywall
-        PremiumPaywall.show(context);
-      }
+      _matchOcrItemsToShoppingList(result.detectedItems);
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
@@ -476,10 +457,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (_selectedShoppingItems.isNotEmpty) {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
         final userId = ref.read(currentUserIdProvider);
-        for (final item in _selectedShoppingItems) {
+
+        // Paralelizamos todos los items: antes se hacía secuencial (add+toggle
+        // por item) y con 14 artículos se iban ~5-6s. Con Future.wait todas las
+        // operaciones salen a la vez y el tiempo total ≈ la operación más lenta.
+        final futures = _selectedShoppingItems.map((item) async {
           if (item.id.startsWith('temp_')) {
-            // Nuevo item (detectado por OCR, no estaba en la lista):
-            // primero lo agrega, luego lo marca como comprado.
             final addResult = await shoppingRepo.addItem(
               name: item.name,
               category: (item.category != 'general')
@@ -489,9 +472,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               userId: userId ?? '',
               householdId: householdId,
             );
-
-            // Usar match explícito para garantizar que el await del toggleItem
-            // se resuelve correctamente (fold con lambdas async no siempre await bien).
             if (addResult.isRight()) {
               final newItem = addResult.getRight().toNullable()!;
               await shoppingRepo.toggleItem(
@@ -499,17 +479,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 completed: true,
                 userId: userId,
               );
-              shoppingItemsSynced++;
+              return true;
             }
+            return false;
           } else {
             final toggleResult = await shoppingRepo.toggleItem(
               itemId: item.id,
               completed: true,
               userId: userId,
             );
-            if (toggleResult.isRight()) shoppingItemsSynced++;
+            return toggleResult.isRight();
           }
-        }
+        });
+        final results = await Future.wait(futures);
+        shoppingItemsSynced = results.where((ok) => ok).length;
         ref.invalidate(shoppingItemsProvider);
       }
 
@@ -656,7 +639,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             context,
                             shoppingItemsAsync,
                           ),
-                          if (_unmatchedOcrItems.isNotEmpty) ...[
+                          if (_unmatchedOcrItems.isNotEmpty &&
+                              (ref.watch(premiumProvider).valueOrNull ??
+                                  false)) ...[
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
                               items: _unmatchedOcrItems,
@@ -1151,23 +1136,29 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   ) {
     if (_isIncome) return const SizedBox.shrink();
 
-    // Para usuarios no-premium, no mostrar la sección de vinculación.
-    // El scan solo pre-rellena monto y categoría.
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
-    if (!isPremium) return const SizedBox.shrink();
+
+    if (!isPremium && _scanResult?.detectedItems.isEmpty != false) {
+      return const SizedBox.shrink();
+    }
 
     return shoppingItemsAsync.when(
       data: (allItems) {
-        // Items auto-agregados por OCR (temp_) vs los que ya estaban en lista
         final ocrAutoAdded = _ocrMatchedShoppingItems
             .where((i) => i.id.startsWith('temp_'))
             .toSet();
 
         return ExpenseShoppingIntegrationCard(
-          isPremium: true,
-          linkedItems: _selectedShoppingItems.toList(),
+          isPremium: isPremium,
+          linkedItems: isPremium
+              ? _selectedShoppingItems.toList()
+              : _ocrMatchedShoppingItems.toList(),
           autoAddedItems: ocrAutoAdded,
-          onTap: () => _showShoppingItemsSelector(context),
+          detectedItemNames:
+              isPremium ? const [] : _scanResult?.detectedItems ?? [],
+          onTap: isPremium
+              ? () => _showShoppingItemsSelector(context)
+              : () => PremiumPaywall.show(context),
         );
       },
       loading: () => const SizedBox.shrink(),
@@ -1358,6 +1349,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 avatarUrl: m.avatarUrl,
                 name: m.displayName,
                 radius: 14,
+                forceCircular: true,
               ),
               title: Text(m.displayName, style: const TextStyle(fontSize: 13)),
               trailing: Text(

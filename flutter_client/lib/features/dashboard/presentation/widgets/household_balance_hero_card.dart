@@ -22,7 +22,8 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final householdName = householdAsync.whenOrNull(data: (h) => h?.name);
-    final members = membersAsync.whenOrNull(data: (m) => m) ?? const <MemberModel>[];
+    final members =
+        membersAsync.whenOrNull(data: (m) => m) ?? const <MemberModel>[];
     final sortedMembers = [...members]..sort((a, b) {
         if (a.userId == currentUserId) return -1;
         if (b.userId == currentUserId) return 1;
@@ -301,6 +302,7 @@ class _MembersHeader extends StatelessWidget {
                           name: member.displayName,
                           avatarUrl: member.avatarUrl,
                           radius: 14,
+                          forceCircular: true,
                         ),
                       ),
                     );

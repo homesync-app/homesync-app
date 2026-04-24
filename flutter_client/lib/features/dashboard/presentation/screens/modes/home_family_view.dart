@@ -83,6 +83,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ),
           if (memberNotFound) const SizedBox(height: 16),
           if (isChild) ...[
+            _buildStaggeredSection(
+              delayMs: 40,
+              child: _buildChildHero(theme, currentMember),
+            ),
+            const SizedBox(height: 22),
             if (caps.showTasks) ...[
               _buildStaggeredSection(
                 delayMs: 60,
@@ -93,10 +98,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ),
               ),
             ],
-            const SizedBox(height: 32),
+            const SizedBox(height: 26),
             _buildStaggeredSection(
               delayMs: 120,
-              child: _buildActivitySection(theme),
+              child: _buildActivitySection(theme, title: 'Mis logros'),
             ),
           ] else if (isTeen) ...[
             _buildStaggeredSection(
@@ -186,6 +191,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 _buildWelcomeGreetingSpan(
                   theme: theme,
                   currentMemberName: currentMember?.displayName,
+                  isChild: currentMember?.isChild ?? false,
                 ),
                 style: TextStyle(
                   color: theme.textPrimary,
@@ -213,10 +219,23 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         const SizedBox(width: 8),
         GestureDetector(
           onTap: widget.onAvatarTap,
-          child: CustomUserAvatar(
-            avatarUrl: currentMember?.avatarUrl,
-            radius: 26,
-            showBorder: true,
+          child: Transform.translate(
+            offset: const Offset(6, 0),
+            child: SizedBox(
+              width: 96,
+              height: 58,
+              child: OverflowBox(
+                alignment: Alignment.topRight,
+                maxWidth: 122,
+                maxHeight: 132,
+                child: CustomUserAvatar(
+                  avatarUrl: currentMember?.avatarUrl,
+                  radius: 26,
+                  showBorder: true,
+                  isAnimated: true,
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -403,6 +422,142 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ],
         ).animate().fadeIn(delay: 240.ms),
       ],
+    );
+  }
+
+  Widget _buildChildHero(AppThemeColors theme, MemberModel? currentMember) {
+    final balanceAsync = ref.watch(userBalanceProvider);
+    final coins =
+        balanceAsync.whenOrNull(data: (balance) => balance?['coins'] as int?) ??
+            0;
+    final xp =
+        balanceAsync.whenOrNull(data: (balance) => balance?['xp'] as int?) ?? 0;
+    final firstName = currentMember?.displayName ?? 'vos';
+    final caps = ref.watch(householdCapabilitiesProvider);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFF2DF),
+            Color(0xFFFFF8F0),
+            Color(0xFFEAF7F4),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFFFD7B3)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF08B49).withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.74),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Color(0xFFF08B49),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Aventura de hoy',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    letterSpacing: -0.55,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '$firstName, cada mision aprobada suma coins para la tienda.',
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w800,
+              height: 1.25,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _ChildHeroMetric(
+                  icon: Icons.monetization_on_rounded,
+                  label: 'Coins',
+                  value: '$coins',
+                  color: AppColors.sage,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ChildHeroMetric(
+                  icon: Icons.star_rounded,
+                  label: 'XP',
+                  value: '$xp',
+                  color: const Color(0xFFE8943A),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Mira que premios podes alcanzar.',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: () {
+                  final index = indexForMainTab(
+                    caps,
+                    MainTab.shopping,
+                    currentMember: currentMember,
+                  );
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
+                icon: const Icon(Icons.storefront_rounded, size: 18),
+                label: const Text('Tienda'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -909,8 +1064,26 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   TextSpan _buildWelcomeGreetingSpan({
     required AppThemeColors theme,
     required String? currentMemberName,
+    bool isChild = false,
   }) {
     final firstName = _firstName(currentMemberName);
+    if (isChild) {
+      return TextSpan(
+        children: [
+          TextSpan(
+            text: 'Hola, ',
+            style: TextStyle(color: theme.textPrimary),
+          ),
+          TextSpan(
+            text: firstName ?? 'campeon',
+            style: TextStyle(
+              color: theme.primary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      );
+    }
     final welcome = firstName != null
         ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
         : 'Bienvenido';
@@ -965,6 +1138,77 @@ class _ShoppingLoadingTile extends StatelessWidget {
           ),
           SizedBox(width: 12),
           ShimmerLoading(height: 16, width: 16, borderRadius: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChildHeroMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _ChildHeroMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.74),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 17),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    height: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

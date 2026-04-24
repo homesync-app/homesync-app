@@ -10,6 +10,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   final bool isPremium;
   final List<ShoppingItemModel> linkedItems;
   final Set<ShoppingItemModel> autoAddedItems;
+  final List<String> detectedItemNames;
   final VoidCallback onTap;
 
   const ExpenseShoppingIntegrationCard({
@@ -17,13 +18,16 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
     required this.isPremium,
     required this.linkedItems,
     this.autoAddedItems = const {},
+    this.detectedItemNames = const [],
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hasItems = linkedItems.isNotEmpty;
+    final hasItems = linkedItems.isNotEmpty || detectedItemNames.isNotEmpty;
     final newCount = autoAddedItems.length;
+
+    if (!isPremium) return _buildLockedCard(context, hasItems);
 
     return InkWell(
       onTap: onTap,
@@ -44,7 +48,6 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Header ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Row(
@@ -117,8 +120,6 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // ── Chips ────────────────────────────────────────────────────────
             if (hasItems) ...[
               const SizedBox(height: 12),
               const Divider(height: 1, indent: 16, endIndent: 16),
@@ -131,6 +132,153 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                   children: linkedItems.map((item) {
                     final isNew = autoAddedItems.contains(item);
                     return _ItemChip(item: item, isNew: isNew);
+                  }).toList(),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 16),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedCard(BuildContext context, bool hasItems) {
+    final displayNames =
+        hasItems ? linkedItems.map((i) => i.name).toList() : detectedItemNames;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.divider.withValues(alpha: 0.6),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.grey,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text(
+                              'Vincular con lista de compras',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'PREMIUM',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primary,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          displayNames.isNotEmpty
+                              ? '${displayNames.length} ${displayNames.length == 1 ? 'producto detectado' : 'productos detectados'}'
+                              : 'Toca para vincular artículos',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Colors.grey,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+            if (displayNames.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: displayNames.take(8).map((name) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            '🛒',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }).toList(),
                 ),
               ),
@@ -269,8 +417,9 @@ class _ShoppingItemsSelectorSheetState
 
             if (!existsInHousehold &&
                 !existsInSelection &&
-                !predefinedMatches.any((pm) =>
-                    pm['name']!.toLowerCase() == itemName.toLowerCase(),)) {
+                !predefinedMatches.any(
+                  (pm) => pm['name']!.toLowerCase() == itemName.toLowerCase(),
+                )) {
               predefinedMatches.add({...item, 'categoryId': catId});
             }
           }
@@ -385,7 +534,9 @@ class _ShoppingItemsSelectorSheetState
                             setState(() => _searchQuery = '');
                             _searchFocus.requestFocus();
 
-                            await ref.read(shoppingItemsProvider.notifier).addItem(
+                            await ref
+                                .read(shoppingItemsProvider.notifier)
+                                .addItem(
                                   name: queryToSave,
                                   category: 'general',
                                   emoji: '🏷️',
@@ -484,7 +635,9 @@ class _ShoppingItemsSelectorSheetState
                               setState(() => _searchQuery = '');
                               _searchFocus.requestFocus();
 
-                              await ref.read(shoppingItemsProvider.notifier).addItem(
+                              await ref
+                                  .read(shoppingItemsProvider.notifier)
+                                  .addItem(
                                     name: name,
                                     category: cat,
                                     emoji: emoji,

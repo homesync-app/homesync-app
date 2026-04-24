@@ -155,6 +155,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                 name: debt.fromName,
                 radius: 18,
                 showBorder: true,
+                forceCircular: true,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -204,6 +205,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                 name: debt.toName,
                 radius: 18,
                 showBorder: true,
+                forceCircular: true,
               ),
               const SizedBox(width: 4),
               _isSettling

@@ -29,7 +29,7 @@ class UserAvatar {
 
   static const List<Map<String, dynamic>> defaultAvatars = [
     {'emoji': '\u{1F431}', 'color': Color(0xFFFFD180), 'name': 'Gato'},
-    {'emoji': '\u{1F436}', 'color': Color(0xFF80D8FF), 'name': 'Perro'},
+    {'emoji': '\u{1F436}', 'color': Color(0xFFFFEDE4), 'name': 'Perro'},
     {'emoji': '\u{1F98A}', 'color': Color(0xFFFFAB40), 'name': 'Zorro'},
     {'emoji': '\u{1F43C}', 'color': Color(0xFFB9F6CA), 'name': 'Panda'},
     {'emoji': '\u{1F430}', 'color': Color(0xFFFF80AB), 'name': 'Conejo'},
@@ -66,45 +66,40 @@ class UserAvatar {
       'color': Color(0xFFD8ECFA),
     },
     {
-      'id': 'premium_boy',
-      'url':
-          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/boy.png',
-      'name': 'Chico 3D',
-      'color': Color(0xFFE3F2FD),
+      'id': 'premium_orange_cat',
+      'url': 'assets/images/premium_3d_avatars/premium_orange_cat.png',
+      'name': 'Gatito Naranja',
+      'color': Color(0xFFFFD180),
     },
     {
-      'id': 'premium_girl',
-      'url':
-          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/girl.png',
-      'name': 'Chica 3D',
-      'color': Color(0xFFFCE4EC),
+      'id': 'premium_paper_plane_kid',
+      'url': 'assets/images/premium_3d_avatars/premium_paper_plane_kid.png',
+      'name': 'Mini Aventurero',
+      'color': Color(0xFFFFE0C2),
     },
     {
-      'id': 'premium_cat',
-      'url': 'assets/images/gato_premium_v2.mp4',
-      'name': 'Gato Animado',
-      'color': Color(0xFFFFF3E0),
+      'id': 'premium_plant_adult',
+      'url': 'assets/images/premium_3d_avatars/premium_plant_adult.png',
+      'name': 'Rochi Plantitas',
+      'color': Color(0xFFDCE8CF),
     },
     {
-      'id': 'premium_dog',
-      'url':
-          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/dog.png',
-      'name': 'Perro 3D',
-      'color': Color(0xFFE8EAF6),
+      'id': 'premium_star_girl',
+      'url': 'assets/images/premium_3d_avatars/premium_star_girl.png',
+      'name': 'Mini Estrella',
+      'color': Color(0xFFFFD8C7),
     },
     {
-      'id': 'premium_robot',
-      'url':
-          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/robot.png',
-      'name': 'Robot 3D',
-      'color': Color(0xFFE0F2F1),
+      'id': 'premium_key_bird',
+      'url': 'assets/images/premium_3d_avatars/premium_key_bird.png',
+      'name': 'Pajarito Llaves',
+      'color': Color(0xFFFFE7A8),
     },
     {
-      'id': 'premium_bird',
-      'url':
-          'https://tfavamqszdkoeabpyxms.supabase.co/storage/v1/object/public/avatars/bird.png',
-      'name': 'P\u00E1jaro 3D',
-      'color': Color(0xFFF3E5F5),
+      'id': 'premium_tool_adult_man',
+      'url': 'assets/images/premium_3d_avatars/premium_tool_adult_man.png',
+      'name': 'Manos a Casa',
+      'color': Color(0xFFDCE8CF),
     },
   ];
 
@@ -384,7 +379,9 @@ class _AvatarContent extends StatelessWidget {
         (radius * 2 * MediaQuery.devicePixelRatioOf(context)).round();
 
     final String cleanUrl =
-        (normalizedAvatarUrl ?? '').replaceFirst('premium://', '');
+        normalizedAvatarUrl?.startsWith('premium://') == true
+            ? UserAvatar.resolvePremiumAvatarUrl(normalizedAvatarUrl!)
+            : (normalizedAvatarUrl ?? '');
     final bool isAsset = hasAvatar && cleanUrl.startsWith('assets/');
 
     final bool isEmoji =
@@ -514,7 +511,7 @@ class _PremiumCharacterAvatar extends StatelessWidget {
     final bool shouldPlayVideo =
         isVideo && (isAnimated || isPriority || radius >= 32);
 
-    final double size = isVideo ? radius * 2.8 : radius * 2.8;
+    final double size = isVideo ? radius * 2.8 : radius * 3.38;
     final int premiumCacheSize =
         (size * MediaQuery.devicePixelRatioOf(context)).round();
 
@@ -674,16 +671,16 @@ class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2800),
+      duration: const Duration(milliseconds: 3600),
     )..repeat(reverse: true);
 
-    _offsetAnimation = Tween<double>(begin: 0.0, end: -6.0).animate(
+    _offsetAnimation = Tween<double>(begin: 0.0, end: -2.5).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    _scaleAnimation = Tween<double>(begin: 0.98, end: 1.03).animate(
+    _scaleAnimation = Tween<double>(begin: 0.995, end: 1.012).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    _glowAnimation = Tween<double>(begin: 0.18, end: 0.42).animate(
+    _glowAnimation = Tween<double>(begin: 0.06, end: 0.16).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -713,8 +710,8 @@ class _PremiumAvatarMotionState extends State<_PremiumAvatarMotion>
                     color: AppColors.accentGold.withValues(
                       alpha: _glowAnimation.value,
                     ),
-                    blurRadius: widget.isPriority ? 22 : 16,
-                    spreadRadius: widget.isPriority ? 3 : 1,
+                    blurRadius: widget.isPriority ? 16 : 10,
+                    spreadRadius: widget.isPriority ? 2 : 0,
                   ),
                 ],
               ),

@@ -320,6 +320,7 @@ class _RankingRow extends ConsumerWidget {
             avatarUrl: resolvedAvatar,
             name: name,
             radius: 18,
+            forceCircular: true,
           ),
           const SizedBox(width: 10),
           Expanded(

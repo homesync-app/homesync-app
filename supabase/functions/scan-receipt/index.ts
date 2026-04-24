@@ -26,10 +26,9 @@ interface OcrResult {
   confidence: number;
 }
 
-const SCAN_LIMITS: Record<string, number> = {
-  free: 10,
-  premium: 50,
-};
+// Scan limits removed — OCR (amount + category) is free for all users.
+// Premium gating for product detection → shopping list linking is handled
+// on the client side via canUseReceiptShoppingLinkProvider.
 
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
@@ -182,34 +181,8 @@ serve(async (req) => {
 
     const householdId = memberRow.household_id;
     const tier = (memberRow.households as { subscription_tier: string } | null)?.subscription_tier ?? "free";
-    const limit = SCAN_LIMITS[tier] ?? SCAN_LIMITS.free;
 
-    // Contar scans del mes actual
-    const startOfMonth = new Date();
-    startOfMonth.setUTCDate(1);
-    startOfMonth.setUTCHours(0, 0, 0, 0);
-
-    const { count, error: countError } = await supabase
-      .from("receipt_scan_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("household_id", householdId)
-      .gte("scanned_at", startOfMonth.toISOString());
-
-    if (countError) {
-      console.error("Error contando scans:", countError);
-      return new Response(JSON.stringify({ error: "Error interno" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const usedScans = count ?? 0;
-    if (usedScans >= limit) {
-      return new Response(
-        JSON.stringify({ error: "scan_limit_reached", used: usedScans, limit, tier }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // No scan limit — OCR is free for all. We still log scans for analytics.
     // Leer imagen del body
     const body = await req.json();
     const { imageBase64, mimeType = "image/webp" } = body as {
@@ -314,7 +287,7 @@ serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({ data: result, usage: { used: usedScans + 1, limit, tier } }),
+      JSON.stringify({ data: result, tier }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
