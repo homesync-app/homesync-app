@@ -185,8 +185,11 @@ class _BenefitCard extends StatelessWidget {
   final String title;
   final String desc;
 
-  const _BenefitCard(
-      {required this.icon, required this.title, required this.desc,});
+  const _BenefitCard({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -256,43 +259,28 @@ class _ProductList extends ConsumerWidget {
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            if (AppEnvironment.enableAdminTesting)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                onPressed: () async {
-                  await ref.read(premiumProvider.notifier).togglePremiumMock();
-                  if (context.mounted) Navigator.pop(context);
-                },
-                child: const Text('Activar Mock Premium (DEV)'),
-              )
-            else
-              const Column(
-                children: [
-                  SizedBox(height: 12),
-                  Icon(Icons.rocket_launch_rounded,
-                      size: 40, color: AppColors.primary,),
-                  SizedBox(height: 8),
-                  Text(
-                    '¡Muy pronto!',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Las suscripciones Premium estarán disponibles en la próxima actualización.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                  ),
-                ],
               ),
+              onPressed: () async {
+                await ref.read(premiumProvider.notifier).togglePremiumMock();
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Activar Premium'),
+            ),
+            if (!AppEnvironment.isProduction) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'Modo testing · sin cargo',
+                style: TextStyle(color: Colors.white38, fontSize: 11),
+              ),
+            ],
           ],
         ),
       );
@@ -332,7 +320,10 @@ class _ProductCard extends ConsumerWidget {
         title: Text(
           product.title.split('(').first.trim(),
           style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18,),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         subtitle: Text(
           product.description,
@@ -345,16 +336,20 @@ class _ProductCard extends ConsumerWidget {
             Text(
               product.price,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,),
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+              ),
             ),
             if (isYearly)
-              const Text('Ahorra 20%',
-                  style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,),),
+              const Text(
+                'Ahorra 20%',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
           ],
         ),
         onTap: () => ref.read(buyPremiumProductUseCaseProvider).call(product),
@@ -363,9 +358,9 @@ class _ProductCard extends ConsumerWidget {
   }
 }
 
-class _AlreadyPremiumCard extends StatelessWidget {
+class _AlreadyPremiumCard extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -375,13 +370,19 @@ class _AlreadyPremiumCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.stars_rounded,
-              color: AppColors.accentGold, size: 64,),
+          const Icon(
+            Icons.stars_rounded,
+            color: AppColors.accentGold,
+            size: 64,
+          ),
           const SizedBox(height: 16),
           const Text(
             '¡Ya eres Premium!',
             style: TextStyle(
-                color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900,),
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -397,9 +398,21 @@ class _AlreadyPremiumCard extends StatelessWidget {
               side: const BorderSide(color: Colors.white24),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),),
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
             child: const Text('Continuar'),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () async {
+              await ref.read(premiumProvider.notifier).togglePremiumMock();
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text(
+              'Desactivar Premium (testing)',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+            ),
           ),
         ],
       ),
@@ -421,8 +434,10 @@ class _StoreError extends ConsumerWidget {
           'Error al conectar con la tienda',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        Text(error,
-            style: const TextStyle(color: Colors.white30, fontSize: 10),),
+        Text(
+          error,
+          style: const TextStyle(color: Colors.white30, fontSize: 10),
+        ),
         const SizedBox(height: 24),
         // Switch to allow dev toggle if store fails
         ElevatedButton(
