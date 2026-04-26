@@ -715,9 +715,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     List<MemberModel> members,
     Set<String> selectedCategories,
   ) {
-    // 1. Group by category
-    // Show all persisted tasks so users can always edit/program/delete them.
-    final deduped = tasks;
+    // 1. Deduplicate by id (defensive: RPC may return duplicate rows)
+    // then group by category so users can always edit/program/delete them.
+    final seen = <String>{};
+    final deduped = tasks.where((t) => seen.add(t.id)).toList();
 
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};

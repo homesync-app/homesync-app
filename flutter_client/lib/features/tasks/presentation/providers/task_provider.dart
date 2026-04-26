@@ -632,8 +632,11 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
 
       if (task.recurrenceType == 'daily') return true;
 
-      if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {
-        return true;
+      if (task.dueAt != null) {
+        final now = DateTime.now();
+        final dueDay = DateTime(task.dueAt!.year, task.dueAt!.month, task.dueAt!.day);
+        final today = DateTime(now.year, now.month, now.day);
+        if (!dueDay.isAfter(today)) return true;
       }
 
       return false;
@@ -646,8 +649,11 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
     // Family QA and new households can have active tasks without a due date or
     // explicit "today" schedule yet. In that case, show the next active tasks
     // instead of leaving the home empty.
+    // Exclude tasks that were explicitly de-scheduled (no dueAt AND no recurrence)
+    // so they don't appear in the home view after the parent removes their schedule.
     final householdFallback = tasks.where((task) {
       if (!task.isActive) return false;
+      if (task.dueAt == null && task.recurrenceType == null) return false;
       if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }
