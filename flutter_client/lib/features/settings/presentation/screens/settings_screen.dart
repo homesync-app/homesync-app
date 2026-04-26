@@ -383,7 +383,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             eyebrow: 'APP',
                             title: 'Preferencias',
                             subtitle:
-                                'Tema, notificaciones y herramientas de ayuda.',
+                                'Tema, notificaciones, ayuda y feedback.',
                           ),
                           const SizedBox(height: 14),
                           _buildPremiumCard(),
@@ -397,6 +397,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 24),
                           ],
                           _buildFAQButton(),
+                          const SizedBox(height: 24),
+                          _buildFeedbackCard(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
                             eyebrow: 'CUENTA',
@@ -1219,6 +1221,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         FAQSheet.show(context);
       },
     );
+  }
+
+  Widget _buildFeedbackCard() {
+    return const SettingsFeedbackCard();
   }
 
   Widget _buildLogoutButton() {
