@@ -611,6 +611,8 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
               const SizedBox(height: 20),
               _CatalogRequestsSection(theme: theme),
               const SizedBox(height: 20),
+              _UserFeedbackSection(theme: theme),
+              const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -1012,6 +1014,309 @@ class _ScenarioCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─── Feedback de usuarios ────────────────────────────────────────────────────
+
+final _userFeedbackProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.read(supabaseClientProvider);
+  final response = await client
+      .from('user_feedback')
+      .select('id, type, title, description, email, app_version, platform, created_at')
+      .order('created_at', ascending: false)
+      .limit(100);
+  return List<Map<String, dynamic>>.from(response as List);
+});
+
+class _UserFeedbackSection extends ConsumerStatefulWidget {
+  final dynamic theme;
+  const _UserFeedbackSection({required this.theme});
+
+  @override
+  ConsumerState<_UserFeedbackSection> createState() =>
+      _UserFeedbackSectionState();
+}
+
+class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
+  String _typeFilter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final feedbackAsync = ref.watch(_userFeedbackProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 18,
+                  color: theme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Feedback de usuarios',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Reportes y sugerencias enviados desde la app',
+                      style: TextStyle(fontSize: 12, color: theme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                onPressed: () => ref.invalidate(_userFeedbackProvider),
+                tooltip: 'Actualizar',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _filterChip(theme, 'all', 'Todos'),
+                _filterChip(theme, 'bug', 'Errores'),
+                _filterChip(theme, 'suggestion', 'Sugerencias'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          feedbackAsync.when(
+            data: (items) {
+              final filtered = _typeFilter == 'all'
+                  ? items
+                  : items.where((i) => i['type'] == _typeFilter).toList();
+
+              if (filtered.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      _typeFilter == 'all'
+                          ? 'Sin feedback todavía'
+                          : _typeFilter == 'bug'
+                              ? 'Sin reportes de errores'
+                              : 'Sin sugerencias todavía',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: filtered
+                    .map((item) => _FeedbackTile(item: item, theme: theme))
+                    .toList(),
+              );
+            },
+            loading: () => const LinearProgressIndicator(minHeight: 3),
+            error: (e, _) => Text(
+              'Error cargando feedback: $e',
+              style: TextStyle(color: theme.error, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip(dynamic theme, String value, String label) {
+    final selected = _typeFilter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        selected: selected,
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        onSelected: (_) => setState(() => _typeFilter = value),
+        visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+}
+
+class _FeedbackTile extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final dynamic theme;
+  const _FeedbackTile({required this.item, required this.theme});
+
+  @override
+  State<_FeedbackTile> createState() => _FeedbackTileState();
+}
+
+class _FeedbackTileState extends State<_FeedbackTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final item = widget.item;
+    final isBug = (item['type'] as String?) == 'bug';
+    final color = isBug ? AppColors.error : AppColors.primary;
+    final title = item['title'] as String? ?? '';
+    final description = item['description'] as String?;
+    final email = item['email'] as String?;
+    final appVersion = item['app_version'] as String?;
+    final platform = item['platform'] as String?;
+    final createdAt = item['created_at'] as String?;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: () => setState(() => _expanded = !_expanded),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _expanded
+                  ? color.withValues(alpha: 0.5)
+                  : theme.border.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      isBug ? 'BUG' : 'IDEA',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: _expanded ? null : 1,
+                      overflow: _expanded ? null : TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (createdAt != null) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      _formatDate(createdAt),
+                      style: TextStyle(fontSize: 10, color: theme.textMuted),
+                    ),
+                  ],
+                ],
+              ),
+              if (_expanded) ...[
+                if (description != null && description.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.4,
+                      color: theme.textSecondary,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    if (email != null)
+                      _metaChip(theme, Icons.email_outlined, email),
+                    if (platform != null)
+                      _metaChip(theme, Icons.smartphone_outlined, platform),
+                    if (appVersion != null)
+                      _metaChip(theme, Icons.info_outline_rounded, 'v$appVersion'),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _metaChip(dynamic theme, IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: theme.textMuted),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 10, color: theme.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return iso;
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    final dd = dt.day.toString().padLeft(2, '0');
+    final mon = dt.month.toString().padLeft(2, '0');
+    return '$dd/$mon $hh:$mm';
   }
 }
 
