@@ -201,8 +201,13 @@ class TaskModel {
   bool get isObjected => status == TaskStatus.objected;
   bool get isPending => isActive;
   bool get isRecurring => recurrenceType != null;
-  bool get isOverdue =>
-      dueAt != null && dueAt!.isBefore(DateTime.now()) && isActive;
+  bool get isOverdue {
+    if (dueAt == null || !isActive) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDay = DateTime(dueAt!.year, dueAt!.month, dueAt!.day);
+    return dueDay.isBefore(today);
+  }
   bool get isDueToday {
     if (dueAt == null) return false;
     final now = DateTime.now();

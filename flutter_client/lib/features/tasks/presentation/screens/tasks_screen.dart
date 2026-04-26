@@ -176,6 +176,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                     recurrenceMonthDays: selection.recurrenceMonthDays,
                     assignedTo: selection.assignedTo,
                   );
+              ref.invalidate(todayTasksProvider);
               if (mounted) {
                 _showSnack('Frecuencia actualizada', AppColors.accentGreen);
               }
