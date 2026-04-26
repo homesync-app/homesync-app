@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,14 +15,16 @@ enum FeedbackType { bug, suggestion }
 class FeedbackSheet extends ConsumerStatefulWidget {
   final FeedbackType initialType;
 
-  const FeedbackSheet({super.key, this.initialType = FeedbackType.bug});
+  const FeedbackSheet({super.key, this.initialType = FeedbackType.bug, this.currentScreen});
 
-  static void show(BuildContext context, {FeedbackType type = FeedbackType.bug}) {
+  final String? currentScreen;
+
+  static void show(BuildContext context, {FeedbackType type = FeedbackType.bug, String? screen}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => FeedbackSheet(initialType: type),
+      builder: (ctx) => FeedbackSheet(initialType: type, currentScreen: screen),
     );
   }
 
@@ -62,6 +66,21 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
       final email = profile?['email'] as String?;
       final info = await PackageInfo.fromPlatform();
 
+      String? deviceModel;
+      String? osVersion;
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        deviceModel = '${android.manufacturer} ${android.model}';
+        osVersion = 'Android ${android.version.release} (SDK ${android.version.sdkInt})';
+      } else if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        deviceModel = ios.utsname.machine;
+        osVersion = '${ios.systemName} ${ios.systemVersion}';
+      }
+
+      final locale = Platform.localeName;
+
       await client.from('user_feedback').insert({
         'user_id': userId,
         'email': email,
@@ -69,7 +88,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         'title': title,
         'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
         'app_version': '${info.version}+${info.buildNumber}',
-        'platform': Theme.of(context).platform.name,
+        'platform': Platform.isAndroid ? 'android' : Platform.isIOS ? 'ios' : 'unknown',
+        'device_model': deviceModel,
+        'os_version': osVersion,
+        'locale': locale,
+        'screen_name': widget.currentScreen,
       });
 
       setState(() {
