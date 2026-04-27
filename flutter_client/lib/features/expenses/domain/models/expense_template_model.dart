@@ -9,6 +9,7 @@ class ExpenseTemplateModel {
   final String splitType;
   final String payerDefault;
   final bool isActive;
+  final String type; // 'expense' | 'income'
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? nextExecutionDate;
@@ -24,10 +25,13 @@ class ExpenseTemplateModel {
     required this.splitType,
     required this.payerDefault,
     this.isActive = true,
+    this.type = 'expense',
     this.createdAt,
     this.updatedAt,
     this.nextExecutionDate,
   });
+
+  bool get isIncome => type == 'income';
 
   factory ExpenseTemplateModel.fromJson(Map<String, dynamic> json) {
     return ExpenseTemplateModel(
@@ -41,6 +45,7 @@ class ExpenseTemplateModel {
       splitType: json['split_type'] as String,
       payerDefault: json['payer_default'] as String,
       isActive: json['is_active'] as bool? ?? true,
+      type: json['type'] as String? ?? 'expense',
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
       nextExecutionDate: json['next_execution_date'] != null ? DateTime.parse(json['next_execution_date'] as String) : null,
@@ -59,6 +64,7 @@ class ExpenseTemplateModel {
       'split_type': splitType,
       'payer_default': payerDefault,
       'is_active': isActive,
+      'type': type,
       if (nextExecutionDate != null) 'next_execution_date': nextExecutionDate!.toIso8601String(),
     };
   }
@@ -74,6 +80,7 @@ class ExpenseTemplateModel {
     String? splitType,
     String? payerDefault,
     bool? isActive,
+    String? type,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? nextExecutionDate,
@@ -89,6 +96,7 @@ class ExpenseTemplateModel {
       splitType: splitType ?? this.splitType,
       payerDefault: payerDefault ?? this.payerDefault,
       isActive: isActive ?? this.isActive,
+      type: type ?? this.type,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       nextExecutionDate: nextExecutionDate ?? this.nextExecutionDate,

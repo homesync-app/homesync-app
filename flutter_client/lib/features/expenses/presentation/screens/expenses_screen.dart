@@ -17,6 +17,8 @@ import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
+import '../providers/estimated_income_provider.dart';
+import '../widgets/estimated_income_sheet.dart';
 import '../widgets/expense_detail_sheet.dart';
 import '../widgets/expense_form_sheet.dart';
 import '../widgets/planned_expense_payment_sheet.dart';
@@ -124,6 +126,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final summaryAsync = ref.watch(personalFinanceSummaryProvider);
     final feedAsync = ref.watch(combinedFeedControllerProvider);
     final projectionAsync = ref.watch(monthlyProjectionProvider);
+    final estimatedIncomeAsync = ref.watch(estimatedIncomeNotifierProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -155,21 +158,33 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 error: (e, _) => Center(child: Text('Error: $e')),
                 data: (summary) {
-                  final income = (summary['income'] as num?)?.toDouble() ?? 0.0;
+                  final realIncome =
+                      (summary['income'] as num?)?.toDouble() ?? 0.0;
                   final expense =
                       (summary['expense'] as num?)?.toDouble() ?? 0.0;
+                  final estimated =
+                      estimatedIncomeAsync.valueOrNull;
+                  final isIncomeEstimated =
+                      realIncome == 0 && estimated?.isSet == true;
+                  final income = realIncome > 0
+                      ? realIncome
+                      : (estimated?.isSet == true
+                          ? estimated!.amount
+                          : 0.0);
                   final balance = income - expense;
 
                   return projectionAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (_, __) =>
-                        _buildUnifiedSummaryCard(balance, income, expense, 0),
+                    error: (_, __) => _buildUnifiedSummaryCard(
+                        balance, income, expense, 0,
+                        isIncomeEstimated: isIncomeEstimated),
                     data: (proj) => _buildUnifiedSummaryCard(
                       balance,
                       income,
                       expense,
                       proj.pending,
+                      isIncomeEstimated: isIncomeEstimated,
                     ),
                   );
                 },
@@ -459,10 +474,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     num balance,
     num income,
     num expense,
-    num projectedPending,
-  ) {
+    num projectedPending, {
+    bool isIncomeEstimated = false,
+  }) {
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
+    final hasIncome = income > 0;
 
     return Container(
       width: double.infinity,
@@ -480,7 +497,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'TU BALANCE ACTUAL',
+                  hasIncome ? 'TU BALANCE ACTUAL' : 'GASTOS DEL MES',
                   style: TextStyle(
                     color: theme.textMuted,
                     fontSize: 11.5,
@@ -493,7 +510,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '\$ ${_formatCurrency(balance)}',
+                    '\$ ${_formatCurrency(hasIncome ? balance : expense)}',
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 40,
@@ -502,19 +519,63 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     ),
                   ),
                 ),
+                if (!hasIncome) ...[
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: () => EstimatedIncomeSheet.show(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.success.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_circle_outline_rounded,
+                            size: 14,
+                            color: AppColors.success.withValues(alpha: 0.8),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Agregá tu ingreso para ver el balance',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.success.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    Expanded(
-                      child: _buildPremiumStatTile(
-                        'Ingresos',
-                        income,
-                        AppColors.success,
-                        Icons.trending_up_rounded,
-                        onTap: () => _showIncomeBreakdownSheet(income),
+                    if (hasIncome) ...[
+                      Expanded(
+                        child: _buildPremiumStatTile(
+                          isIncomeEstimated ? 'Ingreso estimado' : 'Ingresos',
+                          income,
+                          AppColors.success,
+                          isIncomeEstimated
+                              ? Icons.edit_rounded
+                              : Icons.trending_up_rounded,
+                          onTap: isIncomeEstimated
+                              ? () => EstimatedIncomeSheet.show(context)
+                              : () => _showIncomeBreakdownSheet(income),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
+                      const SizedBox(width: 16),
+                    ],
                     Expanded(
                       child: _buildPremiumStatTile(
                         'Gastos',
@@ -559,15 +620,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 ),
                 Expanded(
                   child: _buildProjectionStat(
-                    'Cierre estimado',
-                    projectedBalance,
+                    hasIncome ? 'Cierre estimado' : 'Pendiente de pagar',
+                    hasIncome ? projectedBalance : projectedPending,
                     theme.textPrimary,
                     isBold: true,
-                    onTap: () => _showProjectionBreakdownSheet(
-                      balance,
-                      projectedPending,
-                      projectedBalance,
-                    ),
+                    onTap: () => hasIncome
+                        ? _showProjectionBreakdownSheet(
+                            balance,
+                            projectedPending,
+                            projectedBalance,
+                          )
+                        : _showPendingBreakdownSheet(projectedPending),
                   ),
                 ),
               ],
@@ -1784,7 +1847,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   void _showTemplateForm(
     BuildContext context, {
     ExpenseTemplateModel? template,
+    String initialType = 'expense',
   }) {
-    RecurringExpenseFormSheet.show(context, template: template);
+    RecurringExpenseFormSheet.show(
+      context,
+      template: template,
+      initialType: initialType,
+    );
   }
 }

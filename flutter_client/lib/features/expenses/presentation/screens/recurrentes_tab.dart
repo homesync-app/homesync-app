@@ -11,8 +11,11 @@ import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class RecurrentesTab extends ConsumerWidget {
   final String Function(num) formatCurrency;
-  final void Function(BuildContext context, {ExpenseTemplateModel? template})
-      onTemplateForm;
+  final void Function(
+    BuildContext context, {
+    ExpenseTemplateModel? template,
+    String initialType,
+  }) onTemplateForm;
 
   const RecurrentesTab({
     required this.formatCurrency,
@@ -31,6 +34,11 @@ class RecurrentesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (templates) {
+        final incomes =
+            templates.where((t) => t.isIncome).toList();
+        final expenses =
+            templates.where((t) => !t.isIncome).toList();
+
         return RefreshIndicator(
           onRefresh: () async =>
               ref.invalidate(expenseTemplateControllerProvider),
@@ -40,7 +48,7 @@ class RecurrentesTab extends ConsumerWidget {
               parent: AlwaysScrollableScrollPhysics(),
             ),
             slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               if (templates.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -62,7 +70,7 @@ class RecurrentesTab extends ConsumerWidget {
                         ),
                         const SizedBox(height: 24),
                         const Text(
-                          'Sin gastos recurrentes',
+                          'Sin recurrentes',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
@@ -74,7 +82,7 @@ class RecurrentesTab extends ConsumerWidget {
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 48),
                           child: Text(
-                            'Crea plantillas para tus suscripciones o alquileres y nosotros nos encargamos del resto.',
+                            'Crea plantillas para tus suscripciones, alquileres o ingresos fijos.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: AppColors.textSecondary,
@@ -88,137 +96,44 @@ class RecurrentesTab extends ConsumerWidget {
                     ),
                   ),
                 )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final template = templates[index];
-                        final color =
-                            CategoryMapping.getSmartExpenseDisplayColor(
-                          template.category,
-                          title: template.title,
-                          description: null,
-                        );
-                        final icon = CategoryMapping.getSmartExpenseDisplayIcon(
-                          template.category,
-                          title: template.title,
-                          description: null,
-                        );
-                        final theme = context.theme;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: InkWell(
-                            onTap: () => onTemplateForm(
-                              context,
-                              template: template,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: theme.surface,
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color:
-                                      AppColors.divider.withValues(alpha: 0.3),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.02),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: color.withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Icon(
-                                      icon,
-                                      size: 24,
-                                      color: color,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          template.title,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 16,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Día ${template.dayOfMonth} de cada mes',
-                                          style: const TextStyle(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '\$ ${formatCurrency(template.defaultAmount)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 18,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.sage
-                                              .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          _templateSplitLabel(
-                                            template.splitType,
-                                          ),
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.sage,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ).animateStaggered(index);
-                      },
-                      childCount: templates.length,
+              else ...[
+                if (incomes.isNotEmpty) ...[
+                  _buildSectionHeader(context, 'INGRESOS FIJOS', AppColors.success),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildTemplateCard(
+                          context,
+                          incomes[index],
+                          index,
+                          AppColors.success,
+                        ),
+                        childCount: incomes.length,
+                      ),
                     ),
                   ),
-                ),
+                ],
+                if (expenses.isNotEmpty) ...[
+                  _buildSectionHeader(context, 'GASTOS FIJOS', AppColors.primary),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildTemplateCard(
+                          context,
+                          expenses[index],
+                          index,
+                          null,
+                        ),
+                        childCount: expenses.length,
+                      ),
+                    ),
+                  ),
+                ],
+                if (incomes.isEmpty || expenses.isEmpty)
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ],
           ),
         );
@@ -239,6 +154,160 @@ class RecurrentesTab extends ConsumerWidget {
       default:
         return 'Compartido';
     }
+  }
+
+  Widget _buildSectionHeader(
+      BuildContext context, String label, Color color) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: color.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplateCard(
+    BuildContext context,
+    ExpenseTemplateModel template,
+    int index,
+    Color? overrideColor,
+  ) {
+    final color = overrideColor ??
+        CategoryMapping.getSmartExpenseDisplayColor(
+          template.category,
+          title: template.title,
+          description: null,
+        );
+    final icon = template.isIncome
+        ? Icons.savings_rounded
+        : CategoryMapping.getSmartExpenseDisplayIcon(
+            template.category,
+            title: template.title,
+            description: null,
+          );
+    final theme = context.theme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () => onTemplateForm(
+          context,
+          template: template,
+          initialType: template.type,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: AppColors.divider.withValues(alpha: 0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, size: 24, color: color),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      template.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Día ${template.dayOfMonth} de cada mes',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '\$ ${formatCurrency(template.defaultAmount)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      color: template.isIncome
+                          ? AppColors.success
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (!template.isIncome)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.sage.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _templateSplitLabel(template.splitType),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.sage,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animateStaggered(index);
   }
 
   Widget _buildPremiumLockedRecurrentes() {
