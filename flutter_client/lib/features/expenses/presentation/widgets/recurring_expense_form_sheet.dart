@@ -13,6 +13,7 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'expense_category_matcher.dart';
+import 'expense_form_data.dart';
 
 class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseTemplateModel? template;
@@ -64,7 +65,7 @@ class _RecurringExpenseFormSheetState
   bool _isLoading = false;
   late String _type;
 
-  final List<Map<String, String>> _categories = const [
+  final List<Map<String, dynamic>> _expenseCategories = const [
     {'id': 'utilities', 'name': 'Servicios'},
     {'id': 'rent', 'name': 'Alquiler y hogar'},
     {'id': 'restaurants', 'name': 'Salidas y comidas'},
@@ -76,9 +77,15 @@ class _RecurringExpenseFormSheetState
     {'id': 'other', 'name': 'Otros'},
   ];
 
+  late final List<Map<String, dynamic>> _incomeCategories;
+
+  List<Map<String, dynamic>> get _currentCategories =>
+      _type == 'income' ? _incomeCategories : _expenseCategories;
+
   @override
   void initState() {
     super.initState();
+    _incomeCategories = buildIncomeCategories();
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
@@ -107,6 +114,7 @@ class _RecurringExpenseFormSheetState
 
   void _onTitleChanged() {
     if (widget.template != null) return;
+    if (_type == 'income') return; // no inferir categoría para ingresos
     final inferredCategory =
         inferExpenseCategoryIdFromText(_titleController.text);
     if (inferredCategory == null) return;
@@ -498,7 +506,14 @@ class _RecurringExpenseFormSheetState
     final color = type == 'income' ? AppColors.success : AppColors.primary;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _type = type),
+        onTap: () => setState(() {
+          _type = type;
+          // Resetear categoría al cambiar tipo si la actual no existe en la nueva lista
+          final available = type == 'income' ? _incomeCategories : _expenseCategories;
+          if (!available.any((c) => c['id'] == _category)) {
+            _category = available.first['id'] as String;
+          }
+        }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -714,25 +729,25 @@ class _RecurringExpenseFormSheetState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _categories.map((category) {
+          children: _currentCategories.map((category) {
             final isSelected = _category == category['id'];
-            final categoryColor =
-                CategoryMapping.getCategoryColor(category['id']);
+            final categoryColor = category['color'] as Color? ??
+                CategoryMapping.getCategoryColor(category['id'] as String);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    CategoryMapping.getCategoryMaterialIcon(category['id']),
+                    CategoryMapping.getCategoryMaterialIcon(category['id'] as String),
                     size: 16,
                     color: categoryColor,
                   ),
                   const SizedBox(width: 6),
-                  Text(category['name']!),
+                  Text(category['name'] as String),
                 ],
               ),
               selected: isSelected,
-              onSelected: (_) => setState(() => _category = category['id']!),
+              onSelected: (_) => setState(() => _category = category['id'] as String),
               selectedColor: categoryColor.withValues(alpha: 0.16),
               backgroundColor: categoryColor.withValues(alpha: 0.07),
               checkmarkColor: categoryColor,
@@ -909,15 +924,19 @@ class _RecurringExpenseFormSheetState
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.check_rounded, size: 22),
                   const SizedBox(width: 10),
-                  Text(
+                  Flexible(
+                   child: Text(
                     label,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
                     ),
+                   ),
                   ),
                 ],
               ),
