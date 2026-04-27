@@ -119,7 +119,7 @@ class _RecurringExpenseFormSheetState
         inferExpenseCategoryIdFromText(_titleController.text);
     if (inferredCategory == null) return;
     if (_category == inferredCategory) return;
-    if (_categories.any((category) => category['id'] == inferredCategory)) {
+    if (_expenseCategories.any((category) => category['id'] == inferredCategory)) {
       setState(() => _category = inferredCategory);
     }
   }
