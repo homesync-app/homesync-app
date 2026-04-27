@@ -162,26 +162,42 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       (summary['income'] as num?)?.toDouble() ?? 0.0;
                   final expense =
                       (summary['expense'] as num?)?.toDouble() ?? 0.0;
-                  final estimated =
-                      estimatedIncomeAsync.valueOrNull;
+                  final settlementsReceived =
+                      (summary['settlements_received'] as num?)?.toDouble() ??
+                          0.0;
+                  final settlementsPaid =
+                      (summary['settlements_paid'] as num?)?.toDouble() ?? 0.0;
+                  // balance real del RPC (incluye settlements correctamente)
+                  final rpcBalance =
+                      (summary['balance'] as num?)?.toDouble() ?? 0.0;
+
+                  final estimated = estimatedIncomeAsync.valueOrNull;
                   final isIncomeEstimated =
                       realIncome == 0 && estimated?.isSet == true;
-                  final income = realIncome > 0
+
+                  // income para mostrar en el tile: ingresos reales o estimado
+                  final displayIncome = realIncome > 0
                       ? realIncome
-                      : (estimated?.isSet == true
-                          ? estimated!.amount
-                          : 0.0);
-                  final balance = income - expense;
+                      : (estimated?.isSet == true ? estimated!.amount : 0.0);
+
+                  // balance para mostrar: si hay ingreso estimado lo usamos,
+                  // si no usamos el balance real del RPC (que ya tiene settlements)
+                  final balance = isIncomeEstimated
+                      ? estimated!.amount +
+                          settlementsReceived -
+                          expense -
+                          settlementsPaid
+                      : rpcBalance;
 
                   return projectionAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (_, __) => _buildUnifiedSummaryCard(
-                        balance, income, expense, 0,
+                        balance, displayIncome, expense, 0,
                         isIncomeEstimated: isIncomeEstimated),
                     data: (proj) => _buildUnifiedSummaryCard(
                       balance,
-                      income,
+                      displayIncome,
                       expense,
                       proj.pending,
                       isIncomeEstimated: isIncomeEstimated,
