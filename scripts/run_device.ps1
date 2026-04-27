@@ -33,6 +33,8 @@ try {
             }
         }
         $flutterAppDir = Join-Path $wtPath "flutter_client"
+        # Pull latest changes in the worktree
+        git -C $wtPath pull origin $latestBranch --ff-only 2>&1 | Out-Null
         Write-Host "  Branch: $latestBranch (worktree)" -ForegroundColor DarkGray
     } else {
         $currentBranch = git branch --show-current
