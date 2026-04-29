@@ -9,9 +9,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 
 /// Sprint 1 Modo Padres: card de configuracion del bundle "Modo Padres".
 ///
@@ -124,16 +122,6 @@ class _SettingsParentModeCardState
                   builder: (_) => const PendingApprovalsScreen(),
                 ),
               ),
-              onOpenDashboard: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const FamilyDashboardScreen(),
-                ),
-              ),
-              onOpenSummary: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const WeeklyFamilySummaryScreen(),
-                ),
-              ),
             ),
         ],
       ),
@@ -230,15 +218,11 @@ class _UnlockedBody extends ConsumerWidget {
     required this.saving,
     required this.onChangeMode,
     required this.onOpenInbox,
-    required this.onOpenDashboard,
-    required this.onOpenSummary,
   });
 
   final bool saving;
   final Future<void> Function(String mode) onChangeMode;
   final VoidCallback onOpenInbox;
-  final VoidCallback onOpenDashboard;
-  final VoidCallback onOpenSummary;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -335,75 +319,6 @@ class _UnlockedBody extends ConsumerWidget {
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.primary,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: onOpenDashboard,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.accentBlue.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.groups_rounded,
-                  color: AppColors.accentBlue,
-                  size: 20,
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Vista por miembro',
-                    style: TextStyle(
-                      color: AppColors.accentBlue,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.accentBlue),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: onOpenSummary,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.accentPurple.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.celebration_rounded,
-                  color: AppColors.accentPurple,
-                  size: 20,
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Resumen de la semana',
-                    style: TextStyle(
-                      color: AppColors.accentPurple,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.accentPurple,
                 ),
               ],
             ),

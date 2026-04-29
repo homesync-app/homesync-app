@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -19,6 +20,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
 import 'family_tasks_section.dart';
@@ -161,6 +164,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   isChild: false,
                 ),
               ),
+            if (ref.watch(parentModeAvailableProvider)) ...[
+              const SizedBox(height: 20),
+              _buildStaggeredSection(
+                delayMs: 210,
+                child: _buildParentModeShortcuts(theme),
+              ),
+            ],
             const SizedBox(height: 28),
             _buildStaggeredSection(
               delayMs: 240,
@@ -347,7 +357,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.warning,
+            size: 22,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -422,6 +436,93 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ],
         ).animate().fadeIn(delay: 240.ms),
       ],
+    );
+  }
+
+  Widget _buildParentModeShortcuts(AppThemeColors theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Seguimiento familiar',
+          style: TextStyle(
+            color: theme.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildParentModeShortcut(
+                icon: Icons.groups_rounded,
+                label: 'Vista por miembro',
+                color: AppColors.accentBlue,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const FamilyDashboardScreen(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildParentModeShortcut(
+                icon: Icons.celebration_rounded,
+                label: 'Resumen semanal',
+                color: AppColors.accentPurple,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const WeeklyFamilySummaryScreen(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildParentModeShortcut({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 62),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.12)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  height: 1.08,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: color, size: 20),
+          ],
+        ),
+      ),
     );
   }
 
@@ -661,8 +762,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               ),
               TextButton(
                 onPressed: () {
-                  final index = indexForMainTab(caps, MainTab.shopping,
-                      currentMember: _currentMember);
+                  final index = indexForMainTab(
+                    caps,
+                    MainTab.shopping,
+                    currentMember: _currentMember,
+                  );
                   if (index >= 0) {
                     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                   }
@@ -742,8 +846,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                           size: 20,
                         ),
                         onTap: () {
-                          final index = indexForMainTab(caps, MainTab.shopping,
-                              currentMember: _currentMember);
+                          final index = indexForMainTab(
+                            caps,
+                            MainTab.shopping,
+                            currentMember: _currentMember,
+                          );
                           if (index >= 0) {
                             ref
                                 .read(bottomNavIndexProvider.notifier)
