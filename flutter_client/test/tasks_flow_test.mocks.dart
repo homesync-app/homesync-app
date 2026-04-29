@@ -251,6 +251,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
+    List<String>? rotationPool,
     String? status,
   }) =>
       (super.noSuchMethod(
@@ -269,6 +270,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             #recurrenceInterval: recurrenceInterval,
             #recurrenceWeekdays: recurrenceWeekdays,
             #recurrenceMonthDays: recurrenceMonthDays,
+            #rotationPool: rotationPool,
             #status: status,
           },
         ),
@@ -290,6 +292,7 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
               #recurrenceInterval: recurrenceInterval,
               #recurrenceWeekdays: recurrenceWeekdays,
               #recurrenceMonthDays: recurrenceMonthDays,
+              #rotationPool: rotationPool,
               #status: status,
             },
           ),

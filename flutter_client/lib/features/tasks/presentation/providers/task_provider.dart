@@ -19,6 +19,7 @@ import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/utils/task_completion_utils.dart';
+import 'pending_approvals_provider.dart';
 
 part 'task_provider.g.dart';
 
@@ -414,44 +415,68 @@ class Tasks extends _$Tasks {
     }
   }
 
+  /// Sprint 1 Modo Padres: aprueba la submision pendiente via
+  /// `verify_task_transaction`. La RPC valida que el verificador sea
+  /// owner/admin, recupera el snapshot y recien ahi acredita XP/coins y
+  /// reprograma la recurrencia. Devuelve un TaskCompletionResult sintetico
+  /// (success/false) para mantener la firma usada por la UI.
   Future<TaskCompletionResult?> approvePendingTask(TaskModel task) async {
-    final performerId = task.completedBy ?? task.assignedTo;
-    if (performerId == null) return null;
-
-    return completeTask(
-      task,
-      userIds: [performerId],
-      completedAt: task.completedAt ?? DateTime.now(),
-    );
+    try {
+      final ok = await ref
+          .read(taskApprovalActionsProvider)
+          .approve(task.id);
+      if (ok) {
+        silentRefresh();
+        ref.invalidate(userBalanceProvider);
+        ref.invalidate(recentActivityProvider);
+        ref.invalidate(pendingTaskApprovalsProvider);
+        return const TaskCompletionResult(
+          success: true,
+          message: 'Tarea aprobada',
+          queued: false,
+          status: 'approved',
+        );
+      }
+      return null;
+    } catch (e, stack) {
+      log.w('approvePendingTask failure: $e', error: e, stackTrace: stack);
+      return null;
+    }
   }
 
-  Future<void> rejectPendingTask(TaskModel task) async {
+  /// Sprint 1 Modo Padres: rechaza con motivo. La RPC vuelve la tarea a
+  /// `assigned`, persiste el motivo, notifica al hijo y deja registro en
+  /// `task_approvals.rejected`.
+  Future<void> rejectPendingTask(TaskModel task, {String? reason}) async {
     final oldState = state.value;
     if (oldState != null) {
       state = AsyncValue.data(
         oldState
-            .map((t) => t.id == task.id
-                ? t.copyWith(
-                    status: TaskStatus.active,
-                    completedBy: null,
-                    completedAt: null,
-                  )
-                : t,)
+            .map(
+              (t) => t.id == task.id
+                  ? t.copyWith(
+                      status: TaskStatus.assigned,
+                      completedBy: null,
+                      completedAt: null,
+                    )
+                  : t,
+            )
             .toList(),
       );
     }
 
     try {
-      final repo = ref.read(taskRepositoryProvider);
-      await repo.editTask(task.id, {
-        'status': 'active',
-        'completed_by': null,
-        'completed_at': null,
-        'last_completed_at': null,
-      });
+      final ok = await ref
+          .read(taskApprovalActionsProvider)
+          .reject(task.id, reason: reason);
+      if (!ok) {
+        if (oldState != null) state = AsyncValue.data(oldState);
+        return;
+      }
       if (ref.read(isOnlineProvider)) {
         silentRefresh();
         ref.invalidate(recentActivityProvider);
+        ref.invalidate(pendingTaskApprovalsProvider);
       }
     } catch (e, stack) {
       log.w('Reject pending task failure: $e', error: e, stackTrace: stack);
@@ -520,6 +545,7 @@ class Tasks extends _$Tasks {
         recurrenceWeekdays: taskData['recurrenceWeekdays'] as List<int>?,
         recurrenceMonthDays: taskData['recurrenceMonthDays'] as List<int>?,
         status: null,
+        rotationPool: (taskData['rotationPool'] as List?)?.cast<String>(),
       );
 
       result.fold(
@@ -632,11 +658,8 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
 
       if (task.recurrenceType == 'daily') return true;
 
-      if (task.dueAt != null) {
-        final now = DateTime.now();
-        final dueDay = DateTime(task.dueAt!.year, task.dueAt!.month, task.dueAt!.day);
-        final today = DateTime(now.year, now.month, now.day);
-        if (!dueDay.isAfter(today)) return true;
+      if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {
+        return true;
       }
 
       return false;
@@ -649,11 +672,8 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
     // Family QA and new households can have active tasks without a due date or
     // explicit "today" schedule yet. In that case, show the next active tasks
     // instead of leaving the home empty.
-    // Exclude tasks that were explicitly de-scheduled (no dueAt AND no recurrence)
-    // so they don't appear in the home view after the parent removes their schedule.
     final householdFallback = tasks.where((task) {
       if (!task.isActive) return false;
-      if (task.dueAt == null && task.recurrenceType == null) return false;
       if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }

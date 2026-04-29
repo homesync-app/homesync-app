@@ -129,6 +129,13 @@ class FamilyTaskCard extends StatelessWidget {
                           label: '${task.coinReward}',
                           color: const Color(0xFF7CB08B),
                         ),
+                      // Sprint 3 Modo Padres: badge de rotacion.
+                      if (task.hasRotation)
+                        _FamilyTaskPill(
+                          icon: Icons.autorenew_rounded,
+                          label: 'Rota entre ${task.rotationPool.length}',
+                          color: const Color(0xFF5A94E1),
+                        ),
                     ],
                   ),
                 ],

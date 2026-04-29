@@ -108,6 +108,7 @@ class _FailingTaskRepository implements TaskRepository {
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
     String? status,
+    List<String>? rotationPool,
   }) async =>
       throw UnimplementedError();
 

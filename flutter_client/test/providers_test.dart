@@ -87,6 +87,7 @@ class MockTaskRepository implements TaskRepository {
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
+    List<String>? rotationPool,
     String? status,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));

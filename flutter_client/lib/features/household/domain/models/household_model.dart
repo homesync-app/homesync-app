@@ -10,6 +10,11 @@ class HouseholdModel {
   final double defaultSplitRatio;
   final DateTime? createdAt;
 
+  /// Sprint 1 Modo Padres: 'off' | 'all' | 'children_only' | 'per_member'.
+  /// La RPC `complete_task_transaction` lee esto del lado servidor; en el
+  /// cliente lo usamos para mostrar el toggle correcto en settings.
+  final String taskApprovalMode;
+
   const HouseholdModel({
     required this.id,
     required this.name,
@@ -17,6 +22,7 @@ class HouseholdModel {
     this.tasksEnabled = true,
     this.defaultSplitRatio = 0.5,
     this.createdAt,
+    this.taskApprovalMode = 'off',
   });
 
   factory HouseholdModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +35,8 @@ class HouseholdModel {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
+      taskApprovalMode:
+          (json['task_approval_mode'] as String?) ?? 'off',
     );
   }
 

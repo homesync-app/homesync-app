@@ -242,6 +242,7 @@ class MockTaskRepository implements TaskRepository {
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
     String? status,
+    List<String>? rotationPool,
   }) async {
     _tasks.add(TaskModel(
       id: 'task-${_tasks.length + 1}',

@@ -27,6 +27,7 @@ import 'package:homesync_client/features/settings/presentation/widgets/settings_
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_parent_mode_card.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -373,6 +374,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 14),
                           if (_householdId != null) ...[
                             _buildCombinedHouseholdCard(),
+                            const SizedBox(height: 16),
+                            const SettingsParentModeCard(),
                           ] else if (!_hasLoadedOnce && _isLoading) ...[
                             _buildLoadingCard(height: 220),
                           ] else ...[
@@ -383,7 +386,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             eyebrow: 'APP',
                             title: 'Preferencias',
                             subtitle:
-                                'Tema, notificaciones, ayuda y feedback.',
+                                'Tema, notificaciones y herramientas de ayuda.',
                           ),
                           const SizedBox(height: 14),
                           _buildPremiumCard(),
@@ -397,8 +400,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             const SizedBox(height: 24),
                           ],
                           _buildFAQButton(),
-                          const SizedBox(height: 24),
-                          _buildFeedbackCard(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
                             eyebrow: 'CUENTA',
@@ -1221,10 +1222,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         FAQSheet.show(context);
       },
     );
-  }
-
-  Widget _buildFeedbackCard() {
-    return const SettingsFeedbackCard();
   }
 
   Widget _buildLogoutButton() {
