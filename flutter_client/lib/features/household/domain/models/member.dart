@@ -115,7 +115,7 @@ class MemberModel {
   String get initial => displayName[0].toUpperCase();
 
   bool get isOwner => role == 'owner';
-  bool get isAdmin => isOwner;
+  bool get isAdmin => isOwner || role == 'admin';
   bool get isParent => type == MemberType.parent;
   bool get isGuardian => type == MemberType.guardian;
   bool get isTeen => type == MemberType.teen;

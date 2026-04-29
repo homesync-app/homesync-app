@@ -11,7 +11,7 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -56,7 +56,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
               .where((member) => member.userId == currentUserId)
               .firstOrNull,
         );
-    final canReview = isPendingApproval && (currentMember?.canApprove ?? false);
+    final canReview = isPendingApproval && (currentMember?.isAdmin ?? false);
 
     return InkWell(
       onTap: () => _openDetail(context, ref, type, data),
@@ -386,17 +386,16 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> data,
   ) async {
-    final task = _findTask(ref, data['task_id']?.toString());
-    if (task == null) {
+    final taskId = data['task_id']?.toString();
+    if (taskId == null || taskId.isEmpty) {
       _showSnackBar(context, 'No encontramos esa tarea para revisar.');
       return;
     }
 
     try {
-      final result =
-          await ref.read(tasksProvider.notifier).approvePendingTask(task);
+      final ok = await ref.read(taskApprovalActionsProvider).approve(taskId);
       if (!context.mounted) return;
-      if (result == null) {
+      if (!ok) {
         _showSnackBar(context, 'No pudimos aprobar la tarea.');
         return;
       }
@@ -413,15 +412,19 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> data,
   ) async {
-    final task = _findTask(ref, data['task_id']?.toString());
-    if (task == null) {
+    final taskId = data['task_id']?.toString();
+    if (taskId == null || taskId.isEmpty) {
       _showSnackBar(context, 'No encontramos esa tarea para revisar.');
       return;
     }
 
     try {
-      await ref.read(tasksProvider.notifier).rejectPendingTask(task);
+      final ok = await ref.read(taskApprovalActionsProvider).reject(taskId);
       if (!context.mounted) return;
+      if (!ok) {
+        _showSnackBar(context, 'No pudimos devolver la tarea.');
+        return;
+      }
       _refreshAfterReview(ref);
       _showSnackBar(context, 'La tarea volvio para corregir.');
     } catch (error) {
@@ -430,16 +433,12 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     }
   }
 
-  TaskModel? _findTask(WidgetRef ref, String? taskId) {
-    if (taskId == null || taskId.isEmpty) return null;
-    final tasks = ref.read(tasksProvider).valueOrNull ?? const <TaskModel>[];
-    return tasks.where((task) => task.id == taskId).firstOrNull;
-  }
-
   void _refreshAfterReview(WidgetRef ref) {
     ref.invalidate(tasksProvider);
     ref.invalidate(todayTasksProvider);
     ref.invalidate(recentActivityProvider);
+    ref.invalidate(pendingTaskApprovalsProvider);
+    ref.invalidate(userBalanceProvider);
     ref.invalidate(statsControllerProvider);
   }
 
