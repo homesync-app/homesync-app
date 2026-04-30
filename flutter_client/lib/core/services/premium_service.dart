@@ -59,6 +59,17 @@ class PremiumService {
     }
 
     try {
+      final effective = await _supabase.rpc('get_effective_premium_status');
+      if (effective is bool) return effective;
+    } catch (e, stack) {
+      log.w(
+        'get_effective_premium_status failed, falling back to users.is_premium',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+
+    try {
       final data = await _supabase
           .from('users')
           .select('is_premium')
@@ -131,16 +142,17 @@ class PremiumService {
       final userId = AppIdentityService.instance.currentUserId;
       if (userId == null) return false;
 
-      // Update Supabase
-      // In a real app, this should be a backend function that verifies the store token
-      await _supabase.from('users').update({
-        'is_premium': true,
-        'premium_until': purchase.status == PurchaseStatus.purchased
-            ? DateTime.now()
-                .add(const Duration(days: 30))
-                .toIso8601String() // Simple mock logic for presentation
-            : null,
-      }).eq('id', userId);
+      // In a real app, this should be an Edge Function that verifies the store
+      // token. The DB RPC keeps the legacy user flag and household plan in sync.
+      await _supabase.rpc(
+        'set_premium_status',
+        params: {
+          'p_is_premium': true,
+          'p_premium_until': purchase.status == PurchaseStatus.purchased
+              ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
+              : null,
+        },
+      );
 
       onPremiumStatusChanged?.call(true);
       log.i('Premium activated for user $userId');
@@ -169,14 +181,8 @@ class PremiumService {
     }
 
     try {
-      final current = await getPremiumStatus();
-      final next = !current;
-      await _supabase.from('users').update({
-        'is_premium': next,
-        'premium_until': next
-            ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
-            : null,
-      }).eq('id', userId);
+      final result = await _supabase.rpc('toggle_premium_mock');
+      final next = result is Map && result['is_premium'] == true;
 
       onPremiumStatusChanged?.call(next);
       log.i('Premium mock toggled for user $userId: $next');

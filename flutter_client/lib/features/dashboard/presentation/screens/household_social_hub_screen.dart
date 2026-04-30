@@ -183,10 +183,7 @@ class _HouseholdSocialHubScreenState
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final canManageMembers = currentMember?.isAdmin ?? false;
-    final householdPremium =
-        ref.watch(householdPremiumStatusProvider).valueOrNull;
-    final familyTrackingUnlocked = (householdPremium?.isPremium ?? false) &&
-        (householdPremium?.isGroupPlan ?? false);
+    final familyTrackingUnlocked = ref.watch(parentModeAvailableProvider);
 
     return Scaffold(
       backgroundColor: theme.background,
