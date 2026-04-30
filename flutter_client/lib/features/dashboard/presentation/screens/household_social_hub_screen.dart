@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -10,7 +11,10 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -27,6 +31,12 @@ class _HouseholdSocialHubScreenState
   Future<void> _refreshData() async {
     ref.invalidate(currentHouseholdProvider);
     await ref.read(householdMembersNotifierProvider.notifier).refresh();
+  }
+
+  void _openPremiumPaywall() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()));
   }
 
   Future<void> _editMemberRole(
@@ -173,6 +183,10 @@ class _HouseholdSocialHubScreenState
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final canManageMembers = currentMember?.isAdmin ?? false;
+    final householdPremium =
+        ref.watch(householdPremiumStatusProvider).valueOrNull;
+    final familyTrackingUnlocked = (householdPremium?.isPremium ?? false) &&
+        (householdPremium?.isGroupPlan ?? false);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -204,6 +218,32 @@ class _HouseholdSocialHubScreenState
               ),
               const SizedBox(height: 18),
               const FamilyRankingSection(),
+              if (caps.type == HouseholdType.family && canManageMembers) ...[
+                const SizedBox(height: 18),
+                _FamilyTrackingCard(
+                  unlocked: familyTrackingUnlocked,
+                  onMemberView: familyTrackingUnlocked
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const FamilyDashboardScreen(),
+                            ),
+                          );
+                        }
+                      : _openPremiumPaywall,
+                  onWeeklySummary: familyTrackingUnlocked
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const WeeklyFamilySummaryScreen(),
+                            ),
+                          );
+                        }
+                      : _openPremiumPaywall,
+                ),
+              ],
               const SizedBox(height: 18),
               _FamilyStoreCard(
                 caps: caps,
@@ -349,6 +389,218 @@ class _HeaderCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FamilyTrackingCard extends StatelessWidget {
+  const _FamilyTrackingCard({
+    required this.unlocked,
+    required this.onMemberView,
+    required this.onWeeklySummary,
+  });
+
+  final bool unlocked;
+  final VoidCallback onMemberView;
+  final VoidCallback onWeeklySummary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final titleColor = unlocked
+        ? theme.textPrimary
+        : theme.textSecondary.withValues(alpha: 0.76);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
+        boxShadow: [
+          BoxShadow(
+            color:
+                theme.shadow.withValues(alpha: theme.isDarkMode ? 0.18 : 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: (unlocked ? AppColors.primary : theme.textSecondary)
+                      .withValues(alpha: unlocked ? 0.1 : 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  unlocked ? Icons.insights_rounded : Icons.lock_rounded,
+                  color: unlocked ? AppColors.primary : const Color(0xFF9D9691),
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Seguimiento familiar',
+                      style: TextStyle(
+                        color: titleColor,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Avances por integrante y cierre semanal.',
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!unlocked) const SizedBox(width: 8),
+              if (!unlocked) _PremiumBadge(theme: theme),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _FamilyTrackingShortcut(
+                  icon: Icons.groups_rounded,
+                  label: 'Vista por miembro',
+                  color: AppColors.accentBlue,
+                  unlocked: unlocked,
+                  onTap: onMemberView,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _FamilyTrackingShortcut(
+                  icon: Icons.celebration_rounded,
+                  label: 'Resumen semanal',
+                  color: AppColors.accentPurple,
+                  unlocked: unlocked,
+                  onTap: onWeeklySummary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FamilyTrackingShortcut extends StatelessWidget {
+  const _FamilyTrackingShortcut({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.unlocked,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool unlocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = unlocked ? color : const Color(0xFF9D9691);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 54),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+            decoration: BoxDecoration(
+              color: effectiveColor.withValues(alpha: unlocked ? 0.1 : 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: effectiveColor.withValues(alpha: unlocked ? 0.12 : 0.18),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  unlocked ? icon : Icons.lock_rounded,
+                  color: effectiveColor,
+                  size: 21,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: effectiveColor,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w900,
+                      height: 1.08,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: effectiveColor,
+                  size: 19,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PremiumBadge extends StatelessWidget {
+  const _PremiumBadge({required this.theme});
+
+  final AppThemeColors theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.textSecondary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: theme.textSecondary.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Text(
+        'PREMIUM',
+        style: TextStyle(
+          color: theme.textSecondary.withValues(alpha: 0.82),
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }

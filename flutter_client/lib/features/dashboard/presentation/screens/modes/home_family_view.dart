@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -18,11 +17,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
 import 'family_tasks_section.dart';
@@ -63,11 +59,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
     final isTeen = currentMember?.isTeen ?? false;
-    final showParentModeShortcuts = ref.watch(parentModeEligibleProvider);
-    final householdPremium =
-        ref.watch(householdPremiumStatusProvider).valueOrNull;
-    final parentModeUnlocked = (householdPremium?.isPremium ?? false) &&
-        (householdPremium?.isGroupPlan ?? false);
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     return RefreshIndicator(
@@ -176,16 +167,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               child:
                   _buildActivitySection(theme, title: 'Movimientos del hogar'),
             ),
-            if (showParentModeShortcuts) ...[
-              const SizedBox(height: 24),
-              _buildStaggeredSection(
-                delayMs: 280,
-                child: _buildParentModeShortcuts(
-                  theme,
-                  unlocked: parentModeUnlocked,
-                ),
-              ),
-            ],
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
@@ -446,154 +427,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         ).animate().fadeIn(delay: 240.ms),
       ],
     );
-  }
-
-  Widget _buildParentModeShortcuts(
-    AppThemeColors theme, {
-    required bool unlocked,
-  }) {
-    final titleColor = unlocked
-        ? theme.textPrimary
-        : theme.textSecondary.withValues(alpha: 0.76);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Seguimiento familiar',
-                style: TextStyle(
-                  color: titleColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (!unlocked) _buildPremiumBadge(theme),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildParentModeShortcut(
-                icon: Icons.groups_rounded,
-                label: 'Vista por miembro',
-                color: AppColors.accentBlue,
-                unlocked: unlocked,
-                onTap: unlocked
-                    ? () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const FamilyDashboardScreen(),
-                          ),
-                        )
-                    : _openPremiumPaywall,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildParentModeShortcut(
-                icon: Icons.celebration_rounded,
-                label: 'Resumen semanal',
-                color: AppColors.accentPurple,
-                unlocked: unlocked,
-                onTap: unlocked
-                    ? () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const WeeklyFamilySummaryScreen(),
-                          ),
-                        )
-                    : _openPremiumPaywall,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildParentModeShortcut({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool unlocked,
-    required VoidCallback onTap,
-  }) {
-    final effectiveColor = unlocked ? color : const Color(0xFF9D9691);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 62),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: effectiveColor.withValues(alpha: unlocked ? 0.10 : 0.08),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: effectiveColor.withValues(alpha: unlocked ? 0.12 : 0.18),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              unlocked ? icon : Icons.lock_rounded,
-              color: effectiveColor,
-              size: 22,
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: effectiveColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  height: 1.08,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: effectiveColor,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPremiumBadge(AppThemeColors theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.textSecondary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: theme.textSecondary.withValues(alpha: 0.14),
-        ),
-      ),
-      child: Text(
-        'PREMIUM',
-        style: TextStyle(
-          color: theme.textSecondary.withValues(alpha: 0.82),
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.4,
-        ),
-      ),
-    );
-  }
-
-  void _openPremiumPaywall() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()));
   }
 
   Widget _buildChildHero(AppThemeColors theme, MemberModel? currentMember) {
