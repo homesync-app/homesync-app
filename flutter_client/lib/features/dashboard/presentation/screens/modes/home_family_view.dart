@@ -64,7 +64,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final isChild = currentMember?.isChild ?? false;
     final isTeen = currentMember?.isTeen ?? false;
     final showParentModeShortcuts = ref.watch(parentModeEligibleProvider);
-    final parentModeUnlocked = ref.watch(parentModeAvailableProvider);
+    final householdPremium =
+        ref.watch(householdPremiumStatusProvider).valueOrNull;
+    final parentModeUnlocked = (householdPremium?.isPremium ?? false) &&
+        (householdPremium?.isGroupPlan ?? false);
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     return RefreshIndicator(
@@ -167,22 +170,22 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   isChild: false,
                 ),
               ),
-            if (showParentModeShortcuts) ...[
-              const SizedBox(height: 20),
-              _buildStaggeredSection(
-                delayMs: 210,
-                child: _buildParentModeShortcuts(
-                  theme,
-                  unlocked: parentModeUnlocked,
-                ),
-              ),
-            ],
             const SizedBox(height: 28),
             _buildStaggeredSection(
               delayMs: 240,
               child:
                   _buildActivitySection(theme, title: 'Movimientos del hogar'),
             ),
+            if (showParentModeShortcuts) ...[
+              const SizedBox(height: 24),
+              _buildStaggeredSection(
+                delayMs: 280,
+                child: _buildParentModeShortcuts(
+                  theme,
+                  unlocked: parentModeUnlocked,
+                ),
+              ),
+            ],
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
         ],
