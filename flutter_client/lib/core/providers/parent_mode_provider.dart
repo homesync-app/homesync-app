@@ -108,8 +108,11 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   final caps = ref.watch(householdCapabilitiesProvider);
   if (caps.type != HouseholdType.family) return false;
 
-  final premium = ref.watch(effectivePremiumProvider);
-  if (!premium) return false;
+  final householdPremium =
+      ref.watch(householdPremiumStatusProvider).valueOrNull;
+  final hasFamilyPremium = (householdPremium?.isPremium ?? false) &&
+      (householdPremium?.isGroupPlan ?? false);
+  if (!hasFamilyPremium) return false;
 
   final currentUserId = ref.watch(currentUserIdProvider);
   final members = ref.watch(householdMembersProvider).valueOrNull;
