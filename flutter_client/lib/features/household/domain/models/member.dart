@@ -131,6 +131,14 @@ class MemberModel {
   bool get canSeePersonalFinance => isAdult || isTeen;
   bool get canSeeFinanceTab => canSeePersonalFinance;
 
+  /// Solo adultos (parents y guardians) pueden iniciar una compra de premium.
+  /// Teens y children nunca deben ver ni acceder al paywall de pago.
+  bool get canUpgradePremium => isAdult;
+
+  /// Solo admins/owners adultos pueden gestionar la configuracion del hogar
+  /// (Modo Padres, codigo de invitacion, etc.).
+  bool get canManageHousehold => isAdmin && isAdult;
+
   String get visibleRoleLabel {
     if (displayRole != null && displayRole!.trim().isNotEmpty) {
       return displayRole!.trim();

@@ -812,3 +812,93 @@ class SettingsProfileActionButton extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// SettingsMinorPremiumCard
+// ---------------------------------------------------------------------------
+
+/// Tarjeta que se muestra a miembros menores de edad (child/teen) en lugar
+/// de la tarjeta de compra de premium.
+///
+/// Informa que existen funciones premium pero **no** muestra ni redirige al
+/// paywall — esa decision es exclusiva de los adultos del hogar.
+///
+/// [isChild] determina el copy:
+///  - true  → "pedi a tus papas" (niño)
+///  - false → "los adultos pueden activar" (adolescente)
+class SettingsMinorPremiumCard extends StatelessWidget {
+  final bool isChild;
+
+  const SettingsMinorPremiumCard({
+    super.key,
+    required this.isChild,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final body = isChild
+        ? 'Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟'
+        : 'Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.star_outline_rounded,
+              color: Color(0xFFF59E0B),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Funciones Premium',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: theme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: theme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

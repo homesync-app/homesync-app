@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
@@ -295,6 +296,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
 
+    // ── Rol del miembro actual ─────────────────────────────────────────────
+    final currentMember = ref.watch(currentMemberProvider);
+    final isChild = currentMember?.isChild ?? false;
+    final isTeen = currentMember?.isTeen ?? false;
+    // isMinor = cualquier menor de edad (child o teen)
+    final isMinor = isChild || isTeen;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -374,8 +382,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 14),
                           if (_householdId != null) ...[
                             _buildCombinedHouseholdCard(),
-                            const SizedBox(height: 16),
-                            const SettingsParentModeCard(),
+                            // Modo Padres solo visible para adultos; menores
+                            // no pueden gestionar ni ver esta seccion.
+                            if (!isMinor) ...[
+                              const SizedBox(height: 16),
+                              const SettingsParentModeCard(),
+                            ],
                           ] else if (!_hasLoadedOnce && _isLoading) ...[
                             _buildLoadingCard(height: 220),
                           ] else ...[
@@ -389,9 +401,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 'Tema, notificaciones y herramientas de ayuda.',
                           ),
                           const SizedBox(height: 14),
-                          _buildPremiumCard(),
+                          // Menores no pueden comprar premium — solo ven una
+                          // tarjeta informativa que los redirige a sus padres.
+                          if (isMinor)
+                            SettingsMinorPremiumCard(isChild: isChild)
+                          else
+                            _buildPremiumCard(),
                           const SizedBox(height: 24),
-                          _buildAppearanceCard(),
+                          _buildAppearanceCard(isMinor: isMinor),
                           const SizedBox(height: 24),
                           _buildNotificationsCard(),
                           const SizedBox(height: 24),
@@ -968,7 +985,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAppearanceCard() {
+  Widget _buildAppearanceCard({bool isMinor = false}) {
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final defaultPalette = ThemePalette.all.firstWhere(
@@ -992,11 +1009,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         HapticFeedback.lightImpact();
         ref.read(themeModeProvider.notifier).setMode(mode);
       },
-      onLockedTap: () => PremiumPaywall.show(context),
+      // Menores ven el candado pero no se redirigen al paywall — se les indica
+      // que deben pedirle a sus padres que activen el plan.
+      onLockedTap: isMinor ? _showMinorPremiumSnackbar : () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
         HapticFeedback.lightImpact();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
       },
+    );
+  }
+
+  void _showMinorPremiumSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Esta funcion es premium 🌟 Pedi a tus papas que activen el plan.',
+        ),
+        backgroundColor: const Color(0xFFF59E0B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
@@ -1276,16 +1309,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Politica de Privacidad',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded,
-                color: theme.textMuted, size: 18),
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              color: theme.textMuted,
+              size: 18,
+            ),
             onTap: () =>
                 openUrl('https://megablas.github.io/homesync-privacy/'),
           ),
           Divider(
-              height: 1,
-              color: theme.divider.withValues(alpha: 0.1),
-              indent: 16,
-              endIndent: 16),
+            height: 1,
+            color: theme.divider.withValues(alpha: 0.1),
+            indent: 16,
+            endIndent: 16,
+          ),
           ListTile(
             leading:
                 Icon(Icons.description_outlined, color: theme.textSecondary),
@@ -1293,8 +1330,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Terminos de Uso',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded,
-                color: theme.textMuted, size: 18),
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              color: theme.textMuted,
+              size: 18,
+            ),
             onTap: () =>
                 openUrl('https://megablas.github.io/homesync-privacy/terms'),
           ),

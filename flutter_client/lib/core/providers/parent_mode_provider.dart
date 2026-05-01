@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 
 /// Sprint 0 Modo Padres: estado de premium a nivel hogar.
@@ -135,4 +136,16 @@ final parentModeEligibleProvider = Provider<bool>((ref) {
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
   return me?.isAdmin ?? false;
+});
+
+/// [MemberModel] del usuario en sesion dentro del hogar activo.
+///
+/// Retorna `null` mientras los miembros aun no cargaron o si el usuario no
+/// pertenece a ningun hogar. Usado para adaptar la UI segun el tipo de
+/// miembro (parent, guardian, teen, child).
+final currentMemberProvider = Provider<MemberModel?>((ref) {
+  final currentUserId = ref.watch(currentUserIdProvider);
+  final members = ref.watch(householdMembersProvider).valueOrNull;
+  if (currentUserId == null || members == null) return null;
+  return members.where((m) => m.userId == currentUserId).firstOrNull;
 });

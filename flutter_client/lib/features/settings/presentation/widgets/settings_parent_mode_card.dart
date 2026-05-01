@@ -9,7 +9,9 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 
 /// Sprint 1 Modo Padres: card de configuracion del bundle "Modo Padres".
 ///
@@ -80,10 +82,8 @@ class _SettingsParentModeCardState
                     const SizedBox(height: 2),
                     Text(
                       'Vos coordinas, ellos cumplen.',
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 12,
-                      ),
+                      style:
+                          TextStyle(color: theme.textSecondary, fontSize: 12),
                     ),
                   ],
                 ),
@@ -122,6 +122,16 @@ class _SettingsParentModeCardState
                   builder: (_) => const PendingApprovalsScreen(),
                 ),
               ),
+              onOpenDashboard: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const FamilyDashboardScreen(),
+                ),
+              ),
+              onOpenSummary: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const WeeklyFamilySummaryScreen(),
+                ),
+              ),
             ),
         ],
       ),
@@ -129,9 +139,9 @@ class _SettingsParentModeCardState
   }
 
   void _openPaywall() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+    );
   }
 
   Future<void> _persistMode(String mode) async {
@@ -139,15 +149,17 @@ class _SettingsParentModeCardState
     if (householdId == null) return;
     setState(() => _saving = true);
     try {
-      await ref
-          .read(supabaseClientProvider)
-          .from('households')
-          .update({'task_approval_mode': mode})
-          .eq('id', householdId);
+      await ref.read(supabaseClientProvider).from('households').update(
+        {'task_approval_mode': mode},
+      ).eq('id', householdId);
       ref.invalidate(currentHouseholdProvider);
       ref.invalidate(pendingTaskApprovalsProvider);
     } catch (e, stack) {
-      log.e('Failed to update task_approval_mode', error: e, stackTrace: stack);
+      log.e(
+        'Failed to update task_approval_mode',
+        error: e,
+        stackTrace: stack,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('No pudimos guardar el cambio: $e')),
@@ -171,11 +183,7 @@ class _LockedBody extends StatelessWidget {
       children: [
         _bullet(theme, '✅', 'Aprobacion de tareas antes de dar coins.'),
         _bullet(theme, '👀', 'Vista por miembro y resumen familiar semanal.'),
-        _bullet(
-          theme,
-          '🔄',
-          'Rotacion automatica de tareas entre integrantes.',
-        ),
+        _bullet(theme, '🔄', 'Rotacion automatica de tareas entre integrantes.'),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
@@ -218,11 +226,15 @@ class _UnlockedBody extends ConsumerWidget {
     required this.saving,
     required this.onChangeMode,
     required this.onOpenInbox,
+    required this.onOpenDashboard,
+    required this.onOpenSummary,
   });
 
   final bool saving;
   final Future<void> Function(String mode) onChangeMode;
   final VoidCallback onOpenInbox;
+  final VoidCallback onOpenDashboard;
+  final VoidCallback onOpenSummary;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -324,6 +336,78 @@ class _UnlockedBody extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onOpenDashboard,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.accentBlue.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.groups_rounded,
+                  color: AppColors.accentBlue,
+                  size: 20,
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Vista por miembro',
+                    style: TextStyle(
+                      color: AppColors.accentBlue,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.accentBlue,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onOpenSummary,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.accentPurple.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.celebration_rounded,
+                  color: AppColors.accentPurple,
+                  size: 20,
+                ),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Resumen de la semana',
+                    style: TextStyle(
+                      color: AppColors.accentPurple,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.accentPurple,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -411,8 +495,7 @@ class _ModeOption extends StatelessWidget {
 /// Lista de miembros con toggle individual de `requires_task_approval`.
 /// Solo se muestra cuando `households.task_approval_mode = 'per_member'`.
 /// Lee directo de `household_members` con join a `users` y persiste el
-/// cambio con una RPC security-definer; `should_require_task_approval` lo
-/// respeta al completar tareas.
+/// cambio con UPDATE — la RPC `should_require_task_approval` lo respeta.
 class _PerMemberToggleList extends ConsumerStatefulWidget {
   const _PerMemberToggleList();
 
@@ -421,7 +504,8 @@ class _PerMemberToggleList extends ConsumerStatefulWidget {
       _PerMemberToggleListState();
 }
 
-class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
+class _PerMemberToggleListState
+    extends ConsumerState<_PerMemberToggleList> {
   Future<List<_MemberApprovalRow>>? _future;
 
   @override
@@ -443,10 +527,9 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
         .eq('household_id', householdId)
         .order('joined_at', ascending: true);
     return (rows as List)
-        .map(
-          (r) =>
-              _MemberApprovalRow.fromMap(Map<String, dynamic>.from(r as Map)),
-        )
+        .map((r) => _MemberApprovalRow.fromMap(
+              Map<String, dynamic>.from(r as Map),
+            ),)
         .toList();
   }
 
@@ -455,29 +538,12 @@ class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
       row.requiresApproval = requires;
     });
     try {
-      final result = await ref
-          .read(supabaseClientProvider)
-          .rpc(
-            'update_member_task_approval',
-            params: {
-              'p_household_member_id': row.id,
-              'p_requires_task_approval': requires,
-            },
-          );
-      final map = result is Map
-          ? Map<String, dynamic>.from(result)
-          : const <String, dynamic>{};
-      if (map['success'] != true) {
-        throw StateError(
-          (map['message'] as String?) ?? 'No pudimos guardar el cambio',
-        );
-      }
+      await ref.read(supabaseClientProvider).from('household_members').update({
+        'requires_task_approval': requires,
+      }).eq('id', row.id);
     } catch (e, stack) {
-      log.e(
-        'Failed to toggle requires_task_approval',
-        error: e,
-        stackTrace: stack,
-      );
+      log.e('Failed to toggle requires_task_approval',
+          error: e, stackTrace: stack,);
       // Revert UI optimistic.
       setState(() {
         row.requiresApproval = !requires;
@@ -596,8 +662,7 @@ class _MemberApprovalRow {
     return _MemberApprovalRow(
       id: map['id'] as String,
       userId: map['user_id'] as String,
-      fullName:
-          (user['full_name'] as String?) ??
+      fullName: (user['full_name'] as String?) ??
           (user['email'] as String?) ??
           'Miembro',
       roleLabel: _label(memberType, role),
