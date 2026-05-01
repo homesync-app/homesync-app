@@ -37,8 +37,17 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final tasksAsync = ref.watch(todayTasksProvider);
-    final sectionTitle = widget.isChild ? 'Mis misiones' : 'Hoy en casa';
-    final ctaLabel = widget.isChild ? 'Ver todas' : 'Ver semana';
+    final isTeen = widget.currentMember?.isTeen ?? false;
+    final sectionTitle = widget.isChild
+        ? 'Mis misiones'
+        : isTeen
+            ? 'Tareas del hogar'
+            : 'Hoy en casa';
+    final ctaLabel = widget.isChild
+        ? 'Ver todas'
+        : isTeen
+            ? 'Ver semana'
+            : 'Ver semana';
     return _buildSectionStateSwitcher(
       child: tasksAsync.when(
         loading: () => KeyedSubtree(
@@ -310,7 +319,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
-    final isAdultView = currentMember?.canApprove ?? true;
+    final isAdultView = currentMember?.canApprove ?? false;
     final requiresApprovalSubmission =
         currentMember?.submissionRequiresApproval ?? false;
     final assignedMember =
@@ -327,9 +336,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
     if (task.isPendingApproval) {
       if (isAdultView) {
-        actionIcon = Icons.history_rounded;
-        isActionEnabled = false;
-        onTap = null;
+        actionIcon = Icons.fact_check_rounded;
+        onTap = () => _showApprovalActions(task, members);
       } else if (isChildView) {
         actionIcon = Icons.check_circle_outline_rounded;
         isActionEnabled = false;
@@ -376,6 +384,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       currentUserId: currentUserId,
       actionIcon: actionIcon,
       isActionEnabled: isActionEnabled,
+      canApprovePending: currentMember?.canApprove ?? false,
       onTap: onTap,
     );
   }

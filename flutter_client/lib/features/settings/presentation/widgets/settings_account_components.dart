@@ -18,7 +18,7 @@ class SettingsNotificationsCard extends StatelessWidget {
     final theme = context.theme;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -37,7 +37,7 @@ class SettingsNotificationsCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -45,7 +45,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                 child: Icon(
                   Icons.notifications_active_rounded,
                   color: theme.primary,
-                  size: 22,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 14),
@@ -56,7 +56,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                     Text(
                       'Notificaciones',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
@@ -110,9 +110,9 @@ class SettingsFaqCard extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
         leading: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(
             color: theme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
@@ -120,13 +120,13 @@ class SettingsFaqCard extends StatelessWidget {
           child: Icon(
             Icons.help_outline_rounded,
             color: theme.primary,
-            size: 22,
+            size: 20,
           ),
         ),
         title: Text(
           'Preguntas Frecuentes',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w700,
             color: theme.textPrimary,
           ),
@@ -320,14 +320,16 @@ class SettingsFeedbackCard extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             leading: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: theme.error.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.bug_report_outlined, color: theme.error, size: 22),
+              child:
+                  Icon(Icons.bug_report_outlined, color: theme.error, size: 20),
             ),
             title: Text(
               'Reportar un error',
@@ -347,16 +349,26 @@ class SettingsFeedbackCard extends StatelessWidget {
               FeedbackSheet.show(context, type: FeedbackType.bug);
             },
           ),
-          Divider(height: 1, color: theme.divider.withValues(alpha: 0.1), indent: 16, endIndent: 16),
+          Divider(
+            height: 1,
+            color: theme.divider.withValues(alpha: 0.1),
+            indent: 16,
+            endIndent: 16,
+          ),
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             leading: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.lightbulb_outline_rounded, color: theme.primary, size: 22),
+              child: Icon(
+                Icons.lightbulb_outline_rounded,
+                color: theme.primary,
+                size: 20,
+              ),
             ),
             title: Text(
               'Sugerir una mejora',

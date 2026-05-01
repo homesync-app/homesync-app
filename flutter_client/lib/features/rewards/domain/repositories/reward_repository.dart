@@ -23,6 +23,17 @@ abstract class RewardRepository {
     String targetType = 'all',
   });
 
+  /// Update an existing reward.
+  Future<Either<Failure, void>> updateReward({
+    required String rewardId,
+    required String title,
+    String? description,
+    required int cost,
+    required String icon,
+    String? category,
+    required String targetType,
+  });
+
   /// Approve a suggested reward (owner only).
   Future<Either<Failure, void>> approveReward(String rewardId);
 

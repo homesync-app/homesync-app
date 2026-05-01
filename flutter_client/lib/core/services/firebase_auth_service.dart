@@ -150,6 +150,7 @@ class FirebaseAuthService {
   Future<bool> signUpWithEmail({
     required String email,
     required String password,
+    String? fullName,
   }) async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
@@ -165,11 +166,17 @@ class FirebaseAuthService {
         await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       }
 
+      final cleanFullName = fullName?.trim();
+      if (cleanFullName != null && cleanFullName.isNotEmpty) {
+        await user.updateDisplayName(cleanFullName);
+      }
+
       await user.getIdToken(true);
 
       await _createUserProfileIfNeeded(
         firebaseUid: user.uid,
         email: user.email ?? '',
+        fullName: cleanFullName?.isNotEmpty == true ? cleanFullName : null,
       );
       return true;
     } catch (e, stack) {

@@ -78,12 +78,6 @@ class UserAvatar {
       'color': Color(0xFFFFE0C2),
     },
     {
-      'id': 'premium_plant_adult',
-      'url': 'assets/images/premium_3d_avatars/premium_plant_adult.png',
-      'name': 'Rochi Plantitas',
-      'color': Color(0xFFDCE8CF),
-    },
-    {
       'id': 'premium_star_girl',
       'url': 'assets/images/premium_3d_avatars/premium_star_girl.png',
       'name': 'Mini Estrella',
@@ -137,6 +131,14 @@ class UserAvatar {
   static String premiumAvatarValue(Map<String, dynamic> avatar) {
     return 'premium://${avatar['id']}';
   }
+
+  static bool isPremiumAvatarValue(String? value) {
+    final normalized = normalizeAvatarValue(value);
+    if (normalized == null || normalized.trim().isEmpty) return false;
+    return normalized.startsWith('premium://') ||
+        normalized.startsWith('assets/images/custom_avatars/') ||
+        normalized.contains('/storage/v1/object/public/custom-avatars/');
+  }
 }
 
 class CustomUserAvatar extends ConsumerWidget {
@@ -165,7 +167,7 @@ class CustomUserAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bool isPremium = avatarUrl?.startsWith('premium://') ?? false;
+    final bool isPremium = UserAvatar.isPremiumAvatarValue(avatarUrl);
     final admin = ref.watch(adminProvider);
 
     Widget avatarContent;

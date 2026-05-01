@@ -193,8 +193,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (_, __) => _buildUnifiedSummaryCard(
-                        balance, displayIncome, expense, 0,
-                        isIncomeEstimated: isIncomeEstimated),
+                      balance,
+                      displayIncome,
+                      expense,
+                      0,
+                      isIncomeEstimated: isIncomeEstimated,
+                    ),
                     data: (proj) => _buildUnifiedSummaryCard(
                       balance,
                       displayIncome,
@@ -339,8 +343,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   String _compactMovementTitle(String title, {String? category}) {
     final normalized = title.trim();
+    if (normalized.isEmpty) return CategoryMapping.displayName(category);
+
     final lower = normalized.toLowerCase();
     final categoryId = category?.toLowerCase();
+
+    if (lower == categoryId ||
+        CategoryMapping.categoryNames.containsKey(lower)) {
+      return CategoryMapping.displayName(normalized);
+    }
 
     if (categoryId == 'supermarket' &&
         (lower.contains('supermerc') || lower.contains('compras del'))) {

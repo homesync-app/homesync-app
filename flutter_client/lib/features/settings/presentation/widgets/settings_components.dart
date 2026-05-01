@@ -109,7 +109,7 @@ class SettingsAppearanceCard extends StatelessWidget {
     final theme = context.theme;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -128,7 +128,7 @@ class SettingsAppearanceCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(9),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -136,7 +136,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                 child: Icon(
                   Icons.palette_rounded,
                   color: theme.primary,
-                  size: 22,
+                  size: 20,
                 ),
               ),
               const SizedBox(width: 14),
@@ -147,7 +147,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                     Text(
                       'Apariencia',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: theme.textPrimary,
                       ),
@@ -164,12 +164,12 @@ class SettingsAppearanceCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           SettingsThemeModeSelector(
             currentMode: currentThemeMode,
             onModeChanged: onThemeModeChanged,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           SettingsThemePalettePicker(
             effectiveColor: effectiveColor,
             isPremium: isPremium,
@@ -210,7 +210,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
             Text(
               'Color del Tema',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: theme.textPrimary,
               ),
@@ -245,13 +245,15 @@ class SettingsThemePalettePicker extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         SizedBox(
-          height: 44,
+          height: 48,
           child: ListView.separated(
+            clipBehavior: Clip.none,
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(right: 34),
             itemCount: palettes.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final palette = palettes[index];
               final isSelected =
@@ -261,34 +263,37 @@ class SettingsThemePalettePicker extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () => isLocked ? onLockedTap() : onPaletteTap(palette),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: palette.primary,
-                    shape: BoxShape.circle,
-                    border: isSelected
-                        ? Border.all(color: theme.surface, width: 3)
-                        : null,
-                    boxShadow: [
-                      if (isSelected)
-                        BoxShadow(
-                          color: palette.primary.withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                    ],
-                  ),
-                  child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 20)
-                      : (isLocked)
-                          ? Icon(
-                              Icons.lock_outline_rounded,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              size: 18,
-                            )
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: palette.primary,
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: theme.surface, width: 3)
                           : null,
+                      boxShadow: [
+                        if (isSelected)
+                          BoxShadow(
+                            color: palette.primary.withValues(alpha: 0.14),
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
+                          ),
+                      ],
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check, color: Colors.white, size: 20)
+                        : (isLocked)
+                            ? Icon(
+                                Icons.lock_outline_rounded,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                size: 16,
+                              )
+                            : null,
+                  ),
                 ),
               );
             },
@@ -325,12 +330,12 @@ class SettingsThemeModeSelector extends StatelessWidget {
         Text(
           'Modo del Tema',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w700,
             color: theme.textPrimary,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           children: options.map((opt) {
             final (mode, icon, label) = opt;
@@ -344,7 +349,7 @@ class SettingsThemeModeSelector extends StatelessWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding:
-                        const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        const EdgeInsets.symmetric(vertical: 9, horizontal: 6),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? theme.primary.withValues(alpha: 0.12)
@@ -362,15 +367,15 @@ class SettingsThemeModeSelector extends StatelessWidget {
                       children: [
                         Icon(
                           icon,
-                          size: 16,
+                          size: 15,
                           color:
                               isSelected ? theme.primary : theme.textSecondary,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 5),
                         Text(
                           label,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight:
                                 isSelected ? FontWeight.w800 : FontWeight.w600,
                             color: isSelected
@@ -456,121 +461,171 @@ class SettingsPremiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isPremium
-              ? [
-                  const Color(0xFFFDE68A),
-                  const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                ]
-              : [
-                  theme.primary.withValues(alpha: 0.05),
-                  theme.surface,
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: isPremium
-              ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
-              : theme.border.withValues(alpha: 0.5),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (isPremium ? const Color(0xFFF59E0B) : theme.shadow)
-                .withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isPremium
-                      ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
-                      : theme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isPremium
-                      ? Icons.auto_awesome_rounded
-                      : Icons.star_outline_rounded,
-                  color: isPremium ? const Color(0xFFB45309) : theme.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'HOMESYNC PREMIUM',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                        color: isPremium
-                            ? const Color(0xFF92400E)
-                            : theme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Modo simulador para testing',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isPremium
-                            ? const Color(0xFFB45309).withValues(alpha: 0.8)
-                            : theme.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: onTapPlans,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      isPremium ? const Color(0xFFF59E0B) : theme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(isPremium ? 'Gestionar' : 'Ver Planes'),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTapPlans,
+        borderRadius: BorderRadius.circular(24),
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isPremium
+                  ? [
+                      const Color(0xFFFFF3C4),
+                      const Color(0xFFFFFBEB),
+                    ]
+                  : [
+                      const Color(0xFFFFF7DF),
+                      const Color(0xFFFFFEF8),
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isPremium
+                  ? const Color(0xFFF5C451).withValues(alpha: 0.55)
+                  : const Color(0xFFF4D58A).withValues(alpha: 0.42),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isPremium
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFFD8A539))
+                    .withValues(alpha: 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
-          if (isPremium) ...[
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 12),
-            const Text(
-              'Funciones habilitadas:',
-              style: TextStyle(
-                fontSize: 11,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: isPremium
+                          ? const Color(0xFFF59E0B).withValues(alpha: 0.2)
+                          : const Color(0xFFF4C64E).withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      isPremium
+                          ? Icons.auto_awesome_rounded
+                          : Icons.star_outline_rounded,
+                      color: isPremium
+                          ? const Color(0xFFB45309)
+                          : const Color(0xFFD97706),
+                      size: 19,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'HomeSync Premium',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: isPremium
+                                ? const Color(0xFF92400E)
+                                : theme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          isPremium ? 'Premium activo' : 'Funciones avanzadas',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isPremium
+                                ? const Color(0xFFB45309).withValues(alpha: 0.8)
+                                : theme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: isPremium
+                        ? const Color(0xFFB45309)
+                        : const Color(0xFFD97706),
+                    size: 24,
+                  ),
+                ],
+              ),
+              if (isPremium) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: premiumFeatures
+                      .take(2)
+                      .map(
+                        (feature) => SettingsPremiumFeatureChip(text: feature),
+                      )
+                      .toList(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsPremiumFeatureChip extends StatelessWidget {
+  final String text;
+
+  const SettingsPremiumFeatureChip({
+    super.key,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.check_rounded,
+            size: 13,
+            color: Color(0xFFB45309),
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 190),
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFFB45309),
+                color: Color(0xFF92400E),
               ),
             ),
-            const SizedBox(height: 8),
-            ...premiumFeatures.map(
-              (feature) => SettingsPremiumFeatureItem(text: feature),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -632,16 +687,16 @@ class SettingsProfileCard extends StatelessWidget {
     final theme = context.theme;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: theme.shadow.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -660,7 +715,7 @@ class SettingsProfileCard extends StatelessWidget {
                         CustomUserAvatar(
                           name: name,
                           avatarUrl: avatarUrl,
-                          radius: 36,
+                          radius: 32,
                           isAnimated: true,
                           isPriority: true,
                         )
@@ -677,15 +732,15 @@ class SettingsProfileCard extends StatelessWidget {
                           child: CustomUserAvatar(
                             name: name,
                             avatarUrl: avatarUrl,
-                            radius: 36,
+                            radius: 32,
                           ),
                         ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          width: 24,
-                          height: 24,
+                          width: 23,
+                          height: 23,
                           decoration: BoxDecoration(
                             color: theme.primary,
                             shape: BoxShape.circle,
@@ -710,7 +765,7 @@ class SettingsProfileCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -718,7 +773,7 @@ class SettingsProfileCard extends StatelessWidget {
                     Text(
                       name,
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 19,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,
                         color: theme.textPrimary,
@@ -729,7 +784,7 @@ class SettingsProfileCard extends StatelessWidget {
                       email,
                       style: TextStyle(
                         color: theme.textSecondary,
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -739,7 +794,7 @@ class SettingsProfileCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -749,7 +804,7 @@ class SettingsProfileCard extends StatelessWidget {
                   onTap: onAvatarTap,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: SettingsProfileActionButton(
                   icon: Icons.badge_rounded,
@@ -784,24 +839,24 @@ class SettingsProfileActionButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 10),
           decoration: BoxDecoration(
             color: theme.primary.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: theme.primary.withValues(alpha: 0.1)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: theme.primary, size: 20),
-              const SizedBox(width: 10),
+              Icon(icon, color: theme.primary, size: 17),
+              const SizedBox(width: 7),
               Text(
                 label,
                 style: TextStyle(
                   color: theme.primary,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
               ),

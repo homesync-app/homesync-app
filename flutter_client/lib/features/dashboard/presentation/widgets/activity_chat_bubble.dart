@@ -35,8 +35,10 @@ class ActivityChatBubble extends ConsumerWidget {
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();
 
-    final title = _normalizedText(
+    final category = data['category'] as String?;
+    final title = _displayTitle(
       data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad',
+      category,
     );
     final userName = (data['user_name'] as String?)?.trim();
     final avatarUrl =
@@ -46,7 +48,6 @@ class ActivityChatBubble extends ConsumerWidget {
     final coinsReward = _readInt(
       data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
     );
-    final category = data['category'] as String?;
     final amount = _parseAmount(data['amount']);
     final normalizedCategory = CategoryMapping.normaliseCategory(category);
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -359,11 +360,20 @@ class ActivityChatBubble extends ConsumerWidget {
         .replaceAll('\u00c2\u00bf', '¿')
         .replaceAll('\u00c2\u00a1', '¡')
         .replaceAll('  ', ' ')
-        .trim()
-        .replaceAllMapped(
-          RegExp(r'\bsupermarket\b', caseSensitive: false),
-          (_) => 'supermercado',
-        );
+        .trim();
+  }
+
+  String _displayTitle(Object? rawTitle, String? category) {
+    final normalized = _normalizedText('${rawTitle ?? ''}');
+    if (normalized.isEmpty) return 'Actividad';
+
+    final lower = normalized.toLowerCase();
+    final categoryLower = category?.trim().toLowerCase();
+    if (lower == categoryLower ||
+        CategoryMapping.categoryNames.containsKey(lower)) {
+      return CategoryMapping.displayName(normalized);
+    }
+    return normalized;
   }
 
   String _formatCurrency(double amount) {

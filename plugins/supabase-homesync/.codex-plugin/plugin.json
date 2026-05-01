@@ -1,0 +1,44 @@
+{
+  "name": "supabase-homesync",
+  "version": "0.1.0",
+  "description": "Supabase MCP access scoped to the HomeSync project.",
+  "author": {
+    "name": "HomeSync",
+    "email": "TODO@example.com",
+    "url": "https://supabase.com"
+  },
+  "homepage": "https://supabase.com/docs/guides/getting-started/mcp",
+  "repository": "TODO",
+  "license": "UNLICENSED",
+  "keywords": [
+    "supabase",
+    "mcp",
+    "homesync"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Supabase HomeSync",
+    "shortDescription": "Supabase MCP tools for the HomeSync project.",
+    "longDescription": "Connects Codex to Supabase MCP, scoped to the HomeSync project ref. The personal access token is read from local environment variables instead of the plugin files.",
+    "developerName": "HomeSync",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://supabase.com/docs/guides/getting-started/mcp",
+    "privacyPolicyURL": "https://supabase.com/privacy",
+    "termsOfServiceURL": "https://supabase.com/terms",
+    "defaultPrompt": [
+      "List Supabase tables for HomeSync.",
+      "Check Supabase advisors.",
+      "Search Supabase docs."
+    ],
+    "brandColor": "#3ECF8E",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": []
+  }
+}

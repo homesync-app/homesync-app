@@ -58,10 +58,12 @@ class ReceiptMatcher {
   static const _brandWords = {
     'sancor', 'serenisima', 'ilolay', 'milkaut', 'tregar', 'nestle',
     'molinos', 'arcor', 'bagley', 'terrabusi', 'marolio', 'cocacola',
-    'pepsi', 'quilmes', 'brahma', 'imperial', 'stella', 'heineken',
+    // 'coca' y 'cola' NO van aquí: son tokens del catálogo "Coca Cola"
+    'pepsi', 'sprite', 'quilmes', 'brahma', 'imperial', 'stella', 'heineken',
     'corona', 'patagonia', 'manaos', 'cunnington', 'bimbo', 'fargo',
     'knorr', 'maggi', 'hellmanns', 'natura', 'cocinero', 'canuelas',
     'matarazzo', 'luchetti', 'ledesma', 'chango', 'celusal',
+    'dove', 'nivea', 'colgate', 'gillette', 'milka',
   };
 
   /// Genéricos ambiguos: si el OCR no matcheó ningún item del catálogo y el
@@ -104,18 +106,24 @@ class ReceiptMatcher {
 
     CatalogEntry? best;
     double bestScore = 0;
-    int bestCatLen = 0; // tie-breaker: preferimos nombres más específicos
+    int bestCatLen = 0;    // tie-breaker 1: más tokens = más específico
+    int bestCatChars = 0;  // tie-breaker 2: token más largo = más específico
+    // "ANTITRAN DOVE M PEPINO": tanto Antitranspirante como Pepino tienen
+    // 1 token con score 1.0. Gana Antitranspirante porque 'antitranspirante'
+    // (16 chars) > 'pepino' (6 chars).
 
     for (final entry in _flatCatalog) {
       final catTokens = _tokenize(entry.name);
       if (catTokens.isEmpty) continue;
       final s = _scoreByCatalog(ocrTokens, catTokens);
-      // Gana score mayor; en empate, gana el nombre con más tokens.
-      // Ej: "PAN LACTAL BIMBO" → Pan lactal (2 tokens) le gana a Pan (1 token).
+      final catChars = catTokens.fold(0, (sum, t) => sum + t.length);
       if (s > bestScore ||
-          (s == bestScore && s >= _catalogMinScore && catTokens.length > bestCatLen)) {
+          (s == bestScore && s >= _catalogMinScore &&
+              (catTokens.length > bestCatLen ||
+               (catTokens.length == bestCatLen && catChars > bestCatChars)))) {
         bestScore = s;
         bestCatLen = catTokens.length;
+        bestCatChars = catChars;
         best = entry;
       }
     }
@@ -255,6 +263,10 @@ class ReceiptMatcher {
     final cleaned = raw
         .replaceAll(_pricePattern, ' ')
         .replaceAll(_quantityPattern, ' ')
+        // "sin azucar", "sin tacc", "sin sodio", etc. son descriptores del
+        // producto, no el producto en sí. Se eliminan ambas palabras para
+        // evitar que "COCA COLA SIN AZUCAR" matchee "Azúcar".
+        .replaceAll(RegExp(r'\bsin\s+\w+', caseSensitive: false), ' ')
         .toLowerCase()
         .replaceAll('á', 'a').replaceAll('é', 'e').replaceAll('í', 'i')
         .replaceAll('ó', 'o').replaceAll('ú', 'u').replaceAll('ü', 'u')
@@ -403,15 +415,18 @@ class MatchResult {
 /// - [toMarkPurchased]: items ya en la lista pendiente → solo tachar
 /// - [toAddAndMark]: items reconocidos por catálogo pero no en lista → agregar + tachar
 /// - [unrecognized]: no matchean el catálogo → mostrar en banner
+/// - [dropped]: descartados por quality gate (telemetría para mejorar reglas)
 class ScanMatchResult {
   final List<ShoppingItemModel> toMarkPurchased;
   final List<ShoppingItemModel> toAddAndMark;
   final List<String> unrecognized;
+  final List<String> dropped;
 
   const ScanMatchResult({
     required this.toMarkPurchased,
     required this.toAddAndMark,
     required this.unrecognized,
+    this.dropped = const [],
   });
 
   /// Todos los items que van a quedar vinculados (para mostrar en el card)
@@ -428,6 +443,7 @@ ScanMatchResult resolveScanItems({
   final toMarkPurchased = <ShoppingItemModel>[];
   final toAddAndMark = <ShoppingItemModel>[];
   final unrecognized = <String>[];
+  final dropped = <String>[];
 
   // Claves de deduplicación. Si dos líneas OCR resuelven al mismo item
   // (ej: "POROTOS NEGROS..." y "POROTO SECO..." → ambos al catálogo "Porotos"),
@@ -441,13 +457,19 @@ ScanMatchResult resolveScanItems({
     // ── Paso 0: quality gate ─────────────────────────────────────────────────
     // Descartar ruido del ticket (totales, descuentos, códigos, marcas sueltas).
     // Previene que "DESCUENTO LECHE 10%" matchee "Leche" por error.
-    if (!ReceiptMatcher.looksLikeValidProduct(ocrRaw)) continue;
+    if (!ReceiptMatcher.looksLikeValidProduct(ocrRaw)) {
+      dropped.add(ocrRaw);
+      continue;
+    }
 
     final rawTokens = ReceiptMatcher.tokenize(ocrRaw);
 
     // Si después de limpiar (precios, marcas, cantidades) no queda nada con
     // sentido, la línea es solo ruido (ej: "MOLINOS SA $1.250,00").
-    if (rawTokens.isEmpty) continue;
+    if (rawTokens.isEmpty) {
+      dropped.add(ocrRaw);
+      continue;
+    }
 
     // ── Paso 1: buscar directamente en la lista pendiente ────────────────────
     // Pregunta: "¿aparece el nombre del item pendiente dentro del texto OCR?"
@@ -480,13 +502,16 @@ ScanMatchResult resolveScanItems({
       // ofrecen como producto nuevo — evita agregar "Jabón" cuando el ticket
       // también tiene Jabón ropa y Jabón tocador bien detectados.
       if (ReceiptMatcher._ambiguousGenerics.contains(rawTokens.first)) {
+        dropped.add(ocrRaw);
         continue;
       }
       // La línea ya pasó el quality gate del Paso 0 → es un candidato genuino
       // a producto nuevo (ej: "Chicle"), lo ofrecemos al usuario.
-      // Dedupe por firma de tokens stemmeados para colapsar singular/plural.
-      final sig = rawTokens.join(' ');
-      if (sig.isNotEmpty && seenUnrecognized.add(sig)) {
+      // Dedupe por nombre de display (cleanName), que es lo que el usuario
+      // ve en el banner. Así "JUGO DURAZNO TROPA" y "JUGO MULTIFRUTA NATURAL"
+      // — ambos se mostrarían como "Jugo" — colapsan en una sola sugerencia.
+      final displayKey = ReceiptMatcher.cleanName(ocrRaw).toLowerCase();
+      if (displayKey.isNotEmpty && seenUnrecognized.add(displayKey)) {
         unrecognized.add(ocrRaw);
       }
       continue;
@@ -530,5 +555,6 @@ ScanMatchResult resolveScanItems({
     toMarkPurchased: toMarkPurchased,
     toAddAndMark: toAddAndMark,
     unrecognized: unrecognized,
+    dropped: dropped,
   );
 }

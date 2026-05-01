@@ -18,6 +18,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/admin_
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
@@ -308,9 +309,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        // Go to home tab and pop
-        ref.read(bottomNavIndexProvider.notifier).setIndex(0);
-        Navigator.pop(context);
+        _handleBackNavigation();
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackground,
@@ -325,42 +324,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   parent: BouncingScrollPhysics(),
                 ),
                 slivers: [
-                  SliverAppBar(
-                    expandedHeight: 140,
-                    floating: false,
-                    pinned: true,
-                    elevation: 0,
-                    stretch: true,
-                    backgroundColor: theme.scaffoldBackground,
-                    flexibleSpace: FlexibleSpaceBar(
-                      centerTitle: false,
-                      titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
-                      title: Text(
-                        'Configuracion',
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 26,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.primary.withValues(alpha: 0.05),
-                              theme.scaffoldBackground,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
+                  SliverToBoxAdapter(
+                    child: _SettingsHeader(onBack: _handleBackNavigation),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -397,8 +366,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildSectionLabel(
                             eyebrow: 'APP',
                             title: 'Preferencias',
-                            subtitle:
-                                'Tema, notificaciones y herramientas de ayuda.',
+                            subtitle: 'Tema, notificaciones, ayuda y feedback.',
                           ),
                           const SizedBox(height: 14),
                           // Menores no pueden comprar premium — solo ven una
@@ -411,12 +379,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildAppearanceCard(isMinor: isMinor),
                           const SizedBox(height: 24),
                           _buildNotificationsCard(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           if (AppEnvironment.enableAdminTesting) ...[
                             _buildAdminTestingCard(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                           ],
                           _buildFAQButton(),
+                          const SizedBox(height: 16),
+                          _buildFeedbackCard(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
                             eyebrow: 'CUENTA',
@@ -467,6 +437,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  void _handleBackNavigation() {
+    ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+    Navigator.pop(context);
   }
 
   Widget _buildLoadingCard({double height = 180}) {
@@ -520,6 +495,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final isAdminQaUser = ref.watch(adminProvider).isAdminUser;
 
+    // Determinar si mostrar el toggle según tipo de hogar
+    // Family NO puede ocultar tareas, los demás SÍ pueden
+    final householdType = HouseholdType.fromString(_householdType);
+    final showTasksToggle = householdType != HouseholdType.family;
+
     final members = buildSettingsHouseholdMemberData(
       context: context,
       members: _members,
@@ -540,9 +520,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       memberCount: memberCount,
       members: members,
       tasksEnabled: _tasksEnabled,
-      onTasksEnabledChanged:
-          isOwner || isAdminQaUser ? _updateTasksEnabled : null,
+      onTasksEnabledChanged: (showTasksToggle && (isOwner || isAdminQaUser))
+          ? _onTasksToggled
+          : null,
     );
+  }
+
+  void _onTasksToggled(bool enabled) {
+    _confirmAndUpdateTasksEnabled(enabled);
+  }
+
+  Future<void> _confirmAndUpdateTasksEnabled(bool enabled) async {
+    final action = enabled ? 'activar' : 'desactivar';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar cambio'),
+        content: Text(
+          'Al $action el modo "Solo finanzas", TODOS los miembros del hogar '
+          'verán solo funcionalidades financieras (sin tareas, compras, etc.). '
+          'Esta configuración se aplica a todo el hogar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _updateTasksEnabled(enabled);
+    }
   }
 
   Future<void> _updateTasksEnabled(bool enabled) async {
@@ -1399,4 +1413,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // Premium Card
+}
+
+class _SettingsHeader extends StatelessWidget {
+  final VoidCallback onBack;
+
+  const _SettingsHeader({required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.primary.withValues(alpha: 0.06),
+            theme.scaffoldBackground,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 20, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: onBack,
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: theme.textPrimary,
+                  size: 28,
+                ),
+                tooltip: 'Volver',
+              ),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  'Configuracion',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 34,
+                    height: 0.95,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

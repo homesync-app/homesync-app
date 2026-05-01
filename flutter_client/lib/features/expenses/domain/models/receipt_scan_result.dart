@@ -22,6 +22,10 @@ class ReceiptScanResult {
   /// Se usan para matching conservador contra la lista de compras.
   final List<String> detectedItems;
 
+  /// Items tal como vinieron de la IA, sin pasar por cleanName.
+  /// Se usan para telemetría / análisis del OCR.
+  final List<String> rawItems;
+
   /// Path local de la imagen comprimida (WebP).
   /// Se sube a Storage solo si el usuario confirma el gasto.
   final String localImagePath;
@@ -35,12 +39,18 @@ class ReceiptScanResult {
     this.date,
     this.category,
     required this.detectedItems,
+    required this.rawItems,
     required this.localImagePath,
     required this.confidence,
   });
 
   factory ReceiptScanResult.fromJson(
       Map<String, dynamic> json, String localImagePath,) {
+    final raw = (json['items'] as List<dynamic>?)
+            ?.map((e) => e.toString().trim())
+            .where((e) => e.isNotEmpty)
+            .toList() ??
+        [];
     return ReceiptScanResult(
       merchant: json['merchant'] as String?,
       amount: (json['amount'] as num?)?.toDouble(),
@@ -48,11 +58,11 @@ class ReceiptScanResult {
           ? DateTime.tryParse(json['date'] as String)
           : null,
       category: json['category'] as String?,
-      detectedItems: (json['items'] as List<dynamic>?)
-              ?.map((e) => ReceiptMatcher.cleanName(e.toString().trim()))
-              .where((e) => e.isNotEmpty)
-              .toList() ??
-          [],
+      rawItems: raw,
+      detectedItems: raw
+          .map(ReceiptMatcher.cleanName)
+          .where((e) => e.isNotEmpty)
+          .toList(),
       localImagePath: localImagePath,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
     );

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/ocr_log_service.dart';
 import 'package:homesync_client/core/services/receipt_scan_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -15,7 +16,6 @@ import 'package:homesync_client/features/expenses/domain/models/receipt_scan_res
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/new_items_suggestion_banner.dart';
-import 'package:homesync_client/features/expenses/presentation/widgets/receipt_preview_widget.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -97,6 +97,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   List<String> _unmatchedOcrItems = [];
   final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
+  // Telemetría OCR: id de la fila de log para asociar matcher_result + user_action.
+  String? _ocrLogId;
+  bool _ocrConfirmed = false;
+
   // Split logic
   SplitType _splitMode = SplitType.equal;
   Set<String> _selectedMembersForSplit = {}; // For 'equal'
@@ -149,6 +153,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   void dispose() {
+    // Si hubo scan y el usuario cerró sin confirmar, lo marcamos como cancelled.
+    if (_ocrLogId != null && !_ocrConfirmed) {
+      OcrLogService(Supabase.instance.client).updateUserAction(
+        logId: _ocrLogId!,
+        action: 'cancelled',
+      );
+    }
     _titleController.removeListener(_onTitleChanged);
     _amountController.dispose();
     _titleController.dispose();
@@ -249,7 +260,31 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (result == null || !mounted) return;
       _prefillFromScan(result);
 
-      _matchOcrItemsToShoppingList(result.detectedItems);
+      // Logging asíncrono — no bloquea la UI ni rompe si falla.
+      final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
+      final householdId =
+          ref.read(currentHouseholdProvider).valueOrNull?.id;
+      OcrLogService(Supabase.instance.client)
+          .logScan(
+        merchant: result.merchant,
+        confidence: result.confidence,
+        rawItems: result.rawItems,
+        householdId: householdId,
+        tier: isPremium ? 'premium' : 'free',
+      )
+          .then((logId) {
+        if (logId != null && mounted) {
+          setState(() => _ocrLogId = logId);
+        }
+      });
+
+      // Solo corremos el matcher para categorías donde tiene sentido vincular
+      // con la lista de compras. Para cafeterías, transporte, servicios, etc.
+      // el usuario no espera ver productos detectados.
+      const shoppingRelevantCategories = {'supermarket', 'health'};
+      if (shoppingRelevantCategories.contains(result.category)) {
+        _matchOcrItemsToShoppingList(result.rawItems);
+      }
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
@@ -325,15 +360,20 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         ..addAll(result.allLinked);
       _unmatchedOcrItems = result.unrecognized;
     });
-  }
 
-  void _clearScan() {
-    setState(() {
-      _scanResult = null;
-      _unmatchedOcrItems = [];
-      _selectedShoppingItems.removeAll(_ocrMatchedShoppingItems);
-      _ocrMatchedShoppingItems.clear();
-    });
+    // Telemetría: registramos el resultado del matcher para análisis offline.
+    final logId = _ocrLogId;
+    if (logId != null) {
+      OcrLogService(Supabase.instance.client).updateMatcherResult(
+        logId: logId,
+        matcherResult: {
+          'matched': result.toMarkPurchased.map((i) => i.name).toList(),
+          'to_add': result.toAddAndMark.map((i) => i.name).toList(),
+          'unrecognized': result.unrecognized,
+          'dropped': result.dropped,
+        },
+      );
+    }
   }
 
   Future<void> _selectDate() async {
@@ -423,15 +463,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       String? receiptPath = widget.expense?.receiptPath;
       if (_scanResult != null) {
-        try {
-          final receiptService = ReceiptScanService(Supabase.instance.client);
-          receiptPath = await receiptService.uploadReceipt(
-            localImagePath: _scanResult!.localImagePath,
-            householdId: householdId,
-          );
-        } catch (e) {
-          debugPrint('[ExpenseForm] Upload de ticket falló: $e');
-        }
+        receiptPath = null;
+        debugPrint(
+          '[ExpenseForm] Ticket escaneado sin guardar imagen',
+        );
       }
 
       final saveResult = await repo.saveExpense(
@@ -502,6 +537,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ref.invalidate(recentActivityProvider);
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(userBalanceProvider);
+
+      // Telemetría OCR: el usuario confirmó el gasto.
+      if (_ocrLogId != null) {
+        _ocrConfirmed = true;
+        OcrLogService(Supabase.instance.client).updateUserAction(
+          logId: _ocrLogId!,
+          action: 'confirmed',
+        );
+      }
 
       if (mounted) {
         HapticFeedback.mediumImpact();
@@ -615,10 +659,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ),
                           const SizedBox(height: 14),
                           _buildTitleField(),
-                          if (!_isIncome && _scanResult != null) ...[
-                            const SizedBox(height: 10),
-                            _buildReceiptPreviewInline(),
-                          ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
                             eyebrow: 'Contexto',
@@ -1159,81 +1199,67 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           onTap: isPremium
               ? () => _showShoppingItemsSelector(context)
               : () => PremiumPaywall.show(context),
+          // Solo permitimos limpiar/quitar si hubo scan (caso tipico:
+          // el usuario escaneó pero el ticket no es de un super → quita todo).
+          onClearAll: _scanResult != null
+              ? () {
+                  // Snapshot para deshacer.
+                  final prevSelected =
+                      Set<ShoppingItemModel>.from(_selectedShoppingItems);
+                  final prevMatched =
+                      Set<ShoppingItemModel>.from(_ocrMatchedShoppingItems);
+                  final prevUnmatched =
+                      List<String>.from(_unmatchedOcrItems);
+
+                  setState(() {
+                    _selectedShoppingItems.clear();
+                    _ocrMatchedShoppingItems.clear();
+                    _unmatchedOcrItems = [];
+                  });
+
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: const Text(
+                          'Vinculaciones removidas',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        backgroundColor: AppColors.textPrimary,
+                        duration: const Duration(seconds: 4),
+                        behavior: SnackBarBehavior.floating,
+                        action: SnackBarAction(
+                          label: 'Deshacer',
+                          textColor: AppColors.primary,
+                          onPressed: () {
+                            if (!mounted) return;
+                            setState(() {
+                              _selectedShoppingItems
+                                ..clear()
+                                ..addAll(prevSelected);
+                              _ocrMatchedShoppingItems
+                                ..clear()
+                                ..addAll(prevMatched);
+                              _unmatchedOcrItems = prevUnmatched;
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                }
+              : null,
+          onRemoveItem: _scanResult != null
+              ? (item) {
+                  setState(() {
+                    _selectedShoppingItems.remove(item);
+                    _ocrMatchedShoppingItems.remove(item);
+                  });
+                }
+              : null,
         );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildReceiptPreviewInline() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            ReceiptPreviewWidget(
-              localPath: _scanResult!.localImagePath,
-              onRemove: _clearScan,
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExpenseScanButton(
-                  icon: Icons.camera_alt_outlined,
-                  label: 'Re-escanear',
-                  isLoading: _isScanningReceipt,
-                  onTap: _isScanningReceipt
-                      ? null
-                      : () => _scanReceipt(ImageSource.camera),
-                ),
-                const SizedBox(height: 6),
-                ExpenseScanButton(
-                  icon: Icons.photo_library_outlined,
-                  label: 'Galería',
-                  isLoading: false,
-                  onTap: _isScanningReceipt
-                      ? null
-                      : () => _scanReceipt(ImageSource.gallery),
-                ),
-              ],
-            ),
-          ],
-        ),
-        if (_scanResult!.hasLowConfidence) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: AppColors.warning.withValues(alpha: 0.3),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: AppColors.warning,
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Confianza baja: revisá los datos antes de guardar.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.warning,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
     );
   }
 

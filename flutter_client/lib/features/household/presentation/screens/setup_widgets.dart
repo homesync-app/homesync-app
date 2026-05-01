@@ -50,7 +50,7 @@ class SetupSupportBullet extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -64,7 +64,7 @@ class SetupSupportBullet extends StatelessWidget {
               style: TextStyle(
                 fontSize: 15,
                 height: 1.35,
-                color: AppColors.textSecondary.withValues(alpha: 0.85),
+                color: AppColors.textSecondary.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -132,8 +132,8 @@ class SetupPrimaryButton extends StatelessWidget {
         boxShadow: isEnabled
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.16),
-                  blurRadius: 18,
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
               ]
@@ -143,9 +143,10 @@ class SetupPrimaryButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: isEnabled
-              ? AppColors.primary.withValues(alpha: 0.14)
+              ? AppColors.primary.withValues(alpha: 0.2)
               : Colors.white.withValues(alpha: 0.5),
-          foregroundColor: isEnabled ? AppColors.primary : AppColors.textMuted,
+          foregroundColor:
+              isEnabled ? AppColors.primaryDark : AppColors.textMuted,
           disabledBackgroundColor: Colors.white.withValues(alpha: 0.5),
           disabledForegroundColor: AppColors.textMuted,
           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -153,7 +154,7 @@ class SetupPrimaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             side: BorderSide(
               color: isEnabled
-                  ? AppColors.primary.withValues(alpha: 0.32)
+                  ? AppColors.primary.withValues(alpha: 0.38)
                   : AppColors.border.withValues(alpha: 0.85),
               width: 1.4,
             ),

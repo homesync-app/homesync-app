@@ -9,17 +9,19 @@ import {
   Zap,
   Loader2,
   Calendar,
+  MessageSquare,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
 
-type Tone = 'indigo' | 'emerald' | 'rose' | 'amber';
+type Tone = 'indigo' | 'emerald' | 'rose' | 'amber' | 'violet';
 
 interface DashboardStats {
   households: number;
   tasksToday: number;
   alerts: number;
   totalCoins: number;
+  pendingFeedback: number;
 }
 
 interface ActivityItem {
@@ -38,6 +40,7 @@ const toneClass: Record<Tone, { halo: string; icon: string }> = {
   emerald: { halo: 'bg-emerald-500/10', icon: 'bg-emerald-500/10 text-emerald-500' },
   rose: { halo: 'bg-rose-500/10', icon: 'bg-rose-500/10 text-rose-500' },
   amber: { halo: 'bg-amber-500/10', icon: 'bg-amber-500/10 text-amber-500' },
+  violet: { halo: 'bg-violet-500/10', icon: 'bg-violet-500/10 text-violet-400' },
 };
 
 const StatCard = ({
@@ -81,6 +84,7 @@ export const Dashboard = () => {
     tasksToday: 0,
     alerts: 0,
     totalCoins: 0,
+    pendingFeedback: 0,
   });
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +96,7 @@ export const Dashboard = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [households, tasksToday, alerts, ledgerRes, activityStream] = await Promise.all([
+    const [households, tasksToday, alerts, ledgerRes, activityStream, pendingFeedback] = await Promise.all([
       supabase.from('households').select('*', { count: 'exact', head: true }),
       supabase
         .from('tasks')
@@ -102,6 +106,7 @@ export const Dashboard = () => {
       supabase.from('application_logs').select('*', { count: 'exact', head: true }).eq('level', 'error'),
       supabase.from('ledger_entries').select('amount').eq('type', 'coins_earned'),
       supabase.from('household_activities').select('*').order('created_at', { ascending: false }).limit(5),
+      supabase.from('user_feedback').select('*', { count: 'exact', head: true }).eq('resolved', false),
     ]);
 
     if (households.error || tasksToday.error || alerts.error || ledgerRes.error || activityStream.error) {
@@ -118,6 +123,7 @@ export const Dashboard = () => {
       tasksToday: tasksToday.count || 0,
       alerts: alerts.count || 0,
       totalCoins,
+      pendingFeedback: pendingFeedback.count || 0,
     });
     setActivities((activityStream.data || []) as ActivityItem[]);
     setLoading(false);
@@ -134,8 +140,8 @@ export const Dashboard = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">System Overview</h2>
-          <p className="text-gray-400 mt-1">Real-time heuristics and household performance metrics.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Overview del sistema</h2>
+          <p className="text-gray-400 mt-1">Métricas en tiempo real y rendimiento de los hogares.</p>
         </div>
         <button
           onClick={fetchDashboardData}
@@ -145,18 +151,19 @@ export const Dashboard = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Active Households" value={stats.households} icon={Users} tone="indigo" loading={loading} />
-        <StatCard title="Tasks Completed Today" value={stats.tasksToday} icon={CheckCircle2} tone="emerald" loading={loading} />
-        <StatCard title="Critical Alerts" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
-        <StatCard title="Circulating Coins" value={stats.totalCoins.toLocaleString()} icon={Zap} tone="amber" loading={loading} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <StatCard title="Hogares Activos" value={stats.households} icon={Users} tone="indigo" loading={loading} />
+        <StatCard title="Tareas Completadas Hoy" value={stats.tasksToday} icon={CheckCircle2} tone="emerald" loading={loading} />
+        <StatCard title="Alertas Críticas" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
+        <StatCard title="Monedas en Circulación" value={stats.totalCoins.toLocaleString()} icon={Zap} tone="amber" loading={loading} />
+        <StatCard title="Feedback Pendiente" value={stats.pendingFeedback} icon={MessageSquare} tone="violet" loading={loading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass-dark p-8 rounded-3xl border border-white/5">
           <h3 className="text-xl font-bold flex items-center gap-2 mb-8">
             <Activity className="w-5 h-5 text-secondary" />
-            Recent Activity
+            Actividad Reciente
           </h3>
 
           <div className="space-y-6">
@@ -192,24 +199,22 @@ export const Dashboard = () => {
         </div>
 
         <div className="glass-dark p-8 rounded-3xl border border-white/5">
-          <h3 className="text-xl font-bold mb-6">System Health</h3>
+          <h3 className="text-xl font-bold mb-6">Estado del Sistema</h3>
           <div className="space-y-4">
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-1">Database</p>
-              <p className="text-sm font-medium">Supabase Cloud (Active)</p>
+              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-1">Base de Datos</p>
+              <p className="text-sm font-medium">Supabase Cloud (Activo)</p>
             </div>
             <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
-              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Auth Service</p>
-              <p className="text-sm font-medium">JWT RSA-256 (Enabled)</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Autenticación</p>
+              <p className="text-sm font-medium">JWT RSA-256 (Habilitado)</p>
             </div>
             <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Storage</p>
+              <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-1">Almacenamiento</p>
               <p className="text-sm font-medium">Object Storage (CDN)</p>
             </div>
           </div>
-          <button className="w-full mt-6 py-3 rounded-2xl bg-white/5 border border-white/10 font-bold hover:bg-white/10 transition-all">
-            Refresh Diagnostic
-          </button>
+
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
@@ -12,6 +13,8 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   final Set<ShoppingItemModel> autoAddedItems;
   final List<String> detectedItemNames;
   final VoidCallback onTap;
+  final VoidCallback? onClearAll;
+  final void Function(ShoppingItemModel item)? onRemoveItem;
 
   const ExpenseShoppingIntegrationCard({
     super.key,
@@ -20,6 +23,8 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
     this.autoAddedItems = const {},
     this.detectedItemNames = const [],
     required this.onTap,
+    this.onClearAll,
+    this.onRemoveItem,
   });
 
   @override
@@ -110,13 +115,28 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    hasItems
-                        ? Icons.edit_outlined
-                        : Icons.add_circle_outline_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
+                  if (hasItems && onClearAll != null)
+                    InkWell(
+                      onTap: onClearAll,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                          semanticLabel: 'Quitar todas las vinculaciones',
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(
+                      hasItems
+                          ? Icons.edit_outlined
+                          : Icons.add_circle_outline_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                 ],
               ),
             ),
@@ -131,7 +151,13 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                   runSpacing: 6,
                   children: linkedItems.map((item) {
                     final isNew = autoAddedItems.contains(item);
-                    return _ItemChip(item: item, isNew: isNew);
+                    return _ItemChip(
+                      item: item,
+                      isNew: isNew,
+                      onRemove: onRemoveItem != null
+                          ? () => onRemoveItem!(item)
+                          : null,
+                    );
                   }).toList(),
                 ),
               ),
@@ -186,12 +212,15 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              'Vincular con lista de compras',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                                color: Colors.grey,
+                            const Flexible(
+                              child: Text(
+                                'Vincular con lista de compras',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -247,7 +276,15 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                 child: Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: displayNames.take(8).map((name) {
+                  children: displayNames.take(8).map((raw) {
+                    // Resuelve emoji y nombre limpio desde el catálogo.
+                    // raw puede ser nombre canónico ("Antitranspirante") o
+                    // string crudo del OCR ("ANTITRANS DOVE M POMEL").
+                    final catalogEntry = ReceiptMatcher.findPredefined(raw);
+                    final emoji = catalogEntry?.emoji ?? '🛒';
+                    final cleanRaw = ReceiptMatcher.cleanName(raw);
+                    final displayName =
+                        catalogEntry?.name ?? (cleanRaw.isNotEmpty ? cleanRaw : raw);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -263,13 +300,13 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            '🛒',
-                            style: TextStyle(fontSize: 13),
+                          Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 13),
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            name,
+                            displayName,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -295,12 +332,17 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
 class _ItemChip extends StatelessWidget {
   final ShoppingItemModel item;
   final bool isNew;
+  final VoidCallback? onRemove;
 
-  const _ItemChip({required this.item, required this.isNew});
+  const _ItemChip({
+    required this.item,
+    required this.isNew,
+    this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.background,
@@ -351,6 +393,13 @@ class _ItemChip extends StatelessWidget {
           ],
         ],
       ),
+    );
+
+    if (onRemove == null) return chip;
+    return InkWell(
+      onTap: onRemove,
+      borderRadius: BorderRadius.circular(20),
+      child: chip,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -15,11 +16,13 @@ enum FeedbackType { bug, suggestion }
 class FeedbackSheet extends ConsumerStatefulWidget {
   final FeedbackType initialType;
 
-  const FeedbackSheet({super.key, this.initialType = FeedbackType.bug, this.currentScreen});
+  const FeedbackSheet(
+      {super.key, this.initialType = FeedbackType.bug, this.currentScreen});
 
   final String? currentScreen;
 
-  static void show(BuildContext context, {FeedbackType type = FeedbackType.bug, String? screen}) {
+  static void show(BuildContext context,
+      {FeedbackType type = FeedbackType.bug, String? screen}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -72,7 +75,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
       if (Platform.isAndroid) {
         final android = await deviceInfo.androidInfo;
         deviceModel = '${android.manufacturer} ${android.model}';
-        osVersion = 'Android ${android.version.release} (SDK ${android.version.sdkInt})';
+        osVersion =
+            'Android ${android.version.release} (SDK ${android.version.sdkInt})';
       } else if (Platform.isIOS) {
         final ios = await deviceInfo.iosInfo;
         deviceModel = ios.utsname.machine;
@@ -86,13 +90,19 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         'email': email,
         'type': _type.name,
         'title': title,
-        'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+        'description':
+            _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
         'app_version': '${info.version}+${info.buildNumber}',
-        'platform': Platform.isAndroid ? 'android' : Platform.isIOS ? 'ios' : 'unknown',
+        'platform': Platform.isAndroid
+            ? 'android'
+            : Platform.isIOS
+                ? 'ios'
+                : 'unknown',
         'device_model': deviceModel,
         'os_version': osVersion,
         'locale': locale,
-        'screen_name': widget.currentScreen,
+        'screen_name': widget.currentScreen ?? breadcrumb.currentScreen,
+        'breadcrumbs': breadcrumb.getBreadcrumbs(),
       });
 
       setState(() {
@@ -160,11 +170,14 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             color: AppColors.success.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.check_rounded, color: AppColors.success, size: 32),
+          child: const Icon(Icons.check_rounded,
+              color: AppColors.success, size: 32),
         ),
         const SizedBox(height: 16),
         Text(
-          _type == FeedbackType.bug ? '¡Gracias por reportarlo!' : '¡Gracias por la idea!',
+          _type == FeedbackType.bug
+              ? '¡Gracias por reportarlo!'
+              : '¡Gracias por la idea!',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -205,9 +218,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         // tipo selector
         Row(
           children: [
-            _typeChip(theme, FeedbackType.bug, Icons.bug_report_outlined, 'Reportar error'),
+            _typeChip(theme, FeedbackType.bug, Icons.bug_report_outlined,
+                'Reportar error'),
             const SizedBox(width: 10),
-            _typeChip(theme, FeedbackType.suggestion, Icons.lightbulb_outline_rounded, 'Sugerir mejora'),
+            _typeChip(theme, FeedbackType.suggestion,
+                Icons.lightbulb_outline_rounded, 'Sugerir mejora'),
           ],
         ),
         const SizedBox(height: 20),
@@ -242,7 +257,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
         const SizedBox(height: 12),
@@ -266,7 +282,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               borderSide: BorderSide(color: theme.primary, width: 1.5),
             ),
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
         const SizedBox(height: 20),
@@ -275,12 +292,14 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
-            onPressed: _isSending || _titleCtrl.text.trim().isEmpty ? null : _submit,
+            onPressed:
+                _isSending || _titleCtrl.text.trim().isEmpty ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.primary,
               foregroundColor: Colors.white,
               disabledBackgroundColor: theme.primary.withValues(alpha: 0.35),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18)),
               elevation: 0,
             ),
             child: _isSending
@@ -293,8 +312,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
                     ),
                   )
                 : Text(
-                    _type == FeedbackType.bug ? 'Enviar reporte' : 'Enviar sugerencia',
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                    _type == FeedbackType.bug
+                        ? 'Enviar reporte'
+                        : 'Enviar sugerencia',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 16),
                   ),
           ),
         ),
@@ -302,7 +324,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     );
   }
 
-  Widget _typeChip(dynamic theme, FeedbackType type, IconData icon, String label) {
+  Widget _typeChip(
+      dynamic theme, FeedbackType type, IconData icon, String label) {
     final isSelected = _type == type;
     return Expanded(
       child: GestureDetector(
@@ -328,7 +351,9 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: isSelected ? theme.primary : theme.textSecondary),
+              Icon(icon,
+                  size: 18,
+                  color: isSelected ? theme.primary : theme.textSecondary),
               const SizedBox(width: 6),
               Text(
                 label,

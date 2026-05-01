@@ -270,7 +270,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               icon: Icons.add_rounded,
               onPressed: _showCreateTaskDialog,
               heroTag: 'tasks_fab',
-              margin: const EdgeInsets.only(bottom: 18),
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 10,
+              ),
               animateIn: true,
             ),
       body: Column(
@@ -325,33 +327,53 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        SizedBox(
-                                          height: 42,
-                                          child: ListView(
-                                            scrollDirection: Axis.horizontal,
-                                            children: [
-                                              _buildSearchChip()
-                                                  .animateStaggered(0),
-                                              _buildCategoryChip(
-                                                null,
-                                                'Todas',
-                                                AppColors.textSecondary,
-                                              ).animateStaggered(1),
-                                              ...visibleCats
-                                                  .asMap()
-                                                  .entries
-                                                  .map(
-                                                    (e) => _buildCategoryChip(
-                                                      e.value.id,
-                                                      e.value.name,
-                                                      AppColors.fromHex(
-                                                        e.value.color,
-                                                      ),
-                                                    ).animateStaggered(
-                                                      e.key + 2,
-                                                    ),
+                                        ShaderMask(
+                                          shaderCallback: (bounds) {
+                                            return const LinearGradient(
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                              colors: [
+                                                Colors.white,
+                                                Colors.white,
+                                                Colors.transparent,
+                                              ],
+                                              stops: [0, 0.92, 1],
+                                            ).createShader(bounds);
+                                          },
+                                          blendMode: BlendMode.dstIn,
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              padding: const EdgeInsets.only(
+                                                right: 18,
+                                              ),
+                                              itemCount: visibleCats.length + 2,
+                                              itemBuilder: (context, index) {
+                                                if (index == 0) {
+                                                  return _buildSearchChip()
+                                                      .animateStaggered(0);
+                                                }
+
+                                                if (index == 1) {
+                                                  return _buildCategoryChip(
+                                                    null,
+                                                    'Todas',
+                                                    AppColors.textSecondary,
+                                                  ).animateStaggered(1);
+                                                }
+
+                                                final category =
+                                                    visibleCats[index - 2];
+                                                return _buildCategoryChip(
+                                                  category.id,
+                                                  category.name,
+                                                  AppColors.fromHex(
+                                                    category.color,
                                                   ),
-                                            ],
+                                                ).animateStaggered(index);
+                                              },
+                                            ),
                                           ),
                                         ),
                                         AnimatedSize(
@@ -489,11 +511,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                         // Tasks list
                         SliverPadding(
                           padding: EdgeInsets.only(
-                            bottom: ref.read(tasksProvider.notifier).hasMore &&
-                                    tasks.isNotEmpty &&
-                                    selectedCategories.isEmpty
-                                ? 20
-                                : 140,
+                            bottom:
+                                158 + MediaQuery.viewPaddingOf(context).bottom,
                           ),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
@@ -579,13 +598,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected
               ? theme.primary.withValues(alpha: 0.12)
               : theme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? theme.primary.withValues(alpha: 0.45)
@@ -613,6 +632,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             const SizedBox(width: 8),
             Text(
               hasQuery ? 'Buscando' : 'Buscar',
+              maxLines: 1,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -645,11 +665,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.12) : theme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color.withValues(alpha: 0.45) : theme.border,
             width: isSelected ? 1.4 : 1.1,
@@ -673,12 +693,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               size: 18,
             ),
             const SizedBox(width: 8),
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
-                color: isSelected ? color : theme.textPrimary,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 116),
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                  color: isSelected ? color : theme.textPrimary,
+                ),
               ),
             ),
           ],
@@ -990,20 +1015,28 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           spacing: 6,
                           runSpacing: 6,
                           children: [
-                            _pill(
-                              icon: task.isRecurring
-                                  ? Icons.event_repeat_rounded
-                                  : Icons.edit_calendar_rounded,
-                              label: task.isRecurring
-                                  ? task.recurrenceLabel
-                                  : 'Sin programar',
-                              color: task.isRecurring
-                                  ? AppColors.accentGold
-                                  : AppColors.accentRed,
-                              background: task.isRecurring
-                                  ? AppColors.accentGold.withValues(alpha: 0.16)
-                                  : AppColors.accentRed.withValues(alpha: 0.16),
-                            ),
+                            if (task.isRecurring || !task.isOverdue)
+                              _pill(
+                                icon: task.isRecurring
+                                    ? Icons.event_repeat_rounded
+                                    : Icons.edit_calendar_rounded,
+                                label: task.isRecurring
+                                    ? task.recurrenceLabel
+                                    : 'Sin fecha',
+                                color: task.isRecurring
+                                    ? AppColors.accentGold
+                                    : _unscheduledPillColor,
+                                background: task.isRecurring
+                                    ? AppColors.accentGold.withValues(
+                                        alpha: 0.16,
+                                      )
+                                    : _unscheduledPillBackground,
+                                borderAlpha: task.isRecurring ? 0.22 : 0.12,
+                                textWeight: task.isRecurring
+                                    ? FontWeight.w800
+                                    : FontWeight.w700,
+                                gap: task.isRecurring ? 5 : 7,
+                              ),
                             if (task.isOverdue)
                               _pill(
                                 icon: Icons.priority_high_rounded,
@@ -1011,6 +1044,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                 color: AppColors.accentRed,
                                 background:
                                     AppColors.accentRed.withValues(alpha: 0.16),
+                                borderAlpha: 0.26,
                               ),
                             if (isFamilyMode && task.isPendingApproval)
                               _pill(
@@ -1536,6 +1570,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required String label,
     required Color color,
     required Color background,
+    double borderAlpha = 0.22,
+    FontWeight textWeight = FontWeight.w800,
+    double gap = 5,
   }) {
     final readableColor = Color.alphaBlend(
       Colors.black.withValues(alpha: 0.18),
@@ -1547,17 +1584,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+        border: Border.all(color: color.withValues(alpha: borderAlpha)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: readableColor),
-          const SizedBox(width: 5),
+          SizedBox(width: gap),
           Text(
             label,
             style: TextStyle(
-              fontWeight: FontWeight.w800,
+              fontWeight: textWeight,
               fontSize: 10,
               color: readableColor,
               letterSpacing: -0.1,
@@ -1567,6 +1604,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       ),
     );
   }
+
+  Color get _unscheduledPillColor => const Color(0xFFA8734F);
+
+  Color get _unscheduledPillBackground => const Color(0xFFFFF7EF);
 
   Widget _badge(String label, Color color) {
     return Container(

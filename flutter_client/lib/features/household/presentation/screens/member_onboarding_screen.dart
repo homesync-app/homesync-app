@@ -25,7 +25,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     with TickerProviderStateMixin {
   int _step = 0;
   String _selectedDisplayRole = 'Padre';
-  String _selectedMemberType = 'adult';
+  String _selectedMemberType = 'parent';
   List<String> _availableRoles = [];
   bool _isLoadingRoles = false;
   bool _isSaving = false;
@@ -66,7 +66,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           setState(() {
             _availableRoles = ['Adulto'];
             _selectedDisplayRole = 'Adulto';
-            _selectedMemberType = 'adult';
+            _selectedMemberType = 'parent';
           });
         }
       }
@@ -87,7 +87,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           setState(() {
             _availableRoles = ['Tutor/a', 'Adolescente', 'Hijo/a'];
             _selectedDisplayRole = 'Tutor/a';
-            _selectedMemberType = 'adult';
+            _selectedMemberType = 'parent';
           });
         }
       } else if (mounted) {
@@ -103,7 +103,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         setState(() {
           _availableRoles = ['Tutor/a', 'Adolescente', 'Hijo/a'];
           _selectedDisplayRole = 'Tutor/a';
-          _selectedMemberType = 'adult';
+          _selectedMemberType = 'parent';
         });
       }
     } finally {

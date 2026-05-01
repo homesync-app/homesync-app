@@ -117,13 +117,13 @@ class SettingsHouseholdCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: theme.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: theme.shadow.withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -131,7 +131,7 @@ class SettingsHouseholdCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -142,22 +142,22 @@ class SettingsHouseholdCard extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: theme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child:
-                      Icon(Icons.home_rounded, color: theme.primary, size: 26),
+                      Icon(Icons.home_rounded, color: theme.primary, size: 24),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +165,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                       Text(
                         householdName,
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w900,
                           color: theme.textPrimary,
                         ),
@@ -173,7 +173,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 9,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
@@ -199,11 +199,11 @@ class SettingsHouseholdCard extends StatelessWidget {
                     onTap: onEdit,
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(7),
                       child: Icon(
                         Icons.edit_note_rounded,
                         color: theme.primary,
-                        size: 28,
+                        size: 25,
                       ),
                     ),
                   ),
@@ -211,16 +211,21 @@ class SettingsHouseholdCard extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(
+            height: 1,
+            color: theme.border.withValues(alpha: 0.28),
+            indent: 18,
+            endIndent: 18,
+          ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 membersContent,
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: theme.scaffoldBackground,
                     borderRadius: BorderRadius.circular(18),
@@ -233,16 +238,16 @@ class SettingsHouseholdCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: theme.primary.withValues(alpha: 0.10),
+                          color: theme.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           Icons.task_alt_rounded,
                           color: theme.primary,
-                          size: 20,
+                          size: 18,
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,11 +320,15 @@ class SettingsHouseholdMembersSection extends StatelessWidget {
             ),
             Text(
               '$memberCount ${memberCount == 1 ? "miembro" : "miembros"}',
-              style: TextStyle(color: theme.textMuted, fontSize: 11),
+              style: TextStyle(
+                color: theme.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         ...memberRows,
       ],
     );
@@ -332,9 +341,9 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
   final String? avatarUrl;
   final bool isCurrentUser;
   final bool showOwnerStar;
-  final Widget? editAction;
-  final Widget? removeAction;
-  final Widget? qaDeleteAction;
+  final VoidCallback? onEdit;
+  final VoidCallback? onRemove;
+  final VoidCallback? onQaDelete;
 
   const SettingsHouseholdMemberRow({
     super.key,
@@ -343,72 +352,155 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
     required this.avatarUrl,
     required this.isCurrentUser,
     required this.showOwnerStar,
-    this.editAction,
-    this.removeAction,
-    this.qaDeleteAction,
+    this.onEdit,
+    this.onRemove,
+    this.onQaDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
 
+    final hasActions = onEdit != null || onRemove != null || onQaDelete != null;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          CustomUserAvatar(
-            name: name,
-            avatarUrl: avatarUrl,
-            radius: 18,
-            forceCircular: true,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontWeight:
-                            isCurrentUser ? FontWeight.w700 : FontWeight.w600,
-                        fontSize: 14,
-                        color:
-                            isCurrentUser ? theme.primary : theme.textPrimary,
-                      ),
-                    ),
-                    if (isCurrentUser) ...[
-                      const SizedBox(width: 6),
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isCurrentUser
+              ? theme.primary.withValues(alpha: 0.035)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            CustomUserAvatar(
+              name: name,
+              avatarUrl: avatarUrl,
+              radius: 17,
+              forceCircular: true,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
                       Text(
-                        ' (Tu)',
+                        name,
                         style: TextStyle(
-                          color: theme.textMuted,
-                          fontSize: 12,
+                          fontWeight:
+                              isCurrentUser ? FontWeight.w800 : FontWeight.w700,
+                          fontSize: 14,
+                          color:
+                              isCurrentUser ? theme.primary : theme.textPrimary,
                         ),
                       ),
+                      if (isCurrentUser)
+                        _SettingsMemberTinyChip(
+                          label: 'Vos',
+                          color: theme.primary,
+                        ),
+                      if (showOwnerStar)
+                        _SettingsMemberTinyChip(
+                          label: 'Admin',
+                          color: Colors.amber.shade700,
+                          icon: Icons.star_rounded,
+                        ),
                     ],
-                  ],
-                ),
-                Text(
-                  roleLabel,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 11,
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    roleLabel,
+                    style: TextStyle(
+                      color: theme.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasActions)
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_horiz_rounded,
+                  color: theme.textSecondary,
+                  size: 22,
                 ),
-              ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                color: theme.surface,
+                onSelected: (value) {
+                  if (value == 'edit') onEdit?.call();
+                  if (value == 'remove') onRemove?.call();
+                  if (value == 'qa_delete') onQaDelete?.call();
+                },
+                itemBuilder: (context) => [
+                  if (onEdit != null)
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Editar rol'),
+                    ),
+                  if (onRemove != null)
+                    const PopupMenuItem(
+                      value: 'remove',
+                      child: Text('Quitar del hogar'),
+                    ),
+                  if (onQaDelete != null)
+                    const PopupMenuItem(
+                      value: 'qa_delete',
+                      child: Text('Eliminar dummy QA'),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsMemberTinyChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData? icon;
+
+  const _SettingsMemberTinyChip({
+    required this.label,
+    required this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 10, color: color),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          if (editAction != null) editAction!,
-          if (showOwnerStar)
-            const Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: Icon(Icons.star_rounded, size: 14, color: Colors.amber),
-            ),
-          if (removeAction != null) removeAction!,
-          if (qaDeleteAction != null) qaDeleteAction!,
         ],
       ),
     );
@@ -421,9 +513,9 @@ class SettingsHouseholdMemberData {
   final String? avatarUrl;
   final bool isCurrentUser;
   final bool showOwnerStar;
-  final Widget? editAction;
-  final Widget? removeAction;
-  final Widget? qaDeleteAction;
+  final VoidCallback? onEdit;
+  final VoidCallback? onRemove;
+  final VoidCallback? onQaDelete;
 
   const SettingsHouseholdMemberData({
     required this.name,
@@ -431,9 +523,9 @@ class SettingsHouseholdMemberData {
     required this.avatarUrl,
     required this.isCurrentUser,
     required this.showOwnerStar,
-    this.editAction,
-    this.removeAction,
-    this.qaDeleteAction,
+    this.onEdit,
+    this.onRemove,
+    this.onQaDelete,
   });
 }
 
@@ -469,67 +561,12 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
       avatarUrl: avatarUrl,
       isCurrentUser: isCurrentUser,
       showOwnerStar: role == 'owner',
-      editAction: (isCurrentUser || isOwner)
-          ? SizedBox(
-              width: 32,
-              height: 32,
-              child: IconButton(
-                icon: Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: context.theme.textSecondary,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 32,
-                  height: 32,
-                ),
-                splashRadius: 18,
-                onPressed: () => onEditRole(member),
-              ),
-            )
+      onEdit: (isCurrentUser || isOwner) ? () => onEditRole(member) : null,
+      onRemove: (isOwner && !isCurrentUser)
+          ? () => onRemoveMember(member['user_id'], rawName)
           : null,
-      removeAction: (isOwner && !isCurrentUser)
-          ? SizedBox(
-              width: 32,
-              height: 32,
-              child: IconButton(
-                icon: Icon(
-                  Icons.person_remove_outlined,
-                  size: 18,
-                  color: context.theme.error,
-                ),
-                onPressed: () => onRemoveMember(member['user_id'], rawName),
-                constraints: const BoxConstraints.tightFor(
-                  width: 32,
-                  height: 32,
-                ),
-                padding: const EdgeInsets.all(4),
-                splashRadius: 18,
-              ),
-            )
-          : null,
-      qaDeleteAction: (isQaDummy && !isCurrentUser)
-          ? SizedBox(
-              width: 32,
-              height: 32,
-              child: IconButton(
-                icon: Icon(
-                  Icons.delete_forever_rounded,
-                  size: 18,
-                  color: context.theme.error,
-                ),
-                onPressed: () =>
-                    onDeleteDummyMember(member['user_id'], rawName),
-                constraints: const BoxConstraints.tightFor(
-                  width: 32,
-                  height: 32,
-                ),
-                padding: const EdgeInsets.all(4),
-                splashRadius: 18,
-                tooltip: 'Eliminar dummy QA',
-              ),
-            )
+      onQaDelete: (isQaDummy && !isCurrentUser)
+          ? () => onDeleteDummyMember(member['user_id'], rawName)
           : null,
     );
   }).toList();
@@ -561,9 +598,9 @@ Widget buildSettingsCombinedHouseholdCard(
               avatarUrl: member.avatarUrl,
               isCurrentUser: member.isCurrentUser,
               showOwnerStar: member.showOwnerStar,
-              editAction: member.editAction,
-              removeAction: member.removeAction,
-              qaDeleteAction: member.qaDeleteAction,
+              onEdit: member.onEdit,
+              onRemove: member.onRemove,
+              onQaDelete: member.onQaDelete,
             ),
           )
           .toList(),
@@ -780,8 +817,10 @@ void showSettingsEditHouseholdMenu(
                   color: AppColors.accentBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.share_rounded,
-                    color: AppColors.accentBlue),
+                child: const Icon(
+                  Icons.share_rounded,
+                  color: AppColors.accentBlue,
+                ),
               ),
               title: const Text('Codigo de invitacion'),
               subtitle: Text(
@@ -802,8 +841,10 @@ void showSettingsEditHouseholdMenu(
                     color: AppColors.accentTeal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.balance_rounded,
-                      color: AppColors.accentTeal),
+                  child: const Icon(
+                    Icons.balance_rounded,
+                    color: AppColors.accentTeal,
+                  ),
                 ),
                 title: const Text('DivisiÃ³n de gastos'),
                 subtitle: const Text('Ajustar porcentaje de pareja'),

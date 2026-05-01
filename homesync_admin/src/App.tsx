@@ -1,18 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
-import { TaskTemplates } from './pages/TaskTemplates';
-import { Logs } from './pages/Logs';
-import { UserManagement } from './pages/UserManagement';
+import { Households } from './pages/Households';
+import { Activity } from './pages/Activity';
 import { Economy } from './pages/Economy';
-import { Login } from './pages/Login';
-import { CrashReports } from './pages/CrashReports';
-import { RewardTemplates } from './pages/RewardTemplates';
+import { Content } from './pages/Content';
+import { Inbox } from './pages/Inbox';
+import { OcrInsights } from './pages/OcrInsights';
 import { Settings } from './pages/Settings';
+import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
+
+const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === 'true';
 
 function ProtectedRoute({
   session,
@@ -21,24 +23,23 @@ function ProtectedRoute({
   session: Session | null;
   children: React.ReactNode;
 }) {
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
+  if (SKIP_AUTH) return <>{children}</>;
+  if (!session) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+
+  const loading = useMemo(() => !SKIP_AUTH && session === undefined, [session]);
 
   useEffect(() => {
-    // Check initial session
+    if (SKIP_AUTH) return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -57,20 +58,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {!SKIP_AUTH && <Route path="/login" element={<Login />} />}
         <Route
           path="/*"
           element={
-            <ProtectedRoute session={session}>
+            <ProtectedRoute session={session ?? null}>
               <Layout>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/templates" element={<TaskTemplates />} />
-                  <Route path="/logs" element={<Logs />} />
-                  <Route path="/crashes" element={<CrashReports />} />
-                  <Route path="/users" element={<UserManagement />} />
+                  <Route path="/households" element={<Households />} />
+                  <Route path="/activity" element={<Activity />} />
                   <Route path="/economy" element={<Economy />} />
-                  <Route path="/rewards" element={<RewardTemplates />} />
+                  <Route path="/content" element={<Content />} />
+                  <Route path="/inbox" element={<Inbox />} />
+                  <Route path="/ocr-insights" element={<OcrInsights />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

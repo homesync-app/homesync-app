@@ -3,13 +3,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/custom_avatar_generation_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'user_avatar.dart';
+
+final customAvatarOptionsProvider =
+    FutureProvider<List<CustomAvatarOption>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+
+  final List<Map<String, dynamic>> rows = await ref
+      .read(supabaseClientProvider)
+      .from('custom_avatar_generations')
+      .select('id, avatar_url, created_at')
+      .eq('user_id', userId)
+      .order('created_at', ascending: false)
+      .limit(8);
+
+  return rows.map<CustomAvatarOption>((row) {
+    return CustomAvatarOption(
+      id: row['id'] as String,
+      avatarUrl: row['avatar_url'] as String,
+      createdAt: DateTime.parse(row['created_at'] as String),
+    );
+  }).toList();
+});
+
+class CustomAvatarOption {
+  final String id;
+  final String avatarUrl;
+  final DateTime createdAt;
+
+  const CustomAvatarOption({
+    required this.id,
+    required this.avatarUrl,
+    required this.createdAt,
+  });
+}
 
 class AvatarPickerSheet extends ConsumerWidget {
   const AvatarPickerSheet({super.key});
@@ -31,6 +69,13 @@ class AvatarPickerSheet extends ConsumerWidget {
     try {
       final normalizedAvatar =
           UserAvatar.normalizeAvatarValue(avatarValue) ?? avatarValue;
+      final isPremiumAvatar = UserAvatar.isPremiumAvatarValue(normalizedAvatar);
+      final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
+      if (isPremiumAvatar && !isPremium) {
+        PremiumPaywall.show(context);
+        return;
+      }
+
       final result = await ref
           .read(authRepositoryProvider)
           .updateProfile(avatarUrl: normalizedAvatar);
@@ -42,6 +87,7 @@ class AvatarPickerSheet extends ConsumerWidget {
       ref.invalidate(userProfileProvider);
       ref.invalidate(householdMembersNotifierProvider);
       ref.invalidate(recentActivityProvider);
+      ref.invalidate(customAvatarOptionsProvider);
 
       if (context.mounted) {
         Navigator.pop(context);
@@ -162,6 +208,15 @@ class AvatarPickerSheet extends ConsumerWidget {
                             ref.watch(premiumProvider).valueOrNull ?? false;
                         return Column(
                           children: [
+                            _CustomAvatarOptionsSection(
+                              currentAvatar: currentAvatar,
+                              isPremium: isPremium,
+                              onSelect: (avatarUrl) => _updateAvatar(
+                                context,
+                                ref,
+                                avatarUrl,
+                              ),
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -221,12 +276,12 @@ class AvatarPickerSheet extends ConsumerWidget {
                             ref.watch(premiumProvider).valueOrNull ?? false;
                         return OutlinedButton.icon(
                           onPressed: isPremium
-                              ? () => _showCustomAvatarDialog(context, ref)
+                              ? () => _showCustomAvatarSourceSheet(context, ref)
                               : () => PremiumPaywall.show(context),
                           icon: const Icon(Icons.auto_awesome_rounded),
                           label: Text(
                             isPremium
-                                ? 'Crear avatar personalizado'
+                                ? 'Crear avatar personalizado (1 por mes)'
                                 : 'Desbloquear avatar personalizado',
                           ),
                         );
@@ -266,6 +321,110 @@ class AvatarPickerSheet extends ConsumerWidget {
     return value.startsWith('http://') || value.startsWith('https://');
   }
 
+  void _showCustomAvatarSourceSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Avatar personalizado',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Tenés 1 creación por mes. Se guarda como avatar nuevo y conservamos tus últimos 6 personalizados. Si dejás Premium, quedan guardados pero bloqueados.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withValues(alpha: 0.72),
+                  fontWeight: FontWeight.w600,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _CustomAvatarSourceButton(
+                icon: Icons.photo_camera_rounded,
+                label: 'Sacar foto',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _generateCustomAvatar(context, ref, ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 10),
+              _CustomAvatarSourceButton(
+                icon: Icons.photo_library_rounded,
+                label: 'Elegir de galería',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _generateCustomAvatar(context, ref, ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateCustomAvatar(
+    BuildContext context,
+    WidgetRef ref,
+    ImageSource source,
+  ) async {
+    final service = CustomAvatarGenerationService(Supabase.instance.client);
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const _CustomAvatarLoadingDialog(),
+      );
+    }
+
+    try {
+      final avatarUrl = await service.generate(source: source);
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      if (avatarUrl == null || !context.mounted) return;
+      ref.invalidate(customAvatarOptionsProvider);
+      await _updateAvatar(context, ref, avatarUrl);
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  // ignore: unused_element
   void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
     showDialog(
@@ -296,6 +455,165 @@ class AvatarPickerSheet extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CustomAvatarSourceButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _CustomAvatarSourceButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomAvatarLoadingDialog extends StatelessWidget {
+  const _CustomAvatarLoadingDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: const Padding(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 18),
+            Text(
+              'Creando tu avatar...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Puede tardar unos segundos.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomAvatarOptionsSection extends ConsumerWidget {
+  final String? currentAvatar;
+  final bool isPremium;
+  final ValueChanged<String> onSelect;
+
+  const _CustomAvatarOptionsSection({
+    required this.currentAvatar,
+    required this.isPremium,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final customAvatars = ref.watch(customAvatarOptionsProvider);
+
+    return customAvatars.when(
+      data: (avatars) {
+        if (avatars.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Tus personalizados',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Guardamos los últimos 6 generados por IA.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 14,
+              runSpacing: 16,
+              alignment: WrapAlignment.center,
+              children: avatars.map((avatar) {
+                return _PremiumAvatarOption(
+                  avatarValue: avatar.avatarUrl,
+                  name: 'Personalizado',
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  isLocked: !isPremium,
+                  isSelected: currentAvatar == avatar.avatarUrl,
+                  onTap: isPremium
+                      ? () => onSelect(avatar.avatarUrl)
+                      : () => PremiumPaywall.show(context),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 28),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

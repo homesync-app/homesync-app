@@ -154,9 +154,7 @@ export const UserManagement = () => {
                 </div>
              </div>
 
-             <button className="w-full mt-6 py-3 rounded-2xl border border-white/10 text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all">
-               Manage Access
-             </button>
+
           </div>
         ))}
       </div>

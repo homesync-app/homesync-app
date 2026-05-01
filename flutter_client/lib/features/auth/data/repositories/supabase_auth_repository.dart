@@ -82,6 +82,7 @@ class SupabaseAuthRepository
         await _firebaseAuthService.signUpWithEmail(
           email: email,
           password: password,
+          fullName: fullName,
         );
       },
       context: 'SupabaseAuthRepository.signUpWithEmail',

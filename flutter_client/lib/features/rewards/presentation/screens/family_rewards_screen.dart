@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
+import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 
 class FamilyRewardsScreen extends ConsumerWidget {
   const FamilyRewardsScreen({super.key});
@@ -30,14 +31,17 @@ class FamilyRewardsScreen extends ConsumerWidget {
       backgroundColor: theme.background,
       appBar: AppBar(title: Text(isChild ? 'Mi tienda' : 'Tienda del hogar')),
       floatingActionButton: isAdmin
-          ? FloatingActionButton.extended(
+          ? AppFloatingActionButton(
+              heroTag: 'family-rewards-create',
+              label: 'Nuevo premio',
+              icon: Icons.add_rounded,
               onPressed: () => _showRewardComposer(context, ref, isAdmin),
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Nuevo premio'),
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.viewPaddingOf(context).bottom + 10,
+              ),
             )
           : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: rewardsAsync.when(
         data: (rewards) {
           final activeRewards =
@@ -59,15 +63,18 @@ class FamilyRewardsScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                16,
+                20,
+                160 + MediaQuery.viewPaddingOf(context).bottom,
+              ),
               children: [
                 _BalanceHero(
                   balance: balance,
                   isAdult: isAdult,
                   isChild: isChild,
                 ),
-                const SizedBox(height: 18),
-                _CoinsDivider(balance: balance),
                 if (isAdmin && pendingRewards.isNotEmpty) ...[
                   const SizedBox(height: 28),
                   _SectionTitle(
@@ -89,7 +96,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 28),
+                const SizedBox(height: 30),
                 if (approvedRewards.isEmpty)
                   _EmptyBoutique(
                     isAdmin: isAdmin,
@@ -108,8 +115,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     emptyText: 'Todavia no hay premios para chicos.',
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    onDelete: (reward) =>
-                        _confirmDelete(context, ref, reward, isAdmin),
+                    onManage: (reward) =>
+                        _showRewardActions(context, ref, reward, isAdmin),
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
@@ -120,8 +127,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     emptyText: 'Todavia no hay premios para adultos.',
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    onDelete: (reward) =>
-                        _confirmDelete(context, ref, reward, isAdmin),
+                    onManage: (reward) =>
+                        _showRewardActions(context, ref, reward, isAdmin),
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
@@ -131,8 +138,8 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     emptyText: 'Todavia no hay planes familiares cargados.',
                     canDelete: isAdmin,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    onDelete: (reward) =>
-                        _confirmDelete(context, ref, reward, isAdmin),
+                    onManage: (reward) =>
+                        _showRewardActions(context, ref, reward, isAdmin),
                   ),
                 ] else ...[
                   _RewardSection(
@@ -142,7 +149,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     emptyText: 'Todavia no hay premios en tu tienda.',
                     canDelete: false,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    onDelete: (_) {},
+                    onManage: (_) {},
                   ),
                   const SizedBox(height: 26),
                   _RewardSection(
@@ -152,7 +159,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                     emptyText: 'Todavia no hay planes familiares disponibles.',
                     canDelete: false,
                     onRedeem: (reward) => _confirmRedeem(context, ref, reward),
-                    onDelete: (_) {},
+                    onManage: (_) {},
                   ),
                 ],
               ],
@@ -165,12 +172,20 @@ class FamilyRewardsScreen extends ConsumerWidget {
     );
   }
 
-  void _showRewardComposer(BuildContext context, WidgetRef ref, bool isAdmin) {
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final costController = TextEditingController();
-    var targetType = 'all';
-    var selectedIcon = '\uD83C\uDF81';
+  void _showRewardComposer(
+    BuildContext context,
+    WidgetRef ref,
+    bool isAdmin, {
+    RewardModel? reward,
+  }) {
+    final titleController = TextEditingController(text: reward?.title);
+    final descriptionController =
+        TextEditingController(text: reward?.description ?? '');
+    final costController =
+        TextEditingController(text: reward == null ? '' : '${reward.cost}');
+    var targetType = reward?.targetType ?? 'all';
+    var selectedIcon = reward?.icon ?? '\uD83C\uDF81';
+    final isEditing = reward != null;
 
     const icons = [
       '\uD83C\uDF81',
@@ -218,7 +233,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Nuevo premio familiar',
+                    isEditing ? 'Editar premio' : 'Nuevo premio familiar',
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 22,
@@ -321,19 +336,47 @@ class FamilyRewardsScreen extends ConsumerWidget {
                         final description = descriptionController.text.trim();
                         final cost = int.tryParse(costController.text) ?? 0;
                         if (title.isEmpty || cost <= 0) return;
-                        await ref.read(rewardsProvider.notifier).suggestReward(
-                              title: title,
-                              description:
-                                  description.isEmpty ? null : description,
-                              cost: cost,
-                              icon: selectedIcon,
-                              category: 'familia',
-                              isApproved: isAdmin,
-                              targetType: targetType,
+                        final result = isEditing
+                            ? await ref
+                                .read(rewardsProvider.notifier)
+                                .updateReward(
+                                  rewardId: reward.id,
+                                  title: title,
+                                  description:
+                                      description.isEmpty ? null : description,
+                                  cost: cost,
+                                  icon: selectedIcon,
+                                  category: reward.category ?? 'familia',
+                                  targetType: targetType,
+                                )
+                            : await ref
+                                .read(rewardsProvider.notifier)
+                                .suggestReward(
+                                  title: title,
+                                  description:
+                                      description.isEmpty ? null : description,
+                                  cost: cost,
+                                  icon: selectedIcon,
+                                  category: 'familia',
+                                  isApproved: isAdmin,
+                                  targetType: targetType,
+                                );
+                        result.fold(
+                          (failure) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(failure.message)),
                             );
-                        if (context.mounted) Navigator.pop(context);
+                          },
+                          (_) {
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                          },
+                        );
                       },
-                      child: const Text('Guardar premio'),
+                      child: Text(
+                        isEditing ? 'Guardar cambios' : 'Guardar premio',
+                      ),
                     ),
                   ),
                 ],
@@ -392,12 +435,138 @@ class FamilyRewardsScreen extends ConsumerWidget {
     }
   }
 
+  void _showRewardActions(
+    BuildContext context,
+    WidgetRef ref,
+    RewardModel reward,
+    bool isAdmin,
+  ) {
+    if (!isAdmin) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final theme = sheetContext.theme;
+        return Container(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            14,
+            20,
+            MediaQuery.viewPaddingOf(sheetContext).bottom + 18,
+          ),
+          decoration: BoxDecoration(
+            color: theme.background,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(28),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.divider,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      reward.icon,
+                      style: const TextStyle(fontSize: 26),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          reward.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: theme.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${reward.cost} monedas',
+                          style: TextStyle(
+                            color: theme.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    _showRewardComposer(
+                      context,
+                      ref,
+                      isAdmin,
+                      reward: reward,
+                    );
+                  },
+                  icon: const Icon(Icons.edit_rounded),
+                  label: const Text('Editar premio'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(sheetContext);
+                    _confirmDelete(context, ref, reward, isAdmin);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: BorderSide(
+                      color: AppColors.error.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Quitar premio'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _confirmRedeem(
     BuildContext context,
     WidgetRef ref,
     RewardModel reward,
   ) async {
-    final balance = ref.read(userBalanceProvider).value?['coins'] ?? 0;
+    final balance =
+        (ref.read(userBalanceProvider).value?['coins'] as num?)?.toInt() ?? 0;
     if (balance < reward.cost) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No te alcanzan las monedas todavia.')),
@@ -522,52 +691,6 @@ class _BalanceHero extends StatelessWidget {
   }
 }
 
-class _CoinsDivider extends StatelessWidget {
-  const _CoinsDivider({required this.balance});
-
-  final int balance;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.border.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppColors.accentGold.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.monetization_on_rounded,
-              color: AppColors.accentGold,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            '$balance monedas disponibles',
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({
     required this.title,
@@ -648,7 +771,7 @@ class _RewardSection extends StatelessWidget {
     required this.emptyText,
     required this.canDelete,
     required this.onRedeem,
-    required this.onDelete,
+    required this.onManage,
   });
 
   final String title;
@@ -657,7 +780,7 @@ class _RewardSection extends StatelessWidget {
   final String emptyText;
   final bool canDelete;
   final ValueChanged<RewardModel> onRedeem;
-  final ValueChanged<RewardModel> onDelete;
+  final ValueChanged<RewardModel> onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -677,7 +800,7 @@ class _RewardSection extends StatelessWidget {
             rewards: rewards,
             onRedeem: onRedeem,
             canDelete: canDelete,
-            onDelete: onDelete,
+            onManage: onManage,
           ),
       ],
     );
@@ -796,18 +919,19 @@ class _RewardGrid extends ConsumerWidget {
     required this.rewards,
     required this.onRedeem,
     required this.canDelete,
-    required this.onDelete,
+    required this.onManage,
   });
 
   final List<RewardModel> rewards;
   final ValueChanged<RewardModel> onRedeem;
   final bool canDelete;
-  final ValueChanged<RewardModel> onDelete;
+  final ValueChanged<RewardModel> onManage;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+    final userBalance =
+        (ref.watch(userBalanceProvider).value?['coins'] as num?)?.toInt() ?? 0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -847,6 +971,7 @@ class _RewardGrid extends ConsumerWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => onRedeem(reward),
+                    onLongPress: canDelete ? () => onManage(reward) : null,
                     borderRadius: BorderRadius.circular(24),
                     child: Stack(
                       children: [
@@ -855,7 +980,7 @@ class _RewardGrid extends ConsumerWidget {
                             top: -4,
                             right: 2,
                             child: IconButton(
-                              onPressed: () => onDelete(reward),
+                              onPressed: () => onManage(reward),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
                                 minWidth: 28,

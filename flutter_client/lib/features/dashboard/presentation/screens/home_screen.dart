@@ -223,56 +223,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.border.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionItem(
-                    variant: _QuickActionVariant.expense,
-                    label: 'Gastos',
-                    color: AppColors.primary,
-                    onTap: () {
-                      Navigator.pop(context);
-                      ExpenseFormSheet.show(context);
-                    },
-                  ),
+      builder: (context) {
+        final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+        return Container(
+          padding: EdgeInsets.fromLTRB(24, 12, 24, 32 + bottomInset),
+          decoration: BoxDecoration(
+            color: theme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.border.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                if (caps.showTasks) ...[
-                  const SizedBox(width: 14),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
                   Expanded(
                     child: _buildActionItem(
-                      variant: _QuickActionVariant.task,
-                      label: 'Tareas',
-                      color: AppColors.sage,
+                      variant: _QuickActionVariant.expense,
+                      label: 'Gastos',
+                      color: AppColors.primary,
                       onTap: () {
                         Navigator.pop(context);
-                        CompleteTaskSheet.show(context);
+                        ExpenseFormSheet.show(context);
                       },
                     ),
                   ),
+                  if (caps.showTasks) ...[
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: _buildActionItem(
+                        variant: _QuickActionVariant.task,
+                        label: 'Tareas',
+                        color: AppColors.sage,
+                        onTap: () {
+                          Navigator.pop(context);
+                          CompleteTaskSheet.show(context);
+                        },
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ],
-        ),
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

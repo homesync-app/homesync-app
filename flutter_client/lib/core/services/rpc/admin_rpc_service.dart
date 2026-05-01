@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 
 import 'base_rpc_service.dart';
@@ -15,12 +16,14 @@ class AdminRpcService extends BaseRpcService {
   }) async {
     try {
       final userId = await AppIdentityService.instance.refresh();
+      final breadcrumbContext = breadcrumb.buildErrorContext();
       final logData = {
         'user_id': userId,
         'level': level,
         'message': message,
         'stack_trace': stackTrace,
         'context': {
+          ...breadcrumbContext,
           if (context != null) ...context,
           'email': currentAuthEmail(),
         },

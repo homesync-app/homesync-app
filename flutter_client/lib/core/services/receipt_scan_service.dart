@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/foundation.dart';
@@ -7,20 +6,17 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:homesync_client/features/expenses/domain/models/receipt_scan_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 /// Servicio de escaneo de tickets.
 ///
 /// Flujo:
-/// 1. [scan] — pick imagen → comprimir → mandar base64 a Edge Function → OCR
-/// 2. [uploadReceipt] — subir a Storage solo cuando el usuario confirma el gasto
+/// [scan] — pick imagen → comprimir → mandar base64 a Edge Function → OCR.
 ///
-/// La imagen NO toca Supabase Storage hasta confirmar. Así no acumulamos
-/// basura de escaneos cancelados y el storage se mantiene limpio.
+/// La imagen NO toca Supabase Storage. El OCR es efímero y la app persiste
+/// únicamente datos estructurados del gasto.
 class ReceiptScanService {
   final SupabaseClient _supabase;
   final _picker = ImagePicker();
-  static const _uuid = Uuid();
 
   ReceiptScanService(this._supabase);
 
@@ -53,7 +49,8 @@ class ReceiptScanService {
     final imageBytes = await imageFile.readAsBytes();
 
     debugPrint(
-        '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',);
+      '[ReceiptScan] Imagen comprimida: ${(imageBytes.length / 1024).toStringAsFixed(1)} KB',
+    );
 
     // 3. Convertir a base64 para mandar a la Edge Function
     final base64Image = base64Encode(imageBytes);
@@ -108,56 +105,38 @@ class ReceiptScanService {
     }
 
     debugPrint(
-        '[ReceiptScan] Respuesta status=${response.status} data=${response.data}',);
+      '[ReceiptScan] Respuesta status=${response.status} data=${response.data}',
+    );
 
     if (response.status != 200 || response.data == null) {
       throw Exception(
-          'Error en el escaneo (status ${response.status}): ${response.data}',);
+        'Error en el escaneo (status ${response.status}): ${response.data}',
+      );
     }
 
-    final data = response.data['data'] as Map<String, dynamic>?;
+    final responseData = response.data as Map<String, dynamic>;
+    final data = responseData['data'] as Map<String, dynamic>?;
     if (data == null) {
       throw Exception(
-          'Respuesta inválida del servidor de OCR: ${response.data}',);
+        'Respuesta inválida del servidor de OCR: ${response.data}',
+      );
     }
 
     debugPrint(
-        '[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}',);
+      '[ReceiptScan] OCR ok merchant=${data['merchant']} amount=${data['amount']}',
+    );
     return ReceiptScanResult.fromJson(data, imageFile.path);
-  }
-
-  /// Sube la imagen comprimida a Supabase Storage y devuelve el receipt_path.
-  ///
-  /// Llamar SOLO cuando el usuario confirmó el gasto.
-  /// [householdId] y [expenseId] se usan para construir el path.
-  Future<String> uploadReceipt({
-    required String localImagePath,
-    required String householdId,
-    String? expenseId,
-  }) async {
-    final fileName = expenseId ?? _uuid.v4();
-    final storagePath = '$householdId/$fileName.webp';
-    final imageBytes = await File(localImagePath).readAsBytes();
-
-    await _supabase.storage.from('receipts').uploadBinary(
-          storagePath,
-          imageBytes,
-          fileOptions: const FileOptions(
-            contentType: 'image/webp',
-            upsert: true,
-          ),
-        );
-
-    debugPrint('[ReceiptScan] Imagen subida a Storage: receipts/$storagePath');
-    return storagePath;
   }
 
   /// Genera una URL firmada de corta duración para mostrar el ticket en UI.
   ///
+  /// Compatibilidad para tickets ya guardados antes del cambio de política.
   /// No persistir esta URL. Siempre generarla fresh al abrir el detalle.
   /// [expiresIn] en segundos (default: 1 hora).
-  Future<String?> getSignedUrl(String receiptPath,
-      {int expiresIn = 3600,}) async {
+  Future<String?> getSignedUrl(
+    String receiptPath, {
+    int expiresIn = 3600,
+  }) async {
     try {
       final signedUrl = await _supabase.storage
           .from('receipts')

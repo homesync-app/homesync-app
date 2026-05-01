@@ -39,14 +39,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs md:text-sm font-medium text-emerald-300">System Healthy</span>
+              <span className="text-xs md:text-sm font-medium text-emerald-300">Sistema Activo</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
-              <p className="text-xs font-semibold">Admin Mode</p>
-              <p className="text-[10px] text-gray-400">tfavamqszdkoeabpyxms</p>
+              <p className="text-xs font-semibold">Admin</p>
+              <p className="text-[10px] text-gray-400">HomeSync</p>
             </div>
             <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
               <span className="text-xs font-bold text-primary">A</span>
