@@ -25,6 +25,7 @@ import 'package:homesync_client/features/household/presentation/screens/couple_s
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
@@ -1268,6 +1269,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         HapticFeedback.lightImpact();
         FAQSheet.show(context);
       },
+    );
+  }
+
+  Widget _buildFeedbackCard() {
+    final theme = context.theme;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            FeedbackSheet.show(context, screen: 'settings');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Enviar feedback',
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Reporta un bug o sugiere una mejora',
+                        style: TextStyle(
+                          color: theme.textMuted,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.textMuted,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
