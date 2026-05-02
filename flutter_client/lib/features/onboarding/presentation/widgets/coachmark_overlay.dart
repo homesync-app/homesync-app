@@ -792,16 +792,12 @@ class _PrimaryCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final padH = compact ? 22.0 : 28.0;
     final padV = compact ? 13.0 : 16.0;
-    // Compact CTAs live inside a clipped tooltip card, so a heavy drop shadow
-    // would get cut off at the card edge. Use a tight, inset glow instead.
+    // Compact CTAs live inside a ClipRRect-wrapped tooltip card. Any drop
+    // shadow on the button would be sliced where it meets the card's clip
+    // path. The gradient + frosted card already provide enough elevation,
+    // so we skip shadows in compact mode.
     final shadows = compact
-        ? <BoxShadow>[
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ]
+        ? const <BoxShadow>[]
         : <BoxShadow>[
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.42),

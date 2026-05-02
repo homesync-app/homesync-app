@@ -74,21 +74,26 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
       const CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
         eyebrow: 'Paso 2',
-        title: 'Tu balance personal',
+        title: 'El balance del hogar',
         body:
-            'Acá ves lo que ganaste vos. No se mezcla con tu pareja: cada uno acumula lo suyo.',
+            'Acá ven cuánto se deben en gastos compartidos y, abajo, lo que ganó cada uno: XP y monedas son personales.',
         primaryCta: 'Siguiente',
         target: TourTarget.balanceCard,
         bullets: [
           CoachmarkBullet(
-            icon: Icons.monetization_on_rounded,
-            tint: AppColors.accentGold,
-            text: 'Monedas → para canjear recompensas',
+            icon: Icons.payment_rounded,
+            tint: AppColors.accentOrange,
+            text: 'Equilibrar → gastos compartidos pendientes',
           ),
           CoachmarkBullet(
-            icon: Icons.bolt_rounded,
-            tint: AppColors.primary,
+            icon: Icons.star_rounded,
+            tint: Color(0xFFE8943A),
             text: 'XP → para el duelo semanal',
+          ),
+          CoachmarkBullet(
+            icon: Icons.monetization_on_rounded,
+            tint: AppColors.sage,
+            text: 'Monedas → para canjear recompensas',
           ),
         ],
       ),
