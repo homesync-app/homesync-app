@@ -63,10 +63,10 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
       CoachmarkStep(
         kind: CoachmarkStepKind.spotlight,
         eyebrow: 'Paso 1',
-        title: hasTasks ? 'Hacé tareas, ganá puntos' : 'Acá van tus tareas',
+        title: hasTasks ? 'Hacé tareas, ganá puntos' : 'Tareas del día',
         body: hasTasks
             ? 'Tocá ✓ para completar. Cada tarea suma 🪙 monedas y ⚡ XP solo para vos.'
-            : 'Cuando crees tareas, aparecen acá. Cada una te da 🪙 monedas y ⚡ XP al completarla.',
+            : 'Cuando programes tareas para hoy, aparecen acá. Cada una te da 🪙 monedas y ⚡ XP al completarla.',
         primaryCta: 'Siguiente',
         target: TourTarget.tasksSection,
         placement: TooltipPlacement.auto,

@@ -111,15 +111,9 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
                 onTap: () {}, // swallow
               ),
             ),
-            // Frosted blur over the entire screen — creates depth without
-            // hiding the underlying UI.
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: const SizedBox.expand(),
-              ),
-            ),
-            // Animated dim + cutout.
+            // Animated dim + cutout. (No global BackdropFilter — it would
+            // also blur the spotlight area, hurting legibility of the very
+            // thing we're trying to show.)
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: Listenable.merge([_glowCtrl, _stepCtrl]),
@@ -636,7 +630,7 @@ class _TooltipCard extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+            padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
             decoration: BoxDecoration(
               color: theme.surface.withValues(
                 alpha: theme.isDarkMode ? 0.92 : 0.97,
@@ -692,7 +686,7 @@ class _TooltipCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 Align(
                   alignment: Alignment.centerRight,
                   child: _PrimaryCta(
@@ -798,6 +792,23 @@ class _PrimaryCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final padH = compact ? 22.0 : 28.0;
     final padV = compact ? 13.0 : 16.0;
+    // Compact CTAs live inside a clipped tooltip card, so a heavy drop shadow
+    // would get cut off at the card edge. Use a tight, inset glow instead.
+    final shadows = compact
+        ? <BoxShadow>[
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.28),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ]
+        : <BoxShadow>[
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.42),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ];
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -811,13 +822,7 @@ class _PrimaryCta extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.42),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            boxShadow: shadows,
           ),
           child: Padding(
             padding:
