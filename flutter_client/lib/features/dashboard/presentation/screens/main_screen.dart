@@ -25,6 +25,9 @@ import 'package:homesync_client/features/household/presentation/screens/member_o
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
+import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -57,6 +60,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
 
+  // Anchor keys for the onboarding coachmark tour. Live for the lifetime of
+  // MainScreen so the registry stays consistent across rebuilds.
+  final GlobalKey _rewardsTabKey = GlobalKey(debugLabel: 'tour_rewards_tab');
+  final GlobalKey _expensesTabKey = GlobalKey(debugLabel: 'tour_expenses_tab');
+
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
   late final NotificationService _notifService;
@@ -74,6 +82,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         index: ref.read(bottomNavIndexProvider),
         source: 'initial_load',
       );
+      final keys = ref.read(tourTargetKeysProvider.notifier);
+      keys.register(TourTarget.rewardsTab, _rewardsTabKey);
+      keys.register(TourTarget.expensesTab, _expensesTabKey);
     });
   }
 
@@ -81,6 +92,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void dispose() {
     _notifService.dispose();
     _linkSubscription?.cancel();
+    final keys = ref.read(tourTargetKeysProvider.notifier);
+    keys.unregister(TourTarget.rewardsTab, _rewardsTabKey);
+    keys.unregister(TourTarget.expensesTab, _expensesTabKey);
     super.dispose();
   }
 
@@ -353,75 +367,100 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final currentConfig = navConfigs[safeIndex];
         _trackMainTabIfNeeded(index: safeIndex, source: 'state_sync');
 
-        return PopScope(
-          canPop: currentIndex == 0,
-          onPopInvokedWithResult: (didPop, result) {
-            if (didPop) return;
+        // Wrap with a Stack so the coachmark overlay can sit on top of the
+        // Scaffold AND its bottomNavigationBar (otherwise an overlay mounted
+        // inside Scaffold.body would not cover the nav bar — and we need to
+        // spotlight tabs there).
+        return Stack(
+          children: [
+            _buildMainScaffold(
+              context: context,
+              theme: theme,
+              currentIndex: currentIndex,
+              safeIndex: safeIndex,
+              currentConfig: currentConfig,
+              navConfigs: navConfigs,
+            ),
+            const CoachmarkOverlay(),
+          ],
+        );
+      },
+    );
+  }
 
-            // If not on the first tab, go to it
-            if (safeIndex != 0) {
-              _setBottomNavIndex(0, source: 'system_back');
-            }
-          },
-          child: Scaffold(
-            appBar: safeIndex == 0
-                ? null
-                : AppBar(
-                    title: _buildAppBarTitle(
-                      title: currentConfig.title,
-                      currentIndex: safeIndex,
-                      theme: theme,
-                    ),
-                    toolbarHeight: 86,
-                    actions: [
-                      AnimatedPress(
-                        scale: 0.92,
-                        onTap: () => _openSettings(context),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.surface.withValues(
-                              alpha: theme.isDarkMode ? 0.72 : 0.9,
-                            ),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: theme.border.withValues(
-                                alpha: theme.isDarkMode ? 0.46 : 0.72,
-                              ),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.settings_outlined,
-                            color: theme.textSecondary,
-                            size: 22,
+  Widget _buildMainScaffold({
+    required BuildContext context,
+    required AppThemeColors theme,
+    required int currentIndex,
+    required int safeIndex,
+    required NavItemConfig currentConfig,
+    required List<NavItemConfig> navConfigs,
+  }) {
+    return PopScope(
+      canPop: currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // If not on the first tab, go to it
+        if (safeIndex != 0) {
+          _setBottomNavIndex(0, source: 'system_back');
+        }
+      },
+      child: Scaffold(
+        appBar: safeIndex == 0
+            ? null
+            : AppBar(
+                title: _buildAppBarTitle(
+                  title: currentConfig.title,
+                  currentIndex: safeIndex,
+                  theme: theme,
+                ),
+                toolbarHeight: 86,
+                actions: [
+                  AnimatedPress(
+                    scale: 0.92,
+                    onTap: () => _openSettings(context),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.surface.withValues(
+                          alpha: theme.isDarkMode ? 0.72 : 0.9,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: theme.border.withValues(
+                            alpha: theme.isDarkMode ? 0.46 : 0.72,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                    ],
+                      child: Icon(
+                        Icons.settings_outlined,
+                        color: theme.textSecondary,
+                        size: 22,
+                      ),
+                    ),
                   ),
-            // ✅ Stack puts the banner ABOVE everything else in the screen
-            body: Stack(
-              children: [
-                Positioned.fill(
-                  child: AppBackground(isDarkMode: theme.isDarkMode),
-                ),
-                FadeIndexedStack(
-                  index: safeIndex,
-                  children: navConfigs.map((c) => c.screen).toList(),
-                ),
-                // In-app notification banner (slides from top)
-                InAppNotificationBanner(
-                  key: _bannerKey,
-                  onTap: () => _goToNotifications(context),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                ],
+              ),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: AppBackground(isDarkMode: theme.isDarkMode),
             ),
-            bottomNavigationBar: _buildBottomNav(),
-          ),
-        );
-      },
+            FadeIndexedStack(
+              index: safeIndex,
+              children: navConfigs.map((c) => c.screen).toList(),
+            ),
+            // In-app notification banner (slides from top)
+            InAppNotificationBanner(
+              key: _bannerKey,
+              onTap: () => _goToNotifications(context),
+            ),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomNav(),
+      ),
     );
   }
 
@@ -510,6 +549,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             index: indexForMainTab(caps, tab, currentMember: _currentMember),
             icon: _iconForTab(tab, caps, isSelected: false),
             selectedIcon: _iconForTab(tab, caps, isSelected: true),
+            anchorKey: switch (tab) {
+              MainTab.social => _rewardsTabKey,
+              MainTab.expenses => _expensesTabKey,
+              _ => null,
+            },
           ),
         )
         .toList(growable: false);

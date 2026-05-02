@@ -22,6 +22,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
@@ -388,6 +389,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildFAQButton(),
                           const SizedBox(height: 16),
                           _buildFeedbackCard(),
+                          const SizedBox(height: 14),
+                          _buildReplayTourButton(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
                             eyebrow: 'CUENTA',
@@ -1337,6 +1340,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildReplayTourButton() {
+    final theme = context.theme;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.accentGold.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.auto_awesome_rounded,
+            color: AppColors.accentGold,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          'Ver guia de nuevo',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: theme.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          'Repasa la introduccion del hogar',
+          style: TextStyle(color: theme.textSecondary, fontSize: 12),
+        ),
+        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+        onTap: () async {
+          HapticFeedback.lightImpact();
+          final controller =
+              ref.read(coupleHomeTourControllerProvider.notifier);
+          await controller.reset();
+          ref.invalidate(coupleHomeTourSeenProvider);
+          if (!mounted) return;
+          final tasks =
+              ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+          controller.start(hasTasks: tasks?.isNotEmpty ?? false);
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
