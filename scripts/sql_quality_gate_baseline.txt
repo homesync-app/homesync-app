@@ -8,3 +8,4 @@ database/migrations/006_expense_management.sql|SECURITY DEFINER function without
 database/migrations/007_statistics_rpc.sql|SECURITY DEFINER function without SET search_path in function definition.
 database/migrations/010_reward_templates.sql|SECURITY DEFINER function without SET search_path in function definition.
 database/migrations/004_rls_policies.sql|Potentially over-permissive RLS policy 'Users can create households' on sensitive table public.households.
+database/migrations/008_fix_task_persistence_and_tx.sql|SECURITY DEFINER function without SET search_path in function definition.
