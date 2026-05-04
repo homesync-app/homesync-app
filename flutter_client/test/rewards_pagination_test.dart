@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
 import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
@@ -97,6 +98,7 @@ void main() {
           ),
         ),
         householdIdProvider.overrideWith((ref) async => 'house-1'),
+        currentHouseholdProvider.overrideWith((ref) async => null),
       ],
     );
     addTearDown(container.dispose);
