@@ -28,6 +28,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         backgroundColor: theme.scaffoldBackground,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Volver',
           icon:
               Icon(Icons.arrow_back_ios_new_rounded, color: theme.textPrimary),
           onPressed: () => Navigator.pop(context),
@@ -311,6 +312,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
+                  tooltip: 'Eliminar meta',
                   onPressed: () => _confirmDelete(goal),
                   icon:
                       const Icon(Icons.delete_outline, color: AppColors.error),

@@ -432,6 +432,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
             ),
             if (hasActions)
               PopupMenuButton<String>(
+                tooltip: 'Opciones del miembro',
                 icon: Icon(
                   Icons.more_horiz_rounded,
                   color: theme.textSecondary,
@@ -976,6 +977,7 @@ void showSettingsInvitationCodeSheet(
                       ),
                       const SizedBox(width: 8),
                       IconButton(
+                        tooltip: 'Copiar código',
                         onPressed: onCopyCode,
                         icon: Icon(Icons.copy_rounded, color: theme.primary),
                         style: IconButton.styleFrom(

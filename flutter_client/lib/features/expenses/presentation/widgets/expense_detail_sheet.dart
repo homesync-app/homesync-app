@@ -175,6 +175,7 @@ class _ExpenseDetailSheetContentState
                           border: Border.all(color: AppColors.divider),
                         ),
                         child: IconButton(
+                          tooltip: 'Editar',
                           icon: const Icon(
                             Icons.edit_outlined,
                             color: AppColors.primary,

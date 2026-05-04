@@ -83,6 +83,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
             child: child,
           ),
           child: IconButton(
+            tooltip: 'Notificaciones',
             icon: Icon(
               _unreadCount > 0
                   ? Icons.notifications_rounded
