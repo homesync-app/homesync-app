@@ -51,7 +51,7 @@ Unique: (user_id, token)
 | household_id | UUID | FK → households(id) NOT NULL |
 | user_id | UUID | FK → users(id) NOT NULL |
 | role | TEXT | NOT NULL, 'owner'/'member'/'admin' |
-| member_type | TEXT | NOT NULL, default 'adult', CHECK IN ('adult','teen','child') |
+| member_type | TEXT | NOT NULL, default 'parent', CHECK IN ('parent','guardian','teen','child') |
 | display_role | TEXT | nullable, ej: 'Padre', 'Madre', 'Hijo/a' |
 | onboarding_completed | BOOLEAN | NOT NULL, default false |
 | joined_at | TIMESTAMPTZ | default now() |

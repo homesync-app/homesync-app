@@ -21,6 +21,7 @@ class CreateTaskUseCase {
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
     String? status,
+    List<String>? rotationPool,
   }) async {
     if (title.trim().isEmpty) {
       return left(const ValidationFailure(
@@ -43,6 +44,7 @@ class CreateTaskUseCase {
       recurrenceWeekdays: recurrenceWeekdays,
       recurrenceMonthDays: recurrenceMonthDays,
       status: status,
+      rotationPool: rotationPool,
     );
   }
 }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
@@ -17,16 +20,20 @@ import 'package:homesync_client/features/dashboard/presentation/providers/admin_
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_parent_mode_card.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -130,7 +137,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ]);
       final household = householdResult[0] as Map<String, dynamic>?;
       final invitation = householdResult[1] as Map<String, dynamic>?;
-      final membersResult = householdResult[2];
+      final membersResult =
+          householdResult[2] as Either<Failure, List<Map<String, dynamic>>>;
       final membersList = membersResult.match(
         (failure) {
           log.e('Error loading members: ${failure.message}');
@@ -294,14 +302,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
 
+    // ── Rol del miembro actual ─────────────────────────────────────────────
+    final currentMember = ref.watch(currentMemberProvider);
+    final isChild = currentMember?.isChild ?? false;
+    final isTeen = currentMember?.isTeen ?? false;
+    // isMinor = cualquier menor de edad (child o teen)
+    final isMinor = isChild || isTeen;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        // Go to home tab and pop
-        ref.read(bottomNavIndexProvider.notifier).setIndex(0);
-        Navigator.pop(context);
+        _handleBackNavigation();
       },
       child: Scaffold(
         backgroundColor: theme.scaffoldBackground,
@@ -316,42 +329,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   parent: BouncingScrollPhysics(),
                 ),
                 slivers: [
-                  SliverAppBar(
-                    expandedHeight: 140,
-                    floating: false,
-                    pinned: true,
-                    elevation: 0,
-                    stretch: true,
-                    backgroundColor: theme.scaffoldBackground,
-                    flexibleSpace: FlexibleSpaceBar(
-                      centerTitle: false,
-                      titlePadding: const EdgeInsets.only(left: 24, bottom: 20),
-                      title: Text(
-                        'Configuracion',
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 26,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.primary.withValues(alpha: 0.05),
-                              theme.scaffoldBackground,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
+                  SliverToBoxAdapter(
+                    child: _SettingsHeader(onBack: _handleBackNavigation),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -373,6 +356,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 14),
                           if (_householdId != null) ...[
                             _buildCombinedHouseholdCard(),
+                            // Modo Padres solo visible para adultos; menores
+                            // no pueden gestionar ni ver esta seccion.
+                            if (!isMinor) ...[
+                              const SizedBox(height: 16),
+                              const SettingsParentModeCard(),
+                            ],
                           ] else if (!_hasLoadedOnce && _isLoading) ...[
                             _buildLoadingCard(height: 220),
                           ] else ...[
@@ -382,21 +371,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildSectionLabel(
                             eyebrow: 'APP',
                             title: 'Preferencias',
-                            subtitle:
-                                'Tema, notificaciones y herramientas de ayuda.',
+                            subtitle: 'Tema, notificaciones, ayuda y feedback.',
                           ),
                           const SizedBox(height: 14),
-                          _buildPremiumCard(),
+                          // Menores no pueden comprar premium — solo ven una
+                          // tarjeta informativa que los redirige a sus padres.
+                          if (isMinor)
+                            SettingsMinorPremiumCard(isChild: isChild)
+                          else
+                            _buildPremiumCard(),
                           const SizedBox(height: 24),
-                          _buildAppearanceCard(),
+                          _buildAppearanceCard(isMinor: isMinor),
                           const SizedBox(height: 24),
                           _buildNotificationsCard(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           if (AppEnvironment.enableAdminTesting) ...[
                             _buildAdminTestingCard(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                           ],
                           _buildFAQButton(),
+                          const SizedBox(height: 16),
+                          _buildFeedbackCard(),
+                          const SizedBox(height: 14),
+                          _buildReplayTourButton(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
                             eyebrow: 'CUENTA',
@@ -447,6 +444,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  void _handleBackNavigation() {
+    ref.read(bottomNavIndexProvider.notifier).setIndex(0);
+    Navigator.pop(context);
   }
 
   Widget _buildLoadingCard({double height = 180}) {
@@ -500,6 +502,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final isAdminQaUser = ref.watch(adminProvider).isAdminUser;
 
+    // Determinar si mostrar el toggle según tipo de hogar
+    // Family NO puede ocultar tareas, los demás SÍ pueden
+    final householdType = HouseholdType.fromString(_householdType);
+    final showTasksToggle = householdType != HouseholdType.family;
+
     final members = buildSettingsHouseholdMemberData(
       context: context,
       members: _members,
@@ -520,9 +527,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       memberCount: memberCount,
       members: members,
       tasksEnabled: _tasksEnabled,
-      onTasksEnabledChanged:
-          isOwner || isAdminQaUser ? _updateTasksEnabled : null,
+      showTasksToggle: showTasksToggle,
+      onTasksEnabledChanged: (showTasksToggle && (isOwner || isAdminQaUser))
+          ? _onTasksToggled
+          : null,
     );
+  }
+
+  void _onTasksToggled(bool enabled) {
+    _confirmAndUpdateTasksEnabled(enabled);
+  }
+
+  Future<void> _confirmAndUpdateTasksEnabled(bool enabled) async {
+    final action = enabled ? 'activar' : 'desactivar';
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmar cambio'),
+        content: Text(
+          'Al $action el modo "Solo finanzas", TODOS los miembros del hogar '
+          'verán solo funcionalidades financieras (sin tareas, compras, etc.). '
+          'Esta configuración se aplica a todo el hogar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _updateTasksEnabled(enabled);
+    }
   }
 
   Future<void> _updateTasksEnabled(bool enabled) async {
@@ -796,8 +838,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _getMemberRoleLabel(Map<String, dynamic> member, String? role) {
-    if (member['display_role'] != null && member['display_role'].isNotEmpty) {
-      return member['display_role'];
+    final displayRole = member['display_role'] as String?;
+    if (displayRole != null && displayRole.isNotEmpty) {
+      return displayRole;
     }
     if (role == 'owner') return 'Propietario';
     switch (_householdType) {
@@ -965,7 +1008,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildAppearanceCard() {
+  Widget _buildAppearanceCard({bool isMinor = false}) {
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final defaultPalette = ThemePalette.all.firstWhere(
@@ -989,11 +1032,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         HapticFeedback.lightImpact();
         ref.read(themeModeProvider.notifier).setMode(mode);
       },
-      onLockedTap: () => PremiumPaywall.show(context),
+      // Menores ven el candado pero no se redirigen al paywall — se les indica
+      // que deben pedirle a sus padres que activen el plan.
+      onLockedTap: isMinor
+          ? _showMinorPremiumSnackbar
+          : () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
         HapticFeedback.lightImpact();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
       },
+    );
+  }
+
+  void _showMinorPremiumSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Esta funcion es premium 🌟 Pedi a tus papas que activen el plan.',
+        ),
+        backgroundColor: const Color(0xFFF59E0B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
@@ -1221,6 +1282,132 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildFeedbackCard() {
+    final theme = context.theme;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            FeedbackSheet.show(context, screen: 'settings');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Enviar feedback',
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Reporta un bug o sugiere una mejora',
+                        style: TextStyle(
+                          color: theme.textMuted,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.textMuted,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReplayTourButton() {
+    final theme = context.theme;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.accentGold.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.auto_awesome_rounded,
+            color: AppColors.accentGold,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          'Ver guia de nuevo',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: theme.textPrimary,
+          ),
+        ),
+        subtitle: Text(
+          'Repasa la introduccion del hogar',
+          style: TextStyle(color: theme.textSecondary, fontSize: 12),
+        ),
+        trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
+        onTap: () async {
+          HapticFeedback.lightImpact();
+          final controller =
+              ref.read(coupleHomeTourControllerProvider.notifier);
+          await controller.reset();
+          ref.invalidate(coupleHomeTourSeenProvider);
+          if (!mounted) return;
+          final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+          controller.start(hasTasks: tasks?.isNotEmpty ?? false);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   Widget _buildLogoutButton() {
     return SettingsLogoutButton(
       onPressed: () async {
@@ -1273,16 +1460,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Politica de Privacidad',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded,
-                color: theme.textMuted, size: 18),
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              color: theme.textMuted,
+              size: 18,
+            ),
             onTap: () =>
                 openUrl('https://megablas.github.io/homesync-privacy/'),
           ),
           Divider(
-              height: 1,
-              color: theme.divider.withValues(alpha: 0.1),
-              indent: 16,
-              endIndent: 16),
+            height: 1,
+            color: theme.divider.withValues(alpha: 0.1),
+            indent: 16,
+            endIndent: 16,
+          ),
           ListTile(
             leading:
                 Icon(Icons.description_outlined, color: theme.textSecondary),
@@ -1290,8 +1481,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               'Terminos de Uso',
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
-            trailing: Icon(Icons.open_in_new_rounded,
-                color: theme.textMuted, size: 18),
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              color: theme.textMuted,
+              size: 18,
+            ),
             onTap: () =>
                 openUrl('https://megablas.github.io/homesync-privacy/terms'),
           ),
@@ -1356,4 +1550,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // Premium Card
+}
+
+class _SettingsHeader extends StatelessWidget {
+  final VoidCallback onBack;
+
+  const _SettingsHeader({required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.primary.withValues(alpha: 0.06),
+            theme.scaffoldBackground,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 6, 20, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: onBack,
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: theme.textPrimary,
+                  size: 28,
+                ),
+                tooltip: 'Volver',
+              ),
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  'Configuracion',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 34,
+                    height: 0.95,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

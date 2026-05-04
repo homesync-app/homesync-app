@@ -141,6 +141,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
               ),
               if (widget.item != null)
                 IconButton(
+                  tooltip: 'Eliminar',
                   onPressed: _delete,
                   icon: const Icon(Icons.delete_outline_rounded,
                       color: AppColors.error,),

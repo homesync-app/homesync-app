@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
@@ -29,6 +30,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   String? _selectedCategory;
   String _selectedDifficulty = 'medium';
   String? _selectedMemberId;
+
+  /// Sprint 3 Modo Padres: pool de miembros entre los que rota la tarea.
+  /// Solo se usa cuando la recurrencia esta seteada y el usuario tiene Modo
+  /// Padres activo. Si esta vacio o tiene 1 solo miembro, no hay rotacion.
+  final Set<String> _rotationPool = <String>{};
   String? _selectedRecurrence;
   String _customRecurrenceMode = 'weekdays';
   final Set<int> _selectedWeekdays = {};
@@ -180,6 +186,17 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     }
 
     try {
+      // Sprint 3 Modo Padres: si hay pool valido (recurrente + 2+ miembros)
+      // arrancamos asignando al primero del pool y delegamos la rotacion al
+      // server (advance_task_rotation) en cada completion.
+      final List<String>? rotationPoolList =
+          (_selectedRecurrence != null && _rotationPool.length >= 2)
+              ? _rotationPool.toList()
+              : null;
+      final assignedTo = rotationPoolList != null
+          ? rotationPoolList.first
+          : _selectedMemberId;
+
       await ref.read(tasksProvider.notifier).createTask({
         'title': title,
         'description': _descriptionController.text.trim().isEmpty
@@ -189,7 +206,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         'difficulty': _selectedDifficulty,
         'xpReward': int.tryParse(_xpController.text) ?? 10,
         'coinReward': int.tryParse(_coinController.text) ?? 1,
-        'assignedTo': _selectedMemberId,
+        'assignedTo': assignedTo,
         'recurrenceType': _selectedRecurrence,
         'recurrenceInterval': _recurrenceInterval,
         'recurrenceWeekdays':
@@ -197,6 +214,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         'recurrenceMonthDays': _selectedRecurrence == 'custom'
             ? _selectedMonthDays.toList()
             : null,
+        'rotationPool': rotationPoolList,
       });
 
       if (!mounted) return;
@@ -475,6 +493,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           ],
                         ),
                         const SizedBox(height: 20),
+                        _buildRotationSection(),
                         _buildSectionHeader(
                           'VALOR',
                           'Cuanto vale completarla',
@@ -798,6 +817,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           child: Row(
             children: [
               IconButton(
+                tooltip: 'Disminuir',
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.remove,
@@ -822,6 +842,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 ),
               ),
               IconButton(
+                tooltip: 'Aumentar',
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.add,
@@ -896,6 +917,110 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
             );
           }),
         ),
+      ],
+    );
+  }
+
+  /// Sprint 3 Modo Padres: selector de pool de rotacion. Solo se muestra
+  /// cuando la tarea es recurrente y el usuario tiene Modo Padres disponible
+  /// (admin de family con premium). Si el flag no esta, devolvemos un
+  /// SizedBox.shrink y la seccion no ocupa lugar.
+  Widget _buildRotationSection() {
+    if (_selectedRecurrence == null) return const SizedBox.shrink();
+    final available = ref.watch(parentModeAvailableProvider);
+    if (!available) return const SizedBox.shrink();
+    if (_members.length < 2) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'ROTACION',
+          'Que se turnen los miembros',
+          'Elegi al menos dos. Cada vez que se complete, le toca al siguiente.',
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _members.map((member) {
+            final id = member['user_id'] as String;
+            final name = member['users']['full_name'] ??
+                member['users']['email'] ??
+                'Miembro';
+            final initial =
+                name.toString().substring(0, 1).toUpperCase();
+            final selected = _rotationPool.contains(id);
+            return GestureDetector(
+              onTap: () => setState(() {
+                if (selected) {
+                  _rotationPool.remove(id);
+                } else {
+                  _rotationPool.add(id);
+                }
+              }),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.accentBlue.withValues(alpha: 0.12)
+                      : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(
+                    color: selected
+                        ? AppColors.accentBlue
+                        : const Color(0xFFF1F5F9),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 12,
+                      backgroundColor: selected
+                          ? AppColors.accentBlue
+                          : const Color(0xFFCBD5E1),
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      name.toString(),
+                      style: TextStyle(
+                        color: selected
+                            ? AppColors.accentBlue
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        if (_rotationPool.length == 1)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(
+              'Necesitas al menos 2 personas en el pool.',
+              style: TextStyle(
+                color: AppColors.accentOrange,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        const SizedBox(height: 20),
       ],
     );
   }

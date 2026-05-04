@@ -40,12 +40,12 @@ export const Login = () => {
         <div className="glass-dark border border-white/10 rounded-[2.5rem] p-10 shadow-2xl">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold tracking-tight mb-2">Admin Login</h1>
-            <p className="text-gray-400">HomeSync Professional Suite</p>
+            <p className="text-gray-400">HomeSync Panel de Administración</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Email Address</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Correo electrónico</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input 
@@ -60,7 +60,7 @@ export const Login = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Password</label>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Contraseña</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input 
@@ -89,7 +89,7 @@ export const Login = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Ingresar</span>
                   <div className="w-1.5 h-1.5 rounded-full bg-white group-hover:animate-ping" />
                 </>
               )}
@@ -98,7 +98,7 @@ export const Login = () => {
         </div>
         
         <p className="text-center mt-8 text-gray-500 text-xs font-medium">
-          Protected by Supabase Auth & RSA Encryption
+          Protegido por Supabase Auth y encriptación RSA
         </p>
       </div>
     </div>

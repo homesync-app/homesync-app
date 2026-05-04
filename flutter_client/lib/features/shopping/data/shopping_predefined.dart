@@ -110,6 +110,7 @@ class ShoppingPredefined {
       {'name': 'Soda', 'emoji': '🫧'},
       {'name': 'Tónica', 'emoji': '🫧'},
       {'name': 'Gaseosa', 'emoji': '🥤'},
+      {'name': 'Coca Cola', 'emoji': '🥤'},
       {'name': 'Jugo', 'emoji': '🧃'},
       {'name': 'Isotonico', 'emoji': '💪'},
       {'name': 'Energizante', 'emoji': '⚡'},

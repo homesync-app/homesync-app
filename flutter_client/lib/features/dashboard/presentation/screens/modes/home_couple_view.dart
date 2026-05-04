@@ -18,6 +18,9 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
+import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:intl/intl.dart';
@@ -40,6 +43,49 @@ class HomeCoupleView extends ConsumerStatefulWidget {
 
 class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   final Set<String> _completedTaskIds = {};
+  final GlobalKey _balanceKey = GlobalKey(debugLabel: 'tour_balance');
+  final GlobalKey _tasksKey = GlobalKey(debugLabel: 'tour_tasks');
+  bool _tourTriggered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _registerTourKeys();
+      _maybeStartTour();
+    });
+  }
+
+  void _registerTourKeys() {
+    final notifier = ref.read(tourTargetKeysProvider.notifier);
+    notifier.register(TourTarget.balanceCard, _balanceKey);
+    notifier.register(TourTarget.tasksSection, _tasksKey);
+  }
+
+  void _maybeStartTour() {
+    final alreadySeen = ref.read(coupleHomeTourSeenProvider);
+    if (alreadySeen) return;
+    final tourState = ref.read(coupleHomeTourControllerProvider);
+    if (tourState.isActive || _tourTriggered) return;
+    _tourTriggered = true;
+    // Let entrance animations of the home settle before opening the tour.
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+      final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+      ref.read(coupleHomeTourControllerProvider.notifier).start(
+            hasTasks: (tasks?.isNotEmpty ?? false),
+          );
+    });
+  }
+
+  @override
+  void dispose() {
+    final notifier = ref.read(tourTargetKeysProvider.notifier);
+    notifier.unregister(TourTarget.balanceCard, _balanceKey);
+    notifier.unregister(TourTarget.tasksSection, _tasksKey);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,10 +107,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
         children: [
           _buildHeader(theme),
           const SizedBox(height: AppSpacing.lg),
-          _buildFinancialSummary(widget.householdId),
+          KeyedSubtree(
+            key: _balanceKey,
+            child: _buildFinancialSummary(widget.householdId),
+          ),
           const SizedBox(height: 28),
           if (caps.showTasks)
-            _buildTasksSection(theme)
+            KeyedSubtree(
+              key: _tasksKey,
+              child: _buildTasksSection(theme),
+            )
           else
             const HomeShoppingPreviewCard(title: 'Lista actual'),
           const SizedBox(height: 18),

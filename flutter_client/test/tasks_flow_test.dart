@@ -144,7 +144,7 @@ void main() {
                 joinedAt: DateTime.now(),
                 fullName: 'User One',
                 email: 'u1@test.com',
-                type: MemberType.adult,
+                type: MemberType.parent,
               ),
             ]),),
       ],

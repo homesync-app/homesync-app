@@ -13,18 +13,27 @@ import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'expense_category_matcher.dart';
+import 'expense_form_data.dart';
 
 class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseTemplateModel? template;
+  final String initialType;
 
-  const RecurringExpenseFormSheet({super.key, this.template});
+  const RecurringExpenseFormSheet({
+    super.key,
+    this.template,
+    this.initialType = 'expense',
+  });
 
   @override
   ConsumerState<RecurringExpenseFormSheet> createState() =>
       _RecurringExpenseFormSheetState();
 
-  static Future<void> show(BuildContext context,
-      {ExpenseTemplateModel? template,}) {
+  static Future<void> show(
+    BuildContext context, {
+    ExpenseTemplateModel? template,
+    String initialType = 'expense',
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -33,7 +42,10 @@ class RecurringExpenseFormSheet extends ConsumerStatefulWidget {
         alignment: Alignment.bottomCenter,
         child: FractionallySizedBox(
           heightFactor: 0.92,
-          child: RecurringExpenseFormSheet(template: template),
+          child: RecurringExpenseFormSheet(
+            template: template,
+            initialType: initialType,
+          ),
         ),
       ),
     );
@@ -51,8 +63,9 @@ class _RecurringExpenseFormSheetState
   String _splitType = 'equal';
   String _payerDefault = '';
   bool _isLoading = false;
+  late String _type;
 
-  final List<Map<String, String>> _categories = const [
+  final List<Map<String, dynamic>> _expenseCategories = const [
     {'id': 'utilities', 'name': 'Servicios'},
     {'id': 'rent', 'name': 'Alquiler y hogar'},
     {'id': 'restaurants', 'name': 'Salidas y comidas'},
@@ -64,9 +77,15 @@ class _RecurringExpenseFormSheetState
     {'id': 'other', 'name': 'Otros'},
   ];
 
+  late final List<Map<String, dynamic>> _incomeCategories;
+
+  List<Map<String, dynamic>> get _currentCategories =>
+      _type == 'income' ? _incomeCategories : _expenseCategories;
+
   @override
   void initState() {
     super.initState();
+    _incomeCategories = buildIncomeCategories();
     final template = widget.template;
     if (template != null) {
       _titleController.text = template.title;
@@ -77,6 +96,9 @@ class _RecurringExpenseFormSheetState
       _category = template.category;
       _splitType = template.splitType;
       _payerDefault = template.payerDefault;
+      _type = template.type;
+    } else {
+      _type = widget.initialType;
     }
     _titleController.addListener(_onTitleChanged);
     _initializeDefaultPayer();
@@ -92,11 +114,12 @@ class _RecurringExpenseFormSheetState
 
   void _onTitleChanged() {
     if (widget.template != null) return;
+    if (_type == 'income') return; // no inferir categoría para ingresos
     final inferredCategory =
         inferExpenseCategoryIdFromText(_titleController.text);
     if (inferredCategory == null) return;
     if (_category == inferredCategory) return;
-    if (_categories.any((category) => category['id'] == inferredCategory)) {
+    if (_expenseCategories.any((category) => category['id'] == inferredCategory)) {
       setState(() => _category = inferredCategory);
     }
   }
@@ -199,6 +222,7 @@ class _RecurringExpenseFormSheetState
             ? (currentUserId ?? _payerDefault)
             : _payerDefault,
         isActive: true,
+        type: _type,
         nextExecutionDate: _calculateNextExecutionDate(_dayOfMonth),
       );
 
@@ -361,6 +385,10 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildHeader() {
+    final isIncome = _type == 'income';
+    final accentColor = isIncome ? AppColors.success : AppColors.primary;
+    final isEditing = widget.template != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,15 +399,17 @@ class _RecurringExpenseFormSheetState
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
+                color: accentColor.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(28),
                 border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.14),
+                  color: accentColor.withValues(alpha: 0.14),
                 ),
               ),
-              child: const Icon(
-                Icons.autorenew_rounded,
-                color: AppColors.primary,
+              child: Icon(
+                isIncome
+                    ? Icons.savings_rounded
+                    : Icons.autorenew_rounded,
+                color: accentColor,
                 size: 40,
               ),
             ),
@@ -389,11 +419,15 @@ class _RecurringExpenseFormSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.template == null
-                        ? 'Nueva suscripción'
-                        : 'Editar suscripción',
+                    isEditing
+                        ? (isIncome
+                            ? 'Editar ingreso'
+                            : 'Editar suscripción')
+                        : (isIncome
+                            ? 'Nuevo ingreso fijo'
+                            : 'Nueva suscripción'),
                     style: const TextStyle(
-                      fontSize: 30,
+                      fontSize: 28,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
                       letterSpacing: -0.9,
@@ -401,11 +435,13 @@ class _RecurringExpenseFormSheetState
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    widget.template == null
-                        ? 'Dejala configurada y lista para que se registre sola todos los meses.'
-                        : 'Ajusta monto, categoría y reparto para mantenerla al día.',
+                    isEditing
+                        ? 'Ajusta monto, categoría y reparto para mantenerlo al día.'
+                        : (isIncome
+                            ? 'Se sumará automáticamente a tu balance cada mes.'
+                            : 'Dejala configurada y lista para que se registre sola todos los meses.'),
                     style: const TextStyle(
-                      fontSize: 15.5,
+                      fontSize: 14.5,
                       height: 1.45,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
@@ -416,6 +452,7 @@ class _RecurringExpenseFormSheetState
             ),
             const SizedBox(width: 12),
             IconButton(
+              tooltip: 'Cerrar',
               icon: const Icon(
                 Icons.close_rounded,
                 color: AppColors.textMuted,
@@ -425,12 +462,16 @@ class _RecurringExpenseFormSheetState
             ),
           ],
         ),
-        if (widget.template != null) ...[
+        if (!isEditing) ...[
+          const SizedBox(height: 18),
+          _buildTypeToggle(),
+        ],
+        if (isEditing) ...[
           const SizedBox(height: 18),
           OutlinedButton.icon(
             onPressed: _delete,
             icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: const Text('Eliminar suscripción'),
+            label: Text(isIncome ? 'Eliminar ingreso' : 'Eliminar suscripción'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.error,
               side: BorderSide(color: AppColors.error.withValues(alpha: 0.22)),
@@ -442,6 +483,65 @@ class _RecurringExpenseFormSheetState
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildTypeToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.divider.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          _buildTypeOption('expense', Icons.trending_down_rounded, 'Gasto'),
+          _buildTypeOption('income', Icons.trending_up_rounded, 'Ingreso'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypeOption(String type, IconData icon, String label) {
+    final isSelected = _type == type;
+    final color = type == 'income' ? AppColors.success : AppColors.primary;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() {
+          _type = type;
+          // Resetear categoría al cambiar tipo si la actual no existe en la nueva lista
+          final available = type == 'income' ? _incomeCategories : _expenseCategories;
+          if (!available.any((c) => c['id'] == _category)) {
+            _category = available.first['id'] as String;
+          }
+        }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border.all(color: color.withValues(alpha: 0.35))
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: isSelected ? color : AppColors.textMuted),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? color : AppColors.textMuted,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -630,25 +730,25 @@ class _RecurringExpenseFormSheetState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _categories.map((category) {
+          children: _currentCategories.map((category) {
             final isSelected = _category == category['id'];
-            final categoryColor =
-                CategoryMapping.getCategoryColor(category['id']);
+            final categoryColor = category['color'] as Color? ??
+                CategoryMapping.getCategoryColor(category['id'] as String);
             return ChoiceChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    CategoryMapping.getCategoryMaterialIcon(category['id']),
+                    CategoryMapping.getCategoryMaterialIcon(category['id'] as String),
                     size: 16,
                     color: categoryColor,
                   ),
                   const SizedBox(width: 6),
-                  Text(category['name']!),
+                  Text(category['name'] as String),
                 ],
               ),
               selected: isSelected,
-              onSelected: (_) => setState(() => _category = category['id']!),
+              onSelected: (_) => setState(() => _category = category['id'] as String),
               selectedColor: categoryColor.withValues(alpha: 0.16),
               backgroundColor: categoryColor.withValues(alpha: 0.07),
               checkmarkColor: categoryColor,
@@ -797,12 +897,16 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildSaveButton() {
+    final isIncome = _type == 'income';
+    final accentColor = isIncome ? AppColors.success : AppColors.primary;
+    final label = isIncome ? 'Guardar ingreso' : 'Guardar suscripción';
+
     return SizedBox(
       height: 60,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _save,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: accentColor,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -819,17 +923,21 @@ class _RecurringExpenseFormSheetState
                   strokeWidth: 2.6,
                 ),
               )
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.check_rounded, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    'Guardar suscripción',
-                    style: TextStyle(
+                  const Icon(Icons.check_rounded, size: 22),
+                  const SizedBox(width: 10),
+                  Flexible(
+                   child: Text(
+                    label,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
                     ),
+                   ),
                   ),
                 ],
               ),

@@ -10,11 +10,17 @@ class CustomBottomNavItem {
   final IconData selectedIcon;
   final String label;
 
+  /// Optional anchor key — used by the onboarding coachmark tour to spotlight
+  /// a specific tab. Attached to the tile's outermost widget so its global
+  /// rect can be measured.
+  final GlobalKey? anchorKey;
+
   const CustomBottomNavItem({
     required this.index,
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.anchorKey,
   });
 }
 
@@ -87,6 +93,7 @@ class _CustomBottomNavTile extends StatelessWidget {
     final foreground = isSelected ? theme.primary : theme.textMuted;
 
     return AnimatedPress(
+      key: item.anchorKey,
       scale: 0.94,
       onTap: onTap,
       child: AnimatedContainer(

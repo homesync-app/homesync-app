@@ -57,6 +57,12 @@ class TaskCompletionResult {
     );
   }
 
+  /// Sprint 1 Modo Padres: true cuando la submision quedo en `pending_approval`
+  /// y los XP/coins se acreditan recien al aprobar. La UI deberia mostrar un
+  /// feedback distinto en este caso ("Tu tarea quedo pendiente de aprobacion").
+  bool get requiresApproval =>
+      status == 'pending_approval' || rawData['requires_approval'] == true;
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'success': success,

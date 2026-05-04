@@ -14,7 +14,7 @@ MemberModel _member(
     role: 'member',
     joinedAt: DateTime(2024, 1, 1),
     fullName: name,
-    type: MemberType.adult,
+    type: MemberType.parent,
   );
 }
 

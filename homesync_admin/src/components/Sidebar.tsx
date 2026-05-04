@@ -2,15 +2,15 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Terminal,
   ClipboardList,
   Users,
   BarChart3,
   Home,
   Settings,
-  ShieldAlert,
-  Gift,
+  MessageSquare,
   X,
+  Activity,
+  ScanLine,
   type LucideIcon,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -107,23 +107,23 @@ export const Sidebar = ({
           <SidebarItem to="/" icon={LayoutDashboard} collapsed={collapsed} onNavigate={onCloseMobile}>
             Overview
           </SidebarItem>
-          <SidebarItem to="/logs" icon={Terminal} collapsed={collapsed} onNavigate={onCloseMobile}>
-            Logs & Errors
+          <SidebarItem to="/households" icon={Users} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Hogares
           </SidebarItem>
-          <SidebarItem to="/crashes" icon={ShieldAlert} collapsed={collapsed} onNavigate={onCloseMobile}>
-            Crash Reports
-          </SidebarItem>
-          <SidebarItem to="/templates" icon={ClipboardList} collapsed={collapsed} onNavigate={onCloseMobile}>
-            Task Templates
-          </SidebarItem>
-          <SidebarItem to="/rewards" icon={Gift} collapsed={collapsed} onNavigate={onCloseMobile}>
-            Reward Templates
-          </SidebarItem>
-          <SidebarItem to="/users" icon={Users} collapsed={collapsed} onNavigate={onCloseMobile}>
-            User Management
+          <SidebarItem to="/activity" icon={Activity} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Actividad
           </SidebarItem>
           <SidebarItem to="/economy" icon={BarChart3} collapsed={collapsed} onNavigate={onCloseMobile}>
-            Economic Balance
+            Economía
+          </SidebarItem>
+          <SidebarItem to="/content" icon={ClipboardList} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Contenido
+          </SidebarItem>
+          <SidebarItem to="/inbox" icon={MessageSquare} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Bandeja
+          </SidebarItem>
+          <SidebarItem to="/ocr-insights" icon={ScanLine} collapsed={collapsed} onNavigate={onCloseMobile}>
+            OCR Insights
           </SidebarItem>
         </nav>
 

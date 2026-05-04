@@ -301,17 +301,25 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                 label: categoryLabel,
                                 color: categoryColor,
                               ),
-                              _buildChip(
-                                icon: _task.isRecurring
-                                    ? Icons.event_repeat_rounded
-                                    : Icons.edit_calendar_rounded,
-                                label: _task.isRecurring
-                                    ? _task.recurrenceLabel
-                                    : 'Sin programar',
-                                color: _task.isRecurring
-                                    ? AppColors.accentGold
-                                    : AppColors.accentRed,
-                              ),
+                              if (_task.isRecurring || !_task.isOverdue)
+                                _buildChip(
+                                  icon: _task.isRecurring
+                                      ? Icons.event_repeat_rounded
+                                      : Icons.edit_calendar_rounded,
+                                  label: _task.isRecurring
+                                      ? _task.recurrenceLabel
+                                      : 'Sin fecha',
+                                  color: _task.isRecurring
+                                      ? AppColors.accentGold
+                                      : const Color(0xFFA8734F),
+                                  background: _task.isRecurring
+                                      ? null
+                                      : const Color(0xFFFFF7EF),
+                                  textWeight: _task.isRecurring
+                                      ? FontWeight.w800
+                                      : FontWeight.w700,
+                                  gap: _task.isRecurring ? 6 : 8,
+                                ),
                             ],
                           ),
                         ],
@@ -476,23 +484,26 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     required IconData icon,
     required String label,
     required Color color,
+    Color? background,
+    FontWeight textWeight = FontWeight.w800,
+    double gap = 6,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.16),
+        color: background ?? color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: 6),
+          SizedBox(width: gap),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontWeight: FontWeight.w800,
+              fontWeight: textWeight,
               fontSize: 12,
             ),
           ),

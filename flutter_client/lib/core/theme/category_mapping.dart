@@ -789,6 +789,18 @@ class CategoryMapping {
     return lower;
   }
 
+  static String displayName(String? category, {String fallback = 'Otros'}) {
+    final raw = category?.trim();
+    if (raw == null || raw.isEmpty) return fallback;
+
+    final lower = raw.toLowerCase();
+    final exact = categoryNames[lower];
+    if (exact != null) return exact;
+
+    final normalized = normaliseCategory(raw);
+    return categoryNames[normalized] ?? raw;
+  }
+
   static bool _shouldPrioritizeExplicitExpenseCategory(String? category) {
     switch (category) {
       case 'supermarket':

@@ -11,6 +11,7 @@ class FamilyTaskCard extends StatelessWidget {
   final TaskModel task;
   final bool isCompleting;
   final bool isChildView;
+  final bool canApprovePending;
   final MemberModel? assignedMember;
   final MemberModel? completedMember;
   final String? currentUserId;
@@ -24,6 +25,7 @@ class FamilyTaskCard extends StatelessWidget {
     required this.isCompleting,
     required this.isChildView,
     required this.actionIcon,
+    this.canApprovePending = false,
     this.assignedMember,
     this.completedMember,
     this.currentUserId,
@@ -129,6 +131,13 @@ class FamilyTaskCard extends StatelessWidget {
                           label: '${task.coinReward}',
                           color: const Color(0xFF7CB08B),
                         ),
+                      // Sprint 3 Modo Padres: badge de rotacion.
+                      if (task.hasRotation)
+                        _FamilyTaskPill(
+                          icon: Icons.autorenew_rounded,
+                          label: 'Rota entre ${task.rotationPool.length}',
+                          color: const Color(0xFF5A94E1),
+                        ),
                     ],
                   ),
                 ],
@@ -204,11 +213,17 @@ class FamilyTaskCard extends StatelessWidget {
 
   String? _contextLabel() {
     if (task.isPendingApproval) {
-      if (isChildView) return 'Pendiente de aprobación';
-      if (completedMember != null) {
-        return '${completedMember!.displayName} la marcó como hecha';
+      if (canApprovePending) {
+        if (completedMember != null) {
+          return '${completedMember!.displayName} la marcó como hecha';
+        }
+        return 'Lista para revisar';
       }
-      return 'Pendiente de aprobación';
+      if (isChildView) return 'Esperando aprobación';
+      if (completedMember != null) {
+        return 'Esperando que un adulto la revise';
+      }
+      return 'Esperando revisión de un adulto';
     }
     if (task.isOverdue) {
       if (!_isAssignedToCurrentUser && assignedMember != null) {
@@ -233,7 +248,7 @@ class FamilyTaskCard extends StatelessWidget {
 
   String? _urgencyLabel() {
     if (task.isPendingApproval) {
-      return isChildView ? 'Pendiente' : 'Revisar';
+      return canApprovePending ? 'Revisar' : 'En revisión';
     }
     if (task.isOverdue) return 'Vencida';
     if (task.isDueToday) return 'Hoy';

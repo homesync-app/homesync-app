@@ -116,8 +116,8 @@ export const RewardTemplates = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Reward Templates</h2>
-          <p className="text-gray-400 mt-1">Configure default rewards (premios) available to all households.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Plantillas de Premios</h2>
+          <p className="text-gray-400 mt-1">Configurá los premios predeterminados disponibles para todos los hogares.</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -126,7 +126,7 @@ export const RewardTemplates = () => {
             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-black rounded-xl font-bold hover:opacity-90 transition-all glow-amber"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Reward</span>
+            <span>Nuevo Premio</span>
           </button>
         </div>
       </div>
@@ -136,7 +136,7 @@ export const RewardTemplates = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
           <input 
             type="text" 
-            placeholder="Search rewards by title..."
+              placeholder="Buscar premios por título..."
             className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -194,11 +194,11 @@ export const RewardTemplates = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title={editingTemplate ? 'Edit Reward' : 'Add New Reward'}
+        title={editingTemplate ? 'Editar Premio' : 'Nuevo Premio'}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Reward Title</label>
+            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Título del premio</label>
             <input 
               required
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
@@ -208,7 +208,7 @@ export const RewardTemplates = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Description</label>
+            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Descripción</label>
             <textarea 
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50 min-h-[80px]"
               value={formData.description}
@@ -218,7 +218,7 @@ export const RewardTemplates = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Icon (Emoji)</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Icono (Emoji)</label>
               <input 
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 value={formData.icon}
@@ -227,7 +227,7 @@ export const RewardTemplates = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Coin Cost</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Costo en Monedas</label>
               <input 
                 type="number"
                 min="0"
@@ -243,7 +243,7 @@ export const RewardTemplates = () => {
             type="submit"
             className="w-full py-4 bg-amber-500 text-black font-black rounded-2xl hover:opacity-90 transition-all glow-amber flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : editingTemplate ? 'Update Reward' : 'Create Reward'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : editingTemplate ? 'Actualizar Premio' : 'Crear Premio'}
           </button>
         </form>
       </Modal>

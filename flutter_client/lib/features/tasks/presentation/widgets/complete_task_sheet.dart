@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
@@ -126,7 +127,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       return;
     }
 
-    if (_selectedMemberIds.isEmpty) {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final canAssignCredit = ref.read(parentModeAvailableProvider);
+    final effectiveSelectedMemberIds = canAssignCredit
+        ? Set<String>.from(_selectedMemberIds)
+        : {
+            if (currentUserId != null) currentUserId,
+          };
+
+    if (effectiveSelectedMemberIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Selecciona quien la hizo antes de continuar.'),
@@ -168,14 +177,20 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         totalCoins += t.coinReward;
       }
 
-      final currentUserId = ref.read(currentUserIdProvider);
-      final onlyMe = _selectedMemberIds.length == 1 &&
-          _selectedMemberIds.contains(currentUserId);
+      final onlyMe = effectiveSelectedMemberIds.length == 1 &&
+          effectiveSelectedMemberIds.contains(currentUserId);
+      final currentMember =
+          _members.where((m) => m['user_id'] == currentUserId).firstOrNull;
+      final currentMemberNeedsApproval =
+          _requiresApproval(currentMember?['member_type'] as String?);
 
       final selectedMembersRequiringApproval = _members
-          .where((m) =>
-              _selectedMemberIds.contains(m['user_id']) &&
-              _requiresApproval(m['member_type'] as String?))
+          .where(
+            (m) =>
+                currentMemberNeedsApproval &&
+                effectiveSelectedMemberIds.contains(m['user_id']) &&
+                _requiresApproval(m['member_type'] as String?),
+          )
           .toList();
 
       if (selectedMembersRequiringApproval.isNotEmpty) {
@@ -188,13 +203,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 );
           }
         }
-        _selectedMemberIds.removeWhere((id) =>
-            selectedMembersRequiringApproval.any((m) => m['user_id'] == id));
+        effectiveSelectedMemberIds.removeWhere(
+          (id) =>
+              selectedMembersRequiringApproval.any((m) => m['user_id'] == id),
+        );
       }
 
       final remainingTasks =
-          _selectedMemberIds.isNotEmpty ? selectedTasks : <TaskModel>[];
-      final remainingMemberIds = _selectedMemberIds.toList();
+          effectiveSelectedMemberIds.isNotEmpty ? selectedTasks : <TaskModel>[];
+      final remainingMemberIds = effectiveSelectedMemberIds.toList();
 
       if (remainingTasks.isNotEmpty && remainingMemberIds.isNotEmpty) {
         await ref.read(tasksProvider.notifier).completeTasksBatch(
@@ -440,13 +457,15 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       bottom: _selectedTaskIds.isEmpty || _isLoading ? 24 : 12,
                     ),
                     children: [
-                      _buildSectionHeader(
-                        Icons.people_alt_rounded,
-                        '¿Quién lo hizo?',
-                        'Selecciona quiénes ayudaron',
-                      ),
-                      _buildMembersSelection(),
-                      const SizedBox(height: 32),
+                      if (ref.watch(parentModeAvailableProvider)) ...[
+                        _buildSectionHeader(
+                          Icons.people_alt_rounded,
+                          '¿Quién lo hizo?',
+                          'Selecciona quiénes ayudaron',
+                        ),
+                        _buildMembersSelection(),
+                        const SizedBox(height: 32),
+                      ],
                       _buildSectionHeader(
                         Icons.schedule_rounded,
                         '¿Cuándo?',
@@ -587,9 +606,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         itemCount: _members.length,
         itemBuilder: (context, index) {
           final member = _members[index];
+          final user = (member['users'] as Map?)?.cast<String, dynamic>();
           final userId = member['user_id'] as String;
-          final nameStr = member['users']?['full_name'] as String? ?? 'Miembro';
-          final avatarUrl = member['users']?['avatar_url'] as String?;
+          final nameStr = user?['full_name'] as String? ?? 'Miembro';
+          final avatarUrl = user?['avatar_url'] as String?;
           final isSelected = _selectedMemberIds.contains(userId);
 
           return GestureDetector(

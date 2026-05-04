@@ -97,6 +97,13 @@ class TaskModel {
   final TaskDifficulty difficulty;
   final String? createdById;
 
+  /// Sprint 3 Modo Padres: lista de user_id que se turnan. Vacio = sin
+  /// rotacion. `assigned_to` siempre es "a quien le toca ahora", sirve para
+  /// mostrar la UI tal cual lo hacia antes; al completar el server avanza.
+  final List<String> rotationPool;
+  final String rotationStrategy;
+  final int rotationIndex;
+
   const TaskModel({
     required this.id,
     required this.title,
@@ -124,7 +131,29 @@ class TaskModel {
     this.type = TaskType.oneTime,
     this.difficulty = TaskDifficulty.medium,
     this.createdById,
+    this.rotationPool = const [],
+    this.rotationStrategy = 'round_robin',
+    this.rotationIndex = 0,
   });
+
+  /// Sprint 3: true cuando la tarea tiene un pool de rotacion configurado.
+  bool get hasRotation => rotationPool.isNotEmpty;
+
+  /// Sprint 1 Modo Padres: stub para invocar RPCs que solo necesitan el id
+  /// (verify_task_transaction / reject_task_transaction). Evita tener que
+  /// pasar un TaskModel completo cuando solo conocemos el id desde la lista
+  /// de aprobaciones pendientes.
+  factory TaskModel.minimalForApproval({required String id}) {
+    return TaskModel(
+      id: id,
+      title: '',
+      status: TaskStatus.pendingApproval,
+      xpReward: 0,
+      coinReward: 0,
+      householdId: '',
+      createdAt: DateTime.now(),
+    );
+  }
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
     return TaskModel(
@@ -154,6 +183,13 @@ class TaskModel {
       type: TaskType.fromString(map['type'] as String?),
       difficulty: TaskDifficulty.fromString(map['difficulty'] as String?),
       createdById: map['created_by_id'] as String?,
+      rotationPool: (map['rotation_pool'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      rotationStrategy:
+          (map['rotation_strategy'] as String?) ?? 'round_robin',
+      rotationIndex: _toInt(map['rotation_index']),
     );
   }
 
@@ -184,6 +220,9 @@ class TaskModel {
         'type': type.dbValue,
         'difficulty': difficulty.name,
         'created_by_id': createdById,
+        'rotation_pool': rotationPool,
+        'rotation_strategy': rotationStrategy,
+        'rotation_index': rotationIndex,
       };
 
   // ── Computed helpers ───────────────────────────────────────────────────────
@@ -253,6 +292,9 @@ class TaskModel {
     TaskType? type,
     TaskDifficulty? difficulty,
     String? createdById,
+    List<String>? rotationPool,
+    String? rotationStrategy,
+    int? rotationIndex,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -281,6 +323,9 @@ class TaskModel {
       type: type ?? this.type,
       difficulty: difficulty ?? this.difficulty,
       createdById: createdById ?? this.createdById,
+      rotationPool: rotationPool ?? this.rotationPool,
+      rotationStrategy: rotationStrategy ?? this.rotationStrategy,
+      rotationIndex: rotationIndex ?? this.rotationIndex,
     );
   }
 

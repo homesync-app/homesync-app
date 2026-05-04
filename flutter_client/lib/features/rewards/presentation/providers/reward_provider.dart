@@ -367,6 +367,38 @@ class Rewards extends _$Rewards {
     );
   }
 
+  Future<Either<Failure, void>> updateReward({
+    required String rewardId,
+    required String title,
+    String? description,
+    required int cost,
+    required String icon,
+    String? category,
+    required String targetType,
+  }) async {
+    final repo = ref.read(rewardRepositoryProvider);
+    final result = await repo.updateReward(
+      rewardId: rewardId,
+      title: title,
+      description: description,
+      cost: cost,
+      icon: icon,
+      category: category,
+      targetType: targetType,
+    );
+
+    return result.fold(
+      (failure) {
+        log.w('Update reward failure: ${failure.message}');
+        return Left(failure);
+      },
+      (success) {
+        ref.invalidateSelf();
+        return Right(success);
+      },
+    );
+  }
+
   Future<Either<Failure, void>> redeem(String rewardId) async {
     final repo = ref.read(rewardRepositoryProvider);
     final result = await repo.redeemReward(rewardId);
@@ -504,7 +536,9 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
       offset: offset,
     );
 
-    if (result.isRight() && result.getOrElse((_) => const []).isEmpty && offset == 0) {
+    if (result.isRight() &&
+        result.getOrElse((_) => const []).isEmpty &&
+        offset == 0) {
       await ref.read(rewardsProvider.notifier)._seedDefaultRewards(
             householdId: householdId,
             caps: caps,
@@ -569,8 +603,8 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
 
 final paginatedRewardsProvider =
     AsyncNotifierProvider<PaginatedRewardsController, RewardsPageState>(
-      PaginatedRewardsController.new,
-    );
+  PaginatedRewardsController.new,
+);
 
 @riverpod
 Future<List<RewardModel>> filteredRewards(FilteredRewardsRef ref) async {

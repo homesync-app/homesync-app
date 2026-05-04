@@ -4,7 +4,6 @@ import { Modal } from '../components/Modal';
 import { 
   Plus, 
   Search, 
-  Settings2, 
   Edit2, 
   Trash2, 
   Tag, 
@@ -133,30 +132,24 @@ export const TaskTemplates = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Master Task Templates</h2>
-          <p className="text-gray-400 mt-1">Configure the default tasks available to all users.</p>
+          <h2 className="text-3xl font-bold tracking-tight">Plantillas de Tareas</h2>
+          <p className="text-gray-400 mt-1">Configurá las tareas predeterminadas disponibles para todos los usuarios.</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors">
-            <Settings2 className="w-4 h-4" />
-            <span>Manage Categories</span>
-          </button>
           <button 
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl font-bold hover:opacity-90 transition-all glow-violet"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Template</span>
+            <span>Nueva plantilla</span>
           </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar: Categories */}
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-dark p-6 rounded-2xl h-fit">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-secondary mb-4">Categories</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-secondary mb-4">Categorías</h3>
             <div className="space-y-2">
               {categories.map(cat => (
                 <button 
@@ -172,10 +165,7 @@ export const TaskTemplates = () => {
                   </span>
                 </button>
               ))}
-              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg border border-dashed border-white/10 text-gray-500 hover:text-white hover:border-white/30 transition-all mt-4">
-                <Plus className="w-4 h-4" />
-                <span className="text-sm">New Category</span>
-              </button>
+
             </div>
           </div>
         </div>
@@ -186,7 +176,7 @@ export const TaskTemplates = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input 
               type="text" 
-              placeholder="Search templates by title..."
+              placeholder="Buscar plantillas por título..."
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -257,11 +247,11 @@ export const TaskTemplates = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title={editingTemplate ? 'Edit Template' : 'Add New Template'}
+        title={editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}
       >
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Task Title</label>
+            <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Título de la tarea</label>
             <input 
               required
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -272,7 +262,7 @@ export const TaskTemplates = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Category</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Categoría</label>
               <select 
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none"
                 value={formData.category_id}
@@ -282,19 +272,19 @@ export const TaskTemplates = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Icon</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Icono</label>
               <input 
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 value={formData.icon}
                 onChange={e => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="Emoji icon"
+                placeholder="Emoji icono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">XP Reward</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Recompensa XP</label>
               <input 
                 type="number"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -303,7 +293,7 @@ export const TaskTemplates = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Coins</label>
+              <label className="block text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Monedas</label>
               <input 
                 type="number"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -317,7 +307,7 @@ export const TaskTemplates = () => {
             type="submit"
             className="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:opacity-90 transition-all glow-violet flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : editingTemplate ? 'Update Template' : 'Create Template'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : editingTemplate ? 'Actualizar Plantilla' : 'Crear Plantilla'}
           </button>
         </form>
       </Modal>

@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,13 +9,6 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/dashboard/domain/models/love_note_model.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 
-/// Sobre animado que aparece en el header del home cuando hay una nota de amor.
-///
-/// Flujo:
-/// 1. Entra volando desde la esquina superior derecha (slide + scale + fade).
-/// 2. Flota suavemente en loop mientras no se toca.
-/// 3. Al tocar: se abre con animación y muestra el mensaje con corazones.
-/// 4. Al cerrar: se va volando hacia arriba y se marca como leída.
 class LoveNoteEnvelope extends ConsumerStatefulWidget {
   final LoveNoteModel note;
   final String senderName;
@@ -41,19 +35,18 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
   @override
   void initState() {
     super.initState();
-
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2400),
+      duration: const Duration(milliseconds: 2600),
     )..repeat(reverse: true);
 
     _openController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 480),
+      duration: const Duration(milliseconds: 420),
     );
 
     _confettiController = ConfettiController(
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1400),
     );
   }
 
@@ -66,25 +59,20 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
   }
 
   void _onTap() {
-    if (_isDismissing) return;
+    if (_isOpen || _isDismissing) return;
     HapticFeedback.lightImpact();
     setState(() => _isOpen = true);
     _floatController.stop();
-    _openController.forward();
+    _openController.forward(from: 0);
     _confettiController.play();
   }
 
   Future<void> _onClose() async {
     HapticFeedback.lightImpact();
-    setState(() {
-      _isOpen = false;
-      _isDismissing = true;
-    });
+    setState(() => _isDismissing = true);
     await _openController.reverse();
-    await Future.delayed(const Duration(milliseconds: 100));
-    if (mounted) {
-      ref.read(loveNotesProvider.notifier).markAsRead(widget.note.id);
-    }
+    if (!mounted) return;
+    ref.read(loveNotesProvider.notifier).markAsRead(widget.note.id);
   }
 
   @override
@@ -93,208 +81,246 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        // Confetti de corazones
         Positioned(
-          top: 0,
+          top: -6,
           child: ConfettiWidget(
             confettiController: _confettiController,
             blastDirectionality: BlastDirectionality.explosive,
-            emissionFrequency: 0.08,
-            numberOfParticles: 12,
-            gravity: 0.15,
+            emissionFrequency: 0.06,
+            numberOfParticles: 10,
+            gravity: 0.14,
             colors: const [
-              Color(0xFFEF4444),
-              Color(0xFFF87171),
-              Color(0xFFFCA5A5),
-              Color(0xFFFF8FAB),
-              AppColors.accentOrange,
+              Color(0xFFFF8A5B),
+              Color(0xFFFFB199),
+              Color(0xFFFFD5C7),
+              Color(0xFF8CB6AE),
+              Color(0xFFFFC76B),
             ],
             createParticlePath: _heartPath,
           ),
         ),
-
-        // El sobre / mensaje
-        AnimatedBuilder(
-          animation: _floatController,
-          builder: (context, child) {
-            final floatOffset = _isOpen || _isDismissing
-                ? 0.0
-                : sin(_floatController.value * pi) * 5.0;
-            return Transform.translate(
-              offset: Offset(0, floatOffset),
-              child: child,
-            );
-          },
-          child: GestureDetector(
-            onTap: _isOpen ? null : _onTap,
-            child: _isOpen ? _buildOpenNote() : _buildClosedEnvelope(),
-          ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeIn,
+          child: _isOpen
+              ? _buildOpenNote()
+              : GestureDetector(
+                  key: const ValueKey('closedLoveNote'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _onTap,
+                  child: _buildClosedEnvelope(),
+                ),
         ),
       ],
     );
   }
 
-  // ── Sobre cerrado ────────────────────────────────────────────────────────────
-
   Widget _buildClosedEnvelope() {
-    return SizedBox(
-      width: 100,
-      height: 74,
-      child: Stack(
-        children: [
-          // Imagen custom del sobre (la que vas a crear vos)
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/love_note_envelope.png',
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _buildFallbackEnvelope(),
+    return AnimatedBuilder(
+      animation: _floatController,
+      builder: (context, _) {
+        final pulse = sin(_floatController.value * pi);
+        final sway = sin(_floatController.value * pi * 2);
+
+        return Transform.translate(
+          offset: Offset(0, pulse * -3),
+          child: Transform.rotate(
+            angle: sway * 0.025,
+            child: SizedBox(
+              width: 76,
+              height: 58,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  CustomPaint(
+                    size: const Size(68, 46),
+                    painter: _LoveEnvelopePainter(progress: pulse),
+                  ),
+                  Positioned(
+                    top: 9 - (pulse * 2),
+                    child: Transform.scale(
+                      scale: 0.92 + (pulse * 0.08),
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF7F0),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color:
+                                AppColors.accentOrange.withValues(alpha: 0.28),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentOrange.withValues(
+                                alpha: 0.14,
+                              ),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          size: 12,
+                          color: AppColors.accentOrange.withValues(alpha: 0.92),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 5,
+                    top: 7,
+                    child: Transform.scale(
+                      scale: 0.85 + (pulse * 0.18),
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppColors.accentOrange,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentOrange.withValues(
+                                alpha: 0.35,
+                              ),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          // Badge de punto rojo arriba a la derecha
-          Positioned(
-            top: 2,
-            right: 2,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEF4444),
-                shape: BoxShape.circle,
-              ),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(begin: 0.8, end: 1.2, duration: 900.ms),
-          ),
-        ],
-      ),
+        );
+      },
     )
-        // Entrada: vuela desde arriba-derecha
         .animate()
-        .slideX(begin: 1.2, end: 0, duration: 600.ms, curve: Curves.elasticOut)
-        .fadeIn(duration: 300.ms)
-        .scaleXY(begin: 0.4, end: 1.0, duration: 600.ms, curve: Curves.elasticOut);
+        .slideX(
+            begin: 0.45, end: 0, duration: 560.ms, curve: Curves.easeOutBack)
+        .fadeIn(duration: 260.ms)
+        .scaleXY(
+          begin: 0.74,
+          end: 1,
+          duration: 560.ms,
+          curve: Curves.easeOutBack,
+        );
   }
-
-  Widget _buildFallbackEnvelope() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF1F2), Color(0xFFFFE4E6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.18),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Text('💌', style: TextStyle(fontSize: 36)),
-      ),
-    );
-  }
-
-  // ── Nota abierta ─────────────────────────────────────────────────────────────
 
   Widget _buildOpenNote() {
     return AnimatedBuilder(
       animation: _openController,
-      builder: (context, child) => Opacity(
-        opacity: _openController.value,
-        child: Transform.scale(
-          scale: 0.6 + (_openController.value * 0.4),
-          child: child,
-        ),
-      ),
+      builder: (context, child) {
+        final eased = Curves.easeOutBack.transform(_openController.value);
+        return Opacity(
+          opacity: _openController.value,
+          child: Transform.scale(
+            scale: 0.84 + (eased * 0.16),
+            alignment: Alignment.topRight,
+            child: child,
+          ),
+        );
+      },
       child: Container(
-        width: 220,
-        constraints: const BoxConstraints(maxHeight: 260),
+        key: const ValueKey('openLoveNote'),
+        width: 236,
+        constraints: const BoxConstraints(maxHeight: 270),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFBFB),
-          borderRadius: BorderRadius.circular(24),
+          color: const Color(0xFFFFFBF7),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: const Color(0xFFFCA5A5).withValues(alpha: 0.5),
+            color: AppColors.accentOrange.withValues(alpha: 0.20),
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              color: AppColors.accentOrange.withValues(alpha: 0.14),
+              blurRadius: 26,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.fromLTRB(14, 10, 10, 9),
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFFE4E6), Color(0xFFFFF1F2)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                color: Color(0xFFFFEDE4),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
               ),
               child: Row(
                 children: [
-                  const Text('💌', style: TextStyle(fontSize: 16)),
-                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.local_post_office_rounded,
+                    size: 16,
+                    color: AppColors.accentOrange,
+                  ),
+                  const SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       '${widget.senderName} te escribió',
                       style: const TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF9F1239),
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF5C504C),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: _onClose,
-                    child: const Icon(
+                  IconButton(
+                    onPressed: _onClose,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
+                    icon: const Icon(
                       Icons.close_rounded,
-                      size: 16,
-                      color: Color(0xFFBE123C),
+                      size: 17,
+                      color: Color(0xFF8B7A73),
                     ),
                   ),
                 ],
               ),
             ),
-            // Mensaje
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                widget.note.content,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1C1917),
-                  height: 1.5,
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                child: Text(
+                  widget.note.content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3F3835),
+                    height: 1.42,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
-            // Footer
-            const Padding(
-              padding: EdgeInsets.only(bottom: 14),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('❤️', style: TextStyle(fontSize: 11)),
-                  SizedBox(width: 4),
-                  Text(
-                    'Guardado en tu corazón',
+                  Icon(
+                    Icons.favorite_rounded,
+                    size: 12,
+                    color: AppColors.accentOrange.withValues(alpha: 0.9),
+                  ),
+                  const SizedBox(width: 5),
+                  const Text(
+                    'Guardado en el hogar',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFFBE123C),
-                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF8B7A73),
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -305,8 +331,6 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
       ),
     );
   }
-
-  // ── Forma de corazón para confetti ───────────────────────────────────────────
 
   Path _heartPath(Size size) {
     final path = Path();
@@ -317,5 +341,86 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
     path.cubicTo(w * 1.25, h * 0.55, w * 0.85, 0, w / 2, h * 0.35);
     path.close();
     return path;
+  }
+}
+
+class _LoveEnvelopePainter extends CustomPainter {
+  final double progress;
+
+  const _LoveEnvelopePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(12));
+
+    final shadowPaint = Paint()
+      ..color = AppColors.accentOrange.withValues(alpha: 0.11)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+    canvas.drawRRect(rrect.shift(const Offset(0, 5)), shadowPaint);
+
+    final bodyPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFFFF7F0), Color(0xFFFFE5D8)],
+      ).createShader(rect);
+    canvas.drawRRect(rrect, bodyPaint);
+
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = AppColors.accentOrange.withValues(alpha: 0.20);
+    canvas.drawRRect(rrect, borderPaint);
+
+    final seamPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFFEFB49F).withValues(alpha: 0.78);
+
+    final leftFold = Path()
+      ..moveTo(4, size.height * 0.30)
+      ..lineTo(size.width * 0.50, size.height * 0.62)
+      ..lineTo(size.width - 4, size.height * 0.30);
+    canvas.drawPath(leftFold, seamPaint);
+
+    final bottomFold = Path()
+      ..moveTo(5, size.height - 5)
+      ..lineTo(size.width * 0.50, size.height * 0.53)
+      ..lineTo(size.width - 5, size.height - 5);
+    canvas.drawPath(bottomFold, seamPaint);
+
+    final flapLift = progress * 5;
+    final flapPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFFEEE6), Color(0xFFFFD2C1)],
+      ).createShader(rect);
+    final flap = Path()
+      ..moveTo(6, 5 + flapLift)
+      ..quadraticBezierTo(
+          size.width * 0.50, 0 - flapLift, size.width - 6, 5 + flapLift)
+      ..lineTo(size.width * 0.50, size.height * 0.54 + (progress * 3))
+      ..close();
+    canvas.drawPath(flap, flapPaint);
+    canvas.drawPath(flap, seamPaint);
+
+    final shinePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: 0.50);
+    canvas.drawLine(
+      Offset(size.width * 0.16, size.height * 0.18),
+      Offset(size.width * 0.35, size.height * 0.10),
+      shinePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoveEnvelopePainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }

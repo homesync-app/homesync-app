@@ -46,7 +46,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   String _selectedAvatar = UserAvatar.defaultAvatars.first['emoji'] as String;
   String? _selectedAvatarUrl;
   String _familyRole = 'Padre';
-  String _selectedCreatorMemberType = 'adult';
+  String _selectedCreatorMemberType = 'parent';
 
   // Email resolved from auth on init — used as name fallback when Supabase
   // session isn't ready yet (Firebase fires signedIn before session syncs).
@@ -67,6 +67,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   bool _isLoadingTemplates = true;
   bool _isSaving = false;
   TemplateService get _templateService => ref.read(templateServiceProvider);
+
+  static const _initialTaskCategoryPriority = <String, int>{
+    'limpieza': 1,
+    'baño': 2,
+    'bano': 2,
+    'cocina': 3,
+    'ropa': 4,
+    'residuos': 5,
+    'sala': 6,
+    'dormitorio': 7,
+    'compras': 8,
+    'mascotas': 9,
+    'exterior': 10,
+    'mantenimiento': 11,
+    'niños': 12,
+    'ninos': 12,
+    'administracion': 13,
+  };
   final List<Map<String, dynamic>> _modes = [
     {
       'id': 'couple',
@@ -128,17 +146,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         _selectedAvatarUrl = photoUrl;
       }
 
-      final isGoogleSignIn = firebaseUser.providerData.any(
-        (info) => info.providerId == 'google.com',
-      );
-
       final displayName = firebaseUser.displayName;
-      if (isGoogleSignIn &&
-          displayName != null &&
-          displayName.trim().isNotEmpty) {
-        _nameController.text = displayName.split(RegExp(r'\s+')).first.trim();
+      final firstName = _firstNameFromDisplayName(displayName);
+      if (firstName != null) {
+        _nameController.text = firstName;
       }
-      return;
+      if (_nameController.text.trim().isNotEmpty || currentUser == null) return;
     }
 
     // Fallback: use Supabase user metadata (email/password sign-in).
@@ -163,12 +176,29 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         );
 
     if (displayName.isNotEmpty) {
-      _nameController.text = displayName.split(RegExp(r'\s+')).first.trim();
+      _nameController.text = _firstNameFromDisplayName(displayName) ?? '';
     }
 
     if (profileImage.isNotEmpty) {
       _selectedAvatarUrl = profileImage;
     }
+  }
+
+  String? _firstNameFromDisplayName(String? displayName) {
+    final firstName = displayName?.trim().split(RegExp(r'\s+')).first.trim();
+    return firstName == null || firstName.isEmpty ? null : firstName;
+  }
+
+  List<Category> _sortInitialTaskCategories(List<Category> categories) {
+    return [...categories]..sort((a, b) {
+        final aPriority =
+            _initialTaskCategoryPriority[a.id.toLowerCase()] ?? a.sortOrder;
+        final bPriority =
+            _initialTaskCategoryPriority[b.id.toLowerCase()] ?? b.sortOrder;
+        final priorityCompare = aPriority.compareTo(bPriority);
+        if (priorityCompare != 0) return priorityCompare;
+        return a.sortOrder.compareTo(b.sortOrder);
+      });
   }
 
   String get _resolvedAvatarValue => _selectedAvatarUrl ?? _selectedAvatar;
@@ -199,7 +229,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       }
 
       setState(() {
-        _categories = categories;
+        _categories = _sortInitialTaskCategories(categories);
         _templatesByCategory = templatesByCategory;
         _isLoadingTemplates = false;
       });
@@ -323,7 +353,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     try {
       final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
-      result.fold((failure) => throw failure, (_) {});
+      final joinError = result.fold<String?>(
+        (failure) => failure.message,
+        (_) => null,
+      );
+      if (joinError != null) {
+        if (mounted) {
+          setState(() {
+            _isJoining = false;
+            _joinError = joinError;
+          });
+        }
+        return;
+      }
 
       if (!widget.isAdminPreview) {
         final typedName = _nameController.text.trim();
@@ -955,8 +997,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-              SetupOnboardingIllustration(
+              const SetupOnboardingIllustration(
                 imagePath: 'assets/images/onboarding_welcome_cat.png',
               ),
               const SizedBox(height: 18),
@@ -974,9 +1015,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               Text(
                 'Vamos a dejar tu hogar listo para empezar con tareas, gastos y compras compartidas desde el primer día.',
                 style: TextStyle(
-                  fontSize: 17.5,
-                  height: 1.38,
-                  color: AppColors.textSecondary.withValues(alpha: 0.88),
+                  fontSize: 17,
+                  height: 1.36,
+                  color: AppColors.textSecondary.withValues(alpha: 0.84),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -989,7 +1030,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               const SizedBox(height: 12),
               const SetupSupportBullet(
                 icon: Icons.groups_2_rounded,
-                color: AppColors.sage,
+                color: Color(0xFF6FA097),
                 text: 'Podés crear un hogar nuevo o sumarte con un código.',
               ),
               const SizedBox(height: 30),
@@ -1768,7 +1809,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 if (role == 'Adolescente') {
                                   _selectedCreatorMemberType = 'teen';
                                 } else {
-                                  _selectedCreatorMemberType = 'adult';
+                                  _selectedCreatorMemberType = 'parent';
                                 }
                               }),
                             );

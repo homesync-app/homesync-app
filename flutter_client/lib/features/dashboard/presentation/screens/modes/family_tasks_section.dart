@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -37,8 +38,17 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final tasksAsync = ref.watch(todayTasksProvider);
-    final sectionTitle = widget.isChild ? 'Mis misiones' : 'Hoy en casa';
-    final ctaLabel = widget.isChild ? 'Ver todas' : 'Ver semana';
+    final isTeen = widget.currentMember?.isTeen ?? false;
+    final sectionTitle = widget.isChild
+        ? 'Mis misiones'
+        : isTeen
+            ? 'Tareas del hogar'
+            : 'Hoy en casa';
+    final ctaLabel = widget.isChild
+        ? 'Ver todas'
+        : isTeen
+            ? 'Ver semana'
+            : 'Ver semana';
     return _buildSectionStateSwitcher(
       child: tasksAsync.when(
         loading: () => KeyedSubtree(
@@ -54,9 +64,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         ),
         error: (_, __) => const SizedBox.shrink(key: ValueKey('tasks-error')),
         data: (tasks) {
-          final reviewTasks = !widget.isChild
-              ? tasks.where((task) => task.isPendingApproval).toList()
-              : <TaskModel>[];
+          // Las revisiones viven en Movimientos del hogar. "Hoy en casa"
+          // queda reservado para tareas accionables o programadas.
+          final reviewTasks = <TaskModel>[];
           final todayTasks = tasks
               .where((task) => task.isPending && !task.isPendingApproval)
               .where((task) => task.isDueToday)
@@ -310,7 +320,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
-    final isAdultView = currentMember?.canApprove ?? true;
+    final isAdultView = currentMember?.canApprove ?? false;
     final requiresApprovalSubmission =
         currentMember?.submissionRequiresApproval ?? false;
     final assignedMember =
@@ -327,9 +337,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
     if (task.isPendingApproval) {
       if (isAdultView) {
-        actionIcon = Icons.history_rounded;
-        isActionEnabled = false;
-        onTap = null;
+        actionIcon = Icons.fact_check_rounded;
+        onTap = () => _showApprovalActions(task, members);
       } else if (isChildView) {
         actionIcon = Icons.check_circle_outline_rounded;
         isActionEnabled = false;
@@ -376,6 +385,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       currentUserId: currentUserId,
       actionIcon: actionIcon,
       isActionEnabled: isActionEnabled,
+      canApprovePending: currentMember?.canApprove ?? false,
       onTap: onTap,
     );
   }
@@ -675,57 +685,66 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     final isChild = widget.isChild;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(22, isChild ? 22 : 32, 22, 22),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isChild
             ? const Color(0xFFFFF7ED)
-            : theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(isChild ? 28 : 24),
+            : theme.surfaceContainer.withValues(alpha: 0.34),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isChild
               ? const Color(0xFFFFD7B3)
-              : theme.divider.withValues(alpha: 0.05),
+              : theme.border.withValues(alpha: 0.26),
           width: 1,
         ),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: isChild ? 58 : 48,
-            height: isChild ? 58 : 48,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: isChild
                   ? Colors.white.withValues(alpha: 0.8)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(22),
+                  : AppColors.sage.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               isChild ? Icons.celebration_rounded : Icons.task_alt_rounded,
-              size: isChild ? 30 : 48,
+              size: 18,
               color: isChild
                   ? const Color(0xFFF08B49)
-                  : theme.textSecondary.withValues(alpha: 0.2),
+                  : AppColors.sage.withValues(alpha: 0.78),
             ),
           ),
-          const SizedBox(height: 14),
-          Text(
-            'Todo al día',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: theme.textPrimary,
-              letterSpacing: -0.35,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isChild ? 13 : 14,
-              height: 1.25,
-              fontWeight: isChild ? FontWeight.w700 : FontWeight.w400,
-              color: theme.textSecondary,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Todo al dia',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w900,
+                    color: theme.textPrimary,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.2,
+                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

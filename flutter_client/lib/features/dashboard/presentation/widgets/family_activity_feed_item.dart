@@ -11,7 +11,7 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
-import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -56,13 +56,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
               .where((member) => member.userId == currentUserId)
               .firstOrNull,
         );
-    final canReview = isPendingApproval && (currentMember?.canApprove ?? false);
+    final canReview = isPendingApproval && (currentMember?.isAdmin ?? false);
 
     return InkWell(
       onTap: () => _openDetail(context, ref, type, data),
       borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: EdgeInsets.all(isPendingApproval ? 14 : 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isPendingApproval ? const Color(0xFFFFF8ED) : theme.surface,
           borderRadius: BorderRadius.circular(isPendingApproval ? 24 : 22),
@@ -102,10 +102,14 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           children: [
                             Text(
                               _headlineFor(type, userName),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: theme.textSecondary,
+                                color: isPendingApproval
+                                    ? const Color(0xFFC47A18)
+                                    : theme.textSecondary,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                                 letterSpacing: -0.05,
                               ),
                             ),
@@ -152,13 +156,6 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                         icon: Icons.access_time_rounded,
                         label: _formatTime(createdAt),
                       ),
-                      if (isPendingApproval)
-                        _metaPill(
-                          theme: theme,
-                          color: const Color(0xFFE59A2F),
-                          icon: Icons.hourglass_top_rounded,
-                          label: 'En revision',
-                        ),
                       if (amount != null)
                         _metaPill(
                           theme: theme,
@@ -171,9 +168,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           theme: theme,
                           color: const Color(0xFFE8943A),
                           icon: Icons.star_rounded,
-                          label: isPendingApproval
-                              ? '$xpReward XP por aprobar'
-                              : '+$xpReward XP',
+                          label: '+$xpReward XP',
                         ),
                       if (coinsReward != null && coinsReward > 0)
                         _metaPill(
@@ -181,7 +176,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           color: AppColors.sage,
                           icon: Icons.monetization_on_rounded,
                           label: isPendingApproval
-                              ? '$coinsReward coins por aprobar'
+                              ? '+$coinsReward ${coinsReward == 1 ? "coin" : "coins"}'
                               : '+$coinsReward coins',
                         ),
                     ],
@@ -276,7 +271,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   String _headlineFor(String? type, String userName) {
     switch (type) {
       case 'task_pending_approval':
-        return '$userName la dejo lista';
+        return '$userName dejó lista';
       case 'task':
         return '$userName completó';
       case 'expense':
@@ -353,27 +348,47 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: FilledButton.icon(
-            onPressed: () => _approvePendingTask(context, ref, data),
-            icon: const Icon(Icons.check_rounded, size: 18),
-            label: const Text('Aprobar'),
-            style: FilledButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: Colors.white,
-              visualDensity: VisualDensity.compact,
+          child: SizedBox(
+            height: 46,
+            child: FilledButton.icon(
+              onPressed: () => _approvePendingTask(context, ref, data),
+              icon: const Icon(Icons.check_rounded, size: 17),
+              label: const Text('Aprobar'),
+              style: FilledButton.styleFrom(
+                backgroundColor: accent,
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _rejectPendingTask(context, ref, data),
-            icon: const Icon(Icons.reply_rounded, size: 18),
-            label: const Text('Devolver'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: accent,
-              side: BorderSide(color: accent.withValues(alpha: 0.35)),
-              visualDensity: VisualDensity.compact,
+          child: SizedBox(
+            height: 46,
+            child: OutlinedButton.icon(
+              onPressed: () => _rejectPendingTask(context, ref, data),
+              icon: const Icon(Icons.reply_rounded, size: 17),
+              label: const Text('Devolver'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: accent,
+                side: BorderSide(color: accent.withValues(alpha: 0.35)),
+                textStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
             ),
           ),
         ),
@@ -386,17 +401,16 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> data,
   ) async {
-    final task = _findTask(ref, data['task_id']?.toString());
-    if (task == null) {
+    final taskId = data['task_id']?.toString();
+    if (taskId == null || taskId.isEmpty) {
       _showSnackBar(context, 'No encontramos esa tarea para revisar.');
       return;
     }
 
     try {
-      final result =
-          await ref.read(tasksProvider.notifier).approvePendingTask(task);
+      final ok = await ref.read(taskApprovalActionsProvider).approve(taskId);
       if (!context.mounted) return;
-      if (result == null) {
+      if (!ok) {
         _showSnackBar(context, 'No pudimos aprobar la tarea.');
         return;
       }
@@ -413,15 +427,19 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     WidgetRef ref,
     Map<String, dynamic> data,
   ) async {
-    final task = _findTask(ref, data['task_id']?.toString());
-    if (task == null) {
+    final taskId = data['task_id']?.toString();
+    if (taskId == null || taskId.isEmpty) {
       _showSnackBar(context, 'No encontramos esa tarea para revisar.');
       return;
     }
 
     try {
-      await ref.read(tasksProvider.notifier).rejectPendingTask(task);
+      final ok = await ref.read(taskApprovalActionsProvider).reject(taskId);
       if (!context.mounted) return;
+      if (!ok) {
+        _showSnackBar(context, 'No pudimos devolver la tarea.');
+        return;
+      }
       _refreshAfterReview(ref);
       _showSnackBar(context, 'La tarea volvio para corregir.');
     } catch (error) {
@@ -430,16 +448,12 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     }
   }
 
-  TaskModel? _findTask(WidgetRef ref, String? taskId) {
-    if (taskId == null || taskId.isEmpty) return null;
-    final tasks = ref.read(tasksProvider).valueOrNull ?? const <TaskModel>[];
-    return tasks.where((task) => task.id == taskId).firstOrNull;
-  }
-
   void _refreshAfterReview(WidgetRef ref) {
     ref.invalidate(tasksProvider);
     ref.invalidate(todayTasksProvider);
     ref.invalidate(recentActivityProvider);
+    ref.invalidate(pendingTaskApprovalsProvider);
+    ref.invalidate(userBalanceProvider);
     ref.invalidate(statsControllerProvider);
   }
 

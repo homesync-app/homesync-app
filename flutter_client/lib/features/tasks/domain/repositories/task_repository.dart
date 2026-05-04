@@ -60,6 +60,7 @@ abstract class TaskRepository {
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
     String? status,
+    List<String>? rotationPool,
   });
 
   /// Edit an existing TaskModel's fields.

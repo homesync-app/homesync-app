@@ -14,6 +14,7 @@ import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
+import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
@@ -41,6 +42,7 @@ void main() async {
   GoogleFonts.config.allowRuntimeFetching = false;
 
   final packageInfo = await PackageInfo.fromPlatform();
+  breadcrumb.setAppVersion(packageInfo.version, packageInfo.buildNumber);
   final deviceInfo = DeviceInfoPlugin();
   final deviceContext = <String, dynamic>{};
   try {
@@ -279,6 +281,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   static const _criticalBootstrapTimeout = Duration(milliseconds: 2500);
   bool _startupReady = false;
   late final FirebaseAnalyticsObserver _analyticsObserver;
+  final RouteObserver<ModalRoute<void>> _breadcrumbObserver =
+      BreadcrumbRouteObserver();
 
   // GlobalKey so we can imperatively navigate from outside the build() method.
   static final _navigatorKey = GlobalKey<NavigatorState>();
@@ -523,7 +527,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: 'HomeSync',
       debugShowCheckedModeBanner: false,
       navigatorKey: _navigatorKey,
-      navigatorObservers: [_analyticsObserver],
+      navigatorObservers: [_analyticsObserver, _breadcrumbObserver],
       theme: AppTheme.lightTheme(customPrimary: customPrimary),
       darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
       themeMode: themeMode,

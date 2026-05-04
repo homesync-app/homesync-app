@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -316,11 +317,23 @@ class SupabaseDashboardRepository implements DashboardRepository {
           value.isNotEmpty &&
           value.toLowerCase() != 'un gasto' &&
           value.toLowerCase() != 'gasto') {
-        return value;
+        if (candidate == metadata['category'] ||
+            candidate == metadata['category_name']) {
+          return CategoryMapping.displayName(value);
+        }
+        return _localizedCategoryTitle(value);
       }
     }
 
     return 'Gasto del hogar';
+  }
+
+  String _localizedCategoryTitle(String value) {
+    final lower = value.toLowerCase().trim();
+    if (CategoryMapping.categoryNames.containsKey(lower)) {
+      return CategoryMapping.displayName(value);
+    }
+    return value;
   }
 
   Future<List<Map<String, dynamic>>> _getPendingApprovalActivities(

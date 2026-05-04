@@ -96,6 +96,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/premium_3d_avatars/
+    - assets/images/custom_avatars/
     - assets/fonts/outfit/
 
   fonts:
@@ -116,10 +117,11 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo_premium_transparent.png"
+  image_path: "assets/images/app_icon_full.png"
   min_sdk_android: 21
   adaptive_icon_background: "#FFF7F0"
-  adaptive_icon_foreground: "assets/images/logo_premium_transparent.png"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  remove_alpha_ios: true
 
 flutter_native_splash:
   color: "#FFF7F0"

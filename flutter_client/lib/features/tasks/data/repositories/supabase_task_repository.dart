@@ -473,6 +473,7 @@ class SupabaseTaskRepository
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
     String? status,
+    List<String>? rotationPool,
   }) async {
     return executeWithHandling(
         () async {
@@ -532,6 +533,13 @@ class SupabaseTaskRepository
 
           final userId = await AppIdentityService.instance.refresh();
           if (userId != null) updates['created_by_id'] = userId;
+
+          // Sprint 3 Modo Padres: setear pool de rotacion si fue pedido.
+          if (rotationPool != null && rotationPool.isNotEmpty) {
+            updates['rotation_pool'] = rotationPool;
+            updates['rotation_strategy'] = 'round_robin';
+            updates['rotation_index'] = 0;
+          }
 
           if (updates.isNotEmpty) {
             await _client

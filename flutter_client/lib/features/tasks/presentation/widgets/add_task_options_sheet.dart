@@ -254,6 +254,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Cerrar',
                   onPressed: () => Navigator.pop(context, _addedIds.isNotEmpty),
                   icon: const Icon(Icons.close_rounded),
                 ),
@@ -652,6 +653,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                         ),
                       )
                     : IconButton(
+                        tooltip: 'Agregar tarea',
                         icon: Icon(
                           Icons.add_circle_outline_rounded,
                           color: color,
