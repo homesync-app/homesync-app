@@ -56,6 +56,18 @@ class FakePaginatedRewardRepository implements RewardRepository {
     String targetType = 'all',
   }) async =>
       const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateReward({
+    required String rewardId,
+    required String title,
+    String? description,
+    required int cost,
+    required String icon,
+    String? category,
+    required String targetType,
+  }) async =>
+      const Right(null);
 }
 
 Map<String, dynamic> _rewardJson(int index) {
