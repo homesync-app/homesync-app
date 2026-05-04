@@ -546,44 +546,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     ),
                   ),
                 ),
-                if (!hasIncome) ...[
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: () => EstimatedIncomeSheet.show(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.success.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.add_circle_outline_rounded,
-                            size: 14,
-                            color: AppColors.success.withValues(alpha: 0.8),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Agregá tu ingreso para ver el balance',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.success.withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 18),
                 Row(
                   children: [

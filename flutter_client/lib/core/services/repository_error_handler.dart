@@ -30,12 +30,20 @@ mixin RepositoryErrorHandler {
         }
       }
       log.w('$context: Offline Guard - Refusing request while disconnected');
-      return left(const NetworkFailure('Sin conexion a internet. Verifica tu red.'));
+      return left(
+          const NetworkFailure('Sin conexion a internet. Verifica tu red.'));
     }
 
     try {
       final result = await action();
       return right(result);
+    } on Failure catch (e, stack) {
+      log.w(
+        '$context: Domain Failure - ${e.message}',
+        error: e,
+        stackTrace: stack,
+      );
+      return left(e);
     } on AuthException catch (e, stack) {
       log.w(
         '$context: Auth Error (Supabase) - ${e.message}',
@@ -92,7 +100,8 @@ mixin RepositoryErrorHandler {
       final msg = e.toString();
       if (msg.contains('429') || msg.contains('rate limit')) {
         return left(
-          const ServerFailure('Demasiadas solicitudes. Reintenta en un momento.'),
+          const ServerFailure(
+              'Demasiadas solicitudes. Reintenta en un momento.'),
         );
       }
       if (msg.contains('SocketException') ||
@@ -110,16 +119,19 @@ mixin RepositoryErrorHandler {
               stackTrace: fallbackStack,
             );
             return left(
-              const NetworkFailure('No se pudo establecer conexion. (Sin cache)'),
+              const NetworkFailure(
+                  'No se pudo establecer conexion. (Sin cache)'),
             );
           }
         }
         return left(
-          const NetworkFailure('No se pudo establecer conexion con el servidor.'),
+          const NetworkFailure(
+              'No se pudo establecer conexion con el servidor.'),
         );
       }
       return left(
-        ServerFailure('Error inesperado: ${e.toString().split(':').last.trim()}'),
+        ServerFailure(
+            'Error inesperado: ${e.toString().split(':').last.trim()}'),
       );
     } catch (e, stack) {
       log.f('$context: Fatal Error - $e', error: e, stackTrace: stack);

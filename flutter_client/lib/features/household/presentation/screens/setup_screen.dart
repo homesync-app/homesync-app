@@ -353,7 +353,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
     try {
       final result = await ref.read(joinHouseholdUseCaseProvider).call(code);
-      result.fold((failure) => throw failure, (_) {});
+      final joinError = result.fold<String?>(
+        (failure) => failure.message,
+        (_) => null,
+      );
+      if (joinError != null) {
+        if (mounted) {
+          setState(() {
+            _isJoining = false;
+            _joinError = joinError;
+          });
+        }
+        return;
+      }
 
       if (!widget.isAdminPreview) {
         final typedName = _nameController.text.trim();

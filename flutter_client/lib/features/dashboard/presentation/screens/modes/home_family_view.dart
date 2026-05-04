@@ -1,24 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
-import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
-import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'family_finance_section.dart';
 import 'family_tasks_section.dart';
@@ -59,6 +55,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
     final isTeen = currentMember?.isTeen ?? false;
+    final hasSharedAdultFinance =
+        members.where((member) => member.isAdult).length > 1;
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     return RefreshIndicator(
@@ -69,13 +67,13 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       color: AppColors.primary,
       backgroundColor: theme.surface,
       child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         children: [
           _buildStaggeredSection(
             delayMs: 0,
             child: _buildHeader(theme, caps),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: isChild ? 20 : 16),
           if (memberNotFound)
             _buildStaggeredSection(
               delayMs: 10,
@@ -104,15 +102,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               child: _buildActivitySection(theme, title: 'Mis logros'),
             ),
           ] else if (isTeen) ...[
-            _buildStaggeredSection(
-              delayMs: 60,
-              child: _buildAdultHomeWelcome(theme),
-            ),
-            const SizedBox(height: 28),
-            _buildStaggeredSection(
-              delayMs: 80,
-              child: _buildPersonalFinanceCard(theme),
-            ),
             if (caps.showTasks)
               _buildStaggeredSection(
                 delayMs: 140,
@@ -122,36 +111,29 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   isChild: false,
                 ),
               ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 22),
             _buildStaggeredSection(
               delayMs: 200,
               child: _buildShoppingSection(theme),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 22),
             _buildStaggeredSection(
               delayMs: 260,
               child:
                   _buildActivitySection(theme, title: 'Movimientos del hogar'),
             ),
           ] else ...[
-            _buildStaggeredSection(
-              delayMs: 60,
-              child: _buildAdultHomeWelcome(theme),
-            ),
-            const SizedBox(height: 28),
-            const SizedBox(height: 28),
-            _buildStaggeredSection(
-              delayMs: 140,
-              child: FamilyFinanceSection(
-                caps: caps,
-                currentMember: currentMember,
+            if (hasSharedAdultFinance) ...[
+              _buildStaggeredSection(
+                delayMs: 140,
+                child: FamilyFinanceSection(
+                  caps: caps,
+                  currentMember: currentMember,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildStaggeredSection(
-              delayMs: 160,
-              child: _buildDebtSettlement(theme),
-            ),
+              const SizedBox(height: 24),
+            ] else
+              const SizedBox(height: 18),
             if (caps.showTasks)
               _buildStaggeredSection(
                 delayMs: 180,
@@ -161,7 +143,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   isChild: false,
                 ),
               ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 26),
             _buildStaggeredSection(
               delayMs: 240,
               child:
@@ -176,10 +158,17 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
     final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final balanceAsync = ref.watch(userBalanceProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
+    final showDate = currentMember?.isChild ?? false;
+    final showProgress =
+        (currentMember?.isTeen ?? false) || (currentMember?.isChild ?? false);
+    final coins =
+        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
+    final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
 
     return Row(
       children: [
@@ -200,23 +189,44 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   letterSpacing: -1.0,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                DateFormat('EEEE, d MMM', 'es_AR')
-                    .format(DateTime.now())
-                    ._capitalize(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: theme.textSecondary,
+              if (showDate) ...[
+                const SizedBox(height: 6),
+                Text(
+                  DateFormat('EEEE, d MMM', 'es_AR')
+                      .format(DateTime.now())
+                      ._capitalize(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: theme.textSecondary,
+                  ),
                 ),
-              ),
+              ],
+              if (showProgress) ...[
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildHeaderMetricChip(
+                      icon: Icons.monetization_on_rounded,
+                      label: 'Monedas',
+                      value: '$coins',
+                      color: AppColors.accentGold,
+                    ),
+                    _buildHeaderMetricChip(
+                      icon: Icons.star_rounded,
+                      label: 'XP',
+                      value: '$xp',
+                      color: AppColors.accentPurple,
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(width: 12),
-        _buildNotificationBadge(theme),
-        const SizedBox(width: 8),
         GestureDetector(
           onTap: widget.onAvatarTap,
           child: Transform.translate(
@@ -239,90 +249,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
         ),
       ],
-    );
-  }
-
-  int _unreadNotificationCount = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUnreadNotificationCount();
-  }
-
-  Future<void> _loadUnreadNotificationCount() async {
-    try {
-      final userId = ref.read(currentUserIdProvider);
-      if (userId == null || userId.isEmpty) return;
-
-      final data = await ref
-          .read(supabaseClientProvider)
-          .from('notifications')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_read', false);
-      final count = (data as List).length;
-      if (mounted && count != _unreadNotificationCount) {
-        setState(() => _unreadNotificationCount = count);
-      }
-    } catch (_) {}
-  }
-
-  Widget _buildNotificationBadge(AppThemeColors theme) {
-    return AnimatedPress(
-      onPressed: () async {
-        await Navigator.push(
-          context,
-          AppTransitions.slideHorizontal(page: const NotificationsScreen()),
-        );
-        _loadUnreadNotificationCount();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: theme.surfaceContainer,
-          shape: BoxShape.circle,
-        ),
-        child: Stack(
-          children: [
-            Icon(
-              _unreadNotificationCount > 0
-                  ? Icons.notifications_rounded
-                  : Icons.notifications_outlined,
-              color: _unreadNotificationCount > 0
-                  ? AppColors.primary
-                  : theme.textPrimary,
-              size: 26,
-            ),
-            if (_unreadNotificationCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.error,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints:
-                      const BoxConstraints(minWidth: 16, minHeight: 16),
-                  child: Center(
-                    child: Text(
-                      _unreadNotificationCount > 9
-                          ? '9+'
-                          : '$_unreadNotificationCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -381,51 +307,45 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildAdultHomeWelcome(AppThemeColors theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Todo lo importante',
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.55,
+  Widget _buildHeaderMetricChip({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: context.theme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
           ),
-        ).animate().fadeIn(delay: 80.ms),
-        Text(
-          'del hogar',
-          style: TextStyle(
-            color: theme.textPrimary.withValues(alpha: 0.7),
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: context.theme.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              height: 1,
+            ),
           ),
-        ).animate().fadeIn(delay: 160.ms),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 1.5,
-              color: theme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'organizado para ',
-              style: TextStyle(color: theme.textSecondary, fontSize: 14),
-            ),
-            Text(
-              'la familia',
-              style: TextStyle(
-                color: theme.primary,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(delay: 240.ms),
-      ],
+        ],
+      ),
     );
   }
 
@@ -565,19 +485,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
-  Widget _buildDebtSettlement(AppThemeColors theme) {
-    final balancesAsync = ref.watch(expenseBalancesProvider);
-
-    return balancesAsync.when(
-      data: (balances) {
-        if (balances.length < 3) return const SizedBox.shrink();
-        return DebtSettlementSection(balances: balances);
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-
   Widget _buildSectionHeaderLoading() {
     return const Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -652,6 +559,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox.shrink(key: ValueKey('shopping-error')),
         data: (items) {
           final pending = items.where((item) => !item.completed).toList();
+          final visiblePending = pending.take(3).toList();
+          final remainingPending = pending.length - visiblePending.length;
           final header = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -686,21 +595,39 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   header,
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.surfaceContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
                     ),
-                    child: Text(
-                      'No hay compras pendientes.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.textSecondary,
+                    decoration: BoxDecoration(
+                      color: theme.surfaceContainer.withValues(alpha: 0.34),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: theme.border.withValues(alpha: 0.26),
                       ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 20,
+                          color: AppColors.sage.withValues(alpha: 0.78),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Lista al dia',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: theme.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -721,47 +648,104 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: Column(
-                    children: pending.take(3).map((item) {
-                      final quantityLabel = item.quantity != null
-                          ? '${item.quantity} ${item.unit ?? ''}'.trim()
-                          : null;
+                    children: [
+                      ...visiblePending.map((item) {
+                        final quantityLabel = item.quantity != null
+                            ? '${item.quantity} ${item.unit ?? ''}'.trim()
+                            : null;
 
-                      return ListTile(
-                        leading: Text(
-                          item.emoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        title: Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: theme.textPrimary,
+                        return ListTile(
+                          leading: Text(
+                            item.emoji,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          title: Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                          subtitle:
+                              quantityLabel != null && quantityLabel.isNotEmpty
+                                  ? Text(quantityLabel)
+                                  : null,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: theme.textMuted,
+                            size: 20,
+                          ),
+                          onTap: () {
+                            final index = indexForMainTab(
+                              caps,
+                              MainTab.shopping,
+                              currentMember: _currentMember,
+                            );
+                            if (index >= 0) {
+                              ref
+                                  .read(bottomNavIndexProvider.notifier)
+                                  .setIndex(index);
+                            }
+                          },
+                        );
+                      }),
+                      if (remainingPending > 0)
+                        InkWell(
+                          onTap: () {
+                            final index = indexForMainTab(
+                              caps,
+                              MainTab.shopping,
+                              currentMember: _currentMember,
+                            );
+                            if (index >= 0) {
+                              ref
+                                  .read(bottomNavIndexProvider.notifier)
+                                  .setIndex(index);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(18),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 14, 14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        theme.primary.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.more_horiz_rounded,
+                                    size: 18,
+                                    color: theme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    remainingPending == 1
+                                        ? 'Hay 1 producto más en la lista'
+                                        : 'Hay $remainingPending productos más en la lista',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: theme.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 20,
+                                  color: theme.textMuted,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        subtitle:
-                            quantityLabel != null && quantityLabel.isNotEmpty
-                                ? Text(quantityLabel)
-                                : null,
-                        trailing: Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.textMuted,
-                          size: 20,
-                        ),
-                        onTap: () {
-                          final index = indexForMainTab(
-                            caps,
-                            MainTab.shopping,
-                            currentMember: _currentMember,
-                          );
-                          if (index >= 0) {
-                            ref
-                                .read(bottomNavIndexProvider.notifier)
-                                .setIndex(index);
-                          }
-                        },
-                      );
-                    }).toList(),
+                    ],
                   ),
                 ),
               ],
@@ -915,21 +899,21 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildActivityEmptyState(AppThemeColors theme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
+        color: theme.surfaceContainer.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: theme.divider.withValues(alpha: 0.06)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: theme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(13),
             ),
             child: Icon(
               Icons.timeline_rounded,
@@ -945,18 +929,18 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 Text(
                   'Todavía no hay actividad reciente',
                   style: TextStyle(
-                    fontSize: 15.5,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w800,
                     color: theme.textPrimary,
                     letterSpacing: -0.35,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
-                  'Cuando alguien complete una tarea, registre un gasto o marque una compra, lo vas a ver acá.',
+                  'Las tareas, gastos y compras van a aparecer acá.',
                   style: TextStyle(
-                    fontSize: 12.5,
-                    height: 1.3,
+                    fontSize: 12,
+                    height: 1.22,
                     color: theme.textSecondary,
                   ),
                 ),
@@ -965,104 +949,6 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPersonalFinanceCard(AppThemeColors theme) {
-    final balanceAsync = ref.watch(userBalanceProvider);
-    final coins =
-        balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
-    final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.surface, theme.elevatedSurface],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: theme.border.withValues(alpha: 0.68),
-          width: 1.05,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowBase.withValues(alpha: 0.048),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildInlineMetric(
-              context,
-              icon: Icons.monetization_on_rounded,
-              label: 'Monedas',
-              value: '$coins',
-              color: AppColors.accentGold,
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 48,
-            color: theme.border.withValues(alpha: 0.32),
-          ),
-          Expanded(
-            child: _buildInlineMetric(
-              context,
-              icon: Icons.star_rounded,
-              label: 'XP',
-              value: '$xp',
-              color: AppColors.accentPurple,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInlineMetric(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    final theme = context.theme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: theme.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 

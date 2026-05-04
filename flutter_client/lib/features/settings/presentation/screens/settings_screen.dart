@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
+import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
@@ -135,7 +137,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ]);
       final household = householdResult[0] as Map<String, dynamic>?;
       final invitation = householdResult[1] as Map<String, dynamic>?;
-      final membersResult = householdResult[2];
+      final membersResult =
+          householdResult[2] as Either<Failure, List<Map<String, dynamic>>>;
       final membersList = membersResult.match(
         (failure) {
           log.e('Error loading members: ${failure.message}');
@@ -524,6 +527,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       memberCount: memberCount,
       members: members,
       tasksEnabled: _tasksEnabled,
+      showTasksToggle: showTasksToggle,
       onTasksEnabledChanged: (showTasksToggle && (isOwner || isAdminQaUser))
           ? _onTasksToggled
           : null,
@@ -834,8 +838,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _getMemberRoleLabel(Map<String, dynamic> member, String? role) {
-    if (member['display_role'] != null && member['display_role'].isNotEmpty) {
-      return member['display_role'];
+    final displayRole = member['display_role'] as String?;
+    if (displayRole != null && displayRole.isNotEmpty) {
+      return displayRole;
     }
     if (role == 'owner') return 'Propietario';
     switch (_householdType) {
@@ -1029,7 +1034,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
       // Menores ven el candado pero no se redirigen al paywall — se les indica
       // que deben pedirle a sus padres que activen el plan.
-      onLockedTap: isMinor ? _showMinorPremiumSnackbar : () => PremiumPaywall.show(context),
+      onLockedTap: isMinor
+          ? _showMinorPremiumSnackbar
+          : () => PremiumPaywall.show(context),
       onPaletteTap: (palette) {
         HapticFeedback.lightImpact();
         ref.read(primaryColorProvider.notifier).setColor(palette.primary);
@@ -1360,8 +1367,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -1394,8 +1400,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           await controller.reset();
           ref.invalidate(coupleHomeTourSeenProvider);
           if (!mounted) return;
-          final tasks =
-              ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
+          final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
           controller.start(hasTasks: tasks?.isNotEmpty ?? false);
           Navigator.of(context).pop();
         },
