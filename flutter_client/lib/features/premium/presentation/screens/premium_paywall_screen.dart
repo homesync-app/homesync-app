@@ -39,6 +39,7 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Cerrar',
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),

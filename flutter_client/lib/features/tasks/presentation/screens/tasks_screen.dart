@@ -416,6 +416,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                     .text
                                                                     .isNotEmpty
                                                                 ? IconButton(
+                                                                    tooltip: 'Limpiar búsqueda',
                                                                     onPressed:
                                                                         () {
                                                                       _searchController

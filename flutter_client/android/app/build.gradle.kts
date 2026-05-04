@@ -80,6 +80,10 @@ android {
 }
 
 dependencies {
+    // Emoji2: renderiza emojis nuevos en Android < 10 sin actualización del sistema
+    implementation("androidx.emoji2:emoji2:1.4.0")
+    implementation("androidx.emoji2:emoji2-bundled:1.4.0")
+
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
 

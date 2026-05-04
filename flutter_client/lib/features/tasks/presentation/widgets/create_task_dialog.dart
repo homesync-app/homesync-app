@@ -798,6 +798,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           child: Row(
             children: [
               IconButton(
+                tooltip: 'Disminuir',
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.remove,
@@ -822,6 +823,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 ),
               ),
               IconButton(
+                tooltip: 'Aumentar',
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.add,

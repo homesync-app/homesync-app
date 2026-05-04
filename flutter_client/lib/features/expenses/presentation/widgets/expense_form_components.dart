@@ -31,6 +31,7 @@ class ExpenseFormHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
+                tooltip: 'Cerrar',
                 icon: const Icon(
                   Icons.close_rounded,
                   color: AppColors.textPrimary,
@@ -39,6 +40,7 @@ class ExpenseFormHeader extends StatelessWidget {
               ),
               if (isEditing)
                 IconButton(
+                  tooltip: 'Eliminar',
                   icon: const Icon(
                     Icons.delete_outline_rounded,
                     color: AppColors.accentRed,

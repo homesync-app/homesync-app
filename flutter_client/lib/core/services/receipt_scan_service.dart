@@ -33,7 +33,8 @@ class ReceiptScanService {
       source: source,
       maxWidth: 1920,
       maxHeight: 1920,
-      imageQuality: 90, // calidad inicial antes de comprimir
+      imageQuality: 90,
+      requestFullMetadata: false, // usa Android Photo Picker sin pedir permisos de galería completa
     );
     if (picked == null) return null;
 

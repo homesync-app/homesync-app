@@ -675,6 +675,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ? Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: IconButton(
+                  tooltip: _obscurePassword ? 'Mostrar contraseña' : 'Ocultar contraseña',
                   icon: Icon(
                     _obscurePassword
                         ? Icons.visibility_outlined

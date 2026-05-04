@@ -65,6 +65,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 ),
               ),
               IconButton(
+                tooltip: 'Expandir',
                 onPressed: _toggleExpanded,
                 style: IconButton.styleFrom(
                   backgroundColor: theme.surface,

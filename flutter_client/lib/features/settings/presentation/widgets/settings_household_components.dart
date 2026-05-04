@@ -474,6 +474,7 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
               width: 32,
               height: 32,
               child: IconButton(
+                tooltip: 'Editar rol',
                 icon: Icon(
                   Icons.edit_outlined,
                   size: 16,
@@ -494,6 +495,7 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
               width: 32,
               height: 32,
               child: IconButton(
+                tooltip: 'Eliminar miembro',
                 icon: Icon(
                   Icons.person_remove_outlined,
                   size: 18,
@@ -514,6 +516,7 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
               width: 32,
               height: 32,
               child: IconButton(
+                tooltip: 'Eliminar miembro de prueba',
                 icon: Icon(
                   Icons.delete_forever_rounded,
                   size: 18,
@@ -929,6 +932,7 @@ void showSettingsInvitationCodeSheet(
                       ),
                       const SizedBox(width: 8),
                       IconButton(
+                        tooltip: 'Copiar código',
                         onPressed: onCopyCode,
                         icon: Icon(Icons.copy_rounded, color: theme.primary),
                         style: IconButton.styleFrom(

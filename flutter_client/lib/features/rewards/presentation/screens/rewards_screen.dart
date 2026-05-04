@@ -755,6 +755,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 top: -4,
                 right: 2,
                 child: IconButton(
+                  tooltip: 'Eliminar recompensa',
                   onPressed: () => _confirmDeleteReward(reward),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(

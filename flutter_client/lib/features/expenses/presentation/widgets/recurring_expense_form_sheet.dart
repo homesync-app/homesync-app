@@ -416,6 +416,7 @@ class _RecurringExpenseFormSheetState
             ),
             const SizedBox(width: 12),
             IconButton(
+              tooltip: 'Cerrar',
               icon: const Icon(
                 Icons.close_rounded,
                 color: AppColors.textMuted,
