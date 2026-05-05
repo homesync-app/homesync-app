@@ -44,7 +44,7 @@ final householdCapabilitiesProvider =
 // ignore: unused_element
 typedef HouseholdCapabilitiesRef
     = AutoDisposeProviderRef<HouseholdCapabilities>;
-String _$householdMembersHash() => r'22098bf9455a40129f6ebb9c65afea9439c40f95';
+String _$householdMembersHash() => r'1bc686b6717732ca71993b074cf18da4eae5585d';
 
 /// See also [HouseholdMembers].
 @ProviderFor(HouseholdMembers)

@@ -24,7 +24,7 @@ final filteredRewardsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef FilteredRewardsRef = AutoDisposeFutureProviderRef<List<RewardModel>>;
-String _$rewardsHash() => r'37ddbc4e08cfa64ef178b72dcfac2d25e6d97437';
+String _$rewardsHash() => r'9c3d6f7edb4b745ba2047019c40533e2c6e2b3b8';
 
 /// See also [Rewards].
 @ProviderFor(Rewards)

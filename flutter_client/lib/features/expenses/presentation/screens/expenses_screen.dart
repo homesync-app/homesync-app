@@ -507,6 +507,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
     final hasIncome = income > 0;
+    final hasPending = projectedPending > 0;
+    final mainLabel = hasIncome
+        ? 'TU BALANCE ACTUAL'
+        : hasPending
+            ? 'TOTAL PREVISTO DEL MES'
+            : 'GASTOS DEL MES';
+    final mainAmount = hasIncome
+        ? balance
+        : hasPending
+            ? expense + projectedPending
+            : expense;
 
     return Container(
       width: double.infinity,
@@ -524,7 +535,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  hasIncome ? 'TU BALANCE ACTUAL' : 'GASTOS DEL MES',
+                  mainLabel,
                   style: TextStyle(
                     color: theme.textMuted,
                     fontSize: 11.5,
@@ -537,7 +548,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '\$ ${_formatCurrency(hasIncome ? balance : expense)}',
+                    '\$ ${_formatCurrency(mainAmount)}',
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 40,
@@ -546,85 +557,99 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    if (hasIncome) ...[
+                if (hasIncome || hasPending) ...[
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
                       Expanded(
                         child: _buildPremiumStatTile(
-                          isIncomeEstimated ? 'Ingreso estimado' : 'Ingresos',
-                          income,
-                          AppColors.success,
-                          isIncomeEstimated
-                              ? Icons.edit_rounded
-                              : Icons.trending_up_rounded,
-                          onTap: isIncomeEstimated
-                              ? () => EstimatedIncomeSheet.show(context)
-                              : () => _showIncomeBreakdownSheet(income),
+                          hasIncome
+                              ? (isIncomeEstimated
+                                  ? 'Ingreso estimado'
+                                  : 'Ingresos')
+                              : 'Pagado',
+                          hasIncome ? income : expense,
+                          hasIncome ? AppColors.success : AppColors.primary,
+                          hasIncome
+                              ? (isIncomeEstimated
+                                  ? Icons.edit_rounded
+                                  : Icons.trending_up_rounded)
+                              : Icons.receipt_long_rounded,
+                          onTap: hasIncome
+                              ? (isIncomeEstimated
+                                  ? () => EstimatedIncomeSheet.show(context)
+                                  : () => _showIncomeBreakdownSheet(income))
+                              : () => _showExpensesBreakdownSheet(expense),
                         ),
                       ),
                       const SizedBox(width: 16),
-                    ],
-                    Expanded(
-                      child: _buildPremiumStatTile(
-                        'Gastos',
-                        expense,
-                        AppColors.primary,
-                        Icons.trending_down_rounded,
-                        onTap: () => _showExpensesBreakdownSheet(expense),
+                      Expanded(
+                        child: _buildPremiumStatTile(
+                          hasIncome ? 'Gastos' : 'Pendiente',
+                          hasIncome ? expense : projectedPending,
+                          hasIncome
+                              ? AppColors.primary
+                              : AppColors.accentOrange,
+                          hasIncome
+                              ? Icons.trending_down_rounded
+                              : Icons.event_available_rounded,
+                          onTap: hasIncome
+                              ? () => _showExpensesBreakdownSheet(expense)
+                              : () =>
+                                  _showPendingBreakdownSheet(projectedPending),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: theme.surfaceVariant.withValues(alpha: 0.38),
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(30)),
-              border: Border(
-                top: BorderSide(
-                  color: theme.border.withValues(alpha: 0.55),
+          if (hasIncome)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: theme.surfaceVariant.withValues(alpha: 0.38),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(30)),
+                border: Border(
+                  top: BorderSide(
+                    color: theme.border.withValues(alpha: 0.55),
+                  ),
                 ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildProjectionStat(
-                    'Tu parte pendiente',
-                    projectedPending,
-                    theme.textSecondary,
-                    onTap: () => _showPendingBreakdownSheet(projectedPending),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildProjectionStat(
+                      'Tu parte pendiente',
+                      projectedPending,
+                      theme.textSecondary,
+                      onTap: () => _showPendingBreakdownSheet(projectedPending),
+                    ),
                   ),
-                ),
-                Container(
-                  height: 28,
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(horizontal: 18),
-                  color: theme.border.withValues(alpha: 0.62),
-                ),
-                Expanded(
-                  child: _buildProjectionStat(
-                    hasIncome ? 'Cierre estimado' : 'Pendiente de pagar',
-                    hasIncome ? projectedBalance : projectedPending,
-                    theme.textPrimary,
-                    isBold: true,
-                    onTap: () => hasIncome
-                        ? _showProjectionBreakdownSheet(
-                            balance,
-                            projectedPending,
-                            projectedBalance,
-                          )
-                        : _showPendingBreakdownSheet(projectedPending),
+                  Container(
+                    height: 28,
+                    width: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 18),
+                    color: theme.border.withValues(alpha: 0.62),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: _buildProjectionStat(
+                      'Cierre estimado',
+                      projectedBalance,
+                      theme.textPrimary,
+                      isBold: true,
+                      onTap: () => _showProjectionBreakdownSheet(
+                        balance,
+                        projectedPending,
+                        projectedBalance,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     ).animateEntrance(delay: 100);

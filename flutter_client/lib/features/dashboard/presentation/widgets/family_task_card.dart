@@ -144,16 +144,16 @@ class FamilyTaskCard extends StatelessWidget {
               ),
             ),
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: isActionEnabled
-                    ? accent.withValues(alpha: 0.09)
+                    ? accent.withValues(alpha: 0.055)
                     : theme.textMuted.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isActionEnabled
-                      ? accent.withValues(alpha: 0.12)
+                      ? accent.withValues(alpha: 0.10)
                       : theme.textMuted.withValues(alpha: 0.12),
                 ),
               ),
@@ -164,8 +164,10 @@ class FamilyTaskCard extends StatelessWidget {
                     )
                   : Icon(
                       actionIcon,
-                      size: 18,
-                      color: isActionEnabled ? accent : theme.textMuted,
+                      size: 17,
+                      color: isActionEnabled
+                          ? accent.withValues(alpha: 0.88)
+                          : theme.textMuted,
                     ),
             ),
           ],

@@ -262,8 +262,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       // Logging asíncrono — no bloquea la UI ni rompe si falla.
       final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
-      final householdId =
-          ref.read(currentHouseholdProvider).valueOrNull?.id;
+      final householdId = ref.read(currentHouseholdProvider).valueOrNull?.id;
       OcrLogService(Supabase.instance.client)
           .logScan(
         merchant: result.merchant,
@@ -423,9 +422,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       final caps = ref.read(householdCapabilitiesProvider);
-      final showSplit = caps.showExpensesSplit;
-
       final household = ref.read(currentHouseholdProvider).valueOrNull;
+      final showSplit = _shouldShowSplitControls(caps);
       final splitResult = ExpenseSplitBuilder.build(
         showSplit: showSplit,
         splitMode: _splitMode,
@@ -451,6 +449,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       final splits = splitResult.splits;
+      final effectiveSplitType =
+          !showSplit && household?.householdType == 'family'
+              ? SplitType.fixed
+              : (!caps.showExpensesSplit ? SplitType.personal : _splitMode);
 
       final descriptionParts = <String>[];
       if (_selectedShoppingItems.isNotEmpty) {
@@ -478,7 +480,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         paidBy: _paidByUserId,
         paidAt: _selectedDate,
         description: description.isEmpty ? null : description,
-        splitType: !caps.showExpensesSplit ? SplitType.personal : _splitMode,
+        splitType: effectiveSplitType,
         type: _isIncome ? 'income' : 'expense',
         splits: splits,
         receiptPath: receiptPath,
@@ -601,7 +603,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         final financeMembers = _financeMembers(members);
 
         final caps = ref.watch(householdCapabilitiesProvider);
-        final showSplit = caps.showExpensesSplit;
+        final showSplit = _shouldShowSplitControls(caps);
 
         final payer = financeMembers.firstWhere(
           (m) => m.userId == _paidByUserId,
@@ -855,6 +857,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     _fixedSplitManager.dismissKeyboard();
   }
 
+  bool _shouldShowSplitControls(HouseholdCapabilities caps) {
+    final household = ref.read(currentHouseholdProvider).valueOrNull;
+    if (household?.householdType == 'family' &&
+        household?.financeMode != 'divided') {
+      return false;
+    }
+    return caps.showExpensesSplit;
+  }
+
   Widget _buildTypeToggle() {
     return Container(
       width: double.infinity,
@@ -1048,7 +1059,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     List<MemberModel> members,
   ) {
     final caps = ref.watch(householdCapabilitiesProvider);
-    final showSplit = caps.showExpensesSplit;
+    final showPayer = caps.showExpensesSplit;
 
     return Row(
       children: [
@@ -1060,7 +1071,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             onTap: _selectDate,
           ),
         ),
-        if (showSplit) ...[
+        if (showPayer) ...[
           const SizedBox(width: 16),
           Expanded(
             child: _buildActionTile(
@@ -1208,8 +1219,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                       Set<ShoppingItemModel>.from(_selectedShoppingItems);
                   final prevMatched =
                       Set<ShoppingItemModel>.from(_ocrMatchedShoppingItems);
-                  final prevUnmatched =
-                      List<String>.from(_unmatchedOcrItems);
+                  final prevUnmatched = List<String>.from(_unmatchedOcrItems);
 
                   setState(() {
                     _selectedShoppingItems.clear();

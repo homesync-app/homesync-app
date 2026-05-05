@@ -7,6 +7,7 @@ class HouseholdModel {
   final String name;
   final String householdType;
   final bool tasksEnabled;
+  final String financeMode;
   final double defaultSplitRatio;
   final DateTime? createdAt;
 
@@ -20,6 +21,7 @@ class HouseholdModel {
     required this.name,
     required this.householdType,
     this.tasksEnabled = true,
+    this.financeMode = 'divided',
     this.defaultSplitRatio = 0.5,
     this.createdAt,
     this.taskApprovalMode = 'off',
@@ -31,12 +33,16 @@ class HouseholdModel {
       name: json['name'] as String? ?? 'Mi Hogar',
       householdType: json['household_type'] as String? ?? 'couple',
       tasksEnabled: json['tasks_enabled'] as bool? ?? true,
-      defaultSplitRatio: (json['default_split_ratio'] as num? ?? 0.5).toDouble(),
+      financeMode: json['finance_mode'] as String? ??
+          ((json['household_type'] as String?) == 'family'
+              ? 'shared'
+              : 'divided'),
+      defaultSplitRatio:
+          (json['default_split_ratio'] as num? ?? 0.5).toDouble(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
-      taskApprovalMode:
-          (json['task_approval_mode'] as String?) ?? 'off',
+      taskApprovalMode: (json['task_approval_mode'] as String?) ?? 'off',
     );
   }
 

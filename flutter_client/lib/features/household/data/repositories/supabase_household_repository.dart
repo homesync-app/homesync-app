@@ -354,6 +354,24 @@ class SupabaseHouseholdRepository
   }
 
   @override
+  Future<Either<Failure, void>> updateFinanceSettings(
+    String householdId, {
+    required String financeMode,
+    required double defaultSplitRatio,
+  }) async {
+    return executeWithHandling(
+      () async {
+        await _client.from(AppConstants.tableHouseholds).update({
+          'finance_mode': financeMode,
+          'default_split_ratio': defaultSplitRatio,
+        }).eq('id', householdId);
+      },
+      context: 'SupabaseHouseholdRepository.updateFinanceSettings',
+      isOnline: _isOnline,
+    );
+  }
+
+  @override
   Future<Either<Failure, void>> updateHouseholdType(
     String householdId,
     String type,

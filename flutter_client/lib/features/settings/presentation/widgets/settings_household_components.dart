@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -43,7 +43,7 @@ class SettingsNoHouseholdCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Â¡Comienza tu equipo!',
+            'Ã‚Â¡Comienza tu equipo!',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
@@ -840,7 +840,7 @@ void showSettingsEditHouseholdMenu(
                 onInvitationCode();
               },
             ),
-            if (householdType == 'couple')
+            if (householdType == 'couple' || householdType == 'family')
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(10),
@@ -853,8 +853,16 @@ void showSettingsEditHouseholdMenu(
                     color: AppColors.accentTeal,
                   ),
                 ),
-                title: const Text('DivisiÃ³n de gastos'),
-                subtitle: const Text('Ajustar porcentaje de pareja'),
+                title: Text(
+                  householdType == 'family'
+                      ? 'Finanzas familiares'
+                      : 'División de gastos',
+                ),
+                subtitle: Text(
+                  householdType == 'family'
+                      ? 'Elegir economía compartida o dividida'
+                      : 'Ajustar porcentaje de pareja',
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   onCoupleSplit();
@@ -977,7 +985,7 @@ void showSettingsInvitationCodeSheet(
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        tooltip: 'Copiar código',
+                        tooltip: 'Copiar cÃ³digo',
                         onPressed: onCopyCode,
                         icon: Icon(Icons.copy_rounded, color: theme.primary),
                         style: IconButton.styleFrom(

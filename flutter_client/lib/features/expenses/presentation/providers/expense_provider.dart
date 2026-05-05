@@ -49,7 +49,8 @@ GetBalancesUseCase getBalancesUseCase(GetBalancesUseCaseRef ref) {
 
 @riverpod
 GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
-    GetPersonalFinanceSummaryUseCaseRef ref,) {
+  GetPersonalFinanceSummaryUseCaseRef ref,
+) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetPersonalFinanceSummaryUseCase(repo);
 }
@@ -365,17 +366,22 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.saveTemplate(template);
 
-    result.fold(
+    await result.fold(
       (l) {
         log.w('Save template failed: ${l.message}');
         throw l;
       },
-      (r) {
+      (r) async {
+        final householdId = await ref.read(householdIdProvider.future);
+        if (householdId != null) {
+          await repo.processRecurringExpenses(householdId);
+        }
         if (ref.read(isOnlineProvider)) {
           ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
+          ref.invalidate(personalFinanceSummaryProvider);
         }
       },
     );
@@ -426,7 +432,8 @@ double _projectedShareForUser({
 
 @riverpod
 Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
-    MonthlyPendingPlannedExpensesRef ref,) async {
+  MonthlyPendingPlannedExpensesRef ref,
+) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return const <FeedItemModel>[];
 
@@ -447,11 +454,13 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
 
 @riverpod
 Future<MonthlyProjectionData> monthlyProjection(
-    MonthlyProjectionRef ref,) async {
+  MonthlyProjectionRef ref,
+) async {
   final feedAsync = await ref.watch(combinedFeedControllerProvider.future);
   final monthlyPendingItems =
       await ref.watch(monthlyPendingPlannedExpensesProvider.future);
   final members = await ref.watch(householdMembersProvider.future);
+  final household = await ref.watch(currentHouseholdProvider.future);
   final userId = ref.read(currentUserIdProvider);
   if (userId == null) return const MonthlyProjectionData(spent: 0, pending: 0);
 
@@ -459,6 +468,8 @@ Future<MonthlyProjectionData> monthlyProjection(
   double pending = 0.0;
   final now = DateTime.now();
   final memberCount = members.isNotEmpty ? members.length : 2;
+  final isSharedFamily = household?.householdType == 'family' &&
+      household?.financeMode == 'shared';
 
   for (final item in feedAsync) {
     // Only current month
@@ -474,11 +485,13 @@ Future<MonthlyProjectionData> monthlyProjection(
   }
 
   for (final item in monthlyPendingItems) {
-    pending += _projectedShareForUser(
-      item: item,
-      userId: userId,
-      memberCount: memberCount,
-    );
+    pending += isSharedFamily
+        ? item.amount
+        : _projectedShareForUser(
+            item: item,
+            userId: userId,
+            memberCount: memberCount,
+          );
   }
 
   return MonthlyProjectionData(spent: spent, pending: pending);
