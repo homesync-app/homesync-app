@@ -65,40 +65,48 @@ jobs:
           cd flutter_client
           flutter pub get
 
+      - name: Validate required secrets
+        run: |
+          missing=()
+          [ -z "${{ secrets.SUPABASE_URL }}" ] && missing+=("SUPABASE_URL")
+          [ -z "${{ secrets.SUPABASE_ANON_KEY }}" ] && missing+=("SUPABASE_ANON_KEY")
+          [ -z "${{ secrets.FIREBASE_PROJECT_ID }}" ] && missing+=("FIREBASE_PROJECT_ID")
+          [ -z "${{ secrets.FIREBASE_API_KEY }}" ] && missing+=("FIREBASE_API_KEY")
+          [ -z "${{ secrets.FIREBASE_APP_ID }}" ] && missing+=("FIREBASE_APP_ID")
+          [ -z "${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" ] && missing+=("FIREBASE_MESSAGING_SENDER_ID")
+          [ -z "${{ secrets.FIREBASE_AUTH_DOMAIN }}" ] && missing+=("FIREBASE_AUTH_DOMAIN")
+          [ -z "${{ secrets.FIREBASE_STORAGE_BUCKET }}" ] && missing+=("FIREBASE_STORAGE_BUCKET")
+          [ -z "${{ secrets.GOOGLE_WEB_CLIENT_ID }}" ] && missing+=("GOOGLE_WEB_CLIENT_ID")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing required secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "✅ All secrets present"
+
       - name: Create production env file
         env:
-          SUPABASE_URL_SECRET: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY_SECRET: ${{ secrets.SUPABASE_ANON_KEY }}
-          FIREBASE_PROJECT_ID_SECRET: ${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_API_KEY_SECRET: ${{ secrets.FIREBASE_API_KEY }}
-          FIREBASE_APP_ID_SECRET: ${{ secrets.FIREBASE_APP_ID }}
-          FIREBASE_MESSAGING_SENDER_ID_SECRET: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          FIREBASE_AUTH_DOMAIN_SECRET: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          FIREBASE_STORAGE_BUCKET_SECRET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          GOOGLE_WEB_CLIENT_ID_SECRET: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
         run: |
-          SUPABASE_URL_VALUE="${SUPABASE_URL_SECRET:-https://tfavamqszdkoeabpyxms.supabase.co}"
-          SUPABASE_ANON_KEY_VALUE="${SUPABASE_ANON_KEY_SECRET:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmYXZhbXFzemRrb2VhYnB5eG1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjU5MTYsImV4cCI6MjA4NjkwMTkxNn0.AifBdMFJH14E-JisRcdjWPNpjAOuj6z3J4aYYRxBCSI}"
-          FIREBASE_PROJECT_ID_VALUE="${FIREBASE_PROJECT_ID_SECRET:-homesync-prod-r7-123}"
-          FIREBASE_API_KEY_VALUE="${FIREBASE_API_KEY_SECRET:-AIzaSyAOH6ZSuqIzI1qOUIynDbWGwOQRym_Wb1I}"
-          FIREBASE_APP_ID_VALUE="${FIREBASE_APP_ID_SECRET:-1:105041112830:web:da6228c6d202cdf567ffaf}"
-          FIREBASE_MESSAGING_SENDER_ID_VALUE="${FIREBASE_MESSAGING_SENDER_ID_SECRET:-105041112830}"
-          FIREBASE_AUTH_DOMAIN_VALUE="${FIREBASE_AUTH_DOMAIN_SECRET:-homesync-prod-r7-123.firebaseapp.com}"
-          FIREBASE_STORAGE_BUCKET_VALUE="${FIREBASE_STORAGE_BUCKET_SECRET:-homesync-prod-r7-123.firebasestorage.app}"
-          GOOGLE_WEB_CLIENT_ID_VALUE="${GOOGLE_WEB_CLIENT_ID_SECRET:-105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com}"
-
           cat > flutter_client/.env.production <<EOF
           APP_ENV=production
           AUTH_MODE=firebase_third_party
-          SUPABASE_URL=${SUPABASE_URL_VALUE}
-          SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY_VALUE}
-          FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID_VALUE}
-          FIREBASE_API_KEY=${FIREBASE_API_KEY_VALUE}
-          FIREBASE_APP_ID=${FIREBASE_APP_ID_VALUE}
-          FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID_VALUE}
-          FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN_VALUE}
-          FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET_VALUE}
-          GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID_VALUE}
+          SUPABASE_URL=${SUPABASE_URL}
+          SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+          FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+          FIREBASE_API_KEY=${FIREBASE_API_KEY}
+          FIREBASE_APP_ID=${FIREBASE_APP_ID}
+          FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID}
+          FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}
+          FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
+          GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID}
           EOF
 
       - name: Decode Keystore
@@ -126,14 +134,28 @@ jobs:
           cd flutter_client
           flutter analyze --no-fatal-infos --no-fatal-warnings
 
+      - name: Set version code
+        run: |
+          # Offset keeps versionCode above the last manually-bumped value (53).
+          # Formula: 100 + run_number guarantees it always exceeds 53 and auto-increments.
+          VERSION_CODE=$((100 + ${{ github.run_number }}))
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "Building with versionCode: $VERSION_CODE"
+
       - name: Build AAB (Release)
         run: |
           cd flutter_client
           if [ "${{ env.KEYSTORE_AVAILABLE }}" = "true" ]; then
-            flutter build appbundle --release --dart-define-from-file=.env.production --dart-define=APP_ENV=production
+            flutter build appbundle --release \
+              --dart-define-from-file=.env.production \
+              --dart-define=APP_ENV=production \
+              --build-number=${{ env.VERSION_CODE }}
           else
             echo "No keystore → building debug AAB (not deployable to Play)"
-            flutter build appbundle --debug --dart-define-from-file=.env.production --dart-define=APP_ENV=production
+            flutter build appbundle --debug \
+              --dart-define-from-file=.env.production \
+              --dart-define=APP_ENV=production \
+              --build-number=${{ env.VERSION_CODE }}
           fi
 
       - name: Upload AAB as Artifact
@@ -158,6 +180,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.blas.homesync
           releaseFiles: flutter_client/build/app/outputs/bundle/release/app-release.aab
-          track: internal
+          track: alpha
           status: draft
           whatsNewDirectory: whatsnew

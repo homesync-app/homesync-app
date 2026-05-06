@@ -980,6 +980,7 @@ class _RewardGrid extends ConsumerWidget {
                             top: -4,
                             right: 2,
                             child: IconButton(
+                              tooltip: 'Eliminar recompensa',
                               onPressed: () => onManage(reward),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(

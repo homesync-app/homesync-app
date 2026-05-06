@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
 import 'package:homesync_client/features/rewards/domain/repositories/reward_repository.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
@@ -56,6 +57,18 @@ class FakePaginatedRewardRepository implements RewardRepository {
     String targetType = 'all',
   }) async =>
       const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateReward({
+    required String rewardId,
+    required String title,
+    String? description,
+    required int cost,
+    required String icon,
+    String? category,
+    required String targetType,
+  }) async =>
+      const Right(null);
 }
 
 Map<String, dynamic> _rewardJson(int index) {
@@ -85,6 +98,7 @@ void main() {
           ),
         ),
         householdIdProvider.overrideWith((ref) async => 'house-1'),
+        currentHouseholdProvider.overrideWith((ref) async => null),
       ],
     );
     addTearDown(container.dispose);

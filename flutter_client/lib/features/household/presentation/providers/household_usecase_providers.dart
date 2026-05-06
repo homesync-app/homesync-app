@@ -3,6 +3,7 @@ import 'package:homesync_client/features/household/data/repositories/supabase_ho
 import 'package:homesync_client/features/household/domain/usecases/generate_invitation_code_usecase.dart';
 import 'package:homesync_client/features/household/domain/usecases/join_household_usecase.dart';
 import 'package:homesync_client/features/household/domain/usecases/update_default_split_ratio_usecase.dart';
+import 'package:homesync_client/features/household/domain/usecases/update_finance_settings_usecase.dart';
 import 'package:homesync_client/features/household/domain/usecases/update_household_type_usecase.dart';
 import 'package:homesync_client/features/household/domain/usecases/update_member_display_role_usecase.dart';
 
@@ -18,6 +19,11 @@ final joinHouseholdUseCaseProvider = Provider<JoinHouseholdUseCase>((ref) {
 final updateDefaultSplitRatioUseCaseProvider =
     Provider<UpdateDefaultSplitRatioUseCase>((ref) {
   return UpdateDefaultSplitRatioUseCase(ref.read(householdRepositoryProvider));
+});
+
+final updateFinanceSettingsUseCaseProvider =
+    Provider<UpdateFinanceSettingsUseCase>((ref) {
+  return UpdateFinanceSettingsUseCase(ref.read(householdRepositoryProvider));
 });
 
 final updateHouseholdTypeUseCaseProvider =

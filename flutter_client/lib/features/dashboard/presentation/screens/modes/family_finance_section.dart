@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
-
-import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
-import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
+import 'package:intl/intl.dart';
 
 class FamilyFinanceSection extends ConsumerWidget {
   final HouseholdCapabilities caps;
@@ -27,10 +26,8 @@ class FamilyFinanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final balancesAsync = ref.watch(expenseBalancesProvider);
-    final walletAsync = ref.watch(userBalanceProvider);
+    final feedAsync = ref.watch(combinedFeedControllerProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
-    final currentUserId = ref.watch(currentUserIdProvider) ?? '';
 
     final members = membersAsync.valueOrNull ?? const <MemberModel>[];
     final isChild = currentMember?.isChild ?? false;
@@ -38,13 +35,10 @@ class FamilyFinanceSection extends ConsumerWidget {
     final adultMembers = members.where((m) => m.isAdult).toList();
     final shouldShowSection =
         currentMember != null && !isChild && !isTeen && adultMembers.length > 1;
-    final sectionTitle =
-        adultMembers.length == 2 ? 'Balance del hogar' : 'Finanzas familiares';
+    const sectionTitle = 'Finanzas familiares';
 
-    final isLoading = membersAsync.isLoading ||
-        balancesAsync.isLoading ||
-        walletAsync.isLoading;
-    final hasError = membersAsync.hasError || balancesAsync.hasError;
+    final isLoading = membersAsync.isLoading || feedAsync.isLoading;
+    final hasError = membersAsync.hasError || feedAsync.hasError;
 
     Widget child;
     if (!isLoading && !shouldShowSection) {
@@ -75,9 +69,7 @@ class FamilyFinanceSection extends ConsumerWidget {
         ],
       );
     } else {
-      final walletCoins = walletAsync.valueOrNull?['coins'] as int? ?? 0;
-      final walletXp = walletAsync.valueOrNull?['xp'] as int? ?? 0;
-      final balances = balancesAsync.valueOrNull ?? const [];
+      final feed = feedAsync.valueOrNull ?? const <FeedItemModel>[];
 
       child = Column(
         key: ValueKey('finance-ready-${adultMembers.length}'),
@@ -87,12 +79,7 @@ class FamilyFinanceSection extends ConsumerWidget {
           const SizedBox(height: 12),
           _buildFinanceReadyState(
             theme,
-            caps,
-            adultMembers: adultMembers,
-            currentUserId: currentUserId,
-            balances: balances,
-            walletCoins: walletCoins,
-            walletXp: walletXp,
+            feed: feed,
           ),
           const SizedBox(height: 28),
         ],
@@ -161,76 +148,22 @@ class FamilyFinanceSection extends ConsumerWidget {
   }
 
   static Widget _buildFinanceReadyState(
-    AppThemeColors theme,
-    HouseholdCapabilities caps, {
-    required List<MemberModel> adultMembers,
-    required String currentUserId,
-    required List<HouseholdBalanceModel> balances,
-    required int walletCoins,
-    required int walletXp,
+    AppThemeColors theme, {
+    required List<FeedItemModel> feed,
   }) {
-    if (balances.isEmpty) {
-      if (adultMembers.length == 2) {
-        final partner = adultMembers
-            .where((member) => member.userId != currentUserId)
-            .firstOrNull;
-        return BalanceCard(
-          coins: walletCoins,
-          xp: walletXp,
-          userBalance: 0,
-          partnerName: partner?.displayName,
-        );
-      }
+    final now = DateTime.now();
+    final monthItems = feed.where((item) {
+      return item.isRealExpense &&
+          item.date.month == now.month &&
+          item.date.year == now.year &&
+          !item.isSettlement;
+    }).toList();
+    final spent = monthItems
+        .where((item) => item.transactionType == 'expense')
+        .fold<double>(0, (total, item) => total + item.amount);
 
-      return _buildFinanceEmptyState(
-        theme,
-        'Todavia no hay balances del hogar para mostrar.',
-      );
-    }
-
-    final adultIds = adultMembers.map((member) => member.userId).toSet();
-    final adultBalances =
-        balances.where((balance) => adultIds.contains(balance.userId)).toList();
-
-    if (adultBalances.isEmpty) {
-      if (adultMembers.length == 2) {
-        final partner = adultMembers
-            .where((member) => member.userId != currentUserId)
-            .firstOrNull;
-        return BalanceCard(
-          coins: walletCoins,
-          xp: walletXp,
-          userBalance: 0,
-          partnerName: partner?.displayName,
-        );
-      }
-
-      return _buildFinanceEmptyState(
-        theme,
-        'Todavia no hay balances del hogar para mostrar.',
-      );
-    }
-
-    if (adultMembers.length == 2) {
-      final partner = adultMembers
-          .where((member) => member.userId != currentUserId)
-          .firstOrNull;
-      final myBalance = adultBalances
-          .where((balance) => balance.userId == currentUserId)
-          .firstOrNull
-          ?.balance;
-
-      return BalanceCard(
-        coins: walletCoins,
-        xp: walletXp,
-        userBalance: myBalance,
-        partnerName: partner?.displayName,
-      );
-    }
-
-    return FamilyBalanceCard(
-      balances: adultBalances,
-      title: caps.balanceMessage,
+    return _SharedFamilyFinanceCard(
+      spent: spent,
     );
   }
 
@@ -313,7 +246,7 @@ class FamilyFinanceSection extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sin resumen financiero todavía',
+                  'Sin resumen financiero todavÃ­a',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -327,6 +260,89 @@ class FamilyFinanceSection extends ConsumerWidget {
                     fontSize: 12.5,
                     color: theme.textSecondary,
                     height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SharedFamilyFinanceCard extends StatelessWidget {
+  final double spent;
+
+  const _SharedFamilyFinanceCard({
+    required this.spent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final formatter = NumberFormat.decimalPattern('es_AR');
+    final hasActivity = spent > 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 17, 18, 17),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.surface,
+            theme.elevatedSurface.withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: theme.border.withValues(alpha: 0.62),
+          width: 1.05,
+        ),
+        boxShadow: theme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.accentTeal.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: AppColors.accentTeal.withValues(alpha: 0.10),
+              ),
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet_rounded,
+              color: AppColors.accentTeal,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasActivity ? 'Gasto compartido del mes' : 'Mes sin gastos',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$ ${formatter.format(spent.round())}',
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 31,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.0,
+                    height: 1,
                   ),
                 ),
               ],

@@ -47,6 +47,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   final GlobalKey _balanceKey = GlobalKey(debugLabel: 'tour_balance');
   final GlobalKey _tasksKey = GlobalKey(debugLabel: 'tour_tasks');
   bool _tourTriggered = false;
+  // Cached pre-dispose so dispose() never calls ref after unmount
+  late final TourTargetKeysNotifier _tourKeysNotifier;
 
   @override
   void initState() {
@@ -59,9 +61,9 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   void _registerTourKeys() {
-    final notifier = ref.read(tourTargetKeysProvider.notifier);
-    notifier.register(TourTarget.balanceCard, _balanceKey);
-    notifier.register(TourTarget.tasksSection, _tasksKey);
+    _tourKeysNotifier = ref.read(tourTargetKeysProvider.notifier);
+    _tourKeysNotifier.register(TourTarget.balanceCard, _balanceKey);
+    _tourKeysNotifier.register(TourTarget.tasksSection, _tasksKey);
   }
 
   void _maybeStartTour() {
@@ -94,9 +96,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   @override
   void dispose() {
-    final notifier = ref.read(tourTargetKeysProvider.notifier);
-    notifier.unregister(TourTarget.balanceCard, _balanceKey);
-    notifier.unregister(TourTarget.tasksSection, _tasksKey);
+    _tourKeysNotifier.unregister(TourTarget.balanceCard, _balanceKey);
+    _tourKeysNotifier.unregister(TourTarget.tasksSection, _tasksKey);
     super.dispose();
   }
 

@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-const _tabs = ['Todos', 'Adultos', 'Peques'];
+const _tabs = ['Todos', 'Adultos', 'Chicos'];
 
 class FamilyRankingSection extends ConsumerStatefulWidget {
-  const FamilyRankingSection({super.key});
+  const FamilyRankingSection({
+    super.key,
+    required this.currentMember,
+  });
+
+  final MemberModel? currentMember;
 
   @override
   ConsumerState<FamilyRankingSection> createState() =>
@@ -33,6 +39,7 @@ class _FamilyRankingSectionState extends ConsumerState<FamilyRankingSection> {
           selectedTab: _selectedTab,
           onTabChanged: (i) => setState(() => _selectedTab = i),
           theme: theme,
+          hideLiveScores: _shouldHideLiveScores(widget.currentMember),
         );
       },
       loading: () => const Padding(
@@ -45,6 +52,12 @@ class _FamilyRankingSectionState extends ConsumerState<FamilyRankingSection> {
       ),
     );
   }
+
+  bool _shouldHideLiveScores(MemberModel? member) {
+    if (member == null || member.isAdult) return false;
+    final today = DateTime.now().weekday;
+    return member.isTeen || member.isChild ? today >= DateTime.thursday : false;
+  }
 }
 
 class _RankingContent extends StatelessWidget {
@@ -53,12 +66,14 @@ class _RankingContent extends StatelessWidget {
     required this.selectedTab,
     required this.onTabChanged,
     required this.theme,
+    required this.hideLiveScores,
   });
 
   final List<Map<String, dynamic>> ranking;
   final int selectedTab;
   final ValueChanged<int> onTabChanged;
   final AppThemeColors theme;
+  final bool hideLiveScores;
 
   List<Map<String, dynamic>> get _filtered {
     if (selectedTab == 0) return ranking;
@@ -68,9 +83,10 @@ class _RankingContent extends StatelessWidget {
         return type == 'parent' || type == 'guardian';
       }).toList();
     }
-    return ranking
-        .where((item) => (item['member_type'] as String?) == 'child')
-        .toList();
+    return ranking.where((item) {
+      final type = item['member_type'] as String?;
+      return type == 'child' || type == 'teen';
+    }).toList();
   }
 
   bool get _hasAdults => ranking.any((i) {
@@ -78,7 +94,10 @@ class _RankingContent extends StatelessWidget {
         return type == 'parent' || type == 'guardian';
       });
 
-  bool get _hasChildren => ranking.any((i) => i['member_type'] == 'child');
+  bool get _hasChildren => ranking.any((i) {
+        final type = i['member_type'] as String?;
+        return type == 'child' || type == 'teen';
+      });
 
   bool get _showTabs => _hasAdults && _hasChildren;
 
@@ -105,45 +124,96 @@ class _RankingContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
+    final filtered = hideLiveScores
+        ? (List<Map<String, dynamic>>.of(_filtered)
+          ..sort(
+            (a, b) => _displayName(a).compareTo(_displayName(b)),
+          ))
+        : _filtered;
+    final leader = ranking.isNotEmpty ? ranking.first : null;
+    final leaderName = leader == null ? null : _displayName(leader);
+    final totalPoints = ranking.fold<int>(
+      0,
+      (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(
-              Icons.emoji_events_outlined,
-              color: AppColors.accentGold,
-              size: 20,
-            ),
-            SizedBox(width: 8),
-            Text(
-              'Ranking semanal',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.4,
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.emoji_events_rounded,
+                color: AppColors.accentGold,
+                size: 18,
               ),
             ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Ranking semanal',
+                style: TextStyle(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ),
+            if (totalPoints > 0 && !hideLiveScores)
+              _HeaderPill(
+                label: '$totalPoints pts',
+              ),
+            if (hideLiveScores) const _HeaderPill(label: 'Sorpresa'),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 7),
         Text(
-          'Puntos por tareas completadas esta semana.',
+          hideLiveScores
+              ? 'Desde el jueves guardamos los puntos para revelar el ganador al cierre.'
+              : leaderName == null || totalPoints == 0
+                  ? 'Puntos por tareas completadas esta semana.'
+                  : '$leaderName viene liderando la semana.',
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 13,
+            fontWeight: FontWeight.w600,
             height: 1.35,
           ),
         ),
         const SizedBox(height: 14),
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: theme.surface,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.border.withValues(alpha: 0.72)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: theme.isDarkMode
+                  ? [
+                      theme.surface,
+                      theme.surfaceContainer.withValues(alpha: 0.62),
+                    ]
+                  : [
+                      Colors.white,
+                      const Color(0xFFFFFAF6),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: theme.border.withValues(alpha: 0.58)),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadow
+                    .withValues(alpha: theme.isDarkMode ? 0.18 : 0.055),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -151,8 +221,11 @@ class _RankingContent extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: theme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(14),
+                    color: theme.surfaceContainer.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.border.withValues(alpha: 0.36),
+                    ),
                   ),
                   child: Row(
                     children: List.generate(_tabs.length, (i) {
@@ -163,12 +236,22 @@ class _RankingContent extends StatelessWidget {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 220),
                             curve: Curves.easeOutCubic,
-                            padding: const EdgeInsets.symmetric(vertical: 7),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary.withValues(alpha: 0.12)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(11),
+                              color:
+                                  selected ? theme.surface : Colors.transparent,
+                              borderRadius: BorderRadius.circular(13),
+                              boxShadow: selected
+                                  ? [
+                                      BoxShadow(
+                                        color: theme.shadow.withValues(
+                                          alpha: theme.isDarkMode ? 0.12 : 0.06,
+                                        ),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ]
+                                  : null,
                             ),
                             child: Text(
                               _tabs[i],
@@ -176,8 +259,8 @@ class _RankingContent extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: selected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                                    ? FontWeight.w900
+                                    : FontWeight.w700,
                                 color: selected
                                     ? AppColors.primary
                                     : theme.textSecondary,
@@ -189,7 +272,7 @@ class _RankingContent extends StatelessWidget {
                     }),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
               ],
               if (filtered.isEmpty)
                 Padding(
@@ -222,13 +305,13 @@ class _RankingContent extends StatelessWidget {
                   final rank = index + 1;
                   final xp = (item['xp_earned'] as num?)?.toInt() ?? 0;
                   final tasks = (item['tasks_completed'] as num?)?.toInt() ?? 0;
-                  final isFirst = rank == 1 && xp > 0;
-                  final isSecond = rank == 2 && xp > 0;
-                  final isThird = rank == 3 && xp > 0;
+                  final isFirst = !hideLiveScores && rank == 1 && xp > 0;
+                  final isSecond = !hideLiveScores && rank == 2 && xp > 0;
+                  final isThird = !hideLiveScores && rank == 3 && xp > 0;
                   final isLast = index == filtered.length - 1;
 
                   return Padding(
-                    padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+                    padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
                     child: _RankingRow(
                       rank: rank,
                       name: _displayName(item),
@@ -236,6 +319,7 @@ class _RankingContent extends StatelessWidget {
                       avatarUrl: item['avatar_url'] as String?,
                       xp: xp,
                       tasks: tasks,
+                      hideLiveScores: hideLiveScores,
                       isFirst: isFirst,
                       isSecond: isSecond,
                       isThird: isThird,
@@ -259,6 +343,7 @@ class _RankingRow extends ConsumerWidget {
     required this.avatarUrl,
     required this.xp,
     required this.tasks,
+    required this.hideLiveScores,
     required this.isFirst,
     required this.isSecond,
     required this.isThird,
@@ -271,6 +356,7 @@ class _RankingRow extends ConsumerWidget {
   final String? avatarUrl;
   final int xp;
   final int tasks;
+  final bool hideLiveScores;
   final bool isFirst;
   final bool isSecond;
   final bool isThird;
@@ -294,35 +380,38 @@ class _RankingRow extends ConsumerWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: isFirst
-            ? AppColors.accentGold.withValues(alpha: 0.10)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        border: isFirst
-            ? Border.all(
-                color: AppColors.accentGold.withValues(alpha: 0.28),
+            ? AppColors.accentGold.withValues(
+                alpha: theme.isDarkMode ? 0.16 : 0.13,
               )
-            : null,
+            : theme.surface.withValues(alpha: theme.isDarkMode ? 0.28 : 0.82),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isFirst
+              ? AppColors.accentGold.withValues(alpha: 0.34)
+              : theme.border.withValues(alpha: 0.36),
+        ),
       ),
       child: Row(
         children: [
           _RankBadge(
             rank: rank,
+            hidden: hideLiveScores,
             isFirst: isFirst,
             isSecond: isSecond,
             isThird: isThird,
             theme: theme,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 11),
           CustomUserAvatar(
             avatarUrl: resolvedAvatar,
             name: name,
-            radius: 18,
+            radius: 19,
             forceCircular: true,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 11),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,18 +419,33 @@ class _RankingRow extends ConsumerWidget {
                 Text(
                   name,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: isFirst ? FontWeight.w900 : FontWeight.w700,
                     color: theme.textPrimary,
+                    letterSpacing: -0.1,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  role,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: theme.textSecondary,
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _roleColor(role).withValues(alpha: 0.11),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      role,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: _roleColor(role),
+                        height: 1,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -355,20 +459,33 @@ class _RankingRow extends ConsumerWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: xp > 0
-                      ? AppColors.primary.withValues(alpha: 0.10)
+                      ? (hideLiveScores
+                          ? AppColors.accentPurple.withValues(alpha: 0.10)
+                          : AppColors.primary.withValues(alpha: 0.12))
                       : theme.surfaceContainer,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: xp > 0
+                        ? (hideLiveScores
+                            ? AppColors.accentPurple.withValues(alpha: 0.12)
+                            : AppColors.primary.withValues(alpha: 0.10))
+                        : theme.border.withValues(alpha: 0.22),
+                  ),
                 ),
                 child: Text(
-                  xp > 0 ? '$xp pts' : '0 pts',
+                  hideLiveScores ? 'Oculto' : (xp > 0 ? '$xp pts' : '0 pts'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: xp > 0 ? AppColors.primary : theme.textSecondary,
+                    color: hideLiveScores
+                        ? AppColors.accentPurple
+                        : xp > 0
+                            ? AppColors.primary
+                            : theme.textSecondary,
                   ),
                 ),
               ),
-              if (tasks > 0) ...[
+              if (!hideLiveScores && tasks > 0) ...[
                 const SizedBox(height: 3),
                 Text(
                   '$tasks tarea${tasks == 1 ? '' : 's'}',
@@ -385,11 +502,21 @@ class _RankingRow extends ConsumerWidget {
       ),
     );
   }
+
+  Color _roleColor(String role) {
+    return switch (role) {
+      'Adulto' => AppColors.sage,
+      'Adolescente' => AppColors.accentBlue,
+      'Peque' => AppColors.accentGold,
+      _ => AppColors.primary,
+    };
+  }
 }
 
 class _RankBadge extends StatelessWidget {
   const _RankBadge({
     required this.rank,
+    required this.hidden,
     required this.isFirst,
     required this.isSecond,
     required this.isThird,
@@ -397,6 +524,7 @@ class _RankBadge extends StatelessWidget {
   });
 
   final int rank;
+  final bool hidden;
   final bool isFirst;
   final bool isSecond;
   final bool isThird;
@@ -404,6 +532,22 @@ class _RankBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (hidden) {
+      return Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: AppColors.accentPurple.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.lock_rounded,
+          size: 15,
+          color: AppColors.accentPurple,
+        ),
+      );
+    }
+
     if (isFirst) {
       return Container(
         width: 30,
@@ -467,6 +611,35 @@ class _RankBadge extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: theme.textSecondary,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderPill extends StatelessWidget {
+  const _HeaderPill({
+    required this.label,
+  });
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.14)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          height: 1,
         ),
       ),
     );

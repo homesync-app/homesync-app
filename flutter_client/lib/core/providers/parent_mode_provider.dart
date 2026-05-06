@@ -109,10 +109,9 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   final caps = ref.watch(householdCapabilitiesProvider);
   if (caps.type != HouseholdType.family) return false;
 
-  // premiumProvider ya resuelve el acceso efectivo: usuario premium legacy
-  // o plan premium heredado por el hogar. Asi Configuracion, Shopping y
-  // Modo Padres se bloquean/desbloquean con la misma verdad de producto.
-  final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+  // Usa la verdad efectiva del producto: hogar premium o usuario premium
+  // legacy durante la migracion.
+  final isPremium = ref.watch(effectivePremiumProvider);
   if (!isPremium) return false;
 
   final currentUserId = ref.watch(currentUserIdProvider);

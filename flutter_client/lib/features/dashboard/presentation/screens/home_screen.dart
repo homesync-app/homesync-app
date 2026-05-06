@@ -1,5 +1,6 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,9 +17,9 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
+import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -35,6 +36,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late ConfettiController _confettiController;
+  bool _showFab = true;
 
   @override
   void initState() {
@@ -131,7 +133,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const OfflineIndicator(),
           Expanded(
             child: SafeArea(
-              child: _buildModeDispatcher(householdId),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _handleScrollNotification,
+                child: _buildModeDispatcher(householdId),
+              ),
             ),
           ),
         ],
@@ -139,6 +144,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _buildFAB(householdId, caps),
     );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.depth != 0) return false;
+    if (notification is UserScrollNotification) {
+      final direction = notification.direction;
+      final shouldShow = direction == ScrollDirection.forward ||
+          notification.metrics.pixels < 24;
+      if (shouldShow != _showFab && mounted) {
+        setState(() => _showFab = shouldShow);
+      }
+    }
+    return false;
   }
 
   Widget _buildModeDispatcher(String householdId) {
@@ -194,14 +212,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Transform.translate(
       offset: Offset(0, fabOffsetY),
-      child: AppFloatingActionButton(
-        label: caps.showTasks ? 'Acciones' : 'Gastos',
-        icon: Icons.add_rounded,
-        onPressed: () => caps.showTasks
-            ? _showQuickActionMenu(householdId, caps)
-            : ExpenseFormSheet.show(context),
-        heroTag: 'home_fab',
-        margin: const EdgeInsets.only(bottom: 2),
+      child: AnimatedSlide(
+        offset: _showFab ? Offset.zero : const Offset(0, 1.4),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: _showFab ? 1 : 0,
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          child: AppFloatingActionButton(
+            label: caps.showTasks ? 'Acciones' : 'Gastos',
+            icon: Icons.add_rounded,
+            onPressed: () => caps.showTasks
+                ? _showQuickActionMenu(householdId, caps)
+                : ExpenseFormSheet.show(context),
+            heroTag: 'home_fab',
+            margin: const EdgeInsets.only(bottom: 2),
+          ),
+        ),
       ),
     )
         .animate(delay: 600.ms)

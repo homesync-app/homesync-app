@@ -727,6 +727,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
           ),
         ),
         IconButton(
+          tooltip: 'Cerrar',
           onPressed: _isLoading ? null : () => Navigator.pop(context),
           splashRadius: 22,
           icon: Icon(

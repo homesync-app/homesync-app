@@ -6,9 +6,11 @@ import 'logger_service.dart';
 
 class AnalyticsService {
   AnalyticsService({FirebaseAnalytics? analytics})
-      : _analytics = analytics ?? FirebaseAnalytics.instance;
+      : _analyticsOverride = analytics;
 
-  final FirebaseAnalytics _analytics;
+  final FirebaseAnalytics? _analyticsOverride;
+  FirebaseAnalytics get _analytics =>
+      _analyticsOverride ?? FirebaseAnalytics.instance;
 
   FirebaseAnalyticsObserver get observer =>
       FirebaseAnalyticsObserver(analytics: _analytics);

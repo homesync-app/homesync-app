@@ -225,6 +225,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           ),
         ),
         IconButton(
+          tooltip: 'Cerrar',
           onPressed: () => Navigator.pop(context),
           splashRadius: 22,
           icon: Icon(
@@ -532,6 +533,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             child: Row(
               children: [
                 IconButton(
+                  tooltip: 'Disminuir',
                   onPressed: () {
                     if (_recurrenceInterval > 1) {
                       setState(() => _recurrenceInterval--);
@@ -556,6 +558,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Aumentar',
                   onPressed: () {
                     if (_recurrenceInterval < 365) {
                       setState(() => _recurrenceInterval++);

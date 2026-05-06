@@ -33,28 +33,43 @@ abstract class HouseholdRepository {
 
   /// Updates the default split ratio for the household
   Future<Either<Failure, void>> updateDefaultSplitRatio(
-      String householdId, double ratio,);
+    String householdId,
+    double ratio,
+  );
+
+  /// Updates household finance mode and default split ratio.
+  Future<Either<Failure, void>> updateFinanceSettings(
+    String householdId, {
+    required String financeMode,
+    required double defaultSplitRatio,
+  });
 
   /// Updates the household type (solo, couple, family, friends)
   Future<Either<Failure, void>> updateHouseholdType(
-      String householdId, String type,);
+    String householdId,
+    String type,
+  );
 
   /// Enables or disables household tasks for this household.
   Future<Either<Failure, void>> updateTasksEnabled(
-      String householdId, bool enabled,);
+    String householdId,
+    bool enabled,
+  );
 
   /// Updates the custom display role for a member (e.g. Padre, Madre)
   Future<Either<Failure, void>> updateMemberDisplayRole(
-      String userId, String? displayRole,);
+    String userId,
+    String? displayRole,
+  );
 
   /// Updates the permission type for a member.
   /// [type] must be one of `parent`, `guardian`, `teen`, `child`.
-  Future<Either<Failure, void>> updateMemberType(
-      String userId, String type);
+  Future<Either<Failure, void>> updateMemberType(String userId, String type);
 
   /// QA admin: restores a testing scenario to its seeded baseline.
   Future<Either<Failure, Map<String, dynamic>>> qaResetScenario(
-      String householdId,);
+    String householdId,
+  );
 
   /// QA admin: creates a new dummy member inside a testing scenario.
   Future<Either<Failure, Map<String, dynamic>>> qaAddDummyMember({
