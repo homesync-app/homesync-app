@@ -98,6 +98,7 @@ flutter:
     - assets/images/premium_3d_avatars/
     - assets/images/custom_avatars/
     - assets/fonts/outfit/
+    - shorebird.yaml
 
   fonts:
     - family: Outfit
