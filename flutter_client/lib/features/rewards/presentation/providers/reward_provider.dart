@@ -169,8 +169,6 @@ class Rewards extends _$Rewards {
       tasksEnabled: household?.tasksEnabled ?? true,
     );
 
-    _setupRealtime(householdId);
-
     final repo = ref.read(rewardRepositoryProvider);
     List<Map<String, dynamic>> rawRewards = [];
 
@@ -209,6 +207,10 @@ class Rewards extends _$Rewards {
         rawRewards = secondTry.getOrElse((_) => []);
       }
     }
+
+    // Subscribe to realtime AFTER seeding to avoid cascading invalidations
+    // while inserts are in flight, which could trigger repeated seeding.
+    _setupRealtime(householdId);
 
     return rawRewards.map(RewardModel.fromJson).toList();
   }
