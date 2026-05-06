@@ -6,12 +6,16 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 
 /// Storage key — bumped suffix invalidates older tours when redesigned.
-const _tourFlagKey = 'couple_home_tour_seen_v1';
+const tourFlagKey = 'couple_home_tour_seen_v1';
 
 /// Whether the user already completed/skipped the couple home tour.
+///
+/// Reads SharedPreferences synchronously; this provider gets invalidated by
+/// the controller after every persistence change so callers get a fresh
+/// value instead of the first-build cache.
 final coupleHomeTourSeenProvider = Provider<bool>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return prefs.getBool(_tourFlagKey) ?? false;
+  return prefs.getBool(tourFlagKey) ?? false;
 });
 
 class CoupleHomeTourState {
@@ -167,18 +171,22 @@ class CoupleHomeTourController extends Notifier<CoupleHomeTourState> {
     _finishAndPersist();
   }
 
-  void _finishAndPersist() {
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setBool(_tourFlagKey, true);
+  Future<void> _finishAndPersist() async {
     state = const CoupleHomeTourState.initial();
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(tourFlagKey, true);
+    // Invalidate the seen-provider so subsequent reads recompute against the
+    // freshly-persisted value instead of the cached `false`.
+    ref.invalidate(coupleHomeTourSeenProvider);
   }
 
   /// Removes the persistence flag so the tour will fire again next time the
   /// user lands on the couple home. Used by Settings → "Ver guía de nuevo".
   Future<void> reset() async {
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.remove(_tourFlagKey);
+    await prefs.remove(tourFlagKey);
     state = const CoupleHomeTourState.initial();
+    ref.invalidate(coupleHomeTourSeenProvider);
   }
 }
 

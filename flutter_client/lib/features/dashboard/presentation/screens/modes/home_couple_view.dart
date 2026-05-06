@@ -18,6 +18,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
@@ -64,14 +65,26 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   void _maybeStartTour() {
-    final alreadySeen = ref.read(coupleHomeTourSeenProvider);
+    if (_tourTriggered) return;
+    // Read SharedPreferences directly instead of trusting the Riverpod
+    // provider — the provider's value is computed once at first build and
+    // can return stale `false` even after another State persisted the flag.
+    final prefs = ref.read(sharedPreferencesProvider);
+    final alreadySeen = prefs.getBool(tourFlagKey) ?? false;
     if (alreadySeen) return;
     final tourState = ref.read(coupleHomeTourControllerProvider);
-    if (tourState.isActive || _tourTriggered) return;
+    if (tourState.isActive) return;
     _tourTriggered = true;
     // Let entrance animations of the home settle before opening the tour.
     Future<void>.delayed(const Duration(milliseconds: 650), () {
       if (!mounted) return;
+      // Re-check inside the delay in case another instance/route persisted
+      // the flag while we were waiting.
+      final stillUnseen = !(ref
+              .read(sharedPreferencesProvider)
+              .getBool(tourFlagKey) ??
+          false);
+      if (!stillUnseen) return;
       final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
       ref.read(coupleHomeTourControllerProvider.notifier).start(
             hasTasks: (tasks?.isNotEmpty ?? false),
