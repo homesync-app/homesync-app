@@ -1466,7 +1466,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               size: 18,
             ),
             onTap: () =>
-                openUrl('https://megablas.github.io/homesync-privacy/'),
+                openUrl('https://homesync-app.github.io/homesync-privacy/'),
           ),
           Divider(
             height: 1,
@@ -1487,7 +1487,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               size: 18,
             ),
             onTap: () =>
-                openUrl('https://megablas.github.io/homesync-privacy/terms'),
+                openUrl('https://homesync-app.github.io/homesync-privacy/'),
           ),
         ],
       ),

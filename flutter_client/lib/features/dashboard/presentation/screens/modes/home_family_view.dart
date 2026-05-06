@@ -131,7 +131,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   currentMember: currentMember,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
             ] else
               const SizedBox(height: 18),
             if (caps.showTasks)

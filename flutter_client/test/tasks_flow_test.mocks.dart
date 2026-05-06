@@ -251,8 +251,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
     int? recurrenceInterval,
     List<int>? recurrenceWeekdays,
     List<int>? recurrenceMonthDays,
-    List<String>? rotationPool,
     String? status,
+    List<String>? rotationPool,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -270,8 +270,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
             #recurrenceInterval: recurrenceInterval,
             #recurrenceWeekdays: recurrenceWeekdays,
             #recurrenceMonthDays: recurrenceMonthDays,
-            #rotationPool: rotationPool,
             #status: status,
+            #rotationPool: rotationPool,
           },
         ),
         returnValue: _i3.Future<_i4.Either<_i5.Failure, void>>.value(
@@ -292,8 +292,8 @@ class MockTaskRepository extends _i1.Mock implements _i2.TaskRepository {
               #recurrenceInterval: recurrenceInterval,
               #recurrenceWeekdays: recurrenceWeekdays,
               #recurrenceMonthDays: recurrenceMonthDays,
-              #rotationPool: rotationPool,
               #status: status,
+              #rotationPool: rotationPool,
             },
           ),
         )),

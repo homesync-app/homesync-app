@@ -5,14 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'logger_service.dart';
 
 class AnalyticsService {
-  AnalyticsService({FirebaseAnalytics? analytics}) : _analyticsOverride = analytics;
+  AnalyticsService({FirebaseAnalytics? analytics})
+      : _analyticsOverride = analytics;
 
   final FirebaseAnalytics? _analyticsOverride;
-
-  // Lazy getter so FirebaseAnalytics.instance is only accessed when a method is
-  // actually called — keeps the constructor safe in test environments where
-  // Firebase hasn't been initialized.
-  FirebaseAnalytics get _analytics => _analyticsOverride ?? FirebaseAnalytics.instance;
+  FirebaseAnalytics get _analytics =>
+      _analyticsOverride ?? FirebaseAnalytics.instance;
 
   FirebaseAnalyticsObserver get observer =>
       FirebaseAnalyticsObserver(analytics: _analytics);
