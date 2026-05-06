@@ -39,6 +39,21 @@ cd flutter_client && flutter build apk --debug         # Build debug
 cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyxms
 ```
 
+## Distribución / OTA updates (Shorebird)
+
+Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id: `3da773b5-655d-47c6-8277-5d90b3417d86`).
+
+- **Nueva release** (cuando haya cambios nativos o nueva versión en Play Store):
+  ```bash
+  cd flutter_client && shorebird release android
+  ```
+- **Patch OTA** (fix de código Dart sin pasar por Play Store — llega a usuarios automáticamente):
+  ```bash
+  cd flutter_client && shorebird patch android
+  ```
+
+**Regla**: si el cambio es solo Dart (lógica, UI, providers), preferir `shorebird patch` en vez de subir una release completa. Solo hacer release completa si hay cambios en código nativo, permisos, assets o dependencias con código nativo.
+
 ## Convenciones (OBLIGATORIO)
 
 - **Código**: nombres en inglés (`expenses`, `household`, `settings`)
