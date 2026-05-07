@@ -461,9 +461,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
     if (!confirmed) return;
 
-    final takeoverUserIds =
-        assignedMember != null ? [assignedMember.userId] : null;
-    await _completeTask(task, userIds: takeoverUserIds);
+    // The adult is doing the takeover, so they are the performer.
+    // Passing the child's userId would trigger the child's approval flow,
+    // causing the task to land in pending_approval instead of completing.
+    await _completeTask(task);
   }
 
   void _showTaskLockedMessage(MemberModel? assignedMember) {
