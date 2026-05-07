@@ -83,8 +83,17 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   @override
   void dispose() {
-    _tourKeysNotifier.unregister(TourTarget.balanceCard, _balanceKey);
-    _tourKeysNotifier.unregister(TourTarget.tasksSection, _tasksKey);
+    // Defer the unregister: modifying a provider synchronously during the
+    // widget-tree finalize phase trips Riverpod's "modify provider while
+    // building" assert. Capture the notifier locally so we don't touch ref
+    // after dispose.
+    final notifier = _tourKeysNotifier;
+    final balanceKey = _balanceKey;
+    final tasksKey = _tasksKey;
+    Future<void>.microtask(() {
+      notifier.unregister(TourTarget.balanceCard, balanceKey);
+      notifier.unregister(TourTarget.tasksSection, tasksKey);
+    });
     super.dispose();
   }
 
