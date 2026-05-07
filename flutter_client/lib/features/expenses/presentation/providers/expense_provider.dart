@@ -211,7 +211,13 @@ class ExpenseController extends _$ExpenseController {
       },
       (_) {},
     );
-    // Note: Do not invalidateSelf() here to avoid CircularDependencyError if this is called from within the same family or branch of providers
+
+    if (ref.read(isOnlineProvider)) {
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(personalFinanceSummaryProvider);
+      ref.invalidate(combinedFeedControllerProvider);
+      ref.invalidate(recentActivityProvider);
+    }
   }
 }
 
@@ -231,7 +237,7 @@ class CombinedFeedController extends _$CombinedFeedController {
     unawaited(() async {
       try {
         final now = DateTime.now();
-        const storageKey = 'homesync_last_recurring_run';
+        final storageKey = 'homesync_last_recurring_run_$householdId';
         final prefs = await SharedPreferences.getInstance();
         final lastRunStr = prefs.getString(storageKey);
         final lastRun =
@@ -247,6 +253,8 @@ class CombinedFeedController extends _$CombinedFeedController {
         try {
           ref.invalidateSelf();
           ref.invalidate(expenseBalancesProvider);
+          ref.invalidate(monthlyPendingPlannedExpensesProvider);
+          ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(recentActivityProvider);
         } catch (_) {
           // Provider disposed before recurring processing finished; ignore.
@@ -438,6 +446,14 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
   if (householdId == null) return const <FeedItemModel>[];
 
   final repo = ref.watch(expenseRepositoryProvider);
+  final processResult = await repo.processRecurringExpenses(householdId);
+  processResult.fold(
+    (failure) => log.w(
+      'Monthly pending recurring processing failed: ${failure.message}',
+    ),
+    (_) {},
+  );
+
   final result = await repo.getMonthlyPendingPlannedExpenses(
     householdId,
     month: DateTime.now(),

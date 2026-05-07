@@ -3,9 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/weekly_family_summary_provider.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+
+String _formatMoney(num value) {
+  final rounded = value.round().abs().toString();
+  final buffer = StringBuffer();
+  for (var i = 0; i < rounded.length; i++) {
+    final fromEnd = rounded.length - i;
+    buffer.write(rounded[i]);
+    if (fromEnd > 1 && fromEnd % 3 == 1) {
+      buffer.write('.');
+    }
+  }
+  return '\$${buffer.toString()}';
+}
 
 /// Sprint 4 Modo Padres: pantalla con el resumen semanal del hogar.
 ///
@@ -51,7 +65,11 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: const Text('Resumen de la semana'),
+        title: const Text(
+          'Resumen semanal',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -74,28 +92,31 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
         data: (summary) {
           if (summary == null) return _EmptyState(theme: theme);
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.invalidate(weeklyFamilySummaryProvider),
+            onRefresh: () async => ref.invalidate(weeklyFamilySummaryProvider),
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
               children: [
+                _WeeklyReadoutHero(summary: summary),
+                const SizedBox(height: 16),
+                _WeeklyMetrics(summary: summary),
+                const SizedBox(height: 16),
                 _CompletionCard(summary: summary),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 if (summary.mvp != null) ...[
                   _MvpCard(member: summary.mvp!),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                 ],
                 if (summary.slacker != null) ...[
                   _SlackerCard(member: summary.slacker!),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                 ],
                 if (summary.forgottenTask != null) ...[
                   _ForgottenCard(task: summary.forgottenTask!),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                 ],
                 _SpendingCard(summary: summary),
                 if (summary.topCategory != null) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   _TopCategoryCard(top: summary.topCategory!),
                 ],
               ],
@@ -108,6 +129,196 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
 }
 
 // ---------- Cards -----------------------------------------------------------
+
+class _WeeklyReadoutHero extends StatelessWidget {
+  const _WeeklyReadoutHero({required this.summary});
+
+  final WeeklyFamilySummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final hasTasks = summary.tasksPlanned > 0;
+    final hasSpending = summary.spendingTotal > 0;
+    final hasAttention =
+        summary.slacker != null || summary.forgottenTask != null;
+    final pct = hasTasks ? (summary.completionRate * 100).round() : null;
+
+    final title = hasAttention
+        ? 'Semana con puntos a revisar'
+        : hasTasks && pct != null && pct >= 80
+            ? 'Buena coordinación'
+            : hasSpending
+                ? 'Semana tranquila con gastos'
+                : 'Semana tranquila';
+    final subtitle = hasTasks
+        ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas completadas.'
+        : hasSpending
+            ? 'Hubo gastos compartidos, pero todavía no hubo tareas planificadas.'
+            : 'Todavía no hubo actividad suficiente para un cierre completo.';
+    final accent = hasAttention
+        ? AppColors.accentGold
+        : hasTasks
+            ? AppColors.accentGreen
+            : AppColors.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: theme.border.withValues(alpha: 0.7)),
+        boxShadow: [
+          BoxShadow(
+            color:
+                theme.shadow.withValues(alpha: theme.isDarkMode ? 0.16 : 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(Icons.auto_graph_rounded, color: accent, size: 27),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                    letterSpacing: -0.3,
+                    height: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyMetrics extends StatelessWidget {
+  const _WeeklyMetrics({required this.summary});
+
+  final WeeklyFamilySummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasTasks = summary.tasksPlanned > 0;
+    final pct =
+        hasTasks ? '${(summary.completionRate * 100).round()}%' : 'Sin datos';
+    return Row(
+      children: [
+        Expanded(
+          child: _MetricTile(
+            label: 'Tareas',
+            value:
+                hasTasks ? '${summary.tasksDone}/${summary.tasksPlanned}' : '0',
+            icon: Icons.task_alt_rounded,
+            color: AppColors.accentGreen,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricTile(
+            label: 'Gastos',
+            value: _formatMoney(summary.spendingTotal),
+            icon: Icons.payments_rounded,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricTile(
+            label: 'Cumpl.',
+            value: pct,
+            icon: Icons.insights_rounded,
+            color: AppColors.accentBlue,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.075),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.13)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 9),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.textSecondary,
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _StoryCard extends StatelessWidget {
   const _StoryCard({
@@ -173,8 +384,7 @@ class _StoryCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
-                  style:
-                      TextStyle(color: theme.textSecondary, fontSize: 13),
+                  style: TextStyle(color: theme.textSecondary, fontSize: 13),
                 ),
               ],
             ),
@@ -192,49 +402,59 @@ class _CompletionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = (summary.completionRate * 100).round();
+    final hasTasks = summary.tasksPlanned > 0;
+    final pct = hasTasks ? (summary.completionRate * 100).round() : 0;
     final delta = summary.tasksDoneDelta;
-    final accent = pct >= 80
-        ? AppColors.accentGreen
-        : pct >= 50
-            ? AppColors.accentGold
-            : AppColors.accentRed;
-    final trailingText = delta == 0
+    final accent = !hasTasks
+        ? AppColors.accentBlue
+        : pct >= 80
+            ? AppColors.accentGreen
+            : pct >= 50
+                ? AppColors.accentGold
+                : AppColors.accentRed;
+    final trailingText = !hasTasks
         ? null
-        : delta > 0
-            ? '+$delta vs sem. anterior'
-            : '$delta vs sem. anterior';
+        : delta == 0
+            ? null
+            : delta > 0
+                ? '+$delta vs sem. anterior'
+                : '$delta vs sem. anterior';
     return _StoryCard(
       accent: accent,
       icon: Icons.task_alt_rounded,
       eyebrow: 'Cumplimiento',
-      title:
-          '${summary.tasksDone} de ${summary.tasksPlanned} tareas — $pct%',
-      subtitle: trailingText ??
-          'Buen ritmo: la semana cerro con todo lo que se planearon.',
-      trailing: SizedBox(
-        width: 56,
-        height: 56,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            CircularProgressIndicator(
-              value: summary.completionRate.clamp(0.0, 1.0),
-              strokeWidth: 5,
-              backgroundColor: accent.withValues(alpha: 0.12),
-              valueColor: AlwaysStoppedAnimation(accent),
-            ),
-            Text(
-              '$pct%',
-              style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
+      title: hasTasks
+          ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas - $pct%'
+          : 'Sin tareas esta semana',
+      subtitle: hasTasks
+          ? trailingText ??
+              'Buen ritmo: la semana cerró con lo planificado al día.'
+          : 'Cuando asignen tareas, acá vas a ver cumplimiento real y comparación semanal.',
+      trailing: hasTasks
+          ? SizedBox(
+              width: 56,
+              height: 56,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: summary.completionRate.clamp(0.0, 1.0),
+                    strokeWidth: 5,
+                    backgroundColor: accent.withValues(alpha: 0.12),
+                    valueColor: AlwaysStoppedAnimation(accent),
+                  ),
+                  Text(
+                    '$pct%',
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : null,
     );
   }
 }
@@ -319,18 +539,20 @@ class _SpendingCard extends StatelessWidget {
         : delta > 0
             ? AppColors.accentRed
             : AppColors.accentBlue;
-    final deltaLabel = summary.spendingLastWeek == 0
-        ? 'Primera semana con gastos compartidos.'
-        : delta < 0
-            ? 'Gastaron \$${delta.abs().toStringAsFixed(0)} menos que la semana anterior.'
-            : delta > 0
-                ? 'Gastaron \$${delta.toStringAsFixed(0)} mas que la semana anterior.'
-                : 'Mismo gasto que la semana anterior.';
+    final deltaLabel = summary.spendingTotal == 0
+        ? 'No hubo gastos compartidos esta semana.'
+        : summary.spendingLastWeek == 0
+            ? 'Primera semana con gastos compartidos.'
+            : delta < 0
+                ? 'Gastaron ${_formatMoney(delta.abs())} menos que la semana anterior.'
+                : delta > 0
+                    ? 'Gastaron ${_formatMoney(delta)} más que la semana anterior.'
+                    : 'Mismo gasto que la semana anterior.';
     return _StoryCard(
       accent: accent,
       icon: Icons.payments_rounded,
       eyebrow: 'Gastos compartidos',
-      title: '\$${summary.spendingTotal.toStringAsFixed(0)} esta semana',
+      title: '${_formatMoney(summary.spendingTotal)} esta semana',
       subtitle: deltaLabel,
     );
   }
@@ -342,13 +564,14 @@ class _TopCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final categoryName = CategoryMapping.displayName(top.category);
     return _StoryCard(
       accent: AppColors.accentPurple,
       icon: Icons.category_rounded,
-      eyebrow: 'Top categoria',
-      title: top.category,
+      eyebrow: 'Top categoría',
+      title: categoryName,
       subtitle:
-          '\$${top.total.toStringAsFixed(0)} en ${top.count} gasto${top.count == 1 ? "" : "s"}.',
+          '${_formatMoney(top.total)} en ${top.count} gasto${top.count == 1 ? "" : "s"}.',
     );
   }
 }

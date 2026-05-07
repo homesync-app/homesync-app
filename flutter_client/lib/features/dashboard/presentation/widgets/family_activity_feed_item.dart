@@ -58,6 +58,23 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         );
     final canReview = isPendingApproval && (currentMember?.isAdmin ?? false);
 
+    if (isPendingApproval) {
+      return _PendingApprovalActivityCard(
+        theme: theme,
+        userName: userName,
+        avatarUrl: avatarUrl,
+        detailTitle: detailTitle,
+        timeLabel: _formatTime(createdAt),
+        xpReward: xpReward,
+        coinsReward: coinsReward,
+        accent: accent,
+        canReview: canReview,
+        onTap: () => _openDetail(context, ref, type, data),
+        onApprove: () => _approvePendingTask(context, ref, data),
+        onReject: () => _rejectPendingTask(context, ref, data),
+      );
+    }
+
     return InkWell(
       onTap: () => _openDetail(context, ref, type, data),
       borderRadius: BorderRadius.circular(22),
@@ -175,16 +192,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           theme: theme,
                           color: AppColors.sage,
                           icon: Icons.monetization_on_rounded,
-                          label: isPendingApproval
-                              ? '+$coinsReward ${coinsReward == 1 ? "coin" : "coins"}'
-                              : '+$coinsReward coins',
+                          label: '+$coinsReward coins',
                         ),
                     ],
                   ),
-                  if (canReview) ...[
-                    const SizedBox(height: 14),
-                    _approvalActions(context, ref, data, accent),
-                  ],
                 ],
               ),
             ),
@@ -339,63 +350,6 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     return DateFormat('d MMM', 'es_AR').format(time);
   }
 
-  Widget _approvalActions(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> data,
-    Color accent,
-  ) {
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 46,
-            child: FilledButton.icon(
-              onPressed: () => _approvePendingTask(context, ref, data),
-              icon: const Icon(Icons.check_rounded, size: 17),
-              label: const Text('Aprobar'),
-              style: FilledButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: Colors.white,
-                textStyle: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w900,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SizedBox(
-            height: 46,
-            child: OutlinedButton.icon(
-              onPressed: () => _rejectPendingTask(context, ref, data),
-              icon: const Icon(Icons.reply_rounded, size: 17),
-              label: const Text('Devolver'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: accent,
-                side: BorderSide(color: accent.withValues(alpha: 0.35)),
-                textStyle: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w900,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _approvePendingTask(
     BuildContext context,
     WidgetRef ref,
@@ -460,6 +414,333 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+}
+
+class _PendingApprovalActivityCard extends StatelessWidget {
+  final AppThemeColors theme;
+  final String userName;
+  final String? avatarUrl;
+  final String detailTitle;
+  final String timeLabel;
+  final int? xpReward;
+  final int? coinsReward;
+  final Color accent;
+  final bool canReview;
+  final VoidCallback onTap;
+  final VoidCallback onApprove;
+  final VoidCallback onReject;
+
+  const _PendingApprovalActivityCard({
+    required this.theme,
+    required this.userName,
+    required this.avatarUrl,
+    required this.detailTitle,
+    required this.timeLabel,
+    required this.xpReward,
+    required this.coinsReward,
+    required this.accent,
+    required this.canReview,
+    required this.onTap,
+    required this.onApprove,
+    required this.onReject,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(26),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 17),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBF2),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(
+            color: accent.withValues(alpha: 0.28),
+            width: 1.1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CustomUserAvatar(
+                  name: userName,
+                  avatarUrl: avatarUrl,
+                  radius: 21,
+                  forceCircular: true,
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _ReviewStatusPill(accent: accent),
+                          const Spacer(),
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: accent.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(13),
+                            ),
+                            child: Icon(
+                              Icons.fact_check_rounded,
+                              color: accent,
+                              size: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 9),
+                      Text(
+                        '$userName dejó lista',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: accent.withValues(alpha: 0.94),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          height: 1.05,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        detailTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: theme.textPrimary,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          height: 1.08,
+                          letterSpacing: -0.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 13),
+            Padding(
+              padding: const EdgeInsets.only(left: 54),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _ReviewMetaPill(
+                    color: theme.textMuted,
+                    icon: Icons.access_time_rounded,
+                    label: timeLabel,
+                  ),
+                  if (xpReward != null && xpReward! > 0)
+                    _ReviewMetaPill(
+                      color: const Color(0xFFE8943A),
+                      icon: Icons.star_rounded,
+                      label: '${xpReward!} XP',
+                    ),
+                  if (coinsReward != null && coinsReward! > 0)
+                    _ReviewMetaPill(
+                      color: AppColors.sage,
+                      icon: Icons.monetization_on_rounded,
+                      label:
+                          '${coinsReward!} ${coinsReward == 1 ? "coin" : "coins"}',
+                    ),
+                ],
+              ),
+            ),
+            if (canReview) ...[
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ReviewActionButton(
+                      label: 'Devolver',
+                      icon: Icons.reply_rounded,
+                      color: accent,
+                      filled: false,
+                      onPressed: onReject,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _ReviewActionButton(
+                      label: 'Aprobar',
+                      icon: Icons.check_rounded,
+                      color: accent,
+                      filled: true,
+                      onPressed: onApprove,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewStatusPill extends StatelessWidget {
+  final Color accent;
+
+  const _ReviewStatusPill({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.hourglass_top_rounded, size: 13, color: accent),
+          const SizedBox(width: 6),
+          Text(
+            'Revisión pendiente',
+            style: TextStyle(
+              color: accent,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewMetaPill extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String label;
+
+  const _ReviewMetaPill({
+    required this.color,
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool filled;
+  final VoidCallback onPressed;
+
+  const _ReviewActionButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.filled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = filled ? Colors.white : color;
+    return SizedBox(
+      height: 46,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: filled ? color : Colors.white.withValues(alpha: 0.52),
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(
+            color: color.withValues(alpha: filled ? 0 : 0.32),
+            width: 1.2,
+          ),
+          boxShadow: filled
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 7),
+                  ),
+                ]
+              : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(17),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 17, color: foreground),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: TextStyle(
+                        color: foreground,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

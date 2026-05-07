@@ -89,30 +89,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     {
       'id': 'couple',
       'name': 'Pareja',
-      'icon': Icons.favorite_rounded,
-      'desc': 'Para convivir y organizar gastos de a dos',
-      'gradient': [const Color(0xFF6B8E85), const Color(0xFF84A59D)],
+      'icon': Icons.handshake_rounded,
+      'desc': 'Gastos y tareas compartidas',
+      'gradient': [const Color(0xFFEF7A4B), const Color(0xFFFFB085)],
     },
     {
       'id': 'family',
       'name': 'Familia',
       'icon': Icons.family_restroom_rounded,
-      'desc': 'Toda la familia participa',
-      'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8A65)],
+      'desc': 'Tareas, compras y seguimiento familiar',
+      'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8F5F)],
     },
     {
       'id': 'friends',
       'name': 'Convivencia',
       'icon': Icons.groups_rounded,
-      'desc': 'Compartimos piso, depto o roommates',
-      'gradient': [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
+      'desc': 'Cuentas claras entre roommates',
+      'gradient': [const Color(0xFF3B82F6), const Color(0xFF7DD3FC)],
     },
     {
       'id': 'solo',
       'name': 'Solo yo',
-      'icon': Icons.self_improvement_rounded,
-      'desc': 'Mis tareas personales',
-      'gradient': [const Color(0xFF9575CD), const Color(0xFFB39DDB)],
+      'icon': Icons.task_alt_rounded,
+      'desc': 'Rutinas y pendientes personales',
+      'gradient': [const Color(0xFF8B5CF6), const Color(0xFFC4B5FD)],
     },
   ];
 
@@ -1258,73 +1258,117 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
-          SetupStepEyebrow(text: 'Tipo de hogar'),
+          const SetupStepEyebrow(text: 'Tipo de hogar'),
           const SizedBox(height: 8),
-          SetupHeading(
+          const SetupHeading(
             title: '¡Comencemos!',
             subtitle: '¿Cómo vas a organizar tu hogar?',
           ),
           const SizedBox(height: 18),
           Expanded(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: Column(
-                children: [
-                  ..._modes.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final mode = entry.value;
-                    return TweenAnimationBuilder<double>(
-                      duration: Duration(milliseconds: 280 + (index * 60)),
-                      tween: Tween(begin: 0, end: 1),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, child) => Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(18 * (1 - value), 0),
-                          child: child,
-                        ),
-                      ),
-                      child: _buildModeCardV3(mode),
-                    );
-                  }),
-                  const SizedBox(height: 16),
-                  SetupPrimaryButton(
-                    text: 'Continuar',
-                    onPressed: _selectedMode != null ? _onModeSelected : null,
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        ref.read(authControllerProvider.notifier).signOut();
-                      },
-                      child: Text(
-                        'Cerrar sesión',
-                        style: TextStyle(
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.68),
-                          fontWeight: FontWeight.w600,
-                        ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          ..._modes.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final mode = entry.value;
+                            return TweenAnimationBuilder<double>(
+                              duration:
+                                  Duration(milliseconds: 280 + (index * 60)),
+                              tween: Tween(begin: 0, end: 1),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, value, child) => Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(18 * (1 - value), 0),
+                                  child: child,
+                                ),
+                              ),
+                              child: _buildModeCardV3(mode),
+                            );
+                          }),
+                          const Spacer(flex: 2),
+                          const SizedBox(height: 8),
+                          SetupPrimaryButton(
+                            text: 'Continuar',
+                            onPressed:
+                                _selectedMode != null ? _onModeSelected : null,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4,
+                            runSpacing: 0,
+                            children: [
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(0, 34),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () {
+                                  ref
+                                      .read(authControllerProvider.notifier)
+                                      .signOut();
+                                },
+                                child: Text(
+                                  'Cerrar sesión',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary
+                                        .withValues(alpha: 0.64),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '·',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary
+                                      .withValues(alpha: 0.38),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  minimumSize: const Size(0, 34),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () =>
+                                    setState(() => _currentStep = 0),
+                                child: Text(
+                                  'Ver características',
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary
+                                        .withValues(alpha: 0.52),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                        ],
                       ),
                     ),
                   ),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => setState(() => _currentStep = 0),
-                      child: Text(
-                        'Ver características de la app',
-                        style: TextStyle(
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.52),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -1334,7 +1378,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Widget _buildModeCardV3(Map<String, dynamic> mode) {
     final isSelected = _selectedMode == mode['id'];
-    final icon = mode['icon'] as IconData;
     final gradient = mode['gradient'] as List<Color>;
 
     return GestureDetector(
@@ -1345,7 +1388,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(24),
@@ -1367,19 +1410,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         ),
         child: Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(icon, color: Colors.white, size: 26),
-            ),
+            _buildModeIconV3(mode, gradient),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -1432,6 +1463,51 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildModeIconV3(Map<String, dynamic> mode, List<Color> gradient) {
+    final id = mode['id'] as String;
+    final accent = gradient.first;
+
+    IconData primary;
+    switch (id) {
+      case 'couple':
+        primary = Icons.favorite_rounded;
+        break;
+      case 'family':
+        primary = Icons.family_restroom_rounded;
+        break;
+      case 'friends':
+        primary = Icons.apartment_rounded;
+        break;
+      default:
+        primary = Icons.check_circle_rounded;
+    }
+
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Icon(
+        primary,
+        color: Colors.white,
+        size: id == 'friends' ? 29 : 31,
       ),
     );
   }

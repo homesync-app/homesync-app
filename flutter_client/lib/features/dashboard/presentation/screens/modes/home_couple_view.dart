@@ -47,8 +47,11 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   final GlobalKey _balanceKey = GlobalKey(debugLabel: 'tour_balance');
   final GlobalKey _tasksKey = GlobalKey(debugLabel: 'tour_tasks');
   bool _tourTriggered = false;
+  bool _settlementJustCompleted = false;
+  double? _optimisticExpenseBalance;
+  ScaffoldMessengerState? _scaffoldMessenger;
   // Cached pre-dispose so dispose() never calls ref after unmount
-  late final TourTargetKeysNotifier _tourKeysNotifier;
+  TourTargetKeysNotifier? _tourKeysNotifier;
 
   @override
   void initState() {
@@ -60,10 +63,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scaffoldMessenger = ScaffoldMessenger.maybeOf(context);
+  }
+
   void _registerTourKeys() {
     _tourKeysNotifier = ref.read(tourTargetKeysProvider.notifier);
-    _tourKeysNotifier.register(TourTarget.balanceCard, _balanceKey);
-    _tourKeysNotifier.register(TourTarget.tasksSection, _tasksKey);
+    _tourKeysNotifier?.register(TourTarget.balanceCard, _balanceKey);
+    _tourKeysNotifier?.register(TourTarget.tasksSection, _tasksKey);
   }
 
   void _maybeStartTour() {
@@ -96,8 +105,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   @override
   void dispose() {
-    _tourKeysNotifier.unregister(TourTarget.balanceCard, _balanceKey);
-    _tourKeysNotifier.unregister(TourTarget.tasksSection, _tasksKey);
+    _tourKeysNotifier?.unregister(TourTarget.balanceCard, _balanceKey);
+    _tourKeysNotifier?.unregister(TourTarget.tasksSection, _tasksKey);
     super.dispose();
   }
 
@@ -358,6 +367,15 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           balances.where((b) => b.userId == currentUserId).firstOrNull;
       if (myBalanceModel != null) myExpenseBalance = myBalanceModel.balance;
     });
+    final displayedExpenseBalance =
+        _optimisticExpenseBalance ?? myExpenseBalance;
+
+    if (_optimisticExpenseBalance != null && myExpenseBalance.abs() <= 10.0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _optimisticExpenseBalance = null);
+      });
+    }
 
     final partner = membersAsync.whenOrNull(
       data: (members) =>
@@ -367,15 +385,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     return BalanceCard(
       coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
       xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
-      userBalance: myExpenseBalance,
+      userBalance: displayedExpenseBalance,
       partnerName: partner?.displayName,
-      onSettle: partner != null && myExpenseBalance.abs() > 10.0
+      settlementJustCompleted: _settlementJustCompleted,
+      onSettle: partner != null && displayedExpenseBalance.abs() > 10.0
           ? () => _showSettlementDialog(
                 householdId: householdId,
                 partnerId: partner.userId,
                 partnerName: partner.displayName,
-                amount: myExpenseBalance.abs(),
-                isOwedByMe: myExpenseBalance < 0,
+                amount: displayedExpenseBalance.abs(),
+                isOwedByMe: displayedExpenseBalance < 0,
               )
           : null,
     ).animateEntrance(delay: 100);
@@ -710,6 +729,12 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                                   amount: amount,
                                 );
 
+                            if (mounted) {
+                              setState(() {
+                                _optimisticExpenseBalance = 0;
+                                _settlementJustCompleted = true;
+                              });
+                            }
                             HapticFeedback.mediumImpact();
                             setDialogState(() {
                               isSubmitting = false;
@@ -718,6 +743,16 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
                             await Future<void>.delayed(
                               const Duration(milliseconds: 420),
+                            );
+
+                            Future<void>.delayed(
+                              const Duration(milliseconds: 2200),
+                              () {
+                                if (!mounted) return;
+                                setState(() {
+                                  _settlementJustCompleted = false;
+                                });
+                              },
                             );
 
                             if (!mounted || !dialogContext.mounted) return;
@@ -794,7 +829,9 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
+    final messenger = _scaffoldMessenger;
+    if (messenger == null || !messenger.mounted) return;
+    messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
   }

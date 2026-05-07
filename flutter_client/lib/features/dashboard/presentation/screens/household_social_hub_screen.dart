@@ -46,7 +46,7 @@ class _HouseholdSocialHubScreenState
     final members = membersAsync.valueOrNull ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final canManageMembers = currentMember?.isAdmin ?? false;
+    final canSeeFamilyTracking = currentMember?.isAdult ?? false;
     final familyTrackingUnlocked = ref.watch(parentModeAvailableProvider);
 
     return Scaffold(
@@ -78,7 +78,8 @@ class _HouseholdSocialHubScreenState
               ),
               const SizedBox(height: 18),
               FamilyRankingSection(currentMember: currentMember),
-              if (caps.type == HouseholdType.family && canManageMembers) ...[
+              if (caps.type == HouseholdType.family &&
+                  canSeeFamilyTracking) ...[
                 const SizedBox(height: 18),
                 _FamilyTrackingCard(
                   unlocked: familyTrackingUnlocked,

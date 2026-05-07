@@ -99,8 +99,7 @@ final effectivePremiumProvider = Provider<bool>((ref) {
 ///
 /// Reglas:
 ///  - Solo en hogares de tipo `family`.
-///  - El miembro actual debe ser admin (puede aprobar tareas, gestionar el
-///    hogar, etc.).
+///  - El miembro actual debe ser adulto.
 ///  - El hogar debe tener premium activo.
 ///
 /// Las features de control parental (aprobacion de tareas, dashboard parental,
@@ -119,11 +118,11 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
-  return me?.isAdmin ?? false;
+  return me?.isAdult ?? false;
 });
 
 /// Misma logica que [parentModeAvailableProvider] pero sin exigir premium.
-/// Sirve para mostrar la entrada al paywall: si el usuario es admin de una
+/// Sirve para mostrar la entrada al paywall: si el usuario es adulto de una
 /// familia y todavia no compro, ahi mostramos el CTA.
 final parentModeEligibleProvider = Provider<bool>((ref) {
   final caps = ref.watch(householdCapabilitiesProvider);
@@ -134,7 +133,7 @@ final parentModeEligibleProvider = Provider<bool>((ref) {
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
-  return me?.isAdmin ?? false;
+  return me?.isAdult ?? false;
 });
 
 /// [MemberModel] del usuario en sesion dentro del hogar activo.

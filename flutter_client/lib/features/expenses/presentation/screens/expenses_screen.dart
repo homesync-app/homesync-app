@@ -330,12 +330,15 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
+    final tomorrow = today.add(const Duration(days: 1));
     final checkDate = DateTime(date.year, date.month, date.day);
 
     if (checkDate == today) {
       return 'HOY';
     } else if (checkDate == yesterday) {
       return 'AYER';
+    } else if (checkDate == tomorrow) {
+      return 'MAÑANA';
     } else {
       return DateFormat('d MMMM y', 'es').format(date).toUpperCase();
     }
@@ -587,9 +590,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         child: _buildPremiumStatTile(
                           hasIncome ? 'Gastos' : 'Pendiente',
                           hasIncome ? expense : projectedPending,
-                          hasIncome
-                              ? AppColors.primary
-                              : AppColors.accentOrange,
+                          hasIncome ? AppColors.primary : AppColors.accentTeal,
                           hasIncome
                               ? Icons.trending_down_rounded
                               : Icons.event_available_rounded,
@@ -1331,7 +1332,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       splitType: item.splitType,
     );
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(22),
@@ -1339,117 +1340,122 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         boxShadow: theme.cardShadow,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(11),
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
               color: categoryColor.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               categoryIcon,
-              size: 22,
+              size: 23,
               color: categoryColor,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _compactMovementTitle(
-                          item.title,
-                          category: item.category,
-                        ),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                          color: theme.textPrimary.withValues(
-                            alpha: theme.isDarkMode ? 0.92 : 0.6,
-                          ),
-                          letterSpacing: -0.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildPlannedStatusBadge(item),
-                  ],
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  'Previsto: ${DateFormat('d MMM', 'es').format(item.date)}',
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  _compactMovementTitle(
+                    item.title,
+                    category: item.category,
                   ),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                    color: theme.textPrimary,
+                    letterSpacing: -0.2,
+                    height: 1.08,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 8),
+                _buildPlannedStatusBadge(item),
               ],
             ),
           ),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '\$ ${_formatCurrency(item.amount)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 15,
-                  color: theme.textPrimary.withValues(
-                    alpha: theme.isDarkMode ? 0.88 : 0.5,
-                  ),
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () async {
-                  final result =
-                      await PlannedExpensePaymentSheet.show(context, item);
-                  if (!mounted || result == null || result['success'] != true) {
-                    return;
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.primary,
-                  elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '\$ ${_formatCurrency(item.amount)}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    color: theme.textPrimary.withValues(
+                      alpha: theme.isDarkMode ? 0.92 : 0.72,
+                    ),
+                    letterSpacing: -0.55,
                   ),
                 ),
-                child: const Text(
-                  'Pagar',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
-                ),
               ),
-              const SizedBox(height: 4),
-              TextButton(
-                onPressed: () => ref
-                    .read(combinedFeedControllerProvider.notifier)
-                    .discardPlannedExpense(item.id),
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.textMuted,
-                  minimumSize: Size.zero,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text(
-                  'Omitir',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
-                ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () => ref
+                        .read(combinedFeedControllerProvider.notifier)
+                        .discardPlannedExpense(item.id),
+                    style: TextButton.styleFrom(
+                      foregroundColor: theme.textMuted,
+                      minimumSize: const Size(48, 30),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text(
+                      'Omitir',
+                      style:
+                          TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final result =
+                          await PlannedExpensePaymentSheet.show(context, item);
+                      if (!mounted ||
+                          result == null ||
+                          result['success'] != true) {
+                        return;
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                      foregroundColor: AppColors.primary,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
+                      minimumSize: const Size(66, 30),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text(
+                      'Pagar',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1464,7 +1470,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final dueDate = DateTime(item.date.year, item.date.month, item.date.day);
     final diff = dueDate.difference(today).inDays;
 
-    String label = 'PRÓXIMO';
+    String label = 'PROXIMO';
     Color badgeColor = AppColors.textMuted;
     IconData icon = Icons.access_time_rounded;
 
@@ -1476,6 +1482,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       label = 'VENCE HOY';
       badgeColor = AppColors.accentOrange;
       icon = Icons.today_rounded;
+    } else if (diff == 1) {
+      label = 'MAÑANA';
+      badgeColor = AppColors.accentGold;
+      icon = Icons.notification_important_rounded;
     } else if (diff <= 2) {
       label = 'VENCE PRONTO';
       badgeColor = AppColors.accentGold;
@@ -1483,20 +1493,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.1),
+        color: badgeColor.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: badgeColor.withValues(alpha: 0.8)),
+          Icon(icon, size: 9, color: badgeColor.withValues(alpha: 0.78)),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 8.5,
               fontWeight: FontWeight.w900,
               color: badgeColor,
               letterSpacing: 0.5,

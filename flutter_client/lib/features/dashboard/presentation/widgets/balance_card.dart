@@ -12,6 +12,7 @@ class BalanceCard extends StatelessWidget {
   final bool isDark;
   final VoidCallback? onSettle;
   final String? partnerName;
+  final bool settlementJustCompleted;
 
   const BalanceCard({
     super.key,
@@ -21,6 +22,7 @@ class BalanceCard extends StatelessWidget {
     this.isDark = false,
     this.onSettle,
     this.partnerName,
+    this.settlementJustCompleted = false,
   });
 
   @override
@@ -32,32 +34,53 @@ class BalanceCard extends StatelessWidget {
     final theme = context.theme;
 
     final statusColor = isNegative ? AppColors.accentOrange : AppColors.sage;
-    final balanceMessage = partnerName == null
-        ? 'Mi presupuesto'
-        : (isBalanced
-            ? 'Balance en calma'
-            : (isNegative ? 'Hace falta equilibrar' : 'Quedó a tu favor'));
-    return Container(
+    final surfaceColor = settlementJustCompleted
+        ? Color.alphaBlend(
+            AppColors.sage.withValues(alpha: 0.035),
+            theme.surface,
+          )
+        : theme.surface;
+    final elevatedSurfaceColor = settlementJustCompleted
+        ? Color.alphaBlend(
+            AppColors.sage.withValues(alpha: 0.05),
+            theme.elevatedSurface,
+          )
+        : theme.elevatedSurface;
+    final borderColor = settlementJustCompleted
+        ? AppColors.sage.withValues(alpha: 0.22)
+        : theme.border.withValues(alpha: 0.68);
+    final balanceMessage = settlementJustCompleted
+        ? 'Todo equilibrado'
+        : partnerName == null
+            ? 'Mi presupuesto'
+            : (isBalanced
+                ? 'Balance en calma'
+                : (isNegative ? 'Hace falta equilibrar' : 'Quedó a tu favor'));
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.surface,
-            theme.elevatedSurface,
+            surfaceColor,
+            elevatedSurfaceColor,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: theme.border.withValues(alpha: 0.68),
+          color: borderColor,
           width: 1.05,
         ),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowBase.withValues(alpha: 0.036),
-            blurRadius: 16,
-            offset: const Offset(0, 7),
+            color: settlementJustCompleted
+                ? AppColors.sage.withValues(alpha: 0.075)
+                : theme.shadowBase.withValues(alpha: 0.036),
+            blurRadius: settlementJustCompleted ? 22 : 16,
+            offset: Offset(0, settlementJustCompleted ? 9 : 7),
           ),
         ],
       ),
@@ -74,7 +97,9 @@ class BalanceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isBalanced ? 'Balance en calma' : balanceMessage,
+                        settlementJustCompleted || !isBalanced
+                            ? balanceMessage
+                            : 'Balance en calma',
                         style: TextStyle(
                           color: isBalanced
                               ? statusColor.withValues(alpha: 0.88)
@@ -163,19 +188,27 @@ class BalanceCard extends StatelessWidget {
                     ),
                   ).animatePulse()
                 else if (isBalanced)
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.sage.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 320),
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.88,
+                            end: 1,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _BalanceSuccessBadge(
+                      key: ValueKey(settlementJustCompleted),
+                      emphasized: settlementJustCompleted,
                     ),
-                    child: const Icon(
-                      Icons.check_rounded,
-                      color: AppColors.sage,
-                      size: 24,
-                    ),
-                  ).animateScaleIn(),
+                  ),
               ],
             ),
             const SizedBox(height: 13),
@@ -281,6 +314,44 @@ class BalanceCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _BalanceSuccessBadge extends StatelessWidget {
+  final bool emphasized;
+
+  const _BalanceSuccessBadge({
+    super.key,
+    required this.emphasized,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      width: emphasized ? 54 : 44,
+      height: emphasized ? 54 : 44,
+      decoration: BoxDecoration(
+        color: AppColors.sage.withValues(alpha: emphasized ? 0.16 : 0.1),
+        shape: BoxShape.circle,
+        boxShadow: emphasized
+            ? [
+                BoxShadow(
+                  color: AppColors.sage.withValues(alpha: 0.18),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
+      ),
+      child: const Icon(
+        Icons.check_rounded,
+        color: AppColors.sage,
+        size: 24,
+      ),
     );
   }
 }

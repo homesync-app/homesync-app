@@ -39,14 +39,20 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Color.alphaBlend(
+            AppColors.primary.withValues(alpha: 0.018),
+            AppColors.surface,
+          ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.divider, width: 1),
+          border: Border.all(
+            color: AppColors.divider.withValues(alpha: 0.78),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: AppColors.shadowBase.withValues(alpha: 0.035),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -61,7 +67,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
+                      color: AppColors.primary.withValues(alpha: 0.105),
                       borderRadius: BorderRadius.circular(11),
                     ),
                     child: const Icon(
@@ -77,17 +83,18 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       children: [
                         Text(
                           hasItems
-                              ? '${linkedItems.length} ${linkedItems.length == 1 ? 'artículo' : 'artículos'} del ticket'
+                              ? 'Productos detectados'
                               : 'Vincular con lista de compras',
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
-                            fontSize: 14,
+                            fontSize: 14.5,
                             color: AppColors.textPrimary,
+                            letterSpacing: -0.1,
                           ),
                         ),
                         if (hasItems && newCount > 0)
                           Text(
-                            '$newCount nuevo${newCount == 1 ? '' : 's'} · se agregan a tu lista',
+                            '${linkedItems.length} artículo${linkedItems.length == 1 ? '' : 's'} · $newCount nuevo${newCount == 1 ? '' : 's'} para tu lista',
                             style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
@@ -120,11 +127,19 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       onTap: onClearAll,
                       borderRadius: BorderRadius.circular(20),
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: AppColors.background.withValues(alpha: 0.72),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.divider.withValues(alpha: 0.72),
+                          ),
+                        ),
                         child: const Icon(
                           Icons.close_rounded,
                           color: AppColors.textSecondary,
-                          size: 20,
+                          size: 18,
                           semanticLabel: 'Quitar todas las vinculaciones',
                         ),
                       ),
@@ -141,14 +156,21 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
               ),
             ),
             if (hasItems) ...[
-              const SizedBox(height: 12),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    color: AppColors.divider.withValues(alpha: 0.52),
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
+                  spacing: 7,
+                  runSpacing: 7,
                   children: linkedItems.map((item) {
                     final isNew = autoAddedItems.contains(item);
                     return _ItemChip(
@@ -283,8 +305,8 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                     final catalogEntry = ReceiptMatcher.findPredefined(raw);
                     final emoji = catalogEntry?.emoji ?? '🛒';
                     final cleanRaw = ReceiptMatcher.cleanName(raw);
-                    final displayName =
-                        catalogEntry?.name ?? (cleanRaw.isNotEmpty ? cleanRaw : raw);
+                    final displayName = catalogEntry?.name ??
+                        (cleanRaw.isNotEmpty ? cleanRaw : raw);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -342,16 +364,19 @@ class _ItemChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final chipBorderColor = isNew
+        ? AppColors.divider.withValues(alpha: 0.95)
+        : AppColors.sage.withValues(alpha: 0.34);
+    final chipBackgroundColor = isNew
+        ? AppColors.background.withValues(alpha: 0.84)
+        : AppColors.sage.withValues(alpha: 0.065);
+
     final chip = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6.5),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: chipBackgroundColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isNew
-              ? AppColors.primary.withValues(alpha: 0.30)
-              : AppColors.divider,
-        ),
+        border: Border.all(color: chipBorderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -360,36 +385,41 @@ class _ItemChip extends StatelessWidget {
             item.emoji.isNotEmpty ? item.emoji : '🛒',
             style: const TextStyle(fontSize: 13),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 6),
           Text(
             item.name,
             style: const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
+              letterSpacing: -0.05,
             ),
           ),
           if (isNew) ...[
             const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
+                color: AppColors.primaryLight.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
                 'nuevo',
                 style: TextStyle(
                   fontSize: 9,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: AppColors.primary,
-                  letterSpacing: 0.2,
+                  letterSpacing: 0.1,
                 ),
               ),
             ),
           ] else ...[
-            const SizedBox(width: 5),
-            const Icon(Icons.check_circle, size: 13, color: Color(0xFF22C55E)),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 14,
+              color: AppColors.accentGreen,
+            ),
           ],
         ],
       ),

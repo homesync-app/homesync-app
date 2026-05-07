@@ -27,8 +27,7 @@ class FamilyDashboardScreen extends ConsumerStatefulWidget {
       _FamilyDashboardScreenState();
 }
 
-class _FamilyDashboardScreenState
-    extends ConsumerState<FamilyDashboardScreen> {
+class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
   DashboardPeriod _period = DashboardPeriod.week;
 
   @override
@@ -79,6 +78,26 @@ class _FamilyDashboardScreenState
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: SegmentedButton<DashboardPeriod>(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary.withValues(alpha: 0.12);
+                  }
+                  return theme.surface;
+                }),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return AppColors.primary;
+                  }
+                  return theme.textSecondary;
+                }),
+                side: WidgetStateProperty.all(
+                  BorderSide(color: theme.border.withValues(alpha: 0.7)),
+                ),
+                textStyle: WidgetStateProperty.all(
+                  const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
               segments: const [
                 ButtonSegment(
                   value: DashboardPeriod.week,
@@ -90,8 +109,7 @@ class _FamilyDashboardScreenState
                 ),
               ],
               selected: {_period},
-              onSelectionChanged: (s) =>
-                  setState(() => _period = s.first),
+              onSelectionChanged: (s) => setState(() => _period = s.first),
             ),
           ),
         ),
@@ -115,14 +133,19 @@ class _FamilyDashboardScreenState
           return RefreshIndicator(
             onRefresh: () async =>
                 ref.invalidate(familyMemberDashboardProvider(_period)),
-            child: ListView.separated(
+            child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              itemCount: dashboard.members.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, i) => _MemberCard(
-                snapshot: dashboard.members[i],
-                period: dashboard.period,
-              ),
+              children: [
+                _DashboardSummary(dashboard: dashboard),
+                const SizedBox(height: 16),
+                for (final member in dashboard.members) ...[
+                  _MemberCard(
+                    snapshot: member,
+                    period: dashboard.period,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
             ),
           );
         },
@@ -139,47 +162,46 @@ class _MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final rate = snapshot.completionRate;
-    final ringColor = _ringColor(rate);
+    final plannedTotal = snapshot.plannedTotal;
+    final hasTasks = plannedTotal > 0;
+    final rate = hasTasks ? snapshot.completionRate : 0.0;
+    final statusColor = _statusColor(snapshot, hasTasks, rate);
+    final statusLabel = _statusLabel(snapshot, hasTasks, rate);
+    final statusIcon = _statusIcon(snapshot, hasTasks, rate);
+    final progressText = hasTasks
+        ? '${snapshot.tasksDone}/$plannedTotal hechas'
+        : period == DashboardPeriod.week
+            ? 'Sin tareas esta semana'
+            : 'Sin tareas este mes';
+    final coinDelta = snapshot.coinsEarned - snapshot.coinsSpent;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.border.withValues(alpha: 0.66)),
+        boxShadow: [
+          BoxShadow(
+            color:
+                theme.shadow.withValues(alpha: theme.isDarkMode ? 0.16 : 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              SizedBox(
-                width: 56,
-                height: 56,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 56,
-                      height: 56,
-                      child: CircularProgressIndicator(
-                        value: rate.clamp(0.0, 1.0),
-                        strokeWidth: 4,
-                        backgroundColor: theme.divider,
-                        valueColor: AlwaysStoppedAnimation(ringColor),
-                      ),
-                    ),
-                    CustomUserAvatar(
-                      avatarUrl: snapshot.avatarUrl,
-                      name: snapshot.fullName,
-                      userId: snapshot.userId,
-                      radius: 22,
-                    ),
-                  ],
-                ),
+              CustomUserAvatar(
+                avatarUrl: snapshot.avatarUrl,
+                name: snapshot.fullName,
+                userId: snapshot.userId,
+                radius: 25,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 13),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +219,8 @@ class _MemberCard extends StatelessWidget {
                       _roleLabel(snapshot),
                       style: TextStyle(
                         color: theme.textSecondary,
-                        fontSize: 12,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -205,64 +228,107 @@ class _MemberCard extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
+                  horizontal: 11,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: ringColor.withValues(alpha: 0.14),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(statusIcon, color: statusColor, size: 14),
+                    const SizedBox(width: 5),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (hasTasks) ...[
+            const SizedBox(height: 13),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: rate.clamp(0.0, 1.0),
+                minHeight: 7,
+                backgroundColor: theme.divider.withValues(alpha: 0.65),
+                valueColor: AlwaysStoppedAnimation(statusColor),
+              ),
+            ),
+          ],
+          SizedBox(height: hasTasks ? 10 : 12),
+          Row(
+            children: [
+              Expanded(
                 child: Text(
-                  '${(rate * 100).round()}%',
+                  progressText,
                   style: TextStyle(
-                    color: ringColor,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
+                    color: hasTasks ? theme.textPrimary : theme.textSecondary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
+              if (snapshot.streakDays > 0 || plannedTotal >= 2)
+                _MiniMetric(
+                  icon: Icons.local_fire_department_rounded,
+                  label: snapshot.streakDays > 0
+                      ? '${snapshot.streakDays} días'
+                      : 'Sin racha',
+                  color: snapshot.streakDays > 0
+                      ? AppColors.accentOrange
+                      : theme.textMuted,
+                ),
+              if (coinDelta != 0) ...[
+                const SizedBox(width: 8),
+                _MiniMetric(
+                  icon: Icons.monetization_on_rounded,
+                  color: AppColors.accentYellow,
+                  label: coinDelta == 0
+                      ? '0 coins'
+                      : '${coinDelta > 0 ? '+' : ''}$coinDelta',
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _Stat(
-                icon: Icons.task_alt_rounded,
-                color: AppColors.accentGreen,
-                label: '${snapshot.tasksDone} hechas',
-              ),
-              if (snapshot.tasksOpen > 0)
-                _Stat(
-                  icon: Icons.pending_actions_rounded,
-                  color: AppColors.accentBlue,
-                  label: '${snapshot.tasksOpen} pendientes',
-                ),
-              if (snapshot.tasksOverdue > 0)
-                _Stat(
-                  icon: Icons.error_outline_rounded,
-                  color: AppColors.accentRed,
-                  label: '${snapshot.tasksOverdue} atrasadas',
-                ),
-              if (snapshot.tasksPendingApproval > 0)
-                _Stat(
-                  icon: Icons.hourglass_top_rounded,
-                  color: AppColors.accentGold,
-                  label: '${snapshot.tasksPendingApproval} a aprobar',
-                ),
-              _Stat(
-                icon: Icons.local_fire_department_rounded,
-                color: AppColors.accentOrange,
-                label: '${snapshot.streakDays} de racha',
-              ),
-              _Stat(
-                icon: Icons.monetization_on_rounded,
-                color: AppColors.accentYellow,
-                label: '+${snapshot.coinsEarned} / -${snapshot.coinsSpent}',
-              ),
-            ],
-          ),
+          if (snapshot.tasksOpen > 0 ||
+              snapshot.tasksOverdue > 0 ||
+              snapshot.tasksPendingApproval > 0) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (snapshot.tasksOpen > 0)
+                  _Stat(
+                    icon: Icons.pending_actions_rounded,
+                    color: AppColors.accentBlue,
+                    label: '${snapshot.tasksOpen} pendientes',
+                  ),
+                if (snapshot.tasksOverdue > 0)
+                  _Stat(
+                    icon: Icons.error_outline_rounded,
+                    color: AppColors.accentRed,
+                    label: '${snapshot.tasksOverdue} atrasadas',
+                  ),
+                if (snapshot.tasksPendingApproval > 0)
+                  _Stat(
+                    icon: Icons.hourglass_top_rounded,
+                    color: AppColors.accentGold,
+                    label: '${snapshot.tasksPendingApproval} a aprobar',
+                  ),
+              ],
+            ),
+          ],
           if (snapshot.topCategories.isNotEmpty) ...[
             const SizedBox(height: 14),
             Text(
@@ -308,10 +374,40 @@ class _MemberCard extends StatelessWidget {
     );
   }
 
-  Color _ringColor(double rate) {
+  Color _statusColor(
+    FamilyMemberSnapshot snapshot,
+    bool hasTasks,
+    double rate,
+  ) {
+    if (!hasTasks) return AppColors.accentBlue;
+    if (snapshot.tasksOverdue > 0) return AppColors.accentRed;
+    if (snapshot.tasksPendingApproval > 0) return AppColors.accentGold;
     if (rate >= 0.8) return AppColors.accentGreen;
     if (rate >= 0.5) return AppColors.accentGold;
     return AppColors.accentRed;
+  }
+
+  IconData _statusIcon(
+    FamilyMemberSnapshot snapshot,
+    bool hasTasks,
+    double rate,
+  ) {
+    if (!hasTasks) return Icons.event_available_rounded;
+    if (snapshot.tasksOverdue > 0) return Icons.error_outline_rounded;
+    if (snapshot.tasksPendingApproval > 0) return Icons.hourglass_top_rounded;
+    if (rate >= 0.8) return Icons.check_circle_rounded;
+    return Icons.trending_flat_rounded;
+  }
+
+  String _statusLabel(
+    FamilyMemberSnapshot snapshot,
+    bool hasTasks,
+    double rate,
+  ) {
+    if (!hasTasks) return 'Sin tareas';
+    if (snapshot.tasksOverdue > 0) return 'Atención';
+    if (snapshot.tasksPendingApproval > 0) return 'A revisar';
+    return '${(rate * 100).round()}%';
   }
 
   String _roleLabel(FamilyMemberSnapshot s) {
@@ -321,6 +417,256 @@ class _MemberCard extends StatelessWidget {
     if (s.isChild) return 'Hijo/a';
     if (s.isTeen) return 'Adolescente';
     return 'Adulto';
+  }
+}
+
+class _DashboardSummary extends StatelessWidget {
+  const _DashboardSummary({required this.dashboard});
+
+  final FamilyMemberDashboard dashboard;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final members = dashboard.members;
+    final done = members.fold<int>(0, (sum, m) => sum + m.tasksDone);
+    final open = members.fold<int>(0, (sum, m) => sum + m.tasksOpen);
+    final overdue = members.fold<int>(0, (sum, m) => sum + m.tasksOverdue);
+    final approvals =
+        members.fold<int>(0, (sum, m) => sum + m.tasksPendingApproval);
+    final planned = done + open;
+    final activeMembers = members.where((m) => m.plannedTotal > 0).length;
+    final rate = planned == 0 ? null : done / planned;
+    final title = dashboard.period == DashboardPeriod.week
+        ? 'Seguimiento semanal'
+        : 'Seguimiento mensual';
+    final subtitle = planned == 0
+        ? dashboard.period == DashboardPeriod.week
+            ? 'Aún no hay tareas para esta semana.'
+            : 'Aún no hay tareas para este mes.'
+        : '$activeMembers de ${members.length} integrantes tienen tareas activas.';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: theme.border.withValues(alpha: 0.66)),
+        boxShadow: [
+          BoxShadow(
+            color:
+                theme.shadow.withValues(alpha: theme.isDarkMode ? 0.16 : 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.insights_rounded,
+                  color: AppColors.primary,
+                  size: 23,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (rate != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 11,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '${(rate * 100).round()}%',
+                    style: const TextStyle(
+                      color: AppColors.accentGreen,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryMetric(
+                  label: 'Hechas',
+                  value: '$done',
+                  icon: Icons.task_alt_rounded,
+                  color: AppColors.accentGreen,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SummaryMetric(
+                  label: 'Pendientes',
+                  value: '$open',
+                  icon: Icons.pending_actions_rounded,
+                  color: AppColors.accentBlue,
+                ),
+              ),
+            ],
+          ),
+          if (overdue > 0 || approvals > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (overdue > 0)
+                  Expanded(
+                    child: _SummaryMetric(
+                      label: 'Atrasadas',
+                      value: '$overdue',
+                      icon: Icons.error_outline_rounded,
+                      color: AppColors.accentRed,
+                    ),
+                  ),
+                if (overdue > 0 && approvals > 0) const SizedBox(width: 10),
+                if (approvals > 0)
+                  Expanded(
+                    child: _SummaryMetric(
+                      label: 'A revisar',
+                      value: '$approvals',
+                      icon: Icons.hourglass_top_rounded,
+                      color: AppColors.accentGold,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.075),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.13)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 19,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniMetric extends StatelessWidget {
+  const _MiniMetric({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 14),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 }
 

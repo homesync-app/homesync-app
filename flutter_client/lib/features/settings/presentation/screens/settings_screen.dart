@@ -33,7 +33,6 @@ import 'package:homesync_client/features/settings/presentation/widgets/settings_
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/settings_parent_mode_card.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -356,12 +355,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 14),
                           if (_householdId != null) ...[
                             _buildCombinedHouseholdCard(),
-                            // Modo Padres solo visible para adultos; menores
-                            // no pueden gestionar ni ver esta seccion.
-                            if (!isMinor) ...[
-                              const SizedBox(height: 16),
-                              const SettingsParentModeCard(),
-                            ],
                           ] else if (!_hasLoadedOnce && _isLoading) ...[
                             _buildLoadingCard(height: 220),
                           ] else ...[

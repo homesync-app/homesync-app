@@ -440,7 +440,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                     .text
                                                                     .isNotEmpty
                                                                 ? IconButton(
-                                                                    tooltip: 'Limpiar búsqueda',
+                                                                    tooltip:
+                                                                        'Limpiar búsqueda',
                                                                     onPressed:
                                                                         () {
                                                                       _searchController
@@ -744,8 +745,17 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   ) {
     // 1. Deduplicate by id (defensive: RPC may return duplicate rows)
     // then group by category so users can always edit/program/delete them.
+    final caps = ref.watch(householdCapabilitiesProvider);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+    final hideReviewQueue =
+        caps.type == HouseholdType.family && (currentMember?.isAdult ?? false);
     final seen = <String>{};
-    final deduped = tasks.where((t) => seen.add(t.id)).toList();
+    final deduped = tasks
+        .where((t) => seen.add(t.id))
+        .where((t) => !(hideReviewQueue && t.isPendingApproval))
+        .toList();
 
     // 2. Build Category Lookup Map (Key: Normalised ID)
     final catLookup = <String, CategoryModel>{};
@@ -932,7 +942,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     // Default to false while members are still loading — never grant adult
     // permissions to an unknown viewer.
     final parentModeActive = ref.watch(parentModeAvailableProvider);
-    final isAdultView = isFamilyMode && parentModeActive && (currentMember?.canApprove ?? false);
+    final isAdultView = isFamilyMode &&
+        parentModeActive &&
+        (currentMember?.canApprove ?? false);
     // Teens and children must send completions through the adult review
     // queue instead of marking tasks done directly.
     final requiresApprovalSubmission =
@@ -1083,11 +1095,17 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
-                        Divider(
-                          color: theme.divider.withValues(
-                            alpha: theme.isDarkMode ? 0.35 : 0.9,
-                          ),
+                        Container(
                           height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                theme.divider.withValues(alpha: 0.34),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -1165,26 +1183,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         );
       }
 
-      return Row(
-        children: [
-          Expanded(
-            child: _buildActionTilePremium(
-              icon: Icons.check_rounded,
-              label: _isSubmitting ? 'Aprobando...' : 'Aprobar',
-              color: AppColors.accentGreen,
-              onTap: _isSubmitting ? null : _approvePendingTask,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _buildActionTilePremium(
-              icon: Icons.reply_rounded,
-              label: _isSubmitting ? 'Devolviendo...' : 'Devolver',
-              color: AppColors.accentRed,
-              onTap: _isSubmitting ? null : _rejectPendingTask,
-            ),
-          ),
-        ],
+      return _buildInfoBanner(
+        icon: Icons.hourglass_top_rounded,
+        text: 'Esperando revisión.',
+        color: AppColors.primary,
       );
     }
 
@@ -1525,46 +1527,6 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         ref.invalidate(todayTasksProvider);
         ref.invalidate(recentActivityProvider);
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  Future<void> _approvePendingTask() async {
-    setState(() => _isSubmitting = true);
-    try {
-      final result = await ref
-          .read(tasksProvider.notifier)
-          .approvePendingTask(widget.task);
-      if (!mounted) return;
-      if (result == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No pudimos aprobar la tarea.')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarea aprobada.')),
-        );
-        ref.invalidate(tasksProvider);
-        ref.invalidate(todayTasksProvider);
-        ref.invalidate(recentActivityProvider);
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
-  }
-
-  Future<void> _rejectPendingTask() async {
-    setState(() => _isSubmitting = true);
-    try {
-      await ref.read(tasksProvider.notifier).rejectPendingTask(widget.task);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La tarea volvió a quedar pendiente.')),
-      );
-      ref.invalidate(tasksProvider);
-      ref.invalidate(todayTasksProvider);
-      ref.invalidate(recentActivityProvider);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
