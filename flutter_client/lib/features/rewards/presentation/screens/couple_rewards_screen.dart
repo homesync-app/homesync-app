@@ -208,9 +208,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   Widget build(BuildContext context) {
     if (widget.showDuel) {
       ref.listen<int>(parejaTabIndexProvider, (previous, next) {
-        if (_tabController.index != next) {
+        if (!mounted) return;
+        if (next < 0 || next >= _tabController.length) return;
+        if (_tabController.index == next) return;
+        // Defer to next frame so we don't animate during a build pass and
+        // don't touch a controller whose Ticker just became inactive.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (_tabController.index == next) return;
           _tabController.animateTo(next);
-        }
+        });
       });
     }
 

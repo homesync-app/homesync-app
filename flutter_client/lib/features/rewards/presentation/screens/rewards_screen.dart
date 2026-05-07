@@ -159,9 +159,14 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   @override
   Widget build(BuildContext context) {
     ref.listen<int>(parejaTabIndexProvider, (previous, next) {
-      if (_tabController.index != next) {
+      if (!mounted) return;
+      if (next < 0 || next >= _tabController.length) return;
+      if (_tabController.index == next) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_tabController.index == next) return;
         _tabController.animateTo(next);
-      }
+      });
     });
 
     final rewardsAsync = ref.watch(paginatedRewardsProvider);
