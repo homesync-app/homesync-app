@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -64,9 +65,12 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         ),
         error: (_, __) => const SizedBox.shrink(key: ValueKey('tasks-error')),
         data: (tasks) {
-          // Las revisiones viven en Movimientos del hogar. "Hoy en casa"
-          // queda reservado para tareas accionables o programadas.
-          final reviewTasks = <TaskModel>[];
+          // Tareas pendientes de revisión: solo visibles para adultos con
+          // Modo Padres activo (premium). Los hijos nunca las ven acá.
+          final parentModeActive = ref.watch(parentModeAvailableProvider);
+          final reviewTasks = (parentModeActive && !widget.isChild)
+              ? tasks.where((task) => task.isPendingApproval).toList()
+              : <TaskModel>[];
           final todayTasks = tasks
               .where((task) => task.isPending && !task.isPendingApproval)
               .where((task) => task.isDueToday)

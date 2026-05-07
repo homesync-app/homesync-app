@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -925,10 +926,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final assignedMember =
         members.where((member) => member.userId == task.assignedTo).firstOrNull;
     final isFamilyMode = caps.type == HouseholdType.family;
-    // Parents and guardians can approve; teens and children cannot.
-    // When the current viewer is missing from the member list we default to
-    // adult permissions so the review flow stays reachable.
-    final isAdultView = isFamilyMode && (currentMember?.canApprove ?? true);
+    // Approval actions are a premium feature (Modo Padres).
+    // We gate on parentModeAvailableProvider (family + premium + adult) so
+    // non-premium users and children never see approve/reject buttons.
+    // Default to false while members are still loading — never grant adult
+    // permissions to an unknown viewer.
+    final parentModeActive = ref.watch(parentModeAvailableProvider);
+    final isAdultView = isFamilyMode && parentModeActive && (currentMember?.canApprove ?? false);
     // Teens and children must send completions through the adult review
     // queue instead of marking tasks done directly.
     final requiresApprovalSubmission =
