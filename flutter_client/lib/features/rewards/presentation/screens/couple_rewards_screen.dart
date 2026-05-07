@@ -52,14 +52,14 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
     );
     if (widget.showDuel) {
-      _tabController.addListener(() {
-        if (!_tabController.indexIsChanging) {
-          ref
-              .read(parejaTabIndexProvider.notifier)
-              .setIndex(_tabController.index);
-        }
-      });
+      _tabController.addListener(_onTabChanged);
       _loadDuelStats();
+    }
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      ref.read(parejaTabIndexProvider.notifier).setIndex(_tabController.index);
     }
   }
 
@@ -67,6 +67,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   void didUpdateWidget(covariant CoupleRewardsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.showDuel != widget.showDuel) {
+      _tabController.removeListener(_onTabChanged);
       _tabController.dispose();
       _tabController = TabController(
         length: widget.showDuel ? 2 : 1,
@@ -74,13 +75,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
       );
       if (widget.showDuel) {
-        _tabController.addListener(() {
-          if (!_tabController.indexIsChanging) {
-            ref
-                .read(parejaTabIndexProvider.notifier)
-                .setIndex(_tabController.index);
-          }
-        });
+        _tabController.addListener(_onTabChanged);
         _loadDuelStats();
       }
     }
@@ -97,6 +92,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -518,11 +514,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             final viewportWidth = constraints.maxWidth.isFinite
                 ? constraints.maxWidth
                 : MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2);
-            final columns = viewportWidth >= 280 ? 2 : 1;
-            final cardWidth = (viewportWidth - (12 * (columns - 1)))
-                    .clamp(0, double.infinity) /
-                columns;
-            final cardHeight = columns == 2 ? 208.0 : 220.0;
+            const columns = 2;
+            final cardWidth =
+                (viewportWidth - 12).clamp(0, double.infinity) / columns;
+            const cardHeight = 208.0;
             return Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -1388,20 +1383,20 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final costController = TextEditingController();
-    String selectedIcon = '??';
+    String selectedIcon = '💝';
     String selectedCategory = 'mimos';
     bool isSubmitting = false;
     const icons = [
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '???',
+      '💝',
+      '🌹',
+      '🕯️',
+      '☕',
+      '🍷',
+      '🛁',
+      '🎁',
+      '✨',
+      '🌙',
+      '🎬',
     ];
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 

@@ -52,6 +52,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   @override
   void initState() {
     super.initState();
+    _tourKeysNotifier = ref.read(tourTargetKeysProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _registerTourKeys();
@@ -60,7 +61,6 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   void _registerTourKeys() {
-    _tourKeysNotifier = ref.read(tourTargetKeysProvider.notifier);
     _tourKeysNotifier.register(TourTarget.balanceCard, _balanceKey);
     _tourKeysNotifier.register(TourTarget.tasksSection, _tasksKey);
   }
