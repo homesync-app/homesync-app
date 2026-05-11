@@ -9,6 +9,7 @@ import 'package:homesync_client/features/expenses/domain/models/expense_template
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -65,17 +66,7 @@ class _RecurringExpenseFormSheetState
   bool _isLoading = false;
   late String _type;
 
-  final List<Map<String, dynamic>> _expenseCategories = const [
-    {'id': 'utilities', 'name': 'Servicios'},
-    {'id': 'rent', 'name': 'Alquiler y hogar'},
-    {'id': 'restaurants', 'name': 'Salidas y comidas'},
-    {'id': 'transport', 'name': 'Transporte'},
-    {'id': 'entertainment', 'name': 'Ocio y planes'},
-    {'id': 'health', 'name': 'Salud'},
-    {'id': 'finanzas', 'name': 'Ahorro e inversión'},
-    {'id': 'mercadolibre', 'name': 'Compras online'},
-    {'id': 'other', 'name': 'Otros'},
-  ];
+  final List<Map<String, dynamic>> _expenseCategories = buildExpenseCategories();
 
   late final List<Map<String, dynamic>> _incomeCategories;
 
@@ -114,12 +105,13 @@ class _RecurringExpenseFormSheetState
 
   void _onTitleChanged() {
     if (widget.template != null) return;
-    if (_type == 'income') return; // no inferir categoría para ingresos
+    if (_type == 'income') return; // no inferir categorÃ­a para ingresos
     final inferredCategory =
         inferExpenseCategoryIdFromText(_titleController.text);
     if (inferredCategory == null) return;
     if (_category == inferredCategory) return;
-    if (_expenseCategories.any((category) => category['id'] == inferredCategory)) {
+    if (_expenseCategories
+        .any((category) => category['id'] == inferredCategory)) {
       setState(() => _category = inferredCategory);
     }
   }
@@ -190,15 +182,18 @@ class _RecurringExpenseFormSheetState
 
     if (title.isEmpty || parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa titulo y monto valido.')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)
+                .recurringExpenseValidationTitleAmount,),),
       );
       return;
     }
 
     if (_splitType != 'personal' && _payerDefault.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Elige quien suele abonarla para dejarla lista.'),
+        SnackBar(
+          content: Text(
+              AppLocalizations.of(context).recurringExpenseValidationPayer,),
         ),
       );
       return;
@@ -232,8 +227,10 @@ class _RecurringExpenseFormSheetState
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        final t = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.commonErrorWithDetails('$e'))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -247,17 +244,17 @@ class _RecurringExpenseFormSheetState
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar suscripcion?'),
-        content: const Text('Dejara de aparecer en futuros meses.'),
+        title: Text(AppLocalizations.of(context).recurringExpenseDeleteTitle),
+        content: Text(AppLocalizations.of(context).recurringExpenseDeleteBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context).commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Eliminar'),
+            child: Text(AppLocalizations.of(context).commonDelete),
           ),
         ],
       ),
@@ -275,6 +272,7 @@ class _RecurringExpenseFormSheetState
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(householdMembersProvider);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final t = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -323,10 +321,9 @@ class _RecurringExpenseFormSheetState
                           _buildHeader(),
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'DETALLE',
-                            title: 'Qué se renueva cada mes',
-                            subtitle:
-                                'Define el nombre y el monto para reconocerla rápido.',
+                            eyebrow: t.recurringExpenseDetailEyebrow,
+                            title: t.recurringExpenseDetailTitle,
+                            subtitle: t.recurringExpenseDetailSubtitle,
                           ),
                           const SizedBox(height: 16),
                           _buildTitleField(),
@@ -334,38 +331,34 @@ class _RecurringExpenseFormSheetState
                           _buildAmountField(),
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'CALENDARIO',
-                            title: 'Cuándo se registra',
-                            subtitle:
-                                'Elegimos el día habitual para programarla sola.',
+                            eyebrow: t.recurringExpenseCalendarEyebrow,
+                            title: t.recurringExpenseCalendarTitle,
+                            subtitle: t.recurringExpenseCalendarSubtitle,
                           ),
                           const SizedBox(height: 16),
                           _buildDaySelector(),
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'CATEGORÍA',
-                            title: 'Dónde encaja mejor',
-                            subtitle:
-                                'Ayuda a ordenar Finanzas y mantener la lectura clara.',
+                            eyebrow: t.recurringExpenseCategoryEyebrow,
+                            title: t.recurringExpenseCategoryTitle,
+                            subtitle: t.recurringExpenseCategorySubtitle,
                           ),
                           const SizedBox(height: 16),
                           _buildCategorySelector(),
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'REPARTO',
-                            title: 'Cómo se reparte',
-                            subtitle:
-                                'Define si se comparte en el hogar o si queda como personal.',
+                            eyebrow: t.recurringExpenseSplitEyebrow,
+                            title: t.recurringExpenseSplitTitle,
+                            subtitle: t.recurringExpenseSplitSubtitle,
                           ),
                           const SizedBox(height: 16),
                           _buildSplitTypeSelector(),
                           if (_splitType != 'personal') ...[
                             const SizedBox(height: 28),
                             _buildSectionIntro(
-                              eyebrow: 'PAGADOR',
-                              title: 'Quién suele abonarla',
-                              subtitle:
-                                  'Esto deja una sugerencia lista para los próximos meses.',
+                              eyebrow: t.recurringExpensePayerEyebrow,
+                              title: t.recurringExpensePayerTitle,
+                              subtitle: t.recurringExpensePayerSubtitle,
                             ),
                             const SizedBox(height: 16),
                             _buildPayerSelector(members),
@@ -385,6 +378,7 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildHeader() {
+    final t = AppLocalizations.of(context);
     final isIncome = _type == 'income';
     final accentColor = isIncome ? AppColors.success : AppColors.primary;
     final isEditing = widget.template != null;
@@ -406,9 +400,7 @@ class _RecurringExpenseFormSheetState
                 ),
               ),
               child: Icon(
-                isIncome
-                    ? Icons.savings_rounded
-                    : Icons.autorenew_rounded,
+                isIncome ? Icons.savings_rounded : Icons.autorenew_rounded,
                 color: accentColor,
                 size: 40,
               ),
@@ -421,11 +413,11 @@ class _RecurringExpenseFormSheetState
                   Text(
                     isEditing
                         ? (isIncome
-                            ? 'Editar ingreso'
-                            : 'Editar suscripción')
+                            ? t.recurringExpenseHeaderEditIncome
+                            : t.recurringExpenseHeaderEditSubscription)
                         : (isIncome
-                            ? 'Nuevo ingreso fijo'
-                            : 'Nueva suscripción'),
+                            ? t.recurringExpenseHeaderNewIncome
+                            : t.recurringExpenseHeaderNewSubscription),
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -436,10 +428,10 @@ class _RecurringExpenseFormSheetState
                   const SizedBox(height: 10),
                   Text(
                     isEditing
-                        ? 'Ajusta monto, categoría y reparto para mantenerlo al día.'
+                        ? t.recurringExpenseHeaderEditSubtitle
                         : (isIncome
-                            ? 'Se sumará automáticamente a tu balance cada mes.'
-                            : 'Dejala configurada y lista para que se registre sola todos los meses.'),
+                            ? t.recurringExpenseHeaderNewIncomeSubtitle
+                            : t.recurringExpenseHeaderNewSubscriptionSubtitle),
                     style: const TextStyle(
                       fontSize: 14.5,
                       height: 1.45,
@@ -452,7 +444,7 @@ class _RecurringExpenseFormSheetState
             ),
             const SizedBox(width: 12),
             IconButton(
-              tooltip: 'Cerrar',
+              tooltip: t.commonClose,
               icon: const Icon(
                 Icons.close_rounded,
                 color: AppColors.textMuted,
@@ -471,7 +463,9 @@ class _RecurringExpenseFormSheetState
           OutlinedButton.icon(
             onPressed: _delete,
             icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: Text(isIncome ? 'Eliminar ingreso' : 'Eliminar suscripción'),
+            label: Text(isIncome
+                ? t.recurringExpenseDeleteIncome
+                : t.recurringExpenseDeleteSubscription,),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.error,
               side: BorderSide(color: AppColors.error.withValues(alpha: 0.22)),
@@ -495,8 +489,16 @@ class _RecurringExpenseFormSheetState
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [
-          _buildTypeOption('expense', Icons.trending_down_rounded, 'Gasto'),
-          _buildTypeOption('income', Icons.trending_up_rounded, 'Ingreso'),
+          _buildTypeOption(
+            'expense',
+            Icons.trending_down_rounded,
+            AppLocalizations.of(context).expensesFormTypeExpense,
+          ),
+          _buildTypeOption(
+            'income',
+            Icons.trending_up_rounded,
+            AppLocalizations.of(context).expensesFormTypeIncome,
+          ),
         ],
       ),
     );
@@ -509,8 +511,9 @@ class _RecurringExpenseFormSheetState
       child: GestureDetector(
         onTap: () => setState(() {
           _type = type;
-          // Resetear categoría al cambiar tipo si la actual no existe en la nueva lista
-          final available = type == 'income' ? _incomeCategories : _expenseCategories;
+          // Resetear categorÃ­a al cambiar tipo si la actual no existe en la nueva lista
+          final available =
+              type == 'income' ? _incomeCategories : _expenseCategories;
           if (!available.any((c) => c['id'] == _category)) {
             _category = available.first['id'] as String;
           }
@@ -519,7 +522,8 @@ class _RecurringExpenseFormSheetState
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+            color:
+                isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: isSelected
                 ? Border.all(color: color.withValues(alpha: 0.35))
@@ -528,7 +532,8 @@ class _RecurringExpenseFormSheetState
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 16, color: isSelected ? color : AppColors.textMuted),
+              Icon(icon,
+                  size: 16, color: isSelected ? color : AppColors.textMuted,),
               const SizedBox(width: 6),
               Text(
                 label,
@@ -591,13 +596,17 @@ class _RecurringExpenseFormSheetState
       textInputAction: TextInputAction.next,
       validator: (value) {
         final title = value?.trim() ?? '';
-        if (title.isEmpty) return 'Escribe un nombre para reconocerla.';
-        if (title.length < 3) return 'Usa al menos 3 caracteres.';
+        if (title.isEmpty) {
+          return AppLocalizations.of(context).recurringExpenseNameRequired;
+        }
+        if (title.length < 3) {
+          return AppLocalizations.of(context).recurringExpenseNameMinLength;
+        }
         return null;
       },
       decoration: InputDecoration(
-        labelText: 'Nombre',
-        hintText: 'Ej: Netflix, alquiler o internet',
+        labelText: AppLocalizations.of(context).recurringExpenseNameLabel,
+        hintText: AppLocalizations.of(context).recurringExpenseNameHint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
@@ -624,12 +633,16 @@ class _RecurringExpenseFormSheetState
       onChanged: _onAmountChanged,
       validator: (value) {
         final amount = _parseAmount(value ?? '');
-        if (amount == null) return 'Ingresa un monto valido.';
-        if (amount <= 0) return 'El monto debe ser mayor a cero.';
+        if (amount == null) {
+          return AppLocalizations.of(context).recurringExpenseAmountInvalid;
+        }
+        if (amount <= 0) {
+          return AppLocalizations.of(context).recurringExpenseAmountPositive;
+        }
         return null;
       },
       decoration: InputDecoration(
-        labelText: 'Monto por defecto',
+        labelText: AppLocalizations.of(context).recurringExpenseAmountLabel,
         prefixText: r'$ ',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
         enabledBorder: OutlineInputBorder(
@@ -654,9 +667,9 @@ class _RecurringExpenseFormSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Se cobra el dia:',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).recurringExpenseDayLabel,
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -715,12 +728,13 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildCategorySelector() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Categoria:',
-          style: TextStyle(
+        Text(
+          t.recurringExpenseCategoryLabel,
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -739,16 +753,25 @@ class _RecurringExpenseFormSheetState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    CategoryMapping.getCategoryMaterialIcon(category['id'] as String),
+                    CategoryMapping.getCategoryMaterialIcon(
+                        category['id'] as String,),
                     size: 16,
                     color: categoryColor,
                   ),
                   const SizedBox(width: 6),
-                  Text(category['name'] as String),
+                  Text(
+                    _type == 'income'
+                        ? localizedIncomeCategoryName(t, category['id'] as String)
+                        : localizedExpenseCategoryName(
+                            t,
+                            category['id'] as String,
+                          ),
+                  ),
                 ],
               ),
               selected: isSelected,
-              onSelected: (_) => setState(() => _category = category['id'] as String),
+              onSelected: (_) =>
+                  setState(() => _category = category['id'] as String),
               selectedColor: categoryColor.withValues(alpha: 0.16),
               backgroundColor: categoryColor.withValues(alpha: 0.07),
               checkmarkColor: categoryColor,
@@ -769,12 +792,13 @@ class _RecurringExpenseFormSheetState
   }
 
   Widget _buildSplitTypeSelector() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Reparto de gasto:',
-          style: TextStyle(
+        Text(
+          t.recurringExpenseSplitLabel,
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -783,9 +807,17 @@ class _RecurringExpenseFormSheetState
         const SizedBox(height: 12),
         Row(
           children: [
-            _buildSplitOption('equal', 'Compartido', Icons.groups_rounded),
+            _buildSplitOption(
+              'equal',
+              t.expensesFormSplitShared,
+              Icons.groups_rounded,
+            ),
             const SizedBox(width: 12),
-            _buildSplitOption('personal', 'Solo mio', Icons.person_rounded),
+            _buildSplitOption(
+              'personal',
+              t.expensesFormSplitPersonal,
+              Icons.person_rounded,
+            ),
           ],
         ),
       ],
@@ -846,9 +878,9 @@ class _RecurringExpenseFormSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Pagador habitual:',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).recurringExpenseRegularPayerLabel,
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -899,7 +931,10 @@ class _RecurringExpenseFormSheetState
   Widget _buildSaveButton() {
     final isIncome = _type == 'income';
     final accentColor = isIncome ? AppColors.success : AppColors.primary;
-    final label = isIncome ? 'Guardar ingreso' : 'Guardar suscripción';
+    final t = AppLocalizations.of(context);
+    final label = isIncome
+        ? t.recurringExpenseSaveIncome
+        : t.recurringExpenseSaveSubscription;
 
     return SizedBox(
       height: 60,
@@ -930,14 +965,14 @@ class _RecurringExpenseFormSheetState
                   const Icon(Icons.check_rounded, size: 22),
                   const SizedBox(width: 10),
                   Flexible(
-                   child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 17,
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 17,
+                      ),
                     ),
-                   ),
                   ),
                 ],
               ),
@@ -963,9 +998,9 @@ class _RecurringExpenseFormSheetState
               foregroundColor: AppColors.textMuted,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
             ),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            child: Text(
+              AppLocalizations.of(context).commonCancel,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 16),
@@ -975,3 +1010,5 @@ class _RecurringExpenseFormSheetState
     );
   }
 }
+
+

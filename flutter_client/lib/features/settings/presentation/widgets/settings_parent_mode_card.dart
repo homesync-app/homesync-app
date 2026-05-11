@@ -12,6 +12,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/pending_ap
 import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/pending_approvals_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Sprint 1 Modo Padres: card de configuracion del bundle "Modo Padres".
 ///
@@ -41,6 +42,7 @@ class _SettingsParentModeCardState
 
     final available = ref.watch(parentModeAvailableProvider);
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -72,7 +74,7 @@ class _SettingsParentModeCardState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Modo Padres',
+                      t.settingsParentModeTitle,
                       style: TextStyle(
                         color: theme.textPrimary,
                         fontWeight: FontWeight.w900,
@@ -81,7 +83,7 @@ class _SettingsParentModeCardState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Vos coordinas, ellos cumplen.',
+                      t.settingsParentModeSubtitle,
                       style:
                           TextStyle(color: theme.textSecondary, fontSize: 12),
                     ),
@@ -98,9 +100,9 @@ class _SettingsParentModeCardState
                     color: AppColors.accentGold.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Text(
-                    'PREMIUM',
-                    style: TextStyle(
+                  child: Text(
+                    t.settingsPremiumBadge,
+                    style: const TextStyle(
                       color: AppColors.accentGold,
                       fontWeight: FontWeight.w900,
                       fontSize: 11,
@@ -162,7 +164,13 @@ class _SettingsParentModeCardState
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No pudimos guardar el cambio: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).settingsParentModeSaveError(
+                e.toString(),
+              ),
+            ),
+          ),
         );
       }
     } finally {
@@ -178,12 +186,13 @@ class _LockedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _bullet(theme, '✅', 'Aprobacion de tareas antes de dar coins.'),
-        _bullet(theme, '👀', 'Vista por miembro y resumen familiar semanal.'),
-        _bullet(theme, '🔄', 'Rotacion automatica de tareas entre integrantes.'),
+        _bullet(theme, '✅', t.settingsParentModeBulletApproval),
+        _bullet(theme, '👀', t.settingsParentModeBulletPerMember),
+        _bullet(theme, '🔄', t.settingsParentModeBulletRotation),
         const SizedBox(height: 14),
         SizedBox(
           width: double.infinity,
@@ -194,7 +203,7 @@ class _LockedBody extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text('Activar Modo Padres'),
+            child: Text(t.settingsParentModeUnlockButton),
           ),
         ),
       ],
@@ -239,6 +248,7 @@ class _UnlockedBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final householdAsync = ref.watch(currentHouseholdProvider);
     final mode = householdAsync.valueOrNull?.taskApprovalMode ?? 'off';
     final pending = ref.watch(pendingTaskApprovalsProvider).valueOrNull ?? [];
@@ -247,7 +257,7 @@ class _UnlockedBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Aprobacion de tareas',
+          t.settingsParentModeApprovalSectionTitle,
           style: TextStyle(
             color: theme.textPrimary,
             fontWeight: FontWeight.w800,
@@ -256,7 +266,7 @@ class _UnlockedBody extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Cuando un miembro completa una tarea, queda pendiente hasta que vos la apruebes.',
+          t.settingsParentModeApprovalSectionSubtitle,
           style: TextStyle(color: theme.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 12),
@@ -264,34 +274,32 @@ class _UnlockedBody extends ConsumerWidget {
           value: 'off',
           groupValue: mode,
           enabled: !saving,
-          title: 'Desactivado',
-          subtitle: 'Las tareas se acreditan apenas se completan.',
+          title: t.settingsParentModeApprovalOffTitle,
+          subtitle: t.settingsParentModeApprovalOffSubtitle,
           onChanged: onChangeMode,
         ),
         _ModeOption(
           value: 'children_only',
           groupValue: mode,
           enabled: !saving,
-          title: 'Solo niños y adolescentes',
-          subtitle:
-              'Los adultos completan directo; los demas requieren aprobacion.',
+          title: t.settingsParentModeApprovalChildrenOnlyTitle,
+          subtitle: t.settingsParentModeApprovalChildrenOnlySubtitle,
           onChanged: onChangeMode,
         ),
         _ModeOption(
           value: 'all',
           groupValue: mode,
           enabled: !saving,
-          title: 'Todos los miembros',
-          subtitle: 'Cualquier completion pasa por tu OK antes de pagar coins.',
+          title: t.settingsParentModeApprovalAllTitle,
+          subtitle: t.settingsParentModeApprovalAllSubtitle,
           onChanged: onChangeMode,
         ),
         _ModeOption(
           value: 'per_member',
           groupValue: mode,
           enabled: !saving,
-          title: 'Por miembro',
-          subtitle:
-              'Vos elegis exactamente quien necesita aprobacion en la lista de abajo.',
+          title: t.settingsParentModeApprovalPerMemberTitle,
+          subtitle: t.settingsParentModeApprovalPerMemberSubtitle,
           onChanged: onChangeMode,
         ),
         if (mode == 'per_member') ...[
@@ -319,8 +327,8 @@ class _UnlockedBody extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     pending.isEmpty
-                        ? 'Bandeja de aprobaciones'
-                        : 'Bandeja de aprobaciones — ${pending.length} pendiente${pending.length == 1 ? "" : "s"}',
+                        ? t.settingsParentModeInboxIdle
+                        : t.settingsParentModeInboxWithCount(pending.length),
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,
@@ -346,25 +354,25 @@ class _UnlockedBody extends ConsumerWidget {
               color: AppColors.accentBlue.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.groups_rounded,
                   color: AppColors.accentBlue,
                   size: 20,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Vista por miembro',
-                    style: TextStyle(
+                    t.settingsParentModeMemberView,
+                    style: const TextStyle(
                       color: AppColors.accentBlue,
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
                     ),
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.accentBlue,
                 ),
@@ -382,25 +390,25 @@ class _UnlockedBody extends ConsumerWidget {
               color: AppColors.accentPurple.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.celebration_rounded,
                   color: AppColors.accentPurple,
                   size: 20,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Resumen de la semana',
-                    style: TextStyle(
+                    t.settingsParentModeWeeklySummary,
+                    style: const TextStyle(
                       color: AppColors.accentPurple,
                       fontWeight: FontWeight.w800,
                       fontSize: 13,
                     ),
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.accentPurple,
                 ),
@@ -504,8 +512,7 @@ class _PerMemberToggleList extends ConsumerStatefulWidget {
       _PerMemberToggleListState();
 }
 
-class _PerMemberToggleListState
-    extends ConsumerState<_PerMemberToggleList> {
+class _PerMemberToggleListState extends ConsumerState<_PerMemberToggleList> {
   Future<List<_MemberApprovalRow>>? _future;
 
   @override
@@ -515,6 +522,8 @@ class _PerMemberToggleListState
   }
 
   Future<List<_MemberApprovalRow>> _load() async {
+    final memberFallbackName =
+        AppLocalizations.of(context).settingsHouseholdMemberFallbackName;
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return const [];
     final client = ref.read(supabaseClientProvider);
@@ -527,9 +536,12 @@ class _PerMemberToggleListState
         .eq('household_id', householdId)
         .order('joined_at', ascending: true);
     return (rows as List)
-        .map((r) => _MemberApprovalRow.fromMap(
-              Map<String, dynamic>.from(r as Map),
-            ),)
+        .map(
+          (r) => _MemberApprovalRow.fromMap(
+            Map<String, dynamic>.from(r as Map),
+            memberFallbackName: memberFallbackName,
+          ),
+        )
         .toList();
   }
 
@@ -538,19 +550,32 @@ class _PerMemberToggleListState
       row.requiresApproval = requires;
     });
     try {
-      await ref.read(supabaseClientProvider).from('household_members').update({
-        'requires_task_approval': requires,
-      }).eq('id', row.id);
+      await ref.read(supabaseClientProvider).rpc(
+        'update_member_task_approval',
+        params: {
+          'p_household_member_id': row.id,
+          'p_requires_task_approval': requires,
+        },
+      );
     } catch (e, stack) {
-      log.e('Failed to toggle requires_task_approval',
-          error: e, stackTrace: stack,);
+      log.e(
+        'Failed to toggle requires_task_approval',
+        error: e,
+        stackTrace: stack,
+      );
       // Revert UI optimistic.
       setState(() {
         row.requiresApproval = !requires;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No pudimos guardar el cambio: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).settingsParentModeSaveError(
+                e.toString(),
+              ),
+            ),
+          ),
         );
       }
     }
@@ -579,7 +604,7 @@ class _PerMemberToggleListState
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              'No hay otros miembros en el hogar todavia.',
+              AppLocalizations.of(context).settingsParentModePerMemberEmpty,
               style: TextStyle(color: theme.textSecondary, fontSize: 12),
             ),
           );
@@ -612,14 +637,20 @@ class _PerMemberToggleListState
                               fontSize: 13,
                             ),
                           ),
-                          if (row.roleLabel != null)
-                            Text(
-                              row.roleLabel!,
-                              style: TextStyle(
-                                color: theme.textSecondary,
-                                fontSize: 11.5,
-                              ),
-                            ),
+                          Builder(
+                            builder: (ctx) {
+                              final label = row
+                                  .localizedRoleLabel(AppLocalizations.of(ctx));
+                              if (label == null) return const SizedBox.shrink();
+                              return Text(
+                                label,
+                                style: TextStyle(
+                                  color: theme.textSecondary,
+                                  fontSize: 11.5,
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -642,44 +673,50 @@ class _MemberApprovalRow {
   final String id;
   final String userId;
   final String fullName;
-  final String? roleLabel;
+  final String memberType;
+  final String role;
   bool requiresApproval;
 
   _MemberApprovalRow({
     required this.id,
     required this.userId,
     required this.fullName,
-    required this.roleLabel,
+    required this.memberType,
+    required this.role,
     required this.requiresApproval,
   });
 
-  factory _MemberApprovalRow.fromMap(Map<String, dynamic> map) {
+  factory _MemberApprovalRow.fromMap(
+    Map<String, dynamic> map, {
+    required String memberFallbackName,
+  }) {
     final user = map['users'] is Map
         ? Map<String, dynamic>.from(map['users'] as Map)
         : const <String, dynamic>{};
-    final memberType = (map['member_type'] as String?) ?? 'adult';
-    final role = (map['role'] as String?) ?? 'member';
     return _MemberApprovalRow(
       id: map['id'] as String,
       userId: map['user_id'] as String,
       fullName: (user['full_name'] as String?) ??
           (user['email'] as String?) ??
-          'Miembro',
-      roleLabel: _label(memberType, role),
+          memberFallbackName,
+      memberType: (map['member_type'] as String?) ?? 'adult',
+      role: (map['role'] as String?) ?? 'member',
       requiresApproval: (map['requires_task_approval'] as bool?) ?? false,
     );
   }
 
-  static String? _label(String memberType, String role) {
+  /// Localized role label, computed at render time so it stays in sync with
+  /// the active locale.
+  String? localizedRoleLabel(AppLocalizations t) {
     final type = switch (memberType) {
-      'child' => 'Hijo/a',
-      'teen' => 'Adolescente',
-      'parent' => 'Adulto',
-      'guardian' => 'Tutor/a',
-      _ => 'Adulto',
+      'child' => t.settingsParentModeMemberTypeChild,
+      'teen' => t.settingsParentModeMemberTypeTeen,
+      'parent' => t.settingsParentModeMemberTypeAdult,
+      'guardian' => t.settingsParentModeMemberTypeGuardian,
+      _ => t.settingsParentModeMemberTypeAdult,
     };
-    if (role == 'owner') return '$type · Owner';
-    if (role == 'admin') return '$type · Admin';
+    if (role == 'owner') return '$type · ${t.settingsParentModeRoleOwnerSuffix}';
+    if (role == 'admin') return '$type · ${t.settingsParentModeRoleAdminSuffix}';
     return type;
   }
 }

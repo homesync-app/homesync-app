@@ -34,6 +34,8 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async {
     _task = TaskModel(
       id: 'task-recurring-1',
@@ -77,9 +79,10 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
         _task!.completedAt!.month == _now.month &&
         _task!.completedAt!.day == _now.day;
 
-    final canCompleteFromVerifiedRecurring = _task!.status == TaskStatus.verified &&
-        _task!.recurrenceType != null &&
-        (_task!.dueAt == null || !_task!.dueAt!.isAfter(_now));
+    final canCompleteFromVerifiedRecurring =
+        _task!.status == TaskStatus.verified &&
+            _task!.recurrenceType != null &&
+            (_task!.dueAt == null || !_task!.dueAt!.isAfter(_now));
 
     final canCompleteFromActiveState = _task!.status == TaskStatus.active ||
         _task!.status == TaskStatus.assigned ||
@@ -101,12 +104,14 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
     );
     _lastActivityId = 'activity-${_now.millisecondsSinceEpoch}';
 
-    return const Right(TaskCompletionResult(
-      success: true,
-      message: 'Task completed',
-      queued: false,
-      status: 'ok',
-    ),);
+    return const Right(
+      TaskCompletionResult(
+        success: true,
+        message: 'Task completed',
+        queued: false,
+        status: 'ok',
+      ),
+    );
   }
 
   @override
@@ -121,7 +126,9 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
       return const Left(ServerFailure('Task is not pending verification'));
     }
 
-    final nextDue = _task!.recurrenceType == null ? _task!.dueAt : _now.add(const Duration(days: 1));
+    final nextDue = _task!.recurrenceType == null
+        ? _task!.dueAt
+        : _now.add(const Duration(days: 1));
     _task = _task!.copyWith(
       status: TaskStatus.verified,
       lastVerifiedBy: verifiedByUserId,
@@ -132,7 +139,8 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId,) async {
+    String activityId,
+  ) async {
     if (_task == null || _lastActivityId != activityId) {
       return const Left(ServerFailure('Activity not found'));
     }
@@ -175,9 +183,9 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
-      List<TaskModel> tasks, {
-      List<String>? userIds,
-      DateTime? completedAt,
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
   }) async =>
       const Right({'success': true});
 }
@@ -207,35 +215,32 @@ void main() {
         final completion1 = await repo.completeTask(task, userIds: ['user-1']);
         expect(completion1.isRight(), isTrue);
 
-        final afterComplete = (await repo.getTasks('household-1'))
-            .getOrElse((_) => [])
-            .first;
+        final afterComplete =
+            (await repo.getTasks('household-1')).getOrElse((_) => []).first;
         expect(afterComplete.status, TaskStatus.pendingVerification);
 
         final verification = await repo.verifyTask(afterComplete.id, 'user-2');
         expect(verification.isRight(), isTrue);
 
-        final afterVerify = (await repo.getTasks('household-1'))
-            .getOrElse((_) => [])
-            .first;
+        final afterVerify =
+            (await repo.getTasks('household-1')).getOrElse((_) => []).first;
         expect(afterVerify.status, TaskStatus.verified);
 
-        final sameDayAttempt = await repo.completeTask(afterVerify, userIds: ['user-1']);
+        final sameDayAttempt =
+            await repo.completeTask(afterVerify, userIds: ['user-1']);
         expect(sameDayAttempt.isLeft(), isTrue);
 
         repo.advanceDays(1);
-        final taskNextDay = (await repo.getTasks('household-1'))
-            .getOrElse((_) => [])
-            .first;
+        final taskNextDay =
+            (await repo.getTasks('household-1')).getOrElse((_) => []).first;
         final completionNextDay = await repo.completeTask(
           taskNextDay,
           userIds: ['user-1'],
         );
         expect(completionNextDay.isRight(), isTrue);
 
-        final afterRecomplete = (await repo.getTasks('household-1'))
-            .getOrElse((_) => [])
-            .first;
+        final afterRecomplete =
+            (await repo.getTasks('household-1')).getOrElse((_) => []).first;
         expect(afterRecomplete.status, TaskStatus.pendingVerification);
       },
     );

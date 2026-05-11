@@ -35,8 +35,11 @@ final mercadopagoMovementsProvider =
     );
 
     if (response.status == 200) {
-      final movements =
-          (response.data['movements'] as List).cast<Map<String, dynamic>>();
+      final data = response.data as Map<String, dynamic>?;
+      final movements = (data?['movements'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
       return movements;
     }
     return [];

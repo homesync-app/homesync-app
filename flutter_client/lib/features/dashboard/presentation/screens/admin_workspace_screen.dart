@@ -777,7 +777,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
 // ─── Catálogo Pendiente ──────────────────────────────────────────────────────
 
 class _CatalogRequestsSection extends ConsumerWidget {
-  final dynamic theme;
+  final AppThemeColors theme;
   const _CatalogRequestsSection({required this.theme});
 
   @override
@@ -1031,7 +1031,7 @@ final _userFeedbackProvider =
 });
 
 class _UserFeedbackSection extends ConsumerStatefulWidget {
-  final dynamic theme;
+  final AppThemeColors theme;
   const _UserFeedbackSection({required this.theme});
 
   @override
@@ -1155,7 +1155,7 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
     );
   }
 
-  Widget _filterChip(dynamic theme, String value, String label) {
+  Widget _filterChip(AppThemeColors theme, String value, String label) {
     final selected = _typeFilter == value;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -1177,7 +1177,7 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
 
 class _FeedbackTile extends StatefulWidget {
   final Map<String, dynamic> item;
-  final dynamic theme;
+  final AppThemeColors theme;
   const _FeedbackTile({required this.item, required this.theme});
 
   @override
@@ -1291,7 +1291,7 @@ class _FeedbackTileState extends State<_FeedbackTile> {
     );
   }
 
-  Widget _metaChip(dynamic theme, IconData icon, String label) {
+  Widget _metaChip(AppThemeColors theme, IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -1326,14 +1326,14 @@ final _errorLogsProvider =
   final response = await client
       .from('application_logs')
       .select(
-          'id, level, message, stack_trace, context, device_info, created_at')
+          'id, level, message, stack_trace, context, device_info, created_at',)
       .order('created_at', ascending: false)
       .limit(50);
   return List<Map<String, dynamic>>.from(response as List);
 });
 
 class _ErrorLogsSection extends ConsumerStatefulWidget {
-  final dynamic theme;
+  final AppThemeColors theme;
   const _ErrorLogsSection({required this.theme});
 
   @override
@@ -1489,7 +1489,7 @@ class _ErrorLogsSectionState extends ConsumerState<_ErrorLogsSection> {
 
 class _ErrorLogTile extends StatelessWidget {
   final Map<String, dynamic> log;
-  final dynamic theme;
+  final AppThemeColors theme;
   final bool isExpanded;
   final VoidCallback onToggle;
 
@@ -1557,7 +1557,7 @@ class _ErrorLogTile extends StatelessWidget {
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                            horizontal: 6, vertical: 2,),
                         decoration: BoxDecoration(
                           color: levelColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
@@ -1575,7 +1575,7 @@ class _ErrorLogTile extends StatelessWidget {
                       if (library != null) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                              horizontal: 6, vertical: 2,),
                           decoration: BoxDecoration(
                             color: theme.surfaceContainer,
                             borderRadius: BorderRadius.circular(6),
@@ -1641,7 +1641,7 @@ class _ErrorLogTile extends StatelessWidget {
                     ],
                     if (stackTrace != null && stackTrace.isNotEmpty) ...[
                       _buildDetailBlock(
-                          'Stack trace completo', stackTrace, theme),
+                          'Stack trace completo', stackTrace, theme,),
                     ],
                     if (contextData != null) ...[
                       const SizedBox(height: 8),
@@ -1652,7 +1652,7 @@ class _ErrorLogTile extends StatelessWidget {
                                 e.key != 'full_diagnostics' &&
                                 e.key != 'stack_frames_head' &&
                                 e.key != 'context' &&
-                                e.key != 'library')
+                                e.key != 'library',)
                             .map((e) => '${e.key}: ${e.value}')
                             .join('\n'),
                         theme,
@@ -1681,7 +1681,8 @@ class _ErrorLogTile extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailBlock(String label, String content, dynamic theme) {
+  Widget _buildDetailBlock(
+      String label, String content, AppThemeColors theme,) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

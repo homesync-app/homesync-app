@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/widgets/homesync_logo.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 class PremiumPaywallScreen extends ConsumerStatefulWidget {
@@ -30,6 +31,7 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final productsAsync = ref.watch(premiumProductsProvider);
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
@@ -39,7 +41,7 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Cerrar',
+          tooltip: t.premiumPaywallCloseTooltip,
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
@@ -97,10 +99,10 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                   const SizedBox(height: 24),
 
                   // Title
-                  const Text(
-                    'Lleva tu hogar al\nsiguiente nivel',
+                  Text(
+                    t.premiumPaywallTitle,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -111,10 +113,10 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
 
                   const SizedBox(height: 12),
 
-                  const Text(
-                    'Desbloquea todas las funciones pro\ny simplifica tu vida en equipo.',
+                  Text(
+                    t.premiumPaywallSubtitle,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
                       height: 1.4,
@@ -124,25 +126,22 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                   const SizedBox(height: 40),
 
                   // ── Premium Benefits ──────────────────────────────────────
-                  const _BenefitCard(
+                  _BenefitCard(
                     icon: Icons.auto_graph_rounded,
-                    title: 'Estadísticas Avanzadas',
-                    desc:
-                        'Analiza tus gastos y tareas por categoría con gráficos detallados.',
+                    title: t.premiumBenefitAdvancedStats,
+                    desc: t.premiumBenefitAdvancedStatsDesc,
                   ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.2),
 
-                  const _BenefitCard(
+                  _BenefitCard(
                     icon: Icons.home_work_rounded,
-                    title: 'Hogares Ilimitados',
-                    desc:
-                        'Crea múltiples hogares para tu pareja, familia, amigos o proyectos.',
+                    title: t.premiumBenefitUnlimitedHouseholds,
+                    desc: t.premiumBenefitUnlimitedHouseholdsDesc,
                   ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.2),
 
-                  const _BenefitCard(
+                  _BenefitCard(
                     icon: Icons.palette_rounded,
-                    title: 'Personalización Total',
-                    desc:
-                        'Acceso a temas premium, colores únicos y widgets personalizados.',
+                    title: t.premiumBenefitFullCustomization,
+                    desc: t.premiumBenefitFullCustomizationDesc,
                   ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.2),
 
                   const SizedBox(height: 48),
@@ -164,9 +163,9 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                   TextButton(
                     onPressed: () =>
                         ref.read(restorePremiumPurchasesUseCaseProvider).call(),
-                    child: const Text(
-                      'Restaurar compras',
-                      style: TextStyle(color: Colors.white54, fontSize: 13),
+                    child: Text(
+                      t.premiumRestorePurchases,
+                      style: const TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ),
 
@@ -245,6 +244,7 @@ class _ProductList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     if (products.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -254,10 +254,10 @@ class _ProductList extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            const Text(
-              'Prueba Gratis disponible',
+            Text(
+              t.premiumFreeTrialAvailable,
               style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -273,13 +273,13 @@ class _ProductList extends ConsumerWidget {
                 await ref.read(premiumProvider.notifier).togglePremiumMock();
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Activar Premium'),
+              child: Text(t.premiumActivateButton),
             ),
             if (!AppEnvironment.isProduction) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Modo testing · sin cargo',
-                style: TextStyle(color: Colors.white38, fontSize: 11),
+              Text(
+                t.premiumTestingModeLabel,
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
               ),
             ],
           ],
@@ -301,6 +301,7 @@ class _ProductCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     final isYearly = product.id.contains('yearly');
 
     return Container(
@@ -343,9 +344,9 @@ class _ProductCard extends ConsumerWidget {
               ),
             ),
             if (isYearly)
-              const Text(
-                'Ahorra 20%',
-                style: TextStyle(
+              Text(
+                t.premiumSavePercent,
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -362,6 +363,7 @@ class _ProductCard extends ConsumerWidget {
 class _AlreadyPremiumCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -377,19 +379,19 @@ class _AlreadyPremiumCard extends ConsumerWidget {
             size: 64,
           ),
           const SizedBox(height: 16),
-          const Text(
-            '¡Ya eres Premium!',
-            style: TextStyle(
+          Text(
+            t.premiumAlreadyActiveTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Gracias por apoyar el desarrollo de HomeSync.',
+          Text(
+            t.premiumAlreadyActiveBody,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.white70),
           ),
           const SizedBox(height: 24),
           OutlinedButton(
@@ -402,7 +404,7 @@ class _AlreadyPremiumCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text('Continuar'),
+            child: Text(t.premiumContinueButton),
           ),
           const SizedBox(height: 12),
           TextButton(
@@ -410,9 +412,9 @@ class _AlreadyPremiumCard extends ConsumerWidget {
               await ref.read(premiumProvider.notifier).togglePremiumMock();
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text(
-              'Desactivar Premium (testing)',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+            child: Text(
+              t.premiumDeactivateTesting,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ),
         ],
@@ -427,13 +429,14 @@ class _StoreError extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     return Column(
       children: [
         const Icon(Icons.cloud_off_rounded, color: Colors.white54, size: 48),
         const SizedBox(height: 16),
-        const Text(
-          'Error al conectar con la tienda',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        Text(
+          t.premiumStoreErrorTitle,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         Text(
           error,
@@ -444,7 +447,7 @@ class _StoreError extends ConsumerWidget {
         ElevatedButton(
           onPressed: () =>
               ref.read(premiumProvider.notifier).togglePremiumMock(),
-          child: const Text('Modo Desarrollador: Activar Premium'),
+          child: Text(t.premiumDeveloperModeButton),
         ),
       ],
     );

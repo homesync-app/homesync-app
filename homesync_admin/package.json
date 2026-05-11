@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "triage:errors": "node scripts/triage-errors.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

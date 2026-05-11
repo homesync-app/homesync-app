@@ -96,6 +96,8 @@ class TaskModel {
   final TaskType type;
   final TaskDifficulty difficulty;
   final String? createdById;
+  final String? sourceTemplateId;
+  final String? titleKey;
 
   /// Sprint 3 Modo Padres: lista de user_id que se turnan. Vacio = sin
   /// rotacion. `assigned_to` siempre es "a quien le toca ahora", sirve para
@@ -131,6 +133,8 @@ class TaskModel {
     this.type = TaskType.oneTime,
     this.difficulty = TaskDifficulty.medium,
     this.createdById,
+    this.sourceTemplateId,
+    this.titleKey,
     this.rotationPool = const [],
     this.rotationStrategy = 'round_robin',
     this.rotationIndex = 0,
@@ -167,15 +171,18 @@ class TaskModel {
       coinReward: _toInt(map['coin_reward']),
       recurrenceType: map['recurrence_type'] as String?,
       recurrenceInterval: _toInt(map['recurrence_interval'], defaultValue: 1),
-      recurrenceWeekdays: (map['recurrence_weekdays'] as List?)?.cast<int>() ?? const [],
-      recurrenceMonthDays: (map['recurrence_month_days'] as List?)?.cast<int>() ?? const [],
+      recurrenceWeekdays:
+          (map['recurrence_weekdays'] as List?)?.cast<int>() ?? const [],
+      recurrenceMonthDays:
+          (map['recurrence_month_days'] as List?)?.cast<int>() ?? const [],
       dueAt: _parseDate(map['due_at']),
       recurrenceEndAt: _parseDate(map['recurrence_end_at']),
       householdId: map['household_id'] as String? ?? '',
       createdAt: _parseDate(map['created_at']) ?? DateTime.now(),
       completedAt: _parseDate(map['completed_at'] ?? map['last_completed_at']),
       completedBy: map['completed_by'] as String?,
-      verifiedBy: map['verified_by'] as String? ?? map['last_verified_by'] as String?,
+      verifiedBy:
+          map['verified_by'] as String? ?? map['last_verified_by'] as String?,
       verifiedAt: _parseDate(map['verified_at']),
       lastCompletedAt: map['last_completed_at'] as String?,
       lastVerifiedBy: map['last_verified_by'] as String?,
@@ -183,12 +190,12 @@ class TaskModel {
       type: TaskType.fromString(map['type'] as String?),
       difficulty: TaskDifficulty.fromString(map['difficulty'] as String?),
       createdById: map['created_by_id'] as String?,
-      rotationPool: (map['rotation_pool'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          const [],
-      rotationStrategy:
-          (map['rotation_strategy'] as String?) ?? 'round_robin',
+      sourceTemplateId: map['source_template_id'] as String?,
+      titleKey: map['title_key'] as String?,
+      rotationPool:
+          (map['rotation_pool'] as List?)?.map((e) => e.toString()).toList() ??
+              const [],
+      rotationStrategy: (map['rotation_strategy'] as String?) ?? 'round_robin',
       rotationIndex: _toInt(map['rotation_index']),
     );
   }
@@ -220,6 +227,8 @@ class TaskModel {
         'type': type.dbValue,
         'difficulty': difficulty.name,
         'created_by_id': createdById,
+        'source_template_id': sourceTemplateId,
+        'title_key': titleKey,
         'rotation_pool': rotationPool,
         'rotation_strategy': rotationStrategy,
         'rotation_index': rotationIndex,
@@ -249,6 +258,7 @@ class TaskModel {
     final startOfToday = DateTime(now.year, now.month, now.day);
     return dueAt!.isBefore(startOfToday);
   }
+
   bool get isDueToday {
     if (dueAt == null) return false;
     final now = DateTime.now();
@@ -299,6 +309,8 @@ class TaskModel {
     TaskType? type,
     TaskDifficulty? difficulty,
     String? createdById,
+    String? sourceTemplateId,
+    String? titleKey,
     List<String>? rotationPool,
     String? rotationStrategy,
     int? rotationIndex,
@@ -330,6 +342,8 @@ class TaskModel {
       type: type ?? this.type,
       difficulty: difficulty ?? this.difficulty,
       createdById: createdById ?? this.createdById,
+      sourceTemplateId: sourceTemplateId ?? this.sourceTemplateId,
+      titleKey: titleKey ?? this.titleKey,
       rotationPool: rotationPool ?? this.rotationPool,
       rotationStrategy: rotationStrategy ?? this.rotationStrategy,
       rotationIndex: rotationIndex ?? this.rotationIndex,

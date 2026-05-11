@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
@@ -159,17 +160,20 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   @override
   Widget build(BuildContext context) {
     ref.listen<int>(parejaTabIndexProvider, (previous, next) {
-      if (_tabController.index != next) {
+      if (!mounted) return;
+      if (next < 0 || next >= _tabController.length) return;
+      if (_tabController.index == next) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (_tabController.index == next) return;
         _tabController.animateTo(next);
-      }
+      });
     });
 
+    final t = AppLocalizations.of(context);
     final rewardsAsync = ref.watch(paginatedRewardsProvider);
-
     final currentUserId = ref.read(currentUserIdProvider);
-
     final householdId = ref.watch(householdIdProvider).value;
-
     final theme = context.theme;
 
     return Scaffold(
@@ -186,7 +190,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
               ),
               child: AppSegmentedTabs(
                 controller: _tabController,
-                labels: const ['Duelo', 'Premios'],
+                labels: [t.rewardsTabDuel, t.rewardsTabPrizes],
               ),
             ),
             Expanded(
@@ -249,7 +253,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                                   onPressed: () => ref
                                       .read(paginatedRewardsProvider.notifier)
                                       .loadMore(),
-                                  child: const Text('Cargar mas'),
+                                  child: Text(t.rewardsLoadMore),
                                 ),
                               ),
                             ],
@@ -260,9 +264,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       );
                     },
                     loading: () =>
-                        const AppLoadingState(message: 'Cargando premios...'),
+                        AppLoadingState(message: t.rewardsLoading),
                     error: (e, _) => AppErrorState(
-                      message: 'No pudimos cargar premios.\n$e',
+                      message: t.rewardsLoadError(e.toString()),
                       onRetry: () => ref.invalidate(paginatedRewardsProvider),
                     ),
                   ),
@@ -489,13 +493,13 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Widget _buildPendingProposalsSection(
       List<RewardModel> suggestions, String? currentUserId,) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          'Propuestas',
-          subtitle:
-              'Deseos pendientes de aprobaci\u00F3n. Toca una propuesta para revisarla.',
+          t.rewardsProposalsSection,
+          subtitle: t.rewardsPendingApproval,
           action: _buildCountPill('${suggestions.length}'),
         ),
         const SizedBox(height: 14),
@@ -533,6 +537,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildProposalCard(RewardModel reward, String? currentUserId) {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
 
     final isMine = reward.createdBy == currentUserId;
@@ -564,7 +569,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       icon: isMine
                           ? Icons.hourglass_top_rounded
                           : Icons.mark_email_unread_outlined,
-                      label: isMine ? 'Pendiente' : 'Revisar',
+                      label: isMine ? t.rewardsStatusPending : t.rewardsStatusReview,
                       color: accent,
                       background: accent.withValues(alpha: 0.10),
                     ),
@@ -598,7 +603,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  (reward.description ?? 'Esperando una decision de tu pareja.')
+                  (reward.description ?? t.rewardsWaitingPartnerDecision)
                       .trim(),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
@@ -624,8 +629,8 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   ),
                   child: Text(
                     isMine
-                        ? '${reward.cost} coins \u00B7 esperando respuesta'
-                        : '${reward.cost} coins \u00B7 toca para aprobar o quitar',
+                        ? '${t.rewardsCostCoins(reward.cost)} \u00B7 ${t.rewardsWaitingResponse}'
+                        : '${t.rewardsCostCoins(reward.cost)} \u00B7 ${t.rewardsTapToApprove}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color:
@@ -645,6 +650,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildCoinsDivider(int availableCoins) {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
 
     return Container(
@@ -674,7 +680,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           ),
           const SizedBox(width: 10),
           Text(
-            '$availableCoins coins disponibles',
+            t.rewardsCoinsAvailable(availableCoins),
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 14,
@@ -720,9 +726,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildRewardCard(RewardModel reward) {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
 
-    final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+    final balanceData = ref.watch(userBalanceProvider).value;
+    final userBalance = (balanceData?['coins'] as num?) ?? 0;
 
     final canAfford = userBalance >= reward.cost;
 
@@ -755,7 +763,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 top: -4,
                 right: 2,
                 child: IconButton(
-                  tooltip: 'Eliminar recompensa',
+                  tooltip: t.rewardsDeleteTooltip,
                   onPressed: () => _confirmDeleteReward(reward),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
@@ -855,6 +863,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildEmptyState() {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
 
     return Container(
@@ -867,9 +876,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       ),
       child: Column(
         children: [
-          const AppEmptyState(
-            title: 'Boutique vacia',
-            subtitle: 'Todavia no hay premios cargados en esta casa.',
+          AppEmptyState(
+            title: t.rewardsEmptyBoutique,
+            subtitle: t.rewardsEmptyNoPrizes,
             icon: Icons.storefront_outlined,
           ),
           const SizedBox(height: 20),
@@ -886,17 +895,17 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            child: const Text(
-              'Cargar premios sugeridos',
-              style: TextStyle(fontWeight: FontWeight.w900),
+            child: Text(
+              t.rewardsLoadSuggested,
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: _showCreateRewardSheet,
-            child: const Text(
-              'O crear un premio personalizado',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            child: Text(
+              t.rewardsOrCreateCustom,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -905,6 +914,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildActionButtons() {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
 
     return Container(
@@ -927,7 +937,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Â¿QuerÃ©s sumar un deseo nuevo?',
+            t.rewardsAddNewDesirePrompt,
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 18,
@@ -937,7 +947,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Proponelo y tu compaÃ±ero podrÃ¡ aprobarlo para que aparezca en la tienda.',
+            t.rewardsAddNewDesireHint,
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 13,
@@ -951,9 +961,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
             child: ElevatedButton.icon(
               onPressed: _showSuggestRewardSheet,
               icon: const Icon(Icons.auto_awesome_rounded, size: 20),
-              label: const Text(
-                'Proponer un deseo nuevo',
-                style: TextStyle(
+              label: Text(
+                t.rewardsSuggestNewDesire,
+                style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 15,
                 ),
@@ -979,20 +989,21 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
   Future<void> _handleChallengeCompletion(
       CoupleChallenge challenge, String householdId,) async {
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Â¿Completaron el desafÃ­o?'),
+        title: Text(t.rewardsChallengeCompletePrompt),
         content: Text(
-          'QuÃ© alegrÃ­a. Al confirmar, ambos recibirÃ¡n ${challenge.coinReward} coins.',
+          t.rewardsChallengeCompleteBody(challenge.coinReward),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'AÃºn no',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              t.rewardsNotYet,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1004,7 +1015,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('SÃ­, lo hicimos'),
+            child: Text(t.rewardsChallengeCompleteConfirm),
           ),
         ],
       ),
@@ -1039,9 +1050,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       );
 
       final newTaskId = await taskRpc.createTask(
-        title: 'DesafÃ­o: ${challenge.title}',
+        title: 'Desafío: ${challenge.title}',
         description: challenge.description,
-        category: 'ConexiÃ³n',
+        category: 'Conexión',
         coinReward: challenge.coinReward,
         xpReward: 10,
         type: 'one_time',
@@ -1051,7 +1062,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       await rpc.completeTaskTransaction(
         taskId: newTaskId,
-        taskTitle: 'DesafÃ­o: ${challenge.title}',
+        taskTitle: 'Desafío: ${challenge.title}',
         xpReward: 10,
         coinReward: challenge.coinReward,
         householdId: householdId,
@@ -1064,9 +1075,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       SuccessCelebration.show(
         context,
-        title: 'DesafÃ­o completado',
+        title: 'Desafío completado',
         message:
-            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexiÃ³n.',
+            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexión.',
         icon: 'âœ¨',
       );
 
@@ -1080,7 +1091,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al completar el desafÃ­o: $e'),
+          content: Text('Error al completar el desafío: $e'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -1092,8 +1103,8 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Â¿Eliminar premio?'),
-        content: Text('Se eliminarÃ¡ "${reward.title}" de la boutique.'),
+        title: const Text('¿Eliminar premio?'),
+        content: Text('Se eliminará "${reward.title}" de la boutique.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1138,7 +1149,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('Â¿Canjear este premio?'),
+        title: const Text('¿Canjear este premio?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1205,7 +1216,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context,
       title: 'Premio canjeado',
       message:
-          'Disfruta de "${reward.title}". El amor tambiÃ©n vive en los pequeÃ±os detalles.',
+          'Disfruta de "${reward.title}". El amor también vive en los pequeños detalles.',
       icon: reward.icon,
     );
   }

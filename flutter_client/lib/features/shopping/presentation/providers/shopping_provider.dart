@@ -17,6 +17,7 @@ import '../../domain/usecases/delete_shopping_item_usecase.dart';
 import '../../domain/usecases/get_shopping_items_usecase.dart';
 import '../../domain/usecases/toggle_shopping_item_usecase.dart';
 import '../../domain/usecases/uncomplete_all_shopping_items_usecase.dart';
+import '../../utils/shopping_localization.dart';
 
 part 'shopping_provider.g.dart';
 
@@ -29,7 +30,8 @@ ShoppingRepository shoppingRepository(ShoppingRepositoryRef ref) {
 }
 
 @riverpod
-GetShoppingItemsUseCase getShoppingItemsUseCase(GetShoppingItemsUseCaseRef ref) {
+GetShoppingItemsUseCase getShoppingItemsUseCase(
+    GetShoppingItemsUseCaseRef ref,) {
   return GetShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
@@ -39,23 +41,29 @@ AddShoppingItemUseCase addShoppingItemUseCase(AddShoppingItemUseCaseRef ref) {
 }
 
 @riverpod
-ToggleShoppingItemUseCase toggleShoppingItemUseCase(ToggleShoppingItemUseCaseRef ref) {
+ToggleShoppingItemUseCase toggleShoppingItemUseCase(
+    ToggleShoppingItemUseCaseRef ref,) {
   return ToggleShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
-DeleteShoppingItemUseCase deleteShoppingItemUseCase(DeleteShoppingItemUseCaseRef ref) {
+DeleteShoppingItemUseCase deleteShoppingItemUseCase(
+    DeleteShoppingItemUseCaseRef ref,) {
   return DeleteShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
-ClearCompletedShoppingItemsUseCase clearCompletedShoppingItemsUseCase(ClearCompletedShoppingItemsUseCaseRef ref) {
-  return ClearCompletedShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
+ClearCompletedShoppingItemsUseCase clearCompletedShoppingItemsUseCase(
+    ClearCompletedShoppingItemsUseCaseRef ref,) {
+  return ClearCompletedShoppingItemsUseCase(
+      ref.watch(shoppingRepositoryProvider),);
 }
 
 @riverpod
-UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(UncompleteAllShoppingItemsUseCaseRef ref) {
-  return UncompleteAllShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
+UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(
+    UncompleteAllShoppingItemsUseCaseRef ref,) {
+  return UncompleteAllShoppingItemsUseCase(
+      ref.watch(shoppingRepositoryProvider),);
 }
 
 // ── Main Shopping Controller ──────────────────────────────────────────────────
@@ -74,7 +82,7 @@ class ShoppingItems extends _$ShoppingItems {
 
     final getItems = ref.watch(getShoppingItemsUseCaseProvider);
     final result = await getItems.execute(householdId);
-    
+
     return result.fold(
       (failure) => throw failure,
       (items) => items,
@@ -84,7 +92,7 @@ class ShoppingItems extends _$ShoppingItems {
   void _setupRealtime(String householdId) {
     _channel?.unsubscribe();
     final client = ref.read(supabaseClientProvider);
-    
+
     _channel = client
         .channel('shopping_realtime_$householdId')
         .onPostgresChanges(
@@ -120,8 +128,9 @@ class ShoppingItems extends _$ShoppingItems {
   Future<List<ShoppingItemModel>> _fetchItems() async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return [];
-    
-    final result = await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
+
+    final result =
+        await ref.read(getShoppingItemsUseCaseProvider).execute(householdId);
     return result.fold(
       (failure) => throw failure,
       (items) => items,
@@ -132,6 +141,7 @@ class ShoppingItems extends _$ShoppingItems {
     required String name,
     String? quantity,
     String? unit,
+    String? nameKey,
     String category = 'general',
     String emoji = '🛒',
     String? note,
@@ -144,13 +154,15 @@ class ShoppingItems extends _$ShoppingItems {
     }
 
     final oldState = state.value ?? [];
-    
+    final effectiveNameKey = nameKey ?? shoppingCatalogKeyForName(name);
+
     final clientId = _uuid.v4();
     // Create optimistic temporary item
     final tempItem = ShoppingItemModel(
       id: clientId,
       householdId: householdId,
       name: name,
+      nameKey: effectiveNameKey,
       quantity: quantity,
       unit: unit,
       category: category,
@@ -171,13 +183,14 @@ class ShoppingItems extends _$ShoppingItems {
             name: name,
             userId: userId,
             clientId: clientId,
+            nameKey: effectiveNameKey,
             quantity: quantity,
             unit: unit,
             category: category,
             emoji: emoji,
             note: note,
           );
-      
+
       result.fold(
         (failure) {
           log.e('Failed to add item: ${failure.message}');
@@ -187,7 +200,9 @@ class ShoppingItems extends _$ShoppingItems {
           // Replace temp item with real one to get the proper ID
           final currentState = state.value ?? [];
           state = AsyncValue.data(
-            currentState.map((item) => item.id == tempItem.id ? newItem : item).toList(),
+            currentState
+                .map((item) => item.id == tempItem.id ? newItem : item)
+                .toList(),
           );
           // Log si el item no está en el catálogo predefinido (para admin analytics)
           _logCatalogRequestIfNeeded(name, emoji);
@@ -214,10 +229,13 @@ class ShoppingItems extends _$ShoppingItems {
 
     // Log async sin await — no bloquea el flujo
     final client = ref.read(supabaseClientProvider);
-    client.rpc('upsert_catalog_request', params: {
-      'p_name': name.trim(),
-      'p_emoji': emoji,
-    },).then((_) {
+    client.rpc(
+      'upsert_catalog_request',
+      params: {
+        'p_name': name.trim(),
+        'p_emoji': emoji,
+      },
+    ).then((_) {
       log.d('Catalog request logged: $name');
     }).catchError((e) {
       log.w('Could not log catalog request: $e');
@@ -230,7 +248,7 @@ class ShoppingItems extends _$ShoppingItems {
     if (householdId == null) return;
 
     final oldState = state.value ?? [];
-    
+
     // Optimistic Update
     final newState = oldState.map((item) {
       if (item.id == itemId) {
@@ -242,7 +260,7 @@ class ShoppingItems extends _$ShoppingItems {
       }
       return item;
     }).toList();
-    
+
     state = AsyncValue.data(newState);
 
     try {
@@ -251,7 +269,7 @@ class ShoppingItems extends _$ShoppingItems {
             completed: completed,
             userId: userId,
           );
-      
+
       if (result.isLeft()) {
         log.e('Failed to toggle item');
         state = AsyncValue.data(oldState); // Rollback
@@ -270,6 +288,7 @@ class ShoppingItems extends _$ShoppingItems {
     String? note,
   }) async {
     final oldState = state.value ?? [];
+    final nameKey = shoppingCatalogKeyForName(name);
 
     // Optimistic update
     state = AsyncValue.data(
@@ -279,6 +298,7 @@ class ShoppingItems extends _$ShoppingItems {
           id: item.id,
           householdId: item.householdId,
           name: name,
+          nameKey: nameKey,
           quantity: item.quantity,
           unit: item.unit,
           category: category,
@@ -300,6 +320,7 @@ class ShoppingItems extends _$ShoppingItems {
       final result = await ref.read(shoppingRepositoryProvider).updateItem(
             itemId: itemId,
             name: name,
+            nameKey: nameKey,
             category: category,
             emoji: emoji,
             note: note,
@@ -319,14 +340,15 @@ class ShoppingItems extends _$ShoppingItems {
     if (householdId == null) return;
 
     final oldState = state.value ?? [];
-    
+
     // Optimistic Delete
     state = AsyncValue.data(
       oldState.where((item) => item.id != itemId).toList(),
     );
 
     try {
-      final result = await ref.read(deleteShoppingItemUseCaseProvider).execute(itemId);
+      final result =
+          await ref.read(deleteShoppingItemUseCaseProvider).execute(itemId);
       if (result.isLeft()) {
         log.e('Failed to delete item');
         state = AsyncValue.data(oldState); // Rollback
@@ -342,7 +364,7 @@ class ShoppingItems extends _$ShoppingItems {
     if (householdId == null) return;
 
     final oldState = state.value ?? [];
-    
+
     // Optimistic Clear
     state = AsyncValue.data(
       oldState.where((item) => !item.completed).toList(),
@@ -352,7 +374,7 @@ class ShoppingItems extends _$ShoppingItems {
       final result = await ref
           .read(clearCompletedShoppingItemsUseCaseProvider)
           .execute(householdId);
-      
+
       if (result.isLeft()) {
         log.e('Failed to clear completed items');
         state = AsyncValue.data(oldState); // Rollback
@@ -368,7 +390,7 @@ class ShoppingItems extends _$ShoppingItems {
     if (householdId == null) return;
 
     final oldState = state.value ?? [];
-    
+
     // Optimistic Uncomplete All
     state = AsyncValue.data(
       oldState.map((item) => item.copyWith(completed: false)).toList(),
@@ -378,7 +400,7 @@ class ShoppingItems extends _$ShoppingItems {
       final result = await ref
           .read(uncompleteAllShoppingItemsUseCaseProvider)
           .execute(householdId);
-      
+
       if (result.isLeft()) {
         log.e('Failed to uncomplete items');
         state = AsyncValue.data(oldState); // Rollback
@@ -389,4 +411,3 @@ class ShoppingItems extends _$ShoppingItems {
     }
   }
 }
-

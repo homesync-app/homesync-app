@@ -423,6 +423,34 @@ Unique: (user_id, type, reference_id) — idempotente via ON CONFLICT DO NOTHING
 | device_info | JSONB nullable |
 | created_at | TIMESTAMPTZ |
 
+#### `error_issues`
+Agrupacion operativa de `application_logs` para que Codex/admin puedan priorizar, marcar estado y cerrar errores sin leer cientos de filas crudas.
+
+| Columna | Tipo | Restricciones |
+|---------|------|---------------|
+| id | UUID | PK |
+| fingerprint | TEXT | UNIQUE |
+| title | TEXT | |
+| level | TEXT | `critical`, `error`, `warning`, `info` |
+| status | TEXT | `open`, `investigating`, `fixed`, `ignored` |
+| first_seen | TIMESTAMPTZ | |
+| last_seen | TIMESTAMPTZ | |
+| occurrences | INTEGER | default 0 |
+| affected_users | INTEGER | default 0 |
+| sample_log_id | UUID | nullable |
+| sample_message | TEXT | nullable |
+| sample_stack_trace_head | TEXT | nullable |
+| app_frame | TEXT | nullable |
+| screens | TEXT[] | default `{}` |
+| environments | TEXT[] | default `{}` |
+| first_seen_build | TEXT | nullable |
+| last_seen_build | TEXT | nullable |
+| fixed_in_build | TEXT | nullable |
+| fixed_at | TIMESTAMPTZ | nullable |
+| notes | TEXT | nullable |
+| created_at | TIMESTAMPTZ | default now() |
+| updated_at | TIMESTAMPTZ | default now() |
+
 #### `system_events`
 | Columna | Tipo |
 |---------|------|

@@ -14,6 +14,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'category_widgets.dart';
@@ -44,6 +45,7 @@ class WeeklyTab extends ConsumerWidget {
 
   void _showLoveNoteDialog(
       BuildContext context, WidgetRef ref, AppThemeColors theme,) {
+    final t = AppLocalizations.of(context);
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -56,7 +58,7 @@ class WeeklyTab extends ConsumerWidget {
             const Icon(Icons.favorite, color: Colors.red),
             const SizedBox(width: 12),
             Text(
-              'Nueva Nota de Amor',
+              t.loveNoteDialogTitle,
               style: TextStyle(
                   fontWeight: FontWeight.w900, color: theme.textPrimary,),
             ),
@@ -67,7 +69,7 @@ class WeeklyTab extends ConsumerWidget {
           maxLines: 3,
           style: TextStyle(color: theme.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Escribe algo tierno...',
+            hintText: t.loveNoteHint,
             filled: true,
             fillColor: Colors.red.withValues(alpha: 0.05),
             border: OutlineInputBorder(
@@ -79,7 +81,7 @@ class WeeklyTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancelar', style: TextStyle(color: theme.textMuted)),
+            child: Text(t.commonCancel, style: TextStyle(color: theme.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -113,9 +115,9 @@ class WeeklyTab extends ConsumerWidget {
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('💌 Nota enviada con amor'),
-                    backgroundColor: Color(0xFFEF4444),
+                  SnackBar(
+                    content: Text('💌 ${t.loveNoteSent}'),
+                    backgroundColor: const Color(0xFFEF4444),
                   ),
                 );
               }
@@ -126,7 +128,7 @@ class WeeklyTab extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),),
             ),
-            child: const Text('Enviar'),
+            child: Text(t.commonSend),
           ),
         ],
       ),
@@ -136,7 +138,8 @@ class WeeklyTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final t = AppLocalizations.of(context);
+    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
@@ -145,7 +148,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
             AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
-          const SectionLabel(label: 'Duelo de la semana', icon: '⚔️'),
+          SectionLabel(label: t.statsWeeklyDuel, icon: '⚔️'),
           const SizedBox(height: AppSpacing.md),
 
           if (weeklyRanking.isNotEmpty) ...[
@@ -155,7 +158,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
           // ── Summary row (Global context) ──────────────────────────────────
           Text(
-            'Resumen del hogar',
+            t.statsHouseholdSummary,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w900,
@@ -178,7 +181,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                   child: SummaryMetric(
                     icon: '🔥',
                     value: '$totalTasks',
-                    label: 'Tareas',
+                    label: t.statsTasks,
                     color: AppColors.primary,
                   ),
                 ),
@@ -191,7 +194,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                   child: SummaryMetric(
                     icon: '✨',
                     value: '$totalXp',
-                    label: 'XP',
+                    label: t.statsXP,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -204,7 +207,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                   child: SummaryMetric(
                     icon: '💰',
                     value: '$totalCoins',
-                    label: 'Coins',
+                    label: t.statsCoins,
                     color: AppColors.accentTeal,
                   ),
                 ),
@@ -264,7 +267,7 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Enviar mensaje a tu pareja',
+                          t.loveNoteSendTitle,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -276,8 +279,8 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
                         const SizedBox(height: 4),
                         Text(
                           isPremium
-                              ? 'Sorprendé con una nota especial hoy ✨'
-                              : 'Función Premium. Desbloqueala para enviar notas.',
+                              ? t.loveNoteSendSubtitle
+                              : t.loveNotePremiumFeature,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -300,16 +303,14 @@ final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
           // ── Duel History ─────────────────────────────────────────────────
           if (duelHistory.isNotEmpty) ...[
-            const SectionLabel(label: 'Historial de victorias', icon: '🏆'),
+            SectionLabel(label: t.statsVictoryHistory, icon: '🏆'),
             const SizedBox(height: AppSpacing.md),
             DuelHistoryWidget(duelHistory: duelHistory),
             const SizedBox(height: AppSpacing.xl),
           ],
 
           // ── Activity Placeholder ──────────────────────────────────────────
-          const PrivacyBadge(
-              text:
-                  'Las estadísticas son totalmente privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.',),
+          PrivacyBadge(text: t.statsPrivacyFull),
         ],
       ),
     );
@@ -394,6 +395,7 @@ class _ProgressTabState extends State<ProgressTab> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final spots = _showXp
         ? _buildSpots(widget.xpHistory)
         : _buildSpots(widget.coinHistory);
@@ -414,21 +416,21 @@ class _ProgressTabState extends State<ProgressTab> {
             AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Header ───────────────────────────────────────────────────────
-          const SectionLabel(label: 'Tu evolución personal', icon: '📈'),
+          SectionLabel(label: t.personalEvolutionTitle, icon: '📈'),
           const SizedBox(height: AppSpacing.md),
 
           // ── XP / Coins toggle ────────────────────────────────────────────
           Row(
             children: [
               XPToggleButton(
-                label: 'XP',
+                label: t.statsXP,
                 isSelected: _showXp,
                 color: AppColors.accentGold,
                 onTap: () => setState(() => _showXp = true),
               ),
               const SizedBox(width: AppSpacing.sm),
               XPToggleButton(
-                label: 'Coins',
+                label: t.statsCoins,
                 isSelected: !_showXp,
                 color: AppColors.accentTeal,
                 onTap: () => setState(() => _showXp = false),
@@ -449,16 +451,16 @@ class _ProgressTabState extends State<ProgressTab> {
               border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
             ),
             child: spots.length < 2 || spots.every((s) => s.y == 0)
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('🌱', style: TextStyle(fontSize: 32)),
-                        SizedBox(height: AppSpacing.sm),
+                        const Text('🌱', style: TextStyle(fontSize: 32)),
+                        const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'Empezá a completar tareas\npara ver tu progreso.',
+                          t.statsNoDataMessage,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -478,7 +480,7 @@ class _ProgressTabState extends State<ProgressTab> {
                           getTooltipItems: (touchedSpots) {
                             return touchedSpots.map((s) {
                               return LineTooltipItem(
-                                '${s.y.toInt()} ${_showXp ? 'XP' : 'Coins'}',
+                                '${s.y.toInt()} ${_showXp ? t.statsXP : t.statsCoins}',
                                 const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w900,
@@ -547,25 +549,24 @@ class _ProgressTabState extends State<ProgressTab> {
           // ── Multi-info Cards ─────────────────────────────────────────────
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: PersonalMetricCard(
                   icon: '🔥',
-                  label: 'Racha',
-                  value: '7 días',
+                  label: t.statsStreak,
+                  value: t.statsStreakDays('7'),
                   color: Colors.orange,
-                  subtitle: '¡Vas con todo!',
+                  subtitle: t.statsStreakMessage,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: PersonalMetricCard(
                   icon: '📈',
-                  label: 'Nivel',
+                  label: t.statsLevel,
                   value:
                       '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
                   color: AppColors.primary,
-                  subtitle:
-                      '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()} XP para subir',
+                  subtitle: t.statsXPToNextLevel('${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()}'),
                 ),
               ),
             ],
@@ -573,10 +574,7 @@ class _ProgressTabState extends State<ProgressTab> {
           const SizedBox(height: AppSpacing.xl),
 
           // ── Privacy assurance ───────────────────────────────────────────
-          const PrivacyBadge(
-            text:
-                'Tus datos de progreso son privados y solo vos podés ver este historial detallado.',
-          ),
+          PrivacyBadge(text: t.statsPrivacyDetailed),
         ],
       ),
     );
@@ -595,6 +593,7 @@ class CategoriesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     if (taskStats.isEmpty) {
       return Center(
         child: Column(
@@ -626,18 +625,18 @@ class CategoriesTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text(
-              'Todavía no hay datos',
-              style: TextStyle(
+            Text(
+              t.statsNoDataTitle,
+              style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,),
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'Completá algunas tareas para ver\ntus áreas de dominio.',
+            Text(
+              t.statsNoDataSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+              style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
@@ -650,7 +649,7 @@ class CategoriesTab extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),),
               ),
-              child: const Text('Actualizar datos'),
+              child: Text(t.commonRefresh),
             ),
           ],
         ),
@@ -665,7 +664,7 @@ class CategoriesTab extends StatelessWidget {
             AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
         children: [
           // ── Premium Dominance Header ─────────────────────────────────────
-          const SectionLabel(label: 'Dominio de Categorías', icon: '💎'),
+          SectionLabel(label: t.categoriesDominance, icon: '💎'),
           const SizedBox(height: AppSpacing.lg),
 
           // ── Horizontal bar chart (Modernized) ────────────────────────────
@@ -673,7 +672,7 @@ class CategoriesTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // ── Elegant breakdown list ───────────────────────────────────────
-          const SectionLabel(label: 'Desglose detallado', icon: '✨'),
+          SectionLabel(label: t.categoriesBreakdown, icon: '✨'),
           const SizedBox(height: AppSpacing.md),
           ...taskStats.map((stat) => CategoryDetailCard(stat: stat)),
 
@@ -708,10 +707,10 @@ class CategoriesTab extends StatelessWidget {
                   child: const Text('💡', style: TextStyle(fontSize: 20)),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Balancear las categorías ayuda a mantener un hogar más armonioso y divertido.',
-                    style: TextStyle(
+                    t.categoriesBalanceTip,
+                    style: const TextStyle(
                       fontSize: 13,
                       height: 1.5,
                       color: AppColors.textPrimary,

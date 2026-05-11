@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'app_design_tokens.dart';
+
 import 'app_colors.dart';
+import 'app_design_tokens.dart';
 
 extension AppThemeExtension on BuildContext {
   AppThemeColors get theme => AppThemeColors(this);

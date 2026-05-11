@@ -6,6 +6,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -35,6 +36,7 @@ import 'package:homesync_client/features/settings/presentation/widgets/settings_
 import 'package:homesync_client/features/settings/presentation/widgets/settings_household_components.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
 import 'package:homesync_client/shared/widgets/avatar_picker_sheet.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
@@ -300,6 +302,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     // ── Rol del miembro actual ─────────────────────────────────────────────
     final currentMember = ref.watch(currentMemberProvider);
@@ -338,19 +341,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _buildSectionLabel(
-                            eyebrow: 'PERFIL',
-                            title: 'Tu espacio',
-                            subtitle:
-                                'Avatar, nombre y datos basicos de tu cuenta.',
+                            eyebrow: t.settingsSectionProfileEyebrow,
+                            title: t.settingsSectionProfileTitle,
+                            subtitle: t.settingsSectionProfileSubtitle,
                           ),
                           const SizedBox(height: 14),
                           _buildProfileCard(),
                           const SizedBox(height: 28),
                           _buildSectionLabel(
-                            eyebrow: 'HOGAR',
-                            title: 'Casa compartida',
-                            subtitle:
-                                'Miembros, invitaciones y reglas del hogar.',
+                            eyebrow: t.settingsSectionHouseholdEyebrow,
+                            title: t.settingsSectionHouseholdTitle,
+                            subtitle: t.settingsSectionHouseholdSubtitle,
                           ),
                           const SizedBox(height: 14),
                           if (_householdId != null) ...[
@@ -362,9 +363,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ],
                           const SizedBox(height: 28),
                           _buildSectionLabel(
-                            eyebrow: 'APP',
-                            title: 'Preferencias',
-                            subtitle: 'Tema, notificaciones, ayuda y feedback.',
+                            eyebrow: t.settingsSectionAppEyebrow,
+                            title: t.settingsSectionAppTitle,
+                            subtitle: t.settingsSectionAppSubtitle,
                           ),
                           const SizedBox(height: 14),
                           // Menores no pueden comprar premium — solo ven una
@@ -375,6 +376,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             _buildPremiumCard(),
                           const SizedBox(height: 24),
                           _buildAppearanceCard(isMinor: isMinor),
+                          const SizedBox(height: 16),
+                          _buildLanguageCard(),
                           const SizedBox(height: 24),
                           _buildNotificationsCard(),
                           const SizedBox(height: 16),
@@ -389,10 +392,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildReplayTourButton(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
-                            eyebrow: 'CUENTA',
-                            title: 'Sesion y seguridad',
-                            subtitle:
-                                'Salir de la cuenta o reiniciar tus datos si lo necesitas.',
+                            eyebrow: t.settingsSectionAccountEyebrow,
+                            title: t.settingsSectionAccountTitle,
+                            subtitle: t.settingsSectionAccountSubtitle,
                           ),
                           const SizedBox(height: 14),
                           _buildLogoutButton(),
@@ -400,10 +402,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildResetAccountButton(),
                           const SizedBox(height: 48),
                           _buildSectionLabel(
-                            eyebrow: 'LEGAL',
-                            title: 'Privacidad',
-                            subtitle:
-                                'Politica de privacidad y terminos de uso.',
+                            eyebrow: t.settingsSectionLegalEyebrow,
+                            title: t.settingsSectionLegalTitle,
+                            subtitle: t.settingsSectionLegalSubtitle,
                           ),
                           const SizedBox(height: 14),
                           _buildLegalCard(),
@@ -1001,6 +1002,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildLanguageCard() {
+    return SettingsLanguageCard(
+      currentLocale: ref.watch(localeProvider),
+      onLocaleChanged: (locale) {
+        HapticFeedback.lightImpact();
+        ref.read(localeProvider.notifier).setLocale(locale);
+      },
+    );
+  }
+
   Widget _buildAppearanceCard({bool isMinor = false}) {
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
     final currentColor = ref.watch(primaryColorProvider);
@@ -1053,6 +1064,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildPremiumCard() {
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final t = AppLocalizations.of(context);
 
     return SettingsPremiumCard(
       isPremium: isPremium,
@@ -1062,11 +1074,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
         );
       },
-      premiumFeatures: const [
-        'Sincronizacion Shopping a Finanzas',
-        'Pagos Recurrentes (Suscripciones)',
-        'Notas de Amor en Dashboard',
-        'Avatares Exclusivos',
+      premiumFeatures: [
+        t.settingsPremiumFeatureShoppingFinanceSync,
+        t.settingsPremiumFeatureRecurringPayments,
+        t.settingsPremiumFeatureLoveNotes,
+        t.settingsPremiumFeatureExclusiveAvatars,
       ],
     );
   }
@@ -1095,11 +1107,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
+        final t = AppLocalizations.of(context);
         await _loadData();
         if (mounted) {
           messenger.showSnackBar(
-            const SnackBar(
-              content: Text('✅ Nombre actualizado'),
+            SnackBar(
+              content: Text(t.settingsProfileNameUpdated),
               backgroundColor: AppColors.success,
             ),
           );
@@ -1126,12 +1139,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onChanged: (value) {
         HapticFeedback.lightImpact();
         ref.read(notificationEnabledProvider.notifier).toggle(value);
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               value
-                  ? '🔔 Notificaciones activadas'
-                  : '🔕 Notificaciones desactivadas',
+                  ? t.settingsNotificationsEnabled
+                  : t.settingsNotificationsDisabled,
             ),
             duration: const Duration(seconds: 2),
             backgroundColor: value ? theme.success : theme.textMuted,
@@ -1277,6 +1291,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildFeedbackCard() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: theme.surfaceContainer,
@@ -1313,7 +1328,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Enviar feedback',
+                        t.settingsFeedbackTitle,
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 15,
@@ -1322,7 +1337,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Reporta un bug o sugiere una mejora',
+                        t.settingsFeedbackSubtitle,
                         style: TextStyle(
                           color: theme.textMuted,
                           fontSize: 13,
@@ -1346,6 +1361,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildReplayTourButton() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
@@ -1374,7 +1390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         title: Text(
-          'Ver guia de nuevo',
+          t.settingsReplayTourTitle,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -1382,7 +1398,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         subtitle: Text(
-          'Repasa la introduccion del hogar',
+          t.settingsReplayTourSubtitle,
           style: TextStyle(color: theme.textSecondary, fontSize: 12),
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
@@ -1430,6 +1446,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildLegalCard() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     Future<void> openUrl(String url) async {
       HapticFeedback.lightImpact();
@@ -1450,7 +1467,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             leading:
                 Icon(Icons.privacy_tip_outlined, color: theme.textSecondary),
             title: Text(
-              'Politica de Privacidad',
+              t.settingsLegalPrivacyPolicy,
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
             trailing: Icon(
@@ -1471,7 +1488,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             leading:
                 Icon(Icons.description_outlined, color: theme.textSecondary),
             title: Text(
-              'Terminos de Uso',
+              t.settingsLegalTermsOfUse,
               style: TextStyle(color: theme.textPrimary, fontSize: 15),
             ),
             trailing: Icon(
@@ -1519,9 +1536,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ref.invalidate(householdIdProvider);
 
               if (mounted) {
+                final t = AppLocalizations.of(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('✅ Datos reiniciados y hogar liberado'),
+                    content: Text(t.settingsAccountReset),
                     backgroundColor: theme.success,
                   ),
                 );
@@ -1553,6 +1571,7 @@ class _SettingsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -1579,13 +1598,13 @@ class _SettingsHeader extends StatelessWidget {
                   color: theme.textPrimary,
                   size: 28,
                 ),
-                tooltip: 'Volver',
+                tooltip: t.settingsBackTooltip,
               ),
               const SizedBox(height: 18),
               Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Text(
-                  'Configuracion',
+                  t.settingsAppBarTitle,
                   style: TextStyle(
                     color: theme.textPrimary,
                     fontWeight: FontWeight.w900,

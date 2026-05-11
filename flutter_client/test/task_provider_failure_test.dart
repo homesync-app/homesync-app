@@ -13,8 +13,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
-  RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
+  RealtimeChannel channel(
+    String name, {
+    RealtimeChannelConfig opts = const RealtimeChannelConfig(),
+  }) =>
       _FakeRealtimeChannel();
 }
 
@@ -30,10 +32,10 @@ class _FakeRealtimeChannel extends Fake implements RealtimeChannel {
       this;
 
   @override
-  RealtimeChannel subscribe(
-          [void Function(RealtimeSubscribeStatus status, Object? error)?
-              callback,
-          Duration? timeout,]) =>
+  RealtimeChannel subscribe([
+    void Function(RealtimeSubscribeStatus status, Object? error)? callback,
+    Duration? timeout,
+  ]) =>
       this;
 
   @override
@@ -109,6 +111,8 @@ class _FailingTaskRepository implements TaskRepository {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async =>
       throw UnimplementedError();
 
@@ -140,7 +144,8 @@ void main() {
     await expectLater(
       container.read(tasksProvider.future),
       throwsA(
-        isA<ServerFailure>().having((failure) => failure.message, 'message', 'repo boom'),
+        isA<ServerFailure>()
+            .having((failure) => failure.message, 'message', 'repo boom'),
       ),
     );
 

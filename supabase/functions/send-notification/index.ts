@@ -1,15 +1,46 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const FIREBASE_PROJECT_ID = "homesync-prod-r7-123"
+
+interface FirebaseJWTPayload {
+  sub: string
+  email?: string
+  aud: string
+  iss: string
+}
+
 function getBearerToken(req: Request): string | null {
   const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
   return authHeader.slice('Bearer '.length).trim()
+}
+
+async function verifyFirebaseUser(token: string): Promise<string | null> {
+  try {
+    const jwks = createRemoteJWKSet(
+      new URL(
+        "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+      ),
+    )
+
+    const { payload } = await jwtVerify(token, jwks, {
+      issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+      audience: FIREBASE_PROJECT_ID,
+    })
+
+    const firebasePayload = payload as FirebaseJWTPayload
+    return firebasePayload.sub || null
+  } catch (error) {
+    console.error('Firebase JWT verification failed:', error)
+    return null
+  }
 }
 
 serve(async (req) => {
@@ -24,12 +55,12 @@ serve(async (req) => {
     const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
     const payload = await req.json()
-    console.log('Notification payload received:', JSON.stringify(payload))
-
     // Support both direct calls (from Flutter) and Webhook calls (from SQL)
     // When called from a standard Supabase Webhook, the data is in the 'record' field.
     const { to_user_id, title, body, record, data } = payload
     const isWebhookCall = Boolean(record)
+
+    let callerUserId: string | null = null
 
     if (!isWebhookCall) {
       const accessToken = getBearerToken(req)
@@ -40,9 +71,36 @@ serve(async (req) => {
         })
       }
 
-      const { data: authData, error: authError } = await supabaseClient.auth.getUser(accessToken)
-      if (authError || !authData.user) {
-        console.error('Unauthorized send-notification request', authError)
+      const firebaseUid = await verifyFirebaseUser(accessToken)
+      if (!firebaseUid) {
+        console.error('Unauthorized send-notification request')
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: userRow, error: userError } = await supabaseClient
+        .from('users')
+        .select('id')
+        .eq('firebase_uid', firebaseUid)
+        .limit(1)
+        .single()
+
+      if (userError || !userRow) {
+        console.error('Notification caller lookup failed:', userError)
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      callerUserId = userRow.id
+    } else {
+      const configuredSecret = Deno.env.get('SEND_NOTIFICATION_WEBHOOK_SECRET')
+      const receivedSecret =
+        req.headers.get('x-webhook-secret') ?? req.headers.get('X-Webhook-Secret')
+      if (!configuredSecret || receivedSecret !== configuredSecret) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -60,6 +118,39 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    if (!isWebhookCall && callerUserId !== finalUserId) {
+      const { data: targetMemberships, error: targetMembershipError } =
+        await supabaseClient
+          .from('household_members')
+          .select('household_id')
+          .eq('user_id', finalUserId)
+
+      if (targetMembershipError || !targetMemberships || targetMemberships.length === 0) {
+        console.error('Notification target membership lookup failed:', targetMembershipError)
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const targetHouseholdIds = targetMemberships.map((row) => row.household_id)
+      const { data: sharedHousehold, error: sharedError } = await supabaseClient
+        .from('household_members')
+        .select('household_id')
+        .eq('user_id', callerUserId)
+        .in('household_id', targetHouseholdIds)
+        .limit(1)
+        .maybeSingle()
+
+      if (sharedError || !sharedHousehold) {
+        console.error('Notification target rejected:', sharedError)
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     // 1. Get user tokens from public.user_fcm_tokens
@@ -141,7 +232,7 @@ serve(async (req) => {
           return result
         } catch (e) {
           console.error('Error sending single notification:', e)
-          return { error: e.message }
+          return { error: String(e) }
         }
       })
     )
@@ -154,7 +245,7 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Edge Function Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'internal_error' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     })

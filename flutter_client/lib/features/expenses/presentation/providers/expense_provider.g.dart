@@ -103,7 +103,7 @@ final getPersonalFinanceSummaryUseCaseProvider =
 typedef GetPersonalFinanceSummaryUseCaseRef
     = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
 String _$monthlyPendingPlannedExpensesHash() =>
-    r'b1ad935b11d41d6703c0cf85af1f64d5cf4aaef9';
+    r'a4367c7121abac4b51ffa9e74d8eb463cf61bab1';
 
 /// See also [monthlyPendingPlannedExpenses].
 @ProviderFor(monthlyPendingPlannedExpenses)
@@ -122,7 +122,7 @@ final monthlyPendingPlannedExpensesProvider =
 // ignore: unused_element
 typedef MonthlyPendingPlannedExpensesRef
     = AutoDisposeFutureProviderRef<List<FeedItemModel>>;
-String _$monthlyProjectionHash() => r'a82e4c897b5abcd44ab1dc34cd7538a695ad3d90';
+String _$monthlyProjectionHash() => r'f721034d7d36bf970e87a712b5a0529466782161';
 
 /// See also [monthlyProjection].
 @ProviderFor(monthlyProjection)
@@ -175,7 +175,7 @@ final expenseBalancesProvider = AsyncNotifierProvider<ExpenseBalances,
 );
 
 typedef _$ExpenseBalances = AsyncNotifier<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'fe922b49f6b34ce389139bf27fe411b7e2eab4c2';
+String _$expenseControllerHash() => r'7eed4017b89ce763df5c3a3250b3c63a27f4f0c4';
 
 /// See also [ExpenseController].
 @ProviderFor(ExpenseController)
@@ -192,7 +192,7 @@ final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
 String _$combinedFeedControllerHash() =>
-    r'b2a91bf46f3e2b57c6ce6878789ab124df62d7e9';
+    r'3934382215ed808135dc59952798baffa6b0bad5';
 
 /// See also [CombinedFeedController].
 @ProviderFor(CombinedFeedController)
@@ -210,7 +210,7 @@ final combinedFeedControllerProvider = AutoDisposeAsyncNotifierProvider<
 typedef _$CombinedFeedController
     = AutoDisposeAsyncNotifier<List<FeedItemModel>>;
 String _$expenseTemplateControllerHash() =>
-    r'ae93628fc23a05ebc6ffac5f375508a7877f029c';
+    r'4116020e7c8072eb9f3c61c54bf70c0a7a9c024c';
 
 /// See also [ExpenseTemplateController].
 @ProviderFor(ExpenseTemplateController)

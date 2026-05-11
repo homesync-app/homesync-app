@@ -4,13 +4,15 @@ import '../models/shopping_model.dart';
 
 abstract class ShoppingRepository {
   Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
-      String householdId,);
+    String householdId,
+  );
 
   Future<Either<Failure, ShoppingItemModel>> addItem({
     required String householdId,
     required String name,
     required String userId,
     String? clientId,
+    String? nameKey,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -22,6 +24,7 @@ abstract class ShoppingRepository {
   Future<Either<Failure, void>> updateItem({
     required String itemId,
     required String name,
+    String? nameKey,
     required String category,
     required String emoji,
     String? note,

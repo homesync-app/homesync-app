@@ -168,7 +168,7 @@ serve(async (req) => {
     // Obtener household y tier del usuario
     const { data: memberRow, error: memberError } = await supabase
       .from("household_members")
-      .select("household_id, households(subscription_tier)")
+      .select("household_id, households(plan_tier)")
       .eq("user_id", userId)
       .limit(1)
       .single();
@@ -180,7 +180,7 @@ serve(async (req) => {
     }
 
     const householdId = memberRow.household_id;
-    const tier = (memberRow.households as { subscription_tier: string } | null)?.subscription_tier ?? "free";
+    const tier = (memberRow.households as { plan_tier: string } | null)?.plan_tier ?? "free";
 
     // No scan limit — OCR is free for all. We still log scans for analytics.
     // Leer imagen del body
@@ -216,7 +216,7 @@ serve(async (req) => {
     if (!geminiResult.ok) {
       console.error("Gemini falló:", geminiResult.status, geminiResult.body.slice(0, 300));
       return new Response(
-        JSON.stringify({ error: "Error llamando a Gemini", detail: geminiResult.body }),
+        JSON.stringify({ error: "ocr_failed" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -293,7 +293,7 @@ serve(async (req) => {
   } catch (err) {
     console.error("scan-receipt error:", err);
     return new Response(
-      JSON.stringify({ error: "Error interno", detail: String(err) }),
+      JSON.stringify({ error: "internal_error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

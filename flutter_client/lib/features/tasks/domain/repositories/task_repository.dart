@@ -7,8 +7,11 @@ import '../models/task_model.dart';
 /// The domain never depends on Supabase — only on this interface.
 abstract class TaskRepository {
   /// Fetch tasks for a household with pagination.
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-      {int limit = 100, int offset = 0,});
+  Future<Either<Failure, List<TaskModel>>> getTasks(
+    String householdId, {
+    int limit = 100,
+    int offset = 0,
+  });
 
   /// Mark a TaskModel as completed and award XP/coins via RPC.
   /// Returns the result map from the RPC (new balance, etc.)
@@ -27,11 +30,15 @@ abstract class TaskRepository {
 
   /// Verify a completed TaskModel (done by the other household member).
   Future<Either<Failure, void>> verifyTask(
-      String taskId, String verifiedByUserId,);
+    String taskId,
+    String verifiedByUserId,
+  );
 
   /// Object / dispute a completed task.
   Future<Either<Failure, void>> objectTask(
-      String taskId, String objectedByUserId,);
+    String taskId,
+    String objectedByUserId,
+  );
 
   /// Delete a TaskModel permanently.
   Future<Either<Failure, void>> deleteTask(String taskId);
@@ -61,13 +68,18 @@ abstract class TaskRepository {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   });
 
   /// Edit an existing TaskModel's fields.
   Future<Either<Failure, void>> editTask(
-      String taskId, Map<String, dynamic> updates,);
+    String taskId,
+    Map<String, dynamic> updates,
+  );
 
   /// Revert a completed task via activity ID.
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId,);
+    String activityId,
+  );
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -21,6 +21,7 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -97,7 +98,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   List<String> _unmatchedOcrItems = [];
   final Set<ShoppingItemModel> _ocrMatchedShoppingItems = {};
 
-  // Telemetría OCR: id de la fila de log para asociar matcher_result + user_action.
+  // TelemetrÃ­a OCR: id de la fila de log para asociar matcher_result + user_action.
   String? _ocrLogId;
   bool _ocrConfirmed = false;
 
@@ -153,7 +154,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   void dispose() {
-    // Si hubo scan y el usuario cerró sin confirmar, lo marcamos como cancelled.
+    // Si hubo scan y el usuario cerrÃ³ sin confirmar, lo marcamos como cancelled.
     if (_ocrLogId != null && !_ocrConfirmed) {
       OcrLogService(Supabase.instance.client).updateUserAction(
         logId: _ocrLogId!,
@@ -252,6 +253,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _scanReceipt(ImageSource source) async {
+    final t = AppLocalizations.of(context);
     if (_isScanningReceipt) return;
     setState(() => _isScanningReceipt = true);
     try {
@@ -260,7 +262,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (result == null || !mounted) return;
       _prefillFromScan(result);
 
-      // Logging asíncrono — no bloquea la UI ni rompe si falla.
+      // Logging asÃ­ncrono â€” no bloquea la UI ni rompe si falla.
       final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
       final householdId = ref.read(currentHouseholdProvider).valueOrNull?.id;
       OcrLogService(Supabase.instance.client)
@@ -277,8 +279,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         }
       });
 
-      // Solo corremos el matcher para categorías donde tiene sentido vincular
-      // con la lista de compras. Para cafeterías, transporte, servicios, etc.
+      // Solo corremos el matcher para categorÃ­as donde tiene sentido vincular
+      // con la lista de compras. Para cafeterÃ­as, transporte, servicios, etc.
       // el usuario no espera ver productos detectados.
       const shoppingRelevantCategories = {'supermarket', 'health'};
       if (shoppingRelevantCategories.contains(result.category)) {
@@ -289,7 +291,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('No se pudo leer el ticket: $e'),
+          content: Text(t.expensesFormOcrError(e.toString())),
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 6),
         ),
@@ -303,11 +305,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     setState(() {
       _scanResult = result;
 
-      if ((result.merchant ?? '').isNotEmpty) {
-        _titleController.text = result.merchant!;
+      final merchant = result.merchant;
+      if ((merchant ?? '').isNotEmpty) {
+        _titleController.text = merchant!;
       }
-      if (result.amount != null) {
-        _amountController.text = _formatAmountFromOcr(result.amount!);
+      final amount = result.amount;
+      if (amount != null) {
+        _amountController.text = _formatAmountFromOcr(amount);
       }
       if (result.date != null) {
         _selectedDate = result.date!;
@@ -323,11 +327,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     });
 
     if (result.hasLowConfidence && mounted) {
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Ticket difícil de leer; revisá los datos antes de guardar'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(t.expensesFormOcrLowConfidence),
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -360,7 +364,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       _unmatchedOcrItems = result.unrecognized;
     });
 
-    // Telemetría: registramos el resultado del matcher para análisis offline.
+    // TelemetrÃ­a: registramos el resultado del matcher para anÃ¡lisis offline.
     final logId = _ocrLogId;
     if (logId != null) {
       OcrLogService(Supabase.instance.client).updateMatcherResult(
@@ -388,21 +392,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _saveExpense() async {
+    final t = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     final cleanAmtStr =
         _amountController.text.replaceAll('.', '').replaceAll(',', '.');
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
-      // This case should ideally be caught by the validator, but as a fallback
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto válido.')),
+        SnackBar(content: Text(t.expensesFormValidationAmountRequired)),
       );
       return;
     }
 
     final householdId = await ref.read(householdIdProvider.future);
-    if (householdId == null) throw Exception('No pertenecés a un hogar');
+    if (householdId == null) {
+      throw Exception(t.expensesFormValidationNoHousehold);
+    }
 
     final members = await ref.read(householdMembersProvider.future);
     final financeMembers = _financeMembers(members);
@@ -415,9 +422,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       String computedTitle = _titleController.text.trim();
       if (computedTitle.isEmpty) {
         if (_selectedShoppingItems.isNotEmpty) {
-          computedTitle = 'Compras del Supermercado';
+          computedTitle = t.expensesFormAutoTitleSupermarketShopping;
         } else {
-          computedTitle = _selectedCategory!['name'];
+          final selectedId = _selectedCategory!['id'] as String;
+          computedTitle = _isIncome
+              ? localizedIncomeCategoryName(t, selectedId)
+              : localizedExpenseCategoryName(t, selectedId);
         }
       }
 
@@ -495,9 +505,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         final shoppingRepo = ref.read(shoppingRepositoryProvider);
         final userId = ref.read(currentUserIdProvider);
 
-        // Paralelizamos todos los items: antes se hacía secuencial (add+toggle
-        // por item) y con 14 artículos se iban ~5-6s. Con Future.wait todas las
-        // operaciones salen a la vez y el tiempo total ≈ la operación más lenta.
+        // Paralelizamos todos los items: antes se hacÃ­a secuencial (add+toggle
+        // por item) y con 14 artÃ­culos se iban ~5-6s. Con Future.wait todas las
+        // operaciones salen a la vez y el tiempo total â‰ˆ la operaciÃ³n mÃ¡s lenta.
         final futures = _selectedShoppingItems.map((item) async {
           if (item.id.startsWith('temp_')) {
             final addResult = await shoppingRepo.addItem(
@@ -540,7 +550,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(userBalanceProvider);
 
-      // Telemetría OCR: el usuario confirmó el gasto.
+      // TelemetrÃ­a OCR: el usuario confirmÃ³ el gasto.
       if (_ocrLogId != null) {
         _ocrConfirmed = true;
         OcrLogService(Supabase.instance.client).updateUserAction(
@@ -555,10 +565,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         await Future<void>.delayed(const Duration(milliseconds: 420));
         if (!mounted) return;
         Navigator.pop(context);
-        final baseMsg =
-            widget.expense != null ? 'Gasto actualizado' : 'Gasto guardado';
+        final baseMsg = widget.expense != null
+            ? t.expensesFormUpdatedExpense
+            : (_isIncome
+                ? t.expensesFormSavedIncome
+                : t.expensesFormSavedExpense);
         final shoppingMsg = shoppingItemsSynced > 0
-            ? ' · $shoppingItemsSynced ${shoppingItemsSynced == 1 ? 'artículo' : 'artículos'} comprados ✅'
+            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ✅'
             : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -569,9 +582,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
     } catch (e) {
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(t.commonErrorWithDetails(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -588,16 +602,19 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final membersAsync = ref.watch(householdMembersProvider);
     final shoppingItemsAsync = ref.watch(shoppingItemsProvider);
 
     return membersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('Error: $e')),
+      error: (e, s) {
+        return Center(child: Text(t.commonErrorWithDetails(e.toString())));
+      },
       data: (members) {
         if (members.isEmpty) {
-          return const Center(
-            child: Text('No hay miembros disponibles para registrar gastos.'),
+          return Center(
+            child: Text(t.expensesFormMembersEmpty),
           );
         }
         final financeMembers = _financeMembers(members);
@@ -651,24 +668,23 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           _buildAmountField(),
                           const SizedBox(height: 32),
                           _buildSectionIntro(
-                            eyebrow: 'Detalle',
+                            eyebrow: t.expensesFormSectionDetailEyebrow,
                             title: _isIncome
-                                ? '¿De dónde viene?'
-                                : '¿Qué estás registrando?',
+                                ? t.expensesFormSectionDetailTitleIncome
+                                : t.expensesFormSectionDetailTitleExpense,
                             subtitle: _isIncome
-                                ? 'Podés dejar un nombre claro para reconocer este ingreso más rápido.'
-                                : 'Dale un nombre simple para ubicar este gasto de un vistazo.',
+                                ? t.expensesFormSectionDetailSubtitleIncome
+                                : t.expensesFormSectionDetailSubtitleExpense,
                           ),
                           const SizedBox(height: 14),
                           _buildTitleField(),
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'Contexto',
+                            eyebrow: t.expensesFormSectionContextEyebrow,
                             title: _isIncome
-                                ? 'Cuándo y quién lo recibió'
-                                : 'Cuándo y quién pagó',
-                            subtitle:
-                                'Estos datos ordenan el movimiento dentro del hogar.',
+                                ? t.expensesFormSectionContextTitleIncome
+                                : t.expensesFormSectionContextTitleExpense,
+                            subtitle: t.expensesFormSectionContextSubtitle,
                           ),
                           const SizedBox(height: 14),
                           _buildDateAndPayerRow(
@@ -704,24 +720,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                           ],
                           const SizedBox(height: 28),
                           _buildSectionIntro(
-                            eyebrow: 'Categoría',
+                            eyebrow: t.expensesFormSectionCategoryEyebrow,
                             title: _isIncome
-                                ? 'Cómo querés clasificarlo'
-                                : 'Dónde entra este gasto',
-                            subtitle:
-                                'Podés elegirla, pero también la sugerimos automáticamente según cómo lo describas.',
+                                ? t.expensesFormSectionCategoryTitleIncome
+                                : t.expensesFormSectionCategoryTitleExpense,
+                            subtitle: t.expensesFormSectionCategorySubtitle,
                           ),
                           const SizedBox(height: 14),
                           _buildCategorySelector(context),
                           const SizedBox(height: 28),
                           if (showSplit) ...[
                             _buildSectionIntro(
-                              eyebrow: 'Reparto',
+                              eyebrow: t.expensesFormSectionSplitEyebrow,
                               title: _isIncome
-                                  ? 'Cómo se reparte este ingreso'
-                                  : 'Cómo se divide este gasto',
-                              subtitle:
-                                  'Definí si es compartido, fijo, regalo o personal.',
+                                  ? t.expensesFormSectionSplitTitleIncome
+                                  : t.expensesFormSectionSplitTitleExpense,
+                              subtitle: t.expensesFormSectionSplitSubtitle,
                             ),
                             const SizedBox(height: 14),
                             _buildSplitConfiguration(context, financeMembers),
@@ -766,32 +780,36 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Future<void> _confirmDelete() async {
     final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text(
-          '¿Eliminar gasto?',
-          style: TextStyle(fontWeight: FontWeight.w900),
-        ),
-        content: const Text('Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
+      builder: (context) {
+        final t = AppLocalizations.of(context);
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          title: Text(
+            t.expensesFormDeleteDialogTitle,
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.accentRed),
-            child: const Text(
-              'Eliminar',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          content: Text(t.expensesFormDeleteDialogBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                t.commonCancel,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             ),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: AppColors.accentRed),
+              child: Text(
+                t.commonDelete,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm == true) {
@@ -808,7 +826,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Error: $e')));
+              .showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).commonErrorWithDetails('$e'),
+                  ),
+                ),
+              );
         }
       } finally {
         if (mounted) setState(() => _isLoading = false);
@@ -844,7 +868,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   /// Formatea el monto detectado por OCR al estilo argentino: punto para miles,
-  /// coma para decimal. Ej: 10666.5 → "10.666,50"
+  /// coma para decimal. Ej: 10666.5 â†’ "10.666,50"
   String _formatAmountFromOcr(double amount) {
     if (amount <= 0) return '';
     final intPart = amount.truncate();
@@ -867,6 +891,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildTypeToggle() {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(5),
@@ -911,7 +936,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             children: [
               Expanded(
                 child: _buildTypeOption(
-                  label: 'Gasto',
+                  label: t.expensesFormTypeExpense,
                   isSelected: !_isIncome,
                   onTap: () {
                     if (_isIncome) {
@@ -925,7 +950,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
               Expanded(
                 child: _buildTypeOption(
-                  label: 'Ingreso',
+                  label: t.expensesFormTypeIncome,
                   isSelected: _isIncome,
                   onTap: () {
                     if (!_isIncome) {
@@ -966,6 +991,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   Widget _buildTitleField() {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
       decoration: BoxDecoration(
@@ -1026,8 +1052,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ),
               decoration: InputDecoration(
                 hintText: _isIncome
-                    ? '¿De qué es el ingreso? (Opcional)'
-                    : '¿Qué compraste? (Opcional)',
+                    ? t.expensesFormTitleHintIncome
+                    : t.expensesFormTitleHintExpense,
                 hintStyle: TextStyle(
                   color: theme.textMuted,
                   fontSize: 16,
@@ -1060,14 +1086,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   ) {
     final caps = ref.watch(householdCapabilitiesProvider);
     final showPayer = caps.showExpensesSplit;
+    final t = AppLocalizations.of(context);
 
     return Row(
       children: [
         Expanded(
           child: _buildActionTile(
             icon: Icons.calendar_today_rounded,
-            label: 'Fecha',
-            value: DateFormat('d MMM', 'es').format(_selectedDate),
+            label: t.expensesFormFieldDate,
+            value: DateFormat(
+              'd MMM',
+              Localizations.localeOf(context).toLanguageTag(),
+            ).format(_selectedDate),
             onTap: _selectDate,
           ),
         ),
@@ -1076,7 +1106,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           Expanded(
             child: _buildActionTile(
               icon: Icons.person_outline_rounded,
-              label: 'Pagó',
+              label: t.expensesFormFieldPayer,
               value: payer.displayName,
               onTap: () => showExpenseMemberSelectorSheet(
                 context: context,
@@ -1107,11 +1137,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Widget _buildCategorySelector(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return GestureDetector(
       onTap: () => showExpenseCategorySelectorSheet(
         context: context,
         categories: _currentCategories,
         selectedCategory: _selectedCategory!,
+        isIncome: _isIncome,
         onSelected: (category) {
           setState(() => _selectedCategory = category);
         },
@@ -1152,16 +1184,24 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Categoría',
-                    style: TextStyle(
+                  Text(
+                    t.expensesFormFieldCategory,
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    _selectedCategory!['name'],
+                    _isIncome
+                        ? localizedIncomeCategoryName(
+                            t,
+                            _selectedCategory!['id'] as String,
+                          )
+                        : localizedExpenseCategoryName(
+                            t,
+                            _selectedCategory!['id'] as String,
+                          ),
                     style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,
@@ -1211,7 +1251,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
               ? () => _showShoppingItemsSelector(context)
               : () => PremiumPaywall.show(context),
           // Solo permitimos limpiar/quitar si hubo scan (caso tipico:
-          // el usuario escaneó pero el ticket no es de un super → quita todo).
+          // el usuario escaneÃ³ pero el ticket no es de un super â†’ quita todo).
           onClearAll: _scanResult != null
               ? () {
                   // Snapshot para deshacer.
@@ -1231,15 +1271,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     ..hideCurrentSnackBar()
                     ..showSnackBar(
                       SnackBar(
-                        content: const Text(
-                          'Vinculaciones removidas',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                        content: Text(
+                          AppLocalizations.of(context).expensesFormShoppingUnlinkedSnack,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         backgroundColor: AppColors.textPrimary,
                         duration: const Duration(seconds: 4),
                         behavior: SnackBarBehavior.floating,
                         action: SnackBarAction(
-                          label: 'Deshacer',
+                          label: AppLocalizations.of(context).expensesFormShoppingUnlinkedUndo,
                           textColor: AppColors.primary,
                           onPressed: () {
                             if (!mounted) return;
@@ -1297,6 +1337,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     BuildContext context,
     List<MemberModel> members,
   ) {
+    final t = AppLocalizations.of(context);
     final splitModes = _isIncome
         ? const [SplitType.equal, SplitType.personal]
         : SplitType.values;
@@ -1317,7 +1358,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
             switch (mode) {
               case SplitType.equal:
                 if (_isIncome) {
-                  label = 'Compartido';
+                  label = t.expensesFormSplitShared;
                   icon = Icons.groups_rounded;
                 } else {
                   final ratio = household?.defaultSplitRatio ?? 0.5;
@@ -1332,15 +1373,15 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 }
                 break;
               case SplitType.fixed:
-                label = 'Fijo';
+                label = t.expensesFormSplitFixed;
                 icon = Icons.calculate_rounded;
                 break;
               case SplitType.gift:
-                label = 'Regalo';
+                label = t.expensesFormSplitGift;
                 icon = Icons.redeem_rounded;
                 break;
               case SplitType.personal:
-                label = 'Solo yo';
+                label = t.expensesFormSplitPersonal;
                 icon = Icons.person_rounded;
                 break;
             }
@@ -1369,6 +1410,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   Widget _buildSplitDetails(List<MemberModel> members) {
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
     if (_splitMode == SplitType.equal) {
       final household = ref.watch(currentHouseholdProvider).valueOrNull;
       final defaultRatio = household?.defaultSplitRatio ?? 0.5;
@@ -1425,7 +1467,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       );
     } else if (_splitMode == SplitType.gift) {
       return _buildInfoBox(
-        'Este gasto no afectará el balance ${caps.actionMemberLabel}.',
+        'Este gasto no afectarÃ¡ el balance ${caps.actionMemberLabel(t)}.',
         AppColors.primary,
       );
     } else if (_splitMode == SplitType.personal) {
@@ -1549,3 +1591,6 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 }
+
+
+

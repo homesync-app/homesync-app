@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
@@ -221,8 +222,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final rewardsAsync = ref.watch(rewardsProvider);
     final currentUserId = ref.read(currentUserIdProvider);
     final theme = context.theme;
-    final tabLabels =
-        widget.showDuel ? const ['Duelo', 'Premios'] : const ['Premios'];
+    final t = AppLocalizations.of(context);
+    final List<String> tabLabels =
+        widget.showDuel ? [t.rewardsTabDuel, t.rewardsTabPrizes] : [t.rewardsTabPrizes];
     final tabViews = [
       if (widget.showDuel) _buildDuelTab(),
       rewardsAsync.when(
@@ -265,9 +267,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
           );
         },
-        loading: () => const AppLoadingState(message: 'Cargando premios...'),
+        loading: () => AppLoadingState(message: t.rewardsLoading),
         error: (e, _) => AppErrorState(
-          message: 'No pudimos cargar premios.\n$e',
+          message: t.rewardsLoadError(e.toString()),
           onRetry: () => ref.invalidate(rewardsProvider),
         ),
       ),
@@ -322,6 +324,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       onRefresh: _loadDuelStats,
     );
   }
+
+
 
   Widget _buildHeroPill({
     required IconData icon,
@@ -503,13 +507,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildPendingProposalsSection(
       List<RewardModel> suggestions, String? currentUserId,) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          'Propuestas',
-          subtitle:
-              'Deseos pendientes de aprobacion. Toca una propuesta para revisarla.',
+          t.rewardsProposalsSection,
+          subtitle: t.rewardsPendingApproval,
           action: _buildCountPill('${suggestions.length}'),
         ),
         const SizedBox(height: 14),
@@ -544,6 +548,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildProposalCard(RewardModel reward, String? currentUserId) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final isMine = reward.createdBy == currentUserId;
     final accent = isMine ? AppColors.primary : AppColors.accentPurple;
 
@@ -572,7 +577,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       icon: isMine
                           ? Icons.hourglass_top_rounded
                           : Icons.mark_email_unread_outlined,
-                      label: isMine ? 'Pendiente' : 'Revisar',
+                      label: isMine ? t.rewardsStatusPending : t.rewardsStatusReview,
                       color: accent,
                       background: accent.withValues(alpha: 0.10),
                     ),
@@ -606,7 +611,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  (reward.description ?? 'Esperando una decision de tu pareja.')
+                  (reward.description ?? t.rewardsWaitingPartnerDecision)
                       .trim(),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
@@ -632,8 +637,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   ),
                   child: Text(
                     isMine
-                        ? '${reward.cost} coins - esperando respuesta'
-                        : '${reward.cost} coins - toca para aprobar o quitar',
+                        ? t.rewardsProposalStatusWaiting(reward.cost)
+                        : t.rewardsProposalStatusAction(reward.cost),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color:
@@ -768,7 +773,8 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildRewardCard(RewardModel reward) {
     final theme = context.theme;
-    final userBalance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+    final balanceData = ref.watch(userBalanceProvider).value;
+    final userBalance = (balanceData?['coins'] as num?) ?? 0;
     final canAfford = userBalance >= reward.cost;
     final buttonAccent = canAfford ? theme.primary : theme.textMuted;
 

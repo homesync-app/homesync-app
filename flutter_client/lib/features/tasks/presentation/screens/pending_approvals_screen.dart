@@ -7,6 +7,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_approval_model
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para owner/admin del hogar.
 ///
@@ -22,18 +23,19 @@ class PendingApprovalsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final available = ref.watch(parentModeAvailableProvider);
     final eligible = ref.watch(parentModeEligibleProvider);
 
     if (!eligible) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Aprobaciones')),
+        appBar: AppBar(title: Text(t.pendingApprovalsAppBarShortTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Esta seccion es para administradores de hogares familiares.',
+              t.pendingApprovalsLockedNotice,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),
@@ -45,7 +47,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
     if (!available) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Aprobaciones')),
+        appBar: AppBar(title: Text(t.pendingApprovalsAppBarShortTitle)),
         body: const _LockedHero(),
       );
     }
@@ -55,7 +57,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: const Text('Aprobaciones pendientes'),
+        title: Text(t.pendingApprovalsAppBarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -168,7 +170,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                 child: OutlinedButton.icon(
                   onPressed: _busy ? null : _onReject,
                   icon: const Icon(Icons.close_rounded),
-                  label: const Text('Rechazar'),
+                  label: Text(
+                    AppLocalizations.of(context).pendingApprovalsRejectButton,
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentRed,
                     side: const BorderSide(color: AppColors.accentRed),
@@ -180,7 +184,9 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
                 child: FilledButton.icon(
                   onPressed: _busy ? null : _onApprove,
                   icon: const Icon(Icons.check_rounded),
-                  label: const Text('Aprobar'),
+                  label: Text(
+                    AppLocalizations.of(context).pendingApprovalsApproveButton,
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accentGreen,
                     foregroundColor: Colors.white,
@@ -203,9 +209,13 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
       final res = await ref.read(tasksProvider.notifier).approvePendingTask(stub);
       if (!mounted) return;
       if (res != null) {
-        _snack('Aprobada. Se acreditaron ${widget.approval.coinReward} coins.');
+        _snack(
+          'Aprobada. Se acreditaron ${widget.approval.coinReward} coins.',
+        );
       } else {
-        _snack('No pudimos aprobar la tarea. Reintenta.');
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -222,7 +232,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
           .read(tasksProvider.notifier)
           .rejectPendingTask(stub, reason: reason.isEmpty ? null : reason);
       if (!mounted) return;
-      _snack('Tarea rechazada.');
+      _snack(AppLocalizations.of(context).pendingApprovalsRejectedSnack);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -235,24 +245,25 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
   }
 
   Future<String?> _askReason(BuildContext ctx) async {
+    final t = AppLocalizations.of(ctx);
     final controller = TextEditingController();
     return showDialog<String>(
       context: ctx,
       builder: (dialogCtx) {
         return AlertDialog(
-          title: const Text('Motivo del rechazo'),
+          title: Text(t.pendingApprovalsRejectDialogTitle),
           content: TextField(
             controller: controller,
             maxLength: 200,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Por que no esta aprobada (opcional)',
+            decoration: InputDecoration(
+              hintText: t.pendingApprovalsRejectDialogHint,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar'),
+              child: Text(t.commonCancel),
             ),
             FilledButton(
               onPressed: () =>
@@ -260,7 +271,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentRed,
               ),
-              child: const Text('Rechazar'),
+              child: Text(t.pendingApprovalsRejectButton),
             ),
           ],
         );
@@ -312,6 +323,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -325,7 +337,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Nada pendiente por ahora',
+              t.pendingApprovalsEmptyTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 18,
@@ -334,7 +346,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando alguien complete una tarea aparecera aca para que la revises.',
+              t.pendingApprovalsEmptyBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary, fontSize: 13),
             ),
@@ -351,6 +363,7 @@ class _LockedHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -364,7 +377,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Aprobacion de tareas',
+              t.pendingApprovalsLockedTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 20,
@@ -373,7 +386,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Activa Modo Padres para revisar y aprobar lo que cumple cada miembro del hogar antes de acreditar los coins.',
+              t.pendingApprovalsLockedBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),

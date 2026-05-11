@@ -1,4 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
+
 class ShoppingPredefined {
+  // Legacy support for background services and providers that don't have context.
+  // Defaults to Spanish (original catalog).
   static const Map<String, List<Map<String, String>>> itemsPerCategory = {
     'fruits': [
       {'name': 'Tomate', 'emoji': '🍅'},
@@ -211,4 +216,151 @@ class ShoppingPredefined {
       {'name': 'Gelatina', 'emoji': '🍮'},
     ],
   };
+
+  static List<Map<String, String>> itemsForCategory(
+    String categoryId,
+    BuildContext context,
+  ) {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+
+    if (!isEn) return itemsPerCategory[categoryId] ?? [];
+
+    final localized = _localizedItemsForCategory(categoryId, context);
+    if (localized.isNotEmpty) return localized;
+
+    switch (categoryId) {
+      case 'fruits':
+        return [
+          {'name': 'Tomato', 'emoji': '🍅'},
+          {'name': 'Onion', 'emoji': '🧅'},
+          {'name': 'Green Onion', 'emoji': '🌱'},
+          {'name': 'Potato', 'emoji': '🥔'},
+          {'name': 'Apple', 'emoji': '🍎'},
+          {'name': 'Banana', 'emoji': '🍌'},
+          {'name': 'Pear', 'emoji': '🍐'},
+          {'name': 'Peach', 'emoji': '🍑'},
+          {'name': 'Lemon', 'emoji': '🍋'},
+          {'name': 'Orange', 'emoji': '🍊'},
+          {'name': 'Tangerine', 'emoji': '🍊'},
+          {'name': 'Grapefruit', 'emoji': '🍊'},
+          {'name': 'Kiwi', 'emoji': '🥝'},
+          {'name': 'Pineapple', 'emoji': '🍍'},
+          {'name': 'Strawberry', 'emoji': '🍓'},
+          {'name': 'Grapes', 'emoji': '🍇'},
+          {'name': 'Watermelon', 'emoji': '🍉'},
+          {'name': 'Carrot', 'emoji': '🥕'},
+          {'name': 'Garlic', 'emoji': '🧄'},
+          {'name': 'Ginger', 'emoji': '🫚'},
+          {'name': 'Lettuce', 'emoji': '🥬'},
+          {'name': 'Arugula', 'emoji': '🥬'},
+          {'name': 'Spinach', 'emoji': '🥬'},
+          {'name': 'Chard', 'emoji': '🥬'},
+          {'name': 'Celery', 'emoji': '🌿'},
+          {'name': 'Avocado', 'emoji': '🥑'},
+          {'name': 'Bell Pepper', 'emoji': '🫑'},
+          {'name': 'Pumpkin', 'emoji': '🎃'},
+          {'name': 'Sweet Potato', 'emoji': '🍠'},
+          {'name': 'Broccoli', 'emoji': '🥦'},
+          {'name': 'Eggplant', 'emoji': '🍆'},
+          {'name': 'Mushrooms', 'emoji': '🍄'},
+          {'name': 'Corn', 'emoji': '🌽'},
+          {'name': 'Cucumber', 'emoji': '🥒'},
+          {'name': 'Beet', 'emoji': '🫜'},
+        ];
+
+      case 'meat':
+        return [
+          {'name': 'Ground beef', 'emoji': '🥩'},
+          {'name': 'Chicken', 'emoji': '🍗'},
+          {'name': 'Fish', 'emoji': '🐟'},
+          {'name': 'Pork', 'emoji': '🐖'},
+          {'name': 'Steak', 'emoji': '🥩'},
+          {'name': 'Ribs', 'emoji': '🍖'},
+          {'name': 'Sausages', 'emoji': '🌭'},
+          {'name': 'Chorizo', 'emoji': '🥓'},
+          {'name': 'Burgers', 'emoji': '🍔'},
+          {'name': 'Bacon', 'emoji': '🥓'},
+        ];
+
+      case 'dairy':
+        return [
+          {'name': 'Milk', 'emoji': '🥛'},
+          {'name': 'Plant milk', 'emoji': '🥛'},
+          {'name': 'Cheese', 'emoji': '🧀'},
+          {'name': 'Grated cheese', 'emoji': '🧀'},
+          {'name': 'Cream cheese', 'emoji': '🥣'},
+          {'name': 'Mozzarella', 'emoji': '🧀'},
+          {'name': 'Butter', 'emoji': '🧈'},
+          {'name': 'Cream', 'emoji': '🥛'},
+          {'name': 'Yogurt', 'emoji': '🥣'},
+          {'name': 'Eggs', 'emoji': '🥚'},
+          {'name': 'Tofu', 'emoji': '🧊'},
+          {'name': 'Hummus', 'emoji': '🥣'},
+        ];
+
+      case 'cleaning':
+        return [
+          {'name': 'Detergent', 'emoji': '🧴'},
+          {'name': 'Bleach', 'emoji': '🧪'},
+          {'name': 'Glass cleaner', 'emoji': '✨'},
+          {'name': 'Floor cleaner', 'emoji': '✨'},
+          {'name': 'Multi-purpose', 'emoji': '🧴'},
+          {'name': 'Toilet paper', 'emoji': '🧻'},
+          {'name': 'Kitchen roll', 'emoji': '🧻'},
+          {'name': 'Sponge', 'emoji': '🧽'},
+          {'name': 'Laundry soap', 'emoji': '🧼'},
+          {'name': 'Softener', 'emoji': '🌸'},
+          {'name': 'Trash bags', 'emoji': '🥡'},
+        ];
+
+      case 'drinks':
+        return [
+          {'name': 'Water', 'emoji': '💧'},
+          {'name': 'Soda', 'emoji': '🥤'},
+          {'name': 'Juice', 'emoji': '🧃'},
+          {'name': 'Beer', 'emoji': '🍺'},
+          {'name': 'Wine', 'emoji': '🍷'},
+          {'name': 'Coffee', 'emoji': '☕'},
+          {'name': 'Tea', 'emoji': '🍵'},
+        ];
+
+      default:
+        return itemsPerCategory[categoryId] ?? [];
+    }
+  }
+
+  static Map<String, List<Map<String, String>>> allItems(BuildContext context) {
+    const categories = [
+      'fruits',
+      'meat',
+      'dairy',
+      'bakery',
+      'cleaning',
+      'drinks',
+      'snacks',
+      'pharmacy',
+      'pets',
+      'frozen',
+      'pantry',
+    ];
+    final result = <String, List<Map<String, String>>>{};
+    for (final cat in categories) {
+      result[cat] = itemsForCategory(cat, context);
+    }
+    return result;
+  }
+
+  static List<Map<String, String>> _localizedItemsForCategory(
+    String categoryId,
+    BuildContext context,
+  ) {
+    final source = itemsPerCategory[categoryId] ?? const [];
+    return source.map((item) {
+      final name = item['name'] ?? '';
+      return {
+        'name': localizedShoppingCatalogName(context, name: name),
+        'emoji': item['emoji'] ?? '',
+      };
+    }).toList();
+  }
 }

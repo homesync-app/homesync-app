@@ -19,6 +19,7 @@ class FakeShoppingRepository implements ShoppingRepository {
     required String name,
     required String userId,
     String? clientId,
+    String? nameKey,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -85,6 +86,7 @@ class FakeShoppingRepository implements ShoppingRepository {
   Future<Either<Failure, void>> updateItem({
     required String itemId,
     required String name,
+    String? nameKey,
     required String category,
     required String emoji,
     String? note,

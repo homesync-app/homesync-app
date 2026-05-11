@@ -4,6 +4,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class NewItemsSuggestionBanner extends ConsumerStatefulWidget {
   final List<String> items;
@@ -66,10 +67,11 @@ class _NewItemsSuggestionBannerState
       }
 
       if (mounted) {
+        final t = AppLocalizations.of(context);
         widget.onItemsAdded?.call(addedItems);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${_selected.length} productos agregados a la lista'),
+            content: Text(t.expensesNewItemsAddedCount(_selected.length)),
             backgroundColor: AppColors.success,
             duration: const Duration(seconds: 2),
           ),
@@ -80,7 +82,9 @@ class _NewItemsSuggestionBannerState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al agregar: $e'),
+            content: Text(
+              AppLocalizations.of(context).commonErrorWithDetails('$e'),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -92,6 +96,7 @@ class _NewItemsSuggestionBannerState
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Container(
@@ -113,7 +118,7 @@ class _NewItemsSuggestionBannerState
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Productos nuevos detectados',
+                  t.expensesNewItemsDetectedTitle,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: AppColors.accentBlue,
@@ -132,7 +137,7 @@ class _NewItemsSuggestionBannerState
           ),
           const SizedBox(height: 4),
           Text(
-            'Los agregamos a la lista para la proxima?',
+            t.expensesNewItemsDetectedSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
@@ -176,7 +181,7 @@ class _NewItemsSuggestionBannerState
             children: [
               TextButton(
                 onPressed: _isAdding ? null : widget.onDismiss,
-                child: const Text('Ignorar'),
+                child: Text(t.expensesNewItemsIgnore),
               ),
               const SizedBox(width: 8),
               FilledButton.tonal(
@@ -188,7 +193,7 @@ class _NewItemsSuggestionBannerState
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text('Agregar ${_selected.length} a lista'),
+                    : Text(t.expensesNewItemsAddToList(_selected.length)),
               ),
             ],
           ),

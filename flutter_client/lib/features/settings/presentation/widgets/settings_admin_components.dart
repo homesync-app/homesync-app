@@ -140,7 +140,7 @@ class SettingsAdminTestingCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Tip: eliminÃ¡ miembros desde la secciÃ³n "Miembros" de este mismo hogar QA.',
+                  'Tip: eliminá miembros desde la sección "Miembros" de este mismo hogar QA.',
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 11,
@@ -285,7 +285,7 @@ Future<Map<String, String?>?> showSettingsAdminAddDummyMemberDialog(
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   labelText: 'Rol / apodo',
-                  hintText: 'Ej: Invitado, TÃ­a, Roomie',
+                  hintText: 'Ej: Invitado, Tía, Roomie',
                 ),
               ),
               const SizedBox(height: 12),

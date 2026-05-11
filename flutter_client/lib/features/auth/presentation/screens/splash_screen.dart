@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -205,6 +206,7 @@ class _BrandPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final wave = 0.5 + 0.5 * math.sin(progress * math.pi * 2);
     final fill = 0.24 + (wave * 0.62);
     final breathing = 0.92 + (wave * 0.08);
@@ -263,9 +265,9 @@ class _BrandPanel extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Preparando tu hogar compartido.',
-                  style: TextStyle(
+                Text(
+                  t.splashLoadingMessage,
+                  style: const TextStyle(
                     fontFamily: 'Outfit',
                     fontSize: 15.5,
                     fontWeight: FontWeight.w600,

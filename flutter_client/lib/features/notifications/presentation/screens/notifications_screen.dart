@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/notifications/domain/entities/app_notification.dart';
 import 'package:homesync_client/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationsScreen extends ConsumerWidget {
@@ -12,15 +13,16 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     final notificationsAsync = ref.watch(notificationsControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notificaciones'),
+        title: Text(t.notificationsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all),
-            tooltip: 'Marcar todas como leidas',
+            tooltip: t.notificationsMarkAllReadTooltip,
             onPressed: () async {
               try {
                 await ref
@@ -235,6 +237,7 @@ class _NotificationsEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -252,18 +255,18 @@ class _NotificationsEmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'No tienes notificaciones',
-            style: TextStyle(
+          Text(
+            t.notificationsEmptyTitle,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Al dia con todas las novedades',
-            style: TextStyle(
+          Text(
+            t.notificationsEmptySubtitle,
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
             ),
@@ -279,6 +282,7 @@ class _NotificationsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -296,18 +300,18 @@ class _NotificationsErrorState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'No pudimos cargar tus notificaciones',
-            style: TextStyle(
+          Text(
+            t.notificationsErrorTitle,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Desliza hacia abajo para reintentar',
-            style: TextStyle(
+          Text(
+            t.notificationsErrorSubtitle,
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
             ),

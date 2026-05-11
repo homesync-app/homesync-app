@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -16,14 +17,15 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/home_sho
 import 'package:homesync_client/features/dashboard/presentation/widgets/love_note_envelope.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
@@ -91,10 +93,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
       if (!mounted) return;
       // Re-check inside the delay in case another instance/route persisted
       // the flag while we were waiting.
-      final stillUnseen = !(ref
-              .read(sharedPreferencesProvider)
-              .getBool(tourFlagKey) ??
-          false);
+      final stillUnseen =
+          !(ref.read(sharedPreferencesProvider).getBool(tourFlagKey) ?? false);
       if (!stillUnseen) return;
       final tasks = ref.read(todayTasksProvider).whenOrNull(data: (t) => t);
       ref.read(coupleHomeTourControllerProvider.notifier).start(
@@ -105,8 +105,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   @override
   void dispose() {
-    _tourKeysNotifier?.unregister(TourTarget.balanceCard, _balanceKey);
-    _tourKeysNotifier?.unregister(TourTarget.tasksSection, _tasksKey);
+    // Defer the unregister: modifying a provider synchronously during the
+    // widget-tree finalize phase trips Riverpod's "modify provider while
+    // building" assert. Capture locally so we don't touch ref after dispose.
+    final notifier = _tourKeysNotifier;
+    final balanceKey = _balanceKey;
+    final tasksKey = _tasksKey;
+    if (notifier != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.unregister(TourTarget.balanceCard, balanceKey);
+        notifier.unregister(TourTarget.tasksSection, tasksKey);
+      });
+    }
     super.dispose();
   }
 
@@ -114,6 +124,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
 
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
@@ -141,7 +152,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
               child: _buildTasksSection(theme),
             )
           else
-            const HomeShoppingPreviewCard(title: 'Lista actual'),
+            HomeShoppingPreviewCard(title: t.homeCoupleShoppingListTitle),
           const SizedBox(height: 18),
           _buildActivitySection(theme),
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -196,7 +207,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           partnerMember: partnerMember,
           senderName: partnerMember != null
               ? (partnerMember.displayName.split(' ').first)
-              : 'tu pareja',
+              : AppLocalizations.of(context).homeCouplePartnerFallback,
         ),
       ],
     );
@@ -204,9 +215,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   Widget _buildHomeWelcome({
     required AppThemeColors theme,
-    required dynamic partnerMember,
+    required MemberModel? partnerMember,
     required String senderName,
   }) {
+    final t = AppLocalizations.of(context);
     final partnerFirstName = _firstName(partnerMember?.displayName);
     final pendingNote = ref.watch(pendingLoveNoteProvider);
 
@@ -219,7 +231,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Todo lo importante',
+                t.homeHeadlinePrimary,
                 style: TextStyle(
                   color: theme.textPrimary,
                   fontSize: 24,
@@ -230,7 +242,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: 3),
               Text(
-                'del hogar',
+                t.homeCoupleHeadlineSecondary,
                 style: TextStyle(
                   color: theme.textPrimary.withValues(alpha: 0.62),
                   fontSize: 24,
@@ -257,7 +269,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'con ',
+                    '${t.homeCoupleHeadlineConnector} ',
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 14,
@@ -265,7 +277,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                     ),
                   ),
                   Text(
-                    partnerFirstName ?? 'tu pareja',
+                    partnerFirstName ?? t.homeCouplePartnerFallback,
                     style: TextStyle(
                       color: theme.primary,
                       fontSize: 15,
@@ -305,10 +317,13 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     required AppThemeColors theme,
     required String? currentMemberName,
   }) {
+    final t = AppLocalizations.of(context);
     final firstName = _firstName(currentMemberName);
     final welcome = firstName != null
-        ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
-        : 'Bienvenido';
+        ? (_looksFeminineName(firstName)
+            ? t.homeWelcomeFeminine
+            : t.homeWelcomeMasculine)
+        : t.homeWelcomeMasculine;
 
     return TextSpan(
       children: [
@@ -317,7 +332,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           style: TextStyle(color: theme.textPrimary),
         ),
         TextSpan(
-          text: firstName ?? 'Usuario',
+          text: firstName ?? t.commonUserFallback,
           style: TextStyle(color: theme.primary, fontWeight: FontWeight.w900),
         ),
       ],
@@ -331,7 +346,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     return normalized.endsWith('a');
   }
 
-  Widget _buildProfileAvatar(dynamic member) {
+  Widget _buildProfileAvatar(MemberModel? member) {
     return AnimatedPress(
       onTap: widget.onAvatarTap,
       child: Transform.translate(
@@ -403,6 +418,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,7 +427,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Hoy en casa',
+              t.homeCoupleTasksTitle,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
@@ -427,7 +443,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                 }
               },
               child: Text(
-                'Ver Semana',
+                t.homeViewWeekButton,
                 style: TextStyle(
                   color: theme.primary,
                   fontWeight: FontWeight.w700,
@@ -439,10 +455,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
         const SizedBox(height: AppSpacing.md),
         tasksAsync.when(
           loading: () => _buildTasksShimmer(theme),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => Text(t.commonErrorWithDetails(e.toString())),
           data: (tasks) {
             if (tasks.isEmpty) {
-              return _buildEmptyState('Todo listo por hoy', theme);
+              return _buildEmptyState(t.homeAllDoneToday, theme);
             }
             return ListView.separated(
               shrinkWrap: true,
@@ -472,8 +488,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
       await ref.read(tasksProvider.notifier).completeTask(task);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        final t = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        );
       }
     } finally {
       if (mounted) {
@@ -485,12 +503,13 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildActivitySection(AppThemeColors theme) {
     final activityAsync = ref.watch(recentActivityProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Movimientos del hogar',
+          t.homeCoupleActivityTitle,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w900,
@@ -506,7 +525,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
           ),
           error: (e, _) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Text('Error: $e'),
+            child: Text(t.commonErrorWithDetails(e.toString())),
           ),
           data: (activities) {
             if (activities.isEmpty) {
@@ -529,6 +548,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   Widget _buildActivityEmptyState(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -569,7 +589,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Todavia no hay movimientos',
+                    t.homeCoupleActivityEmptyTitle,
                     style: TextStyle(
                       fontSize: 15.5,
                       fontWeight: FontWeight.w800,
@@ -579,7 +599,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Cuando haya una tarea o un gasto nuevo, aparece aca.',
+                    t.homeCoupleActivityEmptyBody,
                     style: TextStyle(
                       fontSize: 12.5,
                       height: 1.3,
@@ -658,16 +678,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
     required double amount,
     required bool isOwedByMe,
   }) {
+    final t = AppLocalizations.of(context);
     final currentUserId = ref.read(currentUserIdProvider);
     if (currentUserId == null) {
-      _showMessage('No pudimos identificar tu usuario.');
+      _showMessage(t.homeCoupleSettlementErrorNoUser);
       return;
     }
 
     final payerId = isOwedByMe ? currentUserId : partnerId;
     final receiverId = isOwedByMe ? partnerId : currentUserId;
+    final locale = Localizations.localeOf(context).toString();
     final formattedAmount =
-        NumberFormat.decimalPattern('es_AR').format(amount.round());
+        NumberFormat.decimalPattern(locale).format(amount.round());
 
     showDialog<void>(
       context: context,
@@ -685,8 +707,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
               ),
               title: Text(
                 isOwedByMe
-                    ? 'Equilibrar con $partnerName'
-                    : 'Registrar equilibrio',
+                    ? t.homeCoupleSettlementDialogTitlePay(partnerName)
+                    : t.homeCoupleSettlementDialogTitleReceive,
                 style: TextStyle(
                   color: theme.textPrimary,
                   fontWeight: FontWeight.w900,
@@ -694,8 +716,14 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
               ),
               content: Text(
                 isOwedByMe
-                    ? 'Se va a registrar un pago de \$ $formattedAmount para saldar el balance con $partnerName.'
-                    : 'Se va a registrar que $partnerName te compenso \$ $formattedAmount para dejar el balance al dia.',
+                    ? t.homeCoupleSettlementDialogBodyPay(
+                        formattedAmount,
+                        partnerName,
+                      )
+                    : t.homeCoupleSettlementDialogBodyReceive(
+                        partnerName,
+                        formattedAmount,
+                      ),
                 style: TextStyle(
                   color: theme.textSecondary,
                   height: 1.4,
@@ -707,7 +735,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                       ? null
                       : () => Navigator.of(dialogContext).pop(),
                   child: Text(
-                    'Cancelar',
+                    t.commonCancel,
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontWeight: FontWeight.w700,
@@ -759,14 +787,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                             Navigator.of(dialogContext).pop();
                             _showMessage(
                               isOwedByMe
-                                  ? 'Balance equilibrado con $partnerName.'
-                                  : 'Registramos el equilibrio con $partnerName.',
+                                  ? t.homeCoupleSettlementSuccessPay(
+                                      partnerName,
+                                    )
+                                  : t.homeCoupleSettlementSuccessReceive(
+                                      partnerName,
+                                    ),
                             );
                           } catch (e) {
                             if (!dialogContext.mounted) return;
                             setDialogState(() => isSubmitting = false);
                             _showMessage(
-                              'No se pudo equilibrar el balance: $e',
+                              t.homeCoupleSettlementError(e.toString()),
                             );
                           }
                         },
@@ -805,18 +837,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
                             ),
                           )
                         : showSuccess
-                            ? const Row(
-                                key: ValueKey('success'),
+                            ? Row(
+                                key: const ValueKey('success'),
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.check_rounded, size: 18),
-                                  SizedBox(width: 8),
-                                  Text('Listo'),
+                                  const Icon(Icons.check_rounded, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(t.homeCoupleSettlementDoneBadge),
                                 ],
                               )
-                            : const Text(
-                                'Confirmar',
-                                key: ValueKey('idle'),
+                            : Text(
+                                t.commonConfirm,
+                                key: const ValueKey('idle'),
                               ),
                   ),
                 ),

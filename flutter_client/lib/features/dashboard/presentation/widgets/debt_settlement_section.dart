@@ -103,7 +103,7 @@ class DebtSettlementSection extends ConsumerWidget {
       child: Row(
         children: [
           const Icon(Icons.check_circle_rounded,
-              color: AppColors.success, size: 24),
+              color: AppColors.success, size: 24,),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -141,7 +141,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: AnimatedPress(
-        onPressed: _isSettling ? null : () => _confirmSettle(context),
+        onPressed: _isSettling ? null : _confirmSettle,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
@@ -217,7 +217,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     )
-                  : Icon(
+                  : const Icon(
                       Icons.check_circle_outline_rounded,
                       color: AppColors.accentTeal,
                       size: 28,
@@ -229,7 +229,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
     );
   }
 
-  Future<void> _confirmSettle(BuildContext context) async {
+  Future<void> _confirmSettle() async {
     final theme = context.theme;
     final debt = widget.debt;
     final formattedAmount = '\$${debt.amount.toStringAsFixed(0)}';
@@ -302,17 +302,15 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       ref.invalidate(recentActivityProvider);
       ref.invalidate(combinedFeedControllerProvider);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Pago de $formattedAmount registrado.')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Pago de $formattedAmount registrado.')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No se pudo registrar el pago: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo registrar el pago: $e')),
+      );
     } finally {
       if (mounted) setState(() => _isSettling = false);
     }

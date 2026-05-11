@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class FAQSheet extends StatelessWidget {
   const FAQSheet({super.key});
@@ -15,6 +16,7 @@ class FAQSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
@@ -40,19 +42,19 @@ class FAQSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.help_outline_rounded,
                   color: AppColors.primary,
                   size: 28,
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
-                  'Preguntas Frecuentes',
-                  style: TextStyle(
+                  t.faqSheetTitle,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     letterSpacing: -0.5,
@@ -65,7 +67,7 @@ class FAQSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              'Todo lo que necesitas saber sobre HomeSync',
+              t.faqSheetSubtitle,
               style: TextStyle(
                 color: AppColors.textSecondary.withValues(alpha: 0.7),
                 fontSize: 14,
@@ -83,66 +85,57 @@ class FAQSheet extends StatelessWidget {
                   context,
                   icon: Icons.favorite_rounded,
                   color: AppColors.accentRed,
-                  question: 'Como funciona el hogar compartido?',
-                  answer:
-                      'HomeSync esta pensado para parejas y convivientes. Al unirte a un hogar con un codigo, ambos comparten la misma lista de tareas, gastos y ahorros. Todo lo que haga uno se refleja para el otro.',
+                  question: t.faqHowSharedHome,
+                  answer: t.faqHowSharedHomeAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.monetization_on_rounded,
                   color: AppColors.accentGold,
-                  question: 'Para que sirven los Coins?',
-                  answer:
-                      'Los Coins son la recompensa por completar tareas. Puedes usarlos en la seccion de recompensas para canjear vales creados por tu pareja, como una cena romantica o un dia de relax.',
+                  question: t.faqWhatCoins,
+                  answer: t.faqWhatCoinsAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.emoji_events_rounded,
                   color: AppColors.accentTeal,
-                  question: 'Que son los Duelos Semanales?',
-                  answer:
-                      'Cada semana comienza un nuevo duelo de XP. El miembro que complete mas tareas y gane mas puntos de experiencia sera el ganador. Es una forma divertida de motivarse mutuamente.',
+                  question: t.faqWhatWeeklyDuels,
+                  answer: t.faqWhatWeeklyDuelsAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.bolt_rounded,
                   color: AppColors.accentBlue,
-                  question: 'Como gano XP?',
-                  answer:
-                      'Ganas XP cada vez que completas una tarea. Las tareas mas dificiles o importantes suelen dar mas XP. Subir de nivel muestra tu progreso dentro del hogar.',
+                  question: t.faqHowEarnXp,
+                  answer: t.faqHowEarnXpAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.account_balance_wallet_rounded,
                   color: AppColors.accentGreen,
-                  question: 'Como funcionan las finanzas?',
-                  answer:
-                      'En HomeSync puedes registrar gastos reales y tambien anticipar gastos que todavia no pagaste. Los gastos confirmados son los que afectan el balance real entre ustedes. Los pendientes sirven como recordatorio y proyeccion, pero no cambian la deuda hasta que se pagan.',
+                  question: t.faqHowFinancesWork,
+                  answer: t.faqHowFinancesWorkAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.event_repeat_rounded,
                   color: AppColors.primary,
-                  question:
-                      'Como cuentan los recurrentes y el balance estimado?',
-                  answer:
-                      'Un recurrente nuevo empieza desde su primera fecha valida. Si lo creas antes o el mismo dia del vencimiento, puede contar este mes. Si lo creas despues, empieza en el siguiente ciclo. "Tu parte pendiente" muestra solo lo que te corresponde segun el split, y "Balance estimado" usa tu balance actual menos esa parte pendiente.',
+                  question: t.faqHowRecurringCount,
+                  answer: t.faqHowRecurringCountAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.auto_awesome_rounded,
                   color: const Color(0xFF8B5CF6),
-                  question: 'Que son los Eventos Especiales?',
-                  answer:
-                      'Cada semana aparece un desafio de pareja en la tienda. Son actividades pensadas para fortalecer la relacion. Al completarlas, ambos reciben Coins y desbloquean medallas en su perfil de logros.',
+                  question: t.faqWhatSpecialEvents,
+                  answer: t.faqWhatSpecialEventsAnswer,
                 ),
                 _buildFAQItem(
                   context,
                   icon: Icons.trending_up_rounded,
                   color: AppColors.primary,
-                  question: 'Niveles y logros?',
-                  answer:
-                      'A medida que ganan XP, suben de nivel. En la seccion de estadisticas pueden ver sus logros, que son medallas por hitos alcanzados, como completar 50 tareas o superar desafios semanales.',
+                  question: t.faqLevelsAndAchievements,
+                  answer: t.faqLevelsAndAchievementsAnswer,
                 ),
               ],
             ),

@@ -19,23 +19,31 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-      {int limit = 100, int offset = 0,}) async {
+  Future<Either<Failure, List<TaskModel>>> getTasks(
+    String householdId, {
+    int limit = 100,
+    int offset = 0,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return Right(_tasks.skip(offset).take(limit).toList());
   }
 
   @override
-  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds, DateTime? completedAt,}) async {
+  Future<Either<Failure, TaskCompletionResult>> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
-    return Right(TaskCompletionResult(
-      success: true,
-      message: 'ok',
-      queued: false,
-      xpEarned: task.xpReward,
-      coinsEarned: task.coinReward,
-    ),);
+    return Right(
+      TaskCompletionResult(
+        success: true,
+        message: 'ok',
+        queued: false,
+        xpEarned: task.xpReward,
+        coinsEarned: task.coinReward,
+      ),
+    );
   }
 
   @override
@@ -49,14 +57,18 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> verifyTask(
-      String taskId, String verifiedByUserId,) async {
+    String taskId,
+    String verifiedByUserId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> objectTask(
-      String taskId, String objectedByUserId,) async {
+    String taskId,
+    String objectedByUserId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -69,7 +81,12 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType, {int? recurrenceInterval, List<int>? recurrenceWeekdays, List<int>? recurrenceMonthDays, String? assignedTo}) async {
+  Future<Either<Failure, void>> updateSchedule(
+      String taskId, String? recurrenceType,
+      {int? recurrenceInterval,
+      List<int>? recurrenceWeekdays,
+      List<int>? recurrenceMonthDays,
+      String? assignedTo,}) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
@@ -89,33 +106,40 @@ class MockTaskRepository implements TaskRepository {
     List<int>? recurrenceMonthDays,
     List<String>? rotationPool,
     String? status,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
-    _tasks.add(TaskModel(
-      id: 'new-task-${_tasks.length + 1}',
-      title: title,
-      description: description,
-      category: category,
-      difficulty: TaskDifficulty.fromString(difficulty),
-      status: TaskStatus.active,
-      xpReward: xpReward,
-      coinReward: coinReward,
-      householdId: 'household-1',
-      createdAt: DateTime.now(),
-    ),);
+    _tasks.add(
+      TaskModel(
+        id: 'new-task-${_tasks.length + 1}',
+        title: title,
+        description: description,
+        category: category,
+        difficulty: TaskDifficulty.fromString(difficulty),
+        status: TaskStatus.active,
+        xpReward: xpReward,
+        coinReward: coinReward,
+        householdId: 'household-1',
+        createdAt: DateTime.now(),
+      ),
+    );
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> editTask(
-      String taskId, Map<String, dynamic> updates,) async {
+    String taskId,
+    Map<String, dynamic> updates,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-      String activityId,) async {
+    String activityId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right({'success': true});
   }
@@ -277,37 +301,41 @@ void main() {
     test('counts tasks by status correctly', () {
       final tasks = [
         TaskModel(
-            id: '1',
-            title: 'Task 1',
-            status: TaskStatus.active,
-            xpReward: 10,
-            coinReward: 5,
-            householdId: 'h1',
-            createdAt: DateTime.now(),),
+          id: '1',
+          title: 'Task 1',
+          status: TaskStatus.active,
+          xpReward: 10,
+          coinReward: 5,
+          householdId: 'h1',
+          createdAt: DateTime.now(),
+        ),
         TaskModel(
-            id: '2',
-            title: 'Task 2',
-            status: TaskStatus.active,
-            xpReward: 10,
-            coinReward: 5,
-            householdId: 'h1',
-            createdAt: DateTime.now(),),
+          id: '2',
+          title: 'Task 2',
+          status: TaskStatus.active,
+          xpReward: 10,
+          coinReward: 5,
+          householdId: 'h1',
+          createdAt: DateTime.now(),
+        ),
         TaskModel(
-            id: '3',
-            title: 'Task 3',
-            status: TaskStatus.verified,
-            xpReward: 10,
-            coinReward: 5,
-            householdId: 'h1',
-            createdAt: DateTime.now(),),
+          id: '3',
+          title: 'Task 3',
+          status: TaskStatus.verified,
+          xpReward: 10,
+          coinReward: 5,
+          householdId: 'h1',
+          createdAt: DateTime.now(),
+        ),
         TaskModel(
-            id: '4',
-            title: 'Task 4',
-            status: TaskStatus.pendingVerification,
-            xpReward: 10,
-            coinReward: 5,
-            householdId: 'h1',
-            createdAt: DateTime.now(),),
+          id: '4',
+          title: 'Task 4',
+          status: TaskStatus.pendingVerification,
+          xpReward: 10,
+          coinReward: 5,
+          householdId: 'h1',
+          createdAt: DateTime.now(),
+        ),
       ];
 
       final counts = <String, int>{};
@@ -339,5 +367,3 @@ class TestCategoryFilterNotifier extends Notifier<Set<String>> {
 
   void clear() => state = {};
 }
-
-

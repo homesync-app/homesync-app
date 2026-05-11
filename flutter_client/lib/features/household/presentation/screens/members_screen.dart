@@ -4,10 +4,11 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
-import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/widgets/invitation_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class MembersScreen extends ConsumerStatefulWidget {
   const MembersScreen({super.key});
@@ -38,6 +39,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   }
 
   Widget _buildContent(List<MemberModel> members, AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
@@ -49,7 +51,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       padding: const EdgeInsets.all(20),
       children: [
-        _buildHeader(members.length, theme).animateEntrance(),
+        _buildHeader(members.length, theme, t).animateEntrance(),
         const SizedBox(height: 24),
         ...members.asMap().entries.map(
               (entry) => _buildMemberCard(
@@ -60,18 +62,18 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             ),
         const SizedBox(height: 16),
         if (!isChild)
-          _buildInviteCard(theme)
+          _buildInviteCard(theme, t)
               .animateScaleIn(delay: (members.length * 40) + 100),
       ],
     );
   }
 
-  Widget _buildHeader(int count, AppThemeColors theme) {
+  Widget _buildHeader(int count, AppThemeColors theme, AppLocalizations t) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Integrantes',
+          t.membersTitle,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -80,7 +82,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          '$count persona${count == 1 ? '' : 's'} en tu hogar',
+          t.membersSubtitle(count),
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 15,
@@ -95,6 +97,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     AppThemeColors theme, {
     required bool canEditRoles,
   }) {
+    final t = AppLocalizations.of(context);
     // Owners can't be downgraded to minors (would lock the household out of
     // admin-only actions), so we only open the role picker for non-owners.
     final tappable = canEditRoles && !member.isOwner;
@@ -171,7 +174,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Admin',
+                  t.membersAdminBadge,
                   style: TextStyle(
                     color: theme.primary,
                     fontSize: 11,
@@ -186,6 +189,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   }
 
   Future<void> _openRolePicker(MemberModel member) async {
+    final t = AppLocalizations.of(context);
     final theme = context.theme;
     final selected = await showModalBottomSheet<MemberType>(
       context: context,
@@ -203,7 +207,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Rol de ${member.displayName}',
+                t.membersRolePickerTitle(member.displayName),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
@@ -212,7 +216,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Los padres y tutores pueden aprobar tareas. Adolescentes y niños mandan sus tareas a revisión.',
+                t.membersRolePickerSubtitle,
                 style: TextStyle(
                   fontSize: 13,
                   color: theme.textSecondary,
@@ -221,7 +225,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               ),
               const SizedBox(height: 16),
               for (final type in MemberType.values)
-                _buildRoleOption(type, member, theme),
+                _buildRoleOption(type, member, theme, t),
             ],
           ),
         ),
@@ -236,7 +240,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       (failure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No pudimos cambiar el rol: ${failure.message}'),
+            content: Text(t.membersRoleUpdateError(failure.message)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -244,7 +248,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       (_) {
         ref.invalidate(householdMembersProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rol actualizado')),
+          SnackBar(content: Text(t.membersRoleUpdated)),
         );
       },
     );
@@ -254,20 +258,21 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     MemberType type,
     MemberModel member,
     AppThemeColors theme,
+    AppLocalizations t,
   ) {
     final isCurrent = member.type == type;
     final label = switch (type) {
-      MemberType.parent => 'Padre / Madre',
-      MemberType.guardian => 'Tutor/a',
-      MemberType.teen => 'Adolescente',
-      MemberType.child => 'Hijo/a',
+      MemberType.parent => t.membersRoleParent,
+      MemberType.guardian => t.membersRoleGuardian,
+      MemberType.teen => t.membersRoleTeen,
+      MemberType.child => t.membersRoleChild,
     };
     final subtitle = switch (type) {
       MemberType.parent ||
       MemberType.guardian =>
-        'Aprueba tareas, gestiona el hogar.',
-      MemberType.teen => 'Crea sus tareas, pero las completa bajo revisión.',
-      MemberType.child => 'Solo completa sus tareas, siempre bajo revisión.',
+        t.membersRoleParentGuardianDesc,
+      MemberType.teen => t.membersRoleTeenDesc,
+      MemberType.child => t.membersRoleChildDesc,
     };
     return AnimatedPress(
       onPressed: () => Navigator.pop(context, type),
@@ -318,7 +323,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     );
   }
 
-  Widget _buildInviteCard(AppThemeColors theme) {
+  Widget _buildInviteCard(AppThemeColors theme, AppLocalizations t) {
     return AnimatedPress(
       onPressed: () {
         InvitationSheet.show(context);
@@ -350,7 +355,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Invitar integrante',
+                    t.membersInviteTitle,
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -359,7 +364,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Suma otra persona al hogar con un codigo de invitacion.',
+                    t.membersInviteSubtitle,
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 13,

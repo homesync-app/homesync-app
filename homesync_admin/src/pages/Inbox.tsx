@@ -19,10 +19,11 @@ import {
   Copy,
   Check,
   Inbox as InboxIcon,
+  Wrench,
 } from 'lucide-react';
 import { EmptyState, ErrorState } from '../components/PageState';
 
-type InboxTab = 'feedback' | 'crashes' | 'logs';
+type InboxTab = 'issues' | 'feedback' | 'crashes' | 'logs';
 
 interface FeedbackItem {
   id: string;
@@ -63,7 +64,30 @@ interface SystemLog {
   created_at: string;
 }
 
-type InboxItem = FeedbackItem | CrashLog | SystemLog;
+interface ErrorIssue {
+  id: string;
+  type: 'issue';
+  fingerprint: string;
+  title: string;
+  level: string;
+  status: 'open' | 'investigating' | 'fixed' | 'ignored';
+  first_seen: string;
+  last_seen: string;
+  occurrences: number;
+  affected_users: number;
+  sample_message: string | null;
+  sample_stack_trace_head: string | null;
+  app_frame: string | null;
+  screens: string[] | null;
+  environments: string[] | null;
+  first_seen_build: string | null;
+  last_seen_build: string | null;
+  fixed_in_build: string | null;
+  fixed_at: string | null;
+  notes: string | null;
+}
+
+type InboxItem = ErrorIssue | FeedbackItem | CrashLog | SystemLog;
 
 function timeAgo(date: string) {
   const diff = Date.now() - new Date(date).getTime();
@@ -74,7 +98,7 @@ function timeAgo(date: string) {
 }
 
 export const Inbox = () => {
-  const [tab, setTab] = useState<InboxTab>('feedback');
+  const [tab, setTab] = useState<InboxTab>('issues');
   const [items, setItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -86,6 +110,42 @@ export const Inbox = () => {
   const [logFilter, setLogFilter] = useState('all');
 
   const PAGE_SIZE = 50;
+
+  const fetchIssues = useCallback(async (offset = 0) => {
+    const { data, count } = await supabase
+      .from('error_issues')
+      .select('*', { count: 'exact' })
+      .order('status', { ascending: true })
+      .order('last_seen', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1);
+    return {
+      items: (data || []).map(
+        (d: Record<string, unknown>): ErrorIssue => ({
+          id: d.id as string,
+          type: 'issue',
+          fingerprint: d.fingerprint as string,
+          title: d.title as string,
+          level: d.level as string,
+          status: d.status as ErrorIssue['status'],
+          first_seen: d.first_seen as string,
+          last_seen: d.last_seen as string,
+          occurrences: Number(d.occurrences || 0),
+          affected_users: Number(d.affected_users || 0),
+          sample_message: d.sample_message as string | null,
+          sample_stack_trace_head: d.sample_stack_trace_head as string | null,
+          app_frame: d.app_frame as string | null,
+          screens: d.screens as string[] | null,
+          environments: d.environments as string[] | null,
+          first_seen_build: d.first_seen_build as string | null,
+          last_seen_build: d.last_seen_build as string | null,
+          fixed_in_build: d.fixed_in_build as string | null,
+          fixed_at: d.fixed_at as string | null,
+          notes: d.notes as string | null,
+        })
+      ),
+      total: count || 0,
+    };
+  }, []);
 
   const fetchFeedback = useCallback(async (offset = 0) => {
     const { data, count } = await supabase
@@ -169,7 +229,8 @@ export const Inbox = () => {
     setError(null);
     try {
       let result: { items: InboxItem[]; total: number };
-      if (tab === 'feedback') result = await fetchFeedback(offset);
+      if (tab === 'issues') result = await fetchIssues(offset);
+      else if (tab === 'feedback') result = await fetchFeedback(offset);
       else if (tab === 'crashes') result = await fetchCrashes(offset);
       else result = await fetchLogs(offset);
       if (offset === 0) {
@@ -183,7 +244,7 @@ export const Inbox = () => {
     }
     setLoading(false);
     setLoadingMore(false);
-  }, [tab, fetchFeedback, fetchCrashes, fetchLogs]);
+  }, [tab, fetchIssues, fetchFeedback, fetchCrashes, fetchLogs]);
 
   useEffect(() => {
     const id = window.setTimeout(() => void fetchData(0), 0);
@@ -191,6 +252,15 @@ export const Inbox = () => {
   }, [fetchData]);
 
   useEffect(() => {
+    if (tab === 'issues') {
+      const channel = supabase
+        .channel('inbox_error_issues')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'error_issues' }, () => {
+          void fetchData(0);
+        })
+        .subscribe();
+      return () => { supabase.removeChannel(channel); };
+    }
     if (tab === 'feedback') {
       const channel = supabase
         .channel('inbox_feedback')
@@ -229,6 +299,24 @@ export const Inbox = () => {
     setTogglingId(null);
   };
 
+  const setIssueStatus = async (item: ErrorIssue, status: ErrorIssue['status']) => {
+    setTogglingId(item.id);
+    const { error: updateError } = await supabase
+      .from('error_issues')
+      .update({ status })
+      .eq('id', item.id);
+    if (!updateError) {
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id && i.type === 'issue'
+            ? { ...i, status, fixed_at: status === 'fixed' ? new Date().toISOString() : null }
+            : i
+        )
+      );
+    }
+    setTogglingId(null);
+  };
+
   const copyForAI = (item: CrashLog | SystemLog) => {
     const text = `TYPE: ${(item as CrashLog).level?.toUpperCase() || 'LOG'}
 TIMESTAMP: ${new Date(item.created_at).toLocaleString()}
@@ -260,7 +348,15 @@ ${JSON.stringify(item.device_info, null, 2)}`.trim();
     pending: items.filter((i) => i.type === 'feedback' && !(i as FeedbackItem).resolved).length,
   };
 
+  const issueStats = {
+    open: items.filter((i) => i.type === 'issue' && (i as ErrorIssue).status === 'open').length,
+    investigating: items.filter((i) => i.type === 'issue' && (i as ErrorIssue).status === 'investigating').length,
+    fixed: items.filter((i) => i.type === 'issue' && (i as ErrorIssue).status === 'fixed').length,
+    ignored: items.filter((i) => i.type === 'issue' && (i as ErrorIssue).status === 'ignored').length,
+  };
+
   const tabs: { key: InboxTab; label: string; icon: typeof MessageSquare }[] = [
+    { key: 'issues', label: 'Issues', icon: Wrench },
     { key: 'feedback', label: 'Feedback', icon: MessageSquare },
     { key: 'crashes', label: 'Crashes', icon: ShieldAlert },
     { key: 'logs', label: 'Logs', icon: AlertCircle },
@@ -285,6 +381,23 @@ ${JSON.stringify(item.device_info, null, 2)}`.trim();
           <RotateCcw className="w-5 h-5" />
         </button>
       </div>
+
+      {tab === 'issues' && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Abiertos', value: issueStats.open, icon: AlertCircle, color: 'text-rose-400' },
+            { label: 'Investigando', value: issueStats.investigating, icon: Wrench, color: 'text-amber-400' },
+            { label: 'Fixed', value: issueStats.fixed, icon: CheckCircle2, color: 'text-emerald-400' },
+            { label: 'Ignorados', value: issueStats.ignored, icon: Circle, color: 'text-gray-400' },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className="glass-dark rounded-2xl p-5 border border-white/5">
+              <div className={`${color} mb-2`}><Icon className="w-5 h-5" /></div>
+              <p className="text-2xl font-bold">{loading ? '—' : value}</p>
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         {tabs.map(({ key, label, icon: Icon }) => (
@@ -351,6 +464,101 @@ ${JSON.stringify(item.device_info, null, 2)}`.trim();
         <div className="space-y-3">
           {filteredLogs.map((item) => {
             const isExpanded = expanded === item.id;
+
+            if (item.type === 'issue') {
+              const issue = item as ErrorIssue;
+              const isClosed = issue.status === 'fixed' || issue.status === 'ignored';
+              return (
+                <div
+                  key={issue.id}
+                  className={`glass-dark rounded-2xl border transition-all duration-200 overflow-hidden ${
+                    isClosed
+                      ? 'border-white/5 opacity-70'
+                      : issue.level === 'critical'
+                        ? 'border-rose-500/30'
+                        : 'border-orange-500/20'
+                  }`}
+                >
+                  <div className="px-5 py-4 flex items-center gap-4">
+                    <div className={`shrink-0 p-2 rounded-xl ${
+                      issue.level === 'critical' ? 'bg-rose-500/15 text-rose-500' :
+                      issue.level === 'error' ? 'bg-orange-500/15 text-orange-400' :
+                      'bg-amber-500/15 text-amber-400'
+                    }`}>
+                      {issue.status === 'fixed' ? <CheckCircle2 className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                    </div>
+                    <button
+                      className="flex-1 text-left min-w-0"
+                      onClick={() => setExpanded(isExpanded ? null : issue.id)}
+                    >
+                      <p className={`text-sm font-semibold truncate ${isClosed ? 'text-gray-400' : 'text-white/90'}`}>
+                        {issue.title}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />{timeAgo(issue.last_seen)}
+                        </span>
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border bg-white/5 text-gray-300 border-white/10">
+                          {issue.status}
+                        </span>
+                        <span className="text-xs text-gray-500">{issue.occurrences} eventos</span>
+                        <span className="text-xs text-gray-500">{issue.affected_users} usuarios</span>
+                        {issue.screens?.[0] && <span className="text-xs text-gray-500">{issue.screens.join(', ')}</span>}
+                      </div>
+                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {(['open', 'investigating', 'fixed', 'ignored'] as const).map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => void setIssueStatus(issue, status)}
+                          disabled={togglingId === issue.id || issue.status === status}
+                          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase border transition-all ${
+                            issue.status === status
+                              ? 'bg-secondary/20 text-secondary border-secondary/30'
+                              : 'bg-white/5 text-gray-400 border-white/10 hover:text-white'
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
+                      <button onClick={() => setExpanded(isExpanded ? null : issue.id)} className="text-gray-500">
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div className="border-t border-white/5 px-6 py-4 bg-black/20 space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-white/5 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Primero</p>
+                          <p className="text-xs text-gray-200 font-medium">{new Date(issue.first_seen).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Último</p>
+                          <p className="text-xs text-gray-200 font-medium">{new Date(issue.last_seen).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Builds</p>
+                          <p className="text-xs text-gray-200 font-medium">{issue.first_seen_build || '—'} → {issue.last_seen_build || '—'}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Entorno</p>
+                          <p className="text-xs text-gray-200 font-medium">{issue.environments?.join(', ') || '—'}</p>
+                        </div>
+                      </div>
+                      {issue.sample_stack_trace_head && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2 font-bold uppercase tracking-widest">Stack Trace</p>
+                          <pre className="text-[10px] text-rose-400/70 bg-black/40 p-3 rounded-xl overflow-x-auto whitespace-pre font-mono leading-relaxed">
+                            {issue.sample_stack_trace_head}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             if (item.type === 'feedback') {
               const fb = item as FeedbackItem;

@@ -1072,14 +1072,4 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
       ),
     );
   }
-
-  void _showGoalCompletionAnim(SavingsGoalModel goal) {
-    SuccessCelebration.show(
-      context,
-      title: '¡META CUMPLIDA! 🎯',
-      message:
-          '¡Increíble! Han logrado llegar al objetivo de "${goal.title}". ¡A disfrutarlo juntos!',
-      icon: goal.icon,
-    );
-  }
 }

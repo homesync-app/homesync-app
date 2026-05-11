@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
 class FamilyWeeklySummarySection extends ConsumerWidget {
@@ -18,14 +19,15 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildWeeklySummaryBlock(theme, statsAsync),
+        _buildWeeklySummaryBlock(context, theme, statsAsync),
         const SizedBox(height: 24),
-        _buildWeeklyRankingBlock(theme, statsAsync, ref),
+        _buildWeeklyRankingBlock(context, theme, statsAsync, ref),
       ],
     );
   }
 
   Widget _buildWeeklySummaryBlock(
+    BuildContext context,
     AppThemeColors theme,
     AsyncValue<StatsData?> statsAsync,
   ) {
@@ -65,7 +67,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Esta semana en el hogar',
+                AppLocalizations.of(context).familyWeeklyTitle,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -81,7 +83,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
             children: [
               _buildSummaryItem(
                 theme,
-                label: 'Puntos totales',
+                label: AppLocalizations.of(context).familyWeeklyMetricPoints,
                 value: totalXp.toString(),
                 icon: Icons.stars_rounded,
                 color: AppColors.accentGold,
@@ -89,7 +91,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
               _buildSummaryDivider(theme),
               _buildSummaryItem(
                 theme,
-                label: 'Tareas cerradas',
+                label: AppLocalizations.of(context).familyWeeklyMetricTasks,
                 value: completedTasks.toString(),
                 icon: Icons.check_circle_rounded,
                 color: AppColors.success,
@@ -97,8 +99,10 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
               _buildSummaryDivider(theme),
               _buildSummaryItem(
                 theme,
-                label: 'Estado',
-                value: completedTasks > 5 ? 'Activo' : 'Calma',
+                label: AppLocalizations.of(context).familyWeeklyMetricStatus,
+                value: completedTasks > 5
+                    ? AppLocalizations.of(context).familyWeeklyStatusActive
+                    : AppLocalizations.of(context).familyWeeklyStatusCalm,
                 icon: Icons.flash_on_rounded,
                 color: AppColors.accentOrange,
               ),
@@ -204,6 +208,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
   }
 
   Widget _buildWeeklyRankingBlock(
+    BuildContext context,
     AppThemeColors theme,
     AsyncValue<StatsData?> statsAsync,
     WidgetRef ref,
@@ -249,7 +254,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
         Row(
           children: [
             Text(
-              'Ranking Semanal',
+              AppLocalizations.of(context).familyWeeklyRankingTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -265,7 +270,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Esta semana',
+                  AppLocalizations.of(context).familyWeeklyRankingSubtitle,
                   style: TextStyle(fontSize: 10, color: theme.textSecondary),
                 ),
               ),
@@ -338,7 +343,12 @@ class _RankingCategoryFilter extends StatefulWidget {
 
 class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
   int _selectedTab = 0;
-  static const _tabs = ['Todos', 'Adultos', 'Peques'];
+
+  List<String> _tabLabels(AppLocalizations t) => [
+        t.familyWeeklyRankingTabAll,
+        t.familyWeeklyRankingTabAdults,
+        t.familyWeeklyRankingTabKids,
+      ];
 
   List<Map<String, dynamic>> _filteredRanking() {
     if (_selectedTab == 0) return widget.ranking;
@@ -348,7 +358,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
         return type == 'parent' || type == 'guardian';
       }).toList();
     }
-    final targetType = 'child';
+    const targetType = 'child';
     return widget.ranking
         .where((item) => (item['member_type'] as String?) == targetType)
         .toList();
@@ -359,12 +369,14 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
     if (name.isNotEmpty) {
       return name.split(' ').first;
     }
-    return 'Integrante';
+    return AppLocalizations.of(context).familyWeeklyRankingMemberFallback;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final t = AppLocalizations.of(context);
+    final tabs = _tabLabels(t);
     final filtered = _filteredRanking();
     final hasAdults = widget.ranking.any((i) {
       final type = i['member_type'] as String?;
@@ -390,7 +402,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
-                children: List.generate(_tabs.length, (i) {
+                children: List.generate(tabs.length, (i) {
                   final selected = _selectedTab == i;
                   return Expanded(
                     child: GestureDetector(
@@ -406,7 +418,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Text(
-                          _tabs[i],
+                          tabs[i],
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -438,8 +450,10 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                   const SizedBox(width: 6),
                   Text(
                     _selectedTab == 0
-                        ? 'Completen tareas para sumar puntos'
-                        : 'Nadie sumó puntos en ${_tabs[_selectedTab]} todavía',
+                        ? t.familyWeeklyRankingEmptyMessage
+                        : t.familyWeeklyRankingTabEmptyMessage(
+                            tabs[_selectedTab],
+                          ),
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.textSecondary,
@@ -525,7 +539,7 @@ class _RankingCategoryFilterState extends State<_RankingCategoryFilter> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Completen tareas para sumar puntos',
+                  t.familyWeeklyRankingEmptyMessage,
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.textSecondary,

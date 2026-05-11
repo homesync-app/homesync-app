@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class CoupleSplitStrategyScreen extends ConsumerStatefulWidget {
   const CoupleSplitStrategyScreen({super.key});
@@ -55,9 +56,10 @@ class _CoupleSplitStrategyScreenState
         ref.invalidate(currentHouseholdProvider);
 
         if (mounted) {
+          final t = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ConfiguraciÃ³n guardada correctamente'),
+            SnackBar(
+              content: Text(t.coupleSplitSavedSnack),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -67,9 +69,10 @@ class _CoupleSplitStrategyScreenState
       }
     } catch (e) {
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al guardar: $e'),
+            content: Text(t.coupleSplitSaveError(e.toString())),
             backgroundColor: AppColors.error,
           ),
         );
@@ -84,6 +87,8 @@ class _CoupleSplitStrategyScreenState
     final household = ref.watch(currentHouseholdProvider).valueOrNull;
     final isFamily = household?.householdType == 'family';
     final isShared = _financeMode == 'shared';
+    final t = AppLocalizations.of(context);
+    final modeKey = household?.householdType ?? 'couple';
 
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackground,
@@ -115,7 +120,7 @@ class _CoupleSplitStrategyScreenState
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
-                    isFamily ? 'Finanzas familiares' : 'División de gastos',
+                    t.coupleSplitTitle(modeKey),
                     style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
@@ -133,7 +138,7 @@ class _CoupleSplitStrategyScreenState
                             shape: BoxShape.circle,
                           ),
                           child: const Text('âš–ï¸',
-                              style: TextStyle(fontSize: 48)),
+                              style: TextStyle(fontSize: 48),),
                         ),
                       ],
                     ),
@@ -146,20 +151,20 @@ class _CoupleSplitStrategyScreenState
                   delegate: SliverChildListDelegate([
                     if (isFamily) ...[
                       _buildInfoCard(
-                        'Cómo se registran los gastos',
-                        'En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.',
+                        t.coupleSplitFamilyHowTitle,
+                        t.coupleSplitFamilyHowBody,
                       ),
                       const SizedBox(height: 20),
                       _buildStrategyItem(
-                        'Economía compartida',
-                        'Los gastos no se reparten por porcentaje ni generan balances entre adultos.',
+                        t.coupleSplitFamilySharedTitle,
+                        t.coupleSplitFamilySharedBody,
                         '🏠',
                         isActive: isShared,
                         onTap: () => setState(() => _financeMode = 'shared'),
                       ),
                       _buildStrategyItem(
-                        'Gastos divididos',
-                        'Usa porcentajes y balances como en pareja.',
+                        t.coupleSplitFamilyDividedTitle,
+                        t.coupleSplitFamilyDividedBody,
                         '⚖️',
                         isActive: !isShared,
                         onTap: () => setState(() => _financeMode = 'divided'),
@@ -168,46 +173,46 @@ class _CoupleSplitStrategyScreenState
                     ],
                     if (!isFamily || !isShared) ...[
                       _buildInfoCard(
-                        'Â¿CÃ³mo dividir gastos?',
-                        'No hay una Ãºnica forma correcta. Cada pareja es un mundo y la mejor estrategia es la que les dÃ© paz mental a ambos.',
+                        t.coupleSplitInfoTitle,
+                        t.coupleSplitInfoBody,
                       ),
                       const SizedBox(height: 32),
-                      const Text(
-                        'Estrategias comunes',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w800),
+                      Text(
+                        t.coupleSplitStrategiesTitle,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800,),
                       ),
                       const SizedBox(height: 16),
                       _buildStrategyItem(
-                        '50% / 50% (Igualitario)',
-                        'Ideal cuando ambos tienen ingresos similares. Cada uno aporta la mitad de los gastos compartidos.',
-                        'ðŸ‘«',
+                        t.coupleSplitStrategy5050Title,
+                        t.coupleSplitStrategy5050Body,
+                        '👫',
                         isActive: _splitRatio == 0.5,
                         onTap: () => setState(() => _splitRatio = 0.5),
                       ),
                       _buildStrategyItem(
-                        '60% / 40% (Equitativo)',
-                        'Si hay una diferencia de ingresos, el que gana mÃ¡s aporta una parte mayor proporcionalmente.',
-                        'ðŸ“ˆ',
+                        t.coupleSplitStrategy6040Title,
+                        t.coupleSplitStrategy6040Body,
+                        '📈',
                         isActive: _splitRatio != 0.5,
                         onTap: () {}, // Handled by slider
                       ),
                       const SizedBox(height: 48),
-                      const Text(
-                        'ConfiguraciÃ³n personalizada',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w800),
+                      Text(
+                        t.coupleSplitCustomTitle,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w800,),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'Ajusta el porcentaje que tÃº aportarÃ¡s de forma predeterminada.',
-                        style: TextStyle(
+                      Text(
+                        t.coupleSplitCustomBody,
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 32),
-                      _buildSplitVisualizer(),
+                      _buildSplitVisualizer(context),
                       const SizedBox(height: 24),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
@@ -219,7 +224,7 @@ class _CoupleSplitStrategyScreenState
                               AppColors.primary.withValues(alpha: 0.2),
                           trackHeight: 8,
                           thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 15),
+                              enabledThumbRadius: 15,),
                         ),
                         child: Slider(
                           value: _splitRatio,
@@ -244,9 +249,9 @@ class _CoupleSplitStrategyScreenState
                       ),
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Guardar ConfiguraciÃ³n',
-                              style: TextStyle(
+                          : Text(
+                              t.coupleSplitSaveButton,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -361,9 +366,10 @@ class _CoupleSplitStrategyScreenState
     );
   }
 
-  Widget _buildSplitVisualizer() {
+  Widget _buildSplitVisualizer(BuildContext context) {
     final youPercent = (_splitRatio * 100).toInt();
     final partnerPercent = 100 - youPercent;
+    final t = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -373,9 +379,9 @@ class _CoupleSplitStrategyScreenState
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'VOS',
-                  style: TextStyle(
+                Text(
+                  t.coupleSplitVisualizerYou,
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
@@ -394,9 +400,9 @@ class _CoupleSplitStrategyScreenState
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  'TU PAREJA',
-                  style: TextStyle(
+                Text(
+                  t.coupleSplitVisualizerPartner,
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,

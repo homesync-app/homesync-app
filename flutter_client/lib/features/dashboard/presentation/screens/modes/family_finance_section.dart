@@ -10,6 +10,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 import 'package:intl/intl.dart';
 
@@ -28,6 +29,7 @@ class FamilyFinanceSection extends ConsumerWidget {
     final theme = context.theme;
     final feedAsync = ref.watch(combinedFeedControllerProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final t = AppLocalizations.of(context);
 
     final members = membersAsync.valueOrNull ?? const <MemberModel>[];
     final isChild = currentMember?.isChild ?? false;
@@ -35,7 +37,7 @@ class FamilyFinanceSection extends ConsumerWidget {
     final adultMembers = members.where((m) => m.isAdult).toList();
     final shouldShowSection =
         currentMember != null && !isChild && !isTeen && adultMembers.length > 1;
-    const sectionTitle = 'Finanzas familiares';
+    final sectionTitle = t.homeFamilyFinanceTitle;
 
     final isLoading = membersAsync.isLoading || feedAsync.isLoading;
     final hasError = membersAsync.hasError || feedAsync.hasError;
@@ -52,7 +54,7 @@ class FamilyFinanceSection extends ConsumerWidget {
           const SizedBox(height: 12),
           _buildFinanceEmptyState(
             theme,
-            'No pudimos cargar las finanzas del hogar por ahora.',
+            t.homeFamilyFinanceLoadError,
           ),
           const SizedBox(height: 28),
         ],
@@ -119,31 +121,36 @@ class FamilyFinanceSection extends ConsumerWidget {
   ) {
     final caps = ref.watch(householdCapabilitiesProvider);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.textPrimary,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            final index = indexForMainTab(
-              caps,
-              MainTab.expenses,
-              currentMember: currentMember,
-            );
-            if (index >= 0) {
-              ref.read(bottomNavIndexProvider.notifier).setIndex(index);
-            }
-          },
-          child: const Text('Ver todos'),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final t = AppLocalizations.of(context);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.textPrimary,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final index = indexForMainTab(
+                  caps,
+                  MainTab.expenses,
+                  currentMember: currentMember,
+                );
+                if (index >= 0) {
+                  ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                }
+              },
+              child: Text(t.homeFamilyFinanceViewAll),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -246,7 +253,7 @@ class FamilyFinanceSection extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sin resumen financiero todavÃ­a',
+                  'Sin resumen financiero todavía',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -281,7 +288,10 @@ class _SharedFamilyFinanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final formatter = NumberFormat.decimalPattern('es_AR');
+    final t = AppLocalizations.of(context);
+    final formatter = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toString(),
+    );
     final hasActivity = spent > 0;
 
     return Container(
@@ -327,7 +337,9 @@ class _SharedFamilyFinanceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  hasActivity ? 'Gasto compartido del mes' : 'Mes sin gastos',
+                  hasActivity
+                      ? t.homeFamilyFinanceMonthSpent
+                      : t.homeFamilyFinanceMonthEmpty,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 12.5,

@@ -38,10 +38,10 @@ class HomeSyncLogo extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.28),
         child: Image.asset(
-          'assets/images/homesync_logo.jpg',
+          'assets/images/homesync_logo_transparent.png',
           width: size,
           height: size,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
         ),
       ),
     );

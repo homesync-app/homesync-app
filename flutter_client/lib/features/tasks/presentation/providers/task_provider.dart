@@ -186,15 +186,19 @@ class Tasks extends _$Tasks {
 
     // Optimistic update
     if (oldState != null) {
-      state = AsyncValue.data(oldState
-          .map((t) => t.id == task.id
-              ? t.copyWith(
-                  status: TaskStatus.active,
-                  completedBy: primaryUserId,
-                  completedAt: effectiveCompletedAt,
-                )
-              : t,)
-          .toList(),);
+      state = AsyncValue.data(
+        oldState
+            .map(
+              (t) => t.id == task.id
+                  ? t.copyWith(
+                      status: TaskStatus.active,
+                      completedBy: primaryUserId,
+                      completedAt: effectiveCompletedAt,
+                    )
+                  : t,
+            )
+            .toList(),
+      );
     }
 
     try {
@@ -247,15 +251,19 @@ class Tasks extends _$Tasks {
     final oldState = state.value;
 
     if (oldState != null) {
-      state = AsyncValue.data(oldState
-          .map((t) => taskIds.contains(t.id)
-              ? t.copyWith(
-                  status: TaskStatus.active,
-                  completedBy: primaryUserId,
-                  completedAt: effectiveCompletedAt,
-                )
-              : t,)
-          .toList(),);
+      state = AsyncValue.data(
+        oldState
+            .map(
+              (t) => taskIds.contains(t.id)
+                  ? t.copyWith(
+                      status: TaskStatus.active,
+                      completedBy: primaryUserId,
+                      completedAt: effectiveCompletedAt,
+                    )
+                  : t,
+            )
+            .toList(),
+      );
     }
 
     try {
@@ -295,14 +303,19 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(oldState
-          .map((t) => t.id == task.id
-              ? t.copyWith(
-                  status: TaskStatus.verified,
-                  verifiedBy: userId,
-                  verifiedAt: DateTime.now(),)
-              : t,)
-          .toList(),);
+      state = AsyncValue.data(
+        oldState
+            .map(
+              (t) => t.id == task.id
+                  ? t.copyWith(
+                      status: TaskStatus.verified,
+                      verifiedBy: userId,
+                      verifiedAt: DateTime.now(),
+                    )
+                  : t,
+            )
+            .toList(),
+      );
     }
 
     try {
@@ -320,14 +333,19 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(oldState
-          .map((t) => t.id == task.id
-              ? t.copyWith(
-                  status: TaskStatus.active,
-                  completedBy: null,
-                  completedAt: null,)
-              : t,)
-          .toList(),);
+      state = AsyncValue.data(
+        oldState
+            .map(
+              (t) => t.id == task.id
+                  ? t.copyWith(
+                      status: TaskStatus.active,
+                      completedBy: null,
+                      completedAt: null,
+                    )
+                  : t,
+            )
+            .toList(),
+      );
     }
 
     try {
@@ -345,10 +363,14 @@ class Tasks extends _$Tasks {
 
     final oldState = state.value;
     if (oldState != null) {
-      state = AsyncValue.data(oldState
-          .map((t) =>
-              t.id == task.id ? t.copyWith(status: TaskStatus.active) : t,)
-          .toList(),);
+      state = AsyncValue.data(
+        oldState
+            .map(
+              (t) =>
+                  t.id == task.id ? t.copyWith(status: TaskStatus.active) : t,
+            )
+            .toList(),
+      );
     }
 
     try {
@@ -381,28 +403,37 @@ class Tasks extends _$Tasks {
     if (oldState != null) {
       state = AsyncValue.data(
         oldState
-            .map((t) => t.id == task.id
-                ? t.copyWith(
-                    status: TaskStatus.pendingApproval,
-                    completedBy: userId,
-                    completedAt: submittedAt,
-                  )
-                : t,)
+            .map(
+              (t) => t.id == task.id
+                  ? t.copyWith(
+                      status: TaskStatus.pendingApproval,
+                      completedBy: userId,
+                      completedAt: submittedAt,
+                    )
+                  : t,
+            )
             .toList(),
       );
     }
 
     try {
-      final repo = ref.read(taskRepositoryProvider);
-      await repo.editTask(task.id, {
-        'status': 'pending_approval',
-        'completed_by': userId,
-        'completed_at': submittedAt.toIso8601String(),
-        'last_completed_at': submittedAt.toIso8601String(),
-      });
-      if (ref.read(isOnlineProvider)) {
+      final useCase = ref.read(completeTaskUseCaseProvider);
+      final result = await useCase(
+        task,
+        userIds: [userId],
+        completedAt: submittedAt,
+      );
+      result.fold(
+        (failure) {
+          if (oldState != null) state = AsyncValue.data(oldState);
+          throw failure;
+        },
+        (_) {},
+      );
+      if (result.isRight() && ref.read(isOnlineProvider)) {
         silentRefresh();
         ref.invalidate(recentActivityProvider);
+        ref.invalidate(pendingTaskApprovalsProvider);
       }
     } catch (e, stack) {
       log.w(
@@ -422,9 +453,7 @@ class Tasks extends _$Tasks {
   /// (success/false) para mantener la firma usada por la UI.
   Future<TaskCompletionResult?> approvePendingTask(TaskModel task) async {
     try {
-      final ok = await ref
-          .read(taskApprovalActionsProvider)
-          .approve(task.id);
+      final ok = await ref.read(taskApprovalActionsProvider).approve(task.id);
       if (ok) {
         silentRefresh();
         ref.invalidate(userBalanceProvider);
@@ -546,6 +575,8 @@ class Tasks extends _$Tasks {
         recurrenceMonthDays: taskData['recurrenceMonthDays'] as List<int>?,
         status: null,
         rotationPool: (taskData['rotationPool'] as List?)?.cast<String>(),
+        sourceTemplateId: taskData['sourceTemplateId'] as String?,
+        titleKey: taskData['titleKey'] as String?,
       );
 
       result.fold(
@@ -589,8 +620,10 @@ AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
     var result = tasks;
     if (selectedCategories.isNotEmpty) {
       result = result
-          .where((t) => selectedCategories
-              .contains(CategoryMapping.normaliseCategory(t.category)),)
+          .where(
+            (t) => selectedCategories
+                .contains(CategoryMapping.normaliseCategory(t.category)),
+          )
           .toList();
     }
     if (searchQuery.isNotEmpty) {
@@ -652,7 +685,7 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
 
       // Pending-approval tasks must surface for adult review regardless
       // of the original due date — the child already acted on them.
-      if (task.isPendingApproval) return true;
+      if (task.isPendingApproval) return false;
 
       if (task.isDueToday) return true;
 
@@ -674,6 +707,10 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
     // instead of leaving the home empty.
     final householdFallback = tasks.where((task) {
       if (!task.isActive) return false;
+      if (task.isPendingApproval) return false;
+      if (task.completedAt != null && task.recurrenceType == null) {
+        return false;
+      }
       if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
         return false;
       }

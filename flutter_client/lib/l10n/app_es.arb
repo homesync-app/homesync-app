@@ -1,0 +1,2663 @@
+{
+  "@@locale": "es",
+  "appName": "HomeSync",
+  "@appName": {
+    "description": "Application name. Brand name — should typically NOT be translated."
+  },
+  "settingsLanguageTitle": "Idioma",
+  "@settingsLanguageTitle": {
+    "description": "Title of the language selector card in Settings."
+  },
+  "settingsLanguageSubtitle": "Elegí el idioma de la app",
+  "@settingsLanguageSubtitle": {
+    "description": "Subtitle below the language selector title. Argentine Spanish 'voseo' (elegí, no elige)."
+  },
+  "languageSystem": "Predeterminado del sistema",
+  "@languageSystem": {
+    "description": "Option that follows the OS language."
+  },
+  "languageSpanish": "Español",
+  "@languageSpanish": {
+    "description": "Spanish language option label."
+  },
+  "languageEnglish": "Inglés",
+  "@languageEnglish": {
+    "description": "English language option label."
+  },
+  "commonCancel": "Cancelar",
+  "commonAccept": "Aceptar",
+  "commonSave": "Guardar",
+  "commonDelete": "Eliminar",
+  "commonEdit": "Editar",
+  "commonRetry": "Reintentar",
+  "commonClose": "Cerrar",
+  "commonContinue": "Continuar",
+  "commonBack": "Atrás",
+  "commonLoading": "Cargando...",
+  "commonError": "Algo salió mal",
+  "@commonError": {
+    "description": "Generic user-facing error message. Soft, not alarming."
+  },
+  "commonNoConnection": "Sin conexión a internet",
+  "commonConfirm": "Confirmar",
+  "@commonConfirm": {
+    "description": "Generic confirm button label, typically alongside Cancel in a 2-button dialog."
+  },
+  "commonSend": "Enviar",
+  "@commonSend": {
+    "description": "Generic send/submit button label."
+  },
+  "mainTabHome": "Inicio",
+  "@mainTabHome": {
+    "description": "Bottom-nav tab: home / dashboard."
+  },
+  "mainTabTasks": "Tareas",
+  "mainTabExpenses": "Finanzas",
+  "mainTabProgress": "Progreso",
+  "mainTabShopping": "Compras",
+  "mainTabShoppingChild": "Tienda",
+  "@mainTabShoppingChild": {
+    "description": "Bottom-nav label for the shopping tab when the current member is a minor (child store, not regular shopping)."
+  },
+  "householdSocialTabLabel": "{type, select, couple{Pareja} family{Familia} friends{Convivencia} solo{Mi espacio} other{Mi espacio}}",
+  "@householdSocialTabLabel": {
+    "description": "Label for the 'social' bottom-nav tab. Varies by household mode. couple = romantic partner. family = whole family unit. friends = peers/roommates living together. solo = individual user.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdSocialHubTitle": "{type, select, couple{Pareja} family{Centro familiar} friends{Convivencia} solo{Mi espacio} other{Mi espacio}}",
+  "@householdSocialHubTitle": {
+    "description": "Title shown at the top of the social/household hub screen. Varies by mode.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdSocialHubSubtitle": "{type, select, couple{Desafios, premios y pequenas recompensas para compartir.} family{Coordinacion, miembros y acuerdos del hogar para toda la familia.} friends{Organizacion, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}",
+  "@householdSocialHubSubtitle": {
+    "description": "Subtitle on the social hub screen. Tone: couple romantic; family parental/coordinative; friends casual peer; solo individual.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdDashboardGreeting": "{type, select, couple{Nuestro Hogar} family{Hogar Familiar} friends{Convivencia} solo{Mi Progreso} other{Mi Progreso}}",
+  "@householdDashboardGreeting": {
+    "description": "Greeting/title on the dashboard header. Varies by mode.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdBalanceMessage": "{type, select, solo{Llevas gastado este mes} other{Balance acumulado}}",
+  "@householdBalanceMessage": {
+    "description": "Label above the balance/spending figure. solo shows personal spending; couple/family/friends show running shared balance.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdEmptyTasksSubtitle": "{type, select, solo{Agrega tu primera tarea para organizar tu dia.} other{Agreguen su primera tarea para organizar el hogar.}}",
+  "@householdEmptyTasksSubtitle": {
+    "description": "Empty-state subtitle on the tasks screen. solo uses singular 'tu dia'; others use plural imperative 'agreguen' (Argentine voseo).",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdMemberLabel": "{type, select, couple{Pareja} family{Familia} friends{Companeros} solo{Yo} other{Yo}}",
+  "@householdMemberLabel": {
+    "description": "Short noun for 'the other people in the household' as a label. solo = self only.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "householdActionMemberLabel": "{type, select, couple{con tu pareja} family{con la familia} friends{con tus companeros} solo{conmigo} other{conmigo}}",
+  "@householdActionMemberLabel": {
+    "description": "Phrase fragment used inside sentences like 'this expense will not affect the balance {with your partner}'. Lowercase, prepositional. solo = 'with myself' which renders awkward — used in contexts where the surrounding sentence still grammatically allows it.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAppBarTitle": "Configuracion",
+  "@settingsAppBarTitle": {
+    "description": "Large title at the top of the Settings screen."
+  },
+  "settingsBackTooltip": "Volver",
+  "@settingsBackTooltip": {
+    "description": "Tooltip on the back arrow in Settings header."
+  },
+  "settingsSectionProfileEyebrow": "PERFIL",
+  "@settingsSectionProfileEyebrow": {
+    "description": "Tiny uppercase label above a section in Settings. Stays uppercase in all locales."
+  },
+  "settingsSectionProfileTitle": "Tu espacio",
+  "settingsSectionProfileSubtitle": "Avatar, nombre y datos basicos de tu cuenta.",
+  "settingsSectionHouseholdEyebrow": "HOGAR",
+  "settingsSectionHouseholdTitle": "Casa compartida",
+  "settingsSectionHouseholdSubtitle": "Miembros, invitaciones y reglas del hogar.",
+  "settingsSectionAppEyebrow": "APP",
+  "settingsSectionAppTitle": "Preferencias",
+  "settingsSectionAppSubtitle": "Tema, notificaciones, ayuda y feedback.",
+  "settingsSectionAccountEyebrow": "CUENTA",
+  "settingsSectionAccountTitle": "Sesion y seguridad",
+  "settingsSectionAccountSubtitle": "Salir de la cuenta o reiniciar tus datos si lo necesitas.",
+  "settingsSectionLegalEyebrow": "LEGAL",
+  "settingsSectionLegalTitle": "Privacidad",
+  "settingsSectionLegalSubtitle": "Politica de privacidad y terminos de uso.",
+  "settingsAppearanceTitle": "Apariencia",
+  "settingsAppearanceSubtitle": "Elige el tema visual de la app",
+  "settingsThemeModeTitle": "Modo del Tema",
+  "settingsThemeModeLight": "Claro",
+  "settingsThemeModeDark": "Oscuro",
+  "settingsThemeModeSystem": "Sistema",
+  "@settingsThemeModeSystem": {
+    "description": "Theme mode that follows the OS setting."
+  },
+  "settingsThemePaletteTitle": "Color del Tema",
+  "settingsPremiumBadge": "PREMIUM",
+  "@settingsPremiumBadge": {
+    "description": "Tiny uppercase badge on a feature gated behind premium. Stays uppercase in all locales."
+  },
+  "settingsPremiumTitle": "HomeSync Premium",
+  "@settingsPremiumTitle": {
+    "description": "Brand name — keep as 'HomeSync Premium' in all locales."
+  },
+  "settingsPremiumActiveSubtitle": "Premium activo",
+  "@settingsPremiumActiveSubtitle": {
+    "description": "Card subtitle when the user already has premium."
+  },
+  "settingsPremiumInactiveSubtitle": "Funciones avanzadas",
+  "@settingsPremiumInactiveSubtitle": {
+    "description": "Card subtitle when the user does NOT have premium yet — teaser to upsell."
+  },
+  "settingsPremiumFeatureShoppingFinanceSync": "Sincronizacion Shopping a Finanzas",
+  "@settingsPremiumFeatureShoppingFinanceSync": {
+    "description": "Premium feature label: when a shopping list item is purchased, it auto-creates a finance/expense entry."
+  },
+  "settingsPremiumFeatureRecurringPayments": "Pagos Recurrentes (Suscripciones)",
+  "@settingsPremiumFeatureRecurringPayments": {
+    "description": "Premium feature label: scheduled/recurring expenses like Netflix, gym, etc."
+  },
+  "settingsPremiumFeatureLoveNotes": "Notas de Amor en Dashboard",
+  "@settingsPremiumFeatureLoveNotes": {
+    "description": "Premium feature label: small love notes between partners on the dashboard. Couple-mode only feature."
+  },
+  "settingsPremiumFeatureExclusiveAvatars": "Avatares Exclusivos",
+  "@settingsPremiumFeatureExclusiveAvatars": {
+    "description": "Premium feature label: exclusive avatar set."
+  },
+  "settingsMinorPremiumTitle": "Funciones Premium",
+  "settingsMinorPremiumChildBody": "Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟",
+  "@settingsMinorPremiumChildBody": {
+    "description": "Body text shown to a CHILD member: tells them to ask their parents to activate the premium plan. Uses 'pedi' (Argentine voseo)."
+  },
+  "settingsMinorPremiumAdultBody": "Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.",
+  "@settingsMinorPremiumAdultBody": {
+    "description": "Body text shown to a non-owner adult: tells them other adults in the household can activate premium."
+  },
+  "settingsReplayTourTitle": "Ver guia de nuevo",
+  "settingsReplayTourSubtitle": "Repasa la introduccion del hogar",
+  "settingsFeedbackTitle": "Enviar feedback",
+  "settingsFeedbackSubtitle": "Reporta un bug o sugiere una mejora",
+  "settingsLegalPrivacyPolicy": "Politica de Privacidad",
+  "settingsLegalTermsOfUse": "Terminos de Uso",
+  "settingsNotificationsEnabled": "🔔 Notificaciones activadas",
+  "settingsNotificationsDisabled": "🔕 Notificaciones desactivadas",
+  "settingsProfileNameUpdated": "✅ Nombre actualizado",
+  "settingsAccountReset": "✅ Datos reiniciados y hogar liberado",
+  "settingsNotificationsTitle": "Notificaciones",
+  "settingsNotificationsSubtitle": "Recibe avisos de gastos y tareas",
+  "settingsFaqTitle": "Preguntas Frecuentes",
+  "settingsFaqSubtitle": "Aprende como funciona HomeSync",
+  "settingsLogoutButton": "Cerrar Sesion",
+  "@settingsLogoutButton": {
+    "description": "Big outlined button at the bottom of Settings to sign the user out of the app."
+  },
+  "settingsDangerZoneEyebrow": "ZONA DE PELIGRO",
+  "@settingsDangerZoneEyebrow": {
+    "description": "Tiny uppercase label above the destructive 'reset account' button. Stays uppercase in all locales."
+  },
+  "settingsResetAccountButton": "Reiniciar Datos de Cuenta",
+  "@settingsResetAccountButton": {
+    "description": "Destructive button label: wipes all the user's data and removes them from the current household."
+  },
+  "settingsFeedbackBugTitle": "Reportar un error",
+  "settingsFeedbackBugSubtitle": "Algo no funciona bien? Avisanos",
+  "settingsFeedbackSuggestionTitle": "Sugerir una mejora",
+  "settingsFeedbackSuggestionSubtitle": "Tenes una idea? Nos encanta escucharte",
+  "settingsLogoutDialogTitle": "Cerrar sesión?",
+  "settingsLogoutDialogBody": "Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.",
+  "settingsLogoutDialogConfirm": "Salir",
+  "@settingsLogoutDialogConfirm": {
+    "description": "Confirm button on the sign-out dialog. Short — fits next to a Cancel button."
+  },
+  "settingsResetDialogTitle": "Reiniciar todo?",
+  "settingsResetDialogBody": "Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.",
+  "settingsResetDialogConfirm": "Reiniciar",
+  "@settingsResetDialogConfirm": {
+    "description": "Destructive confirm button on the reset-account dialog."
+  },
+  "splashLoadingMessage": "Preparando tu hogar compartido.",
+  "@splashLoadingMessage": {
+    "description": "Single line shown on the splash screen while the app boots and warms providers."
+  },
+  "authWelcomeTitle": "Bienvenido",
+  "@authWelcomeTitle": {
+    "description": "Login screen header title in sign-in mode."
+  },
+  "authSignUpTitle": "Armá tu hogar",
+  "@authSignUpTitle": {
+    "description": "Login screen header title in sign-up mode. Argentine voseo: 'Armá' = 'Set up'."
+  },
+  "authWelcomeSubtitle": "Ingresá para entrar a tu hogar y mantener todo al día.",
+  "authSignUpSubtitle": "Creá tu cuenta para empezar a organizar tu hogar.",
+  "authEmailHint": "Email",
+  "@authEmailHint": {
+    "description": "Email input hint on the login form. Kept as 'Email' even in Spanish — common loanword."
+  },
+  "authEmailFullHint": "Correo electrónico",
+  "@authEmailFullHint": {
+    "description": "Email input hint on the sign-up form and the forgot-password dialog. Spelled-out variant."
+  },
+  "authPasswordHint": "Contraseña",
+  "authPasswordHintWithMin": "Contraseña (mínimo 6 caracteres)",
+  "authNameHint": "Tu nombre o apodo",
+  "@authNameHint": {
+    "description": "Name input hint on sign-up form."
+  },
+  "authValidationRequired": "Requerido",
+  "@authValidationRequired": {
+    "description": "Inline form-field error when a required field is empty. Single word."
+  },
+  "authValidationInvalidEmail": "Inválido",
+  "@authValidationInvalidEmail": {
+    "description": "Inline error: email is malformed (missing @)."
+  },
+  "authValidationInvalidPassword": "Inválida",
+  "@authValidationInvalidPassword": {
+    "description": "Inline error: password too short (<6 chars). Source uses feminine 'Inválida' to agree with 'Contraseña' (feminine in Spanish)."
+  },
+  "authForgotPasswordLink": "¿Olvidaste tu contraseña?",
+  "authSignInButton": "Ingresar",
+  "@authSignInButton": {
+    "description": "Big primary button to submit the sign-in form. Voseo: 'Ingresar' (infinitive, not 'Inicia sesión')."
+  },
+  "authCreateAccountButton": "Crear cuenta",
+  "authTermsAcceptance": "Al crear una cuenta aceptás nuestros términos y la política de privacidad.",
+  "@authTermsAcceptance": {
+    "description": "Fine-print under the sign-up form. Voseo 'aceptás'."
+  },
+  "authShowPasswordTooltip": "Mostrar contraseña",
+  "authHidePasswordTooltip": "Ocultar contraseña",
+  "authOrContinueWith": "o continuá con",
+  "@authOrContinueWith": {
+    "description": "Divider label between email form and Google sign-in button. Voseo 'continuá'."
+  },
+  "authToggleHasAccount": "¿Ya tenés cuenta?",
+  "authToggleNewToApp": "¿Sos nuevo en HomeSync?",
+  "@authToggleNewToApp": {
+    "description": "Prompt above the 'Sign up' link when in sign-in mode. HomeSync = brand name, keep."
+  },
+  "authToggleSignInLink": "Ingresá",
+  "@authToggleSignInLink": {
+    "description": "Link text inside the toggle prompt that switches to sign-in mode. Voseo imperative."
+  },
+  "authToggleSignUpLink": "Registrate",
+  "@authToggleSignUpLink": {
+    "description": "Link text inside the toggle prompt that switches to sign-up mode. Voseo imperative ('Registrate' not 'Regístrate')."
+  },
+  "authForgotDialogTitle": "Recuperar contraseña",
+  "authForgotDialogBody": "Te enviaremos un enlace para restablecer tu contraseña.",
+  "authForgotDialogSendButton": "Enviar enlace",
+  "authForgotInvalidEmail": "Ingresá un correo válido",
+  "authForgotEmailSent": "¡Revisá tu correo para cambiar tu contraseña!",
+  "authSignUpEmailSent": "¡Revisá tu correo para confirmar tu cuenta!",
+  "commonErrorWithDetails": "Error: {message}",
+  "@commonErrorWithDetails": {
+    "description": "Generic technical error shown to the user. {message} is the raw exception text — usually English/technical, not localizable.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commonUserFallback": "Usuario",
+  "@commonUserFallback": {
+    "description": "Placeholder when the user's display name is missing."
+  },
+  "homeWelcomeMasculine": "Bienvenido",
+  "@homeWelcomeMasculine": {
+    "description": "Welcome greeting on the dashboard header, masculine form. Spanish has gendered welcomes; English uses one neutral 'Welcome' for both."
+  },
+  "homeWelcomeFeminine": "Bienvenida",
+  "@homeWelcomeFeminine": {
+    "description": "Welcome greeting on the dashboard header, feminine form. Spanish-only distinction; English collapses to 'Welcome'."
+  },
+  "homeViewWeekButton": "Ver Semana",
+  "@homeViewWeekButton": {
+    "description": "Small button next to the day-tasks list that takes the user to the full weekly view."
+  },
+  "homeAllDoneToday": "Todo listo por hoy",
+  "@homeAllDoneToday": {
+    "description": "Empty-state message shown on the dashboard when there are no tasks left for today."
+  },
+  "homeFabActions": "Acciones",
+  "homeFabExpenses": "Gastos",
+  "homeFabTasks": "Tareas",
+  "balanceCardSettled": "Todo equilibrado",
+  "balanceCardMyBudget": "Mi presupuesto",
+  "balanceCardBalanced": "Balance en calma",
+  "balanceCardNeedsSettlement": "Hace falta equilibrar",
+  "balanceCardInYourFavor": "Qued? a tu favor",
+  "balanceCardSettleButton": "Equilibrar",
+  "balanceCardXpLabel": "XP",
+  "balanceCardCoinsLabel": "coins",
+  "homeNoActivityYet": "No hay actividad aún",
+  "@homeNoActivityYet": {
+    "description": "Empty-state message shown when the activity feed has no entries."
+  },
+  "homeHeadlinePrimary": "Todo lo importante",
+  "@homeHeadlinePrimary": {
+    "description": "First line of the dashboard headline, shared across solo and couple modes. Each mode pairs it with its own second line ('de tus días', 'del hogar', etc.)."
+  },
+  "homeSoloHeadlineSecondary": "de tus días",
+  "@homeSoloHeadlineSecondary": {
+    "description": "Second line of the solo-mode headline ('Everything important / in your day'). Lighter weight in the UI."
+  },
+  "homeSoloFocusToday": "Enfocate en tus objetivos hoy 🚀",
+  "@homeSoloFocusToday": {
+    "description": "Encouragement subtitle on the solo home header. Voseo 'Enfocate'."
+  },
+  "homeSoloBalanceLabel": "Gastado este mes",
+  "@homeSoloBalanceLabel": {
+    "description": "Label on the solo dashboard financial summary. It describes the amount shown for personal monthly spending."
+  },
+  "homeSoloTasksTitle": "Tus tareas",
+  "homeSoloAddTaskButton": "Agregar tarea",
+  "@homeSoloAddTaskButton": {
+    "description": "CTA in the solo dashboard empty task state. Opens the tasks tab so the user can create or manage tasks."
+  },
+  "homeSoloActivityTitle": "Tu actividad",
+  "homeCoupleHeadlineSecondary": "del hogar",
+  "@homeCoupleHeadlineSecondary": {
+    "description": "Second line of the couple-mode dashboard headline ('Todo lo importante / del hogar')."
+  },
+  "homeCoupleHeadlineConnector": "con",
+  "@homeCoupleHeadlineConnector": {
+    "description": "Tiny connector word (single word, no trailing space) shown before the partner's name in the couple home header."
+  },
+  "homeCouplePartnerFallback": "tu pareja",
+  "@homeCouplePartnerFallback": {
+    "description": "Fallback shown when the partner's display name isn't loaded yet. Lowercase noun phrase."
+  },
+  "homeCoupleShoppingListTitle": "Lista actual",
+  "@homeCoupleShoppingListTitle": {
+    "description": "Title of the shopping-list preview card on the couple home."
+  },
+  "homeCoupleTasksTitle": "Hoy en casa",
+  "@homeCoupleTasksTitle": {
+    "description": "Section title above the day-tasks list on the couple home."
+  },
+  "homeCoupleActivityTitle": "Movimientos del hogar",
+  "@homeCoupleActivityTitle": {
+    "description": "Section title above the recent-activity feed on the couple home."
+  },
+  "homeCoupleActivityEmptyTitle": "Todavia no hay movimientos",
+  "homeCoupleActivityEmptyBody": "Cuando haya una tarea o un gasto nuevo, aparece aca.",
+  "@homeCoupleActivityEmptyBody": {
+    "description": "Empty-state body for the activity feed. 'aca' = 'aquí' in Argentine voseo."
+  },
+  "homeCoupleSettlementErrorNoUser": "No pudimos identificar tu usuario.",
+  "@homeCoupleSettlementErrorNoUser": {
+    "description": "Snackbar shown when the user tries to settle but their user id can't be resolved."
+  },
+  "homeCoupleSettlementDialogTitlePay": "Equilibrar con {partnerName}",
+  "@homeCoupleSettlementDialogTitlePay": {
+    "description": "Settle-up dialog title when the current user owes the partner.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogTitleReceive": "Registrar equilibrio",
+  "@homeCoupleSettlementDialogTitleReceive": {
+    "description": "Settle-up dialog title when the partner owes the current user — they're recording a payment they received."
+  },
+  "homeCoupleSettlementDialogBodyPay": "Se va a registrar un pago de $ {amount} para saldar el balance con {partnerName}.",
+  "@homeCoupleSettlementDialogBodyPay": {
+    "description": "Settle-up dialog body when the user pays the partner. {amount} is a pre-formatted localized number string (no currency symbol — '$' is rendered separately).",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDialogBodyReceive": "Se va a registrar que {partnerName} te compenso $ {amount} para dejar el balance al dia.",
+  "@homeCoupleSettlementDialogBodyReceive": {
+    "description": "Settle-up dialog body when the partner has paid the user.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementDoneBadge": "Listo",
+  "@homeCoupleSettlementDoneBadge": {
+    "description": "Tiny success label inside the settle-up button after the operation completes. One word."
+  },
+  "homeCoupleSettlementSuccessPay": "Balance equilibrado con {partnerName}.",
+  "@homeCoupleSettlementSuccessPay": {
+    "description": "Success snackbar shown after the user settles up by paying.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementSuccessReceive": "Registramos el equilibrio con {partnerName}.",
+  "@homeCoupleSettlementSuccessReceive": {
+    "description": "Success snackbar after the user records that the partner paid them.",
+    "placeholders": {
+      "partnerName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeCoupleSettlementError": "No se pudo equilibrar el balance: {message}",
+  "@homeCoupleSettlementError": {
+    "description": "Error snackbar shown when the settle-up RPC fails. {message} is the raw exception text.",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "commonGreetingMorning": "Buen día",
+  "@commonGreetingMorning": {
+    "description": "Time-of-day greeting before noon. Argentine 'Buen día' (singular) — not 'Buenos días'."
+  },
+  "commonGreetingAfternoon": "Buenas tardes",
+  "commonGreetingEvening": "Buenas noches",
+  "homeViewAllButton": "Ver todas",
+  "@homeViewAllButton": {
+    "description": "Generic 'See all' link/button shown next to a section preview that has more items than the preview shows."
+  },
+  "homeViewListButton": "Ver lista",
+  "@homeViewListButton": {
+    "description": "Generic 'View list' button — opens the full shopping list."
+  },
+  "homeFriendsHeaderSubtitle": "Así viene el piso hoy.",
+  "@homeFriendsHeaderSubtitle": {
+    "description": "Subtitle under the time greeting on the friends home. 'piso' is Argentine slang for 'shared flat / place'."
+  },
+  "homeFriendsMemberNotFound": "No encontramos tu perfil en este piso.",
+  "@homeFriendsMemberNotFound": {
+    "description": "Warning banner shown when the current user's member profile isn't found in the household member list (rare race / data issue)."
+  },
+  "homeFriendsBalancesTitle": "Saldos del piso",
+  "homeFriendsBalancesEmptyTitle": "Todavía no hay balances para mostrar.",
+  "homeFriendsBalancesEmptyBody": "Cuando registren gastos compartidos, vas a ver acá el saldo neto de cada integrante.",
+  "homeFriendsBalanceCardTitle": "Estado del balance",
+  "@homeFriendsBalanceCardTitle": {
+    "description": "Card title shown on the FamilyBalanceCard widget when rendered for friends mode."
+  },
+  "homeFriendsTasksTitle": "Tareas del piso",
+  "homeFriendsTasksSubtitle": "Lo que sigue pendiente para mantener todo en orden.",
+  "homeFriendsTaskCompleteError": "No pudimos completar la tarea. Intenta de nuevo.",
+  "@homeFriendsTaskCompleteError": {
+    "description": "Snackbar shown when completing a task returns null (silent failure)."
+  },
+  "homeFriendsShoppingTitle": "Compras del piso",
+  "homeFriendsShoppingSubtitle": "Lo que falta comprar para la semana.",
+  "homeFriendsAllCleanTitle": "¡Todo limpio!",
+  "@homeFriendsAllCleanTitle": {
+    "description": "Empty-state title in the tasks section (currently rendered nowhere — kept for parity with old code)."
+  },
+  "homeFriendsActivityTitle": "Actividad del piso",
+  "homeFriendsActivitySubtitle": "Los últimos movimientos compartidos del hogar.",
+  "homeFriendsActivityEmpty": "Todavía no hubo movimientos compartidos.",
+  "homeFamilyMemberNotFound": "No encontramos tu perfil en este hogar.",
+  "homeFamilyMetricCoins": "Monedas",
+  "@homeFamilyMetricCoins": {
+    "description": "Adult/teen header chip label for in-app coin balance."
+  },
+  "homeFamilyAdultFallbackName": "Familia",
+  "@homeFamilyAdultFallbackName": {
+    "description": "Fallback display name on the adult/teen welcome line when the current user's name isn't loaded."
+  },
+  "homeFamilyChildHello": "Hola, ",
+  "@homeFamilyChildHello": {
+    "description": "Greeting prefix shown to a child member. Includes trailing comma+space; the child's first name is appended after."
+  },
+  "homeFamilyChildFallbackName": "campeon",
+  "@homeFamilyChildFallbackName": {
+    "description": "Fallback name for a child whose display name isn't loaded yet. Spanish 'campeón' (champ) — used both in the greeting and in the hero body."
+  },
+  "homeFamilyChildHeroTitle": "Aventura de hoy",
+  "@homeFamilyChildHeroTitle": {
+    "description": "Hero card title shown to a child on the family home."
+  },
+  "homeFamilyChildHeroBody": "{firstName}, cada mision aprobada suma coins para la tienda.",
+  "@homeFamilyChildHeroBody": {
+    "description": "Hero card body for a child. Tells them every approved task awards coins they can spend in the store.",
+    "placeholders": {
+      "firstName": {
+        "type": "String"
+      }
+    }
+  },
+  "homeFamilyChildRewardsPrompt": "Mira que premios podes alcanzar.",
+  "@homeFamilyChildRewardsPrompt": {
+    "description": "Small line above the 'Tienda' button in the child hero card. Voseo 'podés' written without accent in source."
+  },
+  "homeFamilyChildActivityTitle": "Mis logros",
+  "@homeFamilyChildActivityTitle": {
+    "description": "Activity feed section title shown to a child member. First-person possessive."
+  },
+  "homeFamilyActivityTitle": "Movimientos del hogar",
+  "@homeFamilyActivityTitle": {
+    "description": "Activity feed section title shown to adult/teen family members."
+  },
+  "homeFamilyActivityTitleDefault": "Actividad Reciente",
+  "@homeFamilyActivityTitleDefault": {
+    "description": "Default activity feed title when a specific title isn't passed in (rarely used — adult/child views always pass an explicit title)."
+  },
+  "homeFamilyActivityEmptyTitle": "Todavía no hay actividad reciente",
+  "homeFamilyActivityEmptyBody": "Las tareas, gastos y compras van a aparecer acá.",
+  "homeFamilyShoppingTitle": "Compras del hogar",
+  "homeFamilyShoppingAllDone": "Lista al dia",
+  "@homeFamilyShoppingAllDone": {
+    "description": "Empty-state shown when the household shopping list has nothing pending."
+  },
+  "homeFamilyShoppingMoreItems": "{count, plural, =1{Hay 1 producto más en la lista} other{Hay {count} productos más en la lista}}",
+  "@homeFamilyShoppingMoreItems": {
+    "description": "Tappable footer indicating how many more items are in the shopping list beyond the visible 3.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "homeFamilyFinanceTitle": "Finanzas familiares",
+  "homeFamilyFinanceLoadError": "No pudimos cargar las finanzas del hogar por ahora.",
+  "homeFamilyFinanceViewAll": "Ver todos",
+  "@homeFamilyFinanceViewAll": {
+    "description": "'See all' button next to the family finance section. Masculine plural ('todos') because it refers to 'movimientos' (m.); the tasks section uses the feminine 'todas'."
+  },
+  "homeFamilyFinanceMonthSpent": "Gasto compartido del mes",
+  "homeFamilyFinanceMonthEmpty": "Mes sin gastos",
+  "familyTasksTitleChild": "Mis misiones",
+  "@familyTasksTitleChild": {
+    "description": "Section title shown to a child member on the family home — kid-friendly framing of tasks as 'missions'."
+  },
+  "familyTasksTitleTeen": "Tareas del hogar",
+  "@familyTasksTitleTeen": {
+    "description": "Section title shown to a teen member on the family home."
+  },
+  "familyTasksEmptyTitle": "Todo al dia",
+  "familyTasksEmptyChildSubtitle": "Hoy podes descansar o mirar la tienda.",
+  "familyTasksEmptyOtherSubtitle": "No hay tareas programadas para hoy.",
+  "familyTasksMarkTitle": "Marcar tarea",
+  "familyTasksMarkBodyApproval": "Se va a marcar \"{taskTitle}\" como realizada por {actorName} y se enviará a revisión.",
+  "@familyTasksMarkBodyApproval": {
+    "description": "Confirm dialog body when a child completes a task that requires parent approval.",
+    "placeholders": {
+      "taskTitle": {
+        "type": "String"
+      },
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksMarkBodyDirect": "Se va a marcar \"{taskTitle}\" como realizada por {actorName}.",
+  "@familyTasksMarkBodyDirect": {
+    "description": "Confirm dialog body when an adult/teen completes a task directly.",
+    "placeholders": {
+      "taskTitle": {
+        "type": "String"
+      },
+      "actorName": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksActorFallback": "vos",
+  "@familyTasksActorFallback": {
+    "description": "Fallback for the current user's name in confirmation copy. Voseo 'vos' = 'you'."
+  },
+  "familyTasksTakeoverTitle": "Completar tarea",
+  "familyTasksTakeoverBody": "Esta tarea estaba asignada a {ownerName}. Si seguís, se va a marcar como realizada por vos.",
+  "@familyTasksTakeoverBody": {
+    "description": "Body shown when an adult takes over a task assigned to a child / another member.",
+    "placeholders": {
+      "ownerName": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksTakeoverConfirm": "Completar",
+  "familyTasksTakeoverOwnerFallback": "otro integrante",
+  "@familyTasksTakeoverOwnerFallback": {
+    "description": "Fallback when the original assignee's name isn't loaded for the takeover dialog."
+  },
+  "familyTasksLockedMessage": "Esta tarea le toca a {ownerName}.",
+  "@familyTasksLockedMessage": {
+    "description": "Snackbar shown when a non-adult tries to complete a task that's assigned to someone else.",
+    "placeholders": {
+      "ownerName": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksLockedOwnerFallback": "otra persona",
+  "familyTasksSubmittedSnack": "Enviada para revisión de un adulto.",
+  "familyTasksSubmitError": "No pudimos enviar la tarea: {message}",
+  "@familyTasksSubmitError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksReviewTitle": "Revisar tarea",
+  "familyTasksReviewBody": "{performerName} marcó \"{taskTitle}\" como realizada.",
+  "@familyTasksReviewBody": {
+    "placeholders": {
+      "performerName": {
+        "type": "String"
+      },
+      "taskTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksReviewPerformerFallback": "este integrante",
+  "familyTasksReviewApprove": "Aprobar tarea",
+  "familyTasksReviewReject": "Devolver para corregir",
+  "familyTasksApproveError": "No pudimos aprobar la tarea.",
+  "familyTasksApproveSuccess": "Tarea aprobada.",
+  "familyTasksApproveErrorWithDetails": "No pudimos aprobar la tarea: {message}",
+  "@familyTasksApproveErrorWithDetails": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "familyTasksRejectSuccess": "La tarea volvió a quedar pendiente.",
+  "familyTasksRejectError": "No pudimos devolver la tarea: {message}",
+  "@familyTasksRejectError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "familyWeeklyTitle": "Esta semana en el hogar",
+  "familyWeeklyMetricPoints": "Puntos totales",
+  "familyWeeklyMetricTasks": "Tareas cerradas",
+  "familyWeeklyMetricStatus": "Estado",
+  "familyWeeklyStatusActive": "Activo",
+  "familyWeeklyStatusCalm": "Calma",
+  "@familyWeeklyStatusCalm": {
+    "description": "Status pill when the household has < 5 closed tasks this week — a 'quiet' state."
+  },
+  "familyWeeklyRankingTitle": "Ranking Semanal",
+  "familyWeeklyRankingSubtitle": "Esta semana",
+  "familyWeeklyRankingTabAll": "Todos",
+  "familyWeeklyRankingTabAdults": "Adultos",
+  "familyWeeklyRankingTabKids": "Peques",
+  "@familyWeeklyRankingTabKids": {
+    "description": "Filter tab for child members. 'Peques' = 'little ones / kids', warm/casual."
+  },
+  "familyWeeklyRankingMemberFallback": "Integrante",
+  "familyWeeklyRankingEmptyMessage": "Completen tareas para sumar puntos",
+  "familyWeeklyRankingTabEmptyMessage": "Nadie sumó puntos en {tabLabel} todavía",
+  "@familyWeeklyRankingTabEmptyMessage": {
+    "description": "Empty-state when a category filter (Adultos/Peques) is selected and that category has no points yet. {tabLabel} is the localized tab label.",
+    "placeholders": {
+      "tabLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "setupModeName": "{mode, select, couple{Pareja} family{Familia} friends{Convivencia} solo{Solo yo} other{Solo yo}}",
+  "@setupModeName": {
+    "description": "Name of each household mode in the setup wizard mode picker.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupModeDescription": "{mode, select, couple{Gastos y tareas compartidas} family{Tareas, compras y seguimiento familiar} friends{Cuentas claras entre roommates} solo{Rutinas y pendientes personales} other{Rutinas y pendientes personales}}",
+  "@setupModeDescription": {
+    "description": "One-line tagline under each mode card in the setup wizard.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupValuePropEyebrow": "Tu hogar, sincronizado",
+  "@setupValuePropEyebrow": {
+    "description": "Tiny eyebrow label above the brand name on the first wizard screen."
+  },
+  "setupValuePropTagline": "El hogar mejor organizado empieza aquí.",
+  "setupValuePropStartButton": "Comenzar",
+  "setupValuePropTimeHint": "Te llevará menos de 2 minutos",
+  "setupFeatureTasksTitle": "Tareas compartidas",
+  "setupFeatureTasksDesc": "Organizá tareas del hogar y repartí responsabilidades sin fricción.",
+  "setupFeatureExpensesTitle": "Gastos en equipo",
+  "setupFeatureExpensesDesc": "Registrá gastos, dividí cuentas y mantené el balance siempre claro.",
+  "setupFeatureGamificationTitle": "Gamificación real",
+  "setupFeatureGamificationDesc": "Convertí la organización diaria en progreso, premios y motivación.",
+  "setupFeatureShoppingTitle": "Compras sincronizadas",
+  "setupFeatureShoppingDesc": "Listas compartidas en tiempo real para que nadie compre dos veces.",
+  "setupWelcomeTitle": "¡Bienvenido!",
+  "setupWelcomeBody": "Vamos a dejar tu hogar listo para empezar con tareas, gastos y compras compartidas desde el primer día.",
+  "setupWelcomeBulletQuick": "Configuración rápida de menos de 1 minuto.",
+  "setupWelcomeBulletJoin": "Podés crear un hogar nuevo o sumarte con un código.",
+  "setupWelcomeStartButton": "Configurar mi hogar",
+  "setupProfileEyebrow": "Tu perfil",
+  "setupProfileTitle": "¿Cómo te llamas?",
+  "setupProfileSubtitle": "Personalizá tu perfil para que tu equipo te identifique mejor.",
+  "setupProfileGoogleAvatarHint": "Usamos tu foto de Google como punto de partida. Si querés, podés cambiarla por uno de nuestros avatares.",
+  "setupProfileEmptyAvatarHint": "Elegí un avatar y un nombre para empezar con una identidad clara dentro del hogar.",
+  "setupProfileAvatarLabel": "Avatar",
+  "setupModePickerEyebrow": "Tipo de hogar",
+  "setupModePickerTitle": "¡Comencemos!",
+  "setupModePickerSubtitle": "¿Cómo vas a organizar tu hogar?",
+  "setupSignOutLink": "Cerrar sesión",
+  "@setupSignOutLink": {
+    "description": "Tiny sign-out link below the mode picker in the setup wizard. Source uses lowercase 'sesión' (with accent) — distinct from the bigger Settings logout button."
+  },
+  "setupSeeFeaturesLink": "Ver características",
+  "@setupSeeFeaturesLink": {
+    "description": "Tiny link to go back to the value-prop screen from the mode picker."
+  },
+  "setupHouseholdDefaultName": "Mi Hogar",
+  "@setupHouseholdDefaultName": {
+    "description": "Fallback household name when the user didn't enter one."
+  },
+  "setupFamilyDefaultName": "Mi familia",
+  "@setupFamilyDefaultName": {
+    "description": "Fallback name when creating a family-mode household without an explicit name."
+  },
+  "setupSnackJoinedHousehold": "¡Te uniste al hogar!",
+  "setupSnackPickAtLeastOneTask": "Selecciona al menos una tarea",
+  "setupSnackUnknownError": "Error desconocido",
+  "setupSnackOnboardingFailed": "No se pudo completar el onboarding. Intentá de nuevo.",
+  "setupSnackCodeCopied": "¡Código copiado al portapapeles! 📋",
+  "@setupSnackCodeCopied": {
+    "description": "Toast after copying the household invite code."
+  },
+  "setupSnackWhatsappFailed": "No se pudo abrir WhatsApp. Código copiado.",
+  "setupJoinCodeTitle": "Ingresa el código",
+  "@setupJoinCodeTitle": {
+    "description": "Heading above the 6-letter invite code input on the join flow."
+  },
+  "setupConnectEyebrow": "Conectar el hogar",
+  "setupConnectTitle": "Conecta tu hogar",
+  "setupConnectSubtitle": "Podés crear un nuevo equipo o sumarte con un código de invitación.",
+  "setupConnectCreateTitle": "Crear nuevo hogar",
+  "setupConnectCreateDesc": "Generá un código para invitar a quienes comparten este espacio.",
+  "setupConnectJoinTitle": "Tengo un código",
+  "setupConnectJoinDesc": "Ingresá el código para sumarte al hogar.",
+  "setupConnectCodeInputLabel": "Ingresá el código",
+  "setupConnectCreateButton": "Crear mi hogar",
+  "setupConnectJoinButton": "Unirme ahora",
+  "setupConnectBackButton": "Volver atrás",
+  "setupInvitationEyebrow": "Invitación",
+  "setupInvitationTitle": "{mode, select, family{Familia creada} friends{Familia creada} couple{Hogar creado} solo{Hogar creado} other{Hogar creado}}",
+  "@setupInvitationTitle": {
+    "description": "Heading on the invite-code result step. Family and friends modes share 'Familia creada' (multi-member group); couple/solo show 'Hogar creado'.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInvitationSubtitle": "{mode, select, family{Compartí este código con quienes forman parte del hogar.} friends{Compartí este código con quienes forman parte del hogar.} couple{Compartí este código para invitar a la otra persona.} solo{Compartí este código para invitar a la otra persona.} other{Compartí este código para invitar a la otra persona.}}",
+  "@setupInvitationSubtitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupInvitationCodeEyebrow": "CODIGO DE INVITACION",
+  "setupInvitationFooter": "Podés copiarlo o compartirlo ahora. Más adelante también lo vas a encontrar en ajustes.",
+  "setupInvitationCopyButton": "Copiar",
+  "setupInvitationShareButton": "Compartir",
+  "setupFamilyBaseEyebrow": "Base familiar",
+  "setupFamilyBaseTitle": "Base del hogar familiar",
+  "setupFamilyBaseSubtitle": "Antes de empezar, definamos cómo se organiza esta familia.",
+  "setupFamilyHouseholdNameLabel": "Nombre del hogar",
+  "setupFamilyHouseholdNameHint": "Ej: Casa de los Gómez",
+  "setupFamilyRoleLabel": "Tu rol visible",
+  "setupFamilyRoleFather": "Padre",
+  "setupFamilyRoleMother": "Madre",
+  "setupFamilyRoleGuardian": "Tutor/a",
+  "setupFamilyRoleTeen": "Adolescente",
+  "@setupFamilyRoleTeen": {
+    "description": "Family role label. Note: backend stores the Spanish string as-is for back-compat; UI overrides only the displayed label."
+  },
+  "setupSaveAndContinue": "Guardar y continuar",
+  "setupConfigureLater": "Configurar luego",
+  "setupExpensesEyebrow": "Gastos del hogar",
+  "setupExpensesTitle": "División de gastos",
+  "setupFriendsExpensesSubtitle": "En un piso compartido, lo más simple es dividir todo en partes iguales.",
+  "setupFriendsExpensesCardTitle": "Reparto equitativo",
+  "setupFriendsExpensesCardBody": "Cada compañero paga la misma proporción. Pueden ajustar gastos individuales más adelante.",
+  "setupFriendsExpensesTipTitle": "Equitativo por defecto",
+  "setupFriendsExpensesTipDesc": "Ideal para compañeros que comparten gastos del piso.",
+  "setupCoupleFamilyExpensesSubtitle": "{mode, select, couple{Configuremos una base simple para dividir gastos en pareja.} other{Configuremos una base simple para dividir gastos en convivencia.}}",
+  "@setupCoupleFamilyExpensesSubtitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupCoupleFamilyExpensesNote": "{mode, select, couple{Pueden cambiar esto después en ajustes. Como base arrancamos con una división 50/50.} other{Pueden cambiar esto después en ajustes. Como base arrancamos con una división equitativa.}}",
+  "@setupCoupleFamilyExpensesNote": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupCoupleFamilyExpensesSplitLabel": "{mode, select, couple{VOS / PAREJA} other{VOS / OTROS}}",
+  "@setupCoupleFamilyExpensesSplitLabel": {
+    "description": "Tiny uppercase label above the split-percentage slider. couple = 'VOS / PAREJA' (you / partner); family = 'VOS / OTROS' (you / others).",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupCoupleFamilyTipEqualTitle": "Igualitario (50/50)",
+  "setupCoupleFamilyTipEqualDescCouple": "Ideal para ingresos y responsabilidades similares.",
+  "setupCoupleFamilyTipEqualDescOther": "Ideal para hogares donde los gastos se reparten parejo.",
+  "setupCoupleFamilyTipProportionalTitle": "Proporcional",
+  "setupCoupleFamilyTipProportionalDesc": "Ajustado a lo que cada persona puede aportar.",
+  "setupFirstTasksEyebrow": "Primeras tareas",
+  "setupFirstTasksTitle": "{mode, select, family{Primeras tareas para la familia} other{Personaliza tu hogar}}",
+  "@setupFirstTasksTitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFirstTasksSubtitle": "{mode, select, family{Elegí tareas iniciales para coordinar el hogar desde el primer día.} other{Elegí las primeras tareas. Ya dejamos algunas sugeridas para arrancar.}}",
+  "@setupFirstTasksSubtitle": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFinishButton": "Terminar configuración",
+  "settingsHouseholdEmptyTitle": "¡Comienza tu equipo!",
+  "settingsHouseholdEmptyBody": "Unite a un equipo existente con un código de invitación para empezar a compartir tareas y gastos.",
+  "settingsHouseholdJoinWithCodeButton": "Unirse con código",
+  "settingsHouseholdTasksToggleTitle": "Tareas del hogar",
+  "settingsHouseholdTasksToggleOnSubtitle": "Mostrar tareas, progreso y accesos rapidos.",
+  "settingsHouseholdTasksToggleOffSubtitle": "Ocultar tareas y dejar solo finanzas y compras.",
+  "settingsHouseholdMembersEyebrow": "MIEMBROS",
+  "settingsHouseholdMembersCount": "{count, plural, =1{1 miembro} other{{count} miembros}}",
+  "@settingsHouseholdMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "settingsHouseholdMemberFallbackName": "Miembro",
+  "settingsHouseholdMemberSelfChip": "Vos",
+  "@settingsHouseholdMemberSelfChip": {
+    "description": "Tiny chip next to the current user's name in the member list. Voseo 'Vos' = 'You'."
+  },
+  "settingsHouseholdMemberAdminChip": "Admin",
+  "settingsHouseholdMemberMenuTooltip": "Opciones del miembro",
+  "settingsHouseholdMemberMenuEditRole": "Editar rol",
+  "settingsHouseholdMemberMenuRemove": "Quitar del hogar",
+  "settingsHouseholdMemberMenuDeleteDummyQa": "Eliminar dummy QA",
+  "settingsHouseholdJoinDialogTitle": "Unirse a un hogar",
+  "settingsHouseholdJoinDialogBody": "Ingresá el código de invitación que te compartieron para unirte al hogar:",
+  "settingsHouseholdJoinDialogConfirm": "Unirme",
+  "settingsHouseholdEditMenuRenameTitle": "Editar nombre",
+  "settingsHouseholdEditMenuRenameSubtitle": "Cambia el nombre de tu hogar",
+  "settingsHouseholdEditMenuInviteTitle": "Código de invitación",
+  "settingsHouseholdEditMenuInviteSubtitleExisting": "Compartir o generar nuevo código",
+  "settingsHouseholdEditMenuInviteSubtitleNone": "Generar código para invitar",
+  "settingsHouseholdEditMenuSplitTitle": "{type, select, family{Finanzas familiares} other{División de gastos}}",
+  "@settingsHouseholdEditMenuSplitTitle": {
+    "description": "Menu item title in the household edit sheet for the split-strategy screen. Family mode reframes it as 'Family finances'; couple mode uses 'Splitting expenses'.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHouseholdEditMenuSplitSubtitle": "{type, select, family{Elegir economía compartida o dividida} other{Ajustar porcentaje de pareja}}",
+  "@settingsHouseholdEditMenuSplitSubtitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHouseholdInviteSheetTitle": "Código de invitación",
+  "settingsHouseholdInviteSheetSubtitle": "Compartí este código para que otros se unan a tu hogar",
+  "settingsHouseholdInviteSheetCopyTooltip": "Copiar código",
+  "settingsHouseholdInviteSheetEmpty": "Sin código activo",
+  "settingsHouseholdInviteSheetGenerate": "Generar código",
+  "settingsHouseholdInviteSheetRegenerate": "Generar nuevo código",
+  "settingsHouseholdRemoveMemberTitle": "Quitar miembro",
+  "settingsHouseholdRemoveMemberBody": "¿Estás seguro de que querés quitar a {memberName} de este hogar?",
+  "@settingsHouseholdRemoveMemberBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHouseholdRemoveMemberConfirm": "Quitar",
+  "settingsHouseholdDeleteDummyTitle": "Eliminar dummy QA",
+  "settingsHouseholdDeleteDummyBody": "Esto eliminará a {memberName} como usuario dummy QA. Si no pertenece a otro hogar QA, también se borrará su identidad técnica.",
+  "@settingsHouseholdDeleteDummyBody": {
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHouseholdDeleteDummyConfirm": "Eliminar dummy",
+  "settingsHouseholdRenameDialogTitle": "Nombre del hogar",
+  "settingsHouseholdRenameDialogLabel": "Tu nombre",
+  "@settingsHouseholdRenameDialogLabel": {
+    "description": "Input label inside the rename-household dialog. Source uses 'Tu nombre' (your name) — confusing UX since it renames the household, but kept verbatim."
+  },
+  "settingsParentModeTitle": "Modo Padres",
+  "@settingsParentModeTitle": {
+    "description": "Card title for the Parent Mode premium feature. Family-only."
+  },
+  "settingsParentModeSubtitle": "Vos coordinas, ellos cumplen.",
+  "@settingsParentModeSubtitle": {
+    "description": "Card subtitle. Voseo 'Vos coordinás'. Tone: parental authority, friendly."
+  },
+  "settingsParentModeBulletApproval": "Aprobación de tareas antes de dar coins.",
+  "settingsParentModeBulletPerMember": "Vista por miembro y resumen familiar semanal.",
+  "settingsParentModeBulletRotation": "Rotación automática de tareas entre integrantes.",
+  "settingsParentModeUnlockButton": "Activar Modo Padres",
+  "settingsParentModeApprovalSectionTitle": "Aprobación de tareas",
+  "settingsParentModeApprovalSectionSubtitle": "Cuando un miembro completa una tarea, queda pendiente hasta que vos la apruebes.",
+  "settingsParentModeApprovalOffTitle": "Desactivado",
+  "settingsParentModeApprovalOffSubtitle": "Las tareas se acreditan apenas se completan.",
+  "settingsParentModeApprovalChildrenOnlyTitle": "Solo niños y adolescentes",
+  "settingsParentModeApprovalChildrenOnlySubtitle": "Los adultos completan directo; los demás requieren aprobación.",
+  "settingsParentModeApprovalAllTitle": "Todos los miembros",
+  "settingsParentModeApprovalAllSubtitle": "Cualquier completion pasa por tu OK antes de pagar coins.",
+  "settingsParentModeApprovalPerMemberTitle": "Por miembro",
+  "settingsParentModeApprovalPerMemberSubtitle": "Vos elegís exactamente quién necesita aprobación en la lista de abajo.",
+  "settingsParentModeInboxIdle": "Bandeja de aprobaciones",
+  "settingsParentModeInboxWithCount": "{count, plural, =1{Bandeja de aprobaciones — 1 pendiente} other{Bandeja de aprobaciones — {count} pendientes}}",
+  "@settingsParentModeInboxWithCount": {
+    "description": "Inbox button label including pending count. ICU plural.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "settingsParentModeMemberView": "Vista por miembro",
+  "settingsParentModeWeeklySummary": "Resumen de la semana",
+  "settingsParentModePerMemberEmpty": "No hay otros miembros en el hogar todavía.",
+  "settingsParentModeSaveError": "No pudimos guardar el cambio: {message}",
+  "@settingsParentModeSaveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsParentModeMemberTypeChild": "Hijo/a",
+  "@settingsParentModeMemberTypeChild": {
+    "description": "Member type label in the per-member approval list. 'Hijo/a' = son/daughter (gender-inclusive)."
+  },
+  "settingsParentModeMemberTypeTeen": "Adolescente",
+  "settingsParentModeMemberTypeAdult": "Adulto",
+  "settingsParentModeMemberTypeGuardian": "Tutor/a",
+  "settingsParentModeRoleOwnerSuffix": "Owner",
+  "@settingsParentModeRoleOwnerSuffix": {
+    "description": "Suffix shown after member type for the household owner. 'Owner' is brand convention; kept in English in source."
+  },
+  "settingsParentModeRoleAdminSuffix": "Admin",
+  "memberOnboardingWelcomeTitle": "¡Bienvenido al hogar!",
+  "memberOnboardingWelcomeSubtitle": "Elegí tu rol para empezar.",
+  "memberOnboardingEyebrow": "Rol en el hogar",
+  "memberOnboardingTitle": "¿Quién sos?",
+  "memberOnboardingSubtitle": "Elegí tu rol en el hogar.",
+  "memberOnboardingFinishButton": "¡Listo!",
+  "memberOnboardingSaveError": "No se pudo guardar. Intentá de nuevo.",
+  "memberOnboardingRoleDescAdult": "Responsable del hogar. Administra gastos y tareas.",
+  "@memberOnboardingRoleDescAdult": {
+    "description": "Description card for adult/parent/guardian roles. Same copy is shown for Padre/Madre/Tutor/a/Adulto."
+  },
+  "memberOnboardingRoleDescTeen": "Gestión personal de gastos y tareas.",
+  "memberOnboardingRoleDescChild": "Participa con tareas y puede ganar recompensas.",
+  "memberOnboardingRoleDescDefault": "Miembro del hogar.",
+  "coupleSplitTitle": "{type, select, family{Finanzas familiares} other{División de gastos}}",
+  "@coupleSplitTitle": {
+    "description": "AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitSavedSnack": "Configuración guardada correctamente",
+  "coupleSplitSaveError": "Error al guardar: {message}",
+  "@coupleSplitSaveError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitFamilyHowTitle": "Cómo se registran los gastos",
+  "coupleSplitFamilyHowBody": "En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.",
+  "coupleSplitFamilySharedTitle": "Economía compartida",
+  "coupleSplitFamilySharedBody": "Los gastos no se reparten por porcentaje ni generan balances entre adultos.",
+  "coupleSplitFamilyDividedTitle": "Gastos divididos",
+  "coupleSplitFamilyDividedBody": "Usa porcentajes y balances como en pareja.",
+  "coupleSplitInfoTitle": "¿Cómo dividir gastos?",
+  "coupleSplitInfoBody": "No hay una única forma correcta. Cada pareja es un mundo y la mejor estrategia es la que les dé paz mental a ambos.",
+  "coupleSplitStrategiesTitle": "Estrategias comunes",
+  "coupleSplitStrategy5050Title": "50% / 50% (Igualitario)",
+  "coupleSplitStrategy5050Body": "Ideal cuando ambos tienen ingresos similares. Cada uno aporta la mitad de los gastos compartidos.",
+  "coupleSplitStrategy6040Title": "60% / 40% (Equitativo)",
+  "coupleSplitStrategy6040Body": "Si hay una diferencia de ingresos, el que gana más aporta una parte mayor proporcionalmente.",
+  "coupleSplitCustomTitle": "Configuración personalizada",
+  "coupleSplitCustomBody": "Ajustá el porcentaje que vos vas a aportar de forma predeterminada.",
+  "coupleSplitVisualizerYou": "VOS",
+  "coupleSplitVisualizerPartner": "TU PAREJA",
+  "coupleSplitSaveButton": "Guardar Configuración",
+  "tasksTabList": "Lista",
+  "tasksTabCalendar": "Calendario",
+  "tasksFabNew": "Nueva tarea",
+  "tasksLoadingMessage": "Cargando tareas...",
+  "tasksLoadError": "No pudimos cargar las tareas.",
+  "tasksLoadMore": "Cargar más tareas",
+  "tasksFilterAll": "Todas",
+  "@tasksFilterAll": {
+    "description": "Default 'all categories' filter chip in the tasks screen. Feminine plural ('todas') matching 'tareas'."
+  },
+  "tasksSearchHint": "Buscar tarea o rutina",
+  "tasksSearchClearTooltip": "Limpiar búsqueda",
+  "tasksSearchActiveLabel": "Buscando",
+  "tasksSearchIdleLabel": "Buscar",
+  "tasksEmptyTitle": "No hay tareas configuradas",
+  "tasksEmptyFilteredTitle": "No hay tareas con esos filtros",
+  "tasksEmptySoloSubtitle": "Agregá tu primera tarea para empezar a organizar tu hogar.",
+  "tasksEmptySharedSubtitle": "Agregá tu primera tarea o activá una categoría para empezar a organizar la casa.",
+  "tasksEmptyFilteredSubtitle": "Probá cambiar la categoría o crear una nueva tarea.",
+  "tasksPillNoDate": "Sin fecha",
+  "tasksPillOverdue": "Vencida",
+  "tasksPillInReview": "En revisión",
+  "tasksActionSchedule": "Programar",
+  "tasksActionComplete": "Completar",
+  "tasksActionCompleting": "Completando...",
+  "tasksActionSendForReview": "Enviar a revisión",
+  "tasksActionSending": "Enviando...",
+  "tasksStatusWaitingForAdult": "Esperando revisión de un adulto.",
+  "tasksStatusWaitingReview": "Esperando revisión.",
+  "tasksStatusBelongsTo": "Le toca a {ownerName}.",
+  "@tasksStatusBelongsTo": {
+    "placeholders": {
+      "ownerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tasksTakeoverHeading": "Esta tarea le toca a {ownerName}",
+  "@tasksTakeoverHeading": {
+    "description": "Title of the adult-takeover bottom sheet. No period at the end (acts as a heading).",
+    "placeholders": {
+      "ownerName": {
+        "type": "String"
+      }
+    }
+  },
+  "tasksTakeoverPrompt": "¿Querés darle una mano y completarla de todas formas?",
+  "tasksTakeoverConfirm": "Completar igual",
+  "tasksSnackFrequencyUpdated": "Frecuencia actualizada",
+  "tasksSnackCompleted": "Tarea completada.",
+  "tasksSnackCompleteError": "No pudimos completar la tarea.",
+  "createTaskDifficultyEasy": "Fácil",
+  "createTaskDifficultyMedium": "Media",
+  "createTaskDifficultyHard": "Difícil",
+  "createTaskRecurrenceDaily": "Diaria",
+  "createTaskRecurrenceWeekly": "Semanal",
+  "createTaskRecurrenceMonthly": "Mensual",
+  "createTaskRecurrenceNone": "Sin repetir",
+  "createTaskRecurrenceCustom": "Personalizada",
+  "createTaskValidationCustomDays": "Elegí al menos un día para la repetición personalizada.",
+  "createTaskValidationCustomMonthDates": "Elegí al menos una fecha del mes.",
+  "createTaskValidationTitleRequired": "Título requerido",
+  "createTaskValidationNumberRequired": "Ingresá un número",
+  "createTaskValidationNotNegative": "No puede ser negativo",
+  "createTaskSnackCategoryNotReady": "Esperá un momento y elegí una categoría.",
+  "createTaskSnackDuplicate": "Ya existe una tarea idéntica activa",
+  "createTaskSnackCreated": "Tarea creada",
+  "createTaskHeaderTitle": "Nueva tarea",
+  "createTaskSectionDetailEyebrow": "DETALLE",
+  "createTaskSectionDetailTitle": "Qué hay que hacer",
+  "createTaskSectionDetailSubtitle": "Ponele un nombre claro para que se entienda de un vistazo.",
+  "createTaskFieldTitleLabel": "Qué hay que hacer",
+  "createTaskFieldNotesLabel": "Notas (opcional)",
+  "createTaskSectionCategoryEyebrow": "CATEGORÍA",
+  "createTaskSectionCategoryTitle": "Dónde vive mejor",
+  "createTaskSectionCategorySubtitle": "Elegí la zona del hogar para que aparezca ordenada.",
+  "createTaskSectionFrequencyEyebrow": "FRECUENCIA",
+  "createTaskSectionFrequencyTitle": "Cuándo se repite",
+  "createTaskSectionFrequencySubtitle": "Puede quedar única, repetirse o seguir un patrón propio.",
+  "createTaskSectionAssigneeEyebrow": "RESPONSABLE",
+  "createTaskSectionAssigneeTitle": "Quién puede hacerla",
+  "createTaskSectionAssigneeSubtitle": "Podés dejarla abierta o asignarla a alguien en particular.",
+  "createTaskAssigneeAnyone": "Cualquiera",
+  "createTaskSectionValueEyebrow": "VALOR",
+  "createTaskSectionValueTitle": "Cuánto vale completarla",
+  "createTaskSectionValueSubtitle": "La dificultad define puntos y coins de forma rápida.",
+  "createTaskRewardsTitle": "Recompensas",
+  "createTaskCustomizeRewards": "Personalizar",
+  "createTaskFieldCoinsLabel": "Coins",
+  "createTaskSectionRotationEyebrow": "ROTACIÓN",
+  "createTaskSectionRotationTitle": "Que se turnen los miembros",
+  "createTaskSectionRotationSubtitle": "Elegí al menos dos. Cada vez que se complete, le toca al siguiente.",
+  "createTaskCustomTabWeekdays": "Por día",
+  "createTaskCustomTabInterval": "Intervalo",
+  "createTaskCustomTabMonthDays": "Fecha",
+  "createTaskCustomRepeatEvery": "Repetir cada",
+  "createTaskCustomDecreaseTooltip": "Disminuir",
+  "createTaskCustomIncreaseTooltip": "Aumentar",
+  "createTaskCustomMonthDaysHelp": "Elegí los días del mes",
+  "createTaskWeekdayMonday": "L",
+  "createTaskWeekdayTuesday": "M",
+  "createTaskWeekdayWednesday": "X",
+  "createTaskWeekdayThursday": "J",
+  "createTaskWeekdayFriday": "V",
+  "createTaskWeekdaySaturday": "S",
+  "createTaskWeekdaySunday": "D",
+  "createTaskCreateButton": "Crear tarea",
+  "addTaskOptionsHeaderTitle": "Nueva tarea",
+  "addTaskOptionsCustomChip": "Personalizada",
+  "addTaskOptionsAddTooltip": "Agregar tarea",
+  "addTaskOptionsAllSuggestedDone": "Ya tenés todas las sugeridas",
+  "addTaskOptionsCreateCustomBelow": "Creá una tarea personalizada abajo.",
+  "addTaskOptionsLoadMore": "Cargar más",
+  "completeTaskSnackPickAtLeastOne": "Seleccioná al menos una tarea para completar.",
+  "completeTaskSnackPickWho": "Seleccioná quién la hizo antes de continuar.",
+  "completeTaskSnackFutureDate": "La fecha de finalización no puede ser futura.",
+  "completeTaskSnackTasksMissing": "No pudimos encontrar todas las tareas elegidas. Refrescá e intentá de nuevo.",
+  "completeTaskHeaderTitle": "Completar tareas",
+  "completeTaskHeaderSubtitle": "Marcá lo que ya hicieron y asigná el mérito en un solo paso.",
+  "completeTaskWhoTitle": "¿Quién lo hizo?",
+  "completeTaskWhoSubtitle": "Seleccioná quiénes ayudaron",
+  "completeTaskWhenTitle": "¿Cuándo?",
+  "completeTaskWhenSubtitle": "Elegí el momento de finalización",
+  "completeTaskTimeNow": "Ahora",
+  "completeTaskTimeBefore": "Antes",
+  "completeTaskTasksTitle": "Seleccionar tareas",
+  "completeTaskTasksSubtitle": "Buscá y seleccioná lo terminado",
+  "completeTaskSearchHint": "Buscar tarea...",
+  "completeTaskNoTasksAvailable": "No hay tareas disponibles",
+  "completeTaskRewardVerb": "{count, plural, =1{Ganaste} other{Ganaron}}",
+  "@completeTaskRewardVerb": {
+    "description": "Verb shown next to the rewards earned after completing tasks. Singular when only the current user did it; plural when multiple members participated.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editTaskHeaderTitle": "Editar tarea",
+  "editTaskHeaderSubtitle": "Actualizá el nombre, la categoría y la recompensa de esta tarea.",
+  "editTaskFieldNameHint": "Nombre de la tarea",
+  "editTaskSectionDetailEyebrow": "DETALLE",
+  "editTaskSectionCategoryEyebrow": "CATEGORÍA",
+  "editTaskSectionRewardEyebrow": "RECOMPENSA",
+  "editTaskSnackNameRequired": "Por favor ingresá un nombre para la tarea",
+  "editTaskSaveChanges": "Guardar cambios",
+  "editTaskCompleteButton": "Completar tarea",
+  "editTaskSubmitForReviewButton": "Enviar a revisión",
+  "editTaskSnackSentForReview": "Tarea enviada a revisión.",
+  "editTaskDeleteTitle": "Eliminar tarea",
+  "editTaskDeleteConfirm": "Eliminar",
+  "taskDetailHeaderTitle": "Detalle de tarea",
+  "taskDetailFallbackUser": "Alguien",
+  "taskDetailStatusCompleted": "Completada",
+  "taskDetailStatusDisputed": "En disputa",
+  "taskDetailStatusPending": "Pendiente",
+  "taskDetailUndoButton": "Deshacer",
+  "taskDetailUndoErrorNotFound": "No se puede deshacer: actividad no encontrada",
+  "taskDetailUndoError": "No se pudo deshacer",
+  "taskDetailNoRecord": "Sin registro",
+  "taskDetailExperience": "Experiencia",
+  "taskDetailReward": "Recompensa",
+  "taskDetailCompletedBy": "La completó",
+  "taskDetailAssignedTo": "Responsable",
+  "taskDetailComment": "Comentario",
+  "familyDashboardAppBarTitle": "Familia",
+  "familyDashboardTitle": "Vista por miembro",
+  "familyDashboardLockedNotice": "Esta vista es para administradores de hogares familiares.",
+  "familyDashboardWeekFilter": "Semana",
+  "familyDashboardEmptyWeek": "Sin tareas esta semana",
+  "familyDashboardEmptyMonth": "Sin tareas este mes",
+  "familyDashboardNoStreak": "Sin racha",
+  "familyDashboardTopCategoriesWeek": "Top categorías de la semana",
+  "familyDashboardTopCategoriesMonth": "Top categorías del mes",
+  "familyDashboardStateNoTasks": "Sin tareas",
+  "familyDashboardStateAttention": "Atención",
+  "familyDashboardStateToReview": "A revisar",
+  "familyDashboardTrackingWeekly": "Seguimiento semanal",
+  "familyDashboardTrackingMonthly": "Seguimiento mensual",
+  "familyDashboardEmptySubtitleWeek": "Aún no hay tareas para esta semana.",
+  "familyDashboardEmptySubtitleMonth": "Aún no hay tareas para este mes.",
+  "familyDashboardLabelDone": "Hechas",
+  "familyDashboardLabelPending": "Pendientes",
+  "familyDashboardLabelOverdue": "Atrasadas",
+  "familyDashboardLabelToReview": "A revisar",
+  "familyDashboardLockedTitle": "Vista por miembro",
+  "familyDashboardLockedBody": "Activá Modo Padres para ver el progreso de cada integrante de la familia en un solo lugar.",
+  "familyDashboardEmptyTitle": "Todavía no hay datos",
+  "familyDashboardEmptyBody": "Cuando los miembros completen tareas o reciban coins, los vas a ver acá.",
+  "weeklySummaryAppBarTitle": "Resumen semanal",
+  "weeklySummaryLockedNotice": "Esta sección es para administradores de hogares familiares.",
+  "weeklySummaryHeaderTitle": "Resumen semanal",
+  "weeklySummaryTitleAttention": "Semana con puntos a revisar",
+  "weeklySummaryTitleGood": "Buena coordinación",
+  "weeklySummaryTitleQuietWithExpenses": "Semana tranquila con gastos",
+  "weeklySummaryTitleQuiet": "Semana tranquila",
+  "weeklySummaryBodyExpensesNoTasks": "Hubo gastos compartidos, pero todavía no hubo tareas planificadas.",
+  "weeklySummaryBodyNoActivity": "Todavía no hubo actividad suficiente para un cierre completo.",
+  "weeklySummaryNoData": "Sin datos",
+  "weeklySummaryMetricTasks": "Tareas",
+  "weeklySummaryMetricExpenses": "Gastos",
+  "weeklySummaryMetricCompletion": "Cumpl.",
+  "weeklySummaryEyebrowCompletion": "Cumplimiento",
+  "weeklySummaryEyebrowNeedsBoost": "Necesita un empujón",
+  "weeklySummaryEyebrowMostForgotten": "La más olvidada",
+  "weeklySummaryEyebrowExpenses": "Gastos compartidos",
+  "weeklySummaryEyebrowTopCategory": "Top categoría",
+  "weeklySummaryCompletionEmpty": "Sin tareas esta semana",
+  "weeklySummaryCompletionGoodPace": "Buen ritmo: la semana cerró con lo planificado al día.",
+  "weeklySummaryCompletionLockedBody": "Cuando asignen tareas, acá vas a ver cumplimiento real y comparación semanal.",
+  "weeklySummaryExpensesNone": "No hubo gastos compartidos esta semana.",
+  "weeklySummaryExpensesFirst": "Primera semana con gastos compartidos.",
+  "weeklySummaryExpensesSame": "Mismo gasto que la semana anterior.",
+  "weeklySummaryEmptyTitle": "Tu primer resumen viene en camino",
+  "weeklySummaryEmptyBody": "Cuando empiecen a completar tareas y cargar gastos vamos a generar el reporte de la semana automáticamente.",
+  "weeklySummaryLockedTitle": "Resumen semanal",
+  "weeklySummaryLockedBody": "Activá Modo Padres para recibir el resumen de la semana con cumplimiento, MVP y gastos.",
+  "calendarWeekOf": "Semana de",
+  "calendarNoTasksScheduled": "Sin tareas programadas",
+  "pendingApprovalsAppBarShortTitle": "Aprobaciones",
+  "pendingApprovalsAppBarTitle": "Aprobaciones pendientes",
+  "pendingApprovalsLockedNotice": "Esta sección es para administradores de hogares familiares.",
+  "pendingApprovalsApproveButton": "Aprobar",
+  "pendingApprovalsRejectButton": "Rechazar",
+  "pendingApprovalsApproveErrorRetry": "No pudimos aprobar la tarea. Reintentá.",
+  "pendingApprovalsRejectedSnack": "Tarea rechazada.",
+  "pendingApprovalsRejectDialogTitle": "Motivo del rechazo",
+  "pendingApprovalsRejectDialogHint": "Por qué no está aprobada (opcional)",
+  "pendingApprovalsEmptyTitle": "Nada pendiente por ahora",
+  "pendingApprovalsEmptyBody": "Cuando alguien complete una tarea aparecerá acá para que la revises.",
+  "pendingApprovalsLockedTitle": "Aprobación de tareas",
+  "pendingApprovalsLockedBody": "Activá Modo Padres para revisar y aprobar lo que cumple cada miembro del hogar antes de acreditar los coins.",
+  "expensesTabMovements": "Movimientos",
+  "expensesTabRecurring": "Recurrentes",
+  "expensesTabGoals": "Metas",
+  "expensesFabMovement": "Movimiento",
+  "expensesFabNewSubscription": "Nueva Suscripción",
+  "expensesFabNewGoal": "Nueva Meta",
+  "expensesActivityRecentEyebrow": "ACTIVIDAD RECIENTE",
+  "expensesActivityEmpty": "No hay movimientos recientes",
+  "expensesDateToday": "HOY",
+  "expensesDateYesterday": "AYER",
+  "expensesDateTomorrow": "MAÑANA",
+  "expensesSummaryMainBalance": "TU BALANCE ACTUAL",
+  "expensesSummaryMainProjected": "TOTAL PREVISTO DEL MES",
+  "expensesSummaryMainExpenses": "GASTOS DEL MES",
+  "expensesStatTileEstimatedIncome": "Ingreso estimado",
+  "expensesStatTileIncomes": "Ingresos",
+  "expensesStatTilePaid": "Pagado",
+  "expensesStatTileExpenses": "Gastos",
+  "expensesStatTilePending": "Pendiente",
+  "expensesProjectionPendingShare": "Tu parte pendiente",
+  "expensesProjectionEstimated": "Cierre estimado",
+  "expensesProjectionTitle": "Cálculo de proyección",
+  "expensesProjectionSubtitle": "Así llegamos a tu cierre estimado para fin de mes.",
+  "expensesProjectionRowBalance": "Tu balance actual",
+  "expensesProjectionRowEstimated": "Tu cierre estimado",
+  "expensesPendingDetailsEyebrow": "DETALLE DE PENDIENTES",
+  "expensesGotIt": "Entendido",
+  "expensesIncomeBreakdownTitle": "Detalle de Ingresos",
+  "expensesIncomeBreakdownSubtitle": "Tus ingresos registrados este mes.",
+  "expensesExpensesBreakdownTitle": "Detalle de Gastos",
+  "expensesExpensesBreakdownSubtitle": "Tus gastos pagados este mes.",
+  "expensesPendingBreakdownTitle": "Tu Parte Pendiente",
+  "expensesPendingBreakdownSubtitle": "Lo que te corresponde de los gastos planificados de este mes.",
+  "expensesPendingBreakdownTotalLabel": "Tu total pendiente",
+  "expensesBreakdownTotalLabel": "Total del mes",
+  "expensesBreakdownEmpty": "No hay movimientos registrados",
+  "expensesBreakdownMovementsEyebrow": "MOVIMIENTOS",
+  "expensesPlannedSkip": "Omitir",
+  "expensesPlannedPay": "Pagar",
+  "expensesPlannedPaymentSnack": "Pago de \"{title}\" registrado",
+  "@expensesPlannedPaymentSnack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesPlannedBadgeUpcoming": "PRÓXIMO",
+  "expensesPlannedBadgePending": "PENDIENTE",
+  "expensesPlannedBadgeDueToday": "VENCE HOY",
+  "expensesPlannedBadgeTomorrow": "MAÑANA",
+  "expensesPlannedBadgeSoon": "VENCE PRONTO",
+  "expensesDeleteDialogTitle": "¿Eliminar gasto?",
+  "expensesDeleteDialogBody": "Esta acción no se puede deshacer.",
+  "expensesDeletedSnack": "Movimiento eliminado",
+  "expensesTypeBadgeGift": "Regalo",
+  "expensesTypeBadgeShared": "Compartido",
+  "expensesTypeBadgePersonal": "Personal",
+  "expensesSettlementCardTitle": "Liquidación de saldo",
+  "expensesSettlementCardBody": "{name} equilibró el balance",
+  "@expensesSettlementCardBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesEmptyDefaultSubtitle": "Empezá hoy mismo a organizar tus finanzas del hogar.",
+  "expensesFormOcrError": "No se pudo leer el ticket: {error}",
+  "@expensesFormOcrError": {
+    "description": "Snackbar shown when receipt OCR fails. {error} is the raw exception text.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormOcrLowConfidence": "Ticket difícil de leer; revisá los datos antes de guardar",
+  "@expensesFormOcrLowConfidence": {
+    "description": "Snackbar warning when OCR confidence is low — user should double-check the prefilled data."
+  },
+  "expensesFormValidationAmountRequired": "Ingresá un monto válido.",
+  "@expensesFormValidationAmountRequired": {
+    "description": "Validation error when the amount field is empty or invalid."
+  },
+  "expensesFormValidationNoHousehold": "No pertenecés a un hogar",
+  "@expensesFormValidationNoHousehold": {
+    "description": "Exception thrown when the user tries to save an expense but doesn't belong to a household."
+  },
+  "expensesFormSavedIncome": "Ingreso guardado",
+  "expensesFormSavedExpense": "Gasto guardado",
+  "expensesFormUpdatedExpense": "Gasto actualizado",
+  "@expensesFormUpdatedExpense": {
+    "description": "Success label on the save button when editing an existing expense."
+  },
+  "expensesFormDeleteDialogTitle": "¿Eliminar gasto?",
+  "@expensesFormDeleteDialogTitle": {
+    "description": "Delete confirmation dialog title in the expense form."
+  },
+  "expensesFormDeleteDialogBody": "Esta acción no se puede deshacer.",
+  "@expensesFormDeleteDialogBody": {
+    "description": "Delete confirmation dialog body in the expense form."
+  },
+  "expensesFormSectionDetailEyebrow": "DETALLE",
+  "@expensesFormSectionDetailEyebrow": {
+    "description": "Eyebrow label for the 'Detail' section of the expense form."
+  },
+  "expensesFormSectionDetailTitleIncome": "¿De dónde viene?",
+  "@expensesFormSectionDetailTitleIncome": {
+    "description": "Detail section title when creating an income entry."
+  },
+  "expensesFormSectionDetailTitleExpense": "¿Qué estás registrando?",
+  "@expensesFormSectionDetailTitleExpense": {
+    "description": "Detail section title when creating an expense entry."
+  },
+  "expensesFormSectionDetailSubtitleIncome": "Podés dejar un nombre claro para reconocer este ingreso más rápido.",
+  "@expensesFormSectionDetailSubtitleIncome": {
+    "description": "Detail section subtitle when creating an income entry."
+  },
+  "expensesFormSectionDetailSubtitleExpense": "Dale un nombre simple para ubicar este gasto de un vistazo.",
+  "@expensesFormSectionDetailSubtitleExpense": {
+    "description": "Detail section subtitle when creating an expense entry."
+  },
+  "expensesFormSectionContextEyebrow": "CONTEXTO",
+  "@expensesFormSectionContextEyebrow": {
+    "description": "Eyebrow label for the 'Context' section of the expense form."
+  },
+  "expensesFormSectionContextTitleIncome": "Cuándo y quién lo recibió",
+  "@expensesFormSectionContextTitleIncome": {
+    "description": "Context section title when creating an income entry."
+  },
+  "expensesFormSectionContextTitleExpense": "Cuándo y quién pagó",
+  "@expensesFormSectionContextTitleExpense": {
+    "description": "Context section title when creating an expense entry."
+  },
+  "expensesFormSectionContextSubtitle": "Estos datos ordenan el movimiento dentro del hogar.",
+  "@expensesFormSectionContextSubtitle": {
+    "description": "Context section subtitle (same for income and expense)."
+  },
+  "expensesFormSectionCategoryEyebrow": "CATEGORÍA",
+  "@expensesFormSectionCategoryEyebrow": {
+    "description": "Eyebrow label for the 'Category' section of the expense form."
+  },
+  "expensesFormSectionCategoryTitleIncome": "Cómo querés clasificarlo",
+  "@expensesFormSectionCategoryTitleIncome": {
+    "description": "Category section title when creating an income entry."
+  },
+  "expensesFormSectionCategoryTitleExpense": "Dónde entra este gasto",
+  "@expensesFormSectionCategoryTitleExpense": {
+    "description": "Category section title when creating an expense entry."
+  },
+  "expensesFormSectionCategorySubtitle": "Podés elegirla, pero también la sugerimos automáticamente según cómo lo describas.",
+  "@expensesFormSectionCategorySubtitle": {
+    "description": "Category section subtitle (same for income and expense)."
+  },
+  "expensesFormSectionSplitEyebrow": "REPARTO",
+  "@expensesFormSectionSplitEyebrow": {
+    "description": "Eyebrow label for the 'Split' section of the expense form."
+  },
+  "expensesFormSectionSplitTitleIncome": "Cómo se reparte este ingreso",
+  "@expensesFormSectionSplitTitleIncome": {
+    "description": "Split section title when creating an income entry."
+  },
+  "expensesFormSectionSplitTitleExpense": "Cómo se divide este gasto",
+  "@expensesFormSectionSplitTitleExpense": {
+    "description": "Split section title when creating an expense entry."
+  },
+  "expensesFormSectionSplitSubtitle": "Definí si es compartido, fijo, regalo o personal.",
+  "@expensesFormSectionSplitSubtitle": {
+    "description": "Split section subtitle (same for income and expense)."
+  },
+  "expensesFormFieldDate": "Fecha",
+  "expensesFormFieldPayer": "Pagó",
+  "expensesFormFieldCategory": "Categoría",
+  "expensesFormShoppingUnlinkedSnack": "Vinculaciones removidas",
+  "@expensesFormShoppingUnlinkedSnack": {
+    "description": "Snackbar shown when user clears all shopping-list linkages from a scanned receipt."
+  },
+  "expensesFormShoppingUnlinkedUndo": "Deshacer",
+  "expensesFormSplitShared": "Compartido",
+  "@expensesFormSplitShared": {
+    "description": "Split mode chip label: shared/equal split."
+  },
+  "expensesFormSplit5050": "50/50",
+  "@expensesFormSplit5050": {
+    "description": "Split mode chip label: 50/50 split."
+  },
+  "expensesFormSplitFixed": "Fijo",
+  "@expensesFormSplitFixed": {
+    "description": "Split mode chip label: fixed/per-member amounts."
+  },
+  "expensesFormSplitGift": "Regalo",
+  "@expensesFormSplitGift": {
+    "description": "Split mode chip label: gift (does not affect balance)."
+  },
+  "expensesFormSplitPersonal": "Solo yo",
+  "@expensesFormSplitPersonal": {
+    "description": "Split mode chip label: personal (only I)."
+  },
+  "expensesFormInfoBoxGift": "Este gasto no afectará el balance {memberLabel}.",
+  "@expensesFormInfoBoxGift": {
+    "description": "Info box shown when split mode is 'gift'. {memberLabel} is the household-type-aware phrase (e.g. 'with your partner').",
+    "placeholders": {
+      "memberLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormInfoBoxPersonal": "Registrado como gasto personal.",
+  "@expensesFormInfoBoxPersonal": {
+    "description": "Info box shown when split mode is 'personal'."
+  },
+  "expensesFormSaveButtonUpdated": "Actualizado",
+  "@expensesFormSaveButtonUpdated": {
+    "description": "Save button success state label when editing an existing expense."
+  },
+  "expensesFormSaveButtonSaveIncome": "Guardar Ingreso",
+  "@expensesFormSaveButtonSaveIncome": {
+    "description": "Save button idle label when creating an income entry."
+  },
+  "expensesFormSaveButtonSaveExpense": "Guardar Gasto",
+  "@expensesFormSaveButtonSaveExpense": {
+    "description": "Save button idle label when creating an expense entry."
+  },
+  "expensesFormMembersEmpty": "No hay miembros disponibles para registrar gastos.",
+  "@expensesFormMembersEmpty": {
+    "description": "Empty state shown when there are no household members to assign as payer."
+  },
+  "expensesFormTitleHintIncome": "¿De qué es el ingreso? (Opcional)",
+  "@expensesFormTitleHintIncome": {
+    "description": "Hint text in the title field when creating an income entry."
+  },
+  "expensesFormTitleHintExpense": "¿Qué compraste? (Opcional)",
+  "@expensesFormTitleHintExpense": {
+    "description": "Hint text in the title field when creating an expense entry."
+  },
+  "expensesFormTypeExpense": "Gasto",
+  "@expensesFormTypeExpense": {
+    "description": "Toggle label for 'Expense' type in the form."
+  },
+  "expensesFormTypeIncome": "Ingreso",
+  "@expensesFormTypeIncome": {
+    "description": "Toggle label for 'Income' type in the form."
+  },
+  "expensesFormHeaderEditIncome": "Modificar Ingreso",
+  "expensesFormHeaderEditExpense": "Modificar Gasto",
+  "expensesFormHeaderNewIncome": "Nuevo Ingreso",
+  "expensesFormHeaderNewExpense": "Nuevo Gasto",
+  "expensesFormSelectCategoryTitle": "Seleccionar categoría",
+  "expensesFormAutoTitleSupermarketShopping": "Compras del supermercado",
+  "expensesFormShoppingSynced": "{count, plural, =1{1 artículo comprado} other{{count} artículos comprados}}",
+  "@expensesFormShoppingSynced": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "expensesFormShoppingDetectedTitle": "Productos detectados",
+  "expensesFormShoppingLinkTitle": "Vincular con lista de compras",
+  "expensesFormShoppingDetectedSummary": "{linkedCount, plural, =1{1 artículo} other{{linkedCount} artículos}} · {newCount, plural, =1{1 nuevo para tu lista} other{{newCount} nuevos para tu lista}}",
+  "@expensesFormShoppingDetectedSummary": {
+    "placeholders": {
+      "linkedCount": {
+        "type": "int"
+      },
+      "newCount": {
+        "type": "int"
+      }
+    }
+  },
+  "expensesFormShoppingWillMarkBought": "Se marcarán como comprados al guardar",
+  "expensesFormShoppingTapToLink": "Tocá para vincular artículos",
+  "expensesFormShoppingClearAllSemantic": "Quitar todas las vinculaciones",
+  "expensesFormShoppingDetectedCount": "{count, plural, =1{1 producto detectado} other{{count} productos detectados}}",
+  "@expensesFormShoppingDetectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "expensesFormShoppingBadgeNew": "nuevo",
+  "expensesFormShoppingItemsSheetTitle": "Artículos de la lista",
+  "expensesFormShoppingSearchHint": "Buscar o agregar producto...",
+  "expensesFormShoppingAddQuery": "Agregar \"{query}\"",
+  "@expensesFormShoppingAddQuery": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "expensesFormShoppingCustomProduct": "Producto personalizado",
+  "expensesFormShoppingGlobalSuggestions": "Sugerencias globales",
+  "expensesFormCategorySupermarket": "Supermercado",
+  "expensesFormCategoryUtilities": "Servicios",
+  "expensesFormCategoryRent": "Alquiler y hogar",
+  "expensesFormCategoryRestaurants": "Salidas y comidas",
+  "expensesFormCategoryTransport": "Transporte",
+  "expensesFormCategoryEntertainment": "Ocio y planes",
+  "expensesFormCategoryHealth": "Salud",
+  "expensesFormCategoryFinances": "Ahorro e inversión",
+  "expensesFormCategorySettlement": "Liquidación de balance",
+  "expensesFormCategoryOnlineShopping": "Compras online",
+  "expensesFormCategoryPets": "Mascotas",
+  "expensesFormCategoryClothing": "Ropa y calzado",
+  "expensesFormCategoryElectronics": "Tecnología",
+  "expensesFormCategoryEducation": "Educación",
+  "expensesFormCategoryOtherExpenses": "Otros gastos",
+  "expensesFormIncomeCategorySalary": "Sueldo",
+  "expensesFormIncomeCategoryFreelance": "Freelance",
+  "expensesFormIncomeCategorySales": "Ventas",
+  "expensesFormIncomeCategoryBonus": "Bono o premio",
+  "expensesFormIncomeCategoryRefund": "Reembolso",
+  "expensesFormIncomeCategoryGift": "Regalo",
+  "expensesFormIncomeCategoryInvestment": "Rendimiento",
+  "expensesFormIncomeCategoryOtherIncome": "Otros ingresos",
+  "notificationsTitle": "Notificaciones",
+  "notificationsMarkAllReadTooltip": "Marcar todo como leído",
+  "notificationsEmptyTitle": "Sin notificaciones",
+  "notificationsEmptySubtitle": "Estás al día",
+  "notificationsErrorTitle": "No pudimos cargar tus notificaciones",
+  "notificationsErrorSubtitle": "Deslizá hacia abajo para reintentar",
+  "premiumPaywallCloseTooltip": "Cerrar",
+  "premiumPaywallTitle": "Llevá tu hogar\nal siguiente nivel",
+  "premiumPaywallSubtitle": "Desbloqueá todas las funciones pro y simplificá la vida en equipo.",
+  "premiumBenefitAdvancedStats": "Estadísticas Avanzadas",
+  "premiumBenefitAdvancedStatsDesc": "Analizá tus gastos y tareas por categoría con gráficos detallados.",
+  "premiumBenefitUnlimitedHouseholds": "Hogares Ilimitados",
+  "premiumBenefitUnlimitedHouseholdsDesc": "Creá múltiples hogares para tu pareja, familia, amigos o proyectos.",
+  "premiumBenefitFullCustomization": "Personalización Completa",
+  "premiumBenefitFullCustomizationDesc": "Accedé a temas premium, colores únicos y widgets personalizados.",
+  "premiumRestorePurchases": "Restaurar compras",
+  "premiumFreeTrialAvailable": "Prueba Gratis Disponible",
+  "premiumActivateButton": "Activar Premium",
+  "premiumTestingModeLabel": "Modo testing · sin cargo",
+  "premiumSavePercent": "Ahorrá 20%",
+  "premiumAlreadyActiveTitle": "¡Ya sos Premium!",
+  "premiumAlreadyActiveBody": "Gracias por apoyar el desarrollo de HomeSync.",
+  "premiumContinueButton": "Continuar",
+  "premiumDeactivateTesting": "Desactivar Premium (testing)",
+  "premiumStoreErrorTitle": "Error al conectar con la tienda",
+  "premiumDeveloperModeButton": "Modo Desarrollador: Activar Premium",
+  "faqSheetTitle": "Preguntas Frecuentes",
+  "faqSheetSubtitle": "Todo lo que necesitás saber sobre HomeSync",
+  "faqHowSharedHome": "¿Cómo funciona el hogar compartido?",
+  "faqHowSharedHomeAnswer": "HomeSync está pensado para parejas y personas que conviven. Cuando te unís a un hogar con un código, ambos comparten la misma lista de tareas, gastos y ahorros. Todo lo que hace uno se refleja para el otro.",
+  "faqWhatCoins": "¿Para qué sirven los Coins?",
+  "faqWhatCoinsAnswer": "Los Coins son la recompensa por completar tareas. Podés usarlos en la sección de premios para canjear vouchers creados por tu pareja, como una cena romántica o un día de descanso.",
+  "faqWhatWeeklyDuels": "¿Qué son los Duelos Semanales?",
+  "faqWhatWeeklyDuelsAnswer": "Cada semana empieza un duelo de XP nuevo. El miembro que complete más tareas y gane más puntos de experiencia será el ganador. Es una forma divertida de motivarse mutuamente.",
+  "faqHowEarnXp": "¿Cómo gano XP?",
+  "faqHowEarnXpAnswer": "Ganás XP cada vez que completás una tarea. Las tareas más difíciles o importantes suelen dar más XP. Subir de nivel muestra tu progreso dentro del hogar.",
+  "faqHowFinancesWork": "¿Cómo funcionan las finanzas?",
+  "faqHowFinancesWorkAnswer": "En HomeSync podés registrar gastos reales y también anticipar gastos que aún no pagaste. Los gastos confirmados son los que afectan el balance real entre ustedes. Los pendientes sirven como recordatorio y proyección, pero no cambian la deuda hasta que se paguen.",
+  "faqHowRecurringCount": "¿Cómo cuentan los gastos recurrentes y el balance estimado?",
+  "faqHowRecurringCountAnswer": "Un gasto recurrente nuevo arranca desde su primera fecha válida. Si lo creás antes o en la fecha de vencimiento, puede contar este mes. Si lo creás después, arranca en el próximo ciclo. \"Tu parte pendiente\" muestra solo lo que te corresponde según la división, y \"Balance estimado\" usa tu balance actual menos esa parte pendiente.",
+  "faqWhatSpecialEvents": "¿Qué son los Eventos Especiales?",
+  "faqWhatSpecialEventsAnswer": "Cada semana aparece un desafío de pareja en la tienda. Son actividades diseñadas para fortalecer la relación. Cuando los completan, ambos reciben Coins y desbloquean medallas en su perfil de logros.",
+  "faqLevelsAndAchievements": "¿Niveles y logros?",
+  "faqLevelsAndAchievementsAnswer": "A medida que ganás XP, subís de nivel. En la sección de estadísticas podés ver tus logros, que son medallas por hitos alcanzados, como completar 50 tareas o ganar desafíos semanales.",
+  "feedbackThanksBug": "¡Gracias por reportarlo!",
+  "feedbackThanksSuggestion": "¡Gracias por la idea!",
+  "feedbackReviewBug": "Lo vamos a revisar en breve.",
+  "feedbackConsiderSuggestion": "Lo vamos a tener en cuenta.",
+  "feedbackSendError": "No se pudo enviar. Intentá de nuevo.",
+  "feedbackBugTitlePlaceholder": "¿Qué pasó?",
+  "feedbackSuggestionTitlePlaceholder": "¿Qué mejorarías?",
+  "feedbackBugHint": "Ej: La pantalla de gastos no carga",
+  "feedbackSuggestionHint": "Ej: Filtrar tareas por semana",
+  "feedbackBugDescHint": "Descripción opcional: pasos para reproducirlo, qué esperabas ver...",
+  "feedbackSuggestionDescHint": "Descripción opcional: contexto, por qué sería útil...",
+  "feedbackSendBugReport": "Enviar reporte",
+  "feedbackSendSuggestion": "Enviar sugerencia",
+  "feedbackReportErrorOption": "Reportar error",
+  "feedbackSuggestImprovementOption": "Sugerir mejora",
+  "membersTitle": "Miembros",
+  "membersSubtitle": "{count, plural, =1{1 persona en tu hogar} other{{count} personas en tu hogar}}",
+  "membersAdminBadge": "Admin",
+  "membersRolePickerTitle": "Rol de {memberName}",
+  "@membersRolePickerTitle": {
+    "description": "Title of the role picker sheet for a member.",
+    "placeholders": {
+      "memberName": {
+        "type": "String"
+      }
+    }
+  },
+  "membersRolePickerSubtitle": "Padres y tutores pueden aprobar tareas. Adolescentes y chicos envían sus tareas para revisión.",
+  "membersRoleParent": "Padre/Madre",
+  "membersRoleGuardian": "Tutor/a",
+  "membersRoleTeen": "Adolescente",
+  "membersRoleChild": "Chico/a",
+  "membersRoleParentGuardianDesc": "Aprueba tareas, administra el hogar.",
+  "membersRoleTeenDesc": "Crea sus tareas, pero las completa bajo revisión.",
+  "membersRoleChildDesc": "Solo completa sus tareas, siempre bajo revisión.",
+  "membersRoleUpdateError": "No se pudo cambiar el rol: {message}",
+  "@membersRoleUpdateError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "membersRoleUpdated": "Rol actualizado",
+  "membersInviteTitle": "Invitar miembro",
+  "membersInviteSubtitle": "Agregá otra persona al hogar con un código de invitación.",
+  "shoppingSearchHint": "Necesito...",
+  "shoppingListTitle": "Lista actual",
+  "shoppingAllDone": "Todo listo",
+  "shoppingListResolved": "Lista resuelta",
+  "shoppingEmptyFirstLineDone": "La heladera está llena.\n¿Necesitás algo hoy?",
+  "shoppingEmptyFirstLineBought": "Todo comprado.\n¿Querés agregar algo más?",
+  "shoppingEmptyHint": "Agregá productos usando las categorías\no la barra de búsqueda abajo.",
+  "shoppingRecentSection": "Comprar de nuevo",
+  "shoppingCategoriesSection": "Categorías",
+  "shoppingProductsBought": "{count, plural, =1{1 artículo comprado} other{{count} artículos comprados}}",
+  "@shoppingProductsBought": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "shoppingScanReceipt": "Escanear ticket y registrar gasto",
+  "shoppingItemNameHint": "Nombre del producto",
+  "shoppingDeleteTooltip": "Eliminar",
+  "shoppingCategoryLabel": "Categoría",
+  "shoppingAddToList": "Agregar a la lista",
+  "shoppingSaveChanges": "Guardar cambios",
+  "rewardsTabDuel": "Duelo",
+  "rewardsTabPrizes": "Premios",
+  "rewardsLoadMore": "Cargar más",
+  "rewardsLoading": "Cargando premios...",
+  "rewardsLoadError": "No pudimos cargar premios.\n{error}",
+  "@rewardsLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsProposalsSection": "Propuestas",
+  "rewardsPendingApproval": "Deseos pendientes de aprobación. Tocá una propuesta para revisarla.",
+  "rewardsStatusPending": "Pendiente",
+  "rewardsStatusReview": "Revisar",
+  "rewardsWaitingPartnerDecision": "Esperando una decisión de tu pareja.",
+  "rewardsCoinsAvailable": "{count} coins disponibles",
+  "@rewardsCoinsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsCoinsAvailableShort": "{count} coins",
+  "@rewardsCoinsAvailableShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsCoinsAvailableToRedeem": "Disponibles para canjear ahora",
+  "rewardsBalance": "Saldo",
+  "rewardsDeleteTooltip": "Eliminar recompensa",
+  "rewardsEmptyBoutique": "Boutique vacía",
+  "rewardsEmptyNoPrizes": "Todavía no hay premios cargados en esta casa.",
+  "rewardsLoadSuggested": "Cargar premios sugeridos",
+  "rewardsOrCreateCustom": "O crear un premio personalizado",
+  "rewardsAddNewDesirePrompt": "¿Querés sumar un deseo nuevo?",
+  "rewardsAddNewDesireHint": "Proponelo y tu compañero podrá aprobarlo para que aparezca en la tienda.",
+  "rewardsSuggestNewDesire": "Proponer un deseo nuevo",
+  "rewardsChallengeCompletePrompt": "¿Completaron el desafío?",
+  "rewardsChallengeCompleteBody": "Qué alegría. Al confirmar, ambos recibirán {count} coins.",
+  "@rewardsChallengeCompleteBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsNotYet": "Aún no",
+  "rewardsYesWeDid": "Sí, lo hicimos",
+  "rewardsChallengeTitle": "Desafío: {title}",
+  "@rewardsChallengeTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsChallengeCompleted": "Desafío completado",
+  "rewardsChallengeCompletedBody": "Ambos ganaron {count} coins. Sigan cultivando su conexión.",
+  "@rewardsChallengeCompletedBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsChallengeError": "Error al completar el desafío: {error}",
+  "@rewardsChallengeError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsDeletePrompt": "¿Eliminar premio?",
+  "rewardsDeleteBody": "Se eliminará \"{title}\" de la boutique.",
+  "@rewardsDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsInsufficientCoins": "Coins insuficientes. A completar tareas.",
+  "rewardsRedeemPrompt": "¿Canjear este premio?",
+  "rewardsRedeem": "Canjear",
+  "rewardsRedeemed": "Premio canjeado",
+  "rewardsRedeemedBody": "Disfruta de \"{title}\". El amor también vive en los pequeños detalles.",
+  "@rewardsRedeemedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsApprovalReason": "Motivo para aprobarlo",
+  "rewardsCostLabel": "Costo: {cost} coins",
+  "@rewardsCostLabel": {
+    "placeholders": {
+      "cost": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsSuggestTitle": "Proponer un deseo",
+  "rewardsNewHouseReward": "Nuevo premio de la casa",
+  "rewardsTitleLabel": "TÍTULO",
+  "rewardsReasonLabel": "POR QUÉ DEBERÍA APROBARLO",
+  "rewardsDescriptionLabel": "DESCRIPCIÓN",
+  "rewardsCostFieldLabel": "COSTO",
+  "rewardsCategoryFieldLabel": "CATEGORÍA",
+  "rewardsCostHint": "Costo en coins",
+  "rewardsPendingReview": "Pendientes de aprobación",
+  "rewardsPendingReviewSubtitle": "Premios propuestos que todavía necesitan decisión.",
+  "rewardsForKids": "Premios para chicos",
+  "rewardsForKidsSubtitle": "Recompensas pensadas para motivar y celebrar avances.",
+  "rewardsForAdults": "Premios para adultos",
+  "rewardsForAdultsSubtitle": "Toman el lenguaje visual y emocional de la boutique de pareja.",
+  "rewardsFamilyPlans": "Planes familiares",
+  "rewardsFamilyPlansSubtitle": "Premios y salidas para disfrutar entre todos.",
+  "rewardsForYou": "Premios para vos",
+  "rewardsForYouSubtitle": "Elegí qué querés conseguir con tus coins.",
+  "rewardsPlansTogether": "Planes en familia",
+  "rewardsPlansTogetherSubtitle": "Premios para disfrutar juntos.",
+  "rewardsChildStoreTitle": "Mi tienda",
+  "rewardsFamilyStoreTitle": "Tienda del hogar",
+  "rewardsNewPrizeLabel": "Nuevo premio",
+  "rewardsEmptyNoChildPrizes": "Todavía no hay premios para chicos.",
+  "rewardsEmptyNoAdultPrizes": "Todavía no hay premios para adultos.",
+  "rewardsEmptyNoFamilyPlans": "Todavía no hay planes familiares cargados.",
+  "rewardsEmptyNoFamilyPlansChild": "Todavía no hay planes familiares disponibles.",
+  "rewardsEditPrize": "Editar premio",
+  "rewardsNewFamilyPrize": "Nuevo premio familiar",
+  "rewardsPrizeTitleField": "Título del premio",
+  "rewardsPrizeDescriptionField": "Descripción breve",
+  "rewardsCostInCoinsField": "Costo en monedas",
+  "rewardsTargetAudience": "Dirigido a",
+  "rewardsWholeFamily": "Toda la familia",
+  "rewardsAdults": "Adultos",
+  "rewardsKids": "Chicos",
+  "rewardsIconLabel": "Icono",
+  "rewardsSaveChanges": "Guardar cambios",
+  "rewardsSavePrize": "Guardar premio",
+  "rewardsApprovedSnack": "\"{title}\" quedó aprobado.",
+  "@rewardsApprovedSnack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsDeleteDialogTitle": "Eliminar premio",
+  "rewardsDeleteDialogBody": "Se va a quitar \"{title}\" de la tienda.",
+  "@rewardsDeleteDialogBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsPrizeCostCoins": "{cost} monedas",
+  "@rewardsPrizeCostCoins": {
+    "placeholders": {
+      "cost": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsRemovePrize": "Quitar premio",
+  "rewardsNotEnoughCoins": "No te alcanzan las monedas todavía.",
+  "rewardsRedeemDialogTitle": "Canjear premio",
+  "rewardsRedeemDialogBody": "¿Querés canjear \"{title}\" por {cost} monedas?",
+  "@rewardsRedeemDialogBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsRedeemedSnack": "Canjeaste \"{title}\".",
+  "@rewardsRedeemedSnack": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "rewardsChildCoinPurse": "Tu bolsita de coins",
+  "rewardsCurrentBalance": "Balance actual",
+  "rewardsYourCoins": "Tus monedas",
+  "rewardsBalanceAmount": "{balance} monedas",
+  "@rewardsBalanceAmount": {
+    "placeholders": {
+      "balance": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsChildBalanceHint": "Cuando un adulto aprueba tus misiones, crece.",
+  "rewardsEmptyBoutiqueAdmin": "Cargá premios sugeridos o creá el primer catálogo del hogar.",
+  "rewardsEmptyBoutiqueNonAdmin": "Todavía no hay premios disponibles en la tienda del hogar.",
+  "rewardsLoadInitialCatalog": "Cargar catálogo inicial",
+  "rewardsReviewPill": "Revisar",
+  "rewardsRemove": "Quitar",
+  "rewardsApprove": "Aprobar",
+  "rewardsProposalStatusWaiting": "{count} coins · esperando respuesta",
+  "@rewardsProposalStatusWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardsProposalStatusAction": "{count} coins · tocá para aprobar o quitar",
+  "@rewardsProposalStatusAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleChallengeWeeklyPill": "Especial semanal {number} de {total}",
+  "@coupleChallengeWeeklyPill": {
+    "description": "Pill label on the couple challenge card indicating which weekly special this is.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleChallengeExpandTooltip": "Expandir",
+  "coupleChallengeShowLess": "Ver menos",
+  "coupleChallengeShowMore": "Ver detalles completos",
+  "coupleChallengeSharedReward": "Recompensa compartida",
+  "coupleChallengeSharedRewardBody": "Si lo completan, ambos reciben {count} coins.",
+  "@coupleChallengeSharedRewardBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coupleChallengeWeDidIt": "Lo hicimos",
+  "familyRewardsCoinsLabel": "monedas",
+  "statsTabWeek": "Semana",
+  "statsTabEvolution": "Evolución",
+  "statsTabAchievements": "Logros",
+  "statsRetry": "Reintentar",
+  "statsHouseholdSummary": "Resumen del hogar",
+  "statsTasks": "Tareas",
+  "statsXP": "XP",
+  "statsCoins": "Coins",
+  "statsWeeklyHistory": "Historial semanal",
+  "statsVictoryHistory": "Historial de victorias",
+  "statsPrivacyMessage": "Las estadísticas son privadas de tu hogar. Solo vos y tu pareja pueden ver estos datos.",
+  "statsPrivacyDetailed": "Tus datos de progreso son privados y solo vos podés ver este historial detallado.",
+  "statsPrivacyFull": "Las estadísticas son totalmente privadas de tu hogar. Solo vos y tu pareja pueden ver estos datos.",
+  "statsWeeklyDuel": "Duelo semanal",
+  "statsEmptyTitle": "Todavía no hay datos",
+  "statsEmptySubtitle": "Completá algunas tareas para ver tus áreas de dominio.",
+  "statsRefreshButton": "Actualizar datos",
+  "weeklyWinnerEmptyTitle": "Todavía no hay ganador semanal",
+  "weeklyWinnerEmptyBody": "Completá tareas esta semana y el duelo empezará a tomar forma.",
+  "weeklyWinnerWeeklyClose": "CIERRE SEMANAL",
+  "weeklyWinnerTitle": "Ganador semanal",
+  "weeklyWinnerSubtitle": "Así terminó el duelo semanal entre ustedes.",
+  "weeklyWinnerCardSubtitle": "Terminó adelante en XP y se llevó el cierre semanal.",
+  "weeklyWinnerCoinsReward": "+20 coins",
+  "weeklyWinnerSecondPlace": "Segundo puesto",
+  "weeklyWinnerRankingTitle": "Ranking semanal",
+  "weeklyWinnerFallbackWinner": "Ganador",
+  "weeklyWinnerFallbackLoser": "Perdedor",
+  "weeklyWinnerFallbackParticipant": "Participante",
+  "weeklyWinnerFallbackPlayer": "Jugador",
+  "weeklyWinnerClose": "Cerrar",
+  "weeklyWinnerContinue": "Continuar",
+  "loveNoteDialogTitle": "Nueva nota de amor",
+  "loveNoteHint": "Escribí algo tierno...",
+  "loveNoteSent": "Nota enviada con amor",
+  "loveNoteSendMessageTitle": "Enviar mensaje a tu pareja",
+  "loveNotePremiumHintActive": "Sorprendé con una nota especial hoy ✨",
+  "loveNotePremiumHintInactive": "Función Premium. Desbloqueala para enviar notas.",
+  "weeklyProgressTitle": "Progreso semanal",
+  "weeklyProgressSubtitle": "Seguí cómo viene la semana, quién tomó ventaja y cuánto ritmo llevan juntos.",
+  "weeklyProgressWeekLabel": "Semana actual · {weekRange}",
+  "@weeklyProgressWeekLabel": {
+    "placeholders": {
+      "weekRange": {
+        "type": "String"
+      }
+    }
+  },
+  "personalEvolutionTitle": "Tu evolución personal",
+  "streakLabel": "Racha",
+  "streakDaysValue": "{days} días",
+  "@streakDaysValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "streakSubtitle": "¡Vas con todo!",
+  "levelLabel": "Nivel",
+  "levelXpToNext": "{xp} XP para subir",
+  "@levelXpToNext": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "progressEmptyTitle": "Empezá a completar tareas\npara ver tu progreso.",
+  "categoriesDominance": "Dominio por categoría",
+  "categoriesBreakdown": "Desglose detallado",
+  "categoriesBalanceTip": "Balancear las categorías ayuda a mantener un hogar más armonioso y divertido.",
+  "categoriesImpactDistribution": "DISTRIBUCIÓN DE IMPACTO",
+  "categoriesTasksCount": "{count} TAREAS",
+  "@categoriesTasksCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesCompletedCount": "{count} completadas",
+  "@categoriesCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesXpTotal": "XP TOTAL",
+  "achievementsTitle": "Tus medallas",
+  "achievementsCoupleChallenges": "Desafíos de pareja",
+  "achievementsIconicMoments": "Momentos icónicos",
+  "duelHistoryLastWeek": "Semana pasada",
+  "duelVsText": " vs ",
+  "rewardsTitleRequiredError": "Escribe el nombre del deseo.",
+  "rewardsTitleMinLengthError": "Usa al menos 3 caracteres.",
+  "rewardsTitleHint": "Ej: Masaje de 20 minutos",
+  "rewardsTargetTypeAdult": "Adultos",
+  "rewardsTargetTypeChild": "Chicos",
+  "rewardsTargetTypeFamily": "Familia",
+  "rewardsCostValidationInvalid": "Ingresá un costo válido.",
+  "rewardsCostValidationMin": "Debe costar al menos 1 coin.",
+  "rewardsDescriptionSuggestionHint": "Explicá por qué tu pareja debería aprobar este deseo.",
+  "rewardsDescriptionPrizeHint": "Un detalle corto para describir el premio.",
+  "rewardsValidationMinLength": "Contá un poco más para que sea fácil evaluarlo.",
+  "loveNoteSendTitle": "Enviar mensaje a tu pareja",
+  "loveNoteSendSubtitle": "Sorprendé con una nota especial hoy.",
+  "loveNotePremiumFeature": "Función premium. Desbloqueala para enviar notas.",
+  "statsWeeklyProgressTitle": "Progreso semanal",
+  "statsWeeklyProgressSubtitle": "Seguí cómo viene la semana, quién tomó ventaja y cuánto ritmo llevan juntos.",
+  "faceoffWeeklyDuelLabel": "DUELO SEMANAL",
+  "faceoffHiddenScoreTitle": "Tu pareja juega con marcador oculto",
+  "faceoffHiddenScoreSubtitle": "Vos ves tu propio avance. El resultado real se descubre al cierre de la semana.",
+  "faceoffYouLabel": "Vos",
+  "faceoffPartnerLabel": "Pareja",
+  "faceoffXpValue": "{xp} XP",
+  "@faceoffXpValue": {
+    "description": "XP value shown on the weekly duel card.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffHiddenXp": "XP oculta",
+  "faceoffWeeklyAdvantage": "Ventaja semanal",
+  "faceoffHiddenScore": "Marcador oculto",
+  "faceoffCurrentXpCounts": "Tus {xp} XP ya cuentan. La XP de tu pareja queda oculta hasta el domingo.",
+  "@faceoffCurrentXpCounts": {
+    "description": "Helper text under the weekly duel hidden-score bar.",
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "faceoffWeeklyRhythm": "Ritmo semanal",
+  "faceoffClosesToday": "Cierra hoy",
+  "faceoffDaysRemaining": "{days, plural, =1{1 día restante} other{{days} días restantes}}",
+  "@faceoffDaysRemaining": {
+    "description": "Remaining days until the weekly duel closes.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCurrentWeek": "Semana actual",
+  "statsNoDataMessage": "Empezá a completar tareas para ver tu progreso.",
+  "statsStreak": "Racha",
+  "statsStreakDays": "{count} días",
+  "statsStreakMessage": "¡Vas con todo!",
+  "statsLevel": "Nivel",
+  "statsXPToNextLevel": "{count} XP para subir",
+  "statsNoDataTitle": "Todavía no hay datos",
+  "statsNoDataSubtitle": "Completá algunas tareas para ver tus áreas de dominio.",
+  "commonRefresh": "Actualizar datos",
+  "rewardsChallengeCompleteConfirm": "Sí, lo hicimos",
+  "rewardsWaitingResponse": "esperando respuesta",
+  "rewardsTapToApprove": "toca para aprobar o quitar",
+  "rewardsCostCoins": "{cost} coins",
+  "householdSocialHubYourRole": "Tu rol: {role}",
+  "householdSocialHubRoleFallback": "Roles y premios listos para organizar la semana.",
+  "householdSocialHubStoreButton": "Tienda",
+  "householdSocialHubTrackingTitle": "Seguimiento familiar",
+  "householdSocialHubTrackingSubtitle": "Avances por integrante y cierre semanal.",
+  "householdSocialHubShortcutMemberView": "Vista por miembro",
+  "householdSocialHubShortcutWeeklySummary": "Resumen semanal",
+  "householdSocialHubRankingPoints": "{count} pts",
+  "householdSocialHubRankingHidden": "Oculto",
+  "householdSocialHubRankingSurprise": "Sorpresa",
+  "householdSocialHubRankingLeader": "{name} viene liderando la semana.",
+  "householdSocialHubRankingHideHint": "Desde el jueves guardamos los puntos para revelar al ganador al cierre.",
+  "householdSocialHubRankingEmpty": "Completen tareas para sumar puntos",
+  "householdSocialHubRankingEmptyTab": "Nadie sumó puntos en {tab} todavía",
+  "householdSocialHubRankingTasksCount": "{count, plural, =1{1 tarea} other{{count} tareas}}",
+  "householdSocialHubMemberFallback": "Integrante",
+  "householdSocialHubLoading": "Cargando ranking...",
+  "householdSocialHubLoadError": "No pudimos cargar el ranking.",
+  "householdSocialHubRetry": "Reintentar",
+  "taskCategoryCleaningGeneral": "Limpieza general",
+  "@taskCategoryCleaningGeneral": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryKitchen": "Cocina",
+  "@taskCategoryKitchen": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryBedroom": "Dormitorio",
+  "@taskCategoryBedroom": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryBathroom": "Baño",
+  "@taskCategoryBathroom": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryCommonSpaces": "Espacios comunes",
+  "@taskCategoryCommonSpaces": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryLaundry": "Ropa",
+  "@taskCategoryLaundry": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryTrashRecycling": "Basura / reciclaje",
+  "@taskCategoryTrashRecycling": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryShoppingOrganization": "Compras / organización",
+  "@taskCategoryShoppingOrganization": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryPets": "Mascotas",
+  "@taskCategoryPets": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryOutdoorGarden": "Exterior / jardín",
+  "@taskCategoryOutdoorGarden": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryHomeMaintenance": "Mantenimiento del hogar",
+  "@taskCategoryHomeMaintenance": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryKidsCare": "Niños / cuidado",
+  "@taskCategoryKidsCare": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskCategoryHomeAdmin": "Administración del hogar",
+  "@taskCategoryHomeAdmin": {
+    "description": "Localized task category label from the system catalog."
+  },
+  "taskTemplateSweepFloors": "Barrer pisos",
+  "@taskTemplateSweepFloors": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateVacuumFloorsOrRugs": "Aspirar pisos o alfombras",
+  "@taskTemplateVacuumFloorsOrRugs": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateMopFloors": "Trapear / fregar pisos",
+  "@taskTemplateMopFloors": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateDustFurniture": "Limpiar polvo de muebles",
+  "@taskTemplateDustFurniture": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanWindows": "Limpiar ventanas",
+  "@taskTemplateCleanWindows": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateGeneralHouseTidying": "Orden general de la casa",
+  "@taskTemplateGeneralHouseTidying": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateDeepCleanGeneral": "Limpieza profunda general",
+  "@taskTemplateDeepCleanGeneral": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWashDishes": "Lavar los platos",
+  "@taskTemplateWashDishes": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateEmptyDishwasher": "Guardar / vaciar lavavajillas",
+  "@taskTemplateEmptyDishwasher": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCookSimpleMeal": "Cocinar comida sencilla",
+  "@taskTemplateCookSimpleMeal": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCookFullMeal": "Cocinar comida completa",
+  "@taskTemplateCookFullMeal": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateSetTable": "Poner la mesa",
+  "@taskTemplateSetTable": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateClearTable": "Levantar la mesa",
+  "@taskTemplateClearTable": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanCounters": "Limpiar mesada y superficies",
+  "@taskTemplateCleanCounters": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanFullKitchen": "Limpiar cocina completa",
+  "@taskTemplateCleanFullKitchen": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanFridge": "Limpiar heladera",
+  "@taskTemplateCleanFridge": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanOven": "Limpiar horno",
+  "@taskTemplateCleanOven": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateOrganizePantry": "Organizar despensa",
+  "@taskTemplateOrganizePantry": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateMakeBed": "Hacer la cama",
+  "@taskTemplateMakeBed": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTidyBedroom": "Ordenar habitación",
+  "@taskTemplateTidyBedroom": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateChangeSheets": "Cambiar sábanas",
+  "@taskTemplateChangeSheets": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateOrganizeCloset": "Ordenar placard",
+  "@taskTemplateOrganizeCloset": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateBedroomGeneralClean": "Limpieza general del dormitorio",
+  "@taskTemplateBedroomGeneralClean": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanToilet": "Limpiar inodoro",
+  "@taskTemplateCleanToilet": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanSink": "Limpiar lavamanos",
+  "@taskTemplateCleanSink": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanMirror": "Limpiar espejo",
+  "@taskTemplateCleanMirror": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanShowerTub": "Limpiar ducha / bañera",
+  "@taskTemplateCleanShowerTub": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateRestockBathroomSupplies": "Reponer papel higiénico o jabón",
+  "@taskTemplateRestockBathroomSupplies": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanFullBathroom": "Limpieza completa del baño",
+  "@taskTemplateCleanFullBathroom": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTidyLivingRoom": "Ordenar sala / living",
+  "@taskTemplateTidyLivingRoom": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanFurniture": "Limpiar muebles",
+  "@taskTemplateCleanFurniture": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanSofas": "Limpiar sillones",
+  "@taskTemplateCleanSofas": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanDiningTable": "Limpiar mesa del comedor",
+  "@taskTemplateCleanDiningTable": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanCommonArea": "Aspirar o limpiar área común",
+  "@taskTemplateCleanCommonArea": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWashLaundry": "Lavar ropa",
+  "@taskTemplateWashLaundry": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateHangLaundry": "Tender ropa",
+  "@taskTemplateHangLaundry": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateUseDryer": "Usar secadora",
+  "@taskTemplateUseDryer": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateFoldPutAwayLaundry": "Doblar y guardar ropa",
+  "@taskTemplateFoldPutAwayLaundry": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateIronClothes": "Planchar ropa",
+  "@taskTemplateIronClothes": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateChangeTowels": "Cambiar toallas",
+  "@taskTemplateChangeTowels": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateOrganizeWardrobe": "Organizar placard",
+  "@taskTemplateOrganizeWardrobe": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTakeOutTrash": "Sacar la basura",
+  "@taskTemplateTakeOutTrash": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateSortRecycling": "Separar reciclaje",
+  "@taskTemplateSortRecycling": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTakeRecycling": "Llevar reciclaje",
+  "@taskTemplateTakeRecycling": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateMakeShoppingList": "Hacer lista de compras",
+  "@taskTemplateMakeShoppingList": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateGoGroceryShopping": "Ir al supermercado",
+  "@taskTemplateGoGroceryShopping": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePutAwayGroceries": "Guardar compras",
+  "@taskTemplatePutAwayGroceries": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePlanWeeklyMenu": "Planificar menú semanal",
+  "@taskTemplatePlanWeeklyMenu": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateFeedPet": "Dar de comer a la mascota",
+  "@taskTemplateFeedPet": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWalkPet": "Pasear mascota",
+  "@taskTemplateWalkPet": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanPetArea": "Limpiar arenero / área",
+  "@taskTemplateCleanPetArea": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateBathePet": "Bañar mascota",
+  "@taskTemplateBathePet": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePetAreaGeneralClean": "Limpieza general de zona de mascota",
+  "@taskTemplatePetAreaGeneralClean": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateWaterPlants": "Regar plantas",
+  "@taskTemplateWaterPlants": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCleanPatioTerrace": "Limpiar patio / terraza",
+  "@taskTemplateCleanPatioTerrace": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateRakeLeaves": "Juntar hojas",
+  "@taskTemplateRakeLeaves": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateMowLawn": "Cortar césped",
+  "@taskTemplateMowLawn": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTidyGarden": "Ordenar jardín",
+  "@taskTemplateTidyGarden": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateChangeLightBulbs": "Cambiar bombillas",
+  "@taskTemplateChangeLightBulbs": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateSmallHomeRepair": "Pequeño arreglo del hogar",
+  "@taskTemplateSmallHomeRepair": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateCheckFilters": "Revisión de filtros",
+  "@taskTemplateCheckFilters": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateUnclogDrains": "Desatascar desagües",
+  "@taskTemplateUnclogDrains": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateMediumRepair": "Arreglo mediano",
+  "@taskTemplateMediumRepair": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateLargeRepair": "Arreglo grande",
+  "@taskTemplateLargeRepair": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateTidyToys": "Ordenar juguetes",
+  "@taskTemplateTidyToys": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateFeedKids": "Dar de comer",
+  "@taskTemplateFeedKids": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateHelpWithHomework": "Ayudar con tareas escolares",
+  "@taskTemplateHelpWithHomework": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateSchoolPickupDropoff": "Llevar o buscar del colegio",
+  "@taskTemplateSchoolPickupDropoff": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateBatheKids": "Bañar niños",
+  "@taskTemplateBatheKids": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePayBills": "Pagar facturas",
+  "@taskTemplatePayBills": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateReviewHouseholdExpenses": "Revisar gastos del hogar",
+  "@taskTemplateReviewHouseholdExpenses": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplateOrganizeDocuments": "Organizar documentos",
+  "@taskTemplateOrganizeDocuments": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "taskTemplatePlanHouseholdTasks": "Planificar tareas del hogar",
+  "@taskTemplatePlanHouseholdTasks": {
+    "description": "Localized task template title from the system catalog."
+  },
+  "addTaskOptionsAddedSnack": "\"{title}\" añadida",
+  "@addTaskOptionsAddedSnack": {
+    "description": "Snackbar shown after adding a suggested task template.",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Wash the dishes"
+      }
+    }
+  },
+  "recurringExpenseValidationTitleAmount": "Complet? t?tulo y monto v?lido.",
+  "recurringExpenseValidationPayer": "Eleg? qui?n suele abonarla para dejarla lista.",
+  "recurringExpenseDeleteTitle": "?Eliminar suscripci?n?",
+  "recurringExpenseDeleteBody": "Dejar? de aparecer en futuros meses.",
+  "recurringExpenseDetailEyebrow": "DETALLE",
+  "recurringExpenseDetailTitle": "Qu? se renueva cada mes",
+  "recurringExpenseDetailSubtitle": "Defin? el nombre y el monto para reconocerla r?pido.",
+  "recurringExpenseCalendarEyebrow": "CALENDARIO",
+  "recurringExpenseCalendarTitle": "Cu?ndo se registra",
+  "recurringExpenseCalendarSubtitle": "Elegimos el d?a habitual para programarla sola.",
+  "recurringExpenseCategoryEyebrow": "CATEGOR?A",
+  "recurringExpenseCategoryTitle": "D?nde encaja mejor",
+  "recurringExpenseCategorySubtitle": "Ayuda a ordenar Finanzas y mantener la lectura clara.",
+  "recurringExpenseSplitEyebrow": "REPARTO",
+  "recurringExpenseSplitTitle": "C?mo se reparte",
+  "recurringExpenseSplitSubtitle": "Defin? si se comparte en el hogar o si queda como personal.",
+  "recurringExpensePayerEyebrow": "PAGADOR",
+  "recurringExpensePayerTitle": "Qui?n suele abonarla",
+  "recurringExpensePayerSubtitle": "Esto deja una sugerencia lista para los pr?ximos meses.",
+  "recurringExpenseHeaderEditIncome": "Editar ingreso",
+  "recurringExpenseHeaderEditSubscription": "Editar suscripci?n",
+  "recurringExpenseHeaderNewIncome": "Nuevo ingreso fijo",
+  "recurringExpenseHeaderNewSubscription": "Nueva suscripci?n",
+  "recurringExpenseHeaderEditSubtitle": "Ajust? monto, categor?a y reparto para mantenerlo al d?a.",
+  "recurringExpenseHeaderNewIncomeSubtitle": "Se sumar? autom?ticamente a tu balance cada mes.",
+  "recurringExpenseHeaderNewSubscriptionSubtitle": "Dejala configurada y lista para que se registre sola todos los meses.",
+  "recurringExpenseDeleteIncome": "Eliminar ingreso",
+  "recurringExpenseDeleteSubscription": "Eliminar suscripci?n",
+  "recurringExpenseNameRequired": "Escrib? un nombre para reconocerla.",
+  "recurringExpenseNameMinLength": "Us? al menos 3 caracteres.",
+  "recurringExpenseNameLabel": "Nombre",
+  "recurringExpenseNameHint": "Ej: Netflix, alquiler o internet",
+  "recurringExpenseAmountLabel": "Monto por defecto",
+  "recurringExpenseSaveIncome": "Guardar ingreso",
+  "recurringExpenseSaveSubscription": "Guardar suscripci?n",
+  "recurringExpenseCategoryLabel": "Categor?a:",
+  "recurringExpenseSplitLabel": "Reparto de gasto:",
+  "recurringExpenseAmountInvalid": "Ingres? un monto v?lido.",
+  "recurringExpenseAmountPositive": "El monto debe ser mayor a cero.",
+  "recurringExpenseDayLabel": "Se cobra el d?a:",
+  "recurringExpenseRegularPayerLabel": "Pagador habitual:"
+  ,
+  "expensesNewItemsAddedCount": "{count, plural, =1{1 producto agregado a la lista} other{{count} productos agregados a la lista}}",
+  "@expensesNewItemsAddedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "expensesNewItemsDetectedTitle": "Productos nuevos detectados",
+  "expensesNewItemsDetectedSubtitle": "¿Los agregamos a la lista para la próxima?",
+  "expensesNewItemsIgnore": "Ignorar",
+  "expensesNewItemsAddToList": "Agregar {count} a lista",
+  "@expensesNewItemsAddToList": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "expensesPlannedPaymentTitle": "Confirmar pago",
+  "expensesPlannedPaymentSubtitle": "Vas a marcar \"{title}\" como pagado.",
+  "@expensesPlannedPaymentSubtitle": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "expensesPlannedPaymentAmountEyebrow": "MONTO EFECTIVO",
+  "expensesPlannedPaymentDateEyebrow": "FECHA DE PAGO",
+  "expensesDetailHeaderIncome": "Detalle de ingreso",
+  "expensesDetailHeaderSettlement": "Detalle de liquidación de balance",
+  "expensesDetailHeaderExpense": "Detalle de gasto",
+  "expensesDetailPaidBy": "Pagó {name}",
+  "@expensesDetailPaidBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "expensesDetailNoteLabel": "Nota:",
+  "expensesDetailPurchasedItems": "Ítems comprados",
+  "expensesDetailLabel": "Detalle",
+  "expensesDetailSplitLabel": "División",
+  "expensesDetailPaidLabel": "Pagó",
+  "expensesDetailTheirPartLabel": "Su parte",
+  "expensesDetailSplitEqual": "Dividido equitativamente",
+  "expensesDetailSplitPersonal": "Gasto solo",
+  "expensesRecurrentesDayOfMonth": "Día {day} de cada mes",
+  "@expensesRecurrentesDayOfMonth": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "expensesRecurrentesPremiumTitle": "Pagos recurrentes",
+  "expensesRecurrentesPremiumSubtitle": "Gestioná tus suscripciones, alquileres y servicios de forma automática con HomeSync Premium.",
+  "expensesRecurrentesPremiumCta": "SABER MÁS",
+  "expensesSavingsGoalNameLabel": "Nombre",
+  "expensesSavingsGoalNameHint": "¿Cuál es tu objetivo?",
+  "expensesSavingsGoalAmountLabel": "Monto objetivo",
+  "expensesSavingsGoalAmountHint": "¿Cuánto quieren juntar?"
+}

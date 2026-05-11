@@ -23,17 +23,18 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/screens/member_onboarding_screen.dart';
 import 'package:homesync_client/features/household/presentation/screens/setup_screen.dart';
-import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/onboarding/presentation/widgets/coachmark_overlay.dart';
+import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/custom_bottom_nav.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -217,7 +218,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final isProcessed = await rpc.isWeekProcessed();
       if (!isProcessed) {
         final ranking = await rpc.getWeeklyRanking();
-        if (ranking.isNotEmpty && (ranking.first['xp_earned'] ?? 0) > 0) {
+        final top = ranking.isNotEmpty
+            ? Map<String, dynamic>.from(ranking.first as Map)
+            : null;
+        if (top != null && (top['xp_earned'] as num? ?? 0) > 0) {
           setState(() => _showWeeklyWinner = true);
         }
       }
@@ -416,31 +420,35 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
                 toolbarHeight: 86,
                 actions: [
-                  AnimatedPress(
-                    scale: 0.92,
-                    onTap: () => _openSettings(context),
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 4),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: theme.surface.withValues(
-                          alpha: theme.isDarkMode ? 0.72 : 0.9,
-                        ),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: theme.border.withValues(
-                            alpha: theme.isDarkMode ? 0.46 : 0.72,
+                  SizedBox(
+                    width: 48,
+                    child: Center(
+                      child: AnimatedPress(
+                        scale: 0.92,
+                        onTap: () => _openSettings(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: theme.surface.withValues(
+                              alpha: theme.isDarkMode ? 0.72 : 0.9,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.border.withValues(
+                                alpha: theme.isDarkMode ? 0.46 : 0.72,
+                              ),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.settings_outlined,
+                            color: theme.textSecondary,
+                            size: 21,
                           ),
                         ),
                       ),
-                      child: Icon(
-                        Icons.settings_outlined,
-                        color: theme.textSecondary,
-                        size: 22,
-                      ),
                     ),
                   ),
-                  const SizedBox(width: 8),
                 ],
               ),
         body: Stack(
@@ -473,7 +481,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       return Text(title);
     }
 
-    final dateStr = DateFormat('EEEE, d MMM', 'es').format(DateTime.now());
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateStr = DateFormat('EEEE, d MMM', locale).format(DateTime.now());
     final capitalizedDate =
         dateStr.isEmpty ? '' : dateStr[0].toUpperCase() + dateStr.substring(1);
 
@@ -541,11 +550,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget _buildBottomNav() {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
     final navItems = visibleMainTabs(caps, currentMember: _currentMember)
         .where((tab) => tab != MainTab.stats)
         .map(
           (tab) => CustomBottomNavItem(
-            label: _labelForTab(tab, caps),
+            label: _labelForTab(tab, caps, t),
             index: indexForMainTab(caps, tab, currentMember: _currentMember),
             icon: _iconForTab(tab, caps, isSelected: false),
             selectedIcon: _iconForTab(tab, caps, isSelected: true),
@@ -567,37 +577,40 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   NavItemConfig _navConfigForTab(MainTab tab, BuildContext context) {
     final caps = ref.read(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
 
     return switch (tab) {
       MainTab.home => NavItemConfig(
-          title: 'Inicio',
+          title: t.mainTabHome,
           icon: Icons.home_rounded,
           screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
         ),
       MainTab.tasks => NavItemConfig(
-          title: 'Tareas',
+          title: t.mainTabTasks,
           icon: Icons.task_alt_rounded,
           screen: const TasksScreen(),
         ),
       MainTab.expenses => NavItemConfig(
-          title: 'Finanzas',
+          title: t.mainTabExpenses,
           icon: Icons.account_balance_wallet_rounded,
           screen: const ExpensesScreen(),
         ),
       MainTab.social => NavItemConfig(
-          title: caps.socialTabLabel,
+          title: caps.socialTabLabel(t),
           icon: caps.partnerIcon,
           screen: caps.usesCoupleRewardsExperience
               ? const CoupleSpaceScreen()
               : const HouseholdSocialHubScreen(),
         ),
       MainTab.stats => NavItemConfig(
-          title: 'Progreso',
+          title: t.mainTabProgress,
           icon: Icons.bar_chart_rounded,
           screen: const StatsScreen(),
         ),
       MainTab.shopping => NavItemConfig(
-          title: _currentMember?.isChild == true ? 'Tienda' : 'Compras',
+          title: _currentMember?.isChild == true
+              ? t.mainTabShoppingChild
+              : t.mainTabShopping,
           icon: _currentMember?.isChild == true
               ? Icons.storefront_rounded
               : Icons.shopping_cart_rounded,
@@ -638,15 +651,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     };
   }
 
-  String _labelForTab(MainTab tab, HouseholdCapabilities caps) {
+  String _labelForTab(
+    MainTab tab,
+    HouseholdCapabilities caps,
+    AppLocalizations t,
+  ) {
     return switch (tab) {
-      MainTab.home => 'Inicio',
-      MainTab.tasks => 'Tareas',
-      MainTab.expenses => 'Finanzas',
-      MainTab.social => caps.socialTabLabel,
-      MainTab.stats => 'Progreso',
-      MainTab.shopping =>
-        _currentMember?.isChild == true ? 'Tienda' : 'Compras',
+      MainTab.home => t.mainTabHome,
+      MainTab.tasks => t.mainTabTasks,
+      MainTab.expenses => t.mainTabExpenses,
+      MainTab.social => caps.socialTabLabel(t),
+      MainTab.stats => t.mainTabProgress,
+      MainTab.shopping => _currentMember?.isChild == true
+          ? t.mainTabShoppingChild
+          : t.mainTabShopping,
     };
   }
 

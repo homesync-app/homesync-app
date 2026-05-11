@@ -140,16 +140,30 @@ class ActivityChatBubble extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    if (type == 'reward')
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          'Premio canjeado',
+                          style: TextStyle(
+                            color: accent.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(top: 2.5),
-                          child: Icon(
-                            _activityIcon(type, category),
-                            size: 18,
-                            color: accent,
+                          padding: const EdgeInsets.only(top: 1.5),
+                          child: _activityLeading(
+                            type,
+                            category,
+                            data['reward_icon'] as String?,
+                            accent,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -212,6 +226,13 @@ class ActivityChatBubble extends ConsumerWidget {
                           _activityMetaPill(
                             label: '$coinsReward coins',
                             color: AppColors.sage,
+                            icon: Icons.monetization_on_rounded,
+                            theme: theme,
+                          ),
+                        if (type == 'reward' && _readInt(data['reward_cost']) != null)
+                          _activityMetaPill(
+                            label: '-${_readInt(data['reward_cost'])} coins',
+                            color: AppColors.accentGold,
                             icon: Icons.monetization_on_rounded,
                             theme: theme,
                           ),
@@ -319,14 +340,51 @@ class ActivityChatBubble extends ConsumerWidget {
     Color? resolvedCategoryColor,
   }) {
     if (type == 'expense') return const Color(0xFFF08B49);
+    if (type == 'reward') return AppColors.accentGold;
     if (resolvedCategoryColor != null) return resolvedCategoryColor;
     return dashboardCategoryAccent(context, category);
+  }
+
+  /// Leading visual for the bubble. For redeemed rewards we show the reward's
+  /// own emoji inside a soft gold chip — feels more celebratory than reusing
+  /// the generic task icon. Falls back to a gift icon if no emoji is set.
+  Widget _activityLeading(
+    String? type,
+    String? category,
+    String? rewardIcon,
+    Color accent,
+  ) {
+    if (type == 'reward') {
+      final emoji = (rewardIcon ?? '').trim();
+      return Container(
+        width: 26,
+        height: 26,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: emoji.isNotEmpty
+            ? Text(emoji, style: const TextStyle(fontSize: 15))
+            : Icon(Icons.card_giftcard_rounded, size: 15, color: accent),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 1),
+      child: Icon(
+        _activityIcon(type, category),
+        size: 18,
+        color: accent,
+      ),
+    );
   }
 
   IconData _activityIcon(String? type, String? category) {
     switch (type) {
       case 'expense':
         return Icons.receipt_long_rounded;
+      case 'reward':
+        return Icons.card_giftcard_rounded;
       case 'task':
         return dashboardCategoryIcon(category);
       default:

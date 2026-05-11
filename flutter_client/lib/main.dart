@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
@@ -30,7 +31,9 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -245,6 +248,7 @@ void main() async {
   };
 
   await initializeDateFormatting('es', null);
+  await initializeDateFormatting('en_US', null);
   final prefs = await SharedPreferences.getInstance();
 
   runApp(
@@ -280,6 +284,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   static const _minimumSplashDuration = Duration(milliseconds: 800);
   static const _criticalBootstrapTimeout = Duration(milliseconds: 2500);
   bool _startupReady = false;
+  String? _pendingAuthNavigation;
   late final FirebaseAnalyticsObserver _analyticsObserver;
   final RouteObserver<ModalRoute<void>> _breadcrumbObserver =
       BreadcrumbRouteObserver();
@@ -471,10 +476,50 @@ class _MyAppState extends ConsumerState<MyApp> {
     );
   }
 
+  void _navigateAfterAuthTransition(String target) {
+    if (_pendingAuthNavigation == target) return;
+    _pendingAuthNavigation = target;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _pendingAuthNavigation = null;
+        return;
+      }
+
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) {
+        log.e('Auth navigation failed: _navigatorKey.currentState is NULL');
+        _pendingAuthNavigation = null;
+        return;
+      }
+
+      if (target == 'login') {
+        navigator.pushNamedAndRemoveUntil('/__login__', (route) => false);
+      } else if (target == 'home') {
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => MainScreen(prefs: widget.prefs),
+          ),
+          (route) => false,
+        );
+      }
+
+      _pendingAuthNavigation = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final customPrimary = ref.watch(primaryColorProvider);
+    final locale = ref.watch(localeProvider);
+    if (locale != null) {
+      Intl.defaultLocale = locale.toLanguageTag();
+    } else {
+      // If null, it will follow the platform locale which Flutter handles via MaterialApp,
+      // but we help Intl a bit by using the first supported locale if no default is set.
+      Intl.defaultLocale = WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag();
+    }
     final authState = ref.watch(authStateProvider);
 
     // ── Reactive sign-out: imperatively navigate when auth state changes to
@@ -494,32 +539,13 @@ class _MyAppState extends ConsumerState<MyApp> {
 
       if ((prev?.isAuthenticated ?? true) && !curr.isAuthenticated) {
         log.i('Imperative sign-out: Navigating to Login');
-        Future.microtask(() {
-          final navigator = _navigatorKey.currentState;
-          if (navigator == null) {
-            log.e('Sign-out failed: _navigatorKey.currentState is NULL');
-            return;
-          }
-          navigator.pushNamedAndRemoveUntil('/__login__', (route) => false);
-        });
+        _navigateAfterAuthTransition('login');
         return;
       }
 
       if (!(prev?.isAuthenticated ?? false) && curr.isAuthenticated) {
         log.i('Imperative sign-in: Navigating to Home');
-        Future.microtask(() {
-          final navigator = _navigatorKey.currentState;
-          if (navigator == null) {
-            log.e('Sign-in failed: _navigatorKey.currentState is NULL');
-            return;
-          }
-          navigator.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => MainScreen(prefs: widget.prefs),
-            ),
-            (route) => false,
-          );
-        });
+        _navigateAfterAuthTransition('home');
       }
     });
 
@@ -531,6 +557,9 @@ class _MyAppState extends ConsumerState<MyApp> {
       theme: AppTheme.lightTheme(customPrimary: customPrimary),
       darkTheme: AppTheme.darkTheme(customPrimary: customPrimary),
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routes: {
         '/__login__': (_) => LoginScreen(prefs: widget.prefs),
       },

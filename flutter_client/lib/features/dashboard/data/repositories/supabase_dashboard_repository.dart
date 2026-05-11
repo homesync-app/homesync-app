@@ -111,8 +111,14 @@ class SupabaseDashboardRepository implements DashboardRepository {
               data['is_shared'] = metadata['is_shared'];
               data['split_type'] = metadata['split_type'];
             } else if (eventType == 'reward_redeemed') {
-              uiType = 'task';
-              data['title'] = item['title'] ?? 'Premio';
+              uiType = 'reward';
+              data['title'] = metadata['reward_title'] ??
+                  item['title'] ??
+                  'Premio canjeado';
+              data['reward_icon'] = metadata['reward_icon'] ?? metadata['icon'];
+              data['reward_cost'] = metadata['cost'] ??
+                  metadata['coins'] ??
+                  metadata['coin_cost'];
             } else {
               data['title'] = item['title'] ??
                   item['description'] ??
@@ -186,7 +192,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
               .order('created_at', ascending: false)
               .limit(30);
 
-      final mappedActivities = (response as List).map((item) {
+      final mappedActivities = (response as List)
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .map((item) {
         final eventType = item['event_type'] as String;
         final user = item['user'] as Map<String, dynamic>?;
         final creatorId = item['user_id'] as String?;
@@ -235,8 +243,14 @@ class SupabaseDashboardRepository implements DashboardRepository {
           data['is_shared'] = metadata['is_shared'];
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
-          uiType = 'task';
-          data['title'] = item['title'] ?? 'Premio';
+          uiType = 'reward';
+          data['title'] = metadata['reward_title'] ??
+              item['title'] ??
+              'Premio canjeado';
+          data['reward_icon'] = metadata['reward_icon'] ?? metadata['icon'];
+          data['reward_cost'] = metadata['cost'] ??
+              metadata['coins'] ??
+              metadata['coin_cost'];
         } else {
           data['title'] = item['title'] ??
               item['description'] ??

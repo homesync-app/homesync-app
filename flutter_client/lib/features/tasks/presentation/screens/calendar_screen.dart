@@ -7,6 +7,8 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -100,7 +102,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
 
     if (task.recurrenceType == null) {
-      return task.dueAt != null && _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
+      return task.dueAt != null &&
+          _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
     }
 
     if (normalizedDay.isBefore(anchor)) {
@@ -120,11 +123,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         if (!weekdays.contains(normalizedDay.weekday)) {
           return false;
         }
-        final anchorWeekStart = anchor.subtract(Duration(days: anchor.weekday - 1));
+        final anchorWeekStart =
+            anchor.subtract(Duration(days: anchor.weekday - 1));
         final dayWeekStart =
             normalizedDay.subtract(Duration(days: normalizedDay.weekday - 1));
-        final diffWeeks =
-            dayWeekStart.difference(anchorWeekStart).inDays ~/ 7;
+        final diffWeeks = dayWeekStart.difference(anchorWeekStart).inDays ~/ 7;
         return diffWeeks >= 0 && diffWeeks % interval == 0;
       case 'monthly':
         final monthDays = task.recurrenceMonthDays.isNotEmpty
@@ -138,7 +141,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         return diffMonths >= 0 && diffMonths % interval == 0;
       case 'custom':
         if (task.recurrenceWeekdays.isNotEmpty) {
-          final anchorWeekStart = anchor.subtract(Duration(days: anchor.weekday - 1));
+          final anchorWeekStart =
+              anchor.subtract(Duration(days: anchor.weekday - 1));
           final dayWeekStart =
               normalizedDay.subtract(Duration(days: normalizedDay.weekday - 1));
           final diffWeeks =
@@ -157,7 +161,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         final diffDays = normalizedDay.difference(anchor).inDays;
         return diffDays >= 0 && diffDays % interval == 0;
       default:
-        return task.dueAt != null && _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
+        return task.dueAt != null &&
+            _normalizeDate(task.dueAt!.toLocal()) == normalizedDay;
     }
   }
 
@@ -169,10 +174,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       backgroundColor: context.theme.scaffoldBackground,
       body: tasksAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
         error: (err, _) => Center(
-            child: Text('Error: $err',
-                style: const TextStyle(color: AppColors.error),),),
+          child: Text(
+            'Error: $err',
+            style: const TextStyle(color: AppColors.error),
+          ),
+        ),
         data: (tasks) {
           final scheduledTasks = _groupTasks(tasks);
 
@@ -211,7 +220,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildWeekHeader() {
     final theme = context.theme;
-    final monthFormat = DateFormat('MMMM yyyy', 'es');
+    final t = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toString();
+    final monthFormat = DateFormat('MMMM yyyy', localeTag);
     final startMonth = monthFormat.format(_weekStart);
     final monthYear = startMonth[0].toUpperCase() + startMonth.substring(1);
 
@@ -239,7 +250,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Semana de',
+                    t.calendarWeekOf,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -279,8 +290,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _buildArrowButton(
-      {required IconData icon, required VoidCallback onTap,}) {
+  Widget _buildArrowButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     final theme = context.theme;
     return AnimatedPress(
       onTap: onTap,
@@ -300,7 +313,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildDaySection(DateTime date, List<TaskModel> tasks, bool isToday) {
     final theme = context.theme;
-    final dayNameFull = DateFormat('EEEE', 'es').format(date);
+    final t = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toString();
+    final dayNameFull = DateFormat('EEEE', localeTag).format(date);
     final dayName = dayNameFull[0].toUpperCase() + dayNameFull.substring(1);
 
     return Column(
@@ -367,7 +382,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  'Sin tareas programadas',
+                  t.calendarNoTasksScheduled,
                   style: TextStyle(
                     color: theme.textMuted,
                     fontSize: 14,
@@ -378,11 +393,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
           )
         else
-          ...tasks.map((task) => _CalendarTaskCard(
-                task: task,
-                onEdit: () => widget.onEdit(task),
-                onSchedule: () => widget.onSchedule(task),
-              ),),
+          ...tasks.map(
+            (task) => _CalendarTaskCard(
+              task: task,
+              onEdit: () => widget.onEdit(task),
+              onSchedule: () => widget.onSchedule(task),
+            ),
+          ),
       ],
     );
   }
@@ -498,7 +515,10 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          task.title,
+                          localizedTaskTitle(
+                            AppLocalizations.of(context),
+                            task,
+                          ),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -524,7 +544,9 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             if (task.recurrenceType != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2,),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.accentTeal
                                       .withValues(alpha: 0.1),
@@ -545,8 +567,11 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                     ),
                   ),
                   if (isCompleted && !_isExpanded)
-                    const Icon(Icons.check_circle_rounded,
-                        color: AppColors.accentGreen, size: 24,),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.accentGreen,
+                      size: 24,
+                    ),
                 ],
               ),
               ClipRect(
@@ -571,7 +596,7 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             Expanded(
                               child: _buildActionTile(
                                 icon: Icons.edit_rounded,
-                                label: 'Editar',
+                                label: AppLocalizations.of(context).commonEdit,
                                 color: AppColors.primary,
                                 onTap: widget.onEdit,
                               ),
@@ -580,7 +605,8 @@ class _CalendarTaskCardState extends ConsumerState<_CalendarTaskCard> {
                             Expanded(
                               child: _buildActionTile(
                                 icon: Icons.schedule_rounded,
-                                label: 'Programar',
+                                label: AppLocalizations.of(context)
+                                    .tasksActionSchedule,
                                 color: AppColors.accentGold,
                                 onTap: widget.onSchedule,
                               ),

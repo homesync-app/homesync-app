@@ -32,62 +32,82 @@ class MockTaskRepository implements TaskRepository {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async {
     createTaskCalled = true;
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds, DateTime? completedAt,}) async {
+  Future<Either<Failure, TaskCompletionResult>> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     completeTaskCalled = true;
-    return right(const TaskCompletionResult(
-      success: true,
-      message: 'ok',
-      queued: false,
-      xpEarned: 20,
-    ),);
+    return right(
+      const TaskCompletionResult(
+        success: true,
+        message: 'ok',
+        queued: false,
+        xpEarned: 20,
+      ),
+    );
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> completeTasksBatch(
-      List<TaskModel> tasks,
-      {List<String>? userIds, DateTime? completedAt,}) async {
+    List<TaskModel> tasks, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     return right({'success': true});
   }
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-          {int limit = 100, int offset = 0,}) async =>
+  Future<Either<Failure, List<TaskModel>>> getTasks(
+    String householdId, {
+    int limit = 100,
+    int offset = 0,
+  }) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> updateSchedule(
-          String taskId, String? recurrenceType, {
-          int? recurrenceInterval,
-          List<int>? recurrenceWeekdays,
-          List<int>? recurrenceMonthDays,
-          String? assignedTo,
+    String taskId,
+    String? recurrenceType, {
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+    String? assignedTo,
   }) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> verifyTask(
-          String taskId, String verifiedByUserId,) async =>
+    String taskId,
+    String verifiedByUserId,
+  ) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> objectTask(
-          String taskId, String objectedByUserId,) async =>
+    String taskId,
+    String objectedByUserId,
+  ) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> editTask(
-          String taskId, Map<String, dynamic> updates,) async =>
+    String taskId,
+    Map<String, dynamic> updates,
+  ) async =>
       throw UnimplementedError();
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-          String activityId,) async =>
+    String activityId,
+  ) async =>
       throw UnimplementedError();
 }
 
@@ -119,15 +139,18 @@ class MockExpenseRepository implements ExpenseRepository {
       throw UnimplementedError();
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-          String householdId,) async =>
+    String householdId,
+  ) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-          String expenseId,) async =>
+    String expenseId,
+  ) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-          String householdId,) async =>
+    String householdId,
+  ) async =>
       throw UnimplementedError();
   @override
   Future<Either<Failure, void>> deleteExpense(String expenseId) async =>
@@ -143,26 +166,32 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-          String userId, String householdId,) async =>
+    String userId,
+    String householdId,
+  ) async =>
       throw UnimplementedError();
 
   @override
-  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(String householdId) async {
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+  Future<Either<Failure, Unit>> saveTemplate(
+      ExpenseTemplateModel template,) async {
     return const Right(unit);
   }
 
   @override
-  Future<Either<Failure, Unit>> toggleTemplateActivity(String templateId, bool isActive) async {
+  Future<Either<Failure, Unit>> toggleTemplateActivity(
+      String templateId, bool isActive,) async {
     return const Right(unit);
   }
 
@@ -177,7 +206,8 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+  Future<Either<Failure, Unit>> processRecurringExpenses(
+      String householdId,) async {
     return const Right(unit);
   }
 
@@ -207,13 +237,14 @@ void main() {
 
     test('Should call repository when task is active', () async {
       final task = TaskModel(
-          id: '1',
-          title: 'T',
-          status: TaskStatus.active,
-          xpReward: 10,
-          coinReward: 5,
-          householdId: 'h',
-          createdAt: DateTime.now(),);
+        id: '1',
+        title: 'T',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h',
+        createdAt: DateTime.now(),
+      );
 
       await useCase.call(task);
 
@@ -222,13 +253,14 @@ void main() {
 
     test('Should throw ValidationFailure when task is NOT active', () async {
       final task = TaskModel(
-          id: '1',
-          title: 'T',
-          status: TaskStatus.verified, // already done
-          xpReward: 10,
-          coinReward: 5,
-          householdId: 'h',
-          createdAt: DateTime.now(),);
+        id: '1',
+        title: 'T',
+        status: TaskStatus.verified, // already done
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h',
+        createdAt: DateTime.now(),
+      );
 
       final result = await useCase.call(task);
       expect(result.isLeft(), isTrue);
@@ -247,32 +279,35 @@ void main() {
 
     test('Should call repository with valid data', () async {
       await useCase.call(
-          title: 'Lavar platos',
-          category: 'kitchen',
-          difficulty: 'easy',
-          xpReward: 10,
-          coinReward: 5,);
+        title: 'Lavar platos',
+        category: 'kitchen',
+        difficulty: 'easy',
+        xpReward: 10,
+        coinReward: 5,
+      );
 
       expect(mockRepo.createTaskCalled, isTrue);
     });
 
     test('Should return Failure if category is empty', () async {
       final result = await useCase.call(
-          title: 'Title',
-          category: '',
-          difficulty: 'easy',
-          xpReward: 10,
-          coinReward: 5,);
+        title: 'Title',
+        category: '',
+        difficulty: 'easy',
+        xpReward: 10,
+        coinReward: 5,
+      );
       expect(result.isLeft(), isTrue);
     });
 
     test('Should return Failure if title is empty', () async {
       final result = await useCase.call(
-          title: '',
-          category: 'kitchen',
-          difficulty: 'easy',
-          xpReward: 10,
-          coinReward: 5,);
+        title: '',
+        category: 'kitchen',
+        difficulty: 'easy',
+        xpReward: 10,
+        coinReward: 5,
+      );
       expect(result.isLeft(), isTrue);
     });
   });
@@ -288,38 +323,41 @@ void main() {
 
     test('Should call repository with valid data', () async {
       await useCase.call(
-          householdId: 'h1',
-          title: 'Super',
-          amount: 100.0,
-          category: 'food',
-          paidBy: 'u1',
-          paidAt: DateTime.now(),
-          splitType: SplitType.equal,);
+        householdId: 'h1',
+        title: 'Super',
+        amount: 100.0,
+        category: 'food',
+        paidBy: 'u1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
 
       expect(mockRepo.saveExpenseCalled, isTrue);
     });
 
     test('Should return Failure if amount is zero or negative', () async {
       final result = await useCase.call(
-          householdId: 'h1',
-          title: 'Super',
-          amount: 0.0,
-          category: 'food',
-          paidBy: 'u1',
-          paidAt: DateTime.now(),
-          splitType: SplitType.equal,);
+        householdId: 'h1',
+        title: 'Super',
+        amount: 0.0,
+        category: 'food',
+        paidBy: 'u1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
       expect(result.isLeft(), isTrue);
     });
 
     test('Should return Failure if householdId is empty', () async {
       final result = await useCase.call(
-          householdId: '',
-          title: 'Super',
-          amount: 100.0,
-          category: 'food',
-          paidBy: 'u1',
-          paidAt: DateTime.now(),
-          splitType: SplitType.equal,);
+        householdId: '',
+        title: 'Super',
+        amount: 100.0,
+        category: 'food',
+        paidBy: 'u1',
+        paidAt: DateTime.now(),
+        splitType: SplitType.equal,
+      );
       expect(result.isLeft(), isTrue);
     });
   });

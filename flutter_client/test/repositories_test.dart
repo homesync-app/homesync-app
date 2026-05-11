@@ -27,14 +27,16 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-      String householdId,) async {
+    String householdId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return right(_expenses);
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-      String expenseId,) async {
+    String expenseId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     try {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
@@ -49,7 +51,8 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-      String householdId,) async {
+    String householdId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return right([
       const HouseholdBalanceModel(
@@ -118,7 +121,9 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-      String userId, String householdId,) async {
+    String userId,
+    String householdId,
+  ) async {
     return {
       'total_balance': 0.0,
       'pending_tasks': 0,
@@ -127,22 +132,26 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(String householdId) async {
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+  Future<Either<Failure, Unit>> saveTemplate(
+      ExpenseTemplateModel template,) async {
     return const Right(unit);
   }
 
   @override
-  Future<Either<Failure, Unit>> toggleTemplateActivity(String templateId, bool isActive) async {
+  Future<Either<Failure, Unit>> toggleTemplateActivity(
+      String templateId, bool isActive,) async {
     return const Right(unit);
   }
 
@@ -157,7 +166,8 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+  Future<Either<Failure, Unit>> processRecurringExpenses(
+      String householdId,) async {
     return const Right(unit);
   }
 
@@ -180,23 +190,31 @@ class MockTaskRepository implements TaskRepository {
   bool shouldFail = false;
 
   @override
-  Future<Either<Failure, List<TaskModel>>> getTasks(String householdId,
-      {int limit = 100, int offset = 0,}) async {
+  Future<Either<Failure, List<TaskModel>>> getTasks(
+    String householdId, {
+    int limit = 100,
+    int offset = 0,
+  }) async {
     if (shouldFail) return const Left(ServerFailure('Mock error'));
     return right(_tasks);
   }
 
   @override
-  Future<Either<Failure, TaskCompletionResult>> completeTask(TaskModel task,
-      {List<String>? userIds, DateTime? completedAt,}) async {
+  Future<Either<Failure, TaskCompletionResult>> completeTask(
+    TaskModel task, {
+    List<String>? userIds,
+    DateTime? completedAt,
+  }) async {
     if (shouldFail) return const Left(ServerFailure('Mock error'));
-    return right(TaskCompletionResult(
-      success: true,
-      message: 'ok',
-      queued: false,
-      xpEarned: task.xpReward,
-      coinsEarned: task.coinReward,
-    ),);
+    return right(
+      TaskCompletionResult(
+        success: true,
+        message: 'ok',
+        queued: false,
+        xpEarned: task.xpReward,
+        coinsEarned: task.coinReward,
+      ),
+    );
   }
 
   @override
@@ -210,12 +228,16 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> verifyTask(
-          String taskId, String verifiedByUserId,) async =>
+    String taskId,
+    String verifiedByUserId,
+  ) async =>
       const Right(null);
 
   @override
   Future<Either<Failure, void>> objectTask(
-          String taskId, String objectedByUserId,) async =>
+    String taskId,
+    String objectedByUserId,
+  ) async =>
       const Right(null);
 
   @override
@@ -225,7 +247,12 @@ class MockTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateSchedule(String taskId, String? recurrenceType, {int? recurrenceInterval, List<int>? recurrenceWeekdays, List<int>? recurrenceMonthDays, String? assignedTo}) async =>
+  Future<Either<Failure, void>> updateSchedule(
+          String taskId, String? recurrenceType,
+          {int? recurrenceInterval,
+          List<int>? recurrenceWeekdays,
+          List<int>? recurrenceMonthDays,
+          String? assignedTo,}) async =>
       const Right(null);
 
   @override
@@ -243,30 +270,37 @@ class MockTaskRepository implements TaskRepository {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async {
-    _tasks.add(TaskModel(
-      id: 'task-${_tasks.length + 1}',
-      title: title,
-      description: description,
-      category: category,
-      difficulty: TaskDifficulty.fromString(difficulty),
-      status: TaskStatus.active,
-      xpReward: xpReward,
-      coinReward: coinReward,
-      householdId: 'household-1',
-      createdAt: DateTime.now(),
-    ),);
+    _tasks.add(
+      TaskModel(
+        id: 'task-${_tasks.length + 1}',
+        title: title,
+        description: description,
+        category: category,
+        difficulty: TaskDifficulty.fromString(difficulty),
+        status: TaskStatus.active,
+        xpReward: xpReward,
+        coinReward: coinReward,
+        householdId: 'household-1',
+        createdAt: DateTime.now(),
+      ),
+    );
     return const Right(null);
   }
 
   @override
   Future<Either<Failure, void>> editTask(
-          String taskId, Map<String, dynamic> updates,) async =>
+    String taskId,
+    Map<String, dynamic> updates,
+  ) async =>
       const Right(null);
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> undoTaskCompletion(
-          String activityId,) async =>
+    String activityId,
+  ) async =>
       right({'success': true});
 }
 
@@ -392,11 +426,13 @@ void main() {
       final tasksResult = await repo.getTasks('household-1');
       final tasks = tasksResult.getOrElse((_) => []);
       final result = await repo.completeTask(tasks.first, userIds: ['user-1']);
-      final data = result.getOrElse((_) => const TaskCompletionResult(
-            success: false,
-            message: '',
-            queued: false,
-          ),);
+      final data = result.getOrElse(
+        (_) => const TaskCompletionResult(
+          success: false,
+          message: '',
+          queued: false,
+        ),
+      );
 
       expect(data.xpEarned, equals(50));
       expect(data.coinsEarned, equals(25));

@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class RecurrentesTab extends ConsumerWidget {
@@ -26,13 +27,15 @@ class RecurrentesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
-    if (!isPremium) return _buildPremiumLockedRecurrentes();
+    if (!isPremium) return _buildPremiumLockedRecurrentes(context);
 
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
 
     return templatesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(
+        child: Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
+      ),
       data: (templates) {
         final incomes =
             templates.where((t) => t.isIncome).toList();
@@ -141,23 +144,24 @@ class RecurrentesTab extends ConsumerWidget {
     );
   }
 
-  String _templateSplitLabel(String splitType) {
+  String _templateSplitLabel(BuildContext context, String splitType) {
+    final t = AppLocalizations.of(context);
     switch (splitType.toLowerCase()) {
       case 'equal':
-        return 'Compartido';
+        return t.expensesFormSplitShared;
       case 'fixed':
-        return 'Monto fijo';
+        return t.expensesFormSplitFixed;
       case 'gift':
-        return 'Regalo';
+        return t.expensesFormSplitGift;
       case 'personal':
-        return 'Personal';
+        return t.expensesFormSplitPersonal;
       default:
-        return 'Compartido';
+        return t.expensesFormSplitShared;
     }
   }
 
   Widget _buildSectionHeader(
-      BuildContext context, String label, Color color) {
+      BuildContext context, String label, Color color,) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
@@ -258,7 +262,8 @@ class RecurrentesTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Día ${template.dayOfMonth} de cada mes',
+                       AppLocalizations.of(context)
+                           .expensesRecurrentesDayOfMonth(template.dayOfMonth),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -293,7 +298,7 @@ class RecurrentesTab extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        _templateSplitLabel(template.splitType),
+                         _templateSplitLabel(context, template.splitType),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -310,7 +315,7 @@ class RecurrentesTab extends ConsumerWidget {
     ).animateStaggered(index);
   }
 
-  Widget _buildPremiumLockedRecurrentes() {
+  Widget _buildPremiumLockedRecurrentes(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -330,10 +335,10 @@ class RecurrentesTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Pagos Recurrentes',
+             Text(
+               AppLocalizations.of(context).expensesRecurrentesPremiumTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
                 color: AppColors.textPrimary,
@@ -341,10 +346,10 @@ class RecurrentesTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Gestiona tus suscripciones, alquileres y servicios de forma automática con HomeSync Premium.',
+             Text(
+               AppLocalizations.of(context).expensesRecurrentesPremiumSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
@@ -365,9 +370,9 @@ class RecurrentesTab extends ConsumerWidget {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'SABER MÁS',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                child: Text(
+                  AppLocalizations.of(context).expensesRecurrentesPremiumCta,
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                 ),
               ),
             ),
@@ -377,3 +382,4 @@ class RecurrentesTab extends ConsumerWidget {
     );
   }
 }
+

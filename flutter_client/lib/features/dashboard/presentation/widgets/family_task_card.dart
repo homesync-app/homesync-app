@@ -4,6 +4,8 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
     show dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -77,7 +79,7 @@ class FamilyTaskCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
+                    localizedTaskTitle(AppLocalizations.of(context), task),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

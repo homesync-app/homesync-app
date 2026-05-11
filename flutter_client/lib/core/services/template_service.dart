@@ -10,6 +10,7 @@ class TaskTemplate {
   final int coinReward;
   final String? icon;
   final bool isPopular;
+  final String? translationKey;
 
   TaskTemplate({
     required this.id,
@@ -20,6 +21,7 @@ class TaskTemplate {
     required this.coinReward,
     this.icon,
     this.isPopular = false,
+    this.translationKey,
   });
 
   factory TaskTemplate.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class TaskTemplate {
       coinReward: json['coin_reward'] as int,
       icon: json['icon'] as String?,
       isPopular: json['is_popular'] as bool? ?? false,
+      translationKey: json['translation_key'] as String?,
     );
   }
 }

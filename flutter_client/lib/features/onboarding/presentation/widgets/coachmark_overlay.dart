@@ -127,9 +127,7 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
                           targetRect.inflate(_kSpotlightPadding),
                           eased,
                         )
-                      : (targetRect == null
-                          ? null
-                          : targetRect.inflate(_kSpotlightPadding));
+                      : (targetRect?.inflate(_kSpotlightPadding));
 
                   return CustomPaint(
                     painter: SpotlightPainter(
@@ -168,7 +166,7 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
             ),
             // Step content.
             ..._buildStepContent(context, step, targetRect, steps.length,
-                tourState.currentStep),
+                tourState.currentStep,),
             // Confetti (only finale).
             if (step.kind == CoachmarkStepKind.finale)
               Align(
@@ -401,7 +399,7 @@ class _DuelIllustration extends StatelessWidget {
           // Left avatar
           Align(
             alignment: const Alignment(-0.85, 0),
-            child: _DuelAvatar(
+            child: const _DuelAvatar(
               tint: AppColors.primary,
               icon: Icons.person_rounded,
             ).animate().slideX(
@@ -414,7 +412,7 @@ class _DuelIllustration extends StatelessWidget {
           // Right avatar
           Align(
             alignment: const Alignment(0.85, 0),
-            child: _DuelAvatar(
+            child: const _DuelAvatar(
               tint: AppColors.accentTeal,
               icon: Icons.favorite_rounded,
             ).animate().slideX(

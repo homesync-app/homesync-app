@@ -17,8 +17,10 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/calendar_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
@@ -168,6 +170,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 recurrenceType = null;
                 break;
             }
+            final t = AppLocalizations.of(context);
             try {
               await ref.read(tasksProvider.notifier).updateSchedule(
                     task,
@@ -179,10 +182,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                   );
               ref.invalidate(todayTasksProvider);
               if (mounted) {
-                _showSnack('Frecuencia actualizada', AppColors.accentGreen);
+                _showSnack(
+                  t.tasksSnackFrequencyUpdated,
+                  AppColors.accentGreen,
+                );
               }
             } catch (e) {
-              if (mounted) _showSnack('Error: $e', AppColors.error);
+              if (mounted) {
+                _showSnack(
+                  t.commonErrorWithDetails(e.toString()),
+                  AppColors.error,
+                );
+              }
             }
           },
         ),
@@ -231,7 +242,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   Widget _buildTabShell() {
     return AppSegmentedTabs(
       controller: _tabController,
-      labels: const ['Lista', 'Calendario'],
+      labels: [
+        AppLocalizations.of(context).tasksTabList,
+        AppLocalizations.of(context).tasksTabCalendar,
+      ],
       padding: const EdgeInsets.all(6),
     );
   }
@@ -267,7 +281,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       floatingActionButton: !canCreateTasks
           ? null
           : AppFloatingActionButton(
-              label: 'Nueva tarea',
+              label: AppLocalizations.of(context).tasksFabNew,
               icon: Icons.add_rounded,
               onPressed: _showCreateTaskDialog,
               heroTag: 'tasks_fab',
@@ -288,11 +302,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               children: [
                 // TASK LIST TAB
                 filteredAsync.when(
-                  loading: () => const AppLoadingState(
-                    message: 'Cargando tareas...',
+                  loading: () => AppLoadingState(
+                    message: AppLocalizations.of(context).tasksLoadingMessage,
                   ),
                   error: (e, _) => AppErrorState(
-                    message: 'No pudimos cargar las tareas.',
+                    message: AppLocalizations.of(context).tasksLoadError,
                     onRetry: () {
                       ref.invalidate(tasksProvider);
                       ref.invalidate(categoriesProvider);
@@ -359,7 +373,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                 if (index == 1) {
                                                   return _buildCategoryChip(
                                                     null,
-                                                    'Todas',
+                                                    AppLocalizations.of(context)
+                                                        .tasksFilterAll,
                                                     AppColors.textSecondary,
                                                   ).animateStaggered(1);
                                                 }
@@ -368,7 +383,12 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                     visibleCats[index - 2];
                                                 return _buildCategoryChip(
                                                   category.id,
-                                                  category.name,
+                                                  localizedTaskCategoryName(
+                                                    AppLocalizations.of(
+                                                      context,
+                                                    ),
+                                                    category,
+                                                  ),
                                                   AppColors.fromHex(
                                                     category.color,
                                                   ),
@@ -423,7 +443,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                       decoration:
                                                           InputDecoration(
                                                         hintText:
-                                                            'Buscar tarea o rutina',
+                                                            AppLocalizations.of(
+                                                          context,
+                                                        ).tasksSearchHint,
                                                         hintStyle: TextStyle(
                                                           color:
                                                               theme.textMuted,
@@ -441,7 +463,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                                                     .isNotEmpty
                                                                 ? IconButton(
                                                                     tooltip:
-                                                                        'Limpiar búsqueda',
+                                                                        AppLocalizations
+                                                                            .of(
+                                                                      context,
+                                                                    ).tasksSearchClearTooltip,
                                                                     onPressed:
                                                                         () {
                                                                       _searchController
@@ -499,7 +524,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                       _buildSearchChip(),
                                       _buildCategoryChip(
                                         null,
-                                        'Todas',
+                                        AppLocalizations.of(context)
+                                            .tasksFilterAll,
                                         AppColors.textSecondary,
                                       ),
                                     ],
@@ -550,9 +576,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                                       .read(tasksProvider.notifier)
                                       .loadMore(),
                                   icon: const Icon(Icons.add_rounded),
-                                  label: const Text(
-                                    'Cargar mas tareas',
-                                    style: TextStyle(
+                                  label: Text(
+                                    AppLocalizations.of(context).tasksLoadMore,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -634,7 +660,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              hasQuery ? 'Buscando' : 'Buscar',
+              hasQuery
+                  ? AppLocalizations.of(context).tasksSearchActiveLabel
+                  : AppLocalizations.of(context).tasksSearchIdleLabel,
               maxLines: 1,
               style: TextStyle(
                 fontSize: 13,
@@ -719,17 +747,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final isSolo =
         ref.watch(currentHouseholdProvider).valueOrNull?.householdType ==
             'solo';
+    final t = AppLocalizations.of(context);
     return AppEmptyState(
-      title: filterStatus == null
-          ? (isSolo
-              ? 'No hay tareas configuradas'
-              : 'No hay tareas configuradas')
-          : 'No hay tareas con esos filtros',
+      title:
+          filterStatus == null ? t.tasksEmptyTitle : t.tasksEmptyFilteredTitle,
       subtitle: filterStatus == null
-          ? (isSolo
-              ? 'Agrega tu primera tarea para empezar a organizar tu hogar.'
-              : 'Agrega tu primera tarea o activa una categoria para empezar a organizar la casa.')
-          : 'Proba cambiar la categoria o crear una nueva tarea.',
+          ? (isSolo ? t.tasksEmptySoloSubtitle : t.tasksEmptySharedSubtitle)
+          : t.tasksEmptyFilteredSubtitle,
       icon: filterStatus == null
           ? Icons.edit_note_rounded
           : Icons.filter_list_off_rounded,
@@ -807,7 +831,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
       widgets.add(
         _SectionHeader(
           icon: CategoryMapping.getCategoryMaterialIcon(normCat),
-          title: catInfo.name,
+          title: localizedTaskCategoryName(
+            AppLocalizations.of(context),
+            catInfo,
+          ),
           count: catTasks.length,
           color: AppColors.fromHex(catInfo.color),
         ).animateEntrance(),
@@ -923,6 +950,21 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   bool _isExpanded = false;
   bool _isSubmitting = false;
 
+  String _recurrenceLabel(AppLocalizations t, String? recurrenceType) {
+    switch (recurrenceType) {
+      case 'daily':
+        return t.createTaskRecurrenceDaily;
+      case 'weekly':
+        return t.createTaskRecurrenceWeekly;
+      case 'monthly':
+        return t.createTaskRecurrenceMonthly;
+      case 'custom':
+        return t.createTaskRecurrenceCustom;
+      default:
+        return t.createTaskRecurrenceNone;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final task = widget.task;
@@ -951,6 +993,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         isFamilyMode && (currentMember?.submissionRequiresApproval ?? false);
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
+    final localizedTitle = localizedTaskTitle(
+      AppLocalizations.of(context),
+      task,
+    );
 
     // Resolve dynamic category data
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -1005,7 +1051,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          task.title,
+                          localizedTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -1038,8 +1084,12 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                     ? Icons.event_repeat_rounded
                                     : Icons.edit_calendar_rounded,
                                 label: task.isRecurring
-                                    ? task.recurrenceLabel
-                                    : 'Sin fecha',
+                                    ? _recurrenceLabel(
+                                        AppLocalizations.of(context),
+                                        task.recurrenceType,
+                                      )
+                                    : AppLocalizations.of(context)
+                                        .tasksPillNoDate,
                                 color: task.isRecurring
                                     ? AppColors.accentGold
                                     : _unscheduledPillColor,
@@ -1057,7 +1107,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             if (task.isOverdue)
                               _pill(
                                 icon: Icons.priority_high_rounded,
-                                label: 'Vencida',
+                                label: AppLocalizations.of(context)
+                                    .tasksPillOverdue,
                                 color: AppColors.accentRed,
                                 background:
                                     AppColors.accentRed.withValues(alpha: 0.16),
@@ -1066,7 +1117,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             if (isFamilyMode && task.isPendingApproval)
                               _pill(
                                 icon: Icons.hourglass_top_rounded,
-                                label: 'En revisión',
+                                label: AppLocalizations.of(context)
+                                    .tasksPillInReview,
                                 color: AppColors.primary,
                                 background:
                                     AppColors.primary.withValues(alpha: 0.12),
@@ -1116,7 +1168,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                               Expanded(
                                 child: _buildActionTilePremium(
                                   icon: Icons.edit_rounded,
-                                  label: 'Editar',
+                                  label:
+                                      AppLocalizations.of(context).commonEdit,
                                   color: AppColors.accentGold,
                                   onTap: widget.onEdit,
                                 ),
@@ -1125,7 +1178,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                               Expanded(
                                 child: _buildActionTilePremium(
                                   icon: Icons.schedule_rounded,
-                                  label: 'Programar',
+                                  label: AppLocalizations.of(context)
+                                      .tasksActionSchedule,
                                   color: AppColors.primary,
                                   onTap: widget.onSchedule,
                                 ),
@@ -1146,8 +1200,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                                   : _buildActionTilePremium(
                                       icon: Icons.check_rounded,
                                       label: _isSubmitting
-                                          ? 'Completando...'
-                                          : 'Completar',
+                                          ? AppLocalizations.of(context)
+                                              .tasksActionCompleting
+                                          : AppLocalizations.of(context)
+                                              .tasksActionComplete,
                                       color: AppColors.accentGreen,
                                       onTap:
                                           _isSubmitting ? null : _completeTask,
@@ -1174,18 +1230,21 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     required bool isAssignedToCurrentUser,
     required MemberModel? assignedMember,
   }) {
+    final t = AppLocalizations.of(context);
+    final completingLabel =
+        _isSubmitting ? t.tasksActionCompleting : t.tasksActionComplete;
     if (widget.task.isPendingApproval) {
       if (!isAdultView) {
         return _buildInfoBanner(
           icon: Icons.hourglass_top_rounded,
-          text: 'Esperando revisión de un adulto.',
+          text: t.tasksStatusWaitingForAdult,
           color: AppColors.primary,
         );
       }
 
       return _buildInfoBanner(
         icon: Icons.hourglass_top_rounded,
-        text: 'Esperando revisión.',
+        text: t.tasksStatusWaitingReview,
         color: AppColors.primary,
       );
     }
@@ -1193,7 +1252,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     if (isOpenTask) {
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
-        label: _isSubmitting ? 'Completando...' : 'Completar',
+        label: completingLabel,
         color: AppColors.primary,
         onTap: _isSubmitting
             ? null
@@ -1211,7 +1270,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       if (requiresApprovalSubmission) {
         return _buildActionTilePremium(
           icon: Icons.send_rounded,
-          label: _isSubmitting ? 'Enviando...' : 'Enviar a revisión',
+          label:
+              _isSubmitting ? t.tasksActionSending : t.tasksActionSendForReview,
           color: AppColors.primary,
           onTap: _isSubmitting ? null : _submitTaskForApproval,
         );
@@ -1219,17 +1279,18 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
-        label: _isSubmitting ? 'Completando...' : 'Completar',
+        label: completingLabel,
         color: AppColors.accentGreen,
         onTap: _isSubmitting ? null : _completeTask,
       );
     }
 
-    final ownerName = assignedMember?.displayName ?? 'otra persona';
+    final ownerName =
+        assignedMember?.displayName ?? t.familyTasksLockedOwnerFallback;
     if (isAdultView) {
       return _buildActionTilePremium(
         icon: Icons.check_rounded,
-        label: _isSubmitting ? 'Completando...' : 'Completar',
+        label: completingLabel,
         color: AppColors.primary,
         onTap: _isSubmitting
             ? null
@@ -1239,7 +1300,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
     return _buildInfoBanner(
       icon: Icons.lock_outline_rounded,
-      text: 'Le toca a $ownerName.',
+      text: t.tasksStatusBelongsTo(ownerName),
       color: AppColors.textMuted,
     );
   }
@@ -1334,25 +1395,27 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         ref.read(householdMembersProvider).valueOrNull ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final actorName = currentMember?.displayName ?? 'vos';
+    final t = AppLocalizations.of(context);
+    final actorName = currentMember?.displayName ?? t.familyTasksActorFallback;
+    final localizedTitle = localizedTaskTitle(t, widget.task);
 
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Marcar tarea'),
+            title: Text(t.familyTasksMarkTitle),
             content: Text(
               requiresApproval
-                  ? 'Se va a marcar "${widget.task.title}" como realizada por $actorName y se enviará a revisión.'
-                  : 'Se va a marcar "${widget.task.title}" como realizada por $actorName.',
+                  ? t.familyTasksMarkBodyApproval(localizedTitle, actorName)
+                  : t.familyTasksMarkBodyDirect(localizedTitle, actorName),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(t.commonCancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Confirmar'),
+                child: Text(t.commonConfirm),
               ),
             ],
           ),
@@ -1370,6 +1433,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
 
   Future<void> _confirmAdultTakeoverCompletion(String ownerName) async {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final confirmed = await showModalBottomSheet<bool>(
           context: context,
           backgroundColor: Colors.transparent,
@@ -1416,7 +1480,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Esta tarea le toca a $ownerName',
+                    t.tasksTakeoverHeading(ownerName),
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -1427,7 +1491,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '¿Quieres darle una mano y completarla de todas formas?',
+                    t.tasksTakeoverPrompt,
                     style: TextStyle(
                       fontSize: 15,
                       color: theme.textSecondary,
@@ -1449,7 +1513,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           ),
                           onPressed: () => Navigator.pop(context, false),
                           child: Text(
-                            'Cerrar',
+                            t.commonClose,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -1471,9 +1535,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                             ),
                           ),
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text(
-                            'Completar igual',
-                            style: TextStyle(
+                          child: Text(
+                            t.tasksTakeoverConfirm,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                             ),
@@ -1499,7 +1563,11 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enviada para revisión de un adulto.')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).familyTasksSubmittedSnack,
+          ),
+        ),
       );
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
@@ -1515,13 +1583,14 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       final result =
           await ref.read(tasksProvider.notifier).completeTask(widget.task);
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       if (result == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No pudimos completar la tarea.')),
+          SnackBar(content: Text(t.tasksSnackCompleteError)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarea completada.')),
+          SnackBar(content: Text(t.tasksSnackCompleted)),
         );
         ref.invalidate(tasksProvider);
         ref.invalidate(todayTasksProvider);

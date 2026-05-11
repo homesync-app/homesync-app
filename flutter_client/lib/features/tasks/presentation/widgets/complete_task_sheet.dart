@@ -11,6 +11,8 @@ import 'package:homesync_client/features/tasks/domain/models/category_model.dart
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -117,10 +119,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   Future<void> _submitCompletedTasks() async {
     if (_isLoading) return;
 
+    final t = AppLocalizations.of(context);
     if (_selectedTaskIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona al menos una tarea para completar.'),
+        SnackBar(
+          content: Text(t.completeTaskSnackPickAtLeastOne),
           backgroundColor: AppColors.accentOrange,
         ),
       );
@@ -137,8 +140,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     if (effectiveSelectedMemberIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona quien la hizo antes de continuar.'),
+        SnackBar(
+          content: Text(t.completeTaskSnackPickWho),
           backgroundColor: AppColors.accentOrange,
         ),
       );
@@ -147,8 +150,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La fecha de finalizacion no puede ser futura.'),
+        SnackBar(
+          content: Text(t.completeTaskSnackFutureDate),
           backgroundColor: AppColors.accentOrange,
         ),
       );
@@ -163,9 +166,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
       if (selectedTasks.isEmpty ||
           selectedTasks.length != _selectedTaskIds.length) {
-        throw Exception(
-          'No pudimos encontrar todas las tareas elegidas. Refresca e intenta de nuevo.',
-        );
+        throw Exception(t.completeTaskSnackTasksMissing);
       }
 
       int totalXp = 0;
@@ -237,7 +238,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           message =
               '$approvalCount tarea${approvalCount > 1 ? "s" : ""} enviada${approvalCount > 1 ? "s" : ""} para aprobacion';
         } else {
-          final String verb = onlyMe ? 'Ganaste' : 'Ganaron';
+          final verb = t.completeTaskRewardVerb(onlyMe ? 1 : 2);
           message = '⭐ $verb $totalXp XP y $totalCoins Coins!';
         }
 
@@ -264,7 +265,9 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(
+              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+            ),
             backgroundColor: AppColors.accentRed,
           ),
         );
@@ -411,21 +414,22 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.task_alt_rounded,
                             color: AppColors.primary,
                             size: 28,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
-                            'Completar tareas',
-                            style: TextStyle(
+                            AppLocalizations.of(context)
+                                .completeTaskHeaderTitle,
+                            style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.5,
@@ -434,12 +438,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Marcá lo que ya hicieron y asigná el mérito en un solo paso.',
-                          style: TextStyle(
+                          AppLocalizations.of(context)
+                              .completeTaskHeaderSubtitle,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF64748B),
@@ -460,23 +465,23 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                       if (ref.watch(parentModeAvailableProvider)) ...[
                         _buildSectionHeader(
                           Icons.people_alt_rounded,
-                          '¿Quién lo hizo?',
-                          'Selecciona quiénes ayudaron',
+                          AppLocalizations.of(context).completeTaskWhoTitle,
+                          AppLocalizations.of(context).completeTaskWhoSubtitle,
                         ),
                         _buildMembersSelection(),
                         const SizedBox(height: 32),
                       ],
                       _buildSectionHeader(
                         Icons.schedule_rounded,
-                        '¿Cuándo?',
-                        'Elige el momento de finalización',
+                        AppLocalizations.of(context).completeTaskWhenTitle,
+                        AppLocalizations.of(context).completeTaskWhenSubtitle,
                       ),
                       _buildDateSelection(),
                       const SizedBox(height: 32),
                       _buildSectionHeader(
                         Icons.layers_rounded,
-                        'Seleccionar Tareas',
-                        'Busca y selecciona lo terminado',
+                        AppLocalizations.of(context).completeTaskTasksTitle,
+                        AppLocalizations.of(context).completeTaskTasksSubtitle,
                       ),
                       _buildCategoryAndSearch(categories),
                       const SizedBox(height: 16),
@@ -599,7 +604,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   Widget _buildMembersSelection() {
     return SizedBox(
-      height: 116,
+      height: 112,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -608,7 +613,8 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           final member = _members[index];
           final user = (member['users'] as Map?)?.cast<String, dynamic>();
           final userId = member['user_id'] as String;
-          final nameStr = user?['full_name'] as String? ?? 'Miembro';
+          final nameStr = user?['full_name'] as String? ??
+              AppLocalizations.of(context).settingsHouseholdMemberFallbackName;
           final avatarUrl = user?['avatar_url'] as String?;
           final isSelected = _selectedMemberIds.contains(userId);
 
@@ -625,32 +631,43 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             },
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              width: 72,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: EdgeInsets.all(isSelected ? 3.0 : 0.0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.06)
-                          : Colors.transparent,
-                      border: Border.all(
-                        color:
-                            isSelected ? AppColors.primary : Colors.transparent,
-                        width: 2.0,
+                  SizedBox(
+                    width: 58,
+                    height: 58,
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: EdgeInsets.all(isSelected ? 2.5 : 0.0),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.06)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.transparent,
+                            width: 2.0,
+                          ),
+                        ),
+                        child: CustomUserAvatar(
+                          name: nameStr.split(' ').first,
+                          avatarUrl: avatarUrl,
+                          radius: 23,
+                          forceCircular: true,
+                        ),
                       ),
-                    ),
-                    child: CustomUserAvatar(
-                      name: nameStr.split(' ').first,
-                      avatarUrl: avatarUrl,
-                      radius: 26,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     nameStr.split(' ')[0],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight:
@@ -676,7 +693,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
         children: [
           Expanded(
             child: _buildDateOptionCard(
-              title: 'Ahora',
+              title: AppLocalizations.of(context).completeTaskTimeNow,
               icon: Icons.bolt_rounded,
               isSelected: _isRightNow,
               onTap: () => setState(() => _isRightNow = true),
@@ -687,7 +704,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             child: _buildDateOptionCard(
               title: !_isRightNow
                   ? DateFormat('d/M HH:mm').format(_customDate)
-                  : 'Antes',
+                  : AppLocalizations.of(context).completeTaskTimeBefore,
               icon: Icons.calendar_today_rounded,
               isSelected: !_isRightNow,
               onTap: _selectCustomDate,
@@ -780,7 +797,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
               onChanged: (val) => setState(() => _searchQuery = val),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
-                hintText: 'Buscar tarea...',
+                hintText: AppLocalizations.of(context).completeTaskSearchHint,
                 hintStyle: TextStyle(
                   color: const Color(0xFF94A3B8).withValues(alpha: 0.8),
                 ),
@@ -815,11 +832,18 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 children: [
-                  _buildCategoryChip(null, 'Todas', const Color(0xFF64748B)),
+                  _buildCategoryChip(
+                    null,
+                    AppLocalizations.of(context).tasksFilterAll,
+                    const Color(0xFF64748B),
+                  ),
                   ...visibleCats.map(
                     (c) => _buildCategoryChip(
                       c.id,
-                      c.name,
+                      localizedTaskCategoryName(
+                        AppLocalizations.of(context),
+                        c,
+                      ),
                       AppColors.fromHex(c.color),
                     ),
                   ),
@@ -895,10 +919,12 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
   ) {
     if (tasks.isEmpty) {
       return [
-        const Center(
+        Center(
           child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Text('No hay tareas disponibles'),
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              AppLocalizations.of(context).completeTaskNoTasksAvailable,
+            ),
           ),
         ),
       ];
@@ -937,7 +963,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       widgets.add(
         _buildCategoryDivider(
           icon: CategoryMapping.getCategoryMaterialIcon(normCat),
-          title: catInfo.name,
+          title: localizedTaskCategoryName(
+            AppLocalizations.of(context),
+            catInfo,
+          ),
           color: AppColors.fromHex(catInfo.color),
         ),
       );
@@ -1014,7 +1043,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                task.title,
+                localizedTaskTitle(AppLocalizations.of(context), task),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,

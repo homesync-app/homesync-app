@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 enum FeedbackType { bug, suggestion }
@@ -17,12 +19,12 @@ class FeedbackSheet extends ConsumerStatefulWidget {
   final FeedbackType initialType;
 
   const FeedbackSheet(
-      {super.key, this.initialType = FeedbackType.bug, this.currentScreen});
+      {super.key, this.initialType = FeedbackType.bug, this.currentScreen,});
 
   final String? currentScreen;
 
   static void show(BuildContext context,
-      {FeedbackType type = FeedbackType.bug, String? screen}) {
+      {FeedbackType type = FeedbackType.bug, String? screen,}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -116,9 +118,10 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
       log.e('Error enviando feedback', error: e, stackTrace: st);
       if (!mounted) return;
       setState(() => _isSending = false);
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('No se pudo enviar. Intentalo de nuevo.'),
+          content: Text(t.feedbackSendError),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -157,7 +160,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     );
   }
 
-  Widget _buildSuccess(dynamic theme) {
+  Widget _buildSuccess(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       key: const ValueKey('success'),
       mainAxisSize: MainAxisSize.min,
@@ -171,13 +175,13 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.check_rounded,
-              color: AppColors.success, size: 32),
+              color: AppColors.success, size: 32,),
         ),
         const SizedBox(height: 16),
         Text(
           _type == FeedbackType.bug
-              ? '¡Gracias por reportarlo!'
-              : '¡Gracias por la idea!',
+              ? t.feedbackThanksBug
+              : t.feedbackThanksSuggestion,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -187,8 +191,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         const SizedBox(height: 8),
         Text(
           _type == FeedbackType.bug
-              ? 'Lo revisamos a la brevedad.'
-              : 'La vamos a tener en cuenta.',
+              ? t.feedbackReviewBug
+              : t.feedbackConsiderSuggestion,
           style: TextStyle(fontSize: 14, color: theme.textSecondary),
         ),
         const SizedBox(height: 24),
@@ -196,7 +200,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     );
   }
 
-  Widget _buildForm(dynamic theme) {
+  Widget _buildForm(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       key: const ValueKey('form'),
       mainAxisSize: MainAxisSize.min,
@@ -219,16 +224,16 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         Row(
           children: [
             _typeChip(theme, FeedbackType.bug, Icons.bug_report_outlined,
-                'Reportar error'),
+                t.feedbackReportErrorOption,),
             const SizedBox(width: 10),
             _typeChip(theme, FeedbackType.suggestion,
-                Icons.lightbulb_outline_rounded, 'Sugerir mejora'),
+                Icons.lightbulb_outline_rounded, t.feedbackSuggestImprovementOption,),
           ],
         ),
         const SizedBox(height: 20),
 
         Text(
-          _type == FeedbackType.bug ? '¿Qué pasó?' : '¿Qué mejorarías?',
+          _type == FeedbackType.bug ? t.feedbackBugTitlePlaceholder : t.feedbackSuggestionTitlePlaceholder,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w800,
@@ -244,8 +249,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           maxLength: 120,
           decoration: InputDecoration(
             hintText: _type == FeedbackType.bug
-                ? 'Ej: La pantalla de gastos no carga'
-                : 'Ej: Poder filtrar tareas por semana',
+                ? t.feedbackBugHint
+                : t.feedbackSuggestionHint,
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
@@ -269,8 +274,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           maxLength: 500,
           decoration: InputDecoration(
             hintText: _type == FeedbackType.bug
-                ? 'Descripción opcional: pasos para reproducirlo, qué esperabas ver...'
-                : 'Descripción opcional: contexto, por qué sería útil...',
+                ? t.feedbackBugDescHint
+                : t.feedbackSuggestionDescHint,
             filled: true,
             fillColor: theme.surfaceContainer,
             border: OutlineInputBorder(
@@ -299,7 +304,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               foregroundColor: Colors.white,
               disabledBackgroundColor: theme.primary.withValues(alpha: 0.35),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
+                  borderRadius: BorderRadius.circular(18),),
               elevation: 0,
             ),
             child: _isSending
@@ -313,10 +318,10 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
                   )
                 : Text(
                     _type == FeedbackType.bug
-                        ? 'Enviar reporte'
-                        : 'Enviar sugerencia',
+                        ? t.feedbackSendBugReport
+                        : t.feedbackSendSuggestion,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 16),
+                        fontWeight: FontWeight.w800, fontSize: 16,),
                   ),
           ),
         ),
@@ -325,7 +330,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   }
 
   Widget _typeChip(
-      dynamic theme, FeedbackType type, IconData icon, String label) {
+      AppThemeColors theme, FeedbackType type, IconData icon, String label,) {
     final isSelected = _type == type;
     return Expanded(
       child: GestureDetector(
@@ -353,7 +358,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             children: [
               Icon(icon,
                   size: 18,
-                  color: isSelected ? theme.primary : theme.textSecondary),
+                  color: isSelected ? theme.primary : theme.textSecondary,),
               const SizedBox(width: 6),
               Text(
                 label,

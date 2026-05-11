@@ -2,6 +2,7 @@ class ShoppingItemModel {
   final String id;
   final String householdId;
   final String name;
+  final String? nameKey;
   final String? quantity;
   final String? unit;
   final String category;
@@ -20,6 +21,7 @@ class ShoppingItemModel {
     required this.id,
     required this.householdId,
     required this.name,
+    this.nameKey,
     this.quantity,
     this.unit,
     this.category = 'general',
@@ -40,6 +42,7 @@ class ShoppingItemModel {
       id: map['id'] as String,
       householdId: map['household_id'] as String,
       name: map['name'] as String,
+      nameKey: map['name_key'] as String?,
       quantity: map['quantity'] as String?,
       unit: map['unit'] as String?,
       category: map['category'] as String? ?? 'general',
@@ -66,6 +69,7 @@ class ShoppingItemModel {
       'id': id,
       'household_id': householdId,
       'name': name,
+      'name_key': nameKey,
       'quantity': quantity,
       'unit': unit,
       'category': category,
@@ -96,12 +100,17 @@ class ShoppingItemModel {
     return completedByName!.split(' ').first;
   }
 
-  ShoppingItemModel copyWith(
-      {bool? completed, String? completedBy, DateTime? completedAt, bool? shouldSync,}) {
+  ShoppingItemModel copyWith({
+    bool? completed,
+    String? completedBy,
+    DateTime? completedAt,
+    bool? shouldSync,
+  }) {
     return ShoppingItemModel(
       id: id,
       householdId: householdId,
       name: name,
+      nameKey: nameKey,
       quantity: quantity,
       unit: unit,
       category: category,

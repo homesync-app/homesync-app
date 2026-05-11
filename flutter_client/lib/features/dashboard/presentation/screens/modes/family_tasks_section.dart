@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -14,6 +13,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
 class FamilyTasksSection extends ConsumerStatefulWidget {
@@ -38,18 +39,16 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final tasksAsync = ref.watch(todayTasksProvider);
     final isTeen = widget.currentMember?.isTeen ?? false;
     final sectionTitle = widget.isChild
-        ? 'Mis misiones'
+        ? t.familyTasksTitleChild
         : isTeen
-            ? 'Tareas del hogar'
-            : 'Hoy en casa';
-    final ctaLabel = widget.isChild
-        ? 'Ver todas'
-        : isTeen
-            ? 'Ver semana'
-            : 'Ver semana';
+            ? t.familyTasksTitleTeen
+            : t.homeCoupleTasksTitle;
+    final ctaLabel =
+        widget.isChild ? t.homeViewAllButton : t.homeViewWeekButton;
     return _buildSectionStateSwitcher(
       child: tasksAsync.when(
         loading: () => KeyedSubtree(
@@ -65,12 +64,6 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         ),
         error: (_, __) => const SizedBox.shrink(key: ValueKey('tasks-error')),
         data: (tasks) {
-          // Tareas pendientes de revisión: solo visibles para adultos con
-          // Modo Padres activo (premium). Los hijos nunca las ven acá.
-          final parentModeActive = ref.watch(parentModeAvailableProvider);
-          final reviewTasks = (parentModeActive && !widget.isChild)
-              ? tasks.where((task) => task.isPendingApproval).toList()
-              : <TaskModel>[];
           final todayTasks = tasks
               .where((task) => task.isPending && !task.isPendingApproval)
               .where((task) => task.isDueToday)
@@ -94,7 +87,6 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               overdueTasks.length - visibleOverdueTasks.length;
 
           final visibleTasks = <TaskModel>[
-            ...reviewTasks,
             ...visibleOverdueTasks,
             ...todayTasks,
           ];
@@ -138,8 +130,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                   _buildEmptyState(
                     theme,
                     widget.isChild
-                        ? 'Hoy podes descansar o mirar la tienda.'
-                        : 'No hay tareas programadas para hoy.',
+                        ? t.familyTasksEmptyChildSubtitle
+                        : t.familyTasksEmptyOtherSubtitle,
                   ),
                 ],
               ),
@@ -403,25 +395,27 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final actorName = currentMember?.displayName ?? 'vos';
+    final t = AppLocalizations.of(context);
+    final actorName = currentMember?.displayName ?? t.familyTasksActorFallback;
+    final localizedTitle = localizedTaskTitle(t, task);
 
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Marcar tarea'),
+            title: Text(t.familyTasksMarkTitle),
             content: Text(
               requiresApproval
-                  ? 'Se va a marcar "${task.title}" como realizada por $actorName y se enviará a revisión.'
-                  : 'Se va a marcar "${task.title}" como realizada por $actorName.',
+                  ? t.familyTasksMarkBodyApproval(localizedTitle, actorName)
+                  : t.familyTasksMarkBodyDirect(localizedTitle, actorName),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(t.commonCancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Confirmar'),
+                child: Text(t.commonConfirm),
               ),
             ],
           ),
@@ -441,22 +435,22 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     TaskModel task,
     MemberModel? assignedMember,
   ) async {
-    final ownerName = assignedMember?.displayName ?? 'otro integrante';
+    final t = AppLocalizations.of(context);
+    final ownerName =
+        assignedMember?.displayName ?? t.familyTasksTakeoverOwnerFallback;
     final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Completar tarea'),
-            content: Text(
-              'Esta tarea estaba asignada a $ownerName. Si seguís, se va a marcar como realizada por vos.',
-            ),
+            title: Text(t.familyTasksTakeoverTitle),
+            content: Text(t.familyTasksTakeoverBody(ownerName)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(t.commonCancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Completar'),
+                child: Text(t.familyTasksTakeoverConfirm),
               ),
             ],
           ),
@@ -472,10 +466,12 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   }
 
   void _showTaskLockedMessage(MemberModel? assignedMember) {
-    final ownerName = assignedMember?.displayName ?? 'otra persona';
+    final t = AppLocalizations.of(context);
+    final ownerName =
+        assignedMember?.displayName ?? t.familyTasksLockedOwnerFallback;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Esta tarea le toca a $ownerName.'),
+        content: Text(t.familyTasksLockedMessage(ownerName)),
       ),
     );
   }
@@ -487,9 +483,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     try {
       await ref.read(tasksProvider.notifier).submitTaskForApproval(task);
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enviada para revisión de un adulto.'),
+        SnackBar(
+          content: Text(t.familyTasksSubmittedSnack),
         ),
       );
       ref.invalidate(tasksProvider);
@@ -497,8 +494,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       ref.invalidate(recentActivityProvider);
     } catch (e) {
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No pudimos enviar la tarea: $e')),
+        SnackBar(content: Text(t.familyTasksSubmitError(e.toString()))),
       );
     } finally {
       if (mounted) {
@@ -511,10 +509,13 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     TaskModel task,
     List<MemberModel> members,
   ) async {
+    final t = AppLocalizations.of(context);
     final performer = members
         .where((member) => member.userId == task.completedBy)
         .firstOrNull;
-    final performerName = performer?.displayName ?? 'este integrante';
+    final performerName =
+        performer?.displayName ?? t.familyTasksReviewPerformerFallback;
+    final localizedTitle = localizedTaskTitle(t, task);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -534,7 +535,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Revisar tarea',
+                  t.familyTasksReviewTitle,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
@@ -543,7 +544,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$performerName marcó "${task.title}" como realizada.',
+                  t.familyTasksReviewBody(performerName, localizedTitle),
                   style: TextStyle(
                     fontSize: 14,
                     color: theme.textSecondary,
@@ -559,7 +560,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                       await _approvePendingTask(task);
                     },
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('Aprobar tarea'),
+                    label: Text(t.familyTasksReviewApprove),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -571,7 +572,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
                       await _rejectPendingTask(task);
                     },
                     icon: const Icon(Icons.reply_rounded),
-                    label: const Text('Devolver para corregir'),
+                    label: Text(t.familyTasksReviewReject),
                   ),
                 ),
               ],
@@ -590,13 +591,14 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       final result =
           await ref.read(tasksProvider.notifier).approvePendingTask(task);
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       if (result == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No pudimos aprobar la tarea.')),
+          SnackBar(content: Text(t.familyTasksApproveError)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tarea aprobada.')),
+          SnackBar(content: Text(t.familyTasksApproveSuccess)),
         );
         ref.invalidate(tasksProvider);
         ref.invalidate(todayTasksProvider);
@@ -605,8 +607,11 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       }
     } catch (e) {
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No pudimos aprobar la tarea: $e')),
+        SnackBar(
+          content: Text(t.familyTasksApproveErrorWithDetails(e.toString())),
+        ),
       );
     } finally {
       if (mounted) {
@@ -622,16 +627,18 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     try {
       await ref.read(tasksProvider.notifier).rejectPendingTask(task);
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La tarea volvió a quedar pendiente.')),
+        SnackBar(content: Text(t.familyTasksRejectSuccess)),
       );
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
       ref.invalidate(recentActivityProvider);
     } catch (e) {
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No pudimos devolver la tarea: $e')),
+        SnackBar(content: Text(t.familyTasksRejectError(e.toString()))),
       );
     } finally {
       if (mounted) {
@@ -657,9 +664,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
       if (result == null) {
         log.w('[family] task completion returned null id=${task.id}');
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No pudimos completar la tarea. Intenta de nuevo.'),
+          SnackBar(
+            content: Text(t.homeFriendsTaskCompleteError),
           ),
         );
         return;
@@ -675,8 +683,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     } catch (e) {
       log.e('[family] task completion threw id=${task.id}', error: e);
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
         );
       }
     } finally {
@@ -688,6 +697,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
   Widget _buildEmptyState(AppThemeColors theme, String subtitle) {
     final isChild = widget.isChild;
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -729,7 +739,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Todo al dia',
+                  t.familyTasksEmptyTitle,
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w900,

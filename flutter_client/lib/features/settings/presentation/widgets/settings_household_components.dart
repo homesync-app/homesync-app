@@ -2,6 +2,7 @@
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class SettingsNoHouseholdCard extends StatelessWidget {
@@ -15,6 +16,7 @@ class SettingsNoHouseholdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(32),
@@ -43,7 +45,7 @@ class SettingsNoHouseholdCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Ã‚Â¡Comienza tu equipo!',
+            t.settingsHouseholdEmptyTitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
@@ -54,7 +56,7 @@ class SettingsNoHouseholdCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Unite a un equipo existente con un codigo de invitacion para empezar a compartir tareas y gastos.',
+            t.settingsHouseholdEmptyBody,
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 15,
@@ -74,14 +76,14 @@ class SettingsNoHouseholdCard extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.login_rounded, size: 20),
-                SizedBox(width: 12),
+                const Icon(Icons.login_rounded, size: 20),
+                const SizedBox(width: 12),
                 Text(
-                  'Unirse con codigo',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                  t.settingsHouseholdJoinWithCodeButton,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ],
             ),
@@ -115,6 +117,7 @@ class SettingsHouseholdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -256,7 +259,7 @@ class SettingsHouseholdCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Tareas del hogar',
+                                t.settingsHouseholdTasksToggleTitle,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: theme.textPrimary,
@@ -265,8 +268,8 @@ class SettingsHouseholdCard extends StatelessWidget {
                               const SizedBox(height: 2),
                               Text(
                                 tasksEnabled
-                                    ? 'Mostrar tareas, progreso y accesos rapidos.'
-                                    : 'Ocultar tareas y dejar solo finanzas y compras.',
+                                    ? t.settingsHouseholdTasksToggleOnSubtitle
+                                    : t.settingsHouseholdTasksToggleOffSubtitle,
                                 style: TextStyle(
                                   fontSize: 12,
                                   height: 1.35,
@@ -306,6 +309,7 @@ class SettingsHouseholdMembersSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +318,7 @@ class SettingsHouseholdMembersSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'MIEMBROS',
+              t.settingsHouseholdMembersEyebrow,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -323,7 +327,7 @@ class SettingsHouseholdMembersSection extends StatelessWidget {
               ),
             ),
             Text(
-              '$memberCount ${memberCount == 1 ? "miembro" : "miembros"}',
+              t.settingsHouseholdMembersCount(memberCount),
               style: TextStyle(
                 color: theme.textMuted,
                 fontSize: 11,
@@ -364,6 +368,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     final hasActions = onEdit != null || onRemove != null || onQaDelete != null;
 
@@ -407,12 +412,12 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
                       ),
                       if (isCurrentUser)
                         _SettingsMemberTinyChip(
-                          label: 'Vos',
+                          label: t.settingsHouseholdMemberSelfChip,
                           color: theme.primary,
                         ),
                       if (showOwnerStar)
                         _SettingsMemberTinyChip(
-                          label: 'Admin',
+                          label: t.settingsHouseholdMemberAdminChip,
                           color: Colors.amber.shade700,
                           icon: Icons.star_rounded,
                         ),
@@ -432,7 +437,7 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
             ),
             if (hasActions)
               PopupMenuButton<String>(
-                tooltip: 'Opciones del miembro',
+                tooltip: t.settingsHouseholdMemberMenuTooltip,
                 icon: Icon(
                   Icons.more_horiz_rounded,
                   color: theme.textSecondary,
@@ -449,19 +454,19 @@ class SettingsHouseholdMemberRow extends StatelessWidget {
                 },
                 itemBuilder: (context) => [
                   if (onEdit != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'edit',
-                      child: Text('Editar rol'),
+                      child: Text(t.settingsHouseholdMemberMenuEditRole),
                     ),
                   if (onRemove != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'remove',
-                      child: Text('Quitar del hogar'),
+                      child: Text(t.settingsHouseholdMemberMenuRemove),
                     ),
                   if (onQaDelete != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'qa_delete',
-                      child: Text('Eliminar dummy QA'),
+                      child: Text(t.settingsHouseholdMemberMenuDeleteDummyQa),
                     ),
                 ],
               ),
@@ -548,9 +553,10 @@ List<SettingsHouseholdMemberData> buildSettingsHouseholdMemberData({
 }) {
   return members.map((member) {
     final userData = (member['users'] is Map) ? member['users'] as Map : {};
+    final t = AppLocalizations.of(context);
     final rawName = (userData['full_name'] as String?) ??
         (userData['email'] as String?)?.split('@').first ??
-        'Miembro';
+        t.settingsHouseholdMemberFallbackName;
     final email = userData['email'] as String?;
     final avatarUrl = userData['avatar_url'] as String?;
     final role = member['role'] ?? 'member';
@@ -670,7 +676,7 @@ Future<void> showSettingsJoinHouseholdDialog(
                 size: 22,
               ),
               const SizedBox(width: 10),
-              const Text('Unirse a un hogar'),
+              Text(AppLocalizations.of(context).settingsHouseholdJoinDialogTitle),
             ],
           ),
           content: Column(
@@ -678,7 +684,7 @@ Future<void> showSettingsJoinHouseholdDialog(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ingresa el codigo de invitacion que te compartieron para unirte al hogar:',
+                AppLocalizations.of(context).settingsHouseholdJoinDialogBody,
                 style: TextStyle(
                   color: context.theme.textSecondary,
                   fontSize: 14,
@@ -727,7 +733,7 @@ Future<void> showSettingsJoinHouseholdDialog(
           actions: [
             TextButton(
               onPressed: isLoading ? null : () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar'),
+              child: Text(AppLocalizations.of(context).commonCancel),
             ),
             ElevatedButton(
               onPressed: isLoading ? null : doJoin,
@@ -745,9 +751,10 @@ Future<void> showSettingsJoinHouseholdDialog(
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text(
-                      'Unirme',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                  : Text(
+                      AppLocalizations.of(context)
+                          .settingsHouseholdJoinDialogConfirm,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
             ),
           ],
@@ -767,6 +774,7 @@ void showSettingsEditHouseholdMenu(
   required VoidCallback onCoupleSplit,
 }) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
 
   showModalBottomSheet(
     context: context,
@@ -810,8 +818,8 @@ void showSettingsEditHouseholdMenu(
                 ),
                 child: const Icon(Icons.edit_rounded, color: AppColors.primary),
               ),
-              title: const Text('Editar nombre'),
-              subtitle: const Text('Cambia el nombre de tu hogar'),
+              title: Text(t.settingsHouseholdEditMenuRenameTitle),
+              subtitle: Text(t.settingsHouseholdEditMenuRenameSubtitle),
               onTap: () {
                 Navigator.pop(ctx);
                 onEditName();
@@ -829,11 +837,11 @@ void showSettingsEditHouseholdMenu(
                   color: AppColors.accentBlue,
                 ),
               ),
-              title: const Text('Codigo de invitacion'),
+              title: Text(t.settingsHouseholdEditMenuInviteTitle),
               subtitle: Text(
                 invitationCode != null
-                    ? 'Compartir o generar nuevo codigo'
-                    : 'Generar codigo para invitar',
+                    ? t.settingsHouseholdEditMenuInviteSubtitleExisting
+                    : t.settingsHouseholdEditMenuInviteSubtitleNone,
               ),
               onTap: () {
                 Navigator.pop(ctx);
@@ -854,14 +862,14 @@ void showSettingsEditHouseholdMenu(
                   ),
                 ),
                 title: Text(
-                  householdType == 'family'
-                      ? 'Finanzas familiares'
-                      : 'División de gastos',
+                  t.settingsHouseholdEditMenuSplitTitle(
+                    householdType ?? 'couple',
+                  ),
                 ),
                 subtitle: Text(
-                  householdType == 'family'
-                      ? 'Elegir economía compartida o dividida'
-                      : 'Ajustar porcentaje de pareja',
+                  t.settingsHouseholdEditMenuSplitSubtitle(
+                    householdType ?? 'couple',
+                  ),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -918,7 +926,8 @@ void showSettingsInvitationCodeSheet(
                   Icon(Icons.share_rounded, color: theme.primary),
                   const SizedBox(width: 12),
                   Text(
-                    'Codigo de invitacion',
+                    AppLocalizations.of(context)
+                        .settingsHouseholdInviteSheetTitle,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -929,7 +938,8 @@ void showSettingsInvitationCodeSheet(
               ),
               const SizedBox(height: 8),
               Text(
-                'Comparte este codigo para que otros se unan a tu hogar',
+                AppLocalizations.of(context)
+                    .settingsHouseholdInviteSheetSubtitle,
                 style: TextStyle(
                   color: theme.textSecondary,
                   fontSize: 13,
@@ -985,7 +995,8 @@ void showSettingsInvitationCodeSheet(
                       ),
                       const SizedBox(width: 8),
                       IconButton(
-                        tooltip: 'Copiar cÃ³digo',
+                        tooltip: AppLocalizations.of(context)
+                            .settingsHouseholdInviteSheetCopyTooltip,
                         onPressed: onCopyCode,
                         icon: Icon(Icons.copy_rounded, color: theme.primary),
                         style: IconButton.styleFrom(
@@ -1005,7 +1016,8 @@ void showSettingsInvitationCodeSheet(
                   ),
                   child: Center(
                     child: Text(
-                      'Sin codigo activo',
+                      AppLocalizations.of(context)
+                          .settingsHouseholdInviteSheetEmpty,
                       style: TextStyle(color: theme.textMuted),
                     ),
                   ),
@@ -1020,8 +1032,10 @@ void showSettingsInvitationCodeSheet(
                   icon: const Icon(Icons.refresh_rounded),
                   label: Text(
                     invitationCode == null
-                        ? 'Generar codigo'
-                        : 'Generar nuevo codigo',
+                        ? AppLocalizations.of(context)
+                            .settingsHouseholdInviteSheetGenerate
+                        : AppLocalizations.of(context)
+                            .settingsHouseholdInviteSheetRegenerate,
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: theme.primary,
@@ -1043,23 +1057,22 @@ Future<bool?> showSettingsRemoveMemberDialog(
   required String memberName,
 }) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
 
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text(
-        'Quitar miembro',
-        style: TextStyle(fontWeight: FontWeight.w900),
+      title: Text(
+        t.settingsHouseholdRemoveMemberTitle,
+        style: const TextStyle(fontWeight: FontWeight.w900),
       ),
-      content: Text(
-        'Estas seguro de que quieres quitar a $memberName de este hogar?',
-      ),
+      content: Text(t.settingsHouseholdRemoveMemberBody(memberName)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancelar'),
+          child: Text(t.commonCancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
@@ -1071,7 +1084,7 @@ Future<bool?> showSettingsRemoveMemberDialog(
             ),
             minimumSize: const Size(100, 48),
           ),
-          child: const Text('Quitar'),
+          child: Text(t.settingsHouseholdRemoveMemberConfirm),
         ),
       ],
     ),
@@ -1083,23 +1096,22 @@ Future<bool?> showSettingsDeleteDummyMemberDialog(
   required String memberName,
 }) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
 
   return showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: const Text(
-        'Eliminar dummy QA',
-        style: TextStyle(fontWeight: FontWeight.w900),
+      title: Text(
+        t.settingsHouseholdDeleteDummyTitle,
+        style: const TextStyle(fontWeight: FontWeight.w900),
       ),
-      content: Text(
-        'Esto eliminara a $memberName como usuario dummy QA. Si no pertenece a otro hogar QA, tambien se borrara su identidad tecnica.',
-      ),
+      content: Text(t.settingsHouseholdDeleteDummyBody(memberName)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Cancelar'),
+          child: Text(t.commonCancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, true),
@@ -1111,7 +1123,7 @@ Future<bool?> showSettingsDeleteDummyMemberDialog(
             ),
             minimumSize: const Size(128, 48),
           ),
-          child: const Text('Eliminar dummy'),
+          child: Text(t.settingsHouseholdDeleteDummyConfirm),
         ),
       ],
     ),
@@ -1123,6 +1135,7 @@ Future<String?> showSettingsRenameHouseholdDialog(
   required String? initialName,
 }) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
   final controller = TextEditingController(text: initialName);
 
   return showDialog<String>(
@@ -1130,16 +1143,16 @@ Future<String?> showSettingsRenameHouseholdDialog(
     builder: (ctx) => AlertDialog(
       backgroundColor: theme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
-        'Nombre del hogar',
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: Text(
+        t.settingsHouseholdRenameDialogTitle,
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: TextField(
         controller: controller,
         autofocus: true,
         textCapitalization: TextCapitalization.words,
         decoration: InputDecoration(
-          labelText: 'Tu nombre',
+          labelText: t.settingsHouseholdRenameDialogLabel,
           filled: true,
           fillColor: theme.primary.withValues(alpha: 0.05),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -1148,7 +1161,7 @@ Future<String?> showSettingsRenameHouseholdDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Cancelar'),
+          child: Text(t.commonCancel),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(ctx, controller.text.trim()),
@@ -1157,7 +1170,7 @@ Future<String?> showSettingsRenameHouseholdDialog(
             foregroundColor: Colors.white,
             minimumSize: const Size(100, 48),
           ),
-          child: const Text('Guardar'),
+          child: Text(t.commonSave),
         ),
       ],
     ),

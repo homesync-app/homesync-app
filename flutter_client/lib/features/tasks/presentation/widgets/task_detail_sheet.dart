@@ -7,6 +7,8 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -38,7 +40,6 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
 
   TaskModel get _task => TaskModel.fromMap(widget.taskData);
   TaskStatus get _status => _task.status;
-  String get _title => _task.title;
   String get _category => _task.category ?? 'general';
   int get _xpReward => _readInt(
         _task.xpReward,
@@ -56,8 +57,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   String? get _comment => widget.taskData['objection_reason'] as String?;
 
   Map? get _completedUser => widget.taskData['completed_user'] as Map?;
-  String get _completedByName =>
-      (_completedUser?['full_name'] as String?) ?? 'Alguien';
+  String _completedByName(AppLocalizations t) =>
+      (_completedUser?['full_name'] as String?) ?? t.taskDetailFallbackUser;
   String? get _completedByAvatar => _completedUser?['avatar_url'] as String?;
   String? get _completedById => _completedUser?['id'] as String?;
   String get _currentUserId => ref.read(currentUserIdProvider) ?? '';
@@ -79,32 +80,38 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     return 0;
   }
 
-  (String, Color, IconData) get _statusInfo {
+  (String, Color, IconData) _statusInfo(AppLocalizations t) {
     if (_activityId != null) {
-      return ('Completada', AppColors.accentTeal, Icons.check_circle_rounded);
+      return (
+        t.taskDetailStatusCompleted,
+        AppColors.accentTeal,
+        Icons.check_circle_rounded,
+      );
     }
 
     return switch (_status) {
       TaskStatus.pendingVerification || TaskStatus.verified => (
-          'Completada',
+          t.taskDetailStatusCompleted,
           AppColors.accentTeal,
           Icons.check_circle_rounded
         ),
       TaskStatus.objected => (
-          'En disputa',
+          t.taskDetailStatusDisputed,
           AppColors.accentRed,
           Icons.warning_amber_rounded
         ),
-      _ => ('Pendiente', AppColors.textMuted, Icons.schedule_rounded),
+      _ => (
+          t.taskDetailStatusPending,
+          AppColors.textMuted,
+          Icons.schedule_rounded
+        ),
     };
   }
 
   Future<void> _undoTask() async {
+    final t = AppLocalizations.of(context);
     if (_activityId == null) {
-      _showSnack(
-        'No se puede deshacer: actividad no encontrada',
-        AppColors.error,
-      );
+      _showSnack(t.taskDetailUndoErrorNotFound, AppColors.error);
       return;
     }
 
@@ -114,7 +121,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       final repo = ref.read(taskRepositoryProvider);
       final result = await repo.undoTaskCompletion(_activityId!);
       result.fold(
-        (failure) => _showSnack('No se pudo deshacer', AppColors.error),
+        (failure) => _showSnack(t.taskDetailUndoError, AppColors.error),
         (_) {
           widget.onChanged?.call();
           if (mounted) Navigator.pop(context);
@@ -128,7 +135,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       );
       if (mounted) {
         setState(() => _isLoading = false);
-        _showSnack('No se pudo deshacer', AppColors.error);
+        _showSnack(t.taskDetailUndoError, AppColors.error);
       }
     }
   }
@@ -147,16 +154,18 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (statusLabel, statusColor, statusIcon) = _statusInfo;
+    final t = AppLocalizations.of(context);
+    final (statusLabel, statusColor, statusIcon) = _statusInfo(t);
     final categoryColor = CategoryMapping.getCategoryColor(_category);
     final categoryIcon = CategoryMapping.getCategoryMaterialIcon(_category);
     final categoryLabel =
         CategoryMapping.categoryNames[_category.toLowerCase()] ?? _category;
     final completedAt = widget.taskData['completed_at'];
+    final localeTag = Localizations.localeOf(context).toString();
     final dateStr = completedAt != null
-        ? DateFormat("d MMM '·' HH:mm", 'es')
+        ? DateFormat("d MMM '·' HH:mm", localeTag)
             .format(DateTime.parse(completedAt as String).toLocal())
-        : 'Sin registro';
+        : t.taskDetailNoRecord;
 
     return Container(
       margin: const EdgeInsets.only(top: 56),
@@ -187,7 +196,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Detalle de tarea',
+                        t.taskDetailHeaderTitle,
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 13,
@@ -277,7 +286,10 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Text(
-                                  _title,
+                                  localizedTaskTitle(
+                                    AppLocalizations.of(context),
+                                    _task,
+                                  ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
@@ -308,7 +320,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                       : Icons.edit_calendar_rounded,
                                   label: _task.isRecurring
                                       ? _task.recurrenceLabel
-                                      : 'Sin fecha',
+                                      : t.tasksPillNoDate,
                                   color: _task.isRecurring
                                       ? AppColors.accentGold
                                       : const Color(0xFFA8734F),
@@ -347,7 +359,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   icon: Icons.star_rounded,
                                   iconColor: AppColors.accentGold,
                                   value: '+$_xpReward XP',
-                                  label: 'Experiencia',
+                                  label: t.taskDetailExperience,
                                 ),
                               ),
                               Container(
@@ -360,7 +372,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                   icon: Icons.monetization_on_rounded,
                                   iconColor: AppColors.accentGreen,
                                   value: '+$_coinReward coins',
-                                  label: 'Recompensa',
+                                  label: t.taskDetailReward,
                                 ),
                               ),
                             ],
@@ -379,7 +391,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                             child: Row(
                               children: [
                                 CustomUserAvatar(
-                                  name: _completedByName,
+                                  name: _completedByName(t),
                                   avatarUrl: _completedByAvatar,
                                   radius: 16,
                                   forceCircular: true,
@@ -392,8 +404,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                     children: [
                                       Text(
                                         _hasCompletionRecord
-                                            ? 'La completó'
-                                            : 'Responsable',
+                                            ? t.taskDetailCompletedBy
+                                            : t.taskDetailAssignedTo,
                                         style: const TextStyle(
                                           color: AppColors.textMuted,
                                           fontSize: 11,
@@ -402,7 +414,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        _completedByName,
+                                        _completedByName(t),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -447,9 +459,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Comentario',
-                              style: TextStyle(
+                            Text(
+                              t.taskDetailComment,
+                              style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
@@ -568,9 +580,9 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
         child: OutlinedButton.icon(
           onPressed: _undoTask,
           icon: const Icon(Icons.undo_rounded, size: 18),
-          label: const Text(
-            'Deshacer',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          label: Text(
+            AppLocalizations.of(context).taskDetailUndoButton,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
           style: OutlinedButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,

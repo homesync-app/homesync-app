@@ -22,10 +22,15 @@ class CreateTaskUseCase {
     List<int>? recurrenceMonthDays,
     String? status,
     List<String>? rotationPool,
+    String? sourceTemplateId,
+    String? titleKey,
   }) async {
     if (title.trim().isEmpty) {
-      return left(const ValidationFailure(
-          'El título de la tarea no puede estar vacío',),);
+      return left(
+        const ValidationFailure(
+          'El título de la tarea no puede estar vacío',
+        ),
+      );
     }
     if (category.trim().isEmpty) {
       return left(const ValidationFailure('La categoría no puede estar vacía'));
@@ -45,6 +50,8 @@ class CreateTaskUseCase {
       recurrenceMonthDays: recurrenceMonthDays,
       status: status,
       rotationPool: rotationPool,
+      sourceTemplateId: sourceTemplateId,
+      titleKey: titleKey,
     );
   }
 }

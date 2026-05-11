@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
@@ -6,6 +6,7 @@ import 'package:homesync_client/features/shopping/data/shopping_predefined.dart'
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class ExpenseShoppingIntegrationCard extends StatelessWidget {
   final bool isPremium;
@@ -29,6 +30,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final hasItems = linkedItems.isNotEmpty || detectedItemNames.isNotEmpty;
     final newCount = autoAddedItems.length;
 
@@ -83,8 +85,8 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       children: [
                         Text(
                           hasItems
-                              ? 'Productos detectados'
-                              : 'Vincular con lista de compras',
+                              ? t.expensesFormShoppingDetectedTitle
+                              : t.expensesFormShoppingLinkTitle,
                           style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 14.5,
@@ -94,7 +96,10 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                         ),
                         if (hasItems && newCount > 0)
                           Text(
-                            '${linkedItems.length} artículo${linkedItems.length == 1 ? '' : 's'} · $newCount nuevo${newCount == 1 ? '' : 's'} para tu lista',
+                            t.expensesFormShoppingDetectedSummary(
+                              linkedItems.length,
+                              newCount,
+                            ),
                             style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
@@ -102,18 +107,18 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                             ),
                           )
                         else if (hasItems)
-                          const Text(
-                            'Se marcarán como comprados al guardar',
-                            style: TextStyle(
+                          Text(
+                            t.expensesFormShoppingWillMarkBought,
+                            style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
                               height: 1.4,
                             ),
                           )
                         else
-                          const Text(
-                            'Toca para vincular artículos',
-                            style: TextStyle(
+                          Text(
+                            t.expensesFormShoppingTapToLink,
+                            style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
                               height: 1.4,
@@ -136,11 +141,11 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                             color: AppColors.divider.withValues(alpha: 0.72),
                           ),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           color: AppColors.textSecondary,
                           size: 18,
-                          semanticLabel: 'Quitar todas las vinculaciones',
+                          semanticLabel: t.expensesFormShoppingClearAllSemantic,
                         ),
                       ),
                     )
@@ -193,6 +198,7 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
   }
 
   Widget _buildLockedCard(BuildContext context, bool hasItems) {
+    final t = AppLocalizations.of(context);
     final displayNames =
         hasItems ? linkedItems.map((i) => i.name).toList() : detectedItemNames;
 
@@ -234,10 +240,10 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Flexible(
+                            Flexible(
                               child: Text(
-                                'Vincular con lista de compras',
-                                style: TextStyle(
+                                t.expensesFormShoppingLinkTitle,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 14,
                                   color: Colors.grey,
@@ -270,8 +276,10 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                         ),
                         Text(
                           displayNames.isNotEmpty
-                              ? '${displayNames.length} ${displayNames.length == 1 ? 'producto detectado' : 'productos detectados'}'
-                              : 'Toca para vincular artículos',
+                              ? t.expensesFormShoppingDetectedCount(
+                                  displayNames.length,
+                                )
+                              : t.expensesFormShoppingTapToLink,
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey.shade500,
@@ -299,11 +307,11 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 6,
                   children: displayNames.take(8).map((raw) {
-                    // Resuelve emoji y nombre limpio desde el catálogo.
-                    // raw puede ser nombre canónico ("Antitranspirante") o
+                    // Resuelve emoji y nombre limpio desde el catÃ¡logo.
+                    // raw puede ser nombre canÃ³nico ("Antitranspirante") o
                     // string crudo del OCR ("ANTITRANS DOVE M POMEL").
                     final catalogEntry = ReceiptMatcher.findPredefined(raw);
-                    final emoji = catalogEntry?.emoji ?? '🛒';
+                    final emoji = catalogEntry?.emoji ?? 'ðŸ›’';
                     final cleanRaw = ReceiptMatcher.cleanName(raw);
                     final displayName = catalogEntry?.name ??
                         (cleanRaw.isNotEmpty ? cleanRaw : raw);
@@ -382,7 +390,7 @@ class _ItemChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            item.emoji.isNotEmpty ? item.emoji : '🛒',
+            item.emoji.isNotEmpty ? item.emoji : 'ðŸ›’',
             style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(width: 6),
@@ -403,9 +411,9 @@ class _ItemChip extends StatelessWidget {
                 color: AppColors.primaryLight.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'nuevo',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context).expensesFormShoppingBadgeNew,
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
@@ -471,6 +479,7 @@ class _ShoppingItemsSelectorSheetState
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final query = _searchQuery.toLowerCase().trim();
     final householdItems = ref.watch(shoppingItemsProvider).value ?? [];
     final pendingHouseholdItems =
@@ -526,11 +535,11 @@ class _ShoppingItemsSelectorSheetState
             height: MediaQuery.of(context).size.height * 0.75,
             child: Column(
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                   child: Text(
-                    'Artículos de la Lista',
-                    style: TextStyle(
+                    t.expensesFormShoppingItemsSheetTitle,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
                       color: AppColors.textPrimary,
@@ -550,11 +559,13 @@ class _ShoppingItemsSelectorSheetState
                     child: TextField(
                       controller: _searchController,
                       focusNode: _searchFocus,
-                      decoration: const InputDecoration(
-                        hintText: 'Buscar o agregar producto...',
-                        hintStyle:
-                            TextStyle(color: AppColors.textMuted, fontSize: 14),
-                        icon: Icon(
+                      decoration: InputDecoration(
+                        hintText: t.expensesFormShoppingSearchHint,
+                        hintStyle: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 14,
+                        ),
+                        icon: const Icon(
                           Icons.search,
                           size: 20,
                           color: AppColors.textSecondary,
@@ -571,7 +582,7 @@ class _ShoppingItemsSelectorSheetState
                         await ref.read(shoppingItemsProvider.notifier).addItem(
                               name: val.trim(),
                               category: 'general',
-                              emoji: '🏷️',
+                              emoji: 'ðŸ·ï¸',
                             );
 
                         final temp = ShoppingItemModel(
@@ -579,7 +590,7 @@ class _ShoppingItemsSelectorSheetState
                           name: val.trim(),
                           householdId: '',
                           createdAt: DateTime.now(),
-                          emoji: '🏷️',
+                          emoji: 'ðŸ·ï¸',
                           category: 'general',
                         );
                         setState(() => _currentSelection.add(temp));
@@ -595,17 +606,17 @@ class _ShoppingItemsSelectorSheetState
                       if (showAddOption)
                         ListTile(
                           leading:
-                              const Text('➕', style: TextStyle(fontSize: 24)),
+                              const Text('âž•', style: TextStyle(fontSize: 24)),
                           title: Text(
-                            'Agregar "$_searchQuery"',
+                            t.expensesFormShoppingAddQuery(_searchQuery),
                             style: const TextStyle(
                               fontWeight: FontWeight.w800,
                               color: AppColors.primary,
                             ),
                           ),
-                          subtitle: const Text(
-                            'Producto personalizado',
-                            style: TextStyle(fontSize: 12),
+                          subtitle: Text(
+                            t.expensesFormShoppingCustomProduct,
+                            style: const TextStyle(fontSize: 12),
                           ),
                           onTap: () async {
                             final queryToSave = _searchQuery.trim();
@@ -618,7 +629,7 @@ class _ShoppingItemsSelectorSheetState
                                 .addItem(
                                   name: queryToSave,
                                   category: 'general',
-                                  emoji: '🏷️',
+                                  emoji: 'ðŸ·ï¸',
                                 );
 
                             final temp = ShoppingItemModel(
@@ -626,7 +637,7 @@ class _ShoppingItemsSelectorSheetState
                               name: queryToSave,
                               householdId: '',
                               createdAt: DateTime.now(),
-                              emoji: '🏷️',
+                              emoji: 'ðŸ·ï¸',
                               category: 'general',
                             );
                             setState(() => _currentSelection.add(temp));
@@ -675,11 +686,11 @@ class _ShoppingItemsSelectorSheetState
                         );
                       }),
                       if (predefinedMatches.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                           child: Text(
-                            'Sugerencias globales',
-                            style: TextStyle(
+                            t.expensesFormShoppingGlobalSuggestions,
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textMuted,
@@ -752,9 +763,9 @@ class _ShoppingItemsSelectorSheetState
                         shape: const StadiumBorder(),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Listo',
-                        style: TextStyle(
+                      child: Text(
+                        t.commonAccept,
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -770,3 +781,5 @@ class _ShoppingItemsSelectorSheetState
     );
   }
 }
+
+

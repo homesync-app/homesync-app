@@ -1,9 +1,12 @@
 "use strict";
 
-const { initializeApp } = require("firebase-admin/app");
+const { applicationDefault, initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 
-initializeApp();
+initializeApp({
+  credential: applicationDefault(),
+  projectId: process.env.GCLOUD_PROJECT || "homesync-prod-r7-123",
+});
 
 async function setRoleCustomClaim() {
   let nextPageToken;

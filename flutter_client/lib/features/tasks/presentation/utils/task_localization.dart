@@ -1,0 +1,199 @@
+import 'package:homesync_client/core/services/template_service.dart';
+import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
+
+String localizedTaskCatalogText(
+  AppLocalizations t,
+  String? translationKey,
+  String fallback,
+) {
+  switch (translationKey) {
+    case 'taskCategoryCleaningGeneral':
+      return t.taskCategoryCleaningGeneral;
+    case 'taskCategoryKitchen':
+      return t.taskCategoryKitchen;
+    case 'taskCategoryBedroom':
+      return t.taskCategoryBedroom;
+    case 'taskCategoryBathroom':
+      return t.taskCategoryBathroom;
+    case 'taskCategoryCommonSpaces':
+      return t.taskCategoryCommonSpaces;
+    case 'taskCategoryLaundry':
+      return t.taskCategoryLaundry;
+    case 'taskCategoryTrashRecycling':
+      return t.taskCategoryTrashRecycling;
+    case 'taskCategoryShoppingOrganization':
+      return t.taskCategoryShoppingOrganization;
+    case 'taskCategoryPets':
+      return t.taskCategoryPets;
+    case 'taskCategoryOutdoorGarden':
+      return t.taskCategoryOutdoorGarden;
+    case 'taskCategoryHomeMaintenance':
+      return t.taskCategoryHomeMaintenance;
+    case 'taskCategoryKidsCare':
+      return t.taskCategoryKidsCare;
+    case 'taskCategoryHomeAdmin':
+      return t.taskCategoryHomeAdmin;
+    case 'taskTemplateSweepFloors':
+      return t.taskTemplateSweepFloors;
+    case 'taskTemplateVacuumFloorsOrRugs':
+      return t.taskTemplateVacuumFloorsOrRugs;
+    case 'taskTemplateMopFloors':
+      return t.taskTemplateMopFloors;
+    case 'taskTemplateDustFurniture':
+      return t.taskTemplateDustFurniture;
+    case 'taskTemplateCleanWindows':
+      return t.taskTemplateCleanWindows;
+    case 'taskTemplateGeneralHouseTidying':
+      return t.taskTemplateGeneralHouseTidying;
+    case 'taskTemplateDeepCleanGeneral':
+      return t.taskTemplateDeepCleanGeneral;
+    case 'taskTemplateWashDishes':
+      return t.taskTemplateWashDishes;
+    case 'taskTemplateEmptyDishwasher':
+      return t.taskTemplateEmptyDishwasher;
+    case 'taskTemplateCookSimpleMeal':
+      return t.taskTemplateCookSimpleMeal;
+    case 'taskTemplateCookFullMeal':
+      return t.taskTemplateCookFullMeal;
+    case 'taskTemplateSetTable':
+      return t.taskTemplateSetTable;
+    case 'taskTemplateClearTable':
+      return t.taskTemplateClearTable;
+    case 'taskTemplateCleanCounters':
+      return t.taskTemplateCleanCounters;
+    case 'taskTemplateCleanFullKitchen':
+      return t.taskTemplateCleanFullKitchen;
+    case 'taskTemplateCleanFridge':
+      return t.taskTemplateCleanFridge;
+    case 'taskTemplateCleanOven':
+      return t.taskTemplateCleanOven;
+    case 'taskTemplateOrganizePantry':
+      return t.taskTemplateOrganizePantry;
+    case 'taskTemplateMakeBed':
+      return t.taskTemplateMakeBed;
+    case 'taskTemplateTidyBedroom':
+      return t.taskTemplateTidyBedroom;
+    case 'taskTemplateChangeSheets':
+      return t.taskTemplateChangeSheets;
+    case 'taskTemplateOrganizeCloset':
+      return t.taskTemplateOrganizeCloset;
+    case 'taskTemplateBedroomGeneralClean':
+      return t.taskTemplateBedroomGeneralClean;
+    case 'taskTemplateCleanToilet':
+      return t.taskTemplateCleanToilet;
+    case 'taskTemplateCleanSink':
+      return t.taskTemplateCleanSink;
+    case 'taskTemplateCleanMirror':
+      return t.taskTemplateCleanMirror;
+    case 'taskTemplateCleanShowerTub':
+      return t.taskTemplateCleanShowerTub;
+    case 'taskTemplateRestockBathroomSupplies':
+      return t.taskTemplateRestockBathroomSupplies;
+    case 'taskTemplateCleanFullBathroom':
+      return t.taskTemplateCleanFullBathroom;
+    case 'taskTemplateTidyLivingRoom':
+      return t.taskTemplateTidyLivingRoom;
+    case 'taskTemplateCleanFurniture':
+      return t.taskTemplateCleanFurniture;
+    case 'taskTemplateCleanSofas':
+      return t.taskTemplateCleanSofas;
+    case 'taskTemplateCleanDiningTable':
+      return t.taskTemplateCleanDiningTable;
+    case 'taskTemplateCleanCommonArea':
+      return t.taskTemplateCleanCommonArea;
+    case 'taskTemplateWashLaundry':
+      return t.taskTemplateWashLaundry;
+    case 'taskTemplateHangLaundry':
+      return t.taskTemplateHangLaundry;
+    case 'taskTemplateUseDryer':
+      return t.taskTemplateUseDryer;
+    case 'taskTemplateFoldPutAwayLaundry':
+      return t.taskTemplateFoldPutAwayLaundry;
+    case 'taskTemplateIronClothes':
+      return t.taskTemplateIronClothes;
+    case 'taskTemplateChangeTowels':
+      return t.taskTemplateChangeTowels;
+    case 'taskTemplateOrganizeWardrobe':
+      return t.taskTemplateOrganizeWardrobe;
+    case 'taskTemplateTakeOutTrash':
+      return t.taskTemplateTakeOutTrash;
+    case 'taskTemplateSortRecycling':
+      return t.taskTemplateSortRecycling;
+    case 'taskTemplateTakeRecycling':
+      return t.taskTemplateTakeRecycling;
+    case 'taskTemplateMakeShoppingList':
+      return t.taskTemplateMakeShoppingList;
+    case 'taskTemplateGoGroceryShopping':
+      return t.taskTemplateGoGroceryShopping;
+    case 'taskTemplatePutAwayGroceries':
+      return t.taskTemplatePutAwayGroceries;
+    case 'taskTemplatePlanWeeklyMenu':
+      return t.taskTemplatePlanWeeklyMenu;
+    case 'taskTemplateFeedPet':
+      return t.taskTemplateFeedPet;
+    case 'taskTemplateWalkPet':
+      return t.taskTemplateWalkPet;
+    case 'taskTemplateCleanPetArea':
+      return t.taskTemplateCleanPetArea;
+    case 'taskTemplateBathePet':
+      return t.taskTemplateBathePet;
+    case 'taskTemplatePetAreaGeneralClean':
+      return t.taskTemplatePetAreaGeneralClean;
+    case 'taskTemplateWaterPlants':
+      return t.taskTemplateWaterPlants;
+    case 'taskTemplateCleanPatioTerrace':
+      return t.taskTemplateCleanPatioTerrace;
+    case 'taskTemplateRakeLeaves':
+      return t.taskTemplateRakeLeaves;
+    case 'taskTemplateMowLawn':
+      return t.taskTemplateMowLawn;
+    case 'taskTemplateTidyGarden':
+      return t.taskTemplateTidyGarden;
+    case 'taskTemplateChangeLightBulbs':
+      return t.taskTemplateChangeLightBulbs;
+    case 'taskTemplateSmallHomeRepair':
+      return t.taskTemplateSmallHomeRepair;
+    case 'taskTemplateCheckFilters':
+      return t.taskTemplateCheckFilters;
+    case 'taskTemplateUnclogDrains':
+      return t.taskTemplateUnclogDrains;
+    case 'taskTemplateMediumRepair':
+      return t.taskTemplateMediumRepair;
+    case 'taskTemplateLargeRepair':
+      return t.taskTemplateLargeRepair;
+    case 'taskTemplateTidyToys':
+      return t.taskTemplateTidyToys;
+    case 'taskTemplateFeedKids':
+      return t.taskTemplateFeedKids;
+    case 'taskTemplateHelpWithHomework':
+      return t.taskTemplateHelpWithHomework;
+    case 'taskTemplateSchoolPickupDropoff':
+      return t.taskTemplateSchoolPickupDropoff;
+    case 'taskTemplateBatheKids':
+      return t.taskTemplateBatheKids;
+    case 'taskTemplatePayBills':
+      return t.taskTemplatePayBills;
+    case 'taskTemplateReviewHouseholdExpenses':
+      return t.taskTemplateReviewHouseholdExpenses;
+    case 'taskTemplateOrganizeDocuments':
+      return t.taskTemplateOrganizeDocuments;
+    case 'taskTemplatePlanHouseholdTasks':
+      return t.taskTemplatePlanHouseholdTasks;
+    default:
+      return fallback;
+  }
+}
+
+String localizedTaskCategoryName(AppLocalizations t, CategoryModel category) {
+  return localizedTaskCatalogText(t, category.translationKey, category.name);
+}
+
+String localizedTaskTemplateTitle(AppLocalizations t, TaskTemplate template) {
+  return localizedTaskCatalogText(t, template.translationKey, template.title);
+}
+
+String localizedTaskTitle(AppLocalizations t, TaskModel task) {
+  return localizedTaskCatalogText(t, task.titleKey, task.title);
+}

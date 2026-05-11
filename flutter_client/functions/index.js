@@ -6,17 +6,22 @@ import {
 
 initializeApp();
 
+function withAuthenticatedRole(event) {
+  return {
+    ...(event.data?.customClaims ?? {}),
+    role: "authenticated",
+  };
+}
+
 export const beforecreated = beforeUserCreated((event) => {
   return {
-    customClaims: {
-      role: "authenticated",
-    },
+    customClaims: withAuthenticatedRole(event),
   };
 });
 
 export const beforesignedin = beforeUserSignedIn((event) => {
   return {
-    customClaims: {
+    sessionClaims: {
       role: "authenticated",
     },
   };

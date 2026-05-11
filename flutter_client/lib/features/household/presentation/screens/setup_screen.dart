@@ -15,6 +15,7 @@ import 'package:homesync_client/features/auth/presentation/providers/auth_contro
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'setup_widgets.dart';
@@ -85,33 +86,27 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     'ninos': 12,
     'administracion': 13,
   };
+  // Names and descriptions live in app_es.arb / app_en.arb under
+  // `setupModeName` / `setupModeDescription` (ICU select on the id below).
   final List<Map<String, dynamic>> _modes = [
     {
       'id': 'couple',
-      'name': 'Pareja',
       'icon': Icons.handshake_rounded,
-      'desc': 'Gastos y tareas compartidas',
       'gradient': [const Color(0xFFEF7A4B), const Color(0xFFFFB085)],
     },
     {
       'id': 'family',
-      'name': 'Familia',
       'icon': Icons.family_restroom_rounded,
-      'desc': 'Tareas, compras y seguimiento familiar',
       'gradient': [const Color(0xFFEE652B), const Color(0xFFFF8F5F)],
     },
     {
       'id': 'friends',
-      'name': 'Convivencia',
       'icon': Icons.groups_rounded,
-      'desc': 'Cuentas claras entre roommates',
       'gradient': [const Color(0xFF3B82F6), const Color(0xFF7DD3FC)],
     },
     {
       'id': 'solo',
-      'name': 'Solo yo',
       'icon': Icons.task_alt_rounded,
-      'desc': 'Rutinas y pendientes personales',
       'gradient': [const Color(0xFF8B5CF6), const Color(0xFFC4B5FD)],
     },
   ];
@@ -286,7 +281,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   String _suggestFamilyHouseholdName() {
     final rawName = _nameController.text.trim();
-    if (rawName.isEmpty) return 'Mi familia';
+    if (rawName.isEmpty) return AppLocalizations.of(context).setupFamilyDefaultName;
 
     final firstName = rawName.split(' ').first.trim();
     return '$firstName y familia';
@@ -301,7 +296,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     try {
       final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
       final mode = _selectedMode ?? 'couple';
-      await firebaseAuthService.createHouseholdForUser(mode);
+      final householdId =
+          await firebaseAuthService.createHouseholdForUser(mode);
+      if (householdId == null || householdId.isEmpty) {
+        throw Exception('No se pudo crear el hogar');
+      }
+      _invalidateHouseholdSession();
 
       final result =
           await ref.read(generateInvitationCodeUseCaseProvider).call();
@@ -336,6 +336,45 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         );
       }
     }
+  }
+
+  void _invalidateHouseholdSession() {
+    ref.invalidate(householdIdProvider);
+    ref.invalidate(currentHouseholdProvider);
+    ref.invalidate(householdCapabilitiesProvider);
+  }
+
+  void _notifySetupComplete() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onComplete();
+    });
+  }
+
+  Future<String?> _ensureHouseholdForSetupCompletion() async {
+    final selectedMode = _selectedMode ?? 'solo';
+    var householdId = await ref.read(householdIdProvider.future);
+
+    if (householdId == null && _createNew) {
+      householdId = await ref
+          .read(firebaseAuthServiceProvider)
+          .createHouseholdForUser(selectedMode);
+      if (householdId == null || householdId.isEmpty) {
+        throw Exception('No se pudo crear el hogar');
+      }
+      _invalidateHouseholdSession();
+    }
+
+    // Only update household type when the user CREATED the household.
+    // Joiners don't own the household and RLS blocks the update.
+    if (householdId != null && _selectedMode != null && _createNew) {
+      final result = await ref
+          .read(updateHouseholdTypeUseCaseProvider)
+          .call(householdId, _selectedMode!);
+      result.fold((failure) => throw failure, (_) {});
+      _invalidateHouseholdSession();
+    }
+
+    return householdId;
   }
 
   Future<void> _handleJoinTeam() async {
@@ -383,9 +422,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   );
           profileResult.fold(
             (failure) => log.e(
-                'SetupScreen._handleJoinTeam: updateProfile failed: ${failure.message}'),
+                'SetupScreen._handleJoinTeam: updateProfile failed: ${failure.message}',),
             (_) => log.i(
-                'SetupScreen._handleJoinTeam: updateProfile ok name="$nameToSave"'),
+                'SetupScreen._handleJoinTeam: updateProfile ok name="$nameToSave"',),
           );
         }
       }
@@ -399,8 +438,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Te uniste al hogar!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).setupSnackJoinedHousehold),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -410,7 +449,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('setup_completed', true);
         }
-        if (mounted) widget.onComplete();
+        if (mounted) _notifySetupComplete();
       }
     } catch (e) {
       if (mounted) {
@@ -423,11 +462,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Future<void> _saveAndComplete() async {
+    final t = AppLocalizations.of(context);
     final tasksEnabled = await _isTasksEnabledForCurrentHousehold();
     if (!mounted) return;
     if (tasksEnabled && _selectedTemplateIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona al menos una tarea')),
+        SnackBar(
+          content: Text(t.setupSnackPickAtLeastOneTask),
+        ),
       );
       return;
     }
@@ -437,15 +479,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final client = ref.read(supabaseClientProvider);
 
     try {
-      final householdId = await ref.read(householdIdProvider.future);
-      // Only update household type when the user CREATED the household.
-      // Joiners don't own the household and RLS blocks the update.
-      if (householdId != null && _selectedMode != null && _createNew) {
-        final result = await ref
-            .read(updateHouseholdTypeUseCaseProvider)
-            .call(householdId, _selectedMode!);
-        result.fold((failure) => throw failure, (_) {});
-      }
+      await _ensureHouseholdForSetupCompletion();
 
       if (!mounted) return;
 
@@ -488,7 +522,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
       if (tasksEnabled) {
         log.i(
-            '_saveAndComplete: cloning ${_selectedTemplateIds.length} templates');
+            '_saveAndComplete: cloning ${_selectedTemplateIds.length} templates',);
         final count = await _templateService
             .cloneTemplates(_selectedTemplateIds.toList());
         log.i('_saveAndComplete: cloned $count tasks');
@@ -507,7 +541,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           );
           if (rpcResult is Map<String, dynamic> && rpcResult['ok'] == false) {
             final errorMsg =
-                rpcResult['error'] as String? ?? 'Error desconocido';
+                rpcResult['error'] as String? ?? t.setupSnackUnknownError;
             log.w('complete_member_onboarding (creator) returned: $errorMsg');
             if (mounted) {
               setState(() => _isSaving = false);
@@ -519,13 +553,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           }
         } catch (e, stack) {
           log.w('complete_member_onboarding (creator) failed: $e',
-              error: e, stackTrace: stack);
+              error: e, stackTrace: stack,);
           if (mounted) {
             setState(() => _isSaving = false);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text(
-                      'No se pudo completar el onboarding. Intentá de nuevo.')),
+              SnackBar(content: Text(t.setupSnackOnboardingFailed)),
             );
           }
           return;
@@ -544,13 +576,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('setup_completed', true);
       }
-      if (mounted) widget.onComplete();
+      if (mounted) _notifySetupComplete();
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
         log.e('_saveAndComplete error: $e');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.commonErrorWithDetails(e.toString())),
+          ),
+        );
       }
     }
   }
@@ -561,7 +596,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('¡Código copiado al portapapeles! ??'),
+        content: Text(AppLocalizations.of(context).setupSnackCodeCopied),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -587,8 +622,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           _copyCode();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No se pudo abrir WhatsApp. Código copiado.'),
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context).setupSnackWhatsappFailed,
+                ),
               ),
             );
           }
@@ -791,9 +828,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showLabel) ...[
-            const Text(
-              'Ingresa el código',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            Text(
+              AppLocalizations.of(context).setupJoinCodeTitle,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
             ),
             SizedBox(height: compact ? 8 : 12),
           ],
@@ -843,10 +880,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   double _tempRatio = 0.5;
 
   Future<void> _saveFamilySetup() async {
-    final householdId = ref.read(householdIdProvider).valueOrNull;
+    final defaultHouseholdName =
+        AppLocalizations.of(context).setupHouseholdDefaultName;
+    final householdId = await ref.read(householdIdProvider.future);
     final currentUserId = ref.read(currentUserIdProvider);
     final rawName = _familyHouseholdNameController.text.trim();
-    final householdName = rawName.isNotEmpty ? rawName : 'Mi Hogar';
+    final householdName =
+        rawName.isNotEmpty ? rawName : defaultHouseholdName;
 
     try {
       if (householdId != null) {
@@ -878,33 +918,30 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildValuePropStepV3() {
-    const features = [
+    final t = AppLocalizations.of(context);
+    final features = [
       (
         icon: Icons.checklist_rounded,
-        title: 'Tareas compartidas',
-        desc:
-            'Organizá tareas del hogar y repartí responsabilidades sin fricción.',
+        title: t.setupFeatureTasksTitle,
+        desc: t.setupFeatureTasksDesc,
         color: AppColors.primary,
       ),
       (
         icon: Icons.account_balance_wallet_rounded,
-        title: 'Gastos en equipo',
-        desc:
-            'Registrá gastos, dividí cuentas y mantené el balance siempre claro.',
+        title: t.setupFeatureExpensesTitle,
+        desc: t.setupFeatureExpensesDesc,
         color: AppColors.sage,
       ),
       (
         icon: Icons.workspace_premium_rounded,
-        title: 'Gamificación real',
-        desc:
-            'Convertí la organización diaria en progreso, premios y motivación.',
+        title: t.setupFeatureGamificationTitle,
+        desc: t.setupFeatureGamificationDesc,
         color: AppColors.accentGold,
       ),
       (
         icon: Icons.shopping_cart_checkout_rounded,
-        title: 'Compras sincronizadas',
-        desc:
-            'Listas compartidas en tiempo real para que nadie compre dos veces.',
+        title: t.setupFeatureShoppingTitle,
+        desc: t.setupFeatureShoppingDesc,
         color: AppColors.accentBlue,
       ),
     ];
@@ -918,7 +955,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            const SetupStepEyebrow(text: 'Tu hogar, sincronizado'),
+            SetupStepEyebrow(text: t.setupValuePropEyebrow),
             const SizedBox(height: 12),
             const Text(
               'HomeSync',
@@ -931,7 +968,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'El hogar mejor organizado empieza aquí.',
+              t.setupValuePropTagline,
               style: TextStyle(
                 fontSize: 18,
                 height: 1.45,
@@ -964,7 +1001,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             }),
             const SizedBox(height: 24),
             SetupPrimaryButton(
-              text: 'Comenzar',
+              text: t.setupValuePropStartButton,
               onPressed: () {
                 HapticFeedback.heavyImpact();
                 setState(() => _currentStep = 1);
@@ -972,7 +1009,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Te llevará menos de 2 minutos',
+              t.setupValuePropTimeHint,
               style: TextStyle(
                 color: AppColors.textSecondary.withValues(alpha: 0.6),
                 fontSize: 13,
@@ -988,7 +1025,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Widget _buildWelcomeStepV5() {
     return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
+      builder: (context, constraints) {
+        final t = AppLocalizations.of(context);
+        return SingleChildScrollView(
         key: const ValueKey('welcome_v5'),
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1001,9 +1040,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 imagePath: 'assets/images/onboarding_welcome_cat.png',
               ),
               const SizedBox(height: 18),
-              const Text(
-                '¡Bienvenido!',
-                style: TextStyle(
+              Text(
+                t.setupWelcomeTitle,
+                style: const TextStyle(
                   fontSize: 42,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1.8,
@@ -1013,7 +1052,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'Vamos a dejar tu hogar listo para empezar con tareas, gastos y compras compartidas desde el primer día.',
+                t.setupWelcomeBody,
                 style: TextStyle(
                   fontSize: 17,
                   height: 1.36,
@@ -1022,20 +1061,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 ),
               ),
               const SizedBox(height: 18),
-              const SetupSupportBullet(
+              SetupSupportBullet(
                 icon: Icons.timer_outlined,
                 color: AppColors.primary,
-                text: 'Configuración rápida de menos de 1 minuto.',
+                text: t.setupWelcomeBulletQuick,
               ),
               const SizedBox(height: 12),
-              const SetupSupportBullet(
+              SetupSupportBullet(
                 icon: Icons.groups_2_rounded,
-                color: Color(0xFF6FA097),
-                text: 'Podés crear un hogar nuevo o sumarte con un código.',
+                color: const Color(0xFF6FA097),
+                text: t.setupWelcomeBulletJoin,
               ),
               const SizedBox(height: 30),
               SetupPrimaryButton(
-                text: 'Configurar mi hogar',
+                text: t.setupWelcomeStartButton,
                 onPressed: () {
                   HapticFeedback.heavyImpact();
                   setState(() => _currentStep = 2);
@@ -1045,11 +1084,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ],
           ),
         ),
-      ),
+      );
+      },
     );
   }
 
   Widget _buildIdentityStepV3() {
+    final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('identity_v3'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1059,12 +1100,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 18),
-            SetupStepEyebrow(text: 'Tu perfil'),
+            SetupStepEyebrow(text: t.setupProfileEyebrow),
             const SizedBox(height: 10),
             SetupHeading(
-              title: '¿Cómo te llamas?',
-              subtitle:
-                  'Personalizá tu perfil para que tu equipo te identifique mejor.',
+              title: t.setupProfileTitle,
+              subtitle: t.setupProfileSubtitle,
             ),
             const SizedBox(height: 32),
             Center(
@@ -1126,8 +1166,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             const SizedBox(height: 24),
             Text(
               _selectedAvatarUrl != null
-                  ? 'Usamos tu foto de Google como punto de partida. Si querés, podés cambiarla por uno de nuestros avatares.'
-                  : 'Elegí un avatar y un nombre para empezar con una identidad clara dentro del hogar.',
+                  ? t.setupProfileGoogleAvatarHint
+                  : t.setupProfileEmptyAvatarHint,
               style: TextStyle(
                 fontSize: 14,
                 height: 1.45,
@@ -1140,7 +1180,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               autofocus: true,
               style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
               decoration: InputDecoration(
-                hintText: 'Tu nombre o apodo',
+                hintText: t.authNameHint,
                 prefixIcon: const Icon(Icons.person_outline_rounded),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.9),
@@ -1168,7 +1208,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
             const SizedBox(height: 22),
             Text(
-              'Avatar',
+              t.setupProfileAvatarLabel,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -1235,7 +1275,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             ),
             const SizedBox(height: 40),
             SetupPrimaryButton(
-              text: 'Continuar',
+              text: t.commonContinue,
               onPressed: _nameController.text.trim().isEmpty
                   ? null
                   : () {
@@ -1251,6 +1291,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildModeSelectionV3() {
+    final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('mode_v3'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1258,11 +1299,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
-          const SetupStepEyebrow(text: 'Tipo de hogar'),
+          SetupStepEyebrow(text: t.setupModePickerEyebrow),
           const SizedBox(height: 8),
-          const SetupHeading(
-            title: '¡Comencemos!',
-            subtitle: '¿Cómo vas a organizar tu hogar?',
+          SetupHeading(
+            title: t.setupModePickerTitle,
+            subtitle: t.setupModePickerSubtitle,
           ),
           const SizedBox(height: 18),
           Expanded(
@@ -1297,7 +1338,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           const Spacer(flex: 2),
                           const SizedBox(height: 8),
                           SetupPrimaryButton(
-                            text: 'Continuar',
+                            text: t.commonContinue,
                             onPressed:
                                 _selectedMode != null ? _onModeSelected : null,
                           ),
@@ -1322,7 +1363,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                       .signOut();
                                 },
                                 child: Text(
-                                  'Cerrar sesión',
+                                  t.setupSignOutLink,
                                   style: TextStyle(
                                     color: AppColors.textSecondary
                                         .withValues(alpha: 0.64),
@@ -1351,7 +1392,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 onPressed: () =>
                                     setState(() => _currentStep = 0),
                                 child: Text(
-                                  'Ver características',
+                                  t.setupSeeFeaturesLink,
                                   style: TextStyle(
                                     color: AppColors.textSecondary
                                         .withValues(alpha: 0.52),
@@ -1513,18 +1554,20 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildTeamOptionsV3() {
-    return Padding(
+    final t = AppLocalizations.of(context);
+    return SingleChildScrollView(
       key: const ValueKey('team_options_v3'),
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 6),
-          SetupStepEyebrow(text: 'Conectar el hogar'),
+          SetupStepEyebrow(text: t.setupConnectEyebrow),
           const SizedBox(height: 10),
-          const Text(
-            'Conecta tu hogar',
-            style: TextStyle(
+          Text(
+            t.setupConnectTitle,
+            style: const TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w900,
               letterSpacing: -1.4,
@@ -1534,7 +1577,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Podés crear un nuevo equipo o sumarte con un código de invitación.',
+            t.setupConnectSubtitle,
             style: TextStyle(
               fontSize: 15.5,
               height: 1.28,
@@ -1545,9 +1588,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 16),
           SetupOptionTile(
             icon: Icons.add_home_work_rounded,
-            title: 'Crear nuevo hogar',
-            desc:
-                'Generá un código para invitar a quienes comparten este espacio.',
+            title: t.setupConnectCreateTitle,
+            desc: t.setupConnectCreateDesc,
             isSelected: _createNew,
             tone: AppColors.primary,
             onTap: () => setState(() {
@@ -1558,8 +1600,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 10),
           SetupOptionTile(
             icon: Icons.qr_code_scanner_rounded,
-            title: 'Tengo un código',
-            desc: 'Ingresá el código para sumarte al hogar.',
+            title: t.setupConnectJoinTitle,
+            desc: t.setupConnectJoinDesc,
             isSelected: !_createNew,
             tone: AppColors.sage,
             onTap: () => setState(() {
@@ -1570,8 +1612,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           if (!_createNew) ...[
             const SizedBox(height: 14),
             Text(
-              'Ingresá el código',
-              style: TextStyle(
+              t.setupConnectCodeInputLabel,
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -1581,19 +1623,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             const SizedBox(height: 8),
             _buildJoinInput(showLabel: false, compact: true),
           ],
-          const Spacer(),
+          const SizedBox(height: 20),
           if (_isJoining)
             const Center(child: CircularProgressIndicator())
           else
             SetupPrimaryButton(
-              text: _createNew ? 'Crear mi hogar' : 'Unirme ahora',
+              text: _createNew
+                  ? t.setupConnectCreateButton
+                  : t.setupConnectJoinButton,
               onPressed: _createNew ? _handleCreateTeam : _handleJoinTeam,
             ),
           const SizedBox(height: 4),
           Center(
             child: TextButton(
               onPressed: () => setState(() => _currentStep = 3),
-              child: const Text('Volver atrás'),
+              child: Text(t.setupConnectBackButton),
             ),
           ),
           const SizedBox(height: 8),
@@ -1603,6 +1647,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildInviteCodeStepV2() {
+    final t = AppLocalizations.of(context);
+    final modeKey = _selectedMode ?? 'couple';
     return Column(
       key: const ValueKey('invite_code_v2'),
       children: [
@@ -1612,15 +1658,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              SetupStepEyebrow(text: 'Invitación'),
+              SetupStepEyebrow(text: t.setupInvitationEyebrow),
               const SizedBox(height: 10),
               SetupHeading(
-                title: _selectedMode == 'family'
-                    ? 'Familia creada'
-                    : 'Hogar creado',
-                subtitle: _selectedMode == 'family'
-                    ? 'Compartí este código con quienes forman parte del hogar.'
-                    : 'Compartí este código para invitar a la otra persona.',
+                title: t.setupInvitationTitle(modeKey),
+                subtitle: t.setupInvitationSubtitle(modeKey),
               ),
               const SizedBox(height: 28),
               Center(
@@ -1667,9 +1709,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    'CODIGO DE INVITACION',
-                                    style: TextStyle(
+                                  Text(
+                                    t.setupInvitationCodeEyebrow,
+                                    style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w900,
                                       fontSize: 12,
@@ -1732,7 +1774,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Podés copiarlo o compartirlo ahora. Más adelante también lo vas a encontrar en ajustes.',
+                        t.setupInvitationFooter,
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.4,
@@ -1750,7 +1792,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 children: [
                   Expanded(
                     child: SetupSecondaryButton(
-                      text: 'Copiar',
+                      text: t.setupInvitationCopyButton,
                       icon: Icons.copy_rounded,
                       onTap: _copyCode,
                     ),
@@ -1758,7 +1800,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   const SizedBox(width: 16),
                   Expanded(
                     child: SetupSecondaryButton(
-                      text: 'Compartir',
+                      text: t.setupInvitationShareButton,
                       icon: Icons.share_rounded,
                       onTap: _shareViaWhatsApp,
                     ),
@@ -1772,7 +1814,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: SetupPrimaryButton(
-            text: 'Continuar',
+            text: t.commonContinue,
             onPressed: () {
               setState(() {
                 _currentStep = _selectedMode == 'solo' ? 7 : 6;
@@ -1783,7 +1825,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         const SizedBox(height: 16),
         TextButton(
           onPressed: () => setState(() => _currentStep = 4),
-          child: const Text('Volver'),
+          child: Text(t.commonBack),
         ),
         const SizedBox(height: 32),
       ],
@@ -1798,6 +1840,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildFamilySetupStepV2() {
+    final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('family_setup_v2'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1805,12 +1848,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          SetupStepEyebrow(text: 'Base familiar'),
+          SetupStepEyebrow(text: t.setupFamilyBaseEyebrow),
           const SizedBox(height: 10),
           SetupHeading(
-            title: 'Base del hogar familiar',
-            subtitle:
-                'Antes de empezar, definamos cómo se organiza esta familia.',
+            title: t.setupFamilyBaseTitle,
+            subtitle: t.setupFamilyBaseSubtitle,
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -1822,9 +1864,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Nombre del hogar',
-                          style: TextStyle(
+                        Text(
+                          t.setupFamilyHouseholdNameLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                           ),
@@ -1834,7 +1876,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           controller: _familyHouseholdNameController,
                           textCapitalization: TextCapitalization.words,
                           decoration: InputDecoration(
-                            hintText: 'Ej: Casa de los Gómez',
+                            hintText: t.setupFamilyHouseholdNameHint,
                             filled: true,
                             fillColor: Colors.white.withValues(alpha: 0.92),
                             enabledBorder: OutlineInputBorder(
@@ -1860,9 +1902,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Tu rol visible',
-                          style: TextStyle(
+                        Text(
+                          t.setupFamilyRoleLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                           ),
@@ -1872,17 +1914,22 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           spacing: 10,
                           runSpacing: 10,
                           children: [
-                            'Padre',
-                            'Madre',
-                            'Tutor/a',
-                            'Adolescente',
-                          ].map((role) {
+                            // Internal id stays in Spanish for backend compat
+                            // (sent as 'p_display_role'); only the UI label is
+                            // localized via the lookup below.
+                            ('Padre', t.setupFamilyRoleFather),
+                            ('Madre', t.setupFamilyRoleMother),
+                            ('Tutor/a', t.setupFamilyRoleGuardian),
+                            ('Adolescente', t.setupFamilyRoleTeen),
+                          ].map((entry) {
+                            final id = entry.$1;
+                            final label = entry.$2;
                             return SetupFamilyChoiceChip(
-                              label: role,
-                              selected: _familyRole == role,
+                              label: label,
+                              selected: _familyRole == id,
                               onTap: () => setState(() {
-                                _familyRole = role;
-                                if (role == 'Adolescente') {
+                                _familyRole = id;
+                                if (id == 'Adolescente') {
                                   _selectedCreatorMemberType = 'teen';
                                 } else {
                                   _selectedCreatorMemberType = 'parent';
@@ -1900,14 +1947,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
           const SizedBox(height: 24),
           SetupPrimaryButton(
-            text: 'Guardar y continuar',
+            text: t.setupSaveAndContinue,
             onPressed: _saveFamilySetup,
           ),
           const SizedBox(height: 16),
           Center(
             child: TextButton(
               onPressed: _advanceToTaskSelectionOrComplete,
-              child: const Text('Configurar luego'),
+              child: Text(t.setupConfigureLater),
             ),
           ),
           const SizedBox(height: 32),
@@ -1917,6 +1964,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildFriendsEqualSplitStepV2() {
+    final t = AppLocalizations.of(context);
     _tempRatio = 0.5;
     return Padding(
       key: const ValueKey('split_friends_v2'),
@@ -1925,12 +1973,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          SetupStepEyebrow(text: 'Gastos del hogar'),
+          SetupStepEyebrow(text: t.setupExpensesEyebrow),
           const SizedBox(height: 10),
           SetupHeading(
-            title: 'División de gastos',
-            subtitle:
-                'En un piso compartido, lo más simple es dividir todo en partes iguales.',
+            title: t.setupExpensesTitle,
+            subtitle: t.setupFriendsExpensesSubtitle,
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -1963,9 +2010,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Reparto equitativo',
-                          style: TextStyle(
+                        Text(
+                          t.setupFriendsExpensesCardTitle,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.4,
@@ -1973,7 +2020,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Cada compañero paga la misma proporción. Pueden ajustar gastos individuales más adelante.',
+                          t.setupFriendsExpensesCardBody,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 13.5,
@@ -1987,10 +2034,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const SetupStrategyTip(
-                    title: 'Equitativo por defecto',
-                    desc:
-                        'Ideal para compañeros que comparten gastos del piso.',
+                  SetupStrategyTip(
+                    title: t.setupFriendsExpensesTipTitle,
+                    desc: t.setupFriendsExpensesTipDesc,
                     active: true,
                   ),
                 ],
@@ -1999,18 +2045,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
           const SizedBox(height: 24),
           SetupPrimaryButton(
-            text: 'Guardar y continuar',
+            text: t.setupSaveAndContinue,
             onPressed: () async {
               _tempRatio = 0.5;
               try {
-                final householdId = ref.read(householdIdProvider).valueOrNull;
+                final householdId = await ref.read(householdIdProvider.future);
                 if (householdId != null) {
                   final result = await ref
                       .read(updateDefaultSplitRatioUseCaseProvider)
                       .call(householdId, _tempRatio);
                   result.fold((failure) => throw failure, (_) {});
                 }
-              } catch (e) {}
+              } catch (e, st) {
+                log.w(
+                  'Failed to update default split ratio during setup',
+                  error: e,
+                  stackTrace: st,
+                );
+              }
               await _advanceToTaskSelectionOrComplete();
             },
           ),
@@ -2018,7 +2070,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           Center(
             child: TextButton(
               onPressed: _advanceToTaskSelectionOrComplete,
-              child: const Text('Configurar luego'),
+              child: Text(t.setupConfigureLater),
             ),
           ),
           const SizedBox(height: 32),
@@ -2032,6 +2084,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       return _buildFriendsEqualSplitStepV2();
     }
 
+    final t = AppLocalizations.of(context);
+    final modeKey = _selectedMode ?? 'couple';
+
     return Padding(
       key: const ValueKey('split_v2'),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -2039,12 +2094,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          SetupStepEyebrow(text: 'Gastos del hogar'),
+          SetupStepEyebrow(text: t.setupExpensesEyebrow),
           const SizedBox(height: 10),
           SetupHeading(
-            title: 'División de gastos',
-            subtitle:
-                'Configuremos una base simple para dividir gastos en ${_selectedMode == 'couple' ? 'pareja' : 'convivencia'}.',
+            title: t.setupExpensesTitle,
+            subtitle: t.setupCoupleFamilyExpensesSubtitle(modeKey),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -2078,9 +2132,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            _selectedMode == 'couple'
-                                ? 'Pueden cambiar esto después en ajustes. Como base arrancamos con una división 50/50.'
-                                : 'Pueden cambiar esto después en ajustes. Como base arrancamos con una división equitativa.',
+                            t.setupCoupleFamilyExpensesNote(modeKey),
                             style: TextStyle(
                               fontSize: 13,
                               height: 1.4,
@@ -2095,7 +2147,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    _selectedMode == 'couple' ? 'VOS / PAREJA' : 'VOS / OTROS',
+                    t.setupCoupleFamilyExpensesSplitLabel(modeKey),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w900,
@@ -2158,15 +2210,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   ),
                   const SizedBox(height: 32),
                   SetupStrategyTip(
-                    title: 'Igualitario (50/50)',
+                    title: t.setupCoupleFamilyTipEqualTitle,
                     desc: _selectedMode == 'couple'
-                        ? 'Ideal para ingresos y responsabilidades similares.'
-                        : 'Ideal para hogares donde los gastos se reparten parejo.',
+                        ? t.setupCoupleFamilyTipEqualDescCouple
+                        : t.setupCoupleFamilyTipEqualDescOther,
                     active: _tempRatio == 0.5,
                   ),
                   SetupStrategyTip(
-                    title: 'Proporcional',
-                    desc: 'Ajustado a lo que cada persona puede aportar.',
+                    title: t.setupCoupleFamilyTipProportionalTitle,
+                    desc: t.setupCoupleFamilyTipProportionalDesc,
                     active: _tempRatio != 0.5,
                   ),
                 ],
@@ -2175,10 +2227,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           ),
           const SizedBox(height: 24),
           SetupPrimaryButton(
-            text: 'Guardar y continuar',
+            text: t.setupSaveAndContinue,
             onPressed: () async {
               try {
-                final householdId = ref.read(householdIdProvider).valueOrNull;
+                final householdId = await ref.read(householdIdProvider.future);
                 if (householdId != null) {
                   final result = await ref
                       .read(updateDefaultSplitRatioUseCaseProvider)
@@ -2195,7 +2247,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           Center(
             child: TextButton(
               onPressed: _advanceToTaskSelectionOrComplete,
-              child: const Text('Configurar luego'),
+              child: Text(t.setupConfigureLater),
             ),
           ),
           const SizedBox(height: 32),
@@ -2209,6 +2261,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
+    final t = AppLocalizations.of(context);
+    final modeKey = _selectedMode ?? 'couple';
+
     return Column(
       key: const ValueKey('tasks_v2'),
       children: [
@@ -2218,15 +2273,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              SetupStepEyebrow(text: 'Primeras tareas'),
+              SetupStepEyebrow(text: t.setupFirstTasksEyebrow),
               const SizedBox(height: 10),
               SetupHeading(
-                title: _selectedMode == 'family'
-                    ? 'Primeras tareas para la familia'
-                    : 'Personaliza tu hogar',
-                subtitle: _selectedMode == 'family'
-                    ? 'Elegí tareas iniciales para coordinar el hogar desde el primer día.'
-                    : 'Elegí las primeras tareas. Ya dejamos algunas sugeridas para arrancar.',
+                title: t.setupFirstTasksTitle(modeKey),
+                subtitle: t.setupFirstTasksSubtitle(modeKey),
               ),
               const SizedBox(height: 18),
             ],
@@ -2284,7 +2335,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           child: SafeArea(
             top: false,
             child: SetupPrimaryButton(
-              text: 'Terminar configuración',
+              text: t.setupFinishButton,
               isLoading: _isSaving,
               onPressed:
                   _selectedTemplateIds.isNotEmpty ? _saveAndComplete : null,

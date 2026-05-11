@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+
+import 'expense_form_data.dart';
 
 Future<void> showExpenseMemberSelectorSheet({
   required BuildContext context,
@@ -17,15 +20,16 @@ Future<void> showExpenseMemberSelectorSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
     builder: (context) {
+      final t = AppLocalizations.of(context);
       return SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Pagado por',
-                style: TextStyle(
+              Text(
+                t.expensesFormFieldPayer,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textPrimary,
@@ -66,6 +70,7 @@ Future<void> showExpenseCategorySelectorSheet({
   required List<Map<String, dynamic>> categories,
   required Map<String, dynamic> selectedCategory,
   required ValueChanged<Map<String, dynamic>> onSelected,
+  required bool isIncome,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -74,14 +79,15 @@ Future<void> showExpenseCategorySelectorSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
     ),
     builder: (context) {
+      final t = AppLocalizations.of(context);
       return SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(24),
+            Padding(
+              padding: const EdgeInsets.all(24),
               child: Text(
-                'Seleccionar Categoría',
-                style: TextStyle(
+                t.expensesFormSelectCategoryTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                   color: AppColors.textPrimary,
@@ -95,6 +101,10 @@ Future<void> showExpenseCategorySelectorSheet({
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final isSelected = selectedCategory['id'] == category['id'];
+                  final categoryId = category['id'] as String;
+                  final categoryName = isIncome
+                      ? localizedIncomeCategoryName(t, categoryId)
+                      : localizedExpenseCategoryName(t, categoryId);
                   return ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
@@ -104,13 +114,13 @@ Future<void> showExpenseCategorySelectorSheet({
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        CategoryMapping.getCategoryMaterialIcon(category['id']),
+                        CategoryMapping.getCategoryMaterialIcon(categoryId),
                         size: 20,
                         color: category['color'] as Color,
                       ),
                     ),
                     title: Text(
-                      category['name'],
+                      categoryName,
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight:
@@ -137,3 +147,4 @@ Future<void> showExpenseCategorySelectorSheet({
     },
   );
 }
+

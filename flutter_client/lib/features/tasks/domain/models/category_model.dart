@@ -4,6 +4,7 @@ class CategoryModel {
   final String icon;
   final String color;
   final int sortOrder;
+  final String? translationKey;
 
   CategoryModel({
     required this.id,
@@ -11,6 +12,7 @@ class CategoryModel {
     required this.icon,
     required this.color,
     this.sortOrder = 0,
+    this.translationKey,
   });
 
   factory CategoryModel.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class CategoryModel {
       icon: map['icon']?.toString() ?? '📦',
       color: map['color']?.toString() ?? '#94A3B8',
       sortOrder: map['sort_order'] ?? 0,
+      translationKey: map['translation_key']?.toString(),
     );
   }
 }

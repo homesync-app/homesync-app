@@ -57,7 +57,7 @@ Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id
 ## Convenciones (OBLIGATORIO)
 
 - **Código**: nombres en inglés (`expenses`, `household`, `settings`)
-- **Strings UI**: en español (argentino)
+- **Strings UI**: bilingüe **es / en-US** vía ARB (`flutter_localizations`). Ver sección [i18n / Localización](#i18n--localización). El idioma fuente es **español argentino** (`app_es.arb`); `en-US` se mantiene a partir de él.
 - **State management**: Riverpod con `@riverpod` annotation
 - **Auth**: Firebase Auth → JWT → Supabase `accessToken` callback. NUNCA `supabase.auth.signIn()`
 - **Current user ID**: usar `currentUserIdProvider` (Firebase UID → Supabase UUID via `AppIdentityService`), NO `auth.uid()` en SQL
@@ -83,6 +83,58 @@ Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id
 - Para tareas recurrentes, seguir el playbook correspondiente en `docs/playbooks/`
 - Schema de la BD: `docs/schema.md`
 - Provider map: `docs/provider-map.md`
+
+## i18n / Localización
+
+Setup oficial **`flutter_localizations` + ARB** (recomendación 2026 para apps medianas/grandes), con **`arb_translate`** como dev_dependency para regenerar el `app_en.arb` a partir del fuente `app_es.arb`.
+
+### Layout
+
+```
+flutter_client/
+  l10n.yaml                          # config de gen-l10n
+  lib/l10n/
+    app_es.arb                       # FUENTE — único editado a mano
+    app_en.arb                       # traducción en-US (revisada feature-by-feature)
+    generated/
+      app_localizations.dart         # autogenerado — NO commitear edits manuales
+      app_localizations_es.dart
+      app_localizations_en.dart
+```
+
+### Cómo agregar un string
+
+1. Agregar la clave en `app_es.arb` con su `@key.description` (esa descripción es contexto para la IA y para traductores futuros).
+2. Agregar la traducción equivalente en `app_en.arb` **a mano la primera vez** (la primera pasada de cada feature debe ser revisada por humano para preservar tono y jerga del dominio: "modo padre" → "Parent Mode", "hogar" → "Household", etc.).
+3. Correr `flutter gen-l10n` (también lo dispara `flutter pub get` y `flutter run`).
+4. Usar en widgets: `AppLocalizations.of(context).miClave`. Convención local: aliasarlo como `final t = AppLocalizations.of(context);` y usar `t.miClave`.
+
+### Mantenimiento masivo con `arb_translate` (Gemini / OpenAI)
+
+Para keys nuevas que aún no están en `app_en.arb`, o cuando se incorpora un tercer idioma:
+
+```bash
+cd flutter_client
+export ARB_TRANSLATE_API_KEY=...                # Gemini por default
+# o: arb-translate-model-provider: open-ai en l10n.yaml + key de OpenAI
+dart run arb_translate
+```
+
+`arb_translate` lee el ARB fuente (`app_es.arb`), detecta keys faltantes en los demás `app_<locale>.arb`, traduce respetando ICU (plurales, placeholders) y escribe el resultado. **Siempre revisar el diff en PR** — la IA acierta mucho pero la jerga del dominio (parent mode, household, family finance) merece chequeo humano.
+
+### Selector de idioma
+
+- Provider: `localeProvider` en `lib/core/providers/locale_provider.dart` (`Notifier<Locale?>`, `null` = seguir el sistema).
+- UI: `SettingsLanguageCard` en la pantalla de Settings — opciones System / Español / Inglés.
+- Persistencia: `SharedPreferences` key `app_locale` (`'es'`, `'en'`, o ausente).
+- En primer arranque sin preferencia, `MaterialApp` resuelve el mejor locale soportado a partir del SO.
+
+### Reglas
+
+- **No hardcodear strings UI nuevos** — siempre vía ARB. Excepción: nombres propios (HomeSync) y datos del backend.
+- **No editar `lib/l10n/generated/`** a mano. Se regenera con `flutter gen-l10n`.
+- **Argentino voseo en el fuente `es`** (elegí, contá, querés), **en-US neutro** en `en`.
+- Para plurales/género usar ICU MessageFormat dentro del ARB (`{count, plural, =0{...} one{...} other{...}}`).
 
 ## Gotchas
 

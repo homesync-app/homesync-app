@@ -15,6 +15,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -44,21 +45,24 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       edgeOffset: 20,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),),
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.lg,),
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
         children: [
           _buildHeader(theme),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           _buildFinancialSummary(widget.householdId),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           if (caps.showTasks)
             _buildTasksSection(theme)
           else
             const HomeShoppingPreviewCard(),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           _buildActivitySection(theme),
-          const SizedBox(height: AppSpacing.xxl + 80),
+          const SizedBox(height: AppSpacing.xxl + 64),
         ],
       ),
     );
@@ -85,57 +89,61 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                 ),
                 style: TextStyle(
                   color: theme.textPrimary,
-                  fontSize: 32,
+                  fontSize: 29,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.9,
+                  letterSpacing: 0,
                 ),
               ).animateEntrance(),
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.sm),
             CustomUserAvatar(
-                    name: currentMember?.displayName,
-                    avatarUrl: currentMember?.avatarUrl,
-                    radius: 26,)
-                .animateScaleIn(delay: 70),
+              name: currentMember?.displayName,
+              avatarUrl: currentMember?.avatarUrl,
+              radius: 24,
+            ).animateScaleIn(delay: 70),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _buildHomeWelcome(theme: theme),
       ],
     );
   }
 
   Widget _buildHomeWelcome({required AppThemeColors theme}) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Todo lo importante',
+          t.homeHeadlinePrimary,
           style: TextStyle(
             color: theme.textPrimary,
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w900,
-            letterSpacing: -0.55,
+            letterSpacing: 0,
           ),
         ).animate().fadeIn(delay: 100.ms),
         Text(
-          'de tus días',
+          t.homeSoloHeadlineSecondary,
           style: TextStyle(
             color: theme.textPrimary.withValues(alpha: 0.7),
-            fontSize: 22,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
         ).animate().fadeIn(delay: 200.ms),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           children: [
             Container(
-                width: 24,
-                height: 1.5,
-                color: theme.primary.withValues(alpha: 0.5),),
+              width: 24,
+              height: 1.5,
+              color: theme.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(width: 8),
-            Text('Enfocate en tus objetivos hoy 🚀',
-                style: TextStyle(color: theme.textSecondary, fontSize: 14),),
+            Text(
+              t.homeSoloFocusToday,
+              style: TextStyle(color: theme.textSecondary, fontSize: 13.5),
+            ),
           ],
         ).animate().fadeIn(delay: 300.ms),
       ],
@@ -146,19 +154,24 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
     required AppThemeColors theme,
     required String? currentMemberName,
   }) {
+    final t = AppLocalizations.of(context);
     final firstName = _firstName(currentMemberName);
     final welcome = firstName != null
-        ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
-        : 'Bienvenido';
+        ? (_looksFeminineName(firstName)
+            ? t.homeWelcomeFeminine
+            : t.homeWelcomeMasculine)
+        : t.homeWelcomeMasculine;
 
     return TextSpan(
       children: [
         TextSpan(
-            text: '$welcome, ', style: TextStyle(color: theme.textPrimary),),
+          text: '$welcome, ',
+          style: TextStyle(color: theme.textPrimary),
+        ),
         TextSpan(
-            text: firstName ?? 'Usuario',
-            style:
-                TextStyle(color: theme.primary, fontWeight: FontWeight.w900),),
+          text: firstName ?? t.commonUserFallback,
+          style: TextStyle(color: theme.primary, fontWeight: FontWeight.w900),
+        ),
       ],
     );
   }
@@ -182,12 +195,16 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
       xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
       userBalance: 0.0, // In solo mode we don't show internal debt
+      balancedLabel: AppLocalizations.of(context).homeSoloBalanceLabel,
+      neutralLabel: AppLocalizations.of(context).homeSoloBalanceLabel,
+      compact: true,
     ).animateEntrance(delay: 100);
   }
 
   Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,12 +212,15 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Tus tareas',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: theme.textPrimary,
-                    letterSpacing: -0.7,),),
+            Text(
+              t.homeSoloTasksTitle,
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: 0,
+              ),
+            ),
             TextButton(
               onPressed: () {
                 final index = indexForMainTab(caps, MainTab.tasks);
@@ -208,19 +228,34 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
                   ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                 }
               },
-              child: Text('Ver Semana',
-                  style: TextStyle(
-                      color: theme.primary, fontWeight: FontWeight.w700,),),
+              child: Text(
+                t.homeViewWeekButton,
+                style: TextStyle(
+                  color: theme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
         tasksAsync.when(
           loading: () => _buildTasksShimmer(theme),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => Text(t.commonErrorWithDetails(e.toString())),
           data: (tasks) {
             if (tasks.isEmpty) {
-              return _buildEmptyState('Todo listo por hoy', theme);
+              return _buildEmptyState(
+                message: t.homeAllDoneToday,
+                theme: theme,
+                icon: Icons.task_alt_rounded,
+                actionLabel: t.homeSoloAddTaskButton,
+                onAction: () {
+                  final index = indexForMainTab(caps, MainTab.tasks);
+                  if (index >= 0) {
+                    ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+                  }
+                },
+              );
             }
             final myTasks = tasks.toList();
             return ListView.separated(
@@ -251,8 +286,10 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
       await ref.read(tasksProvider.notifier).completeTask(task);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        final t = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        );
       }
     } finally {
       if (mounted) setState(() => _completedTaskIds.remove(task.id));
@@ -262,30 +299,41 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   Widget _buildActivitySection(AppThemeColors theme) {
     final activityAsync = ref.watch(recentActivityProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Tu actividad',
-            style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: theme.textPrimary,
-                letterSpacing: -0.7,),),
-        const SizedBox(height: AppSpacing.md),
+        Text(
+          t.homeSoloActivityTitle,
+          style: TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.w900,
+            color: theme.textPrimary,
+            letterSpacing: 0,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         activityAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => Text(t.commonErrorWithDetails(e.toString())),
           data: (activities) {
             if (activities.isEmpty) {
-              return _buildEmptyState('No hay actividad aún', theme);
+              return _buildEmptyState(
+                message: t.homeNoActivityYet,
+                theme: theme,
+                icon: Icons.history_rounded,
+                isQuiet: true,
+              );
             }
             return Column(
               children: activities
-                  .map((a) => ActivityChatBubble(
-                        activity: a,
-                        currentUserId: currentUserId,
-                      ),)
+                  .map(
+                    (a) => ActivityChatBubble(
+                      activity: a,
+                      currentUserId: currentUserId,
+                    ),
+                  )
                   .toList(),
             );
           },
@@ -296,30 +344,77 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
 
   Widget _buildTasksShimmer(AppThemeColors theme) {
     return Column(
-        children: List.generate(
-            2,
-            (_) => ShimmerLoading(
-                child: Container(
-                    height: 70,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                        color: theme.surface,
-                        borderRadius: BorderRadius.circular(20),),),),),);
+      children: List.generate(
+        2,
+        (_) => ShimmerLoading(
+          child: Container(
+            height: 70,
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _buildEmptyState(String message, AppThemeColors theme) {
+  Widget _buildEmptyState({
+    required String message,
+    required AppThemeColors theme,
+    required IconData icon,
+    String? actionLabel,
+    VoidCallback? onAction,
+    bool isQuiet = false,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: isQuiet ? 18 : 22,
+      ),
       decoration: BoxDecoration(
-          color: theme.surface, borderRadius: BorderRadius.circular(24),),
-      child: Column(children: [
-        const Text('🎯', style: TextStyle(fontSize: 32)),
-        const SizedBox(height: 8),
-        Text(message,
+        color: isQuiet
+            ? theme.surface.withValues(alpha: 0.42)
+            : theme.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.border.withValues(alpha: isQuiet ? 0.18 : 0.34),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: isQuiet
+                ? theme.textMuted.withValues(alpha: 0.68)
+                : theme.primary,
+            size: isQuiet ? 24 : 30,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
             style: TextStyle(
-                fontWeight: FontWeight.w800, color: theme.textPrimary,),),
-      ],),
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
+            ),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 14),
+            TextButton.icon(
+              onPressed: onAction,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(actionLabel),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.primary,
+                textStyle: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

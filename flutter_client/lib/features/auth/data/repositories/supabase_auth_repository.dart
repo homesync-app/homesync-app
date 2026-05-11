@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
-import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/firebase_auth_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
@@ -45,15 +44,6 @@ class SupabaseAuthRepository
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
-
-  Future<String?> _resolveCurrentUserId() async {
-    final appUserId = await AppIdentityService.instance.refresh();
-    if (appUserId != null && appUserId.isNotEmpty) {
-      return appUserId;
-    }
-
-    return null;
-  }
 
   @override
   // In Firebase Third-Party Auth mode there is no Supabase session; return null.
@@ -177,7 +167,7 @@ class SupabaseAuthRepository
       await _client.rpc('update_own_profile', params: {
         'p_full_name': fullName,
         'p_avatar_url': avatarUrl,
-      });
-    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline);
+      },);
+    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline,);
   }
 }

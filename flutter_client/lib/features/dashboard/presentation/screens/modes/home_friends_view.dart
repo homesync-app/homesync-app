@@ -23,6 +23,7 @@ import 'package:homesync_client/features/shopping/presentation/providers/shoppin
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -74,7 +75,6 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     final caps = ref.watch(householdCapabilitiesProvider);
     final tasksAsync = ref.watch(todayTasksProvider);
     final shoppingAsync = ref.watch(shoppingItemsProvider);
-    final activitiesAsync = ref.watch(recentActivityProvider);
 
     final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
@@ -128,14 +128,15 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
     final membersAsync = ref.watch(householdMembersNotifierProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
+    final t = AppLocalizations.of(context);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final firstName = _firstName(currentMember?.displayName);
     final greeting = firstName == null
-        ? _greetingByTime()
-        : '${_greetingByTime()}, $firstName';
+        ? _greetingByTime(t)
+        : '${_greetingByTime(t)}, $firstName';
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -167,7 +168,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Así viene el piso hoy.',
+                t.homeFriendsHeaderSubtitle,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -241,6 +242,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildMemberNotFoundBanner(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -251,11 +253,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
+          const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'No encontramos tu perfil en este piso.',
+              t.homeFriendsMemberNotFound,
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -274,7 +276,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Reintentar', style: TextStyle(fontSize: 13)),
+            child: Text(t.commonRetry, style: const TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -284,13 +286,14 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   Widget _buildFinanceSummary(AppThemeColors theme) {
     final balancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
           theme,
-          title: 'Saldos del piso',
+          title: t.homeFriendsBalancesTitle,
           subtitle: '',
         ),
         const SizedBox(height: 12),
@@ -317,7 +320,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Todavía no hay balances para mostrar.',
+                      t.homeFriendsBalancesEmptyTitle,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -326,7 +329,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Cuando registren gastos compartidos, vas a ver acá el saldo neto de cada integrante.',
+                      t.homeFriendsBalancesEmptyBody,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
@@ -340,7 +343,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
             }
             return FamilyBalanceCard(
               balances: balances,
-              title: 'Estado del balance',
+              title: t.homeFriendsBalanceCardTitle,
               currentUserId: currentUserId,
             );
           },
@@ -355,15 +358,16 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     final tasksAsync = ref.watch(todayTasksProvider);
     final membersAsync = ref.watch(householdMembersNotifierProvider);
     final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
           theme,
-          title: 'Tareas del piso',
-          subtitle: 'Lo que sigue pendiente para mantener todo en orden.',
-          actionLabel: 'Ver todas',
+          title: t.homeFriendsTasksTitle,
+          subtitle: t.homeFriendsTasksSubtitle,
+          actionLabel: t.homeViewAllButton,
           onAction: () {
             final index = indexForMainTab(caps, MainTab.tasks);
             if (index >= 0) {
@@ -435,9 +439,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
       if (result == null) {
         log.w('[friends] task completion returned null id=${task.id}');
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No pudimos completar la tarea. Intenta de nuevo.'),
+          SnackBar(
+            content: Text(t.homeFriendsTaskCompleteError),
           ),
         );
         return;
@@ -453,8 +458,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     } catch (e) {
       log.e('[friends] task completion threw id=${task.id}', error: e);
       if (mounted) {
+        final t = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
         );
       }
     } finally {
@@ -467,15 +473,16 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   Widget _buildShoppingSection(AppThemeColors theme) {
     final shoppingAsync = ref.watch(shoppingItemsProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
           theme,
-          title: 'Compras del piso',
-          subtitle: 'Lo que falta comprar para la semana.',
-          actionLabel: 'Ver lista',
+          title: t.homeFriendsShoppingTitle,
+          subtitle: t.homeFriendsShoppingSubtitle,
+          actionLabel: t.homeViewListButton,
           onAction: () {
             final index = indexForMainTab(caps, MainTab.shopping);
             if (index >= 0) {
@@ -506,7 +513,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                     children: [
                       ListTile(
                         leading: Text(item.emoji,
-                            style: const TextStyle(fontSize: 20)),
+                            style: const TextStyle(fontSize: 20),),
                         title: Text(
                           item.name,
                           style: TextStyle(
@@ -552,58 +559,17 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     );
   }
 
-  Widget _buildEmptyState(AppThemeColors theme, String subtitle) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: theme.surfaceContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.divider.withValues(alpha: 0.05),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.task_alt_rounded,
-            size: 48,
-            color: theme.textSecondary.withValues(alpha: 0.2),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '¡Todo limpio!',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: theme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: theme.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActivitySection(AppThemeColors theme) {
     final activitiesAsync = ref.watch(recentActivityProvider);
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
           theme,
-          title: 'Actividad del piso',
-          subtitle: 'Los últimos movimientos compartidos del hogar.',
+          title: t.homeFriendsActivityTitle,
+          subtitle: t.homeFriendsActivitySubtitle,
         ),
         const SizedBox(height: 16),
         activitiesAsync.when(
@@ -620,7 +586,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                   ),
                 ),
                 child: Text(
-                  'Todavía no hubo movimientos compartidos.',
+                  t.homeFriendsActivityEmpty,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -647,19 +613,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     );
   }
 
-  Widget _buildActivityItem(dynamic activity, AppThemeColors theme) {
-    // Convert legacy typed object to Map if needed, or use ActivityChatBubble directly
-    final activityMap = activity is Map<String, dynamic>
-        ? activity
-        : <String, dynamic>{
-            'creator_id': activity.userId,
-            'created_at': activity.timestamp?.toIso8601String(),
-            'data': <String, dynamic>{
-              'title': activity.description,
-              'user_name': activity.userName,
-              'avatar_url': activity.avatarUrl,
-            },
-          };
+  Widget _buildActivityItem(
+      Map<String, dynamic> activity, AppThemeColors theme,) {
+    final activityMap = activity;
     final currentUserId = ref.watch(currentUserIdProvider);
     return ActivityChatBubble(
       activity: activityMap,
@@ -715,11 +671,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     );
   }
 
-  String _greetingByTime() {
+  String _greetingByTime(AppLocalizations t) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Buen día';
-    if (hour < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (hour < 12) return t.commonGreetingMorning;
+    if (hour < 19) return t.commonGreetingAfternoon;
+    return t.commonGreetingEvening;
   }
 
   String? _firstName(String? fullName) {

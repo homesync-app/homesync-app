@@ -31,7 +31,7 @@ mixin RepositoryErrorHandler {
       }
       log.w('$context: Offline Guard - Refusing request while disconnected');
       return left(
-          const NetworkFailure('Sin conexion a internet. Verifica tu red.'));
+          const NetworkFailure('Sin conexion a internet. Verifica tu red.'),);
     }
 
     try {
@@ -101,7 +101,7 @@ mixin RepositoryErrorHandler {
       if (msg.contains('429') || msg.contains('rate limit')) {
         return left(
           const ServerFailure(
-              'Demasiadas solicitudes. Reintenta en un momento.'),
+              'Demasiadas solicitudes. Reintenta en un momento.',),
         );
       }
       if (msg.contains('SocketException') ||
@@ -120,18 +120,18 @@ mixin RepositoryErrorHandler {
             );
             return left(
               const NetworkFailure(
-                  'No se pudo establecer conexion. (Sin cache)'),
+                  'No se pudo establecer conexion. (Sin cache)',),
             );
           }
         }
         return left(
           const NetworkFailure(
-              'No se pudo establecer conexion con el servidor.'),
+              'No se pudo establecer conexion con el servidor.',),
         );
       }
       return left(
         ServerFailure(
-            'Error inesperado: ${e.toString().split(':').last.trim()}'),
+            'Error inesperado: ${e.toString().split(':').last.trim()}',),
       );
     } catch (e, stack) {
       log.f('$context: Fatal Error - $e', error: e, stackTrace: stack);

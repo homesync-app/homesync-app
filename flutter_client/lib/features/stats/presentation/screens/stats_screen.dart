@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/stats/presentation/widgets/widgets.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -15,14 +16,14 @@ class StatsScreen extends ConsumerStatefulWidget {
 
 class _StatsScreenState extends ConsumerState<StatsScreen>
     with SingleTickerProviderStateMixin {
-  static const _tabs = ['Semana', 'Evolucion', 'Logros'];
+  List<String> _getTabs(AppLocalizations t) => [t.statsTabWeek, t.statsTabEvolution, t.statsTabAchievements];
 
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -77,6 +78,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final statsAsync = ref.watch(statsControllerProvider);
 
     ref.listen(userProfileProvider, (previous, next) {
@@ -91,7 +93,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: AppSegmentedTabs(
             controller: _tabController,
-            labels: _tabs,
+            labels: _getTabs(t),
           ),
         ),
         Expanded(
@@ -102,7 +104,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             error: (_, __) => Center(
               child: TextButton(
                 onPressed: () => ref.read(statsControllerProvider.notifier).refresh(),
-                child: const Text('Reintentar'),
+                child: Text(t.statsRetry),
               ),
             ),
             data: (stats) => TabBarView(

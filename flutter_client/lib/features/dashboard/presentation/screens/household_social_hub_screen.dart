@@ -14,6 +14,7 @@ import 'package:homesync_client/features/premium/presentation/screens/premium_pa
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class HouseholdSocialHubScreen extends ConsumerStatefulWidget {
   const HouseholdSocialHubScreen({super.key});
@@ -127,21 +128,10 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
-    final title = switch (caps.type) {
-      HouseholdType.family => 'Familia',
-      HouseholdType.friends => 'Convivencia',
-      HouseholdType.couple => 'Hogar',
-      HouseholdType.solo => 'Mi espacio',
-    };
-
-    final subtitle = switch (caps.type) {
-      HouseholdType.family =>
-        'Integrantes, roles visibles y organización del hogar.',
-      HouseholdType.friends =>
-        'Compañeros, roles y organización de la convivencia.',
-      _ => caps.socialHubSubtitle,
-    };
+    final title = caps.socialHubTitle(t);
+    final subtitle = caps.socialHubSubtitle(t);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -228,8 +218,10 @@ class _HeaderCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   currentMember == null
-                      ? 'Roles y premios listos para organizar la semana.'
-                      : 'Tu rol: ${currentMember!.visibleRoleLabel}',
+                      ? t.householdSocialHubRoleFallback
+                      : t.householdSocialHubYourRole(
+                          currentMember!.localizedRoleLabel(t),
+                        ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -243,7 +235,7 @@ class _HeaderCard extends StatelessWidget {
               const SizedBox(width: 10),
               _QuickActionButton(
                 icon: Icons.storefront_rounded,
-                label: 'Tienda',
+                label: t.householdSocialHubStoreButton,
                 onPressed: onRewards,
               ),
             ],
@@ -268,6 +260,7 @@ class _FamilyTrackingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final titleColor = unlocked
         ? theme.textPrimary
         : theme.textSecondary.withValues(alpha: 0.76);
@@ -312,7 +305,7 @@ class _FamilyTrackingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Seguimiento familiar',
+                      t.householdSocialHubTrackingTitle,
                       style: TextStyle(
                         color: titleColor,
                         fontSize: 17,
@@ -322,7 +315,7 @@ class _FamilyTrackingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Avances por integrante y cierre semanal.',
+                      t.householdSocialHubTrackingSubtitle,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 12.5,
@@ -343,7 +336,7 @@ class _FamilyTrackingCard extends StatelessWidget {
               Expanded(
                 child: _FamilyTrackingShortcut(
                   icon: Icons.groups_rounded,
-                  label: 'Vista por miembro',
+                  label: t.householdSocialHubShortcutMemberView,
                   color: AppColors.accentBlue,
                   unlocked: unlocked,
                   onTap: onMemberView,
@@ -353,7 +346,7 @@ class _FamilyTrackingCard extends StatelessWidget {
               Expanded(
                 child: _FamilyTrackingShortcut(
                   icon: Icons.celebration_rounded,
-                  label: 'Resumen semanal',
+                  label: t.householdSocialHubShortcutWeeklySummary,
                   color: AppColors.accentPurple,
                   unlocked: unlocked,
                   onTap: onWeeklySummary,

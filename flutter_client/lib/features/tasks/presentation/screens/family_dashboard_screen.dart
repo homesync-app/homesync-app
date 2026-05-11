@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/family_member_dashboard.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/family_member_dashboard_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 /// Sprint 2 Modo Padres: dashboard parental.
@@ -33,16 +34,17 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final eligible = ref.watch(parentModeEligibleProvider);
     if (!eligible) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Familia')),
+        appBar: AppBar(title: Text(t.familyDashboardAppBarTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Esta vista es para administradores de hogares familiares.',
+              t.familyDashboardLockedNotice,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),
@@ -55,7 +57,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
     if (!available) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Familia')),
+        appBar: AppBar(title: Text(t.familyDashboardAppBarTitle)),
         body: const _LockedHero(),
       );
     }
@@ -65,7 +67,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: const Text('Vista por miembro'),
+        title: Text(t.familyDashboardTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -98,12 +100,12 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
                   const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: DashboardPeriod.week,
-                  label: Text('Semana'),
+                  label: Text(t.familyDashboardWeekFilter),
                 ),
-                ButtonSegment(
+                const ButtonSegment(
                   value: DashboardPeriod.month,
                   label: Text('Mes'),
                 ),
@@ -162,17 +164,18 @@ class _MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final plannedTotal = snapshot.plannedTotal;
     final hasTasks = plannedTotal > 0;
     final rate = hasTasks ? snapshot.completionRate : 0.0;
     final statusColor = _statusColor(snapshot, hasTasks, rate);
-    final statusLabel = _statusLabel(snapshot, hasTasks, rate);
+    final statusLabel = _statusLabel(t, snapshot, hasTasks, rate);
     final statusIcon = _statusIcon(snapshot, hasTasks, rate);
     final progressText = hasTasks
         ? '${snapshot.tasksDone}/$plannedTotal hechas'
         : period == DashboardPeriod.week
-            ? 'Sin tareas esta semana'
-            : 'Sin tareas este mes';
+            ? t.familyDashboardEmptyWeek
+            : t.familyDashboardEmptyMonth;
     final coinDelta = snapshot.coinsEarned - snapshot.coinsSpent;
 
     return Container(
@@ -283,7 +286,7 @@ class _MemberCard extends StatelessWidget {
                   icon: Icons.local_fire_department_rounded,
                   label: snapshot.streakDays > 0
                       ? '${snapshot.streakDays} días'
-                      : 'Sin racha',
+                      : t.familyDashboardNoStreak,
                   color: snapshot.streakDays > 0
                       ? AppColors.accentOrange
                       : theme.textMuted,
@@ -333,8 +336,8 @@ class _MemberCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               period == DashboardPeriod.week
-                  ? 'Top categorias de la semana'
-                  : 'Top categorias del mes',
+                  ? t.familyDashboardTopCategoriesWeek
+                  : t.familyDashboardTopCategoriesMonth,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontSize: 11.5,
@@ -400,13 +403,16 @@ class _MemberCard extends StatelessWidget {
   }
 
   String _statusLabel(
+    AppLocalizations t,
     FamilyMemberSnapshot snapshot,
     bool hasTasks,
     double rate,
   ) {
-    if (!hasTasks) return 'Sin tareas';
-    if (snapshot.tasksOverdue > 0) return 'Atención';
-    if (snapshot.tasksPendingApproval > 0) return 'A revisar';
+    if (!hasTasks) return t.familyDashboardStateNoTasks;
+    if (snapshot.tasksOverdue > 0) return t.familyDashboardStateAttention;
+    if (snapshot.tasksPendingApproval > 0) {
+      return t.familyDashboardStateToReview;
+    }
     return '${(rate * 100).round()}%';
   }
 
@@ -414,6 +420,7 @@ class _MemberCard extends StatelessWidget {
     if (s.displayRole != null && s.displayRole!.isNotEmpty) {
       return s.displayRole!;
     }
+    // Note: short fallback labels — backend usually provides displayRole.
     if (s.isChild) return 'Hijo/a';
     if (s.isTeen) return 'Adolescente';
     return 'Adulto';
@@ -428,6 +435,7 @@ class _DashboardSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final members = dashboard.members;
     final done = members.fold<int>(0, (sum, m) => sum + m.tasksDone);
     final open = members.fold<int>(0, (sum, m) => sum + m.tasksOpen);
@@ -438,12 +446,12 @@ class _DashboardSummary extends StatelessWidget {
     final activeMembers = members.where((m) => m.plannedTotal > 0).length;
     final rate = planned == 0 ? null : done / planned;
     final title = dashboard.period == DashboardPeriod.week
-        ? 'Seguimiento semanal'
-        : 'Seguimiento mensual';
+        ? t.familyDashboardTrackingWeekly
+        : t.familyDashboardTrackingMonthly;
     final subtitle = planned == 0
         ? dashboard.period == DashboardPeriod.week
-            ? 'Aún no hay tareas para esta semana.'
-            : 'Aún no hay tareas para este mes.'
+            ? t.familyDashboardEmptySubtitleWeek
+            : t.familyDashboardEmptySubtitleMonth
         : '$activeMembers de ${members.length} integrantes tienen tareas activas.';
 
     return Container(
@@ -532,7 +540,7 @@ class _DashboardSummary extends StatelessWidget {
             children: [
               Expanded(
                 child: _SummaryMetric(
-                  label: 'Hechas',
+                  label: t.familyDashboardLabelDone,
                   value: '$done',
                   icon: Icons.task_alt_rounded,
                   color: AppColors.accentGreen,
@@ -541,7 +549,7 @@ class _DashboardSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _SummaryMetric(
-                  label: 'Pendientes',
+                  label: t.familyDashboardLabelPending,
                   value: '$open',
                   icon: Icons.pending_actions_rounded,
                   color: AppColors.accentBlue,
@@ -556,7 +564,7 @@ class _DashboardSummary extends StatelessWidget {
                 if (overdue > 0)
                   Expanded(
                     child: _SummaryMetric(
-                      label: 'Atrasadas',
+                      label: t.familyDashboardLabelOverdue,
                       value: '$overdue',
                       icon: Icons.error_outline_rounded,
                       color: AppColors.accentRed,
@@ -566,7 +574,7 @@ class _DashboardSummary extends StatelessWidget {
                 if (approvals > 0)
                   Expanded(
                     child: _SummaryMetric(
-                      label: 'A revisar',
+                      label: t.familyDashboardLabelToReview,
                       value: '$approvals',
                       icon: Icons.hourglass_top_rounded,
                       color: AppColors.accentGold,
@@ -713,6 +721,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -726,7 +735,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Todavia no hay datos',
+              t.familyDashboardEmptyTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 18,
@@ -735,7 +744,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando los miembros completen tareas o reciban coins, los vas a ver aca.',
+              t.familyDashboardEmptyBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary, fontSize: 13),
             ),
@@ -752,6 +761,7 @@ class _LockedHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -765,7 +775,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Vista por miembro',
+              t.familyDashboardLockedTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 20,
@@ -774,7 +784,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Activa Modo Padres para ver el progreso de cada integrante de la familia en un solo lugar.',
+              t.familyDashboardLockedBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),

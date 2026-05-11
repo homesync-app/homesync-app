@@ -9,6 +9,7 @@ import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   final dynamic prefs;
@@ -30,16 +31,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _nameController = TextEditingController();
   bool _obscurePassword = true;
   bool _isSignUpMode = false;
+  bool _isSubmitting = false;
   final String _loadingMessage = '';
 
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
+  late final ProviderSubscription<AsyncValue<dynamic>> _authSubscription;
 
   @override
   void initState() {
     super.initState();
     log.setScreen('LoginScreen');
+    _authSubscription = ref.listenManual(
+      authControllerProvider,
+      (_, __) {},
+    );
 
     _animationController = AnimationController(
       vsync: this,
@@ -64,6 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   void dispose() {
+    _authSubscription.close();
     _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -132,13 +140,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
 
-    await ref.read(authControllerProvider.notifier).signInWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
+    final authController = ref.read(authControllerProvider.notifier);
+    setState(() => _isSubmitting = true);
+
+    await authController.signInWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
     final authState = ref.read(authControllerProvider);
-    if (authState.hasError && mounted) {
+    if (authState.hasError) {
       _showError(authState.error.toString());
     }
   }
@@ -148,28 +162,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     HapticFeedback.mediumImpact();
 
     final fullName = _nameController.text.trim();
+    final authController = ref.read(authControllerProvider.notifier);
+    setState(() => _isSubmitting = true);
 
-    await ref.read(authControllerProvider.notifier).signUpWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text,
-          fullName.isEmpty ? null : fullName,
-        );
+    await authController.signUpWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text,
+      fullName.isEmpty ? null : fullName,
+    );
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
     final authState = ref.read(authControllerProvider);
-    if (authState.hasError && mounted) {
+    if (authState.hasError) {
       _showError(authState.error.toString());
-    } else if (mounted) {
-      _showSuccess('¡Revisá tu correo para confirmar tu cuenta!');
+    } else {
+      _showSuccess(AppLocalizations.of(context).authSignUpEmailSent);
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.mediumImpact();
 
-    final success =
-        await ref.read(authControllerProvider.notifier).signInWithGoogle();
+    final authController = ref.read(authControllerProvider.notifier);
+    setState(() => _isSubmitting = true);
 
-    if (!success && mounted) {
+    final success = await authController.signInWithGoogle();
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    if (!success) {
       final authState = ref.read(authControllerProvider);
       if (authState.hasError) {
         final error = authState.error.toString();
@@ -182,6 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Future<void> _handleForgotPassword() async {
     HapticFeedback.lightImpact();
+    final t = AppLocalizations.of(context);
     final emailController = TextEditingController(
       text: _emailController.text.trim(),
     );
@@ -194,16 +219,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
-        title: const Text(
-          'Recuperar contraseña',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
+        title: Text(
+          t.authForgotDialogTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Te enviaremos un enlace para restablecer tu contraseña.',
+              t.authForgotDialogBody,
               style: TextStyle(
                 color: Theme.of(context)
                     .colorScheme
@@ -218,7 +243,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: 'Correo electrónico',
+                labelText: t.authEmailFullHint,
                 prefixIcon: const Icon(Icons.email_outlined),
                 filled: true,
                 fillColor: Theme.of(context).brightness == Brightness.dark
@@ -241,7 +266,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   .onSurface
                   .withValues(alpha: 0.7),
             ),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 8),
@@ -256,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text('Enviar enlace'),
+              child: Text(t.authForgotDialogSendButton),
             ),
           ),
         ],
@@ -264,28 +289,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ),
     );
 
-    if (confirmed != true) return;
-
-    final email = emailController.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      _showError('Ingresá un correo válido');
+    if (!mounted) {
+      emailController.dispose();
       return;
     }
 
-    await ref.read(authControllerProvider.notifier).resetPassword(email);
+    final email = emailController.text.trim();
+    emailController.dispose();
+    if (confirmed != true) return;
+
+    if (email.isEmpty || !email.contains('@')) {
+      _showError(t.authForgotInvalidEmail);
+      return;
+    }
+
+    final authController = ref.read(authControllerProvider.notifier);
+    setState(() => _isSubmitting = true);
+
+    await authController.resetPassword(email);
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
     final authState = ref.read(authControllerProvider);
-    if (authState.hasError && mounted) {
+    if (authState.hasError) {
       _showError(authState.error.toString());
-    } else if (mounted) {
-      _showSuccess('¡Revisá tu correo para cambiar tu contraseña!');
+    } else {
+      _showSuccess(t.authForgotEmailSent);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -360,13 +395,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ),
           ),
-          if (isLoading) _PremiumLoadingOverlay(message: _loadingMessage),
+          if (_isSubmitting) _PremiumLoadingOverlay(message: _loadingMessage),
         ],
       ),
     );
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       children: [
         Image.asset(
@@ -379,7 +415,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
         const SizedBox(height: 0),
         Text(
-          _isSignUpMode ? 'Armá tu hogar' : 'Bienvenido',
+          _isSignUpMode ? t.authSignUpTitle : t.authWelcomeTitle,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 33,
@@ -393,9 +429,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 288),
           child: Text(
-            _isSignUpMode
-                ? 'Creá tu cuenta para empezar a organizar tu hogar.'
-                : 'Ingresá para entrar a tu hogar y mantener todo al día.',
+            _isSignUpMode ? t.authSignUpSubtitle : t.authWelcomeSubtitle,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
@@ -475,6 +509,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildLoginForm({Key? key, required ThemeData theme}) {
+    final t = AppLocalizations.of(context);
     return Form(
       key: _formKey,
       child: Column(
@@ -484,13 +519,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildPremiumTextField(
             context: context,
             controller: _emailController,
-            hint: 'Email',
+            hint: t.authEmailHint,
             icon: Icons.alternate_email_rounded,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Requerido';
+              if (value == null || value.isEmpty) {
+                return t.authValidationRequired;
+              }
               if (_isAdminTestingInput) return null;
-              if (!value.contains('@')) return 'Inválido';
+              if (!value.contains('@')) return t.authValidationInvalidEmail;
               return null;
             },
           ),
@@ -498,11 +535,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildPremiumTextField(
             context: context,
             controller: _passwordController,
-            hint: 'Contraseña',
+            hint: t.authPasswordHint,
             icon: Icons.lock_outline_rounded,
             isPassword: true,
             validator: (value) {
-              if (value == null || value.length < 6) return 'Inválida';
+              if (value == null || value.length < 6) {
+                return t.authValidationInvalidPassword;
+              }
               return null;
             },
           ),
@@ -512,11 +551,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: InkWell(
               onTap: _handleForgotPassword,
               borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.fromLTRB(6, 4, 6, 2),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 2),
                 child: Text(
-                  '¿Olvidaste tu contraseña?',
-                  style: TextStyle(
+                  t.authForgotPasswordLink,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                     color: Color(0xEDEE652B),
@@ -526,7 +565,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
           const SizedBox(height: 12),
-          _buildPrimaryButton(label: 'Ingresar', onPressed: _handleLogin),
+          _buildPrimaryButton(
+            label: t.authSignInButton,
+            onPressed: _handleLogin,
+          ),
           const SizedBox(height: 12),
           _buildGoogleDivider(theme),
           const SizedBox(height: 10),
@@ -537,6 +579,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildSignUpForm({Key? key, required ThemeData theme}) {
+    final t = AppLocalizations.of(context);
     return Form(
       key: _formKey,
       child: Column(
@@ -546,12 +589,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildPremiumTextField(
             context: context,
             controller: _nameController,
-            hint: 'Tu nombre o apodo',
+            hint: t.authNameHint,
             icon: Icons.person_outline_rounded,
             keyboardType: TextInputType.name,
             textCapitalization: TextCapitalization.words,
             validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Requerido';
+              if (value == null || value.trim().isEmpty) {
+                return t.authValidationRequired;
+              }
               return null;
             },
           ),
@@ -559,12 +604,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildPremiumTextField(
             context: context,
             controller: _emailController,
-            hint: 'Correo electrónico',
+            hint: t.authEmailFullHint,
             icon: Icons.alternate_email_rounded,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Requerido';
-              if (!value.contains('@')) return 'Inválido';
+              if (value == null || value.isEmpty) {
+                return t.authValidationRequired;
+              }
+              if (!value.contains('@')) return t.authValidationInvalidEmail;
               return null;
             },
           ),
@@ -572,23 +619,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildPremiumTextField(
             context: context,
             controller: _passwordController,
-            hint: 'Contraseña (mínimo 6 caracteres)',
+            hint: t.authPasswordHintWithMin,
             icon: Icons.lock_outline_rounded,
             isPassword: true,
             validator: (value) {
-              if (value == null || value.length < 6) return 'Inválida';
+              if (value == null || value.length < 6) {
+                return t.authValidationInvalidPassword;
+              }
               return null;
             },
           ),
           const SizedBox(height: 12),
-          _buildPrimaryButton(label: 'Crear cuenta', onPressed: _handleSignUp),
+          _buildPrimaryButton(
+            label: t.authCreateAccountButton,
+            onPressed: _handleSignUp,
+          ),
           const SizedBox(height: 12),
           _buildGoogleDivider(theme),
           const SizedBox(height: 10),
           _buildGoogleButton(theme),
           const SizedBox(height: 12),
           Text(
-            'Al crear una cuenta aceptás nuestros términos y la política de privacidad.',
+            t.authTermsAcceptance,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -646,7 +698,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ? Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: IconButton(
-                  tooltip: _obscurePassword ? 'Mostrar contraseña' : 'Ocultar contraseña',
+                  tooltip: _obscurePassword
+                      ? AppLocalizations.of(context).authShowPasswordTooltip
+                      : AppLocalizations.of(context).authHidePasswordTooltip,
                   icon: Icon(
                     _obscurePassword
                         ? Icons.visibility_outlined
@@ -695,9 +749,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     required String label,
     required VoidCallback onPressed,
   }) {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
     return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
+      onPressed: _isSubmitting ? null : onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         backgroundColor: AppColors.primary,
@@ -706,7 +759,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         shadowColor: AppColors.primary.withValues(alpha: 0.2),
         elevation: 1.2,
       ),
-      child: isLoading
+      child: _isSubmitting
           ? const SizedBox(
               height: 24,
               width: 24,
@@ -727,10 +780,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildGoogleButton(ThemeData theme) {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
-
     return OutlinedButton(
-      onPressed: isLoading ? null : _handleGoogleSignIn,
+      onPressed: _isSubmitting ? null : _handleGoogleSignIn,
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 13.5),
         foregroundColor: theme.colorScheme.onSurface,
@@ -773,7 +824,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'o continuá con',
+            AppLocalizations.of(context).authOrContinueWith,
             style: TextStyle(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
               fontSize: 12.5,
@@ -787,7 +838,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildModeTogglePrompt(ThemeData theme) {
-    final isLoading = ref.watch(authControllerProvider).isLoading;
+    final t = AppLocalizations.of(context);
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -795,7 +846,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       runSpacing: 4,
       children: [
         Text(
-          _isSignUpMode ? '¿Ya tenés cuenta?' : '¿Sos nuevo en HomeSync?',
+          _isSignUpMode ? t.authToggleHasAccount : t.authToggleNewToApp,
           style: TextStyle(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
             fontSize: 15,
@@ -803,12 +854,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
         ),
         InkWell(
-          onTap: isLoading ? null : _toggleMode,
+          onTap: _isSubmitting ? null : _toggleMode,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             child: Text(
-              _isSignUpMode ? 'Ingresá' : 'Registrate',
+              _isSignUpMode ? t.authToggleSignInLink : t.authToggleSignUpLink,
               style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,

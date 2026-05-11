@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class ExpenseFormHeader extends StatelessWidget {
   final bool isEditing;
@@ -19,9 +20,14 @@ class ExpenseFormHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final title = isEditing
-        ? (isIncome ? 'Modificar Ingreso' : 'Modificar Gasto')
-        : (isIncome ? 'Nuevo Ingreso' : 'Nuevo Gasto');
+        ? (isIncome
+              ? t.expensesFormHeaderEditIncome
+              : t.expensesFormHeaderEditExpense)
+        : (isIncome
+              ? t.expensesFormHeaderNewIncome
+              : t.expensesFormHeaderNewExpense);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -31,7 +37,7 @@ class ExpenseFormHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                tooltip: 'Cerrar',
+                tooltip: t.commonClose,
                 icon: const Icon(
                   Icons.close_rounded,
                   color: AppColors.textPrimary,
@@ -40,7 +46,7 @@ class ExpenseFormHeader extends StatelessWidget {
               ),
               if (isEditing)
                 IconButton(
-                  tooltip: 'Eliminar',
+                  tooltip: t.commonDelete,
                   icon: const Icon(
                     Icons.delete_outline_rounded,
                     color: AppColors.accentRed,
@@ -445,8 +451,8 @@ class ExpenseTitleField extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText: isIncome
-                    ? '¿De qué es el ingreso? (Opcional)'
-                    : '¿Qué compraste? (Opcional)',
+                    ? 'Â¿De quÃ© es el ingreso? (Opcional)'
+                    : 'Â¿QuÃ© compraste? (Opcional)',
                 hintStyle: TextStyle(
                   color: theme.textMuted,
                   fontSize: 16,
@@ -472,3 +478,4 @@ class ExpenseTitleField extends StatelessWidget {
     );
   }
 }
+

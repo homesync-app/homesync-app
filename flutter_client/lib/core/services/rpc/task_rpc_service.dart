@@ -136,7 +136,7 @@ class TaskRpcService extends BaseRpcService {
     final userId = await requireCurrentUserId();
     final requestId = generateRequestId();
 
-    final response = await client.rpc(
+    final rawResponse = await client.rpc(
       'verify_task_transaction',
       params: {
         'p_request_id': requestId,
@@ -147,6 +147,7 @@ class TaskRpcService extends BaseRpcService {
       },
     );
 
+    final response = Map<String, dynamic>.from(rawResponse as Map);
     return {
       'success': response['success'] ?? false,
       'message': response['message'] ?? '',
@@ -161,7 +162,7 @@ class TaskRpcService extends BaseRpcService {
     final userId = await requireCurrentUserId();
     final requestId = generateRequestId();
 
-    final response = await client.rpc(
+    final rawResponse = await client.rpc(
       'reject_task_transaction',
       params: {
         'p_request_id': requestId,
@@ -172,6 +173,7 @@ class TaskRpcService extends BaseRpcService {
       },
     );
 
+    final response = Map<String, dynamic>.from(rawResponse as Map);
     return {
       'success': response['success'] ?? false,
       'message': response['message'] ?? '',

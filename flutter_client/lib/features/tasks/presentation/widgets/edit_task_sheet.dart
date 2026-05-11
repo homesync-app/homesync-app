@@ -8,6 +8,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class EditTaskSheet extends ConsumerStatefulWidget {
   final TaskModel task;
@@ -54,8 +56,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor ingresa un nombre para la tarea'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).editTaskSnackNameRequired,
+          ),
         ),
       );
       return;
@@ -64,11 +68,17 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     setState(() => _isLoading = true);
 
     try {
+      final changedCatalogIdentity = title != widget.task.title ||
+          _selectedCategory != widget.task.category;
       await ref.read(tasksProvider.notifier).editTask(widget.task.id, {
         'title': title,
         'category': _selectedCategory,
         'xp_reward': int.tryParse(_xpController.text) ?? 0,
         'coin_reward': int.tryParse(_coinController.text) ?? 0,
+        if (changedCatalogIdentity) ...{
+          'source_template_id': null,
+          'title_key': null,
+        },
       });
 
       if (mounted) {
@@ -78,7 +88,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al guardar: $e'),
+            content: Text(
+              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -131,7 +143,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'Eliminar tarea',
+                      AppLocalizations.of(context).editTaskDeleteTitle,
                       style: TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.w900,
@@ -165,7 +177,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                         ),
                       ),
                       child: Text(
-                        'Cancelar',
+                        AppLocalizations.of(context).commonCancel,
                         style: TextStyle(
                           color: theme.textMuted,
                           fontWeight: FontWeight.w700,
@@ -189,9 +201,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: const Text(
-                        'Eliminar',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context).editTaskDeleteConfirm,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
@@ -218,7 +230,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al eliminar: $e'),
+            content: Text(
+              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -238,7 +252,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     setState(() => _isLoading = true);
     try {
       if (isChildView) {
-        await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
+        await ref
+            .read(tasksProvider.notifier)
+            .submitTaskForApproval(widget.task);
       } else {
         await ref.read(tasksProvider.notifier).completeTask(widget.task);
       }
@@ -249,8 +265,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
           SnackBar(
             content: Text(
               isChildView
-                  ? 'Tarea enviada a revisión.'
-                  : 'Tarea completada.',
+                  ? AppLocalizations.of(context).editTaskSnackSentForReview
+                  : AppLocalizations.of(context).tasksSnackCompleted,
             ),
             backgroundColor: AppColors.success,
           ),
@@ -260,7 +276,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al completar: $e'),
+            content: Text(
+              AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -276,12 +294,15 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     final theme = context.theme;
     final currentCategories = categoriesAsync.maybeWhen(
       data: (list) => list
-          .map((c) => {
-                'id': c.id,
-                'name': c.name,
-                'icon': c.icon,
-                'color': c.color,
-              },)
+          .map(
+            (c) => {
+              'id': c.id,
+              'name': c.name,
+              'icon': c.icon,
+              'color': c.color,
+              'translationKey': c.translationKey,
+            },
+          )
           .toList(),
       orElse: () => <Map<String, dynamic>>[],
     );
@@ -332,7 +353,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   children: [
                     _buildHeader(theme),
                     const SizedBox(height: 26),
-                    _buildSectionLabel('DETALLE'),
+                    _buildSectionLabel(
+                      AppLocalizations.of(context).editTaskSectionDetailEyebrow,
+                    ),
                     const SizedBox(height: 10),
                     _buildInputCard(
                       theme,
@@ -341,7 +364,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                         controller: _titleController,
                         textCapitalization: TextCapitalization.sentences,
                         decoration: InputDecoration(
-                          hintText: 'Nombre de la tarea',
+                          hintText: AppLocalizations.of(context)
+                              .editTaskFieldNameHint,
                           hintStyle: TextStyle(
                             color: theme.textMuted,
                             fontWeight: FontWeight.w600,
@@ -365,7 +389,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    _buildSectionLabel('CATEGORIA'),
+                    _buildSectionLabel(
+                      AppLocalizations.of(context)
+                          .editTaskSectionCategoryEyebrow,
+                    ),
                     const SizedBox(height: 12),
                     SizedBox(
                       height: 64,
@@ -424,7 +451,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                     ),
                                     child: Icon(
                                       CategoryMapping.getCategoryMaterialIcon(
-                                          cat['name'],),
+                                        cat['name'],
+                                      ),
                                       color: color,
                                       size: 18,
                                     ),
@@ -432,7 +460,11 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                   const SizedBox(width: 10),
                                   Flexible(
                                     child: Text(
-                                      cat['name']!,
+                                      localizedTaskCatalogText(
+                                        AppLocalizations.of(context),
+                                        cat['translationKey'] as String?,
+                                        cat['name']! as String,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -454,7 +486,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                       ),
                     ),
                     const SizedBox(height: 22),
-                    _buildSectionLabel('RECOMPENSA'),
+                    _buildSectionLabel(
+                      AppLocalizations.of(context).editTaskSectionRewardEyebrow,
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -500,7 +534,8 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                               controller: _coinController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                hintText: 'Coins',
+                                hintText: AppLocalizations.of(context)
+                                    .createTaskFieldCoinsLabel,
                                 hintStyle: TextStyle(
                                   color: theme.textMuted,
                                   fontWeight: FontWeight.w600,
@@ -554,7 +589,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                         ),
                       ),
                       child: Text(
-                        'Cancelar',
+                        AppLocalizations.of(context).commonCancel,
                         style: TextStyle(
                           color: theme.textMuted,
                           fontWeight: FontWeight.w700,
@@ -597,9 +632,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text(
-                                'Guardar cambios',
-                                style: TextStyle(
+                            : Text(
+                                AppLocalizations.of(context)
+                                    .editTaskSaveChanges,
+                                style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
                                 ),
@@ -646,7 +682,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Editar tarea',
+                AppLocalizations.of(context).editTaskHeaderTitle,
                 style: TextStyle(
                   fontSize: 21,
                   fontWeight: FontWeight.w900,
@@ -656,7 +692,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Actualiza el nombre, la categoria y la recompensa de esta tarea.',
+                AppLocalizations.of(context).editTaskHeaderSubtitle,
                 style: TextStyle(
                   fontSize: 13,
                   color: theme.textSecondary,
@@ -689,7 +725,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     size: 18,
                   ),
                   label: Text(
-                    isChildView ? 'Enviar a revisión' : 'Completar tarea',
+                    isChildView
+                        ? AppLocalizations.of(context)
+                            .editTaskSubmitForReviewButton
+                        : AppLocalizations.of(context).editTaskCompleteButton,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13.5,
@@ -715,9 +754,9 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                   ),
                 ),
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: const Text(
-                  'Eliminar tarea',
-                  style: TextStyle(
+                label: Text(
+                  AppLocalizations.of(context).editTaskDeleteTitle,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13.5,
                   ),
@@ -727,7 +766,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
           ),
         ),
         IconButton(
-          tooltip: 'Cerrar',
+          tooltip: AppLocalizations.of(context).commonClose,
           onPressed: _isLoading ? null : () => Navigator.pop(context),
           splashRadius: 22,
           icon: Icon(

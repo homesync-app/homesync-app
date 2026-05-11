@@ -549,16 +549,12 @@ class CoupleChallenge {
   }
 
   static int currentWeeklyChallengeIndex([DateTime? householdCreatedAt]) {
-    final now = DateTime.now();
-    
-    // Si no hay fecha de creación, usamos el lunes de esta semana como referencia 
-    // para que sea consistente para todos los nuevos. 
-    // Pero el usuario quiere que arranque por la primera al instalar.
-    final referenceDate = householdCreatedAt ?? DateTime(now.year, 1, 1);
-    
-    // Calculamos semanas transcurridas desde la fecha de referencia
-    final difference = now.difference(referenceDate);
+    // Arrancamos por el desafío 1 cuando se instala/crea el hogar y avanzamos
+    // un desafío por semana transcurrida. Sin fecha → primer desafío.
+    if (householdCreatedAt == null) return 0;
+    final difference = DateTime.now().difference(householdCreatedAt);
     final weekIndex = (difference.inDays / 7).floor();
+    if (weekIndex < 0) return 0;
     return weekIndex % allChallenges.length;
   }
 }

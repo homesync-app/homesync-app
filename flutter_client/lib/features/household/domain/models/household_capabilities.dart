@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 enum HouseholdType {
   solo,
@@ -51,51 +52,25 @@ class HouseholdCapabilities {
   bool get showFamilyBoard =>
       type == HouseholdType.family || type == HouseholdType.friends;
 
-  String get socialTabLabel {
-    return switch (type) {
-      HouseholdType.solo => 'Mi espacio',
-      HouseholdType.couple => 'Pareja',
-      HouseholdType.family => 'Familia',
-      HouseholdType.friends => 'Convivencia',
-    };
-  }
+  // Mode-aware UI text. Localized via ARB ICU `select` on the type name.
+  // Pass `AppLocalizations.of(context)` from the calling widget. Adding new
+  // mode-aware labels: define a new key in `app_es.arb` with `select` over
+  // {couple, family, friends, solo, other} and add a thin wrapper here.
 
-  String get socialHubTitle {
-    return switch (type) {
-      HouseholdType.solo => 'Mi espacio',
-      HouseholdType.couple => 'Pareja',
-      HouseholdType.family => 'Centro familiar',
-      HouseholdType.friends => 'Convivencia',
-    };
-  }
+  String socialTabLabel(AppLocalizations t) =>
+      t.householdSocialTabLabel(type.name);
 
-  String get socialHubSubtitle {
-    return switch (type) {
-      HouseholdType.solo => 'Todo tu progreso personal en un solo lugar.',
-      HouseholdType.couple =>
-        'Desafios, premios y pequenas recompensas para compartir.',
-      HouseholdType.family =>
-        'Coordinacion, miembros y acuerdos del hogar para toda la familia.',
-      HouseholdType.friends =>
-        'Organizacion, convivencia y reparto claro para el piso.',
-    };
-  }
+  String socialHubTitle(AppLocalizations t) =>
+      t.householdSocialHubTitle(type.name);
 
-  String get dashboardGreeting {
-    return switch (type) {
-      HouseholdType.solo => 'Mi Progreso',
-      HouseholdType.couple => 'Nuestro Hogar',
-      HouseholdType.family => 'Hogar Familiar',
-      HouseholdType.friends => 'Convivencia',
-    };
-  }
+  String socialHubSubtitle(AppLocalizations t) =>
+      t.householdSocialHubSubtitle(type.name);
 
-  String get balanceMessage {
-    return switch (type) {
-      HouseholdType.solo => 'Llevas gastado este mes',
-      _ => 'Balance acumulado',
-    };
-  }
+  String dashboardGreeting(AppLocalizations t) =>
+      t.householdDashboardGreeting(type.name);
+
+  String balanceMessage(AppLocalizations t) =>
+      t.householdBalanceMessage(type.name);
 
   IconData get partnerIcon {
     return switch (type) {
@@ -106,30 +81,14 @@ class HouseholdCapabilities {
     };
   }
 
-  String get emptyStateTasksSubtitle {
-    return switch (type) {
-      HouseholdType.solo => 'Agrega tu primera tarea para organizar tu dia.',
-      _ => 'Agreguen su primera tarea para organizar el hogar.',
-    };
-  }
+  String emptyStateTasksSubtitle(AppLocalizations t) =>
+      t.householdEmptyTasksSubtitle(type.name);
 
-  String get memberLabel {
-    return switch (type) {
-      HouseholdType.solo => 'Yo',
-      HouseholdType.couple => 'Pareja',
-      HouseholdType.family => 'Familia',
-      HouseholdType.friends => 'Companeros',
-    };
-  }
+  String memberLabel(AppLocalizations t) =>
+      t.householdMemberLabel(type.name);
 
-  String get actionMemberLabel {
-    return switch (type) {
-      HouseholdType.solo => 'conmigo',
-      HouseholdType.couple => 'con tu pareja',
-      HouseholdType.family => 'con la familia',
-      HouseholdType.friends => 'con tus companeros',
-    };
-  }
+  String actionMemberLabel(AppLocalizations t) =>
+      t.householdActionMemberLabel(type.name);
 
   IconData get socialTabIcon {
     return switch (type) {

@@ -9,6 +9,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 class CreateTaskDialog extends ConsumerStatefulWidget {
@@ -45,17 +47,43 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   bool _showSuccessState = false;
   List<Map<String, dynamic>> _members = [];
 
+  // Difficulty/recurrence display names are looked up by id at render time
+  // via [_difficultyName] / [_recurrenceName] so they follow the active locale.
   final List<Map<String, dynamic>> _difficulties = [
-    {'id': 'easy', 'name': 'Facil', 'xp': 5, 'coins': 1},
-    {'id': 'medium', 'name': 'Media', 'xp': 10, 'coins': 1},
-    {'id': 'hard', 'name': 'Dificil', 'xp': 20, 'coins': 2},
+    {'id': 'easy', 'xp': 5, 'coins': 1},
+    {'id': 'medium', 'xp': 10, 'coins': 1},
+    {'id': 'hard', 'xp': 20, 'coins': 2},
   ];
 
   final List<Map<String, String>> _recurrenceOptions = [
-    {'id': 'daily', 'name': 'Diaria'},
-    {'id': 'weekly', 'name': 'Semanal'},
-    {'id': 'monthly', 'name': 'Mensual'},
+    {'id': 'daily'},
+    {'id': 'weekly'},
+    {'id': 'monthly'},
   ];
+
+  String _difficultyName(AppLocalizations t, String id) {
+    switch (id) {
+      case 'easy':
+        return t.createTaskDifficultyEasy;
+      case 'hard':
+        return t.createTaskDifficultyHard;
+      default:
+        return t.createTaskDifficultyMedium;
+    }
+  }
+
+  String _recurrenceName(AppLocalizations t, String id) {
+    switch (id) {
+      case 'daily':
+        return t.createTaskRecurrenceDaily;
+      case 'weekly':
+        return t.createTaskRecurrenceWeekly;
+      case 'monthly':
+        return t.createTaskRecurrenceMonthly;
+      default:
+        return id;
+    }
+  }
 
   Map<String, dynamic> get _currentDifficulty => _difficulties.firstWhere(
         (difficulty) => difficulty['id'] == _selectedDifficulty,
@@ -107,15 +135,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   String? _validateCustomRecurrence() {
     if (_selectedRecurrence != 'custom') return null;
 
+    final t = AppLocalizations.of(context);
     switch (_customRecurrenceMode) {
       case 'weekdays':
         if (_selectedWeekdays.isEmpty) {
-          return 'Elige al menos un dia para la repeticion personalizada.';
+          return t.createTaskValidationCustomDays;
         }
         break;
       case 'month_days':
         if (_selectedMonthDays.isEmpty) {
-          return 'Elige al menos una fecha del mes.';
+          return t.createTaskValidationCustomMonthDates;
         }
         break;
       case 'interval':
@@ -142,8 +171,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Espera un momento y elige una categoria.'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).createTaskSnackCategoryNotReady,
+          ),
           backgroundColor: AppColors.accentOrange,
         ),
       );
@@ -175,8 +206,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
     if (isDuplicate) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ya existe una tarea identica activa'),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).createTaskSnackDuplicate,
+            ),
             backgroundColor: AppColors.accentOrange,
           ),
         );
@@ -193,9 +226,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           (_selectedRecurrence != null && _rotationPool.length >= 2)
               ? _rotationPool.toList()
               : null;
-      final assignedTo = rotationPoolList != null
-          ? rotationPoolList.first
-          : _selectedMemberId;
+      final assignedTo =
+          rotationPoolList != null ? rotationPoolList.first : _selectedMemberId;
 
       await ref.read(tasksProvider.notifier).createTask({
         'title': title,
@@ -284,13 +316,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Nueva tarea',
-                            style: TextStyle(
+                            AppLocalizations.of(context).createTaskHeaderTitle,
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w900,
                             ),
@@ -307,21 +339,26 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSectionHeader(
-                          'DETALLE',
-                          'Que hay que hacer',
-                          'Ponle un nombre claro para que se entienda de un vistazo.',
+                          AppLocalizations.of(context)
+                              .createTaskSectionDetailEyebrow,
+                          AppLocalizations.of(context)
+                              .createTaskSectionDetailTitle,
+                          AppLocalizations.of(context)
+                              .createTaskSectionDetailSubtitle,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
                           controller: _titleController,
-                          decoration: const InputDecoration(
-                            labelText: 'Que hay que hacer',
-                            prefixIcon: Icon(Icons.edit_note_rounded),
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)
+                                .createTaskFieldTitleLabel,
+                            prefixIcon: const Icon(Icons.edit_note_rounded),
                           ),
                           validator: (value) {
                             final title = value?.trim() ?? '';
                             if (title.isEmpty) {
-                              return 'Titulo requerido';
+                              return AppLocalizations.of(context)
+                                  .createTaskValidationTitleRequired;
                             }
                             if (title.length < 3) {
                               return 'Usa al menos 3 caracteres';
@@ -333,11 +370,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         TextFormField(
                           controller: _descriptionController,
                           maxLines: 2,
-                          decoration: const InputDecoration(
-                            labelText: 'Notas (opcional)',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)
+                                .createTaskFieldNotesLabel,
                             hintText:
                                 'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
-                            prefixIcon: Padding(
+                            prefixIcon: const Padding(
                               padding: EdgeInsets.only(bottom: 24),
                               child: Icon(Icons.notes_rounded),
                             ),
@@ -346,9 +384,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ),
                         const SizedBox(height: 18),
                         _buildSectionHeader(
-                          'CATEGORIA',
-                          'Donde vive mejor',
-                          'Elige la zona del hogar para que aparezca ordenada.',
+                          AppLocalizations.of(context)
+                              .createTaskSectionCategoryEyebrow,
+                          AppLocalizations.of(context)
+                              .createTaskSectionCategoryTitle,
+                          AppLocalizations.of(context)
+                              .createTaskSectionCategorySubtitle,
                         ),
                         const SizedBox(height: 10),
                         categoriesAsync.when(
@@ -412,7 +453,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          category.name,
+                                          localizedTaskCategoryName(
+                                            AppLocalizations.of(context),
+                                            category,
+                                          ),
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: isSelected
@@ -443,23 +487,37 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ),
                         const SizedBox(height: 20),
                         _buildSectionHeader(
-                          'FRECUENCIA',
-                          'Cuando se repite',
-                          'Puede quedar unica, repetirse o seguir un patron propio.',
+                          AppLocalizations.of(context)
+                              .createTaskSectionFrequencyEyebrow,
+                          AppLocalizations.of(context)
+                              .createTaskSectionFrequencyTitle,
+                          AppLocalizations.of(context)
+                              .createTaskSectionFrequencySubtitle,
                         ),
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _buildFrequencyChip('Sin repetir', null),
+                            _buildFrequencyChip(
+                              AppLocalizations.of(context)
+                                  .createTaskRecurrenceNone,
+                              null,
+                            ),
                             ..._recurrenceOptions.map(
                               (recurrence) => _buildFrequencyChip(
-                                recurrence['name']!,
+                                _recurrenceName(
+                                  AppLocalizations.of(context),
+                                  recurrence['id']!,
+                                ),
                                 recurrence['id'],
                               ),
                             ),
-                            _buildFrequencyChip('Personalizada', 'custom'),
+                            _buildFrequencyChip(
+                              AppLocalizations.of(context)
+                                  .createTaskRecurrenceCustom,
+                              'custom',
+                            ),
                           ],
                         ),
                         if (_selectedRecurrence == 'custom') ...[
@@ -468,20 +526,31 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         ],
                         const SizedBox(height: 20),
                         _buildSectionHeader(
-                          'RESPONSABLE',
-                          'Quien puede hacerla',
-                          'Puedes dejarla abierta o asignarla a alguien en particular.',
+                          AppLocalizations.of(context)
+                              .createTaskSectionAssigneeEyebrow,
+                          AppLocalizations.of(context)
+                              .createTaskSectionAssigneeTitle,
+                          AppLocalizations.of(context)
+                              .createTaskSectionAssigneeSubtitle,
                         ),
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _buildAssigneeChip('Cualquiera', null, 'C'),
+                            _buildAssigneeChip(
+                              AppLocalizations.of(context)
+                                  .createTaskAssigneeAnyone,
+                              null,
+                              'C',
+                            ),
                             ..._members.map((member) {
-                              final name = member['users']['full_name'] ??
-                                  member['users']['email'] ??
-                                  'Miembro';
+                              final user =
+                                  member['users'] as Map<String, dynamic>?;
+                              final name = user?['full_name'] ??
+                                  user?['email'] ??
+                                  AppLocalizations.of(context)
+                                      .settingsHouseholdMemberFallbackName;
                               final initial =
                                   name.toString().substring(0, 1).toUpperCase();
                               return _buildAssigneeChip(
@@ -495,9 +564,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                         const SizedBox(height: 20),
                         _buildRotationSection(),
                         _buildSectionHeader(
-                          'VALOR',
-                          'Cuanto vale completarla',
-                          'La dificultad define puntos y coins de forma rapida.',
+                          AppLocalizations.of(context)
+                              .createTaskSectionValueEyebrow,
+                          AppLocalizations.of(context)
+                              .createTaskSectionValueTitle,
+                          AppLocalizations.of(context)
+                              .createTaskSectionValueSubtitle,
                         ),
                         const SizedBox(height: 10),
                         _buildDifficultySection(),
@@ -520,9 +592,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context).commonCancel,
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w700,
                           ),
@@ -582,19 +654,20 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                       ),
                                     )
                                   : _showSuccessState
-                                      ? const Row(
-                                          key: ValueKey('success'),
+                                      ? Row(
+                                          key: const ValueKey('success'),
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(
+                                            const Icon(
                                               Icons.check_circle_rounded,
                                               color: Colors.white,
                                               size: 20,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
-                                              'Tarea creada',
-                                              style: TextStyle(
+                                              AppLocalizations.of(context)
+                                                  .createTaskSnackCreated,
+                                              style: const TextStyle(
                                                 fontWeight: FontWeight.w800,
                                                 color: Colors.white,
                                                 fontSize: 16,
@@ -602,10 +675,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                             ),
                                           ],
                                         )
-                                      : const Text(
-                                          key: ValueKey('idle'),
-                                          'Crear tarea',
-                                          style: TextStyle(
+                                      : Text(
+                                          key: const ValueKey('idle'),
+                                          AppLocalizations.of(context)
+                                              .createTaskCreateButton,
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w800,
                                             color: Colors.white,
                                             fontSize: 16,
@@ -698,13 +772,21 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildCustomModeTab('Por dia', 'weekdays'),
-              _buildCustomModeTab('Intervalo', 'interval'),
-              _buildCustomModeTab('Fecha', 'month_days'),
-            ],
+          Builder(
+            builder: (context) {
+              final t = AppLocalizations.of(context);
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildCustomModeTab(
+                      t.createTaskCustomTabWeekdays, 'weekdays',),
+                  _buildCustomModeTab(
+                      t.createTaskCustomTabInterval, 'interval',),
+                  _buildCustomModeTab(
+                      t.createTaskCustomTabMonthDays, 'month_days',),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           if (_customRecurrenceMode == 'weekdays') _buildWeekdaySelector(),
@@ -745,7 +827,16 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildWeekdaySelector() {
-    const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final t = AppLocalizations.of(context);
+    final days = [
+      t.createTaskWeekdayMonday,
+      t.createTaskWeekdayTuesday,
+      t.createTaskWeekdayWednesday,
+      t.createTaskWeekdayThursday,
+      t.createTaskWeekdayFriday,
+      t.createTaskWeekdaySaturday,
+      t.createTaskWeekdaySunday,
+    ];
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -799,12 +890,13 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildIntervalSelector() {
+    final t = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          'Repetir cada',
-          style: TextStyle(color: AppColors.textSecondary),
+        Text(
+          t.createTaskCustomRepeatEvery,
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
         const SizedBox(width: 12),
         Container(
@@ -817,7 +909,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           child: Row(
             children: [
               IconButton(
-                tooltip: 'Disminuir',
+                tooltip: t.createTaskCustomDecreaseTooltip,
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.remove,
@@ -842,7 +934,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 ),
               ),
               IconButton(
-                tooltip: 'Aumentar',
+                tooltip: t.createTaskCustomIncreaseTooltip,
                 padding: EdgeInsets.zero,
                 icon: const Icon(
                   Icons.add,
@@ -868,11 +960,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
   }
 
   Widget _buildMonthDaySelector() {
+    final t = AppLocalizations.of(context);
     return Column(
       children: [
-        const Text(
-          'Elige los dias del mes',
-          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+        Text(
+          t.createTaskCustomMonthDaysHelp,
+          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -935,9 +1028,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          'ROTACION',
-          'Que se turnen los miembros',
-          'Elegi al menos dos. Cada vez que se complete, le toca al siguiente.',
+          AppLocalizations.of(context).createTaskSectionRotationEyebrow,
+          AppLocalizations.of(context).createTaskSectionRotationTitle,
+          AppLocalizations.of(context).createTaskSectionRotationSubtitle,
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -945,11 +1038,12 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           runSpacing: 8,
           children: _members.map((member) {
             final id = member['user_id'] as String;
-            final name = member['users']['full_name'] ??
-                member['users']['email'] ??
-                'Miembro';
-            final initial =
-                name.toString().substring(0, 1).toUpperCase();
+            final user = member['users'] as Map<String, dynamic>?;
+            final name = user?['full_name'] ??
+                user?['email'] ??
+                AppLocalizations.of(context)
+                    .settingsHouseholdMemberFallbackName;
+            final initial = name.toString().substring(0, 1).toUpperCase();
             final selected = _rotationPool.contains(id);
             return GestureDetector(
               onTap: () => setState(() {
@@ -1115,7 +1209,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
               child: Column(
                 children: [
                   Text(
-                    difficulty['name'] as String,
+                    _difficultyName(
+                      AppLocalizations.of(context),
+                      difficulty['id'] as String,
+                    ),
                     style: TextStyle(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -1166,9 +1263,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Recompensas',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              Text(
+                AppLocalizations.of(context).createTaskRewardsTitle,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               GestureDetector(
                 onTap: () => setState(() {
@@ -1190,7 +1287,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Personalizar',
+                      AppLocalizations.of(context).createTaskCustomizeRewards,
                       style: TextStyle(
                         fontSize: 12,
                         color: _customRewards
@@ -1229,7 +1326,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   validator: (value) {
                     if (!_customRewards) return null;
                     final parsed = int.tryParse((value ?? '').trim());
-                    if (parsed == null) return 'Ingresa un numero';
+                    if (parsed == null) {
+                      return AppLocalizations.of(context)
+                          .createTaskValidationNumberRequired;
+                    }
                     if (parsed <= 0) return 'Debe ser mayor a 0';
                     return null;
                   },
@@ -1241,15 +1341,18 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   controller: _coinController,
                   enabled: _customRewards,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Coins',
-                    prefixIcon: Icon(
+                  decoration: InputDecoration(
+                    labelText:
+                        AppLocalizations.of(context).createTaskFieldCoinsLabel,
+                    prefixIcon: const Icon(
                       Icons.monetization_on_rounded,
                       color: AppColors.sage,
                       size: 20,
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                   ),
                   style: TextStyle(
                     color: _customRewards
@@ -1259,8 +1362,14 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                   validator: (value) {
                     if (!_customRewards) return null;
                     final parsed = int.tryParse((value ?? '').trim());
-                    if (parsed == null) return 'Ingresa un numero';
-                    if (parsed < 0) return 'No puede ser negativo';
+                    if (parsed == null) {
+                      return AppLocalizations.of(context)
+                          .createTaskValidationNumberRequired;
+                    }
+                    if (parsed < 0) {
+                      return AppLocalizations.of(context)
+                          .createTaskValidationNotNegative;
+                    }
                     return null;
                   },
                 ),

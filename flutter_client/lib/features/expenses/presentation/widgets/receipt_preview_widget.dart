@@ -40,7 +40,7 @@ class ReceiptPreviewWidget extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: AppColors.primary.withOpacity(0.3), width: 1.5,),
+                  color: AppColors.primary.withValues(alpha: 0.3), width: 1.5,),
             ),
             clipBehavior: Clip.antiAlias,
             child: imageWidget,

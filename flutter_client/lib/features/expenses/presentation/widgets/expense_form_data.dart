@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 List<Map<String, dynamic>> buildExpenseCategories() {
   return [
@@ -148,4 +149,64 @@ List<Map<String, dynamic>> buildIncomeCategories() {
       'color': AppColors.success,
     },
   ];
+}
+
+String localizedExpenseCategoryName(AppLocalizations t, String categoryId) {
+  switch (categoryId) {
+    case 'supermarket':
+      return t.expensesFormCategorySupermarket;
+    case 'utilities':
+      return t.expensesFormCategoryUtilities;
+    case 'rent':
+      return t.expensesFormCategoryRent;
+    case 'restaurants':
+      return t.expensesFormCategoryRestaurants;
+    case 'transport':
+      return t.expensesFormCategoryTransport;
+    case 'entertainment':
+      return t.expensesFormCategoryEntertainment;
+    case 'health':
+      return t.expensesFormCategoryHealth;
+    case 'finanzas':
+      return t.expensesFormCategoryFinances;
+    case 'settlement':
+      return t.expensesFormCategorySettlement;
+    case 'mercadolibre':
+      return t.expensesFormCategoryOnlineShopping;
+    case 'pets':
+      return t.expensesFormCategoryPets;
+    case 'clothing':
+      return t.expensesFormCategoryClothing;
+    case 'electronics':
+      return t.expensesFormCategoryElectronics;
+    case 'education':
+      return t.expensesFormCategoryEducation;
+    case 'other':
+      return t.expensesFormCategoryOtherExpenses;
+    default:
+      return categoryId;
+  }
+}
+
+String localizedIncomeCategoryName(AppLocalizations t, String categoryId) {
+  switch (categoryId) {
+    case 'salary':
+      return t.expensesFormIncomeCategorySalary;
+    case 'freelance':
+      return t.expensesFormIncomeCategoryFreelance;
+    case 'ventas':
+      return t.expensesFormIncomeCategorySales;
+    case 'bonus':
+      return t.expensesFormIncomeCategoryBonus;
+    case 'reembolso':
+      return t.expensesFormIncomeCategoryRefund;
+    case 'gift':
+      return t.expensesFormIncomeCategoryGift;
+    case 'investment':
+      return t.expensesFormIncomeCategoryInvestment;
+    case 'other':
+      return t.expensesFormIncomeCategoryOtherIncome;
+    default:
+      return categoryId;
+  }
 }

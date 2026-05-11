@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
@@ -12,6 +12,7 @@ import 'package:homesync_client/features/expenses/domain/models/feed_item_model.
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
@@ -82,9 +83,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildTabBar() {
+    final t = AppLocalizations.of(context);
     return AppSegmentedTabs(
       controller: _tabController,
-      labels: const ['Movimientos', 'Recurrentes', 'Metas'],
+      labels: [
+        t.expensesTabMovements,
+        t.expensesTabRecurring,
+        t.expensesTabGoals,
+      ],
       padding: const EdgeInsets.all(6),
     );
   }
@@ -93,17 +99,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return AnimatedBuilder(
       animation: _tabController,
       builder: (context, child) {
-        String label = 'Movimiento';
+        final t = AppLocalizations.of(context);
+        String label = t.expensesFabMovement;
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
           final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
-          label = 'Nueva Suscripción';
+          label = t.expensesFabNewSubscription;
           onPressed = isPremium
               ? () => _showTemplateForm(context)
               : () => PremiumPaywall.show(context);
         } else if (_tabController.index == 2) {
-          label = 'Nueva Meta';
+          label = t.expensesFabNewGoal;
           onPressed = () => SavingsTab.showGoalSheet(context, ref);
         }
 
@@ -256,7 +263,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'ACTIVIDAD RECIENTE',
+                              AppLocalizations.of(context)
+                                  .expensesActivityRecentEyebrow,
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 12,
@@ -313,7 +321,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: _buildEmptyState('No hay movimientos recientes'),
+                        child: _buildEmptyState(
+                          AppLocalizations.of(context).expensesActivityEmpty,
+                        ),
                       ),
                     ),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -332,15 +342,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final yesterday = today.subtract(const Duration(days: 1));
     final tomorrow = today.add(const Duration(days: 1));
     final checkDate = DateTime(date.year, date.month, date.day);
+    final t = AppLocalizations.of(context);
 
     if (checkDate == today) {
-      return 'HOY';
+      return t.expensesDateToday;
     } else if (checkDate == yesterday) {
-      return 'AYER';
+      return t.expensesDateYesterday;
     } else if (checkDate == tomorrow) {
-      return 'MAÑANA';
+      return t.expensesDateTomorrow;
     } else {
-      return DateFormat('d MMMM y', 'es').format(date).toUpperCase();
+      final localeTag = Localizations.localeOf(context).toString();
+      return DateFormat('d MMMM y', localeTag).format(date).toUpperCase();
     }
   }
 
@@ -509,13 +521,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }) {
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final hasIncome = income > 0;
     final hasPending = projectedPending > 0;
     final mainLabel = hasIncome
-        ? 'TU BALANCE ACTUAL'
+        ? t.expensesSummaryMainBalance
         : hasPending
-            ? 'TOTAL PREVISTO DEL MES'
-            : 'GASTOS DEL MES';
+            ? t.expensesSummaryMainProjected
+            : t.expensesSummaryMainExpenses;
     final mainAmount = hasIncome
         ? balance
         : hasPending
@@ -568,9 +581,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         child: _buildPremiumStatTile(
                           hasIncome
                               ? (isIncomeEstimated
-                                  ? 'Ingreso estimado'
-                                  : 'Ingresos')
-                              : 'Pagado',
+                                  ? t.expensesStatTileEstimatedIncome
+                                  : t.expensesStatTileIncomes)
+                              : t.expensesStatTilePaid,
                           hasIncome ? income : expense,
                           hasIncome ? AppColors.success : AppColors.primary,
                           hasIncome
@@ -588,7 +601,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildPremiumStatTile(
-                          hasIncome ? 'Gastos' : 'Pendiente',
+                          hasIncome
+                              ? t.expensesStatTileExpenses
+                              : t.expensesStatTilePending,
                           hasIncome ? expense : projectedPending,
                           hasIncome ? AppColors.primary : AppColors.accentTeal,
                           hasIncome
@@ -623,7 +638,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 children: [
                   Expanded(
                     child: _buildProjectionStat(
-                      'Tu parte pendiente',
+                      t.expensesProjectionPendingShare,
                       projectedPending,
                       theme.textSecondary,
                       onTap: () => _showPendingBreakdownSheet(projectedPending),
@@ -637,7 +652,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                   Expanded(
                     child: _buildProjectionStat(
-                      'Cierre estimado',
+                      t.expensesProjectionEstimated,
                       projectedBalance,
                       theme.textPrimary,
                       isBold: true,
@@ -668,6 +683,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final pendingItems = pendingFeed
         .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
+    final t = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -698,7 +714,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Cálculo de proyección',
+                    t.expensesProjectionTitle,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -708,7 +724,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Así llegamos a tu cierre estimado para fin de mes.',
+                    t.expensesProjectionSubtitle,
                     style: TextStyle(
                       color: theme.textSecondary,
                       fontSize: 14,
@@ -719,13 +735,13 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
                   // Equation Section
                   _buildBreakdownRow(
-                    'Tu balance actual',
+                    t.expensesProjectionRowBalance,
                     balance,
                     AppColors.textPrimary,
                   ),
                   const SizedBox(height: 16),
                   _buildBreakdownRow(
-                    'Tu parte pendiente',
+                    t.expensesProjectionPendingShare,
                     -pendingTotal,
                     AppColors.primary,
                   ),
@@ -735,7 +751,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     color: AppColors.divider,
                   ),
                   _buildBreakdownRow(
-                    'Tu cierre estimado',
+                    t.expensesProjectionRowEstimated,
                     estimated,
                     AppColors.accentTeal,
                     isFinal: true,
@@ -758,9 +774,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Text(
-                          'DETALLE DE PENDIENTES',
-                          style: TextStyle(
+                        Text(
+                          t.expensesPendingDetailsEyebrow,
+                          style: const TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
@@ -826,9 +842,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        'Entendido',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context).expensesGotIt,
+                        style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 16,
                         ),
@@ -959,9 +975,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .map(_expenseFromFeedItem)
         .toList();
 
+    final t = AppLocalizations.of(context);
     _showGenericBreakdownSheet(
-      'Detalle de Ingresos',
-      'Tus ingresos registrados este mes.',
+      t.expensesIncomeBreakdownTitle,
+      t.expensesIncomeBreakdownSubtitle,
       total,
       items,
       AppColors.success,
@@ -986,9 +1003,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .map(_expenseFromFeedItem)
         .toList();
 
+    final t = AppLocalizations.of(context);
     _showGenericBreakdownSheet(
-      'Detalle de Gastos',
-      'Tus gastos pagados este mes.',
+      t.expensesExpensesBreakdownTitle,
+      t.expensesExpensesBreakdownSubtitle,
       total,
       items,
       AppColors.primary,
@@ -1003,16 +1021,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .where((item) => _plannedShareAmount(item, userId) > 0)
         .toList();
 
+    final t = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _buildBreakdownBaseContainer(
-        title: 'Tu Parte Pendiente',
-        subtitle:
-            'Lo que te corresponde de los gastos planificados de este mes.',
+        title: t.expensesPendingBreakdownTitle,
+        subtitle: t.expensesPendingBreakdownSubtitle,
         total: total,
-        totalLabel: 'Tu total pendiente',
+        totalLabel: t.expensesPendingBreakdownTotalLabel,
         accentColor: AppColors.textSecondary,
         content: Column(
           children: items
@@ -1052,16 +1070,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         title: title,
         subtitle: subtitle,
         total: total,
-        totalLabel: 'Total del mes',
+        totalLabel: AppLocalizations.of(context).expensesBreakdownTotalLabel,
         accentColor: accentColor,
         content: Column(
           children: items.isEmpty
               ? [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Text(
-                      'No hay movimientos registrados',
-                      style: TextStyle(color: AppColors.textMuted),
+                      AppLocalizations.of(context).expensesBreakdownEmpty,
+                      style: const TextStyle(color: AppColors.textMuted),
                     ),
                   ),
                 ]
@@ -1184,9 +1202,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Text(
-                      'MOVIMIENTOS',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)
+                          .expensesBreakdownMovementsEyebrow,
+                      style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
@@ -1301,7 +1320,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             payerEmail: item.payerEmail,
             splitType: item.splitType,
             isShared: item.splitType != SplitType.personal.name,
-            type: item.title.toLowerCase().contains('liquidación')
+            type: item.title.toLowerCase().contains('liquidaciÃ³n')
                 ? 'settlement'
                 : 'expense',
           );
@@ -1418,10 +1437,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
-                      'Omitir',
-                      style:
-                          TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                    child: Text(
+                      AppLocalizations.of(context).expensesPlannedSkip,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -1434,6 +1455,18 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           result['success'] != true) {
                         return;
                       }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)
+                                .expensesPlannedPaymentSnack(
+                              result['title'].toString(),
+                            ),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -1449,10 +1482,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Pagar',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                    child: Text(
+                      AppLocalizations.of(context).expensesPlannedPay,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -1469,25 +1504,26 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final today = DateTime(now.year, now.month, now.day);
     final dueDate = DateTime(item.date.year, item.date.month, item.date.day);
     final diff = dueDate.difference(today).inDays;
+    final t = AppLocalizations.of(context);
 
-    String label = 'PROXIMO';
+    String label = t.expensesPlannedBadgeUpcoming;
     Color badgeColor = AppColors.textMuted;
     IconData icon = Icons.access_time_rounded;
 
     if (diff < 0) {
-      label = 'PENDIENTE';
+      label = t.expensesPlannedBadgePending;
       badgeColor = AppColors.accentRed;
       icon = Icons.priority_high_rounded;
     } else if (diff == 0) {
-      label = 'VENCE HOY';
+      label = t.expensesPlannedBadgeDueToday;
       badgeColor = AppColors.accentOrange;
       icon = Icons.today_rounded;
     } else if (diff == 1) {
-      label = 'MAÑANA';
+      label = t.expensesPlannedBadgeTomorrow;
       badgeColor = AppColors.accentGold;
       icon = Icons.notification_important_rounded;
     } else if (diff <= 2) {
-      label = 'VENCE PRONTO';
+      label = t.expensesPlannedBadgeSoon;
       badgeColor = AppColors.accentGold;
       icon = Icons.notification_important_rounded;
     }
@@ -1570,20 +1606,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ),
       ),
       confirmDismiss: (direction) async {
+        final t = AppLocalizations.of(context);
         return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('¿Eliminar gasto?'),
-            content: const Text('Esta acción no se puede deshacer.'),
+            title: Text(t.expensesDeleteDialogTitle),
+            content: Text(t.expensesDeleteDialogBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+                child: Text(t.commonCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                child: const Text('Eliminar'),
+                child: Text(t.editTaskDeleteConfirm),
               ),
             ],
           ),
@@ -1592,7 +1629,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       onDismissed: (_) {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Movimiento eliminado')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).expensesDeletedSnack),
+          ),
         );
       },
       child: AnimatedPress(
@@ -1702,8 +1741,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   const SizedBox(height: 4),
                   _buildTypeBadge(
                     expense.splitType == 'gift'
-                        ? 'Regalo'
-                        : (isShared ? 'Compartido' : 'Personal'),
+                        ? AppLocalizations.of(context).expensesTypeBadgeGift
+                        : (isShared
+                            ? AppLocalizations.of(context).expensesTypeBadgeShared
+                            : AppLocalizations.of(context)
+                                .expensesTypeBadgePersonal),
                     expense.splitType == 'gift'
                         ? Colors.pinkAccent
                         : (isShared ? AppColors.sage : AppColors.textMuted),
@@ -1752,16 +1794,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Liquidación de saldo',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).expensesSettlementCardTitle,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
                     color: AppColors.accentBlue,
                   ),
                 ),
                 Text(
-                  '${expense.payerDisplayName} equilibró el balance',
+                  AppLocalizations.of(context)
+                      .expensesSettlementCardBody(expense.payerDisplayName),
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 12,
@@ -1815,7 +1858,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildEmptyState(
     String message, {
-    String icon = '📉',
+    String icon = 'ðŸ“‰',
     String? subtitle,
   }) {
     return Center(
@@ -1846,7 +1889,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
               subtitle ??
-                  'Empez? hoy mismo a organizar tus finanzas del hogar.',
+                  AppLocalizations.of(context).expensesEmptyDefaultSubtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -1880,3 +1923,4 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 }
+

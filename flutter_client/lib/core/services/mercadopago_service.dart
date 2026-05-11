@@ -39,7 +39,8 @@ class MercadoPagoService {
       );
 
       if (response.status == 200) {
-        final data = response.data;
+        final data = response.data as Map<String, dynamic>?;
+        if (data == null) return null;
         return data['init_point'] as String?;
       }
       return null;
@@ -83,8 +84,11 @@ class MercadoPagoService {
         throw 'Error de servidor: ${response.status}';
       }
 
-      final data = response.data;
-      if (data is Map && data.containsKey('url')) {
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) {
+        throw 'No se pudo obtener la URL de conexion.';
+      }
+      if (data.containsKey('url')) {
         final url = data['url'] as String;
         await launchCheckout(url);
       } else {
@@ -114,7 +118,8 @@ class MercadoPagoService {
       );
 
       if (response.status == 200 && response.data != null) {
-        final List<dynamic> movements = response.data['movements'] ?? [];
+        final data = response.data as Map<String, dynamic>?;
+        final List<dynamic> movements = data?['movements'] as List? ?? [];
         return movements.map((m) => m as Map<String, dynamic>).toList();
       }
       return [];

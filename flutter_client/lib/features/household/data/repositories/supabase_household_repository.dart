@@ -132,7 +132,10 @@ class SupabaseHouseholdRepository
             .from(AppConstants.tableHouseholdMembers)
             .select('user_id')
             .eq('household_id', householdId);
-        return (result as List).map((e) => e['user_id'] as String).toList();
+        return (result as List)
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .map((e) => e['user_id'] as String)
+            .toList();
       },
       context: 'SupabaseHouseholdRepository.getMemberIds',
       isOnline: _isOnline,
@@ -300,7 +303,7 @@ class SupabaseHouseholdRepository
 
         if (!_isAdminTestingActive && householdMember['role'] != 'owner') {
           throw const ServerFailure(
-              'Solo el propietario puede quitar miembros');
+              'Solo el propietario puede quitar miembros',);
         }
 
         await _client
@@ -379,7 +382,7 @@ class SupabaseHouseholdRepository
     return executeWithHandling(
       () async {
         await _client.from(AppConstants.tableHouseholds).update(
-            {'household_type': type.toLowerCase()}).eq('id', householdId);
+            {'household_type': type.toLowerCase()},).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateHouseholdType',
       isOnline: _isOnline,
@@ -435,7 +438,7 @@ class SupabaseHouseholdRepository
           .eq('household_id', householdMember['household_id']);
     },
         context: 'SupabaseHouseholdRepository.updateMemberType',
-        isOnline: _isOnline);
+        isOnline: _isOnline,);
   }
 
   @override

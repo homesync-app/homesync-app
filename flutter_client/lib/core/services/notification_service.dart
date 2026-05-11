@@ -15,6 +15,8 @@ class NotificationService {
   RealtimeChannel? _channel;
   NotificationCallback? _onNotification;
   bool _isEnabled = true;
+  Future<void>? _firebaseSetupFuture;
+  bool _firebaseConfigured = false;
 
   Future<void> initialize({NotificationCallback? onNotification}) async {
     _onNotification = onNotification;
@@ -78,6 +80,27 @@ class NotificationService {
   }
 
   Future<void> _setupFirebase() async {
+    if (_firebaseConfigured) {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await _saveFcmToken(token);
+      }
+      return;
+    }
+    if (_firebaseSetupFuture != null) {
+      await _firebaseSetupFuture;
+      return;
+    }
+
+    _firebaseSetupFuture = _configureFirebaseMessaging();
+    try {
+      await _firebaseSetupFuture;
+    } finally {
+      _firebaseSetupFuture = null;
+    }
+  }
+
+  Future<void> _configureFirebaseMessaging() async {
     if (Firebase.apps.isEmpty) {
       log.w('NotificationService: Firebase no inicializado. Push bloqueado.');
       return;
@@ -115,6 +138,7 @@ class NotificationService {
       log.i('FCM tap from background: ${message.data}');
     });
 
+    _firebaseConfigured = true;
     log.i('NotificationService: Firebase Messaging configurado');
   }
 
@@ -130,12 +154,15 @@ class NotificationService {
     }
 
     try {
-      await _supabase.from('user_fcm_tokens').upsert({
-        'user_id': appUserId,
-        'token': token,
-        'platform': defaultTargetPlatform.name,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,token',);
+      await _supabase.from('user_fcm_tokens').upsert(
+        {
+          'user_id': appUserId,
+          'token': token,
+          'platform': defaultTargetPlatform.name,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        onConflict: 'user_id,token',
+      );
       log.i('FCM token guardado');
     } catch (e, stack) {
       log.e('Error guardando FCM token: $e', error: e, stackTrace: stack);

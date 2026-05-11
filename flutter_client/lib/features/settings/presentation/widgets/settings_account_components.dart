@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class SettingsNotificationsCard extends StatelessWidget {
   final bool isEnabled;
@@ -16,6 +17,7 @@ class SettingsNotificationsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -54,7 +56,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Notificaciones',
+                      t.settingsNotificationsTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -62,7 +64,7 @@ class SettingsNotificationsCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Recibe avisos de gastos y tareas',
+                      t.settingsNotificationsSubtitle,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 12,
@@ -95,6 +97,7 @@ class SettingsFaqCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -124,7 +127,7 @@ class SettingsFaqCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          'Preguntas Frecuentes',
+          t.settingsFaqTitle,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -132,7 +135,7 @@ class SettingsFaqCard extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          'Aprende como funciona HomeSync',
+          t.settingsFaqSubtitle,
           style: TextStyle(color: theme.textSecondary, fontSize: 12),
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
@@ -153,6 +156,7 @@ class SettingsLogoutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return SizedBox(
       width: double.infinity,
@@ -169,14 +173,14 @@ class SettingsLogoutButton extends StatelessWidget {
           ),
           foregroundColor: theme.error,
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.logout_rounded, size: 22),
-            SizedBox(width: 12),
+            const Icon(Icons.logout_rounded, size: 22),
+            const SizedBox(width: 12),
             Text(
-              'Cerrar Sesion',
-              style: TextStyle(
+              t.settingsLogoutButton,
+              style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
                 letterSpacing: 0.5,
@@ -200,6 +204,7 @@ class SettingsDangerZone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -207,7 +212,7 @@ class SettingsDangerZone extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 8, bottom: 12),
           child: Text(
-            'ZONA DE PELIGRO',
+            t.settingsDangerZoneEyebrow,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
@@ -231,14 +236,14 @@ class SettingsDangerZone extends StatelessWidget {
               ),
               foregroundColor: theme.error,
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.delete_forever_rounded, size: 22),
-                SizedBox(width: 12),
+                const Icon(Icons.delete_forever_rounded, size: 22),
+                const SizedBox(width: 12),
                 Text(
-                  'Reiniciar Datos de Cuenta',
-                  style: TextStyle(
+                  t.settingsResetAccountButton,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                     letterSpacing: 0.5,
@@ -303,6 +308,7 @@ class SettingsFeedbackCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -332,7 +338,7 @@ class SettingsFeedbackCard extends StatelessWidget {
                   Icon(Icons.bug_report_outlined, color: theme.error, size: 20),
             ),
             title: Text(
-              'Reportar un error',
+              t.settingsFeedbackBugTitle,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -340,7 +346,7 @@ class SettingsFeedbackCard extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              'Algo no funciona bien? Avisanos',
+              t.settingsFeedbackBugSubtitle,
               style: TextStyle(color: theme.textSecondary, fontSize: 12),
             ),
             trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
@@ -371,7 +377,7 @@ class SettingsFeedbackCard extends StatelessWidget {
               ),
             ),
             title: Text(
-              'Sugerir una mejora',
+              t.settingsFeedbackSuggestionTitle,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -379,7 +385,7 @@ class SettingsFeedbackCard extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              'Tenes una idea? Nos encanta escucharte',
+              t.settingsFeedbackSuggestionSubtitle,
               style: TextStyle(color: theme.textSecondary, fontSize: 12),
             ),
             trailing: Icon(Icons.chevron_right_rounded, color: theme.textMuted),
@@ -396,6 +402,7 @@ class SettingsFeedbackCard extends StatelessWidget {
 
 Future<bool?> showSettingsLogoutDialog(BuildContext context) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
 
   return showDialog<bool>(
     context: context,
@@ -444,7 +451,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Cerrar sesión?',
+                          t.settingsLogoutDialogTitle,
                           style: TextStyle(
                             color: theme.textPrimary,
                             fontSize: 24,
@@ -454,7 +461,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Vas a tener que iniciar sesión de nuevo para acceder a tu hogar.',
+                          t.settingsLogoutDialogBody,
                           style: TextStyle(
                             color: theme.textSecondary,
                             fontSize: 15,
@@ -485,9 +492,9 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(
+                        child: Text(
+                          t.commonCancel,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -509,9 +516,9 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
                             borderRadius: BorderRadius.circular(18),
                           ),
                         ),
-                        child: const Text(
-                          'Salir',
-                          style: TextStyle(
+                        child: Text(
+                          t.settingsLogoutDialogConfirm,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w900,
                           ),
@@ -531,6 +538,7 @@ Future<bool?> showSettingsLogoutDialog(BuildContext context) {
 
 Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
   final theme = context.theme;
+  final t = AppLocalizations.of(context);
 
   return showDialog<bool>(
     context: context,
@@ -542,7 +550,7 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
           Icon(Icons.warning_amber_rounded, color: theme.error),
           const SizedBox(width: 12),
           Text(
-            'Reiniciar todo?',
+            t.settingsResetDialogTitle,
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: theme.error,
@@ -550,15 +558,13 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
           ),
         ],
       ),
-      content: const Text(
-        'Esta accion borrara todas tus tareas, gastos y progreso de forma permanente, y te quitara del hogar actual para que puedas configurar uno nuevo o unirte a otro.',
-      ),
+      content: Text(t.settingsResetDialogBody),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text(
-            'Cancelar',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          child: Text(
+            t.commonCancel,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ),
         Padding(
@@ -573,9 +579,9 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Reiniciar',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            child: Text(
+              t.settingsResetDialogConfirm,
+              style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
         ),

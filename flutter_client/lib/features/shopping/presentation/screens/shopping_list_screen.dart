@@ -7,10 +7,12 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../data/shopping_predefined.dart';
 import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
+import '../../utils/shopping_localization.dart';
 import '../providers/shopping_provider.dart';
 import '../widgets/shopping_item_sheet.dart';
 
@@ -91,7 +93,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     final List<Map<String, String>> matches = [];
 
 // Buscar por nombre de item y por nombre de categoria
-    ShoppingPredefined.itemsPerCategory.forEach((catId, catList) {
+    final itemsMap = ShoppingPredefined.allItems(context);
+    itemsMap.forEach((catId, catList) {
       final catName = ShoppingCategories.nameFor(catId).toLowerCase();
       final catMatchesQuery = catName.contains(query);
 
@@ -153,6 +156,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     List<ShoppingItemModel> done, {
     String? emoji,
     String? category,
+    String? nameKey,
   }) async {
     HapticFeedback.lightImpact();
     final val = name.trim();
@@ -165,15 +169,18 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     _inputFocus.requestFocus();
 
     // Find if already exists in pending
-    final existing = pending
-        .where((i) => i.name.toLowerCase() == val.toLowerCase())
-        .firstOrNull;
+    final effectiveNameKey = nameKey ?? shoppingCatalogKeyForName(val);
+    final existing = pending.where((i) {
+      return i.name.toLowerCase() == val.toLowerCase() ||
+          (effectiveNameKey != null && i.nameKey == effectiveNameKey);
+    }).firstOrNull;
     if (existing != null) return; // Already there
 
     // Find if already exists in done (bring it back)
-    final doneMatch = done
-        .where((i) => i.name.toLowerCase() == val.toLowerCase())
-        .firstOrNull;
+    final doneMatch = done.where((i) {
+      return i.name.toLowerCase() == val.toLowerCase() ||
+          (effectiveNameKey != null && i.nameKey == effectiveNameKey);
+    }).firstOrNull;
     if (doneMatch != null) {
       await _toggleItem(doneMatch);
       _triggerAddSuccessFeedback();
@@ -184,8 +191,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     String finalEmoji = emoji ?? '';
 
     if (category == null) {
-      for (final catKey in ShoppingPredefined.itemsPerCategory.keys) {
-        final list = ShoppingPredefined.itemsPerCategory[catKey]!;
+      final itemsMap = ShoppingPredefined.allItems(context);
+      for (final catKey in itemsMap.keys) {
+        final list = itemsMap[catKey]!;
         for (final p in list) {
           if (p['name']!.toLowerCase() == val.toLowerCase()) {
             categoryId = catKey;
@@ -198,6 +206,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
     ref.read(shoppingItemsProvider.notifier).addItem(
           name: val,
+          nameKey: effectiveNameKey,
           category: categoryId,
           emoji: finalEmoji,
         );
@@ -374,7 +383,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     List<ShoppingItemModel> pending,
     List<ShoppingItemModel> done,
   ) {
-    final predefined = ShoppingPredefined.itemsPerCategory[cat['id']] ?? [];
+    final predefined = ShoppingPredefined.itemsForCategory(cat['id'], context);
     if (predefined.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox());
     }
@@ -394,8 +403,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           (ctx, i) {
             final prefItem = predefined[i];
             final name = prefItem['name']!;
-            final isPending = pending
-                .any((item) => item.name.toLowerCase() == name.toLowerCase());
+            final nameKey = shoppingCatalogKeyForName(name);
+            final isPending = pending.any((item) {
+              return item.name.toLowerCase() == name.toLowerCase() ||
+                  (nameKey != null && item.nameKey == nameKey);
+            });
 
             return _PredefinedItemTile(
               item: prefItem,
@@ -407,6 +419,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                 done,
                 emoji: prefItem['emoji'],
                 category: cat['id'],
+                nameKey: nameKey,
               ),
             );
           },
@@ -420,6 +433,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     List<ShoppingItemModel> pending,
     List<ShoppingItemModel> done,
   ) {
+    final t = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -486,7 +500,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     focusNode: _inputFocus,
                     style: TextStyle(color: context.theme.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Necesito...',
+                      hintText: t.shoppingSearchHint,
                       hintStyle: TextStyle(color: context.theme.textMuted),
                       filled: true,
                       fillColor: context.theme.surfaceVariant.withValues(
@@ -583,6 +597,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final shoppingState = ref.watch(shoppingItemsProvider);
 
     return Scaffold(
@@ -591,7 +606,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
         loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
           child: Text(
-            'Error: $err',
+            t.commonErrorWithDetails(err.toString()),
             style: const TextStyle(color: AppColors.error),
           ),
         ),
@@ -621,7 +636,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       ),
                       slivers: [
                         _buildStaticSectionTitle(
-                          'Lista actual',
+                          t.shoppingListTitle,
                           count: pending.length,
                           accentColor: AppColors.primary,
                         ),
@@ -686,8 +701,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                       ),
                                       child: Text(
                                         done.isEmpty
-                                            ? 'Todo en orden'
-                                            : 'Lista resuelta',
+                                            ? t.shoppingAllDone
+                                            : t.shoppingListResolved,
                                         style: const TextStyle(
                                           color: AppColors.primary,
                                           fontSize: 12,
@@ -699,8 +714,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                     const SizedBox(height: 16),
                                     Text(
                                       done.isEmpty
-                                          ? 'Heladera lista.\nNecesitan algo hoy?'
-                                          : 'Todo comprado.\nQueres anotar algo mas?',
+                                          ? t.shoppingEmptyFirstLineDone
+                                          : t.shoppingEmptyFirstLineBought,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: context.theme.textPrimary,
@@ -712,7 +727,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Agrega productos usando las categorias\no el buscador de abajo.',
+                                      t.shoppingEmptyHint,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: context.theme.textSecondary,
@@ -784,7 +799,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
                         if (done.isNotEmpty) ...[
                           _buildSectionHeader(
-                            'Volver a comprar',
+                            t.shoppingRecentSection,
                             'recent',
                             accentColor: AppColors.accentGreen,
                             count: done.length,
@@ -830,7 +845,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         ],
 
                         _buildStaticSectionTitle(
-                          'Categorias',
+                          t.shoppingCategoriesSection,
                         ),
                         // -- CATEGORIES SECTIONS ---------------------------------
                         for (final cat in ShoppingCategories.all
@@ -840,9 +855,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             cat['id'],
                             emoji: cat['emoji'],
                             accentColor: Color(cat['color'] as int),
-                            count: (ShoppingPredefined
-                                        .itemsPerCategory[cat['id']] ??
-                                    [])
+                            count: ShoppingPredefined.itemsForCategory(
+                                    cat['id'], context,)
                                 .length,
                           ),
                           if (_expandedSections.contains(cat['id']))
@@ -1058,7 +1072,7 @@ class _ShoppingItemTile extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Text(
-                      item.name,
+                      localizedShoppingItemName(context, item),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1107,6 +1121,7 @@ class _PostShoppingBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       decoration: BoxDecoration(
@@ -1137,7 +1152,7 @@ class _PostShoppingBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '✅ $completedCount productos comprados',
+                        '✅ ${t.shoppingProductsBought(completedCount)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -1145,7 +1160,7 @@ class _PostShoppingBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Escanear ticket y registrar gasto',
+                        t.shoppingScanReceipt,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context)

@@ -41,9 +41,9 @@ class CustomBottomNav extends StatelessWidget {
     final theme = context.theme;
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 68),
+        constraints: const BoxConstraints(minHeight: 60),
         padding: const EdgeInsets.all(AppSpacing.xs),
         decoration: BoxDecoration(
           color: theme.navigationSurface.withValues(
@@ -100,7 +100,7 @@ class _CustomBottomNavTile extends StatelessWidget {
         duration: AppMotion.normal,
         curve: AppMotion.standard,
         margin: const EdgeInsets.symmetric(horizontal: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
               ? theme.primary.withValues(alpha: theme.isDarkMode ? 0.18 : 0.10)
@@ -122,17 +122,17 @@ class _CustomBottomNavTile extends StatelessWidget {
                 isSelected ? item.selectedIcon : item.icon,
                 key: ValueKey('${item.label}-$isSelected'),
                 color: foreground,
-                size: 21,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 4),
             Text(
               item.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: foreground,
-                fontSize: 10,
+                fontSize: 9.5,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
               ),
             ),

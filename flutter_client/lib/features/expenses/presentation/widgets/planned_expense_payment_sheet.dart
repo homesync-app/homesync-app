@@ -1,9 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -92,27 +94,6 @@ class _PlannedExpensePaymentSheetState
       if (!mounted) return;
 
       final templateUpdated = result['template_updated'] == true;
-      await showDialog<void>(
-        context: context,
-        useRootNavigator: true,
-        builder: (dialogContext) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Pago registrado'),
-          content: Text(
-            templateUpdated
-                ? 'Se registro "${widget.plannedExpense.title}" y se actualizo la suscripcion.'
-                : 'Se registro "${widget.plannedExpense.title}" correctamente.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
-        ),
-      );
-
-      if (!mounted) return;
       Navigator.pop(context, {
         'success': true,
         'template_updated': templateUpdated,
@@ -122,7 +103,9 @@ class _PlannedExpensePaymentSheetState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text(
+            AppLocalizations.of(context).commonErrorWithDetails('$e'),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -151,8 +134,10 @@ class _PlannedExpensePaymentSheetState
           height: 200,
           child: Center(child: CircularProgressIndicator()),
         ),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (members) {
+        error: (e, _) => Center(
+          child: Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
+        ),
+        data: (List<MemberModel> members) {
           if (_paidBy.isEmpty && members.isNotEmpty) {
             _paidBy = members.first.userId;
           }
@@ -173,9 +158,9 @@ class _PlannedExpensePaymentSheetState
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Confirmar pago',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).expensesPlannedPaymentTitle,
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
@@ -184,7 +169,8 @@ class _PlannedExpensePaymentSheetState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Vas a marcar "${widget.plannedExpense.title}" como pagado.',
+                  AppLocalizations.of(context)
+                      .expensesPlannedPaymentSubtitle(widget.plannedExpense.title),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -210,9 +196,9 @@ class _PlannedExpensePaymentSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'MONTO EFECTIVO',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).expensesPlannedPaymentAmountEyebrow,
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
             color: AppColors.textMuted,
@@ -252,9 +238,9 @@ class _PlannedExpensePaymentSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'FECHA DE PAGO',
-          style: TextStyle(
+        Text(
+          AppLocalizations.of(context).expensesPlannedPaymentDateEyebrow,
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
             color: AppColors.textMuted,
@@ -307,7 +293,7 @@ class _PlannedExpensePaymentSheetState
     );
   }
 
-  Widget _buildPayerSelector(List<dynamic> members) {
+  Widget _buildPayerSelector(List<MemberModel> members) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -389,3 +375,4 @@ class _PlannedExpensePaymentSheetState
     );
   }
 }
+

@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/weekly_family_summary.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/weekly_family_summary_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 String _formatMoney(num value) {
@@ -33,16 +34,17 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final eligible = ref.watch(parentModeEligibleProvider);
     if (!eligible) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Resumen semanal')),
+        appBar: AppBar(title: Text(t.weeklySummaryAppBarTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Esta seccion es para administradores de hogares familiares.',
+              t.weeklySummaryLockedNotice,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),
@@ -55,7 +57,7 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
     if (!available) {
       return Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(title: const Text('Resumen semanal')),
+        appBar: AppBar(title: Text(t.weeklySummaryAppBarTitle)),
         body: const _LockedHero(),
       );
     }
@@ -65,8 +67,8 @@ class WeeklyFamilySummaryScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: const Text(
-          'Resumen semanal',
+        title: Text(
+          t.weeklySummaryHeaderTitle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -138,6 +140,7 @@ class _WeeklyReadoutHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final hasTasks = summary.tasksPlanned > 0;
     final hasSpending = summary.spendingTotal > 0;
     final hasAttention =
@@ -145,17 +148,17 @@ class _WeeklyReadoutHero extends StatelessWidget {
     final pct = hasTasks ? (summary.completionRate * 100).round() : null;
 
     final title = hasAttention
-        ? 'Semana con puntos a revisar'
+        ? t.weeklySummaryTitleAttention
         : hasTasks && pct != null && pct >= 80
-            ? 'Buena coordinación'
+            ? t.weeklySummaryTitleGood
             : hasSpending
-                ? 'Semana tranquila con gastos'
-                : 'Semana tranquila';
+                ? t.weeklySummaryTitleQuietWithExpenses
+                : t.weeklySummaryTitleQuiet;
     final subtitle = hasTasks
         ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas completadas.'
         : hasSpending
-            ? 'Hubo gastos compartidos, pero todavía no hubo tareas planificadas.'
-            : 'Todavía no hubo actividad suficiente para un cierre completo.';
+            ? t.weeklySummaryBodyExpensesNoTasks
+            : t.weeklySummaryBodyNoActivity;
     final accent = hasAttention
         ? AppColors.accentGold
         : hasTasks
@@ -229,14 +232,16 @@ class _WeeklyMetrics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final hasTasks = summary.tasksPlanned > 0;
-    final pct =
-        hasTasks ? '${(summary.completionRate * 100).round()}%' : 'Sin datos';
+    final pct = hasTasks
+        ? '${(summary.completionRate * 100).round()}%'
+        : t.weeklySummaryNoData;
     return Row(
       children: [
         Expanded(
           child: _MetricTile(
-            label: 'Tareas',
+            label: t.weeklySummaryMetricTasks,
             value:
                 hasTasks ? '${summary.tasksDone}/${summary.tasksPlanned}' : '0',
             icon: Icons.task_alt_rounded,
@@ -246,7 +251,7 @@ class _WeeklyMetrics extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _MetricTile(
-            label: 'Gastos',
+            label: t.weeklySummaryMetricExpenses,
             value: _formatMoney(summary.spendingTotal),
             icon: Icons.payments_rounded,
             color: AppColors.primary,
@@ -255,7 +260,7 @@ class _WeeklyMetrics extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _MetricTile(
-            label: 'Cumpl.',
+            label: t.weeklySummaryMetricCompletion,
             value: pct,
             icon: Icons.insights_rounded,
             color: AppColors.accentBlue,
@@ -402,6 +407,7 @@ class _CompletionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final hasTasks = summary.tasksPlanned > 0;
     final pct = hasTasks ? (summary.completionRate * 100).round() : 0;
     final delta = summary.tasksDoneDelta;
@@ -422,14 +428,13 @@ class _CompletionCard extends StatelessWidget {
     return _StoryCard(
       accent: accent,
       icon: Icons.task_alt_rounded,
-      eyebrow: 'Cumplimiento',
+      eyebrow: t.weeklySummaryEyebrowCompletion,
       title: hasTasks
           ? '${summary.tasksDone} de ${summary.tasksPlanned} tareas - $pct%'
-          : 'Sin tareas esta semana',
+          : t.weeklySummaryCompletionEmpty,
       subtitle: hasTasks
-          ? trailingText ??
-              'Buen ritmo: la semana cerró con lo planificado al día.'
-          : 'Cuando asignen tareas, acá vas a ver cumplimiento real y comparación semanal.',
+          ? trailingText ?? t.weeklySummaryCompletionGoodPace
+          : t.weeklySummaryCompletionLockedBody,
       trailing: hasTasks
           ? SizedBox(
               width: 56,
@@ -491,7 +496,7 @@ class _SlackerCard extends StatelessWidget {
     return _StoryCard(
       accent: AppColors.accentBlue,
       icon: Icons.support_rounded,
-      eyebrow: 'Necesita un empujon',
+      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowNeedsBoost,
       title: '${member.fullName} se quedo con tareas pendientes',
       subtitle:
           '${member.count} tarea${member.count == 1 ? "" : "s"} atrasada${member.count == 1 ? "" : "s"}. Quiza esta semana puedas ayudarle a destrabar.',
@@ -520,7 +525,7 @@ class _ForgottenCard extends StatelessWidget {
     return _StoryCard(
       accent: AppColors.accentOrange,
       icon: Icons.bookmark_remove_rounded,
-      eyebrow: 'La mas olvidada',
+      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowMostForgotten,
       title: task.title,
       subtitle: 'Esta recurrente quedo en el camino — $overdueLabel.',
     );
@@ -533,6 +538,7 @@ class _SpendingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final delta = summary.spendingDelta;
     final accent = delta < 0
         ? AppColors.accentGreen
@@ -540,18 +546,18 @@ class _SpendingCard extends StatelessWidget {
             ? AppColors.accentRed
             : AppColors.accentBlue;
     final deltaLabel = summary.spendingTotal == 0
-        ? 'No hubo gastos compartidos esta semana.'
+        ? t.weeklySummaryExpensesNone
         : summary.spendingLastWeek == 0
-            ? 'Primera semana con gastos compartidos.'
+            ? t.weeklySummaryExpensesFirst
             : delta < 0
                 ? 'Gastaron ${_formatMoney(delta.abs())} menos que la semana anterior.'
                 : delta > 0
                     ? 'Gastaron ${_formatMoney(delta)} más que la semana anterior.'
-                    : 'Mismo gasto que la semana anterior.';
+                    : t.weeklySummaryExpensesSame;
     return _StoryCard(
       accent: accent,
       icon: Icons.payments_rounded,
-      eyebrow: 'Gastos compartidos',
+      eyebrow: t.weeklySummaryEyebrowExpenses,
       title: '${_formatMoney(summary.spendingTotal)} esta semana',
       subtitle: deltaLabel,
     );
@@ -568,7 +574,7 @@ class _TopCategoryCard extends StatelessWidget {
     return _StoryCard(
       accent: AppColors.accentPurple,
       icon: Icons.category_rounded,
-      eyebrow: 'Top categoría',
+      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowTopCategory,
       title: categoryName,
       subtitle:
           '${_formatMoney(top.total)} en ${top.count} gasto${top.count == 1 ? "" : "s"}.',
@@ -584,6 +590,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -597,7 +604,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Tu primer resumen viene en camino',
+              t.weeklySummaryEmptyTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 18,
@@ -606,7 +613,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando empiecen a completar tareas y cargar gastos vamos a generar el reporte de la semana automaticamente.',
+              t.weeklySummaryEmptyBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary, fontSize: 13),
             ),
@@ -623,6 +630,7 @@ class _LockedHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -636,7 +644,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Resumen semanal',
+              t.weeklySummaryLockedTitle,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 20,
@@ -645,7 +653,7 @@ class _LockedHero extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Activa Modo Padres para recibir el resumen de la semana con cumplimiento, MVP y gastos.',
+              t.weeklySummaryLockedBody,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary),
             ),

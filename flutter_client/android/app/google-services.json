@@ -7,14 +7,38 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:105041112830:android:581bf3abf4b65e9167ffaf",
+        "mobilesdk_app_id": "1:105041112830:android:5b33f6f83b01f77667ffaf",
         "android_client_info": {
           "package_name": "com.blas.homesync"
         }
       },
       "oauth_client": [
         {
-          "client_id": "105041112830-cg9jq7uom4m19g9sg4qmnjureguludft.apps.googleusercontent.com",
+          "client_id": "105041112830-01vlk5o0s26pjcd8ujjsk0fnp8b3dhm0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "31265688cf0ed57ffae686c595da8ae6daa21171"
+          }
+        },
+        {
+          "client_id": "105041112830-3elp9ju1vjlsvjfhdb7c0v5840nu3q53.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "21ff2f9982af54c79f40ebc54006ab69763d6b05"
+          }
+        },
+        {
+          "client_id": "105041112830-7bclmjtgo1t8mgv9snsfcqi93pfrmsd6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "ff262bab24f4035d851d09222a9f073f2664bc63"
+          }
+        },
+        {
+          "client_id": "105041112830-i79qb8avlvfv38reurc3aa9hnti1k8vv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.blas.homesync",
@@ -22,10 +46,66 @@
           }
         },
         {
-          "client_id": "105041112830-poa0814j84tcc8guh643rk3ns5kcoglm.apps.googleusercontent.com",
+          "client_id": "105041112830-lfs1t789f5jsvjsa2f77joru4bnfurju.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.blas.homesync",
+            "certificate_hash": "d6c23a1ff0813fccd0cd094e13be6a1f719a09d4"
+          }
+        },
+        {
+          "client_id": "105041112830-vi56oiguhpgt43ohuofkj0kptlhk3ft5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blas.homesync",
+            "certificate_hash": "8590bc914f5282853a2593929fbbef11e3c0881f"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFEET0R1HF0S6w0ZRGn_AQSd5tAxhyn1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "105041112830-75q9ubotcf7i51cu8u9v9l9j1m6sdcga.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "105041112830-7v7rhlj1m0rdhrosqh657phl3bi47270.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.blas.homesync"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105041112830:android:581bf3abf4b65e9167ffaf",
+        "android_client_info": {
+          "package_name": "com.homesync.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "105041112830-cg9jq7uom4m19g9sg4qmnjureguludft.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.homesync.app",
+            "certificate_hash": "d9dcdbda33a5cf48efc69a43109f1a316f765a99"
+          }
+        },
+        {
+          "client_id": "105041112830-poa0814j84tcc8guh643rk3ns5kcoglm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.homesync.app",
             "certificate_hash": "8590bc914f5282853a2593929fbbef11e3c0881f"
           }
         }

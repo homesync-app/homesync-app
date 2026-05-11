@@ -113,7 +113,7 @@ class OfflineActionProcessor {
     PostgrestFilterBuilder<dynamic> query,
     List<OfflineFilter> filters,
   ) async {
-    dynamic current = query;
+    PostgrestFilterBuilder<dynamic> current = query;
     for (final filter in filters) {
       if (filter.op != 'eq') {
         throw Exception('Unsupported filter op: ${filter.op}');

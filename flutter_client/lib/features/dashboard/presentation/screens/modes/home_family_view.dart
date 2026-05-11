@@ -13,6 +13,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -99,7 +100,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox(height: 26),
             _buildStaggeredSection(
               delayMs: 120,
-              child: _buildActivitySection(theme, title: 'Mis logros'),
+              child: _buildActivitySection(
+                theme,
+                title: AppLocalizations.of(context).homeFamilyChildActivityTitle,
+              ),
             ),
           ] else if (isTeen) ...[
             if (caps.showTasks)
@@ -120,7 +124,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             _buildStaggeredSection(
               delayMs: 260,
               child:
-                  _buildActivitySection(theme, title: 'Movimientos del hogar'),
+                  _buildActivitySection(
+                    theme,
+                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
+                  ),
             ),
           ] else ...[
             if (hasSharedAdultFinance) ...[
@@ -147,7 +154,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             _buildStaggeredSection(
               delayMs: 240,
               child:
-                  _buildActivitySection(theme, title: 'Movimientos del hogar'),
+                  _buildActivitySection(
+                    theme,
+                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
+                  ),
             ),
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -169,6 +179,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final coins =
         balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0;
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
+    final t = AppLocalizations.of(context);
+    final localeTag = Localizations.localeOf(context).toString();
 
     return Row(
       children: [
@@ -192,7 +204,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               if (showDate) ...[
                 const SizedBox(height: 6),
                 Text(
-                  DateFormat('EEEE, d MMM', 'es_AR')
+                  DateFormat('EEEE, d MMM', localeTag)
                       .format(DateTime.now())
                       ._capitalize(),
                   style: TextStyle(
@@ -210,7 +222,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   children: [
                     _buildHeaderMetricChip(
                       icon: Icons.monetization_on_rounded,
-                      label: 'Monedas',
+                      label: t.homeFamilyMetricCoins,
                       value: '$coins',
                       color: AppColors.accentGold,
                     ),
@@ -263,6 +275,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildMemberNotFoundBanner(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -281,7 +294,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'No encontramos tu perfil en este hogar.',
+              t.homeFamilyMemberNotFound,
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -300,7 +313,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Reintentar', style: TextStyle(fontSize: 13)),
+            child: Text(t.commonRetry, style: const TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -356,7 +369,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             0;
     final xp =
         balanceAsync.whenOrNull(data: (balance) => balance?['xp'] as int?) ?? 0;
-    final firstName = currentMember?.displayName ?? 'vos';
+    final t = AppLocalizations.of(context);
+    final firstName = currentMember?.displayName ?? t.homeFamilyChildFallbackName;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return Container(
@@ -403,7 +417,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Aventura de hoy',
+                  t.homeFamilyChildHeroTitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -419,7 +433,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           ),
           const SizedBox(height: 14),
           Text(
-            '$firstName, cada mision aprobada suma coins para la tienda.',
+            t.homeFamilyChildHeroBody(firstName),
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 12.5,
@@ -454,7 +468,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             children: [
               Expanded(
                 child: Text(
-                  'Mira que premios podes alcanzar.',
+                  t.homeFamilyChildRewardsPrompt,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 12.5,
@@ -476,7 +490,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   }
                 },
                 icon: const Icon(Icons.storefront_rounded, size: 18),
-                label: const Text('Tienda'),
+                label: Text(t.mainTabShoppingChild),
               ),
             ],
           ),
@@ -542,6 +556,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildShoppingSection(AppThemeColors theme) {
     final shoppingAsync = ref.watch(shoppingItemsProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
+    final t = AppLocalizations.of(context);
     return _buildSectionStateSwitcher(
       child: shoppingAsync.when(
         loading: () => KeyedSubtree(
@@ -565,7 +580,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Compras del hogar',
+                t.homeFamilyShoppingTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -583,7 +598,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
                   }
                 },
-                child: const Text('Ver lista'),
+                child: Text(t.homeViewListButton),
               ),
             ],
           );
@@ -619,7 +634,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Lista al dia',
+                            t.homeFamilyShoppingAllDone,
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w800,
@@ -726,9 +741,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    remainingPending == 1
-                                        ? 'Hay 1 producto más en la lista'
-                                        : 'Hay $remainingPending productos más en la lista',
+                                    t.homeFamilyShoppingMoreItems(
+                                      remainingPending,
+                                    ),
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w800,
@@ -758,9 +773,11 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   Widget _buildActivitySection(
     AppThemeColors theme, {
-    String title = 'Actividad Reciente',
+    String? title,
   }) {
     final activitiesAsync = ref.watch(recentActivityProvider);
+    final t = AppLocalizations.of(context);
+    final resolvedTitle = title ?? t.homeFamilyActivityTitleDefault;
 
     return _buildSectionStateSwitcher(
       child: activitiesAsync.when(
@@ -779,7 +796,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox.shrink(key: ValueKey('activity-error')),
         data: (activities) {
           final header = Text(
-            title,
+            resolvedTitle,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -897,6 +914,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildActivityEmptyState(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -927,7 +945,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Todavía no hay actividad reciente',
+                  t.homeFamilyActivityEmptyTitle,
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
@@ -937,7 +955,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Las tareas, gastos y compras van a aparecer acá.',
+                  t.homeFamilyActivityEmptyBody,
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.22,
@@ -962,16 +980,17 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     required String? currentMemberName,
     bool isChild = false,
   }) {
+    final t = AppLocalizations.of(context);
     final firstName = _firstName(currentMemberName);
     if (isChild) {
       return TextSpan(
         children: [
           TextSpan(
-            text: 'Hola, ',
+            text: t.homeFamilyChildHello,
             style: TextStyle(color: theme.textPrimary),
           ),
           TextSpan(
-            text: firstName ?? 'campeon',
+            text: firstName ?? t.homeFamilyChildFallbackName,
             style: TextStyle(
               color: theme.primary,
               fontWeight: FontWeight.w900,
@@ -981,8 +1000,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
       );
     }
     final welcome = firstName != null
-        ? (_looksFeminineName(firstName) ? 'Bienvenida' : 'Bienvenido')
-        : 'Bienvenido';
+        ? (_looksFeminineName(firstName)
+            ? t.homeWelcomeFeminine
+            : t.homeWelcomeMasculine)
+        : t.homeWelcomeMasculine;
 
     return TextSpan(
       children: [
@@ -991,7 +1012,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           style: TextStyle(color: theme.textPrimary),
         ),
         TextSpan(
-          text: firstName ?? 'Familia',
+          text: firstName ?? t.homeFamilyAdultFallbackName,
           style: TextStyle(
             color: theme.primary,
             fontWeight: FontWeight.w900,

@@ -129,6 +129,8 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  let releaseUsageReservation = async () => {};
+
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -185,23 +187,30 @@ serve(async (req) => {
     const monthStart = new Date();
     monthStart.setUTCDate(1);
     monthStart.setUTCHours(0, 0, 0, 0);
+    const generationMonth = monthStart.toISOString().slice(0, 10);
+    let usageReserved = false;
 
-    const { count, error: countError } = await supabase
-      .from("custom_avatar_generations")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userRow.id)
-      .like("avatar_url", "%/storage/v1/object/public/custom-avatars/%")
-      .gte("created_at", monthStart.toISOString());
+    releaseUsageReservation = async () => {
+      if (!usageReserved) return;
+      const { error } = await supabase
+        .from("custom_avatar_monthly_usage")
+        .delete()
+        .eq("user_id", userRow.id)
+        .eq("generation_month", generationMonth);
+      if (error) {
+        console.error("Failed to release avatar usage reservation:", error);
+      }
+      usageReserved = false;
+    };
 
-    if (countError) {
-      console.error("Generation count failed:", countError);
-      return new Response(JSON.stringify({ error: "usage_check_failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { error: reserveError } = await supabase
+      .from("custom_avatar_monthly_usage")
+      .insert({
+        user_id: userRow.id,
+        generation_month: generationMonth,
       });
-    }
 
-    if ((count ?? 0) >= MONTHLY_LIMIT) {
+    if (reserveError?.code === "23505") {
       return new Response(
         JSON.stringify({
           error: "monthly_limit_reached",
@@ -213,6 +222,14 @@ serve(async (req) => {
         },
       );
     }
+    if (reserveError) {
+      console.error("Avatar usage reservation failed:", reserveError);
+      return new Response(JSON.stringify({ error: "usage_check_failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    usageReserved = true;
 
     const body = await req.json();
     const { imageBase64, mimeType = "image/webp" } = body as {
@@ -221,6 +238,7 @@ serve(async (req) => {
     };
 
     if (!imageBase64) {
+      await releaseUsageReservation();
       return new Response(JSON.stringify({ error: "imageBase64_required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -228,6 +246,7 @@ serve(async (req) => {
     }
 
     if (imageBase64.length > MAX_BASE64_LENGTH) {
+      await releaseUsageReservation();
       return new Response(JSON.stringify({ error: "image_too_large" }), {
         status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -236,7 +255,8 @@ serve(async (req) => {
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) {
-      return new Response(JSON.stringify({ error: "OPENAI_API_KEY missing" }), {
+      await releaseUsageReservation();
+      return new Response(JSON.stringify({ error: "server_not_configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -287,11 +307,11 @@ serve(async (req) => {
         }
       }
       console.error("OpenAI image generation failed:", detail.slice(0, 500));
+      await releaseUsageReservation();
       return new Response(
         JSON.stringify({
           error: "generation_failed",
-          message,
-          status: imageResponse.status,
+          message: "No se pudo generar el avatar. Probá con otra foto.",
         }),
         {
           status: 502,
@@ -303,6 +323,7 @@ serve(async (req) => {
     const imageJson = await imageResponse.json();
     const outputBase64 = imageJson?.data?.[0]?.b64_json as string | undefined;
     if (!outputBase64) {
+      await releaseUsageReservation();
       return new Response(JSON.stringify({ error: "empty_generation" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -325,10 +346,10 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error("Custom avatar upload failed:", uploadError);
+      await releaseUsageReservation();
       return new Response(
         JSON.stringify({
           error: "upload_failed",
-          message: uploadError.message,
         }),
         {
           status: 500,
@@ -343,12 +364,21 @@ serve(async (req) => {
 
     const avatarUrl = publicUrlData.publicUrl;
 
-    await supabase.from("custom_avatar_generations").insert({
+    const { error: generationInsertError } = await supabase.from("custom_avatar_generations").insert({
       user_id: userRow.id,
       household_id: memberRow?.household_id ?? null,
       avatar_url: avatarUrl,
       source_image_count: 1,
     });
+
+    if (generationInsertError) {
+      console.error("Custom avatar generation insert failed:", generationInsertError);
+      await releaseUsageReservation();
+      return new Response(JSON.stringify({ error: "usage_record_failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     await pruneOldGeneratedAvatars(
       supabase,
@@ -359,15 +389,16 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         avatarUrl,
-        remaining: Math.max(0, MONTHLY_LIMIT - (count ?? 0) - 1),
+        remaining: 0,
         savedLimit: SAVED_GENERATED_AVATAR_LIMIT,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("generate-custom-avatar error:", error);
+    await releaseUsageReservation();
     return new Response(
-      JSON.stringify({ error: "internal_error", detail: String(error) }),
+      JSON.stringify({ error: "internal_error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

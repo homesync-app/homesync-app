@@ -10,6 +10,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/love_notes_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/faceoff_widget.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'stats_shared_widgets.dart';
@@ -43,6 +44,7 @@ class WeeklyProgressTab extends ConsumerWidget {
     WidgetRef ref,
     AppThemeColors theme,
   ) {
+    final t = AppLocalizations.of(context);
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -55,7 +57,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             const Icon(Icons.favorite, color: Color(0xFFEF4444)),
             const SizedBox(width: 12),
             Text(
-              'Nueva nota de amor',
+              t.loveNoteDialogTitle,
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 color: theme.textPrimary,
@@ -68,7 +70,7 @@ class WeeklyProgressTab extends ConsumerWidget {
           maxLines: 3,
           style: TextStyle(color: theme.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Escribí algo tierno...',
+            hintText: t.loveNoteHint,
             filled: true,
             fillColor: const Color(0xFFEF4444).withValues(alpha: 0.05),
             border: OutlineInputBorder(
@@ -81,7 +83,7 @@ class WeeklyProgressTab extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              'Cancelar',
+              t.commonCancel,
               style: TextStyle(color: theme.textMuted),
             ),
           ),
@@ -117,9 +119,9 @@ class WeeklyProgressTab extends ConsumerWidget {
               if (ctx.mounted) Navigator.pop(ctx);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('💌 Nota enviada con amor'),
-                    backgroundColor: Color(0xFFEF4444),
+                  SnackBar(
+                    content: Text('💌 ${t.loveNoteSent}'),
+                    backgroundColor: const Color(0xFFEF4444),
                   ),
                 );
               }
@@ -131,7 +133,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Enviar'),
+            child: Text(t.commonSend),
           ),
         ],
       ),
@@ -141,6 +143,7 @@ class WeeklyProgressTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
 
     return RefreshIndicator(
@@ -162,7 +165,7 @@ class WeeklyProgressTab extends ConsumerWidget {
             AIFaceoffWidget(weeklyRanking: weeklyRanking),
             const SizedBox(height: AppSpacing.xl),
           ],
-          const SectionLabel(label: 'Resumen del hogar', icon: '•'),
+          SectionLabel(label: t.statsHouseholdSummary, icon: '•'),
           const SizedBox(height: AppSpacing.md),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -178,7 +181,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   child: _SummaryMetric(
                     icon: '🔥',
                     value: '$totalTasks',
-                    label: 'Tareas',
+                    label: t.statsTasks,
                     color: AppColors.primary,
                   ),
                 ),
@@ -187,7 +190,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   child: _SummaryMetric(
                     icon: '✨',
                     value: '$totalXp',
-                    label: 'XP',
+                    label: t.statsXP,
                     color: AppColors.accentGold,
                   ),
                 ),
@@ -196,7 +199,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                   child: _SummaryMetric(
                     icon: '💰',
                     value: '$totalCoins',
-                    label: 'Coins',
+                    label: t.statsCoins,
                     color: AppColors.accentTeal,
                   ),
                 ),
@@ -268,7 +271,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Enviar mensaje a tu pareja',
+                          t.loveNoteSendTitle,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -282,8 +285,8 @@ class WeeklyProgressTab extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           isPremium
-                              ? 'Sorprendé con una nota especial hoy.'
-                              : 'Función premium. Desbloqueala para enviar notas.',
+                              ? t.loveNoteSendSubtitle
+                              : t.loveNotePremiumFeature,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -311,15 +314,12 @@ class WeeklyProgressTab extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           if (duelHistory.isNotEmpty) ...[
-            const SectionLabel(label: 'Historial semanal', icon: '•'),
+            SectionLabel(label: t.statsWeeklyHistory, icon: '•'),
             const SizedBox(height: AppSpacing.md),
             DuelHistoryWidget(duelHistory: duelHistory),
             const SizedBox(height: AppSpacing.xl),
           ],
-          const PrivacyBadge(
-            text:
-                'Las estadísticas son privadas para tu hogar. Solo vos y tu pareja pueden ver estos datos.',
-          ),
+          PrivacyBadge(text: t.statsPrivacyMessage),
         ],
       ),
     );
@@ -343,6 +343,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -368,7 +369,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Progreso semanal',
+            t.statsWeeklyProgressTitle,
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 24,
@@ -378,7 +379,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Seguí cómo viene la semana, quién tomó ventaja y cuánto ritmo llevan juntos.',
+            t.statsWeeklyProgressSubtitle,
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 14,
@@ -399,7 +400,7 @@ class _WeeklyHeaderCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Semana actual · $weekRange',
+              '${t.statsCurrentWeek} · $weekRange',
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 12,

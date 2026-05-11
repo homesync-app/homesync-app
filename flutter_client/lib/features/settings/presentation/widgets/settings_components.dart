@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class SettingsLoadingCard extends StatelessWidget {
@@ -107,6 +108,7 @@ class SettingsAppearanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -145,7 +147,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Apariencia',
+                      t.settingsAppearanceTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -153,7 +155,7 @@ class SettingsAppearanceCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Elige el tema visual de la app',
+                      t.settingsAppearanceSubtitle,
                       style: TextStyle(
                         color: theme.textSecondary,
                         fontSize: 12,
@@ -199,6 +201,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     const palettes = ThemePalette.all;
     const freePaletteNames = {'Naranja (Original)'};
 
@@ -208,7 +211,7 @@ class SettingsThemePalettePicker extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Color del Tema',
+              t.settingsThemePaletteTitle,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -223,18 +226,18 @@ class SettingsThemePalettePicker extends StatelessWidget {
                   color: AppColors.accentGold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.lock_rounded,
                       size: 10,
                       color: AppColors.accentGold,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
-                      'PREMIUM',
-                      style: TextStyle(
+                      t.settingsPremiumBadge,
+                      style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                         color: AppColors.accentGold,
@@ -304,6 +307,157 @@ class SettingsThemePalettePicker extends StatelessWidget {
   }
 }
 
+/// Card to switch the app language (System default / Spanish / English).
+///
+/// `currentLocale == null` means "follow the system locale".
+class SettingsLanguageCard extends StatelessWidget {
+  final Locale? currentLocale;
+  final ValueChanged<Locale?> onLocaleChanged;
+
+  const SettingsLanguageCard({
+    super.key,
+    required this.currentLocale,
+    required this.onLocaleChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+
+    final options = <(Locale?, IconData, String)>[
+      (null, Icons.translate_rounded, t.languageSystem),
+      (const Locale('es'), Icons.language_rounded, t.languageSpanish),
+      (const Locale('en'), Icons.language_rounded, t.languageEnglish),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.translate_rounded,
+                  color: theme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.settingsLanguageTitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      t.settingsLanguageSubtitle,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Column(
+            children: List.generate(options.length, (i) {
+              final (locale, icon, label) = options[i];
+              final isSelected =
+                  currentLocale?.languageCode == locale?.languageCode;
+              return Padding(
+                padding: EdgeInsets.only(bottom: i < options.length - 1 ? 8 : 0),
+                child: GestureDetector(
+                  onTap: () => onLocaleChanged(locale),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.primary.withValues(alpha: 0.12)
+                          : theme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.primary
+                            : theme.border.withValues(alpha: 0.3),
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          icon,
+                          size: 18,
+                          color: isSelected
+                              ? theme.primary
+                              : theme.textSecondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? theme.primary
+                                  : theme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: theme.primary,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SettingsThemeModeSelector extends StatelessWidget {
   final ThemeMode currentMode;
   final ValueChanged<ThemeMode> onModeChanged;
@@ -317,18 +471,19 @@ class SettingsThemeModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     final options = [
-      (ThemeMode.light, Icons.light_mode_rounded, 'Claro'),
-      (ThemeMode.dark, Icons.dark_mode_rounded, 'Oscuro'),
-      (ThemeMode.system, Icons.brightness_auto_rounded, 'Sistema'),
+      (ThemeMode.light, Icons.light_mode_rounded, t.settingsThemeModeLight),
+      (ThemeMode.dark, Icons.dark_mode_rounded, t.settingsThemeModeDark),
+      (ThemeMode.system, Icons.brightness_auto_rounded, t.settingsThemeModeSystem),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Modo del Tema',
+          t.settingsThemeModeTitle,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -460,6 +615,7 @@ class SettingsPremiumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Material(
       color: Colors.transparent,
@@ -529,7 +685,7 @@ class SettingsPremiumCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'HomeSync Premium',
+                          t.settingsPremiumTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -541,7 +697,9 @@ class SettingsPremiumCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          isPremium ? 'Premium activo' : 'Funciones avanzadas',
+                          isPremium
+                              ? t.settingsPremiumActiveSubtitle
+                              : t.settingsPremiumInactiveSubtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -892,9 +1050,10 @@ class SettingsMinorPremiumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final body = isChild
-        ? 'Pedi a tus papas que activen el plan para desbloquear avatares exclusivos, colores y mas 🌟'
-        : 'Los adultos del hogar pueden activar el plan premium para desbloquear funciones adicionales.';
+        ? t.settingsMinorPremiumChildBody
+        : t.settingsMinorPremiumAdultBody;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -933,7 +1092,7 @@ class SettingsMinorPremiumCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Funciones Premium',
+                  t.settingsMinorPremiumTitle,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,

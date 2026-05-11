@@ -46,18 +46,23 @@ class SupabaseShoppingRepository
 
   @override
   Future<Either<Failure, List<ShoppingItemModel>>> fetchItems(
-      String householdId,) async {
-    return executeWithHandling(() async {
-      final response = await _fetchItemsResponse(householdId);
+    String householdId,
+  ) async {
+    return executeWithHandling(
+      () async {
+        final response = await _fetchItemsResponse(householdId);
 
-      final items = (response as List)
-          .map((e) => ShoppingItemModel.fromJson(_mapShoppingRow(e)))
-          .toList();
-      log.i(
-        'ShoppingRepository.fetchItems household=$householdId count=${items.length} adminQa=$_isAdminTestingActive',
-      );
-      return items;
-    }, context: 'SupabaseShoppingRepository.fetchItems', isOnline: _isOnline,);
+        final items = (response as List)
+            .map((e) => ShoppingItemModel.fromJson(_mapShoppingRow(e)))
+            .toList();
+        log.i(
+          'ShoppingRepository.fetchItems household=$householdId count=${items.length} adminQa=$_isAdminTestingActive',
+        );
+        return items;
+      },
+      context: 'SupabaseShoppingRepository.fetchItems',
+      isOnline: _isOnline,
+    );
   }
 
   Future<dynamic> _fetchItemsResponse(String householdId) async {
@@ -85,7 +90,8 @@ class SupabaseShoppingRepository
     return _client
         .from('shopping_items')
         .select(
-            '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',)
+          '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',
+        )
         .eq('household_id', householdId)
         .order('completed', ascending: true)
         .order('created_at', ascending: false);
@@ -101,6 +107,7 @@ class SupabaseShoppingRepository
     required String name,
     required String userId,
     String? clientId,
+    String? nameKey,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -108,93 +115,104 @@ class SupabaseShoppingRepository
     String? note,
     bool shouldSync = true,
   }) async {
-    return executeWithHandling(() async {
-      final itemId = clientId ?? _uuid.v4();
-      final response = _isAdminTestingActive
-          ? await _client.rpc(
-              'qa_admin_add_shopping_item',
-              params: {
-                'p_id': itemId,
-                'p_household_id': householdId,
-                'p_name': name.trim(),
-                'p_added_by': userId,
-                'p_quantity':
-                    quantity?.trim().isEmpty == true ? null : quantity?.trim(),
-                'p_unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
-                'p_category': category,
-                'p_emoji': emoji,
-                'p_note': note?.trim().isEmpty == true ? null : note?.trim(),
-              },
-            )
-          : await _client
-              .from('shopping_items')
-              .insert({
-                'id': itemId,
-                'household_id': householdId,
-                'name': name.trim(),
-                'quantity':
-                    quantity?.trim().isEmpty == true ? null : quantity?.trim(),
-                'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
-                'category': category,
-                'emoji': emoji,
-                'note': note?.trim().isEmpty == true ? null : note?.trim(),
-                'added_by': userId,
-                'completed': false,
-              })
-              .select(
-                  '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',)
-              .single();
+    return executeWithHandling(
+      () async {
+        final itemId = clientId ?? _uuid.v4();
+        final response = _isAdminTestingActive
+            ? await _client.rpc(
+                'qa_admin_add_shopping_item',
+                params: {
+                  'p_id': itemId,
+                  'p_household_id': householdId,
+                  'p_name': name.trim(),
+                  'p_added_by': userId,
+                  'p_quantity': quantity?.trim().isEmpty == true
+                      ? null
+                      : quantity?.trim(),
+                  'p_unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
+                  'p_category': category,
+                  'p_emoji': emoji,
+                  'p_note': note?.trim().isEmpty == true ? null : note?.trim(),
+                },
+              )
+            : await _client
+                .from('shopping_items')
+                .insert({
+                  'id': itemId,
+                  'household_id': householdId,
+                  'name': name.trim(),
+                  'name_key': nameKey,
+                  'quantity': quantity?.trim().isEmpty == true
+                      ? null
+                      : quantity?.trim(),
+                  'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
+                  'category': category,
+                  'emoji': emoji,
+                  'note': note?.trim().isEmpty == true ? null : note?.trim(),
+                  'added_by': userId,
+                  'completed': false,
+                })
+                .select(
+                  '*, added_by_user:users!added_by(full_name), completed_by_user:users!completed_by(full_name)',
+                )
+                .single();
 
-      final mapped = response is List ? _mapShoppingRow(response.first) : _mapShoppingRow(response);
-      log.i(
-        'ShoppingRepository.addItem household=$householdId name=$name adminQa=$_isAdminTestingActive',
-      );
-      return ShoppingItemModel.fromJson(mapped);
-    },
-        context: 'SupabaseShoppingRepository.addItem',
-        isOnline: _isOnline,
-        onOffline: () async {
-          final itemId = clientId ?? _uuid.v4();
-          await _queueAction(
-            OfflineAction(
-              type: OfflineActionType.tableInsert,
-              target: 'shopping_items',
-              values: {
-                'id': itemId,
-                'household_id': householdId,
-                'name': name.trim(),
-                'quantity':
-                    quantity?.trim().isEmpty == true ? null : quantity?.trim(),
-                'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
-                'category': category,
-                'emoji': emoji,
-                'note': note?.trim().isEmpty == true ? null : note?.trim(),
-                'added_by': userId,
-                'completed': false,
-              },
-            ),
-          );
-          return ShoppingItemModel(
-            id: itemId,
-            householdId: householdId,
-            name: name,
-            quantity: quantity,
-            unit: unit,
-            category: category,
-            emoji: emoji,
-            note: note,
-            addedBy: userId,
-            completed: false,
-            createdAt: DateTime.now(),
-            shouldSync: true,
-          );
-        },);
+        final mapped = response is List
+            ? _mapShoppingRow(response.first)
+            : _mapShoppingRow(response);
+        log.i(
+          'ShoppingRepository.addItem household=$householdId name=$name adminQa=$_isAdminTestingActive',
+        );
+        return ShoppingItemModel.fromJson(mapped);
+      },
+      context: 'SupabaseShoppingRepository.addItem',
+      isOnline: _isOnline,
+      onOffline: () async {
+        final itemId = clientId ?? _uuid.v4();
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableInsert,
+            target: 'shopping_items',
+            values: {
+              'id': itemId,
+              'household_id': householdId,
+              'name': name.trim(),
+              if (nameKey != null) 'name_key': nameKey,
+              'quantity':
+                  quantity?.trim().isEmpty == true ? null : quantity?.trim(),
+              'unit': unit?.trim().isEmpty == true ? null : unit?.trim(),
+              'category': category,
+              'emoji': emoji,
+              'note': note?.trim().isEmpty == true ? null : note?.trim(),
+              'added_by': userId,
+              'completed': false,
+            },
+          ),
+        );
+        return ShoppingItemModel(
+          id: itemId,
+          householdId: householdId,
+          name: name,
+          nameKey: nameKey,
+          quantity: quantity,
+          unit: unit,
+          category: category,
+          emoji: emoji,
+          note: note,
+          addedBy: userId,
+          completed: false,
+          createdAt: DateTime.now(),
+          shouldSync: true,
+        );
+      },
+    );
   }
 
   @override
   Future<Either<Failure, void>> updateItem({
     required String itemId,
     required String name,
+    String? nameKey,
     required String category,
     required String emoji,
     String? note,
@@ -202,6 +220,7 @@ class SupabaseShoppingRepository
     return executeWithHandling(() async {
       await _client.from('shopping_items').update({
         'name': name.trim(),
+        'name_key': nameKey,
         'category': category,
         'emoji': emoji,
         if (note != null) 'note': note.trim().isEmpty ? null : note.trim(),
@@ -215,152 +234,162 @@ class SupabaseShoppingRepository
     required bool completed,
     required String? userId,
   }) async {
-    return executeWithHandling(() async {
-      if (_isAdminTestingActive) {
-        final householdId = await _resolveHouseholdIdForItem(itemId);
-        if (householdId == null) {
-          throw Exception('No pudimos resolver el hogar QA del item');
-        }
-        await _client.rpc(
-          'qa_admin_toggle_shopping_item',
-          params: {
-            'p_item_id': itemId,
-            'p_household_id': householdId,
-            'p_completed': completed,
-            'p_user_id': userId,
-          },
-        );
-      } else {
-        await _client.from('shopping_items').update({
-          'completed': completed,
-          'completed_by': completed ? userId : null,
-          'completed_at': completed ? DateTime.now().toIso8601String() : null,
-        }).eq('id', itemId);
-      }
-    },
-        context: 'SupabaseShoppingRepository.toggleItem',
-        isOnline: _isOnline,
-        onOffline: () async {
-          await _queueAction(
-            OfflineAction(
-              type: OfflineActionType.tableUpdate,
-              target: 'shopping_items',
-              values: {
-                'completed': completed,
-                'completed_by': completed ? userId : null,
-                'completed_at': completed ? DateTime.now().toIso8601String() : null,
-              },
-              filters: [OfflineFilter(column: 'id', value: itemId)],
-            ),
+    return executeWithHandling(
+      () async {
+        if (_isAdminTestingActive) {
+          final householdId = await _resolveHouseholdIdForItem(itemId);
+          if (householdId == null) {
+            throw Exception('No pudimos resolver el hogar QA del item');
+          }
+          await _client.rpc(
+            'qa_admin_toggle_shopping_item',
+            params: {
+              'p_item_id': itemId,
+              'p_household_id': householdId,
+              'p_completed': completed,
+              'p_user_id': userId,
+            },
           );
-        },);
+        } else {
+          await _client.from('shopping_items').update({
+            'completed': completed,
+            'completed_by': completed ? userId : null,
+            'completed_at': completed ? DateTime.now().toIso8601String() : null,
+          }).eq('id', itemId);
+        }
+      },
+      context: 'SupabaseShoppingRepository.toggleItem',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableUpdate,
+            target: 'shopping_items',
+            values: {
+              'completed': completed,
+              'completed_by': completed ? userId : null,
+              'completed_at':
+                  completed ? DateTime.now().toIso8601String() : null,
+            },
+            filters: [OfflineFilter(column: 'id', value: itemId)],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Future<Either<Failure, void>> deleteItem(String itemId) async {
-    return executeWithHandling(() async {
-      if (_isAdminTestingActive) {
-        final householdId = await _resolveHouseholdIdForItem(itemId);
-        if (householdId == null) {
-          throw Exception('No pudimos resolver el hogar QA del item');
-        }
-        await _client.rpc(
-          'qa_admin_delete_shopping_item',
-          params: {'p_item_id': itemId, 'p_household_id': householdId},
-        );
-      } else {
-        await _client.from('shopping_items').delete().eq('id', itemId);
-      }
-    },
-        context: 'SupabaseShoppingRepository.deleteItem',
-        isOnline: _isOnline,
-        onOffline: () async {
-          await _queueAction(
-            OfflineAction(
-              type: OfflineActionType.tableDelete,
-              target: 'shopping_items',
-              filters: [OfflineFilter(column: 'id', value: itemId)],
-            ),
+    return executeWithHandling(
+      () async {
+        if (_isAdminTestingActive) {
+          final householdId = await _resolveHouseholdIdForItem(itemId);
+          if (householdId == null) {
+            throw Exception('No pudimos resolver el hogar QA del item');
+          }
+          await _client.rpc(
+            'qa_admin_delete_shopping_item',
+            params: {'p_item_id': itemId, 'p_household_id': householdId},
           );
-        },);
+        } else {
+          await _client.from('shopping_items').delete().eq('id', itemId);
+        }
+      },
+      context: 'SupabaseShoppingRepository.deleteItem',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableDelete,
+            target: 'shopping_items',
+            filters: [OfflineFilter(column: 'id', value: itemId)],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Future<Either<Failure, void>> clearCompleted(String householdId) async {
-    return executeWithHandling(() async {
-      if (_isAdminTestingActive) {
-        await _client.rpc(
-          'qa_admin_clear_completed_shopping_items',
-          params: {'p_household_id': householdId},
-        );
-      } else {
-        await _client
-            .from('shopping_items')
-            .delete()
-            .eq('household_id', householdId)
-            .eq('completed', true);
-      }
-    },
-        context: 'SupabaseShoppingRepository.clearCompleted',
-        isOnline: _isOnline,
-        onOffline: () async {
-          await _queueAction(
-            OfflineAction(
-              type: OfflineActionType.tableDelete,
-              target: 'shopping_items',
-              filters: [
-                OfflineFilter(column: 'household_id', value: householdId),
-                const OfflineFilter(column: 'completed', value: true),
-              ],
-            ),
+    return executeWithHandling(
+      () async {
+        if (_isAdminTestingActive) {
+          await _client.rpc(
+            'qa_admin_clear_completed_shopping_items',
+            params: {'p_household_id': householdId},
           );
-        },);
+        } else {
+          await _client
+              .from('shopping_items')
+              .delete()
+              .eq('household_id', householdId)
+              .eq('completed', true);
+        }
+      },
+      context: 'SupabaseShoppingRepository.clearCompleted',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableDelete,
+            target: 'shopping_items',
+            filters: [
+              OfflineFilter(column: 'household_id', value: householdId),
+              const OfflineFilter(column: 'completed', value: true),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Future<Either<Failure, void>> uncompleteAll(String householdId) async {
-    return executeWithHandling(() async {
-      if (_isAdminTestingActive) {
-        await _client.rpc(
-          'qa_admin_uncomplete_all_shopping_items',
-          params: {'p_household_id': householdId},
-        );
-      } else {
-        await _client
-            .from('shopping_items')
-            .update({
-              'completed': false,
-              'completed_by': null,
-              'completed_at': null,
-            })
-            .eq('household_id', householdId)
-            .eq('completed', true);
-      }
-    },
-        context: 'SupabaseShoppingRepository.uncompleteAll',
-        isOnline: _isOnline,
-        onOffline: () async {
-          await _queueAction(
-            OfflineAction(
-              type: OfflineActionType.tableUpdate,
-              target: 'shopping_items',
-              values: {
+    return executeWithHandling(
+      () async {
+        if (_isAdminTestingActive) {
+          await _client.rpc(
+            'qa_admin_uncomplete_all_shopping_items',
+            params: {'p_household_id': householdId},
+          );
+        } else {
+          await _client
+              .from('shopping_items')
+              .update({
                 'completed': false,
                 'completed_by': null,
                 'completed_at': null,
-              },
-              filters: [
-                OfflineFilter(column: 'household_id', value: householdId),
-                const OfflineFilter(column: 'completed', value: true),
-              ],
-            ),
-          );
-        },);
+              })
+              .eq('household_id', householdId)
+              .eq('completed', true);
+        }
+      },
+      context: 'SupabaseShoppingRepository.uncompleteAll',
+      isOnline: _isOnline,
+      onOffline: () async {
+        await _queueAction(
+          OfflineAction(
+            type: OfflineActionType.tableUpdate,
+            target: 'shopping_items',
+            values: {
+              'completed': false,
+              'completed_by': null,
+              'completed_at': null,
+            },
+            filters: [
+              OfflineFilter(column: 'household_id', value: householdId),
+              const OfflineFilter(column: 'completed', value: true),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Map<String, dynamic> _mapShoppingRow(dynamic raw) {
     final map = Map<String, dynamic>.from(raw as Map);
-    if (map.containsKey('added_by_user') || map.containsKey('completed_by_user')) {
+    if (map.containsKey('added_by_user') ||
+        map.containsKey('completed_by_user')) {
       return map;
     }
 
@@ -368,6 +397,7 @@ class SupabaseShoppingRepository
       'id': map['id'],
       'household_id': map['household_id'],
       'name': map['name'],
+      'name_key': map['name_key'],
       'quantity': map['quantity'],
       'unit': map['unit'],
       'category': map['category'],

@@ -5,10 +5,11 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
-const _tabs = ['Todos', 'Adultos', 'Chicos'];
+// We'll define tabs dynamically in the build method to support localization
 
 class FamilyRankingSection extends ConsumerStatefulWidget {
   const FamilyRankingSection({
@@ -42,12 +43,15 @@ class _FamilyRankingSectionState extends ConsumerState<FamilyRankingSection> {
           hideLiveScores: _shouldHideLiveScores(widget.currentMember),
         );
       },
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: AppLoadingState(message: 'Cargando ranking...'),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: AppLoadingState(
+          message: AppLocalizations.of(context).householdSocialHubLoading,
+        ),
       ),
       error: (error, _) => AppErrorState(
-        message: 'No pudimos cargar el ranking.\n$error',
+        message:
+            '${AppLocalizations.of(context).householdSocialHubLoadError}\n$error',
         onRetry: () => ref.invalidate(statsControllerProvider),
       ),
     );
@@ -106,19 +110,19 @@ class _RankingContent extends StatelessWidget {
     return name.isNotEmpty ? name.split(' ').first : 'Integrante';
   }
 
-  String _roleLabel(Map<String, dynamic> item) {
+  String _roleLabel(Map<String, dynamic> item, AppLocalizations t) {
     final type = item['member_type'] as String?;
     switch (type) {
       case 'parent':
-        return 'Adulto';
+        return t.membersRoleParent;
       case 'guardian':
-        return 'Adulto';
+        return t.membersRoleGuardian;
       case 'teen':
-        return 'Adolescente';
+        return t.membersRoleTeen;
       case 'child':
-        return 'Peque';
+        return t.membersRoleChild;
       default:
-        return 'Integrante';
+        return t.householdSocialHubMemberFallback;
     }
   }
 
@@ -136,6 +140,12 @@ class _RankingContent extends StatelessWidget {
       0,
       (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
     );
+    final t = AppLocalizations.of(context);
+    final tabs = [
+      t.familyWeeklyRankingTabAll,
+      t.familyWeeklyRankingTabAdults,
+      t.familyWeeklyRankingTabKids,
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,10 +166,10 @@ class _RankingContent extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Ranking semanal',
-                style: TextStyle(
+                t.familyWeeklyRankingTitle,
+                style: const TextStyle(
                   fontSize: 21,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.2,
@@ -168,18 +178,19 @@ class _RankingContent extends StatelessWidget {
             ),
             if (totalPoints > 0 && !hideLiveScores)
               _HeaderPill(
-                label: '$totalPoints pts',
+                label: t.householdSocialHubRankingPoints(totalPoints),
               ),
-            if (hideLiveScores) const _HeaderPill(label: 'Sorpresa'),
+            if (hideLiveScores)
+              _HeaderPill(label: t.householdSocialHubRankingSurprise),
           ],
         ),
         const SizedBox(height: 7),
         Text(
           hideLiveScores
-              ? 'Desde el jueves guardamos los puntos para revelar el ganador al cierre.'
+              ? t.householdSocialHubRankingHideHint
               : leaderName == null || totalPoints == 0
-                  ? 'Puntos por tareas completadas esta semana.'
-                  : '$leaderName viene liderando la semana.',
+                  ? t.familyWeeklyRankingSubtitle
+                  : t.householdSocialHubRankingLeader(leaderName),
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 13,
@@ -228,7 +239,7 @@ class _RankingContent extends StatelessWidget {
                     ),
                   ),
                   child: Row(
-                    children: List.generate(_tabs.length, (i) {
+                    children: List.generate(tabs.length, (i) {
                       final selected = selectedTab == i;
                       return Expanded(
                         child: GestureDetector(
@@ -254,7 +265,7 @@ class _RankingContent extends StatelessWidget {
                                   : null,
                             ),
                             child: Text(
-                              _tabs[i],
+                              tabs[i],
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
@@ -288,8 +299,8 @@ class _RankingContent extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         selectedTab == 0
-                            ? 'Completen tareas para sumar puntos'
-                            : 'Nadie sumó puntos en ${_tabs[selectedTab]} todavía',
+                            ? t.householdSocialHubRankingEmpty
+                            : t.householdSocialHubRankingEmptyTab(tabs[selectedTab]),
                         style: TextStyle(
                           fontSize: 13,
                           color: theme.textSecondary,
@@ -315,7 +326,8 @@ class _RankingContent extends StatelessWidget {
                     child: _RankingRow(
                       rank: rank,
                       name: _displayName(item),
-                      role: _roleLabel(item),
+                      role: _roleLabel(item, t),
+                      memberType: item['member_type'] as String?,
                       avatarUrl: item['avatar_url'] as String?,
                       xp: xp,
                       tasks: tasks,
@@ -340,6 +352,7 @@ class _RankingRow extends ConsumerWidget {
     required this.rank,
     required this.name,
     required this.role,
+    this.memberType,
     required this.avatarUrl,
     required this.xp,
     required this.tasks,
@@ -353,6 +366,7 @@ class _RankingRow extends ConsumerWidget {
   final int rank;
   final String name;
   final String role;
+  final String? memberType;
   final String? avatarUrl;
   final int xp;
   final int tasks;
@@ -434,7 +448,7 @@ class _RankingRow extends ConsumerWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: _roleColor(role).withValues(alpha: 0.11),
+                      color: _roleColor(memberType).withValues(alpha: 0.11),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -442,7 +456,7 @@ class _RankingRow extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
-                        color: _roleColor(role),
+                        color: _roleColor(memberType),
                         height: 1,
                       ),
                     ),
@@ -473,7 +487,9 @@ class _RankingRow extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  hideLiveScores ? 'Oculto' : (xp > 0 ? '$xp pts' : '0 pts'),
+                  hideLiveScores
+                      ? AppLocalizations.of(context).householdSocialHubRankingHidden
+                      : (xp > 0 ? AppLocalizations.of(context).householdSocialHubRankingPoints(xp) : '0 pts'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -488,7 +504,7 @@ class _RankingRow extends ConsumerWidget {
               if (!hideLiveScores && tasks > 0) ...[
                 const SizedBox(height: 3),
                 Text(
-                  '$tasks tarea${tasks == 1 ? '' : 's'}',
+                  AppLocalizations.of(context).householdSocialHubRankingTasksCount(tasks),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -503,11 +519,11 @@ class _RankingRow extends ConsumerWidget {
     );
   }
 
-  Color _roleColor(String role) {
-    return switch (role) {
-      'Adulto' => AppColors.sage,
-      'Adolescente' => AppColors.accentBlue,
-      'Peque' => AppColors.accentGold,
+  Color _roleColor(String? type) {
+    return switch (type) {
+      'parent' || 'guardian' => AppColors.sage,
+      'teen' => AppColors.accentBlue,
+      'child' => AppColors.accentGold,
       _ => AppColors.primary,
     };
   }

@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -182,7 +183,7 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
   }
 
   double _resolveBalance({
-    required AsyncValue<dynamic> expenseBalancesAsync,
+    required AsyncValue<List<HouseholdBalanceModel>> expenseBalancesAsync,
     required String? currentUserId,
   }) {
     double balance = 0;

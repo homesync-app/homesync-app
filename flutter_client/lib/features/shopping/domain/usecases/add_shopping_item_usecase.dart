@@ -14,6 +14,7 @@ class AddShoppingItemUseCase {
     required String name,
     required String userId,
     String? clientId,
+    String? nameKey,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -22,7 +23,8 @@ class AddShoppingItemUseCase {
     bool shouldSync = true,
   }) {
     if (householdId.isEmpty) {
-      return Future.value(const Left(ValidationFailure('householdId is required')));
+      return Future.value(
+          const Left(ValidationFailure('householdId is required')),);
     }
     if (name.trim().isEmpty) {
       return Future.value(const Left(ValidationFailure('name is required')));
@@ -36,6 +38,7 @@ class AddShoppingItemUseCase {
       name: name,
       userId: userId,
       clientId: clientId,
+      nameKey: nameKey,
       quantity: quantity,
       unit: unit,
       category: category,

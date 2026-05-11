@@ -1,3 +1,5 @@
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
+
 enum MemberType { parent, guardian, teen, child }
 
 class MemberModel {
@@ -139,10 +141,43 @@ class MemberModel {
   /// (Modo Padres, codigo de invitacion, etc.).
   bool get canManageHousehold => isAdmin && isAdult;
 
-  String get visibleRoleLabel {
+  String localizedRoleLabel(AppLocalizations t) {
     if (displayRole != null && displayRole!.trim().isNotEmpty) {
+      final lower = displayRole!.toLowerCase().trim();
+      if (lower == 'padre' || lower == 'madre' || lower == 'parent') {
+        return t.membersRoleParent;
+      }
+      if (lower == 'tutor' || lower == 'tutora' || lower == 'guardian') {
+        return t.membersRoleGuardian;
+      }
+      if (lower == 'adolescente' || lower == 'teen') {
+        return t.membersRoleTeen;
+      }
+      if (lower == 'hijo' || lower == 'hija' || lower == 'child') {
+        return t.membersRoleChild;
+      }
       return displayRole!.trim();
     }
+    return localizedTypeLabel(t);
+  }
+
+  String localizedTypeLabel(AppLocalizations t) {
+    switch (type) {
+      case MemberType.parent:
+        return t.membersRoleParent;
+      case MemberType.guardian:
+        return t.membersRoleGuardian;
+      case MemberType.teen:
+        return t.membersRoleTeen;
+      case MemberType.child:
+        return t.membersRoleChild;
+    }
+  }
+
+  String get visibleRoleLabel =>
+      displayRole?.trim().isNotEmpty == true ? displayRole!.trim() : typeLabel;
+
+  String get typeLabel {
     switch (type) {
       case MemberType.parent:
         return 'Padre/Madre';
@@ -152,19 +187,6 @@ class MemberModel {
         return 'Adolescente';
       case MemberType.child:
         return 'Hijo/a';
-    }
-  }
-
-  String get typeLabel {
-    switch (type) {
-      case MemberType.parent:
-        return 'Padre/Madre';
-      case MemberType.guardian:
-        return 'Tutor';
-      case MemberType.teen:
-        return 'Adolescente';
-      case MemberType.child:
-        return 'Hijo';
     }
   }
 

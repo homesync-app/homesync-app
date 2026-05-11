@@ -10,6 +10,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/category_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import 'create_task_dialog.dart';
 
@@ -100,11 +102,11 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Future<void> _addTemplate(TaskTemplate template) async {
-    if (_addingIds.contains(template.title)) return;
+    if (_addingIds.contains(template.id)) return;
 
     setState(() {
-      _addingIds.add(template.title);
-      _addedIds.add(template.title);
+      _addingIds.add(template.id);
+      _addedIds.add(template.id);
     });
 
     try {
@@ -118,9 +120,13 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         'assignedTo': null,
         'recurrenceType': null,
         'isTemplate': true,
+        'sourceTemplateId': template.id,
+        'titleKey': template.translationKey,
       });
 
       if (!mounted) return;
+      final t = AppLocalizations.of(context);
+      final title = localizedTaskTemplateTitle(t, template);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -131,7 +137,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 size: 20,
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text('"${template.title}" anadida')),
+              Expanded(child: Text(t.addTaskOptionsAddedSnack(title))),
             ],
           ),
           backgroundColor: AppColors.accentGreen,
@@ -150,7 +156,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _addingIds.remove(template.title));
+      if (mounted) setState(() => _addingIds.remove(template.id));
     }
   }
 
@@ -239,13 +245,13 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Nueva tarea',
-                        style: TextStyle(
+                        AppLocalizations.of(context).addTaskOptionsHeaderTitle,
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
                         ),
@@ -254,7 +260,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Cerrar',
+                  tooltip: AppLocalizations.of(context).commonClose,
                   onPressed: () => Navigator.pop(context, _addedIds.isNotEmpty),
                   icon: const Icon(Icons.close_rounded),
                 ),
@@ -269,11 +275,18 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  _buildCategoryChip(null, 'Todas', null),
+                  _buildCategoryChip(
+                    null,
+                    AppLocalizations.of(context).tasksFilterAll,
+                    null,
+                  ),
                   ...displayCategories.map(
                     (category) => _buildCategoryChip(
                       category.id,
-                      category.name,
+                      localizedTaskCategoryName(
+                        AppLocalizations.of(context),
+                        category,
+                      ),
                       category,
                     ),
                   ),
@@ -320,7 +333,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                       }
                     },
                     icon: const Icon(Icons.edit_rounded),
-                    label: const Text('Personalizada'),
+                    label: Text(
+                      AppLocalizations.of(context).addTaskOptionsCustomChip,
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.theme.surface,
                       foregroundColor: AppColors.primary,
@@ -414,6 +429,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildEmpty() {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -424,14 +440,14 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
             color: AppColors.primary.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Ya tienes todas las sugeridas',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          Text(
+            t.addTaskOptionsAllSuggestedDone,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Crea una tarea personalizada abajo.',
-            style: TextStyle(color: AppColors.textSecondary),
+          Text(
+            t.addTaskOptionsCreateCustomBelow,
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -469,7 +485,9 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           Center(
             child: OutlinedButton(
               onPressed: _loadMoreTemplates,
-              child: const Text('Cargar mas'),
+              child: Text(
+                AppLocalizations.of(context).addTaskOptionsLoadMore,
+              ),
             ),
           ),
         ],
@@ -488,6 +506,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       ),
     );
     final color = AppColors.fromHex(category.color);
+    final name =
+        localizedTaskCategoryName(AppLocalizations.of(context), category);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
@@ -509,7 +529,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  category.name,
+                  name,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -527,8 +547,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
   }
 
   Widget _buildTemplateCard(TaskTemplate template) {
-    final isAdding = _addingIds.contains(template.title);
-    final isAdded = _addedIds.contains(template.title);
+    final isAdding = _addingIds.contains(template.id);
+    final isAdded = _addedIds.contains(template.id);
 
     final category = _categories.firstWhere(
       (item) => item.id == template.categoryId,
@@ -541,6 +561,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
     );
     final color =
         isAdded ? AppColors.accentGreen : AppColors.fromHex(category.color);
+    final title =
+        localizedTaskTemplateTitle(AppLocalizations.of(context), template);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
@@ -575,7 +597,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
           ),
         ),
         title: Text(
-          template.title,
+          title,
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
@@ -653,7 +675,8 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                         ),
                       )
                     : IconButton(
-                        tooltip: 'Agregar tarea',
+                        tooltip: AppLocalizations.of(context)
+                            .addTaskOptionsAddTooltip,
                         icon: Icon(
                           Icons.add_circle_outline_rounded,
                           color: color,

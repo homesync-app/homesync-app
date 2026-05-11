@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class CategoryBarChart extends StatelessWidget {
   final List<Map<String, dynamic>> taskStats;
@@ -11,6 +12,7 @@ class CategoryBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (taskStats.isEmpty) return const SizedBox.shrink();
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     final totalValue = taskStats.fold<double>(
         0,
@@ -48,7 +50,7 @@ class CategoryBarChart extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${totalValue.toInt()} TAREAS',
+                  t.categoriesTasksCount(totalValue.toInt()),
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -151,6 +153,7 @@ class CategoryDetailCard extends StatelessWidget {
     final icon = CategoryMapping.categoryIcons[category] ?? '📋';
     final name = CategoryMapping.categoryNames[category] ?? category;
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -202,7 +205,7 @@ class CategoryDetailCard extends StatelessWidget {
                         size: 14, color: color.withValues(alpha: 0.5),),
                     const SizedBox(width: 4),
                     Text(
-                      '$count completadas',
+                      t.categoriesCompletedCount(count),
                       style: TextStyle(
                         color: AppColors.textPrimary.withValues(alpha: 0.5),
                         fontSize: 13,

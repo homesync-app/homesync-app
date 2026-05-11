@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -9,7 +10,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/core/providers/identity_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class MemberOnboardingScreen extends ConsumerStatefulWidget {
   final VoidCallback onComplete;
@@ -78,7 +79,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     try {
       final client = ref.read(supabaseClientProvider);
       final result = await client.rpc('get_available_family_roles',
-          params: {'p_household_id': householdId});
+          params: {'p_household_id': householdId},);
       final roles =
           result == null ? <String>[] : (result as List).cast<String>();
       if (roles.isEmpty) {
@@ -136,6 +137,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   Future<void> _completeOnboarding() async {
+    final t = AppLocalizations.of(context);
     setState(() => _isSaving = true);
     HapticFeedback.heavyImpact();
 
@@ -154,7 +156,8 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       });
 
       if (rpcResult is Map<String, dynamic> && rpcResult['ok'] == false) {
-        final errorMsg = rpcResult['error'] as String? ?? 'Error desconocido';
+        final errorMsg =
+            rpcResult['error'] as String? ?? t.setupSnackUnknownError;
         log.w('complete_member_onboarding returned error: $errorMsg');
         if (mounted) {
           setState(() => _isSaving = false);
@@ -176,9 +179,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo guardar. Intentá de nuevo.'),
-          ),
+          SnackBar(content: Text(t.memberOnboardingSaveError)),
         );
       }
     }
@@ -210,6 +211,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
   }
 
   Widget _buildWelcomeStep(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Padding(
       key: const ValueKey('welcome'),
       padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -233,10 +235,10 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             ),
           ),
           const SizedBox(height: 32),
-          const Center(
+          Center(
             child: Text(
-              '¡Bienvenido al hogar!',
-              style: TextStyle(
+              t.memberOnboardingWelcomeTitle,
+              style: const TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -1.4,
@@ -248,7 +250,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'Elegí tu rol para empezar.',
+              t.memberOnboardingWelcomeSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -260,7 +262,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           ),
           const Spacer(),
           _buildPrimaryButton(
-            text: 'Continuar',
+            text: t.commonContinue,
             onPressed: () => _goToStep(1),
           ),
           const SizedBox(height: 32),
@@ -269,43 +271,59 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     );
   }
 
-  static const _roleConfig = {
-    'Padre': (
-      Icons.person_rounded,
-      AppColors.primary,
-      'Responsable del hogar. Administra gastos y tareas.'
-    ),
-    'Madre': (
-      Icons.person_rounded,
-      AppColors.primary,
-      'Responsable del hogar. Administra gastos y tareas.'
-    ),
-    'Tutor/a': (
-      Icons.supervisor_account_rounded,
-      AppColors.primary,
-      'Responsable del hogar. Administra gastos y tareas.'
-    ),
-    'Adulto': (
-      Icons.person_rounded,
-      AppColors.primary,
-      'Responsable del hogar. Administra gastos y tareas.'
-    ),
-    'Adolescente': (
-      Icons.emoji_people_rounded,
-      AppColors.accentTeal,
-      'Gestión personal de gastos y tareas.'
-    ),
-    'Hijo/a': (
-      Icons.child_care_rounded,
-      AppColors.accentPurple,
-      'Participa con tareas y puede ganar recompensas.'
-    ),
+  // Icon + color per role id. Title and description are localized at render
+  // time via [_localizedRoleTitle] / [_localizedRoleDesc] so they follow the
+  // active locale without invalidating the cached available-roles list.
+  static const _roleVisuals = <String, (IconData, Color)>{
+    'Padre': (Icons.person_rounded, AppColors.primary),
+    'Madre': (Icons.person_rounded, AppColors.primary),
+    'Tutor/a': (Icons.supervisor_account_rounded, AppColors.primary),
+    'Adulto': (Icons.person_rounded, AppColors.primary),
+    'Adolescente': (Icons.emoji_people_rounded, AppColors.accentTeal),
+    'Hijo/a': (Icons.child_care_rounded, AppColors.accentPurple),
   };
+
+  String _localizedRoleTitle(AppLocalizations t, String role) {
+    switch (role) {
+      case 'Padre':
+        return t.setupFamilyRoleFather;
+      case 'Madre':
+        return t.setupFamilyRoleMother;
+      case 'Tutor/a':
+        return t.setupFamilyRoleGuardian;
+      case 'Adulto':
+        return t.settingsParentModeMemberTypeAdult;
+      case 'Adolescente':
+        return t.setupFamilyRoleTeen;
+      case 'Hijo/a':
+        return t.settingsParentModeMemberTypeChild;
+      default:
+        return role;
+    }
+  }
+
+  String _localizedRoleDesc(AppLocalizations t, String role) {
+    switch (role) {
+      case 'Padre':
+      case 'Madre':
+      case 'Tutor/a':
+      case 'Adulto':
+        return t.memberOnboardingRoleDescAdult;
+      case 'Adolescente':
+        return t.memberOnboardingRoleDescTeen;
+      case 'Hijo/a':
+        return t.memberOnboardingRoleDescChild;
+      default:
+        return t.memberOnboardingRoleDescDefault;
+    }
+  }
 
   Widget _buildRoleStep(AppThemeColors theme) {
     if (_isLoadingRoles) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final t = AppLocalizations.of(context);
 
     return Padding(
       key: const ValueKey('role'),
@@ -314,11 +332,11 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          _buildStepEyebrow('Rol en el hogar'),
+          _buildStepEyebrow(t.memberOnboardingEyebrow),
           const SizedBox(height: 10),
-          const Text(
-            '¿Quién sos?',
-            style: TextStyle(
+          Text(
+            t.memberOnboardingTitle,
+            style: const TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w900,
               letterSpacing: -1.4,
@@ -328,7 +346,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Elegí tu rol en el hogar.',
+            t.memberOnboardingSubtitle,
             style: TextStyle(
               fontSize: 15.5,
               height: 1.28,
@@ -343,18 +361,14 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 final role = _availableRoles[index];
-                final config = _roleConfig[role] ??
-                    (
-                      Icons.person_rounded,
-                      AppColors.primary,
-                      'Miembro del hogar.'
-                    );
+                final visuals = _roleVisuals[role] ??
+                    (Icons.person_rounded, AppColors.primary);
                 return _buildRoleCard(
-                  icon: config.$1,
-                  title: role,
-                  desc: config.$3,
+                  icon: visuals.$1,
+                  title: _localizedRoleTitle(t, role),
+                  desc: _localizedRoleDesc(t, role),
                   isSelected: _selectedDisplayRole == role,
-                  tone: config.$2,
+                  tone: visuals.$2,
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() {
@@ -370,7 +384,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
             const Center(child: CircularProgressIndicator())
           else
             _buildPrimaryButton(
-              text: '¡Listo!',
+              text: t.memberOnboardingFinishButton,
               onPressed: _completeOnboarding,
             ),
           const SizedBox(height: 16),

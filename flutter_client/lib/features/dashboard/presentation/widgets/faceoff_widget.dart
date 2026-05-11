@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class AIFaceoffWidget extends ConsumerWidget {
@@ -17,6 +18,7 @@ class AIFaceoffWidget extends ConsumerWidget {
     }
 
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final currentUserId = ref.watch(currentUserIdProvider);
     final leader = weeklyRanking[0];
     final challenger = weeklyRanking[1];
@@ -64,18 +66,18 @@ class AIFaceoffWidget extends ConsumerWidget {
                   color: AppColors.sage.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.bolt_rounded,
                       size: 14,
                       color: AppColors.iconSage,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
-                      'DUELO SEMANAL',
-                      style: TextStyle(
+                      t.faceoffWeeklyDuelLabel,
+                      style: const TextStyle(
                         color: AppColors.iconSage,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
@@ -86,7 +88,7 @@ class AIFaceoffWidget extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                _daysRemainingLabel(),
+                _daysRemainingLabel(t),
                 style: TextStyle(
                   color: theme.textSecondary,
                   fontSize: 11,
@@ -97,7 +99,7 @@ class AIFaceoffWidget extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Tu pareja juega con marcador oculto',
+            t.faceoffHiddenScoreTitle,
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 23,
@@ -108,7 +110,7 @@ class AIFaceoffWidget extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Vos ves tu propio avance. El resultado real se descubre al cierre de la semana.',
+            t.faceoffHiddenScoreSubtitle,
             style: TextStyle(
               color: theme.textSecondary,
               fontSize: 13,
@@ -124,6 +126,7 @@ class AIFaceoffWidget extends ConsumerWidget {
                   context: context,
                   player: currentUserData,
                   xp: currentUserXp,
+                  t: t,
                   isLeader: true,
                   isCurrentUser: true,
                   showExactXp: true,
@@ -137,6 +140,7 @@ class AIFaceoffWidget extends ConsumerWidget {
                   xp: leader['user_id'] == currentUserId
                       ? challengerXp
                       : leaderXp,
+                  t: t,
                   isLeader: false,
                   isCurrentUser: false,
                   showExactXp: false,
@@ -148,9 +152,10 @@ class AIFaceoffWidget extends ConsumerWidget {
           _buildDuelBar(
             context: context,
             currentUserXp: currentUserXp,
+            t: t,
           ),
           const SizedBox(height: 16),
-          _buildWeekRow(context),
+          _buildWeekRow(context, t),
         ],
       ),
     );
@@ -160,6 +165,7 @@ class AIFaceoffWidget extends ConsumerWidget {
     required BuildContext context,
     required Map<String, dynamic> player,
     required int xp,
+    required AppLocalizations t,
     required bool showExactXp,
     required bool isLeader,
     required bool isCurrentUser,
@@ -200,7 +206,7 @@ class AIFaceoffWidget extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            isCurrentUser ? 'Vos' : 'Pareja',
+            isCurrentUser ? t.faceoffYouLabel : t.faceoffPartnerLabel,
             style: TextStyle(
               color: isCurrentUser ? accent : theme.textMuted,
               fontSize: 11,
@@ -215,7 +221,7 @@ class AIFaceoffWidget extends ConsumerWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              showExactXp ? '$xp XP' : 'XP oculta',
+              showExactXp ? t.faceoffXpValue(xp) : t.faceoffHiddenXp,
               style: TextStyle(
                 color: accent,
                 fontSize: 12,
@@ -231,6 +237,7 @@ class AIFaceoffWidget extends ConsumerWidget {
   Widget _buildDuelBar({
     required BuildContext context,
     required int currentUserXp,
+    required AppLocalizations t,
   }) {
     final theme = context.theme;
     return Column(
@@ -239,7 +246,7 @@ class AIFaceoffWidget extends ConsumerWidget {
         Row(
           children: [
             Text(
-              'Ventaja semanal',
+              t.faceoffWeeklyAdvantage,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontSize: 11,
@@ -248,7 +255,7 @@ class AIFaceoffWidget extends ConsumerWidget {
             ),
             const Spacer(),
             Text(
-              'Marcador oculto',
+              t.faceoffHiddenScore,
               style: TextStyle(
                 color: theme.textMuted,
                 fontSize: 11,
@@ -275,7 +282,7 @@ class AIFaceoffWidget extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Tus $currentUserXp XP ya cuentan. La XP de tu pareja queda oculta hasta el domingo.',
+          t.faceoffCurrentXpCounts(currentUserXp),
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 12,
@@ -287,7 +294,7 @@ class AIFaceoffWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildWeekRow(BuildContext context) {
+  Widget _buildWeekRow(BuildContext context, AppLocalizations t) {
     final theme = context.theme;
     final days = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
     final today = DateTime.now().weekday;
@@ -296,7 +303,7 @@ class AIFaceoffWidget extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Ritmo semanal',
+          t.faceoffWeeklyRhythm,
           style: TextStyle(
             color: theme.textSecondary,
             fontSize: 11,
@@ -351,17 +358,16 @@ class AIFaceoffWidget extends ConsumerWidget {
     );
   }
 
-  String _daysRemainingLabel() {
+  String _daysRemainingLabel(AppLocalizations t) {
     final today = DateTime.now().weekday;
     final remaining = 7 - today;
-    if (remaining <= 0) return 'Cierra hoy';
-    if (remaining == 1) return '1 día restante';
-    return '$remaining días restantes';
+    if (remaining <= 0) return t.faceoffClosesToday;
+    return t.faceoffDaysRemaining(remaining);
   }
 
   String _firstName(dynamic rawName) {
-    final name = (rawName as String? ?? 'Jugador').trim();
-    if (name.isEmpty) return 'Jugador';
+    final name = (rawName as String? ?? '').trim();
+    if (name.isEmpty) return 'Player';
     return name.split(' ').first;
   }
 }

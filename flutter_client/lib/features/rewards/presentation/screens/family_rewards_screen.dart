@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 
 class FamilyRewardsScreen extends ConsumerWidget {
@@ -15,6 +15,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final rewardsAsync = ref.watch(filteredRewardsProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final membersAsync = ref.watch(householdMembersProvider);
@@ -29,11 +30,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.background,
-      appBar: AppBar(title: Text(isChild ? 'Mi tienda' : 'Tienda del hogar')),
+      appBar: AppBar(title: Text(isChild ? t.rewardsChildStoreTitle : t.rewardsFamilyStoreTitle)),
       floatingActionButton: isAdmin
           ? AppFloatingActionButton(
               heroTag: 'family-rewards-create',
-              label: 'Nuevo premio',
+              label: t.rewardsNewPrizeLabel,
               icon: Icons.add_rounded,
               onPressed: () => _showRewardComposer(context, ref, isAdmin),
               margin: EdgeInsets.only(

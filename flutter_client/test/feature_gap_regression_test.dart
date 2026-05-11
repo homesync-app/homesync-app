@@ -47,6 +47,7 @@ class FakeShoppingRepository implements ShoppingRepository {
     required String name,
     required String userId,
     String? clientId,
+    String? nameKey,
     String? quantity,
     String? unit,
     String category = 'general',
@@ -98,6 +99,7 @@ class FakeShoppingRepository implements ShoppingRepository {
   Future<Either<Failure, void>> updateItem({
     required String itemId,
     required String name,
+    String? nameKey,
     required String category,
     required String emoji,
     String? note,
@@ -243,6 +245,14 @@ class FakeHouseholdRepository implements HouseholdRepository {
     String userId,
     String type,
   ) async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateFinanceSettings(
+    String householdId, {
+    required String financeMode,
+    required double defaultSplitRatio,
+  }) async =>
       const Right(null);
 }
 

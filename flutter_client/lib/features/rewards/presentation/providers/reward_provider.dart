@@ -4,6 +4,7 @@ import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/data/repositories/supabase_reward_repository.dart';
@@ -412,6 +413,11 @@ class Rewards extends _$Rewards {
       },
       (success) {
         ref.invalidateSelf();
+        // Refrescamos el feed de actividad y el balance al instante:
+        // el Realtime de Supabase puede tardar varios segundos y el usuario
+        // espera ver el canje reflejado apenas vuelve al home.
+        ref.invalidate(recentActivityProvider);
+        ref.invalidate(userBalanceProvider);
         return Right(success);
       },
     );

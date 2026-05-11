@@ -5,6 +5,8 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 
 Color dashboardCategoryAccent(BuildContext context, String? category) {
@@ -100,7 +102,7 @@ class DashboardTaskCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
+                    localizedTaskTitle(AppLocalizations.of(context), task),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

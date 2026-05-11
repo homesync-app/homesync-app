@@ -7,6 +7,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class ExpenseDetailSheet {
@@ -73,6 +74,7 @@ class _ExpenseDetailSheetContentState
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final expense = _expense;
     final accentColor = CategoryMapping.getSmartExpenseDisplayColor(
       expense.category,
@@ -133,10 +135,10 @@ class _ExpenseDetailSheetContentState
                     children: [
                       Text(
                         expense.isIncome
-                            ? 'Detalle de ingreso'
+                            ? t.expensesDetailHeaderIncome
                             : (expense.isSettlement
-                                ? 'Detalle de liquidación de balance'
-                                : 'Detalle de gasto'),
+                                ? t.expensesDetailHeaderSettlement
+                                : t.expensesDetailHeaderExpense),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
@@ -175,7 +177,7 @@ class _ExpenseDetailSheetContentState
                           border: Border.all(color: AppColors.divider),
                         ),
                         child: IconButton(
-                          tooltip: 'Editar',
+                          tooltip: t.commonEdit,
                           icon: const Icon(
                             Icons.edit_outlined,
                             color: AppColors.primary,
@@ -270,7 +272,7 @@ class _ExpenseDetailSheetContentState
                             runSpacing: 8,
                             children: [
                               _buildTypeBadge(
-                                _primaryBadgeLabel(expense),
+                                _primaryBadgeLabel(expense, t),
                                 expense.splitType == 'gift'
                                     ? Colors.pinkAccent
                                     : accentColor,
@@ -278,7 +280,7 @@ class _ExpenseDetailSheetContentState
                               ),
                               if (expense.payerDisplayName != 'Alguien')
                                 _buildTypeBadge(
-                                  'Pagó ${expense.payerDisplayName}',
+                                  t.expensesDetailPaidBy(expense.payerDisplayName),
                                   AppColors.accentBlue,
                                   isSmall: true,
                                 ),
@@ -289,11 +291,11 @@ class _ExpenseDetailSheetContentState
                     ),
                     const SizedBox(height: 24),
                     if (hasSimpleDescription) ...[
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Nota:',
-                          style: TextStyle(
+                          t.expensesDetailNoteLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -321,11 +323,11 @@ class _ExpenseDetailSheetContentState
                       const SizedBox(height: 24),
                     ],
                     if (isShoppingList && expense.description != null) ...[
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Ítems comprados',
-                          style: TextStyle(
+                          t.expensesDetailPurchasedItems,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -337,11 +339,11 @@ class _ExpenseDetailSheetContentState
                       const SizedBox(height: 24),
                     ] else if (expense.description != null &&
                         expense.description!.contains('\n')) ...[
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Detalle',
-                          style: TextStyle(
+                          t.expensesDetailLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -355,11 +357,11 @@ class _ExpenseDetailSheetContentState
                     if (expense.splits != null &&
                         expense.splits!.isNotEmpty &&
                         expense.splitType != 'personal') ...[
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'División',
-                          style: TextStyle(
+                          t.expensesDetailSplitLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -396,16 +398,16 @@ class _ExpenseDetailSheetContentState
                               ),
                               subtitle: isPayer
                                   ? Text(
-                                      'Pagó',
+                                      t.expensesDetailPaidLabel,
                                       style: TextStyle(
                                         color: accentColor,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     )
-                                  : const Text(
-                                      'Su parte',
-                                      style: TextStyle(
+                                  : Text(
+                                      t.expensesDetailTheirPartLabel,
+                                      style: const TextStyle(
                                         color: AppColors.textMuted,
                                         fontSize: 12,
                                       ),
@@ -436,15 +438,15 @@ class _ExpenseDetailSheetContentState
     );
   }
 
-  static String _primaryBadgeLabel(ExpenseModel expense) {
-    if (expense.isIncome) return 'Ingreso';
-    if (expense.isSettlement) return 'Liquidación de balance';
-    if (expense.splitType == 'gift') return 'Regalo';
-    if (expense.splitType == 'equal') return 'Dividido equitativamente';
-    if (expense.splitType == 'fixed') return 'División';
-    if (expense.splitType == 'personal') return 'Gasto solo';
-    if (expense.isShared) return 'Compartido';
-    return 'Gasto solo';
+  static String _primaryBadgeLabel(ExpenseModel expense, AppLocalizations t) {
+    if (expense.isIncome) return t.expensesFormTypeIncome;
+    if (expense.isSettlement) return t.expensesFormCategorySettlement;
+    if (expense.splitType == 'gift') return t.expensesFormSplitGift;
+    if (expense.splitType == 'equal') return t.expensesDetailSplitEqual;
+    if (expense.splitType == 'fixed') return t.expensesDetailSplitLabel;
+    if (expense.splitType == 'personal') return t.expensesDetailSplitPersonal;
+    if (expense.isShared) return t.expensesFormSplitShared;
+    return t.expensesDetailSplitPersonal;
   }
 
   static String _formatCurrency(num amount) {
@@ -479,7 +481,7 @@ class _ExpenseDetailSheetContentState
   static Widget _buildReceiptView(String text) {
     final lines = text.split(RegExp(r'\n'));
     final items = lines
-        .map((e) => e.trim().replaceAll(RegExp(r'^[-*•]\s*'), ''))
+        .map((e) => e.trim().replaceAll(RegExp(r'^[-*â€¢]\s*'), ''))
         .where(
           (e) => e.isNotEmpty && !e.toLowerCase().contains('lista de compra'),
         )
@@ -546,3 +548,4 @@ class _ExpenseDetailSheetContentState
     );
   }
 }
+

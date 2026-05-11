@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
+import '../../utils/shopping_localization.dart';
 import '../providers/shopping_provider.dart';
 
 class ShoppingItemSheet extends ConsumerStatefulWidget {
@@ -58,7 +60,13 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.item?.name ?? widget.initialName ?? '',
+      text: widget.item == null
+          ? widget.initialName ?? ''
+          : localizedShoppingCatalogName(
+              context,
+              name: widget.item!.name,
+              nameKey: widget.item!.nameKey,
+            ),
     );
     _quantityController = TextEditingController(
       text: widget.item?.quantity ?? '',
@@ -87,6 +95,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 32,
@@ -132,26 +141,28 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                   ),
-                  decoration: const InputDecoration(
-                    hintText: 'Nombre del producto',
+                  decoration: InputDecoration(
+                    hintText: t.shoppingItemNameHint,
                     border: InputBorder.none,
-                    hintStyle: TextStyle(color: AppColors.textMuted),
+                    hintStyle: const TextStyle(color: AppColors.textMuted),
                   ),
                 ),
               ),
               if (widget.item != null)
                 IconButton(
-                  tooltip: 'Eliminar',
+                  tooltip: t.shoppingDeleteTooltip,
                   onPressed: _delete,
-                  icon: const Icon(Icons.delete_outline_rounded,
-                      color: AppColors.error,),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                  ),
                 ),
             ],
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Categoría',
-            style: TextStyle(
+          Text(
+            t.shoppingCategoryLabel,
+            style: const TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
               color: AppColors.textSecondary,
@@ -212,7 +223,9 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 elevation: 0,
               ),
               child: Text(
-                widget.item == null ? 'Agregar a la Lista' : 'Guardar Cambios',
+                widget.item == null
+                    ? t.shoppingAddToList
+                    : t.shoppingSaveChanges,
                 style:
                     const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
               ),

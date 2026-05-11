@@ -16,8 +16,10 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
@@ -35,26 +37,39 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late ConfettiController _confettiController;
+  ProviderSubscription<AsyncValue<List<TaskModel>>>? _taskCompletionListener;
 
   @override
   void initState() {
     super.initState();
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
+    _taskCompletionListener = ref.listenManual(todayTasksProvider, (
+      previous,
+      next,
+    ) {
+      if (previous?.asData?.value.isNotEmpty == true &&
+          next.asData?.value.isEmpty == true &&
+          !next.isLoading &&
+          !next.hasError) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _confettiController.play();
+          HapticFeedback.heavyImpact();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _taskCompletionListener?.close();
     _confettiController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final caps = ref.watch(householdCapabilitiesProvider);
-    if (caps.showTasks) {
-      _setupTaskCompletionListener(ref);
-    }
     final householdAsync = ref.watch(householdIdProvider);
     final theme = context.theme;
 
@@ -107,18 +122,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
     );
-  }
-
-  void _setupTaskCompletionListener(WidgetRef ref) {
-    ref.listen(todayTasksProvider, (previous, next) {
-      if (previous?.asData?.value.isNotEmpty == true &&
-          next.asData?.value.isEmpty == true &&
-          !next.isLoading &&
-          !next.hasError) {
-        _confettiController.play();
-        HapticFeedback.heavyImpact();
-      }
-    });
   }
 
   Widget _buildMainContent(String householdId, AppThemeColors theme) {
@@ -195,7 +198,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Transform.translate(
       offset: Offset(0, fabOffsetY),
       child: AppFloatingActionButton(
-        label: caps.showTasks ? 'Acciones' : 'Gastos',
+        label: caps.showTasks
+            ? AppLocalizations.of(context).homeFabActions
+            : AppLocalizations.of(context).homeFabExpenses,
         icon: Icons.add_rounded,
         onPressed: () => caps.showTasks
             ? _showQuickActionMenu(householdId, caps)
@@ -248,7 +253,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Expanded(
                     child: _buildActionItem(
                       variant: _QuickActionVariant.expense,
-                      label: 'Gastos',
+                      label: AppLocalizations.of(context).homeFabExpenses,
                       color: AppColors.primary,
                       onTap: () {
                         Navigator.pop(context);
@@ -261,7 +266,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: _buildActionItem(
                         variant: _QuickActionVariant.task,
-                        label: 'Tareas',
+                        label: AppLocalizations.of(context).homeFabTasks,
                         color: AppColors.sage,
                         onTap: () {
                           Navigator.pop(context);

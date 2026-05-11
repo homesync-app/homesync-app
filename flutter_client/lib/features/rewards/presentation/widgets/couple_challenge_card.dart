@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
@@ -27,6 +28,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     const highlight = Color(0xFF6B8E85);
     final theme = context.theme;
 
@@ -56,8 +58,8 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                   children: [
                     _softPill(
                       icon: Icons.auto_awesome_rounded,
-                      label:
-                          'Especial semanal ${widget.challengeNumber} de ${widget.totalChallenges}',
+                      label: t.coupleChallengeWeeklyPill(
+                          widget.challengeNumber, widget.totalChallenges,),
                       textColor: highlight,
                       background: highlight.withValues(alpha: 0.08),
                     ),
@@ -65,7 +67,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 ),
               ),
               IconButton(
-                tooltip: 'Expandir',
+                tooltip: t.coupleChallengeExpandTooltip,
                 onPressed: _toggleExpanded,
                 style: IconButton.styleFrom(
                   backgroundColor: theme.surface,
@@ -195,7 +197,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               size: 18,
             ),
             label: Text(
-              _isExpanded ? 'Ver menos' : 'Ver detalle completo',
+              _isExpanded ? t.coupleChallengeShowLess : t.coupleChallengeShowMore,
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -275,7 +277,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Recompensa compartida',
+                        t.coupleChallengeSharedReward,
                         style: TextStyle(
                           color: theme.textSecondary,
                           fontSize: 11,
@@ -284,7 +286,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Si lo completan, ambos reciben ${widget.challenge.coinReward} coins.',
+                        t.coupleChallengeSharedRewardBody(widget.challenge.coinReward),
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 14,
@@ -311,9 +313,9 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                       borderRadius: BorderRadius.circular(18),
                     ),
                   ),
-                  child: const Text(
-                    'Lo hicimos',
-                    style: TextStyle(
+                  child: Text(
+                    t.coupleChallengeWeDidIt,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 12.5,
                     ),

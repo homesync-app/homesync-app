@@ -3,6 +3,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -13,6 +14,9 @@ class BalanceCard extends StatelessWidget {
   final VoidCallback? onSettle;
   final String? partnerName;
   final bool settlementJustCompleted;
+  final String? balancedLabel;
+  final String? neutralLabel;
+  final bool compact;
 
   const BalanceCard({
     super.key,
@@ -23,6 +27,9 @@ class BalanceCard extends StatelessWidget {
     this.onSettle,
     this.partnerName,
     this.settlementJustCompleted = false,
+    this.balancedLabel,
+    this.neutralLabel,
+    this.compact = false,
   });
 
   @override
@@ -32,6 +39,7 @@ class BalanceCard extends StatelessWidget {
     final isNegative = balance < -0.01;
     final isBalanced = !isPositive && !isNegative;
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     final statusColor = isNegative ? AppColors.accentOrange : AppColors.sage;
     final surfaceColor = settlementJustCompleted
@@ -50,12 +58,14 @@ class BalanceCard extends StatelessWidget {
         ? AppColors.sage.withValues(alpha: 0.22)
         : theme.border.withValues(alpha: 0.68);
     final balanceMessage = settlementJustCompleted
-        ? 'Todo equilibrado'
+        ? t.balanceCardSettled
         : partnerName == null
-            ? 'Mi presupuesto'
+            ? (neutralLabel ?? t.balanceCardMyBudget)
             : (isBalanced
-                ? 'Balance en calma'
-                : (isNegative ? 'Hace falta equilibrar' : 'Quedó a tu favor'));
+                ? (balancedLabel ?? t.balanceCardBalanced)
+                : (isNegative
+                    ? t.balanceCardNeedsSettlement
+                    : t.balanceCardInYourFavor));
     return AnimatedContainer(
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
@@ -69,7 +79,7 @@ class BalanceCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(compact ? 24 : 28),
         border: Border.all(
           color: borderColor,
           width: 1.05,
@@ -85,7 +95,8 @@ class BalanceCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+        padding:
+            EdgeInsets.fromLTRB(20, compact ? 16 : 18, 20, compact ? 14 : 16),
         child: Column(
           children: [
             Row(
@@ -99,17 +110,17 @@ class BalanceCard extends StatelessWidget {
                       Text(
                         settlementJustCompleted || !isBalanced
                             ? balanceMessage
-                            : 'Balance en calma',
+                            : (balancedLabel ?? t.balanceCardBalanced),
                         style: TextStyle(
                           color: isBalanced
                               ? statusColor.withValues(alpha: 0.88)
                               : statusColor,
-                          fontSize: 12,
+                          fontSize: compact ? 11.5 : 12,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -0.1,
+                          letterSpacing: 0,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: compact ? 4 : 6),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -130,11 +141,13 @@ class BalanceCard extends StatelessWidget {
                               color: isBalanced
                                   ? theme.textPrimary.withValues(alpha: 0.94)
                                   : statusColor,
-                              fontSize: isBalanced ? 31 : 35,
+                              fontSize: compact
+                                  ? (isBalanced ? 29 : 32)
+                                  : (isBalanced ? 31 : 35),
                               fontWeight: isBalanced
                                   ? FontWeight.w800
                                   : FontWeight.w900,
-                              letterSpacing: -1.2,
+                              letterSpacing: 0,
                             ),
                           ),
                         ],
@@ -175,12 +188,12 @@ class BalanceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            'Equilibrar',
+                            t.balanceCardSettleButton,
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.w800,
                               fontSize: 13,
-                              letterSpacing: -0.2,
+                              letterSpacing: 0,
                             ),
                           ),
                         ],
@@ -211,10 +224,10 @@ class BalanceCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 13),
+            SizedBox(height: compact ? 10 : 13),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 12),
+              padding: EdgeInsets.only(top: compact ? 10 : 12),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
@@ -268,6 +281,7 @@ class BalanceCard extends StatelessWidget {
     bool subdued = false,
   }) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -296,18 +310,20 @@ class BalanceCard extends StatelessWidget {
                       : theme.textPrimary,
                   fontSize: 14.5,
                   fontWeight: subdued ? FontWeight.w700 : FontWeight.w800,
-                  letterSpacing: -0.2,
+                  letterSpacing: 0,
                 ),
               ),
               TextSpan(
-                text: label == 'XP' ? ' XP' : ' coins',
+                text: label == 'XP'
+                    ? ' ${t.balanceCardXpLabel}'
+                    : ' ${t.balanceCardCoinsLabel}',
                 style: TextStyle(
                   color: subdued
                       ? theme.textSecondary.withValues(alpha: 0.82)
                       : theme.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: -0.1,
+                  letterSpacing: 0,
                 ),
               ),
             ],
