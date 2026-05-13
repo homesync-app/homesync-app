@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -263,8 +263,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       _prefillFromScan(result);
 
       // Logging asÃ­ncrono â€” no bloquea la UI ni rompe si falla.
-      final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
-      final householdId = ref.read(currentHouseholdProvider).valueOrNull?.id;
+      final isPremium = ref.read(premiumProvider).value ?? false;
+      final householdId = ref.read(currentHouseholdProvider).value?.id;
       OcrLogService(Supabase.instance.client)
           .logScan(
         merchant: result.merchant,
@@ -340,13 +340,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _matchOcrItemsToShoppingList(List<String> ocrItems) {
     final pending = ref
             .read(shoppingItemsProvider)
-            .valueOrNull
+            .value
             ?.where((item) => !item.completed)
             .toList() ??
         const <ShoppingItemModel>[];
 
     final householdId =
-        ref.read(currentHouseholdProvider).valueOrNull?.id ?? '';
+        ref.read(currentHouseholdProvider).value?.id ?? '';
 
     final result = resolveScanItems(
       ocrItems: ocrItems,
@@ -432,7 +432,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       final caps = ref.read(householdCapabilitiesProvider);
-      final household = ref.read(currentHouseholdProvider).valueOrNull;
+      final household = ref.read(currentHouseholdProvider).value;
       final showSplit = _shouldShowSplitControls(caps);
       final splitResult = ExpenseSplitBuilder.build(
         showSplit: showSplit,
@@ -571,7 +571,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 ? t.expensesFormSavedIncome
                 : t.expensesFormSavedExpense);
         final shoppingMsg = shoppingItemsSynced > 0
-            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ✅'
+            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ?'
             : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -698,14 +698,14 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             shoppingItemsAsync,
                           ),
                           if (_unmatchedOcrItems.isNotEmpty &&
-                              (ref.watch(premiumProvider).valueOrNull ??
+                              (ref.watch(premiumProvider).value ??
                                   false)) ...[
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
                               items: _unmatchedOcrItems,
                               householdId: ref
                                       .read(currentHouseholdProvider)
-                                      .valueOrNull
+                                      .value
                                       ?.id ??
                                   '',
                               onDismiss: () =>
@@ -882,7 +882,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   bool _shouldShowSplitControls(HouseholdCapabilities caps) {
-    final household = ref.read(currentHouseholdProvider).valueOrNull;
+    final household = ref.read(currentHouseholdProvider).value;
     if (household?.householdType == 'family' &&
         household?.financeMode != 'divided') {
       return false;
@@ -1227,11 +1227,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   ) {
     if (_isIncome) return const SizedBox.shrink();
 
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
-
-    if (!isPremium && _scanResult?.detectedItems.isEmpty != false) {
-      return const SizedBox.shrink();
-    }
+    final isPremium = ref.watch(premiumProvider).value ?? false;
 
     return shoppingItemsAsync.when(
       data: (allItems) {
@@ -1412,7 +1408,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
     if (_splitMode == SplitType.equal) {
-      final household = ref.watch(currentHouseholdProvider).valueOrNull;
+      final household = ref.watch(currentHouseholdProvider).value;
       final defaultRatio = household?.defaultSplitRatio ?? 0.5;
 
       if (members.length == 2 && defaultRatio != 0.5) {

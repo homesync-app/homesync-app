@@ -90,9 +90,9 @@ final householdPremiumStatusProvider =
 /// is_premium=true (no migrados aun) deben seguir viendo features pagas. Una
 /// vez completada la migracion, podemos colapsar esto al valor del hogar.
 final effectivePremiumProvider = Provider<bool>((ref) {
-  final household = ref.watch(householdPremiumStatusProvider).valueOrNull;
+  final household = ref.watch(householdPremiumStatusProvider).value;
   if (household != null && household.isPremium) return true;
-  return ref.watch(premiumProvider).valueOrNull ?? false;
+  return ref.watch(premiumProvider).value ?? false;
 });
 
 /// Habilita el bundle "Modo Padres".
@@ -114,7 +114,7 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   if (!isPremium) return false;
 
   final currentUserId = ref.watch(currentUserIdProvider);
-  final members = ref.watch(householdMembersProvider).valueOrNull;
+  final members = ref.watch(householdMembersProvider).value;
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
@@ -129,7 +129,7 @@ final parentModeEligibleProvider = Provider<bool>((ref) {
   if (caps.type != HouseholdType.family) return false;
 
   final currentUserId = ref.watch(currentUserIdProvider);
-  final members = ref.watch(householdMembersProvider).valueOrNull;
+  final members = ref.watch(householdMembersProvider).value;
   if (currentUserId == null || members == null) return false;
 
   final me = members.where((m) => m.userId == currentUserId).firstOrNull;
@@ -143,7 +143,7 @@ final parentModeEligibleProvider = Provider<bool>((ref) {
 /// miembro (parent, guardian, teen, child).
 final currentMemberProvider = Provider<MemberModel?>((ref) {
   final currentUserId = ref.watch(currentUserIdProvider);
-  final members = ref.watch(householdMembersProvider).valueOrNull;
+  final members = ref.watch(householdMembersProvider).value;
   if (currentUserId == null || members == null) return null;
   return members.where((m) => m.userId == currentUserId).firstOrNull;
 });

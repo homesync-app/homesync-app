@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
@@ -18,7 +19,6 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/love_not
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/onboarding/domain/coachmark_step.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
@@ -26,7 +26,6 @@ import 'package:homesync_client/features/onboarding/presentation/providers/tour_
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -162,7 +161,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
@@ -372,7 +371,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
 
@@ -687,9 +686,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
 
     final payerId = isOwedByMe ? currentUserId : partnerId;
     final receiverId = isOwedByMe ? partnerId : currentUserId;
-    final locale = Localizations.localeOf(context).toString();
-    final formattedAmount =
-        NumberFormat.decimalPattern(locale).format(amount.round());
+    final formattedAmount = ref.read(currencyProvider).format(amount);
 
     showDialog<void>(
       context: context,

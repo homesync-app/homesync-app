@@ -35,6 +35,7 @@ class ExpenseSplitModel {
 class ExpenseModel {
   final String id;
   final String title;
+  final String? titleKey;
   final double amount;
   final String? category;
   final String householdId;
@@ -54,6 +55,7 @@ class ExpenseModel {
   const ExpenseModel({
     required this.id,
     required this.title,
+    this.titleKey,
     required this.amount,
     this.category,
     required this.householdId,
@@ -85,6 +87,7 @@ class ExpenseModel {
     return ExpenseModel(
       id: map['id'] as String? ?? '',
       title: map['title'] as String? ?? 'Movimiento',
+      titleKey: map['title_key'] as String?,
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
       category: map['category'] as String?,
       householdId: map['household_id'] as String? ?? '',
@@ -113,6 +116,7 @@ class ExpenseModel {
   Map<String, dynamic> toMap() => {
         'id': id,
         'title': title,
+        'title_key': titleKey,
         'amount': amount,
         'category': category,
         'household_id': householdId,

@@ -82,8 +82,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
             return _EmptyState(theme: theme);
           }
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.invalidate(pendingTaskApprovalsProvider),
+            onRefresh: () async => ref.invalidate(pendingTaskApprovalsProvider),
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               itemCount: items.length,
@@ -206,7 +205,8 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
       // Construimos un TaskModel minimo para reusar approvePendingTask del
       // notifier — solo le importa el id para invocar la RPC.
       final stub = TaskModel.minimalForApproval(id: widget.approval.taskId);
-      final res = await ref.read(tasksProvider.notifier).approvePendingTask(stub);
+      final res =
+          await ref.read(tasksProvider.notifier).approvePendingTask(stub);
       if (!mounted) return;
       if (res != null) {
         _snack(
@@ -266,8 +266,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
               child: Text(t.commonCancel),
             ),
             FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogCtx, controller.text.trim()),
+              onPressed: () => Navigator.pop(dialogCtx, controller.text.trim()),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentRed,
               ),

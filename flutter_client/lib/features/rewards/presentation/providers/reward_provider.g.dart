@@ -6,38 +6,85 @@ part of 'reward_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$filteredRewardsHash() => r'94ca8435b3d86205a52981efc3b6a02023d72666';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [filteredRewards].
-@ProviderFor(filteredRewards)
-final filteredRewardsProvider =
-    AutoDisposeFutureProvider<List<RewardModel>>.internal(
-  filteredRewards,
-  name: r'filteredRewardsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$filteredRewardsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(Rewards)
+final rewardsProvider = RewardsProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FilteredRewardsRef = AutoDisposeFutureProviderRef<List<RewardModel>>;
+final class RewardsProvider
+    extends $AsyncNotifierProvider<Rewards, List<RewardModel>> {
+  RewardsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'rewardsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$rewardsHash();
+
+  @$internal
+  @override
+  Rewards create() => Rewards();
+}
+
 String _$rewardsHash() => r'e3f615c89e51bc7b2ae003efffcaa88d7b7c7e3e';
 
-/// See also [Rewards].
-@ProviderFor(Rewards)
-final rewardsProvider =
-    AutoDisposeAsyncNotifierProvider<Rewards, List<RewardModel>>.internal(
-  Rewards.new,
-  name: r'rewardsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$rewardsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$Rewards extends $AsyncNotifier<List<RewardModel>> {
+  FutureOr<List<RewardModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<AsyncValue<List<RewardModel>>, List<RewardModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<RewardModel>>, List<RewardModel>>,
+        AsyncValue<List<RewardModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$Rewards = AutoDisposeAsyncNotifier<List<RewardModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(filteredRewards)
+final filteredRewardsProvider = FilteredRewardsProvider._();
+
+final class FilteredRewardsProvider extends $FunctionalProvider<
+        AsyncValue<List<RewardModel>>,
+        List<RewardModel>,
+        FutureOr<List<RewardModel>>>
+    with
+        $FutureModifier<List<RewardModel>>,
+        $FutureProvider<List<RewardModel>> {
+  FilteredRewardsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'filteredRewardsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredRewardsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<RewardModel>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<RewardModel>> create(Ref ref) {
+    return filteredRewards(ref);
+  }
+}
+
+String _$filteredRewardsHash() => r'6ef50a30c559fba4b49b08d771ae446828820f7d';

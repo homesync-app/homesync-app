@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/offline/offline_action.dart';
@@ -16,7 +15,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'supabase_reward_repository.g.dart';
 
 @riverpod
-RewardRepository rewardRepository(RewardRepositoryRef ref) {
+RewardRepository rewardRepository(Ref ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(rewardRpcServiceProvider);
   return SupabaseRewardRepository(client: client, rpc: rpc, ref: ref);

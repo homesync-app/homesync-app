@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -310,8 +311,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   }
 
   Widget _buildTaskItem(TaskModel task, AppThemeColors theme) {
-    final members = ref.watch(householdMembersNotifierProvider).valueOrNull ??
-        const <MemberModel>[];
+    final members =
+        ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
@@ -391,8 +392,8 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     required bool requiresApproval,
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final members = ref.read(householdMembersNotifierProvider).valueOrNull ??
-        const <MemberModel>[];
+    final members =
+        ref.read(householdMembersProvider).value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final t = AppLocalizations.of(context);
@@ -675,6 +676,23 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
       log.i(
         '[family] task completion success id=${task.id} queued=${result.queued} message=${result.message}',
+      );
+      HapticFeedback.heavyImpact();
+      final t = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            t.tasksSnackCompleted,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
       );
       ref.invalidate(statsControllerProvider);
       ref.invalidate(tasksProvider);

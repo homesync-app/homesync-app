@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -6,7 +8,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-class BalanceCard extends StatelessWidget {
+class BalanceCard extends ConsumerWidget {
   final int coins;
   final int xp;
   final double? userBalance;
@@ -33,13 +35,14 @@ class BalanceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final balance = userBalance ?? 0.0;
     final isPositive = balance > 0.01;
     final isNegative = balance < -0.01;
     final isBalanced = !isPositive && !isNegative;
     final theme = context.theme;
     final t = AppLocalizations.of(context);
+    final currency = ref.watch(currencyProvider);
 
     final statusColor = isNegative ? AppColors.accentOrange : AppColors.sage;
     final surfaceColor = settlementJustCompleted
@@ -126,8 +129,10 @@ class BalanceCard extends StatelessWidget {
                         children: [
                           Text(
                             isBalanced
-                                ? '\$ '
-                                : (isNegative ? '- \$ ' : '+ \$ '),
+                                ? currency.inputPrefix()
+                                : (isNegative
+                                    ? '- ${currency.inputPrefix()}'
+                                    : '+ ${currency.inputPrefix()}'),
                             style: TextStyle(
                               color:
                                   isBalanced ? theme.textPrimary : statusColor,
@@ -137,6 +142,7 @@ class BalanceCard extends StatelessWidget {
                           ),
                           _AnimatedDigitCounter(
                             value: balance.abs(),
+                            locale: currency.locale,
                             style: TextStyle(
                               color: isBalanced
                                   ? theme.textPrimary.withValues(alpha: 0.94)
@@ -374,10 +380,12 @@ class _BalanceSuccessBadge extends StatelessWidget {
 
 class _AnimatedDigitCounter extends StatelessWidget {
   final double value;
+  final String locale;
   final TextStyle style;
 
   const _AnimatedDigitCounter({
     required this.value,
+    required this.locale,
     required this.style,
   });
 
@@ -388,8 +396,9 @@ class _AnimatedDigitCounter extends StatelessWidget {
       duration: const Duration(milliseconds: 1500),
       curve: Curves.easeOutExpo,
       builder: (context, val, child) {
-        final formatted =
-            NumberFormat.decimalPattern('es_AR').format(val.round());
+        final formatted = NumberFormat.decimalPattern(locale).format(
+          val.round(),
+        );
         return Text(formatted, style: style);
       },
     );

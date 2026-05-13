@@ -118,37 +118,41 @@ void main() {
   group('✅ Tasks — Model & Status Logic', () {
     test('Active task is eligible for completion', () {
       final task = TaskModel(
-          id: '1',
-          title: 'Lavar platos',
-          status: 'active',
-          category: 'kitchen',);
+        id: '1',
+        title: 'Lavar platos',
+        status: 'active',
+        category: 'kitchen',
+      );
       expect(task.canComplete, isTrue);
     });
 
     test('Pending verification task cannot be completed again', () {
       final task = TaskModel(
-          id: '2',
-          title: 'Limpiar baño',
-          status: 'pending_verification',
-          category: 'bathroom',);
+        id: '2',
+        title: 'Limpiar baño',
+        status: 'pending_verification',
+        category: 'bathroom',
+      );
       expect(task.canComplete, isFalse);
     });
 
     test('Verified task cannot be completed', () {
       final task = TaskModel(
-          id: '3',
-          title: 'Hacer cama',
-          status: 'verified',
-          category: 'bedroom',);
+        id: '3',
+        title: 'Hacer cama',
+        status: 'verified',
+        category: 'bedroom',
+      );
       expect(task.canComplete, isFalse);
     });
 
     test('Objected task goes back to active', () {
       final task = TaskModel(
-          id: '4',
-          title: 'Sacar basura',
-          status: 'objected',
-          category: 'general',);
+        id: '4',
+        title: 'Sacar basura',
+        status: 'objected',
+        category: 'general',
+      );
       expect(task.canRedo, isTrue);
     });
 
@@ -170,12 +174,13 @@ void main() {
 
     test('Task XP reward is non-negative', () {
       final task = TaskModel(
-          id: '5',
-          title: 'Test',
-          status: 'active',
-          category: 'general',
-          xpReward: 20,
-          coinReward: 10,);
+        id: '5',
+        title: 'Test',
+        status: 'active',
+        category: 'general',
+        xpReward: 20,
+        coinReward: 10,
+      );
       expect(task.xpReward, greaterThanOrEqualTo(0));
       expect(task.coinReward, greaterThanOrEqualTo(0));
     });
@@ -224,17 +229,22 @@ void main() {
 
     test('Non-recurring task has no recurrenceType', () {
       final task = TaskModel(
-          id: '1', title: 'One-time', status: 'active', category: 'general',);
+        id: '1',
+        title: 'One-time',
+        status: 'active',
+        category: 'general',
+      );
       expect(task.isRecurring, isFalse);
     });
 
     test('Recurring task has recurrenceType set', () {
       final task = TaskModel(
-          id: '2',
-          title: 'Weekly',
-          status: 'active',
-          category: 'general',
-          recurrenceType: 'weekly',);
+        id: '2',
+        title: 'Weekly',
+        status: 'active',
+        category: 'general',
+        recurrenceType: 'weekly',
+      );
       expect(task.isRecurring, isTrue);
     });
 
@@ -332,7 +342,12 @@ void main() {
   group('🎁 Rewards — Store Logic', () {
     test('User can afford reward if coins >= cost', () {
       final reward = Reward(
-          id: '1', title: 'Pizza', cost: 50, icon: '🍕', isCustom: false,);
+        id: '1',
+        title: 'Pizza',
+        cost: 50,
+        icon: '🍕',
+        isCustom: false,
+      );
       expect(reward.canAfford(100), isTrue);
       expect(reward.canAfford(50), isTrue);
       expect(reward.canAfford(49), isFalse);
@@ -429,9 +444,13 @@ void main() {
         {'category': 'cleaning', 'completed_count': 2, 'total_xp': 40},
       ];
       final totalTasks = taskStats.fold<int>(
-          0, (s, e) => s + ((e['completed_count'] as num).toInt()),);
+        0,
+        (s, e) => s + ((e['completed_count'] as num).toInt()),
+      );
       final totalXp = taskStats.fold<int>(
-          0, (s, e) => s + ((e['total_xp'] as num).toInt()),);
+        0,
+        (s, e) => s + ((e['total_xp'] as num).toInt()),
+      );
       expect(totalTasks, equals(10));
       expect(totalXp, equals(200));
     });
@@ -454,10 +473,11 @@ void main() {
         {'user': 'u1', 'tasks_completed': 10},
         {'user': 'u2', 'tasks_completed': 15},
       ];
-      final mvp = members.reduce((a, b) =>
-          (a['tasks_completed'] as int) >= (b['tasks_completed'] as int)
-              ? a
-              : b,);
+      final mvp = members.reduce(
+        (a, b) => (a['tasks_completed'] as int) >= (b['tasks_completed'] as int)
+            ? a
+            : b,
+      );
       expect(mvp['user'], equals('u2'));
     });
   });
@@ -476,14 +496,22 @@ void main() {
     });
 
     test('getLabel returns readable text for each type', () {
-      expect(TransactionHelper.getLabel('coins_earned', null),
-          equals('Tarea completada'),);
-      expect(TransactionHelper.getLabel('coin_transfer', null),
-          equals('Coins enviados'),);
-      expect(TransactionHelper.getLabel('coin_received', null),
-          equals('Coins recibidos'),);
-      expect(TransactionHelper.getLabel('reward_redemption', null),
-          equals('Canje de premio'),);
+      expect(
+        TransactionHelper.getLabel('coins_earned', null),
+        equals('Tarea completada'),
+      );
+      expect(
+        TransactionHelper.getLabel('coin_transfer', null),
+        equals('Coins enviados'),
+      );
+      expect(
+        TransactionHelper.getLabel('coin_received', null),
+        equals('Coins recibidos'),
+      );
+      expect(
+        TransactionHelper.getLabel('reward_redemption', null),
+        equals('Canje de premio'),
+      );
     });
 
     test('Positive transaction amount returns isPositive=true', () {
@@ -603,7 +631,9 @@ class HouseholdJoinSimulator {
     }
     if (user.householdId == targetHouseholdId) {
       return JoinResult(
-          success: false, errorMessage: 'ya perteneces a este hogar',);
+        success: false,
+        errorMessage: 'ya perteneces a este hogar',
+      );
     }
     return JoinResult(
       success: true,
@@ -699,7 +729,11 @@ class RecurrenceCalculator {
         return current.add(Duration(days: interval * 7));
       case 'monthly':
         return DateTime(
-            current.year, current.month + interval, current.day, current.hour,);
+          current.year,
+          current.month + interval,
+          current.day,
+          current.hour,
+        );
       default:
         return current;
     }
@@ -728,8 +762,10 @@ class ExpenseSplit {
   final double perPerson;
   ExpenseSplit._({required this.perPerson});
 
-  static ExpenseSplit equal(
-          {required double amount, required int memberCount,}) =>
+  static ExpenseSplit equal({
+    required double amount,
+    required int memberCount,
+  }) =>
       ExpenseSplit._(perPerson: amount / memberCount);
 }
 
@@ -738,8 +774,11 @@ class FakeExpense {
   final String paidBy;
   final List<String> splitBetween;
 
-  FakeExpense(
-      {required this.amount, required this.paidBy, required this.splitBetween,});
+  FakeExpense({
+    required this.amount,
+    required this.paidBy,
+    required this.splitBetween,
+  });
 
   double amountOwedBy(String userId) {
     final share = amount / splitBetween.length;
@@ -779,8 +818,10 @@ class BalanceCalculator {
     return result;
   }
 
-  static double afterSettlement(
-          {required double currentBalance, required double settledAmount,}) =>
+  static double afterSettlement({
+    required double currentBalance,
+    required double settledAmount,
+  }) =>
       currentBalance + settledAmount;
 }
 
@@ -812,8 +853,11 @@ class CustomRewardInput {
   final int cost;
   final String icon;
 
-  CustomRewardInput(
-      {required this.title, required this.cost, required this.icon,});
+  CustomRewardInput({
+    required this.title,
+    required this.cost,
+    required this.icon,
+  });
 
   bool get isValid => title.trim().isNotEmpty && cost > 0;
 }

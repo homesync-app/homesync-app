@@ -8,20 +8,21 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'dashboard_provider.g.dart';
 
 @riverpod
-DashboardRepository dashboardRepository(DashboardRepositoryRef ref) {
+DashboardRepository dashboardRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseDashboardRepository(client, ref);
 }
 
 @riverpod
 GetRecentActivityUseCase getRecentActivityUseCase(
-    GetRecentActivityUseCaseRef ref,) {
+  Ref ref,
+) {
   final repository = ref.watch(dashboardRepositoryProvider);
   return GetRecentActivityUseCase(repository);
 }
 
 @riverpod
-Stream<List<Map<String, dynamic>>> recentActivity(RecentActivityRef ref) {
+Stream<List<Map<String, dynamic>>> recentActivity(Ref ref) {
   final householdIdAsync = ref.watch(householdIdProvider);
 
   return householdIdAsync.when(

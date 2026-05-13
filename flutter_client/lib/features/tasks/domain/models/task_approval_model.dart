@@ -33,8 +33,7 @@ class TaskApprovalModel {
       taskId: map['task_id'] as String,
       taskTitle: (map['task_title'] as String?) ?? '',
       submittedBy: map['submitted_by'] as String,
-      submittedByName:
-          (map['submitted_by_name'] as String?) ?? 'Miembro',
+      submittedByName: (map['submitted_by_name'] as String?) ?? 'Miembro',
       performers: performersRaw is List
           ? performersRaw.map((e) => e.toString()).toList()
           : const <String>[],

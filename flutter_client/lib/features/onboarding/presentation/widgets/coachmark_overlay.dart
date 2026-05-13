@@ -148,8 +148,9 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
                 top: MediaQuery.of(context).padding.top + 10,
                 right: 16,
                 child: _SkipButton(
-                  onTap: () =>
-                      ref.read(coupleHomeTourControllerProvider.notifier).skip(),
+                  onTap: () => ref
+                      .read(coupleHomeTourControllerProvider.notifier)
+                      .skip(),
                 ),
               ),
             // Progress dots (top-center).
@@ -165,8 +166,13 @@ class _CoachmarkOverlayState extends ConsumerState<CoachmarkOverlay>
               ),
             ),
             // Step content.
-            ..._buildStepContent(context, step, targetRect, steps.length,
-                tourState.currentStep,),
+            ..._buildStepContent(
+              context,
+              step,
+              targetRect,
+              steps.length,
+              tourState.currentStep,
+            ),
             // Confetti (only finale).
             if (step.kind == CoachmarkStepKind.finale)
               Align(
@@ -328,10 +334,7 @@ class _ModalCard extends StatelessWidget {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 260.ms, curve: Curves.easeOutCubic)
-        .scale(
+    ).animate().fadeIn(duration: 260.ms, curve: Curves.easeOutCubic).scale(
           begin: const Offset(0.94, 0.94),
           end: const Offset(1, 1),
           duration: 320.ms,
@@ -374,9 +377,7 @@ class _ModalIllustration extends StatelessWidget {
         color: Colors.white,
         size: 42,
       ),
-    )
-        .animate(onPlay: (c) => c.repeat(reverse: true))
-        .scaleXY(
+    ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(
           begin: 1.0,
           end: 1.04,
           duration: 1800.ms,
@@ -698,10 +699,7 @@ class _TooltipCard extends StatelessWidget {
           ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 240.ms, curve: Curves.easeOutCubic)
-        .slideY(
+    ).animate().fadeIn(duration: 240.ms, curve: Curves.easeOutCubic).slideY(
           begin: 0.04,
           end: 0,
           duration: 320.ms,
@@ -819,8 +817,7 @@ class _PrimaryCta extends StatelessWidget {
             boxShadow: shadows,
           ),
           child: Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+            padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

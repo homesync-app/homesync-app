@@ -41,7 +41,8 @@ class ExpenseSplitBuilder {
       if (financeMembers.length == 2 && defaultRatio != 0.5) {
         final splits = financeMembers.map((member) {
           final isCurrentUser = member.userId == currentUserId;
-          final memberRatio = isCurrentUser ? defaultRatio : (1.0 - defaultRatio);
+          final memberRatio =
+              isCurrentUser ? defaultRatio : (1.0 - defaultRatio);
           return {
             'user_id': member.userId,
             'amount': amount * memberRatio,
@@ -54,16 +55,19 @@ class ExpenseSplitBuilder {
       if (selectedMembers.isEmpty) {
         return const ExpenseSplitBuildResult(
           splits: [],
-          validationMessage: 'Debes seleccionar al menos un miembro para dividir.',
+          validationMessage:
+              'Debes seleccionar al menos un miembro para dividir.',
         );
       }
 
       final splitAmount = amount / selectedMembers.length;
       final splits = selectedMembers
-          .map((memberId) => {
-                'user_id': memberId,
-                'amount': splitAmount,
-              },)
+          .map(
+            (memberId) => {
+              'user_id': memberId,
+              'amount': splitAmount,
+            },
+          )
           .toList();
 
       return ExpenseSplitBuildResult(splits: splits);

@@ -237,7 +237,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                             if (suggestions.isNotEmpty) ...[
                               const SizedBox(height: 28),
                               _buildPendingProposalsSection(
-                                  suggestions, currentUserId,),
+                                suggestions,
+                                currentUserId,
+                              ),
                             ],
                             if (rawRewards.isLoadingMore) ...[
                               const SizedBox(height: 20),
@@ -263,8 +265,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                         ),
                       );
                     },
-                    loading: () =>
-                        AppLoadingState(message: t.rewardsLoading),
+                    loading: () => AppLoadingState(message: t.rewardsLoading),
                     error: (e, _) => AppErrorState(
                       message: t.rewardsLoadError(e.toString()),
                       onRetry: () => ref.invalidate(paginatedRewardsProvider),
@@ -492,7 +493,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Widget _buildPendingProposalsSection(
-      List<RewardModel> suggestions, String? currentUserId,) {
+    List<RewardModel> suggestions,
+    String? currentUserId,
+  ) {
     final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +572,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                       icon: isMine
                           ? Icons.hourglass_top_rounded
                           : Icons.mark_email_unread_outlined,
-                      label: isMine ? t.rewardsStatusPending : t.rewardsStatusReview,
+                      label: isMine
+                          ? t.rewardsStatusPending
+                          : t.rewardsStatusReview,
                       color: accent,
                       background: accent.withValues(alpha: 0.10),
                     ),
@@ -988,7 +993,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Future<void> _handleChallengeCompletion(
-      CoupleChallenge challenge, String householdId,) async {
+    CoupleChallenge challenge,
+    String householdId,
+  ) async {
     final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
@@ -1027,15 +1034,18 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Future<void> _executeChallengeCompletion(
-      CoupleChallenge challenge, String householdId,) async {
+    CoupleChallenge challenge,
+    String householdId,
+  ) async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
+    final t = AppLocalizations.of(context);
     try {
-      final members = ref.read(householdMembersNotifierProvider).value ?? [];
+      final members = ref.read(householdMembersProvider).value ?? [];
 
       final userIds = members.map((m) => m.userId).toList();
 
@@ -1045,14 +1055,18 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         userIds.add(currentUserId);
       }
 
+      final challengeTitle = challenge.localizedTitle(t);
+      final challengeDescription = challenge.localizedDescription(t);
+      final challengeCategory = challenge.localizedCategory(t);
+
       final taskRpc = TaskRpcService(
         clientOverride: ref.read(supabaseClientProvider),
       );
 
       final newTaskId = await taskRpc.createTask(
-        title: 'Desafío: ${challenge.title}',
-        description: challenge.description,
-        category: 'Conexión',
+        title: t.rewardsChallengeTitle(challengeTitle),
+        description: challengeDescription,
+        category: challengeCategory,
         coinReward: challenge.coinReward,
         xpReward: 10,
         type: 'one_time',
@@ -1062,7 +1076,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       await rpc.completeTaskTransaction(
         taskId: newTaskId,
-        taskTitle: 'Desafío: ${challenge.title}',
+        taskTitle: t.rewardsChallengeTitle(challengeTitle),
         xpReward: 10,
         coinReward: challenge.coinReward,
         householdId: householdId,
@@ -1075,10 +1089,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       SuccessCelebration.show(
         context,
-        title: 'Desafío completado',
-        message:
-            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexión.',
-        icon: 'âœ¨',
+        title: t.rewardsChallengeCompleted,
+        message: t.rewardsChallengeCompletedBody(challenge.coinReward),
+        icon: '\u2728',
       );
 
       ref.invalidate(userBalanceProvider);
@@ -1091,7 +1104,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al completar el desafío: $e'),
+          content: Text(t.rewardsChallengeError(e.toString())),
           backgroundColor: AppColors.error,
         ),
       );

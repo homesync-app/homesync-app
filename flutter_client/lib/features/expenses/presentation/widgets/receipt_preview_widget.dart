@@ -21,8 +21,10 @@ class ReceiptPreviewWidget extends StatelessWidget {
     this.localPath,
     this.signedUrl,
     this.onRemove,
-  }) : assert(localPath != null || signedUrl != null,
-            'Debe proveer localPath o signedUrl',);
+  }) : assert(
+          localPath != null || signedUrl != null,
+          'Debe proveer localPath o signedUrl',
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,9 @@ class ReceiptPreviewWidget extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3), width: 1.5,),
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
             clipBehavior: Clip.antiAlias,
             child: imageWidget,
@@ -73,8 +77,11 @@ class ReceiptPreviewWidget extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.cancel,
-                      size: 18, color: AppColors.error,),
+                  child: const Icon(
+                    Icons.cancel,
+                    size: 18,
+                    color: AppColors.error,
+                  ),
                 ),
               ),
             ),
@@ -118,8 +125,10 @@ class ReceiptPreviewWidget extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.black,
             foregroundColor: Colors.white,
-            title: const Text('Ticket',
-                style: TextStyle(color: Colors.white),),
+            title: const Text(
+              'Ticket',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           body: Center(
             child: InteractiveViewer(

@@ -110,7 +110,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
 
   Future<void> _loadMembers() async {
     try {
-      final members = await ref.read(householdMembersNotifierProvider.future);
+      final members = await ref.read(householdMembersProvider.future);
       setState(() {
         _members = members
             .map((member) => member.toMap())
@@ -779,11 +779,17 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildCustomModeTab(
-                      t.createTaskCustomTabWeekdays, 'weekdays',),
+                    t.createTaskCustomTabWeekdays,
+                    'weekdays',
+                  ),
                   _buildCustomModeTab(
-                      t.createTaskCustomTabInterval, 'interval',),
+                    t.createTaskCustomTabInterval,
+                    'interval',
+                  ),
                   _buildCustomModeTab(
-                      t.createTaskCustomTabMonthDays, 'month_days',),
+                    t.createTaskCustomTabMonthDays,
+                    'month_days',
+                  ),
                 ],
               );
             },

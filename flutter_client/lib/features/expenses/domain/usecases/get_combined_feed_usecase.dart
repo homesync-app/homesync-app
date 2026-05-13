@@ -12,7 +12,8 @@ class GetCombinedFeedUseCase {
   Future<Either<Failure, List<FeedItemModel>>> call(String householdId) async {
     if (householdId.isEmpty) {
       return left(
-          const ValidationFailure('El ID del hogar no puede estar vacío'),);
+        const ValidationFailure('El ID del hogar no puede estar vacío'),
+      );
     }
     return await _repository.getCombinedFeed(householdId);
   }

@@ -86,4 +86,3 @@ String generateOfflineRequestId() {
   final rand = Random().nextInt(1000);
   return '$now-$rand';
 }
-

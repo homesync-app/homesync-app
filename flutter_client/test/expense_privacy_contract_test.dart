@@ -3,7 +3,8 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 
 void main() {
   group('Expense privacy contract', () {
-    test('infers private when split_type is personal and is_shared omitted', () {
+    test('infers private when split_type is personal and is_shared omitted',
+        () {
       final model = ExpenseModel.fromJson({
         'id': 'exp-1',
         'title': 'Gasto personal',

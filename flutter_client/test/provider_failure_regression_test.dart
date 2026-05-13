@@ -225,8 +225,10 @@ class _FailingSavingsRepository implements SavingsRepository {
 
 class _FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
-  RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
+  RealtimeChannel channel(
+    String name, {
+    RealtimeChannelConfig opts = const RealtimeChannelConfig(),
+  }) =>
       _FakeRealtimeChannel();
 }
 
@@ -242,10 +244,10 @@ class _FakeRealtimeChannel extends Fake implements RealtimeChannel {
       this;
 
   @override
-  RealtimeChannel subscribe(
-          [void Function(RealtimeSubscribeStatus status, Object? error)?
-              callback,
-          Duration? timeout,]) =>
+  RealtimeChannel subscribe([
+    void Function(RealtimeSubscribeStatus status, Object? error)? callback,
+    Duration? timeout,
+  ]) =>
       this;
 
   @override
@@ -257,78 +259,99 @@ void main() {
       () async {
     final container = ProviderContainer(
       overrides: [
-        expenseRepositoryProvider.overrideWithValue(_FailingExpenseRepository()),
+        expenseRepositoryProvider
+            .overrideWithValue(_FailingExpenseRepository()),
         householdIdProvider.overrideWith((ref) => 'h1'),
       ],
     );
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(expenseControllerProvider.future),
-      throwsA(
-        isA<ServerFailure>().having(
-          (failure) => failure.message,
-          'message',
-          'expense repo boom',
-        ),
+    final subscription = container.listen(
+      expenseControllerProvider,
+      (_, __) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    await container.pump();
+    await container.pump();
+
+    final state = subscription.read();
+    expect(state.hasError, isTrue);
+    expect(
+      state.error,
+      isA<ServerFailure>().having(
+        (failure) => failure.message,
+        'message',
+        'expense repo boom',
       ),
     );
-
-    final state = container.read(expenseControllerProvider);
-    expect(state.hasError, isTrue);
-    expect(state.error, isA<ServerFailure>());
   });
 
   test('shoppingItemsProvider exposes ServerFailure as provider error',
       () async {
     final container = ProviderContainer(
       overrides: [
-        shoppingRepositoryProvider.overrideWithValue(_FailingShoppingRepository()),
+        shoppingRepositoryProvider
+            .overrideWithValue(_FailingShoppingRepository()),
         householdIdProvider.overrideWith((ref) => 'h1'),
         supabaseClientProvider.overrideWithValue(_FakeSupabaseClient()),
       ],
     );
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(shoppingItemsProvider.future),
-      throwsA(
-        isA<ServerFailure>().having(
-          (failure) => failure.message,
-          'message',
-          'shopping repo boom',
-        ),
+    final subscription = container.listen(
+      shoppingItemsProvider,
+      (_, __) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    await container.pump();
+    await container.pump();
+
+    final state = subscription.read();
+    expect(state.hasError, isTrue);
+    expect(
+      state.error,
+      isA<ServerFailure>().having(
+        (failure) => failure.message,
+        'message',
+        'shopping repo boom',
       ),
     );
-
-    final state = container.read(shoppingItemsProvider);
-    expect(state.hasError, isTrue);
-    expect(state.error, isA<ServerFailure>());
   });
 
   test('savingsGoalsProvider exposes ServerFailure as provider error',
       () async {
     final container = ProviderContainer(
       overrides: [
-        savingsRepositoryProvider.overrideWithValue(_FailingSavingsRepository()),
+        savingsRepositoryProvider
+            .overrideWithValue(_FailingSavingsRepository()),
         householdIdProvider.overrideWith((ref) => 'h1'),
       ],
     );
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(savingsGoalsProvider.future),
-      throwsA(
-        isA<ServerFailure>().having(
-          (failure) => failure.message,
-          'message',
-          'savings repo boom',
-        ),
+    final subscription = container.listen(
+      savingsGoalsProvider,
+      (_, __) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    await container.pump();
+    await container.pump();
+
+    final state = subscription.read();
+    expect(state.hasError, isTrue);
+    expect(
+      state.error,
+      isA<ServerFailure>().having(
+        (failure) => failure.message,
+        'message',
+        'savings repo boom',
       ),
     );
-
-    final state = container.read(savingsGoalsProvider);
-    expect(state.hasError, isTrue);
-    expect(state.error, isA<ServerFailure>());
   });
 }

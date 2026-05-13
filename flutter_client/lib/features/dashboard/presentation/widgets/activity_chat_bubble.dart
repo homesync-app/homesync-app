@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
@@ -9,7 +10,9 @@ import 'package:homesync_client/features/expenses/domain/models/expense_model.da
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_detail_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -37,7 +40,7 @@ class ActivityChatBubble extends ConsumerWidget {
 
     final category = data['category'] as String?;
     final title = _displayTitle(
-      data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad',
+      _localizedActivityTitle(context, data),
       category,
     );
     final userName = (data['user_name'] as String?)?.trim();
@@ -210,7 +213,7 @@ class ActivityChatBubble extends ConsumerWidget {
                         ),
                         if (amount != null)
                           _activityMetaPill(
-                            label: _formatCurrency(amount),
+                            label: _formatCurrency(ref, amount),
                             color: accent,
                             icon: Icons.payments_rounded,
                             theme: theme,
@@ -229,7 +232,8 @@ class ActivityChatBubble extends ConsumerWidget {
                             icon: Icons.monetization_on_rounded,
                             theme: theme,
                           ),
-                        if (type == 'reward' && _readInt(data['reward_cost']) != null)
+                        if (type == 'reward' &&
+                            _readInt(data['reward_cost']) != null)
                           _activityMetaPill(
                             label: '-${_readInt(data['reward_cost'])} coins',
                             color: AppColors.accentGold,
@@ -434,8 +438,23 @@ class ActivityChatBubble extends ConsumerWidget {
     return normalized;
   }
 
-  String _formatCurrency(double amount) {
-    return '\$ ${NumberFormat.decimalPattern('es_AR').format(amount.round())}';
+  String _formatCurrency(WidgetRef ref, double amount) {
+    return ref.read(currencyProvider).format(amount);
+  }
+
+  String _localizedActivityTitle(
+    BuildContext context,
+    Map<String, dynamic> data,
+  ) {
+    final fallback = data['task_title'] ??
+        data['title'] ??
+        data['description'] ??
+        'Actividad';
+    return localizedTaskCatalogText(
+      AppLocalizations.of(context),
+      data['title_key'] as String?,
+      fallback.toString(),
+    );
   }
 
   String _formatTime(DateTime time) {

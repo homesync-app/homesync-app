@@ -89,7 +89,8 @@ Map<String, dynamic> _rewardJson(int index) {
 }
 
 void main() {
-  test('paginatedRewardsProvider loads another page and updates hasMore', () async {
+  test('paginatedRewardsProvider loads another page and updates hasMore',
+      () async {
     final container = ProviderContainer(
       overrides: [
         rewardRepositoryProvider.overrideWith(
@@ -109,7 +110,7 @@ void main() {
 
     await container.read(paginatedRewardsProvider.notifier).loadMore();
 
-    final paged = container.read(paginatedRewardsProvider).valueOrNull;
+    final paged = container.read(paginatedRewardsProvider).value;
     expect(paged, isNotNull);
     expect(paged!.items, hasLength(25));
     expect(paged.hasMore, isFalse);

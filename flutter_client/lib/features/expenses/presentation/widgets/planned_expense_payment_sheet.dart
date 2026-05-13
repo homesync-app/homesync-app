@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -46,8 +47,8 @@ class _PlannedExpensePaymentSheetState
   void initState() {
     super.initState();
     final initialAmount = widget.plannedExpense.amount.toInt();
-    _amountController.text = NumberFormat.decimalPattern('es_ES')
-        .format(initialAmount);
+    _amountController.text =
+        NumberFormat.decimalPattern('es_ES').format(initialAmount);
     _paidBy = widget.plannedExpense.payerId;
   }
 
@@ -83,13 +84,14 @@ class _PlannedExpensePaymentSheetState
         _amountController.text.replaceAll('.', '').replaceAll(',', ''),
       );
 
-      final result =
-          await ref.read(combinedFeedControllerProvider.notifier).payPlannedExpense(
-                plannedId: widget.plannedExpense.id,
-                amount: amount,
-                paidAt: _paidAt,
-                paidBy: _paidBy,
-              );
+      final result = await ref
+          .read(combinedFeedControllerProvider.notifier)
+          .payPlannedExpense(
+            plannedId: widget.plannedExpense.id,
+            amount: amount,
+            paidAt: _paidAt,
+            paidBy: _paidBy,
+          );
 
       if (!mounted) return;
 
@@ -135,7 +137,8 @@ class _PlannedExpensePaymentSheetState
           child: Center(child: CircularProgressIndicator()),
         ),
         error: (e, _) => Center(
-          child: Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
+          child:
+              Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
         ),
         data: (List<MemberModel> members) {
           if (_paidBy.isEmpty && members.isNotEmpty) {
@@ -169,8 +172,8 @@ class _PlannedExpensePaymentSheetState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)
-                      .expensesPlannedPaymentSubtitle(widget.plannedExpense.title),
+                  AppLocalizations.of(context).expensesPlannedPaymentSubtitle(
+                      widget.plannedExpense.title,),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
@@ -217,7 +220,7 @@ class _PlannedExpensePaymentSheetState
             color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
-            prefixText: '\$ ',
+            prefixText: ref.watch(currencyProvider).inputPrefix(),
             filled: true,
             fillColor: AppColors.surface,
             border: OutlineInputBorder(
@@ -340,8 +343,11 @@ class _PlannedExpensePaymentSheetState
                     m.displayName.split(' ')[0],
                     style: TextStyle(
                       fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                      fontWeight:
+                          isSelected ? FontWeight.w900 : FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -362,7 +368,8 @@ class _PlannedExpensePaymentSheetState
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.textPrimary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
         ),
         child: _isLoading
@@ -375,4 +382,3 @@ class _PlannedExpensePaymentSheetState
     );
   }
 }
-

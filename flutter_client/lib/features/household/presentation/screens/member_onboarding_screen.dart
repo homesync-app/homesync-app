@@ -78,8 +78,10 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
     setState(() => _isLoadingRoles = true);
     try {
       final client = ref.read(supabaseClientProvider);
-      final result = await client.rpc('get_available_family_roles',
-          params: {'p_household_id': householdId},);
+      final result = await client.rpc(
+        'get_available_family_roles',
+        params: {'p_household_id': householdId},
+      );
       final roles =
           result == null ? <String>[] : (result as List).cast<String>();
       if (roles.isEmpty) {
@@ -169,7 +171,7 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
       }
 
       ref.invalidate(memberOnboardingProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       ref.invalidate(householdMembersProvider);
       ref.invalidate(userProfileProvider);
 

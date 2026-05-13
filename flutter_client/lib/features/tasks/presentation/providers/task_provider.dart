@@ -26,17 +26,17 @@ part 'task_provider.g.dart';
 // ── Use Case Providers ────────────────────────────────────────────────────────
 
 @riverpod
-GetTasksUseCase getTasksUseCase(GetTasksUseCaseRef ref) {
+GetTasksUseCase getTasksUseCase(Ref ref) {
   return GetTasksUseCase(ref.watch(taskRepositoryProvider));
 }
 
 @riverpod
-CompleteTaskUseCase completeTaskUseCase(CompleteTaskUseCaseRef ref) {
+CompleteTaskUseCase completeTaskUseCase(Ref ref) {
   return CompleteTaskUseCase(ref.watch(taskRepositoryProvider));
 }
 
 @riverpod
-CreateTaskUseCase createTaskUseCase(CreateTaskUseCaseRef ref) {
+CreateTaskUseCase createTaskUseCase(Ref ref) {
   return CreateTaskUseCase(ref.watch(taskRepositoryProvider));
 }
 
@@ -134,7 +134,7 @@ class Tasks extends _$Tasks {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<List<TaskModel>>().copyWithPrevious(state);
+    state = const AsyncLoading<List<TaskModel>>();
     state = await AsyncValue.guard(() => build());
   }
 
@@ -611,7 +611,7 @@ class Tasks extends _$Tasks {
 // ── Derived / Filtered Providers ──────────────────────────────────────────────
 
 @riverpod
-AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
+AsyncValue<List<TaskModel>> filteredTasks(Ref ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final selectedCategories = ref.watch(taskCategoryFilterProvider);
   final searchQuery = ref.watch(taskSearchQueryProvider);
@@ -635,7 +635,7 @@ AsyncValue<List<TaskModel>> filteredTasks(FilteredTasksRef ref) {
 }
 
 @riverpod
-AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
+AsyncValue<List<String>> activeCategories(Ref ref) {
   final tasksAsync = ref.watch(tasksProvider);
   return tasksAsync.whenData((tasks) {
     final activeSet = <String>{};
@@ -649,11 +649,11 @@ AsyncValue<List<String>> activeCategories(ActiveCategoriesRef ref) {
 }
 
 @riverpod
-AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
+AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
   final caps = ref.watch(householdCapabilitiesProvider);
-  final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
+  final members = ref.watch(householdMembersProvider).value ?? const [];
   final currentMember =
       members.where((member) => member.userId == currentUserId).firstOrNull;
   final isFamilyMode = caps.type == HouseholdType.family;
@@ -732,7 +732,7 @@ AsyncValue<List<TaskModel>> todayTasks(TodayTasksRef ref) {
 }
 
 @riverpod
-Map<String, int> taskStatusCount(TaskStatusCountRef ref) {
+Map<String, int> taskStatusCount(Ref ref) {
   final tasksAsync = ref.watch(tasksProvider);
   return tasksAsync.maybeWhen(
     data: (tasks) {

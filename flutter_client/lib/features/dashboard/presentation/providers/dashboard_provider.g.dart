@@ -6,63 +6,131 @@ part of 'dashboard_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dashboardRepositoryHash() =>
-    r'f6248dcdae244fcabf566addf9e58d76e3338db0';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [dashboardRepository].
 @ProviderFor(dashboardRepository)
-final dashboardRepositoryProvider =
-    AutoDisposeProvider<DashboardRepository>.internal(
-  dashboardRepository,
-  name: r'dashboardRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$dashboardRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final dashboardRepositoryProvider = DashboardRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DashboardRepositoryRef = AutoDisposeProviderRef<DashboardRepository>;
-String _$getRecentActivityUseCaseHash() =>
-    r'ef09facd05b3e67ceb73f30f30df053b5d5cde89';
+final class DashboardRepositoryProvider extends $FunctionalProvider<
+    DashboardRepository,
+    DashboardRepository,
+    DashboardRepository> with $Provider<DashboardRepository> {
+  DashboardRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'dashboardRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getRecentActivityUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$dashboardRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<DashboardRepository> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DashboardRepository create(Ref ref) {
+    return dashboardRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DashboardRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DashboardRepository>(value),
+    );
+  }
+}
+
+String _$dashboardRepositoryHash() =>
+    r'66954bc9f173839741c4d056059dd1d720911921';
+
 @ProviderFor(getRecentActivityUseCase)
-final getRecentActivityUseCaseProvider =
-    AutoDisposeProvider<GetRecentActivityUseCase>.internal(
-  getRecentActivityUseCase,
-  name: r'getRecentActivityUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getRecentActivityUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getRecentActivityUseCaseProvider = GetRecentActivityUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetRecentActivityUseCaseRef
-    = AutoDisposeProviderRef<GetRecentActivityUseCase>;
-String _$recentActivityHash() => r'fce6e0d56c9f562382377bf82d2a1021431b6ce8';
+final class GetRecentActivityUseCaseProvider extends $FunctionalProvider<
+    GetRecentActivityUseCase,
+    GetRecentActivityUseCase,
+    GetRecentActivityUseCase> with $Provider<GetRecentActivityUseCase> {
+  GetRecentActivityUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getRecentActivityUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [recentActivity].
+  @override
+  String debugGetCreateSourceHash() => _$getRecentActivityUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetRecentActivityUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetRecentActivityUseCase create(Ref ref) {
+    return getRecentActivityUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetRecentActivityUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetRecentActivityUseCase>(value),
+    );
+  }
+}
+
+String _$getRecentActivityUseCaseHash() =>
+    r'2bc9d83d36eb5d15caff6b692f09620b7f3f0687';
+
 @ProviderFor(recentActivity)
-final recentActivityProvider =
-    AutoDisposeStreamProvider<List<Map<String, dynamic>>>.internal(
-  recentActivity,
-  name: r'recentActivityProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$recentActivityHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final recentActivityProvider = RecentActivityProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef RecentActivityRef
-    = AutoDisposeStreamProviderRef<List<Map<String, dynamic>>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class RecentActivityProvider extends $FunctionalProvider<
+        AsyncValue<List<Map<String, dynamic>>>,
+        List<Map<String, dynamic>>,
+        Stream<List<Map<String, dynamic>>>>
+    with
+        $FutureModifier<List<Map<String, dynamic>>>,
+        $StreamProvider<List<Map<String, dynamic>>> {
+  RecentActivityProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'recentActivityProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$recentActivityHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Map<String, dynamic>>> $createElement(
+          $ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Map<String, dynamic>>> create(Ref ref) {
+    return recentActivity(ref);
+  }
+}
+
+String _$recentActivityHash() => r'513c077a769980d9c6b1df5b0195401f2f67a062';

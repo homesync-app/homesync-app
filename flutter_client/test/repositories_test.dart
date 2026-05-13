@@ -133,25 +133,30 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right([]);
   }
 
   @override
   Future<Either<Failure, Unit>> saveTemplate(
-      ExpenseTemplateModel template,) async {
+    ExpenseTemplateModel template,
+  ) async {
     return const Right(unit);
   }
 
   @override
   Future<Either<Failure, Unit>> toggleTemplateActivity(
-      String templateId, bool isActive,) async {
+    String templateId,
+    bool isActive,
+  ) async {
     return const Right(unit);
   }
 
@@ -167,7 +172,8 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, Unit>> processRecurringExpenses(
-      String householdId,) async {
+    String householdId,
+  ) async {
     return const Right(unit);
   }
 
@@ -248,11 +254,13 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> updateSchedule(
-          String taskId, String? recurrenceType,
-          {int? recurrenceInterval,
-          List<int>? recurrenceWeekdays,
-          List<int>? recurrenceMonthDays,
-          String? assignedTo,}) async =>
+    String taskId,
+    String? recurrenceType, {
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+    String? assignedTo,
+  }) async =>
       const Right(null);
 
   @override

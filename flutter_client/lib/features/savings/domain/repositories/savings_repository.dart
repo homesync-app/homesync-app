@@ -9,8 +9,9 @@ abstract class SavingsRepository {
     int? offset,
   });
 
-  Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions(
-      {required String goalId,});
+  Future<Either<Failure, List<SavingsContributionModel>>> getGoalContributions({
+    required String goalId,
+  });
 
   Future<Either<Failure, void>> createGoal({
     required String householdId,

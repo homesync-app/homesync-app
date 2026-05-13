@@ -12,7 +12,6 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -234,7 +233,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Future<bool> _isTasksEnabledForCurrentHousehold() async {
-    final currentHousehold = ref.read(currentHouseholdProvider).valueOrNull;
+    final currentHousehold = ref.read(currentHouseholdProvider).value;
     if (currentHousehold != null) {
       return currentHousehold.tasksEnabled;
     }
@@ -281,7 +280,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   String _suggestFamilyHouseholdName() {
     final rawName = _nameController.text.trim();
-    if (rawName.isEmpty) return AppLocalizations.of(context).setupFamilyDefaultName;
+    if (rawName.isEmpty) {
+      return AppLocalizations.of(context).setupFamilyDefaultName;
+    }
 
     final firstName = rawName.split(' ').first.trim();
     return '$firstName y familia';
@@ -422,9 +423,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   );
           profileResult.fold(
             (failure) => log.e(
-                'SetupScreen._handleJoinTeam: updateProfile failed: ${failure.message}',),
+              'SetupScreen._handleJoinTeam: updateProfile failed: ${failure.message}',
+            ),
             (_) => log.i(
-                'SetupScreen._handleJoinTeam: updateProfile ok name="$nameToSave"',),
+              'SetupScreen._handleJoinTeam: updateProfile ok name="$nameToSave"',
+            ),
           );
         }
       }
@@ -433,13 +436,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       ref.invalidate(userProfileProvider);
       ref.invalidate(currentHouseholdProvider);
       ref.invalidate(userBalanceProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       ref.invalidate(memberOnboardingProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).setupSnackJoinedHousehold),
+            content:
+                Text(AppLocalizations.of(context).setupSnackJoinedHousehold),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -522,7 +526,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
       if (tasksEnabled) {
         log.i(
-            '_saveAndComplete: cloning ${_selectedTemplateIds.length} templates',);
+          '_saveAndComplete: cloning ${_selectedTemplateIds.length} templates',
+        );
         final count = await _templateService
             .cloneTemplates(_selectedTemplateIds.toList());
         log.i('_saveAndComplete: cloned $count tasks');
@@ -552,8 +557,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             return;
           }
         } catch (e, stack) {
-          log.w('complete_member_onboarding (creator) failed: $e',
-              error: e, stackTrace: stack,);
+          log.w(
+            'complete_member_onboarding (creator) failed: $e',
+            error: e,
+            stackTrace: stack,
+          );
           if (mounted) {
             setState(() => _isSaving = false);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -569,7 +577,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(userBalanceProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       ref.invalidate(memberOnboardingProvider);
 
       if (!widget.isAdminPreview) {
@@ -885,8 +893,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final householdId = await ref.read(householdIdProvider.future);
     final currentUserId = ref.read(currentUserIdProvider);
     final rawName = _familyHouseholdNameController.text.trim();
-    final householdName =
-        rawName.isNotEmpty ? rawName : defaultHouseholdName;
+    final householdName = rawName.isNotEmpty ? rawName : defaultHouseholdName;
 
     try {
       if (householdId != null) {
@@ -902,7 +909,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             .read(updateMemberDisplayRoleUseCaseProvider)
             .call(currentUserId, _familyRole);
         result.fold((failure) => throw failure, (_) {});
-        ref.invalidate(householdMembersNotifierProvider);
+        ref.invalidate(householdMembersProvider);
       }
     } catch (error, stackTrace) {
       log.w(
@@ -1028,63 +1035,63 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       builder: (context, constraints) {
         final t = AppLocalizations.of(context);
         return SingleChildScrollView(
-        key: const ValueKey('welcome_v5'),
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SetupOnboardingIllustration(
-                imagePath: 'assets/images/onboarding_welcome_cat.png',
-              ),
-              const SizedBox(height: 18),
-              Text(
-                t.setupWelcomeTitle,
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.8,
-                  height: 0.94,
-                  color: AppColors.textPrimary,
+          key: const ValueKey('welcome_v5'),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SetupOnboardingIllustration(
+                  imagePath: 'assets/images/onboarding_welcome_cat.png',
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                t.setupWelcomeBody,
-                style: TextStyle(
-                  fontSize: 17,
-                  height: 1.36,
-                  color: AppColors.textSecondary.withValues(alpha: 0.84),
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 18),
+                Text(
+                  t.setupWelcomeTitle,
+                  style: const TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.8,
+                    height: 0.94,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              SetupSupportBullet(
-                icon: Icons.timer_outlined,
-                color: AppColors.primary,
-                text: t.setupWelcomeBulletQuick,
-              ),
-              const SizedBox(height: 12),
-              SetupSupportBullet(
-                icon: Icons.groups_2_rounded,
-                color: const Color(0xFF6FA097),
-                text: t.setupWelcomeBulletJoin,
-              ),
-              const SizedBox(height: 30),
-              SetupPrimaryButton(
-                text: t.setupWelcomeStartButton,
-                onPressed: () {
-                  HapticFeedback.heavyImpact();
-                  setState(() => _currentStep = 2);
-                },
-              ),
-              const SizedBox(height: 18),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  t.setupWelcomeBody,
+                  style: TextStyle(
+                    fontSize: 17,
+                    height: 1.36,
+                    color: AppColors.textSecondary.withValues(alpha: 0.84),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SetupSupportBullet(
+                  icon: Icons.timer_outlined,
+                  color: AppColors.primary,
+                  text: t.setupWelcomeBulletQuick,
+                ),
+                const SizedBox(height: 12),
+                SetupSupportBullet(
+                  icon: Icons.groups_2_rounded,
+                  color: const Color(0xFF6FA097),
+                  text: t.setupWelcomeBulletJoin,
+                ),
+                const SizedBox(height: 30),
+                SetupPrimaryButton(
+                  text: t.setupWelcomeStartButton,
+                  onPressed: () {
+                    HapticFeedback.heavyImpact();
+                    setState(() => _currentStep = 2);
+                  },
+                ),
+                const SizedBox(height: 18),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -1418,13 +1425,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   Widget _buildModeCardV3(Map<String, dynamic> mode) {
-    final isSelected = _selectedMode == mode['id'];
+    final t = AppLocalizations.of(context);
+    final id = mode['id'] as String;
+    final isSelected = _selectedMode == id;
     final gradient = mode['gradient'] as List<Color>;
 
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        setState(() => _selectedMode = mode['id'] as String);
+        setState(() => _selectedMode = id);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
@@ -1459,7 +1468,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    mode['name'] as String,
+                    t.setupModeName(id),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -1467,7 +1476,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    mode['desc'] as String,
+                    t.setupModeDescription(id),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

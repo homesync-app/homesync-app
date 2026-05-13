@@ -18,6 +18,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageSubtitle => 'Choose the app\'s language';
 
   @override
+  String get settingsCurrencyTitle => 'Currency';
+
+  @override
+  String get settingsCurrencySubtitle => 'Choose how Finance amounts are shown';
+
+  @override
   String get languageSystem => 'System default';
 
   @override
@@ -612,13 +618,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String homeCoupleSettlementDialogBodyPay(String amount, String partnerName) {
-    return 'We\'ll record a payment of \$ $amount to settle the balance with $partnerName.';
+    return 'We\'ll record a payment of $amount to settle the balance with $partnerName.';
   }
 
   @override
   String homeCoupleSettlementDialogBodyReceive(
       String partnerName, String amount) {
-    return 'We\'ll record that $partnerName paid you \$ $amount to settle the balance.';
+    return 'We\'ll record that $partnerName paid you $amount to settle the balance.';
   }
 
   @override
@@ -2126,6 +2132,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskDetailUndoErrorNotFound => 'Can\'t undo: activity not found';
+
+  @override
+  String get taskDetailUndoSuccess => 'Task moved back to pending.';
 
   @override
   String get taskDetailUndoError => 'Couldn\'t undo';
@@ -4479,6 +4488,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesRecurrentesPremiumCta => 'LEARN MORE';
 
   @override
+  String get expensesRecurringEmptyTitle => 'No recurring items';
+
+  @override
+  String get expensesRecurringEmptySubtitle =>
+      'Create templates for subscriptions, rent, utilities, or fixed income.';
+
+  @override
+  String get expensesRecurringIncomeSection => 'FIXED INCOME';
+
+  @override
+  String get expensesRecurringExpenseSection => 'FIXED EXPENSES';
+
+  @override
+  String get financeTitleSupermarket => 'Supermarket';
+
+  @override
+  String get financeTitleOnlineShopping => 'Online shopping';
+
+  @override
+  String get financeTitleBalanceSettlement => 'Balance settlement';
+
+  @override
+  String get financeTitlePartnerSettlement => 'Partner settlement';
+
+  @override
+  String get financeTitleSalary => 'Salary';
+
+  @override
+  String get financeTitleRent => 'Rent';
+
+  @override
+  String get financeTitleBuildingFees => 'Building fees';
+
+  @override
+  String get financeTitleGas => 'Gas';
+
+  @override
+  String get financeTitleElectricity => 'Electricity';
+
+  @override
+  String get financeTitleWater => 'Water';
+
+  @override
+  String get financeTitleInternet => 'Internet';
+
+  @override
+  String get financeTitleNetflix => 'Netflix';
+
+  @override
+  String get financeTitleMovies => 'Movies';
+
+  @override
+  String get financeTitleInsurance => 'Insurance';
+
+  @override
+  String get financeTitlePhone => 'Phone';
+
+  @override
   String get expensesSavingsGoalNameLabel => 'Name';
 
   @override
@@ -4489,4 +4556,1009 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expensesSavingsGoalAmountHint => 'How much do you want to save?';
+
+  @override
+  String get coupleChallenge1Title => 'Recreating your first date';
+
+  @override
+  String get coupleChallenge1Description =>
+      'Go back to where it all began.\n\nTry to recreate the little details: the food, the clothes, the phrases, the nerves.\n\nTalk about who you were back then and how much you have grown together.\n\nIt will be impossible not to laugh at old memories and feel grateful for everything you have lived.';
+
+  @override
+  String get coupleChallenge1Motivation =>
+      'Sometimes the best way to see how far you have come is to go back to the beginning.';
+
+  @override
+  String get coupleChallenge1Category => 'Experiential';
+
+  @override
+  String get coupleChallenge1Location => 'Outdoors';
+
+  @override
+  String get coupleChallenge1Timing => 'Anytime';
+
+  @override
+  String get coupleChallenge2Title => 'Candlelight dinner';
+
+  @override
+  String get coupleChallenge2Description =>
+      'All you need is a few candles or warm lights, a meal, and something delicious to drink.\n\nTurn off the lights, slow down, and let the silence fill with soft music and long looks.\n\nThe menu does not matter as much as the presence of the person in front of you.';
+
+  @override
+  String get coupleChallenge2Motivation =>
+      'A perfect date to reconnect without distractions and remember why you choose each other every day.';
+
+  @override
+  String get coupleChallenge2Category => 'Romantic';
+
+  @override
+  String get coupleChallenge2Location => 'At home';
+
+  @override
+  String get coupleChallenge2Timing => 'Night';
+
+  @override
+  String get coupleChallenge3Title => 'Shared dream list';
+
+  @override
+  String get coupleChallenge3Description =>
+      'Grab paper and a pen. Write down at least 10 things you would love to achieve together as a couple: trips, goals, or dreams.\n\nRead them out loud to each other and keep the list as a reminder.';
+
+  @override
+  String get coupleChallenge3Motivation =>
+      'Shared dreams do not just bring you closer. They also give your story direction.';
+
+  @override
+  String get coupleChallenge3Category => 'Emotional';
+
+  @override
+  String get coupleChallenge3Location => 'At home';
+
+  @override
+  String get coupleChallenge3Timing => 'Afternoon';
+
+  @override
+  String get coupleChallenge4Title => 'Home karaoke';
+
+  @override
+  String get coupleChallenge4Description =>
+      'Turn the volume up, pick your songs, and let the fun begin. You do not need a microphone or a perfect voice, just attitude.\n\nBetween laughs, you will discover how freeing it is to laugh together.';
+
+  @override
+  String get coupleChallenge4Motivation =>
+      'Love can be off-key too, as long as you are singing to the same rhythm.';
+
+  @override
+  String get coupleChallenge4Category => 'Playful';
+
+  @override
+  String get coupleChallenge4Location => 'At home';
+
+  @override
+  String get coupleChallenge4Timing => 'Night';
+
+  @override
+  String get coupleChallenge5Title => 'Painting together';
+
+  @override
+  String get coupleChallenge5Description =>
+      'Get some paper and brushes. It does not matter if you do not know how to draw. The idea is to let your mind go, laugh at the lines, and enjoy the color.\n\nPaint something that represents you as a couple.';
+
+  @override
+  String get coupleChallenge5Motivation =>
+      'Art is not looking for perfection. It is looking for connection.';
+
+  @override
+  String get coupleChallenge5Category => 'Creative';
+
+  @override
+  String get coupleChallenge5Location => 'At home';
+
+  @override
+  String get coupleChallenge5Timing => 'Flexible';
+
+  @override
+  String get coupleChallenge6Title => 'Movie marathon';
+
+  @override
+  String get coupleChallenge6Description =>
+      'Create your own little cinema: dim lights, blankets, snacks, and a list of movies chosen by both of you.\n\nWatching movies together is also about side glances and laughing in sync.';
+
+  @override
+  String get coupleChallenge6Motivation =>
+      'Little things are often what make love feel big.';
+
+  @override
+  String get coupleChallenge6Category => 'Relaxed';
+
+  @override
+  String get coupleChallenge6Location => 'At home';
+
+  @override
+  String get coupleChallenge6Timing => 'Night';
+
+  @override
+  String get coupleChallenge7Title => 'Photo walk';
+
+  @override
+  String get coupleChallenge7Description =>
+      'Go out for a walk without a plan and try to capture what usually goes unnoticed: a shadow, a smile, a reflection.\n\nTake pictures of whatever makes you stop.';
+
+  @override
+  String get coupleChallenge7Motivation =>
+      'Sometimes seeing the world through a lens is the best way to look at each other again.';
+
+  @override
+  String get coupleChallenge7Category => 'Adventure';
+
+  @override
+  String get coupleChallenge7Location => 'City';
+
+  @override
+  String get coupleChallenge7Timing => 'Afternoon';
+
+  @override
+  String get coupleChallenge8Title => 'Spontaneous picnic';
+
+  @override
+  String get coupleChallenge8Description =>
+      'A blanket, a few snacks, cold drinks, and a desire to share the moment.\n\nFind a park, a square, or even your backyard, settle in, and let the conversation flow.\n\nAdd a card game, a book, or simply stare at the sky together.';
+
+  @override
+  String get coupleChallenge8Motivation =>
+      'You do not have to go far to feel like you escaped the world together.';
+
+  @override
+  String get coupleChallenge8Category => 'Experiential';
+
+  @override
+  String get coupleChallenge8Location => 'Outdoors';
+
+  @override
+  String get coupleChallenge8Timing => 'Afternoon';
+
+  @override
+  String get coupleChallenge9Title => 'Letters that do not disappear';
+
+  @override
+  String get coupleChallenge9Description =>
+      'Write each other a letter. Not on your phone, with paper and ink.\n\nPut on soft music, make something tasty, and let yourselves drift.\n\nWrite what you admire, what you are grateful for, and what you dream about.\n\nAt the end, exchange them and read them out loud.';
+
+  @override
+  String get coupleChallenge9Motivation =>
+      'Letters stay, words can be reread, but what lasts the most is how they make you feel.';
+
+  @override
+  String get coupleChallenge9Category => 'Emotional';
+
+  @override
+  String get coupleChallenge9Location => 'At home';
+
+  @override
+  String get coupleChallenge9Timing => 'Night';
+
+  @override
+  String get coupleChallenge10Title => 'Total disconnect';
+
+  @override
+  String get coupleChallenge10Description =>
+      'Turn off your phones, the TV, and every outside notification for one night.\n\nRead, cook, talk, play, or simply hold each other without interruptions.\n\nYou will discover that when digital noise fades, a different kind of silence appears: the one that makes room for presence.';
+
+  @override
+  String get coupleChallenge10Motivation =>
+      'This date is not measured in minutes, but in real connection.';
+
+  @override
+  String get coupleChallenge10Category => 'Emotional';
+
+  @override
+  String get coupleChallenge10Location => 'At home';
+
+  @override
+  String get coupleChallenge10Timing => 'Night';
+
+  @override
+  String get coupleChallenge11Title => 'Jar of questions';
+
+  @override
+  String get coupleChallenge11Description =>
+      'Fill a jar with little slips of paper containing funny or deep questions.\n\n\"What was the first thing you thought when you met me?\" or \"What dream have you still not dared to tell me about?\"\n\nDraw them at random and answer without filters. You will end up somewhere between laughter and long gazes.';
+
+  @override
+  String get coupleChallenge11Motivation =>
+      'Some conversations do not appear until you invite them in.';
+
+  @override
+  String get coupleChallenge11Category => 'Playful';
+
+  @override
+  String get coupleChallenge11Location => 'At home';
+
+  @override
+  String get coupleChallenge11Timing => 'Anytime';
+
+  @override
+  String get coupleChallenge23Title => 'Breakfast with a view';
+
+  @override
+  String get coupleChallenge23Description =>
+      'Change the setting of breakfast: make something delicious and go find a view. It can be a park, a rooftop, or a bench in a square.\n\nTake the time to enjoy the fresh air and coffee without checking the clock.';
+
+  @override
+  String get coupleChallenge23Motivation =>
+      'Coffee tastes better when the horizon is the limit.';
+
+  @override
+  String get coupleChallenge23Category => 'Exploration';
+
+  @override
+  String get coupleChallenge23Location => 'Outdoors';
+
+  @override
+  String get coupleChallenge23Timing => 'Morning';
+
+  @override
+  String get coupleChallenge24Title => 'At the edge of the world';
+
+  @override
+  String get coupleChallenge24Description =>
+      'Pick a place where the horizon feels endless: a shore, a river, or a lagoon. Bring something to sit on and simply watch the sun go down.\n\nWrite a note together about what you dream of and save it for the future.';
+
+  @override
+  String get coupleChallenge24Motivation =>
+      'Shared silence in front of water can say more than a thousand words.';
+
+  @override
+  String get coupleChallenge24Category => 'Emotional';
+
+  @override
+  String get coupleChallenge24Location => 'Nature';
+
+  @override
+  String get coupleChallenge24Timing => 'Sunset';
+
+  @override
+  String get coupleChallenge25Title => 'Unknown destination';
+
+  @override
+  String get coupleChallenge25Description =>
+      'Go for a walk without a map or GPS. Pick a direction at random and every five blocks one of you decides where to turn.\n\nDiscover new corners of your city as if you were lost tourists.';
+
+  @override
+  String get coupleChallenge25Motivation =>
+      'Getting lost together is one of the best ways to find each other.';
+
+  @override
+  String get coupleChallenge25Category => 'Exploration';
+
+  @override
+  String get coupleChallenge25Location => 'City';
+
+  @override
+  String get coupleChallenge25Timing => 'Afternoon';
+
+  @override
+  String get coupleChallenge26Title => 'Present-moment ritual';
+
+  @override
+  String get coupleChallenge26Description =>
+      'Create a space with warm light and soft music. Each of you writes down three things you want to leave behind, like fears or anger, and three things you are grateful for in the other person.\n\nBurn what you want to let go of and keep the gratitude notes in a jar.';
+
+  @override
+  String get coupleChallenge26Motivation =>
+      'Clearing the past makes room for a brighter future.';
+
+  @override
+  String get coupleChallenge26Category => 'Emotional';
+
+  @override
+  String get coupleChallenge26Location => 'At home';
+
+  @override
+  String get coupleChallenge26Timing => 'Night';
+
+  @override
+  String get coupleChallenge27Title => 'Architect of surprises';
+
+  @override
+  String get coupleChallenge27Description =>
+      'One of you plans a small surprise: a note on the pillow, a favorite meal prepared in secret, or a tiny clue leading to a little adventure.\n\nThe key is the mystery and the detail that was thought through for the other person only.';
+
+  @override
+  String get coupleChallenge27Motivation =>
+      'Love lives in the details that say \"I was thinking of you.\"';
+
+  @override
+  String get coupleChallenge27Category => 'Thoughtful';
+
+  @override
+  String get coupleChallenge27Location => 'Anywhere';
+
+  @override
+  String get coupleChallenge27Timing => 'Surprise';
+
+  @override
+  String get coupleChallenge28Title => 'In the service of love';
+
+  @override
+  String get coupleChallenge28Description =>
+      'Take turns \"taking care\" of the other for a while: prepare a bath, give a massage, or cook while the other person does absolutely nothing.\n\nThis is not about serving. It is about caring with tenderness and intention.';
+
+  @override
+  String get coupleChallenge28Motivation =>
+      'Caring is one of the quietest and strongest ways to love.';
+
+  @override
+  String get coupleChallenge28Category => 'Everyday';
+
+  @override
+  String get coupleChallenge28Location => 'At home';
+
+  @override
+  String get coupleChallenge28Timing => 'Night';
+
+  @override
+  String get coupleChallenge29Title => 'Stories on stage';
+
+  @override
+  String get coupleChallenge29Description =>
+      'Pick a famous scene from a movie and try to recreate it with whatever you have at home. Do not aim for perfection, aim for laughter and complicity.\n\nAt the end, invent your own ending together.';
+
+  @override
+  String get coupleChallenge29Motivation =>
+      'Pretending to be someone else can help you rediscover who you are together.';
+
+  @override
+  String get coupleChallenge29Category => 'Playful';
+
+  @override
+  String get coupleChallenge29Location => 'At home';
+
+  @override
+  String get coupleChallenge29Timing => 'Anytime';
+
+  @override
+  String get coupleChallenge30Title => 'Flavors with a story';
+
+  @override
+  String get coupleChallenge30Description =>
+      'Choose three flavors such as wine, chocolate, or cheese, and for each one share a personal memory connected to it: a trip, childhood, or a person.\n\nLet taste awaken stories you still have not told each other.';
+
+  @override
+  String get coupleChallenge30Motivation =>
+      'Every bite can open a door to a memory.';
+
+  @override
+  String get coupleChallenge30Category => 'Experiential';
+
+  @override
+  String get coupleChallenge30Location => 'Anywhere';
+
+  @override
+  String get coupleChallenge30Timing => 'Night';
+
+  @override
+  String get coupleChallenge31Title => 'The art of doing nothing';
+
+  @override
+  String get coupleChallenge31Description =>
+      'Turn off alarms and forget the to-do list. Spend a day without schedules: read in bed, watch old shows, or talk without a destination.\n\nGive yourselves the luxury of inhabiting time without the pressure to be productive.';
+
+  @override
+  String get coupleChallenge31Motivation =>
+      'Time \"wasted\" together is time gained in connection.';
+
+  @override
+  String get coupleChallenge31Category => 'Relaxed';
+
+  @override
+  String get coupleChallenge31Location => 'At home';
+
+  @override
+  String get coupleChallenge31Timing => 'All day';
+
+  @override
+  String get coupleChallenge32Title => 'Market Sunday';
+
+  @override
+  String get coupleChallenge32Description =>
+      'Go to a local market with cloth bags and mate. Do not focus on buying a lot. Focus on the colors, the smells, and the people.\n\nChoose one unusual ingredient to cook something new when you get back home.';
+
+  @override
+  String get coupleChallenge32Motivation =>
+      'Routine can have its own handmade kind of magic.';
+
+  @override
+  String get coupleChallenge32Category => 'Exploration';
+
+  @override
+  String get coupleChallenge32Location => 'City';
+
+  @override
+  String get coupleChallenge32Timing => 'Morning';
+
+  @override
+  String get coupleChallenge33Title => 'Under the stars';
+
+  @override
+  String get coupleChallenge33Description =>
+      'Find a spot away from city lights. Bring a blanket, open sky, and silence.\n\nCount stars, invent your own constellations, or simply feel the immensity together.';
+
+  @override
+  String get coupleChallenge33Motivation =>
+      'The whole universe fits in the space between the two of you.';
+
+  @override
+  String get coupleChallenge33Category => 'Romantic';
+
+  @override
+  String get coupleChallenge33Location => 'Nature';
+
+  @override
+  String get coupleChallenge33Timing => 'Night';
+
+  @override
+  String get coupleChallenge34Title => 'Night of the senses';
+
+  @override
+  String get coupleChallenge34Description =>
+      'Set a table with mysterious textures, aromas, and flavors. With eyes closed, the other person has to guess what they are feeling.\n\nA dynamic meant to surrender to sensation without needing many words.';
+
+  @override
+  String get coupleChallenge34Motivation =>
+      'Love can be tasted, smelled, and touched.';
+
+  @override
+  String get coupleChallenge34Category => 'Sensory';
+
+  @override
+  String get coupleChallenge34Location => 'At home';
+
+  @override
+  String get coupleChallenge34Timing => 'Night';
+
+  @override
+  String get coupleChallenge35Title => 'Shared reading';
+
+  @override
+  String get coupleChallenge35Description =>
+      'Choose a book, poem, or article and read it out loud, taking turns with each section. Listen to each other\'s tone and pauses.\n\nWhen you finish, share what the story made you think or feel.';
+
+  @override
+  String get coupleChallenge35Motivation =>
+      'Words are a bridge between two minds.';
+
+  @override
+  String get coupleChallenge35Category => 'Intellectual';
+
+  @override
+  String get coupleChallenge35Location => 'Quiet place';
+
+  @override
+  String get coupleChallenge35Timing => 'Night';
+
+  @override
+  String get coupleChallenge36Title => 'Micro-theater date';
+
+  @override
+  String get coupleChallenge36Description =>
+      'Find a micro-theater performance or a short play. Experience the intensity of a story that feels close and alive.\n\nThen take a walk while talking about what made you laugh, cry, or reflect.';
+
+  @override
+  String get coupleChallenge36Motivation =>
+      'Living a thousand lives in one night, always hand in hand.';
+
+  @override
+  String get coupleChallenge36Category => 'Cultural';
+
+  @override
+  String get coupleChallenge36Location => 'City';
+
+  @override
+  String get coupleChallenge36Timing => 'Night';
+
+  @override
+  String get coupleChallenge37Title => 'Trip without luggage';
+
+  @override
+  String get coupleChallenge37Description =>
+      'Choose a country and turn your home into that destination for one night: typical food, music, and atmosphere from that place.\n\nTravel without a passport and imagine what you would do if you were really there.';
+
+  @override
+  String get coupleChallenge37Motivation =>
+      'The best destination is the one you create between the two of you.';
+
+  @override
+  String get coupleChallenge37Category => 'Creative';
+
+  @override
+  String get coupleChallenge37Location => 'At home';
+
+  @override
+  String get coupleChallenge37Timing => 'Night';
+
+  @override
+  String get coupleChallenge38Title => 'The secret envelope';
+
+  @override
+  String get coupleChallenge38Description =>
+      'One of you prepares three envelopes with instructions to open in stages: an outfit, a meeting place, and a special ending.\n\nThe magic is in the anticipation of not knowing what comes next.';
+
+  @override
+  String get coupleChallenge38Motivation =>
+      'Every envelope is an \"I thought of you\" waiting to be opened.';
+
+  @override
+  String get coupleChallenge38Category => 'Adventure';
+
+  @override
+  String get coupleChallenge38Location => 'Surprise';
+
+  @override
+  String get coupleChallenge38Timing => 'All afternoon';
+
+  @override
+  String get coupleChallenge39Title => 'Promises at dawn';
+
+  @override
+  String get coupleChallenge39Description =>
+      'Go somewhere high enough to watch the sun rise. When the first ray appears, promise one small thing for your relationship.\n\nA habit, a wish, or a change you want to begin with the new day.';
+
+  @override
+  String get coupleChallenge39Motivation =>
+      'Every sunrise is a chance to begin again.';
+
+  @override
+  String get coupleChallenge39Category => 'Emotional';
+
+  @override
+  String get coupleChallenge39Location => 'Outdoors';
+
+  @override
+  String get coupleChallenge39Timing => 'Dawn';
+
+  @override
+  String get coupleChallenge40Title => 'Building patience';
+
+  @override
+  String get coupleChallenge40Description =>
+      'Spend the afternoon putting together a puzzle side by side, with mate or wine nearby.\n\nBetween pieces, let calm conversations and comfortable silence flow.';
+
+  @override
+  String get coupleChallenge40Motivation =>
+      'Putting together small things is practice for the patience bigger things require.';
+
+  @override
+  String get coupleChallenge40Category => 'Relaxed';
+
+  @override
+  String get coupleChallenge40Location => 'At home';
+
+  @override
+  String get coupleChallenge40Timing => 'Afternoon';
+
+  @override
+  String get coupleChallenge41Title => 'A full day of gratitude';
+
+  @override
+  String get coupleChallenge41Description =>
+      'Today\'s challenge: spend 24 hours without a single complaint. Every time someone complains, they have to balance it with something they are grateful for.\n\nAt the end of the day, go over all the good things you noticed.';
+
+  @override
+  String get coupleChallenge41Motivation =>
+      'Changing the focus can change the entire relationship.';
+
+  @override
+  String get coupleChallenge41Category => 'Emotional';
+
+  @override
+  String get coupleChallenge41Location => 'Anywhere';
+
+  @override
+  String get coupleChallenge41Timing => 'All day';
+
+  @override
+  String get coupleChallenge42Title => 'Time capsule';
+
+  @override
+  String get coupleChallenge42Description =>
+      'Choose five objects that represent your present: a photo, a ticket, a note. Put them in a box and seal it with a future opening date.\n\nWrite a letter to your future selves describing how you feel today.';
+
+  @override
+  String get coupleChallenge42Motivation =>
+      'Saving the present is a gift you leave for the future.';
+
+  @override
+  String get coupleChallenge42Category => 'Emotional';
+
+  @override
+  String get coupleChallenge42Location => 'At home';
+
+  @override
+  String get coupleChallenge42Timing => 'Night';
+
+  @override
+  String get coupleChallenge43Title => 'Blind painting';
+
+  @override
+  String get coupleChallenge43Description =>
+      'One person covers their eyes and the other guides them with their voice to draw lines and colors on a sheet of paper. Then switch roles.\n\nTrust each other\'s voice and laugh at the abstract result you created together.';
+
+  @override
+  String get coupleChallenge43Motivation =>
+      'Love can be painted with your eyes closed too.';
+
+  @override
+  String get coupleChallenge43Category => 'Playful';
+
+  @override
+  String get coupleChallenge43Location => 'At home';
+
+  @override
+  String get coupleChallenge43Timing => 'Anytime';
+
+  @override
+  String get coupleChallenge44Title => 'Our own podcast';
+
+  @override
+  String get coupleChallenge44Description =>
+      'Record yourselves talking as if you were hosting a podcast. Pick a theme: your story, a trip, or what love has taught you.\n\nDo not try to sound perfect. Try to sound real. Keep it as a little voice capsule.';
+
+  @override
+  String get coupleChallenge44Motivation =>
+      'Recording the voice of love is a way of keeping a living memory.';
+
+  @override
+  String get coupleChallenge44Category => 'Creative';
+
+  @override
+  String get coupleChallenge44Location => 'Quiet place';
+
+  @override
+  String get coupleChallenge44Timing => 'Anytime';
+
+  @override
+  String get coupleChallenge45Title => 'Delayed messages';
+
+  @override
+  String get coupleChallenge45Description =>
+      'Each of you writes a letter to the other, but do not read them now. Exchange them and choose a date one week from now to open them.\n\nEnjoy the sweet waiting and the comfort of knowing a love message is waiting for you.';
+
+  @override
+  String get coupleChallenge45Motivation =>
+      'Love can also be written in delayed time.';
+
+  @override
+  String get coupleChallenge45Category => 'Emotional';
+
+  @override
+  String get coupleChallenge45Location => 'At home';
+
+  @override
+  String get coupleChallenge45Timing => 'Night';
+
+  @override
+  String get coupleChallenge46Title => 'Projection of memories';
+
+  @override
+  String get coupleChallenge46Description =>
+      'Look for photos, videos, and messages from when you first met. Watch together how much you have grown and which obstacles you have overcome.\n\nRediscover the path that brought you to today.';
+
+  @override
+  String get coupleChallenge46Motivation =>
+      'Looking back is one of the best ways to value the present.';
+
+  @override
+  String get coupleChallenge46Category => 'Emotional';
+
+  @override
+  String get coupleChallenge46Location => 'At home';
+
+  @override
+  String get coupleChallenge46Timing => 'Night';
+
+  @override
+  String get coupleChallenge47Title => 'The yes day';
+
+  @override
+  String get coupleChallenge47Description =>
+      'For one whole day, the rule is to say yes to every reasonable proposal the other person makes: ice cream, a walk, a nap.\n\nLet yourselves be carried by the flow of a day without noes.';
+
+  @override
+  String get coupleChallenge47Motivation =>
+      'Too much structure wears you down. Flow brings you closer.';
+
+  @override
+  String get coupleChallenge47Category => 'Playful';
+
+  @override
+  String get coupleChallenge47Location => 'Anywhere';
+
+  @override
+  String get coupleChallenge47Timing => 'All day';
+
+  @override
+  String get coupleChallenge48Title => 'Toast to the future';
+
+  @override
+  String get coupleChallenge48Description =>
+      'Prepare your favorite drink and make a toast while looking each other in the eyes. Write down one intention for the next chapter: a trip or a shared goal.\n\nSeal the toast with a smile that says, \"thank you for being here.\"';
+
+  @override
+  String get coupleChallenge48Motivation =>
+      'Toasting what is coming is a way of honoring what you already are.';
+
+  @override
+  String get coupleChallenge48Category => 'Emotional';
+
+  @override
+  String get coupleChallenge48Location => 'Anywhere';
+
+  @override
+  String get coupleChallenge48Timing => 'Night';
+
+  @override
+  String get coupleChallenge49Title => 'Experimental cooking';
+
+  @override
+  String get coupleChallenge49Description =>
+      'Choose three random ingredients you already have at home and try to create a brand-new dish together.\n\nNo looking up recipes. Use your instincts, taste as you go, and laugh if the experiment gets weird.';
+
+  @override
+  String get coupleChallenge49Motivation =>
+      'Improvised flavor always carries something special.';
+
+  @override
+  String get coupleChallenge49Category => 'Creative';
+
+  @override
+  String get coupleChallenge49Location => 'Kitchen';
+
+  @override
+  String get coupleChallenge49Timing => 'Lunch/Dinner';
+
+  @override
+  String get coupleChallenge50Title => 'Wall of wishes';
+
+  @override
+  String get coupleChallenge50Description =>
+      'Stick notes with wishes, gratitude, or goals on a wall or mirror. Let the wall grow throughout the week.\n\nRead every note at the end and keep them as witnesses of your intentions.';
+
+  @override
+  String get coupleChallenge50Motivation =>
+      'Making a desire visible is the first step toward making it real.';
+
+  @override
+  String get coupleChallenge50Category => 'Thoughtful';
+
+  @override
+  String get coupleChallenge50Location => 'At home';
+
+  @override
+  String get coupleChallenge50Timing => 'All week';
+
+  @override
+  String get rewardCategoryTreats => 'Treats';
+
+  @override
+  String get rewardCategoryMoments => 'Moments';
+
+  @override
+  String get rewardCategoryPerks => 'Perks';
+
+  @override
+  String get rewardCategoryExperiences => 'Experiences';
+
+  @override
+  String get rewardCategoryFamily => 'Family';
+
+  @override
+  String get rewardCategoryOther => 'Other';
+
+  @override
+  String get rewardTemplateCoffeeMatePrepared => 'Coffee or mate made for you';
+
+  @override
+  String get rewardTemplateCoffeeMatePreparedDescription =>
+      'A cozy pause made with care';
+
+  @override
+  String get rewardTemplateSurpriseSnack => 'Surprise snack';
+
+  @override
+  String get rewardTemplateSurpriseSnackDescription =>
+      'An unexpected treat to brighten the day';
+
+  @override
+  String get rewardTemplateMiniRomanticNote => 'Mini romantic note';
+
+  @override
+  String get rewardTemplateMiniRomanticNoteDescription =>
+      'A short message to make you smile';
+
+  @override
+  String get rewardTemplateMassage15Minutes => '15-minute massage';
+
+  @override
+  String get rewardTemplateMassage15MinutesDescription =>
+      'A relaxing 15-minute massage';
+
+  @override
+  String get rewardTemplateIceCreamChoice => 'Ice cream of your choice';
+
+  @override
+  String get rewardTemplateIceCreamChoiceDescription =>
+      'A cold dessert to celebrate';
+
+  @override
+  String get rewardTemplateMovieNightHome => 'Movie night at home';
+
+  @override
+  String get rewardTemplateMovieNightHomeDescription =>
+      'A movie and a special at-home mood';
+
+  @override
+  String get rewardTemplateGamingAfternoon => 'Gaming afternoon';
+
+  @override
+  String get rewardTemplateGamingAfternoonDescription =>
+      'Play together with snacks included';
+
+  @override
+  String get rewardTemplateBoardGameNight => 'Board game night';
+
+  @override
+  String get rewardTemplateBoardGameNightDescription =>
+      'Time for games and laughs';
+
+  @override
+  String get rewardTemplateSpecialHomemadeDinner => 'Special homemade dinner';
+
+  @override
+  String get rewardTemplateSpecialHomemadeDinnerDescription =>
+      'Your favorite meal made at home';
+
+  @override
+  String get rewardTemplateHomePicnic => 'Picnic at home';
+
+  @override
+  String get rewardTemplateHomePicnicDescription =>
+      'A blanket, something tasty, and time offline';
+
+  @override
+  String get rewardTemplateNoScreensNight => 'No-screens night';
+
+  @override
+  String get rewardTemplateNoScreensNightDescription =>
+      'Time to talk and reconnect';
+
+  @override
+  String get rewardTemplateEpisodeMarathonChoice =>
+      'Episode marathon of your choice';
+
+  @override
+  String get rewardTemplateEpisodeMarathonChoiceDescription =>
+      'You pick the show and the pace';
+
+  @override
+  String get rewardTemplateNoDishesVoucher => 'No dishes voucher';
+
+  @override
+  String get rewardTemplateNoDishesVoucherDescription =>
+      'You get to skip that chore today';
+
+  @override
+  String get rewardTemplateChooseMovieVoucher => 'Choose the movie voucher';
+
+  @override
+  String get rewardTemplateChooseMovieVoucherDescription =>
+      'You pick what to watch';
+
+  @override
+  String get rewardTemplateChooseSeriesWeekVoucher =>
+      'Choose the series for a week voucher';
+
+  @override
+  String get rewardTemplateChooseSeriesWeekVoucherDescription =>
+      'Your series, your rules for 7 days';
+
+  @override
+  String get rewardTemplateWeekendPlanVoucher =>
+      'Choose the weekend plan voucher';
+
+  @override
+  String get rewardTemplateWeekendPlanVoucherDescription =>
+      'You pick the main plan';
+
+  @override
+  String get rewardTemplateSkipOneChoreVoucher => 'Skip one chore voucher';
+
+  @override
+  String get rewardTemplateSkipOneChoreVoucherDescription =>
+      'Pick one chore to delegate';
+
+  @override
+  String get rewardTemplateYesToAnyPlanVoucher => 'Yes to any plan voucher';
+
+  @override
+  String get rewardTemplateYesToAnyPlanVoucherDescription =>
+      'Your idea happens today';
+
+  @override
+  String get rewardTemplateDinnerOut => 'Dinner out';
+
+  @override
+  String get rewardTemplateDinnerOutDescription =>
+      'Dinner out somewhere special';
+
+  @override
+  String get rewardTemplatePlannedDate => 'Fully planned date';
+
+  @override
+  String get rewardTemplatePlannedDateDescription =>
+      'A full plan organized from start to finish';
+
+  @override
+  String get rewardTemplateChoreFreeDay => 'Chore-free day';
+
+  @override
+  String get rewardTemplateChoreFreeDayDescription =>
+      'Zero obligations for the whole day';
+
+  @override
+  String get rewardTemplateExtraScreen15Minutes =>
+      '15 extra minutes of screen time';
+
+  @override
+  String get rewardTemplateExtraScreen15MinutesDescription =>
+      'A little more time to play or watch something.';
+
+  @override
+  String get rewardTemplateChooseDinner => 'Choose dinner';
+
+  @override
+  String get rewardTemplateChooseDinnerDescription =>
+      'Pick the menu for one night at home.';
+
+  @override
+  String get rewardTemplateIceCreamForEveryone => 'Ice cream for everyone';
+
+  @override
+  String get rewardTemplateIceCreamForEveryoneDescription =>
+      'A family ice cream outing or delivery order.';
+
+  @override
+  String get rewardTemplateSmallToyPrize => 'Small toy or prize';
+
+  @override
+  String get rewardTemplateSmallToyPrizeDescription =>
+      'Redeem something simple chosen with an adult.';
+
+  @override
+  String get rewardTemplateFamilyMovieNight => 'Family movie night';
+
+  @override
+  String get rewardTemplateFamilyMovieNightDescription =>
+      'A simple plan to enjoy together.';
+
+  @override
+  String get rewardTemplateOrderTakeout => 'Order takeout';
+
+  @override
+  String get rewardTemplateOrderTakeoutDescription =>
+      'A night without cooking for the whole family.';
+
+  @override
+  String get rewardTemplateWeekendFamilyPlan => 'Weekend family plan';
+
+  @override
+  String get rewardTemplateWeekendFamilyPlanDescription =>
+      'Choose an outing or activity to do together.';
+
+  @override
+  String get rewardTemplateSpecialDessert => 'Special dessert';
+
+  @override
+  String get rewardTemplateSpecialDessertDescription =>
+      'Pick a favorite dessert for after dinner.';
 }

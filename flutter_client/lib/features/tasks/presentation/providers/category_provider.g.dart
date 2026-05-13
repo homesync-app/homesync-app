@@ -6,39 +6,86 @@ part of 'category_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$categoriesHash() => r'55fee75c72cf11682e0f5a5adbf6aa911bf7527e';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [categories].
 @ProviderFor(categories)
-final categoriesProvider =
-    AutoDisposeFutureProvider<List<CategoryModel>>.internal(
-  categories,
-  name: r'categoriesProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$categoriesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final categoriesProvider = CategoriesProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CategoriesRef = AutoDisposeFutureProviderRef<List<CategoryModel>>;
-String _$categoryMapHash() => r'8d8f383701b1c7b187a7ccfa223715a23edb1fa4';
+final class CategoriesProvider extends $FunctionalProvider<
+        AsyncValue<List<CategoryModel>>,
+        List<CategoryModel>,
+        FutureOr<List<CategoryModel>>>
+    with
+        $FutureModifier<List<CategoryModel>>,
+        $FutureProvider<List<CategoryModel>> {
+  CategoriesProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'categoriesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [categoryMap].
+  @override
+  String debugGetCreateSourceHash() => _$categoriesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<CategoryModel>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<CategoryModel>> create(Ref ref) {
+    return categories(ref);
+  }
+}
+
+String _$categoriesHash() => r'54924a3f8b05c98630da9d40349bbc270cb71fea';
+
 @ProviderFor(categoryMap)
-final categoryMapProvider =
-    AutoDisposeProvider<Map<String, CategoryModel>>.internal(
-  categoryMap,
-  name: r'categoryMapProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$categoryMapHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final categoryMapProvider = CategoryMapProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CategoryMapRef = AutoDisposeProviderRef<Map<String, CategoryModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class CategoryMapProvider extends $FunctionalProvider<
+    Map<String, CategoryModel>,
+    Map<String, CategoryModel>,
+    Map<String, CategoryModel>> with $Provider<Map<String, CategoryModel>> {
+  CategoryMapProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'categoryMapProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$categoryMapHash();
+
+  @$internal
+  @override
+  $ProviderElement<Map<String, CategoryModel>> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Map<String, CategoryModel> create(Ref ref) {
+    return categoryMap(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, CategoryModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, CategoryModel>>(value),
+    );
+  }
+}
+
+String _$categoryMapHash() => r'73989bf59b881c4efcfd4120b7363d72b1e1c4c0';

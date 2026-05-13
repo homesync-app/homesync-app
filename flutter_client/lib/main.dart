@@ -396,8 +396,8 @@ class _MyAppState extends ConsumerState<MyApp> {
           ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
       'userProfileProvider':
           ref.read(userProfileProvider.future).then((_) {}).catchError((_) {}),
-      'householdMembersNotifierProvider': ref
-          .read(householdMembersNotifierProvider.future)
+      'householdMembersProvider': ref
+          .read(householdMembersProvider.future)
           .then((_) {})
           .catchError((_) {}),
       'expenseBalancesProvider': ref
@@ -445,9 +445,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   Future<void> _precacheStartupImages() async {
     if (!mounted) return;
 
-    final profile = ref.read(userProfileProvider).valueOrNull;
-    final members =
-        ref.read(householdMembersNotifierProvider).valueOrNull ?? const [];
+    final profile = ref.read(userProfileProvider).value;
+    final members = ref.read(householdMembersProvider).value ?? const [];
 
     final avatarUrls = <String>{
       if (profile?['avatar_url'] is String) profile!['avatar_url'] as String,
@@ -518,15 +517,16 @@ class _MyAppState extends ConsumerState<MyApp> {
     } else {
       // If null, it will follow the platform locale which Flutter handles via MaterialApp,
       // but we help Intl a bit by using the first supported locale if no default is set.
-      Intl.defaultLocale = WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag();
+      Intl.defaultLocale =
+          WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag();
     }
     final authState = ref.watch(authStateProvider);
 
     // ── Reactive sign-out: imperatively navigate when auth state changes to
     // isAuthenticated=false, regardless of any route stack sitting on top.
     ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
-      final prev = previous?.valueOrNull;
-      final curr = next.valueOrNull;
+      final prev = previous?.value;
+      final curr = next.value;
 
       if (curr != null) {
         log.i(

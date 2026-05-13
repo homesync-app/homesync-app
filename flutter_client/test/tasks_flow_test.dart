@@ -15,6 +15,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/domain/repositories/task_repository.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,8 +29,10 @@ import 'tasks_flow_test.mocks.dart';
 /// surface that tasks_screen's provider tree touches.
 class FakeSupabaseClient extends Fake implements SupabaseClient {
   @override
-  RealtimeChannel channel(String name,
-          {RealtimeChannelConfig opts = const RealtimeChannelConfig(),}) =>
+  RealtimeChannel channel(
+    String name, {
+    RealtimeChannelConfig opts = const RealtimeChannelConfig(),
+  }) =>
       FakeRealtimeChannel();
 
   @override
@@ -48,10 +51,10 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
       this;
 
   @override
-  RealtimeChannel subscribe(
-          [void Function(RealtimeSubscribeStatus status, Object? error)?
-              callback,
-          Duration? timeout,]) =>
+  RealtimeChannel subscribe([
+    void Function(RealtimeSubscribeStatus status, Object? error)? callback,
+    Duration? timeout,
+  ]) =>
       this;
 
   @override
@@ -62,8 +65,9 @@ class FakeRealtimeChannel extends Fake implements RealtimeChannel {
 /// crashes but also never gets real data.
 class FakeSupabaseQueryBuilder extends Fake implements SupabaseQueryBuilder {
   @override
-  PostgrestFilterBuilder<List<Map<String, dynamic>>> select(
-          [String columns = '*',]) =>
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
+    String columns = '*',
+  ]) =>
       FakePostgrestFilterBuilder();
 }
 
@@ -124,18 +128,24 @@ void main() {
 
   testWidgets('TasksScreen renders tasks and shows inline actions on tap',
       (WidgetTester tester) async {
-    when(mockTaskRepo.getTasks('h1',
-            limit: anyNamed('limit'), offset: anyNamed('offset'),),)
-        .thenAnswer((_) async => Right([testTask]));
+    when(
+      mockTaskRepo.getTasks(
+        'h1',
+        limit: anyNamed('limit'),
+        offset: anyNamed('offset'),
+      ),
+    ).thenAnswer((_) async => Right([testTask]));
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        taskRepositoryProvider.overrideWithValue(mockTaskRepo),
-        supabaseClientProvider.overrideWithValue(FakeSupabaseClient()),
-        householdIdProvider.overrideWith((ref) => 'h1'),
-        currentUserIdProvider.overrideWithValue('u1'),
-        categoriesProvider.overrideWith((ref) => [testCategory]),
-        householdMembersProvider.overrideWith(() => MockHouseholdMembers([
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          taskRepositoryProvider.overrideWithValue(mockTaskRepo),
+          supabaseClientProvider.overrideWithValue(FakeSupabaseClient()),
+          householdIdProvider.overrideWith((ref) => 'h1'),
+          currentUserIdProvider.overrideWithValue('u1'),
+          categoriesProvider.overrideWith((ref) => [testCategory]),
+          householdMembersProvider.overrideWith(
+            () => MockHouseholdMembers([
               MemberModel(
                 id: 'm1',
                 userId: 'u1',
@@ -146,13 +156,18 @@ void main() {
                 email: 'u1@test.com',
                 type: MemberType.parent,
               ),
-            ]),),
-      ],
-      child: MaterialApp(
-        theme: ThemeData(useMaterial3: true),
-        home: const TasksScreen(),
+            ]),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          theme: ThemeData(useMaterial3: true),
+          home: const TasksScreen(),
+        ),
       ),
-    ),);
+    );
 
     await tester.pumpAndSettle();
 
@@ -172,7 +187,7 @@ void main() {
   });
 }
 
-class MockHouseholdMembers extends HouseholdMembers {
+class MockHouseholdMembers extends HouseholdMembersNotifier {
   final List<MemberModel> members;
   MockHouseholdMembers(this.members);
 

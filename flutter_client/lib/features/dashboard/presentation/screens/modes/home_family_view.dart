@@ -9,7 +9,6 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -38,9 +37,9 @@ class HomeFamilyView extends ConsumerStatefulWidget {
 
 class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   MemberModel? get _currentMember {
-    final membersAsync = ref.read(householdMembersNotifierProvider);
+    final membersAsync = ref.read(householdMembersProvider);
     final currentUserId = ref.read(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     return members.where((m) => m.userId == currentUserId).firstOrNull;
   }
 
@@ -49,9 +48,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
 
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
@@ -102,7 +101,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               delayMs: 120,
               child: _buildActivitySection(
                 theme,
-                title: AppLocalizations.of(context).homeFamilyChildActivityTitle,
+                title:
+                    AppLocalizations.of(context).homeFamilyChildActivityTitle,
               ),
             ),
           ] else if (isTeen) ...[
@@ -123,11 +123,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox(height: 22),
             _buildStaggeredSection(
               delayMs: 260,
-              child:
-                  _buildActivitySection(
-                    theme,
-                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
-                  ),
+              child: _buildActivitySection(
+                theme,
+                title: AppLocalizations.of(context).homeFamilyActivityTitle,
+              ),
             ),
           ] else ...[
             if (hasSharedAdultFinance) ...[
@@ -153,11 +152,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox(height: 26),
             _buildStaggeredSection(
               delayMs: 240,
-              child:
-                  _buildActivitySection(
-                    theme,
-                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
-                  ),
+              child: _buildActivitySection(
+                theme,
+                title: AppLocalizations.of(context).homeFamilyActivityTitle,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -167,7 +165,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final balanceAsync = ref.watch(userBalanceProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
@@ -305,7 +303,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           const SizedBox(width: 8),
           TextButton(
             onPressed: () {
-              ref.invalidate(householdMembersNotifierProvider);
+              ref.invalidate(householdMembersProvider);
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
@@ -370,7 +368,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final xp =
         balanceAsync.whenOrNull(data: (balance) => balance?['xp'] as int?) ?? 0;
     final t = AppLocalizations.of(context);
-    final firstName = currentMember?.displayName ?? t.homeFamilyChildFallbackName;
+    final firstName =
+        currentMember?.displayName ?? t.homeFamilyChildFallbackName;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return Container(

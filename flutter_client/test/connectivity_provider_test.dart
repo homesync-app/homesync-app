@@ -16,7 +16,8 @@ class FakeConnectivityClient implements ConnectivityClient {
   Future<List<ConnectivityResult>> checkConnectivity() async => _currentResults;
 
   @override
-  Stream<List<ConnectivityResult>> get onConnectivityChanged => _controller.stream;
+  Stream<List<ConnectivityResult>> get onConnectivityChanged =>
+      _controller.stream;
 
   void emit(List<ConnectivityResult> results) {
     _currentResults = results;
@@ -29,10 +30,11 @@ class FakeConnectivityClient implements ConnectivityClient {
 }
 
 void main() {
-  group('connectivityNotifierProvider', () {
+  group('connectivityProvider', () {
     test('transitions to offline after initial connectivity check returns none',
         () async {
-      final fakeClient = FakeConnectivityClient(const [ConnectivityResult.none]);
+      final fakeClient =
+          FakeConnectivityClient(const [ConnectivityResult.none]);
       final container = ProviderContainer(
         overrides: [
           connectivityClientProvider.overrideWithValue(fakeClient),
@@ -43,20 +45,21 @@ void main() {
         await fakeClient.dispose();
       });
 
-      container.read(connectivityNotifierProvider);
+      container.read(connectivityProvider);
       expect(container.read(isOnlineProvider), isTrue);
 
       await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      final state = container.read(connectivityNotifierProvider);
+      final state = container.read(connectivityProvider);
       expect(state.isOnline, isFalse);
       expect(state.status, ConnectivityStatus.offline);
     });
 
     test('updates back to online when connectivity stream emits a valid result',
         () async {
-      final fakeClient = FakeConnectivityClient(const [ConnectivityResult.none]);
+      final fakeClient =
+          FakeConnectivityClient(const [ConnectivityResult.none]);
       final container = ProviderContainer(
         overrides: [
           connectivityClientProvider.overrideWithValue(fakeClient),
@@ -67,7 +70,7 @@ void main() {
         await fakeClient.dispose();
       });
 
-      container.read(connectivityNotifierProvider);
+      container.read(connectivityProvider);
       await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(container.read(isOnlineProvider), isFalse);
@@ -76,7 +79,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
-      final state = container.read(connectivityNotifierProvider);
+      final state = container.read(connectivityProvider);
       expect(state.isOnline, isTrue);
       expect(state.status, ConnectivityStatus.online);
     });

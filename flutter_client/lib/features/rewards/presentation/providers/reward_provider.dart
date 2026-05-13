@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/errors/failures.dart';
@@ -569,7 +570,7 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<RewardsPageState>().copyWithPrevious(state);
+    state = const AsyncLoading<RewardsPageState>();
     state = await AsyncValue.guard(() async {
       final chunk = await _fetchChunk(offset: 0);
       return RewardsPageState(
@@ -581,7 +582,7 @@ class PaginatedRewardsController extends AsyncNotifier<RewardsPageState> {
   }
 
   Future<void> loadMore() async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null || current.isLoadingMore || !current.hasMore) {
       return;
     }
@@ -615,7 +616,7 @@ final paginatedRewardsProvider =
 );
 
 @riverpod
-Future<List<RewardModel>> filteredRewards(FilteredRewardsRef ref) async {
+Future<List<RewardModel>> filteredRewards(Ref ref) async {
   final rewards = await ref.watch(rewardsProvider.future);
   final members = await ref.watch(householdMembersProvider.future);
   final currentUserId = ref.read(currentUserIdProvider);

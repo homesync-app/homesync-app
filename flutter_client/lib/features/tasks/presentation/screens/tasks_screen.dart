@@ -1,3 +1,4 @@
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,6 +43,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     with SingleTickerProviderStateMixin {
   RealtimeChannel? _tasksChannel;
   late TabController _tabController;
+  late final ConfettiController _completionConfettiController;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchOpen = false;
@@ -51,6 +53,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     super.initState();
     timeago.setLocaleMessages('es', EsMessages());
     _tabController = TabController(length: 2, vsync: this);
+    _completionConfettiController =
+        ConfettiController(duration: const Duration(milliseconds: 1400));
 
     // Sync tab controller with provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -75,6 +79,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   void dispose() {
     _tasksChannel?.unsubscribe();
     _tabController.dispose();
+    _completionConfettiController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -290,331 +295,378 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               ),
               animateIn: true,
             ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-            child: _buildTabShell(),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // TASK LIST TAB
-                filteredAsync.when(
-                  loading: () => AppLoadingState(
-                    message: AppLocalizations.of(context).tasksLoadingMessage,
-                  ),
-                  error: (e, _) => AppErrorState(
-                    message: AppLocalizations.of(context).tasksLoadError,
-                    onRetry: () {
-                      ref.invalidate(tasksProvider);
-                      ref.invalidate(categoriesProvider);
-                    },
-                  ),
-                  data: (tasks) => RefreshIndicator(
-                    onRefresh: () async {
-                      ref.invalidate(tasksProvider);
-                      ref.invalidate(categoriesProvider);
-                    },
-                    color: AppColors.accentGold,
-                    child: CustomScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      slivers: [
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
-                            child: activeCatsAsync.when(
-                              data: (activeCats) {
-                                return categoriesAsync.when(
-                                  data: (catList) {
-                                    final visibleCats = catList
-                                        .where(
-                                          (c) => activeCats.contains(
-                                            CategoryMapping.normaliseCategory(
-                                              c.id,
-                                            ),
-                                          ),
-                                        )
-                                        .toList();
-
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        ShaderMask(
-                                          shaderCallback: (bounds) {
-                                            return const LinearGradient(
-                                              begin: Alignment.centerLeft,
-                                              end: Alignment.centerRight,
-                                              colors: [
-                                                Colors.white,
-                                                Colors.white,
-                                                Colors.transparent,
-                                              ],
-                                              stops: [0, 0.92, 1],
-                                            ).createShader(bounds);
-                                          },
-                                          blendMode: BlendMode.dstIn,
-                                          child: SizedBox(
-                                            height: 40,
-                                            child: ListView.builder(
-                                              scrollDirection: Axis.horizontal,
-                                              padding: const EdgeInsets.only(
-                                                right: 18,
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: _buildTabShell(),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // TASK LIST TAB
+                    filteredAsync.when(
+                      loading: () => AppLoadingState(
+                        message:
+                            AppLocalizations.of(context).tasksLoadingMessage,
+                      ),
+                      error: (e, _) => AppErrorState(
+                        message: AppLocalizations.of(context).tasksLoadError,
+                        onRetry: () {
+                          ref.invalidate(tasksProvider);
+                          ref.invalidate(categoriesProvider);
+                        },
+                      ),
+                      data: (tasks) => RefreshIndicator(
+                        onRefresh: () async {
+                          ref.invalidate(tasksProvider);
+                          ref.invalidate(categoriesProvider);
+                        },
+                        color: AppColors.accentGold,
+                        child: CustomScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 8, 24, 10),
+                                child: activeCatsAsync.when(
+                                  data: (activeCats) {
+                                    return categoriesAsync.when(
+                                      data: (catList) {
+                                        final visibleCats = catList
+                                            .where(
+                                              (c) => activeCats.contains(
+                                                CategoryMapping
+                                                    .normaliseCategory(
+                                                  c.id,
+                                                ),
                                               ),
-                                              itemCount: visibleCats.length + 2,
-                                              itemBuilder: (context, index) {
-                                                if (index == 0) {
-                                                  return _buildSearchChip()
-                                                      .animateStaggered(0);
-                                                }
+                                            )
+                                            .toList();
 
-                                                if (index == 1) {
-                                                  return _buildCategoryChip(
-                                                    null,
-                                                    AppLocalizations.of(context)
-                                                        .tasksFilterAll,
-                                                    AppColors.textSecondary,
-                                                  ).animateStaggered(1);
-                                                }
-
-                                                final category =
-                                                    visibleCats[index - 2];
-                                                return _buildCategoryChip(
-                                                  category.id,
-                                                  localizedTaskCategoryName(
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    ),
-                                                    category,
-                                                  ),
-                                                  AppColors.fromHex(
-                                                    category.color,
-                                                  ),
-                                                ).animateStaggered(index);
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            ShaderMask(
+                                              shaderCallback: (bounds) {
+                                                return const LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Colors.white,
+                                                    Colors.white,
+                                                    Colors.transparent,
+                                                  ],
+                                                  stops: [0, 0.92, 1],
+                                                ).createShader(bounds);
                                               },
-                                            ),
-                                          ),
-                                        ),
-                                        AnimatedSize(
-                                          duration:
-                                              const Duration(milliseconds: 220),
-                                          curve: Curves.easeOutCubic,
-                                          child: _isSearchOpen
-                                              ? Padding(
+                                              blendMode: BlendMode.dstIn,
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: ListView.builder(
+                                                  scrollDirection:
+                                                      Axis.horizontal,
                                                   padding:
                                                       const EdgeInsets.only(
-                                                    top: 10,
+                                                    right: 18,
                                                   ),
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: theme.surface,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                        20,
-                                                      ),
-                                                      border: Border.all(
-                                                        color: theme.border
-                                                            .withValues(
-                                                          alpha: 0.88,
-                                                        ),
-                                                      ),
-                                                      boxShadow:
-                                                          theme.cardShadow,
-                                                    ),
-                                                    child: TextField(
-                                                      controller:
-                                                          _searchController,
-                                                      focusNode:
-                                                          _searchFocusNode,
-                                                      textInputAction:
-                                                          TextInputAction
-                                                              .search,
-                                                      onChanged: (val) {
-                                                        ref
-                                                            .read(
-                                                              taskSearchQueryProvider
-                                                                  .notifier,
-                                                            )
-                                                            .setQuery(val);
-                                                        setState(() {});
-                                                      },
-                                                      decoration:
-                                                          InputDecoration(
-                                                        hintText:
-                                                            AppLocalizations.of(
+                                                  itemCount:
+                                                      visibleCats.length + 2,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    if (index == 0) {
+                                                      return _buildSearchChip()
+                                                          .animateStaggered(0);
+                                                    }
+
+                                                    if (index == 1) {
+                                                      return _buildCategoryChip(
+                                                        null,
+                                                        AppLocalizations.of(
                                                           context,
-                                                        ).tasksSearchHint,
-                                                        hintStyle: TextStyle(
-                                                          color:
-                                                              theme.textMuted,
-                                                          fontWeight:
-                                                              FontWeight.w600,
+                                                        ).tasksFilterAll,
+                                                        AppColors.textSecondary,
+                                                      ).animateStaggered(1);
+                                                    }
+
+                                                    final category =
+                                                        visibleCats[index - 2];
+                                                    return _buildCategoryChip(
+                                                      category.id,
+                                                      localizedTaskCategoryName(
+                                                        AppLocalizations.of(
+                                                          context,
                                                         ),
-                                                        prefixIcon: Icon(
-                                                          Icons.search_rounded,
-                                                          color: theme
-                                                              .textSecondary,
-                                                        ),
-                                                        suffixIcon:
-                                                            _searchController
-                                                                    .text
-                                                                    .isNotEmpty
-                                                                ? IconButton(
-                                                                    tooltip:
-                                                                        AppLocalizations
-                                                                            .of(
-                                                                      context,
-                                                                    ).tasksSearchClearTooltip,
-                                                                    onPressed:
-                                                                        () {
-                                                                      _searchController
-                                                                          .clear();
-                                                                      ref
-                                                                          .read(
-                                                                            taskSearchQueryProvider.notifier,
-                                                                          )
-                                                                          .setQuery(
-                                                                            '',
-                                                                          );
-                                                                      setState(
-                                                                        () {},
-                                                                      );
-                                                                      _searchFocusNode
-                                                                          .requestFocus();
-                                                                    },
-                                                                    icon: Icon(
-                                                                      Icons
-                                                                          .close_rounded,
-                                                                      color: theme
-                                                                          .textSecondary,
-                                                                    ),
-                                                                  )
-                                                                : null,
-                                                        filled: true,
-                                                        fillColor:
-                                                            Colors.transparent,
-                                                        border:
-                                                            OutlineInputBorder(
+                                                        category,
+                                                      ),
+                                                      AppColors.fromHex(
+                                                        category.color,
+                                                      ),
+                                                    ).animateStaggered(index);
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            AnimatedSize(
+                                              duration: const Duration(
+                                                milliseconds: 220,
+                                              ),
+                                              curve: Curves.easeOutCubic,
+                                              child: _isSearchOpen
+                                                  ? Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                        top: 10,
+                                                      ),
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: theme.surface,
                                                           borderRadius:
                                                               BorderRadius
-                                                                  .circular(20),
-                                                          borderSide:
-                                                              BorderSide.none,
+                                                                  .circular(
+                                                            20,
+                                                          ),
+                                                          border: Border.all(
+                                                            color: theme.border
+                                                                .withValues(
+                                                              alpha: 0.88,
+                                                            ),
+                                                          ),
+                                                          boxShadow:
+                                                              theme.cardShadow,
                                                         ),
-                                                        contentPadding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          vertical: 14,
-                                                          horizontal: 16,
+                                                        child: TextField(
+                                                          controller:
+                                                              _searchController,
+                                                          focusNode:
+                                                              _searchFocusNode,
+                                                          textInputAction:
+                                                              TextInputAction
+                                                                  .search,
+                                                          onChanged: (val) {
+                                                            ref
+                                                                .read(
+                                                                  taskSearchQueryProvider
+                                                                      .notifier,
+                                                                )
+                                                                .setQuery(val);
+                                                            setState(() {});
+                                                          },
+                                                          decoration:
+                                                              InputDecoration(
+                                                            hintText:
+                                                                AppLocalizations
+                                                                    .of(
+                                                              context,
+                                                            ).tasksSearchHint,
+                                                            hintStyle:
+                                                                TextStyle(
+                                                              color: theme
+                                                                  .textMuted,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                            prefixIcon: Icon(
+                                                              Icons
+                                                                  .search_rounded,
+                                                              color: theme
+                                                                  .textSecondary,
+                                                            ),
+                                                            suffixIcon:
+                                                                _searchController
+                                                                        .text
+                                                                        .isNotEmpty
+                                                                    ? IconButton(
+                                                                        tooltip:
+                                                                            AppLocalizations.of(
+                                                                          context,
+                                                                        ).tasksSearchClearTooltip,
+                                                                        onPressed:
+                                                                            () {
+                                                                          _searchController
+                                                                              .clear();
+                                                                          ref
+                                                                              .read(
+                                                                                taskSearchQueryProvider.notifier,
+                                                                              )
+                                                                              .setQuery(
+                                                                                '',
+                                                                              );
+                                                                          setState(
+                                                                            () {},
+                                                                          );
+                                                                          _searchFocusNode
+                                                                              .requestFocus();
+                                                                        },
+                                                                        icon:
+                                                                            Icon(
+                                                                          Icons
+                                                                              .close_rounded,
+                                                                          color:
+                                                                              theme.textSecondary,
+                                                                        ),
+                                                                      )
+                                                                    : null,
+                                                            filled: true,
+                                                            fillColor: Colors
+                                                                .transparent,
+                                                            border:
+                                                                OutlineInputBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                20,
+                                                              ),
+                                                              borderSide:
+                                                                  BorderSide
+                                                                      .none,
+                                                            ),
+                                                            contentPadding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                              vertical: 14,
+                                                              horizontal: 16,
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                )
-                                              : const SizedBox.shrink(),
-                                        ),
-                                      ],
+                                                    )
+                                                  : const SizedBox.shrink(),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      loading: () => const SizedBox(),
+                                      error: (_, __) => Row(
+                                        children: [
+                                          _buildSearchChip(),
+                                          _buildCategoryChip(
+                                            null,
+                                            AppLocalizations.of(context)
+                                                .tasksFilterAll,
+                                            AppColors.textSecondary,
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   },
                                   loading: () => const SizedBox(),
-                                  error: (_, __) => Row(
-                                    children: [
-                                      _buildSearchChip(),
-                                      _buildCategoryChip(
-                                        null,
+                                  error: (_, __) => const SizedBox(),
+                                ),
+                              ).animateEntrance(delay: 100),
+                            ),
+                            // Tasks list
+                            SliverPadding(
+                              padding: EdgeInsets.only(
+                                bottom: 158 +
+                                    MediaQuery.viewPaddingOf(context).bottom,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildListDelegate([
+                                  if (tasks.isEmpty)
+                                    _buildEmptyState(
+                                      selectedCategories.isEmpty
+                                          ? null
+                                          : 'filtered',
+                                    ),
+                                  ..._buildGroupedTasks(
+                                    tasks,
+                                    categoriesAsync.maybeWhen(
+                                      data: (list) => list,
+                                      orElse: () => [],
+                                    ),
+                                    members,
+                                    selectedCategories,
+                                  ),
+                                ]),
+                              ),
+                            ),
+                            if (ref.read(tasksProvider.notifier).hasMore &&
+                                tasks.isNotEmpty &&
+                                selectedCategories.isEmpty)
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 0, 24, 140),
+                                  child: Center(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => ref
+                                          .read(tasksProvider.notifier)
+                                          .loadMore(),
+                                      icon: const Icon(Icons.add_rounded),
+                                      label: Text(
                                         AppLocalizations.of(context)
-                                            .tasksFilterAll,
-                                        AppColors.textSecondary,
+                                            .tasksLoadMore,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                );
-                              },
-                              loading: () => const SizedBox(),
-                              error: (_, __) => const SizedBox(),
-                            ),
-                          ).animateEntrance(delay: 100),
-                        ),
-                        // Tasks list
-                        SliverPadding(
-                          padding: EdgeInsets.only(
-                            bottom:
-                                158 + MediaQuery.viewPaddingOf(context).bottom,
-                          ),
-                          sliver: SliverList(
-                            delegate: SliverChildListDelegate([
-                              if (tasks.isEmpty)
-                                _buildEmptyState(
-                                  selectedCategories.isEmpty
-                                      ? null
-                                      : 'filtered',
-                                ),
-                              ..._buildGroupedTasks(
-                                tasks,
-                                categoriesAsync.maybeWhen(
-                                  data: (list) => list,
-                                  orElse: () => [],
-                                ),
-                                members,
-                                selectedCategories,
-                              ),
-                            ]),
-                          ),
-                        ),
-                        if (ref.read(tasksProvider.notifier).hasMore &&
-                            tasks.isNotEmpty &&
-                            selectedCategories.isEmpty)
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.fromLTRB(24, 0, 24, 140),
-                              child: Center(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => ref
-                                      .read(tasksProvider.notifier)
-                                      .loadMore(),
-                                  icon: const Icon(Icons.add_rounded),
-                                  label: Text(
-                                    AppLocalizations.of(context).tasksLoadMore,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.primary,
-                                    side: const BorderSide(
-                                      color: AppColors.primary,
-                                      width: 1.5,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 32,
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        side: const BorderSide(
+                                          color: AppColors.primary,
+                                          width: 1.5,
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 32,
+                                          vertical: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(24),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    // CALENDAR TAB
+                    CalendarScreen(
+                      onEdit: (task) => _showEditDialog(task),
+                      onSchedule: (task) => _showScheduleDialog(task),
+                    ),
+                  ],
                 ),
-                // CALENDAR TAB
-                CalendarScreen(
-                  onEdit: (task) => _showEditDialog(task),
-                  onSchedule: (task) => _showScheduleDialog(task),
-                ),
-              ],
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: IgnorePointer(
+              child: ConfettiWidget(
+                confettiController: _completionConfettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  AppColors.success,
+                  AppColors.accentGold,
+                  AppColors.primary,
+                  Colors.white,
+                ],
+                numberOfParticles: 24,
+                gravity: 0.12,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _showCompletionCelebration() {
+    _completionConfettiController.play();
+    HapticFeedback.heavyImpact();
   }
 
   Widget _buildSearchChip() {
@@ -745,8 +797,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
   Widget _buildEmptyState(String? filterStatus) {
     final isSolo =
-        ref.watch(currentHouseholdProvider).valueOrNull?.householdType ==
-            'solo';
+        ref.watch(currentHouseholdProvider).value?.householdType == 'solo';
     final t = AppLocalizations.of(context);
     return AppEmptyState(
       title:
@@ -849,6 +900,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             task: task,
             onSchedule: () => _showScheduleDialog(task),
             onEdit: () => _showEditDialog(task),
+            onCompletedFeedback: _showCompletionCelebration,
           ).animateStaggered(index);
         }),
       );
@@ -934,12 +986,14 @@ class _TaskCard extends ConsumerStatefulWidget {
   final TaskModel task;
   final VoidCallback onSchedule;
   final VoidCallback onEdit;
+  final VoidCallback onCompletedFeedback;
 
   const _TaskCard({
     super.key,
     required this.task,
     required this.onSchedule,
     required this.onEdit,
+    required this.onCompletedFeedback,
   });
 
   @override
@@ -970,8 +1024,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final task = widget.task;
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
-    final members = ref.watch(householdMembersProvider).valueOrNull ??
-        const <MemberModel>[];
+    final members =
+        ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
@@ -1392,7 +1446,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }) async {
     final currentUserId = ref.read(currentUserIdProvider);
     final members =
-        ref.read(householdMembersProvider).valueOrNull ?? const <MemberModel>[];
+        ref.read(householdMembersProvider).value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final t = AppLocalizations.of(context);
@@ -1589,8 +1643,21 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
           SnackBar(content: Text(t.tasksSnackCompleteError)),
         );
       } else {
+        widget.onCompletedFeedback();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.tasksSnackCompleted)),
+          SnackBar(
+            content: Text(
+              t.tasksSnackCompleted,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
         );
         ref.invalidate(tasksProvider);
         ref.invalidate(todayTasksProvider);

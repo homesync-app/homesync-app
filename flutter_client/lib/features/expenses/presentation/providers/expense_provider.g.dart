@@ -6,261 +6,619 @@ part of 'expense_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$expenseRepositoryHash() => r'6d92aaef781ff86e8e47d1be96a701ed3e446f26';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [expenseRepository].
 @ProviderFor(expenseRepository)
-final expenseRepositoryProvider =
-    AutoDisposeProvider<ExpenseRepository>.internal(
-  expenseRepository,
-  name: r'expenseRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final expenseRepositoryProvider = ExpenseRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ExpenseRepositoryRef = AutoDisposeProviderRef<ExpenseRepository>;
-String _$getExpensesUseCaseHash() =>
-    r'864fdc75d0cbce04736a7903af97835895dabef5';
+final class ExpenseRepositoryProvider extends $FunctionalProvider<
+    ExpenseRepository,
+    ExpenseRepository,
+    ExpenseRepository> with $Provider<ExpenseRepository> {
+  ExpenseRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getExpensesUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$expenseRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<ExpenseRepository> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ExpenseRepository create(Ref ref) {
+    return expenseRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ExpenseRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ExpenseRepository>(value),
+    );
+  }
+}
+
+String _$expenseRepositoryHash() => r'5da251b699e286e75db8e21ed09c45abf2b798b8';
+
 @ProviderFor(getExpensesUseCase)
-final getExpensesUseCaseProvider =
-    AutoDisposeProvider<GetExpensesUseCase>.internal(
-  getExpensesUseCase,
-  name: r'getExpensesUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getExpensesUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getExpensesUseCaseProvider = GetExpensesUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetExpensesUseCaseRef = AutoDisposeProviderRef<GetExpensesUseCase>;
-String _$getCombinedFeedUseCaseHash() =>
-    r'776c80d0c32014624001d544abea6cb6ded9e42f';
+final class GetExpensesUseCaseProvider extends $FunctionalProvider<
+    GetExpensesUseCase,
+    GetExpensesUseCase,
+    GetExpensesUseCase> with $Provider<GetExpensesUseCase> {
+  GetExpensesUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getExpensesUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getCombinedFeedUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$getExpensesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetExpensesUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetExpensesUseCase create(Ref ref) {
+    return getExpensesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetExpensesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetExpensesUseCase>(value),
+    );
+  }
+}
+
+String _$getExpensesUseCaseHash() =>
+    r'86d88aa315e8492d9165f61c53f257da9243bd80';
+
 @ProviderFor(getCombinedFeedUseCase)
-final getCombinedFeedUseCaseProvider =
-    AutoDisposeProvider<GetCombinedFeedUseCase>.internal(
-  getCombinedFeedUseCase,
-  name: r'getCombinedFeedUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getCombinedFeedUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getCombinedFeedUseCaseProvider = GetCombinedFeedUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetCombinedFeedUseCaseRef
-    = AutoDisposeProviderRef<GetCombinedFeedUseCase>;
-String _$getBalancesUseCaseHash() =>
-    r'2986fd5ba6e460ac4c7e16b76d572d70f9924cee';
+final class GetCombinedFeedUseCaseProvider extends $FunctionalProvider<
+    GetCombinedFeedUseCase,
+    GetCombinedFeedUseCase,
+    GetCombinedFeedUseCase> with $Provider<GetCombinedFeedUseCase> {
+  GetCombinedFeedUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getCombinedFeedUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getBalancesUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$getCombinedFeedUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCombinedFeedUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetCombinedFeedUseCase create(Ref ref) {
+    return getCombinedFeedUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCombinedFeedUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCombinedFeedUseCase>(value),
+    );
+  }
+}
+
+String _$getCombinedFeedUseCaseHash() =>
+    r'a54fc1b0f959139edd930196ef054e367fe4c078';
+
 @ProviderFor(getBalancesUseCase)
-final getBalancesUseCaseProvider =
-    AutoDisposeProvider<GetBalancesUseCase>.internal(
-  getBalancesUseCase,
-  name: r'getBalancesUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getBalancesUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getBalancesUseCaseProvider = GetBalancesUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetBalancesUseCaseRef = AutoDisposeProviderRef<GetBalancesUseCase>;
-String _$getPersonalFinanceSummaryUseCaseHash() =>
-    r'3a26bd4131d499ed6860cfd13e7343874ccc40b0';
+final class GetBalancesUseCaseProvider extends $FunctionalProvider<
+    GetBalancesUseCase,
+    GetBalancesUseCase,
+    GetBalancesUseCase> with $Provider<GetBalancesUseCase> {
+  GetBalancesUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getBalancesUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getPersonalFinanceSummaryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$getBalancesUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetBalancesUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetBalancesUseCase create(Ref ref) {
+    return getBalancesUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetBalancesUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetBalancesUseCase>(value),
+    );
+  }
+}
+
+String _$getBalancesUseCaseHash() =>
+    r'fb209ad2a37377c7893de03b18de3746018a85cf';
+
 @ProviderFor(getPersonalFinanceSummaryUseCase)
 final getPersonalFinanceSummaryUseCaseProvider =
-    AutoDisposeProvider<GetPersonalFinanceSummaryUseCase>.internal(
-  getPersonalFinanceSummaryUseCase,
-  name: r'getPersonalFinanceSummaryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getPersonalFinanceSummaryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    GetPersonalFinanceSummaryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetPersonalFinanceSummaryUseCaseRef
-    = AutoDisposeProviderRef<GetPersonalFinanceSummaryUseCase>;
-String _$monthlyPendingPlannedExpensesHash() =>
-    r'a4367c7121abac4b51ffa9e74d8eb463cf61bab1';
+final class GetPersonalFinanceSummaryUseCaseProvider
+    extends $FunctionalProvider<GetPersonalFinanceSummaryUseCase,
+        GetPersonalFinanceSummaryUseCase, GetPersonalFinanceSummaryUseCase>
+    with $Provider<GetPersonalFinanceSummaryUseCase> {
+  GetPersonalFinanceSummaryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getPersonalFinanceSummaryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [monthlyPendingPlannedExpenses].
-@ProviderFor(monthlyPendingPlannedExpenses)
-final monthlyPendingPlannedExpensesProvider =
-    AutoDisposeFutureProvider<List<FeedItemModel>>.internal(
-  monthlyPendingPlannedExpenses,
-  name: r'monthlyPendingPlannedExpensesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$monthlyPendingPlannedExpensesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  String debugGetCreateSourceHash() => _$getPersonalFinanceSummaryUseCaseHash();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef MonthlyPendingPlannedExpensesRef
-    = AutoDisposeFutureProviderRef<List<FeedItemModel>>;
-String _$monthlyProjectionHash() => r'f721034d7d36bf970e87a712b5a0529466782161';
+  @$internal
+  @override
+  $ProviderElement<GetPersonalFinanceSummaryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
-/// See also [monthlyProjection].
-@ProviderFor(monthlyProjection)
-final monthlyProjectionProvider =
-    AutoDisposeFutureProvider<MonthlyProjectionData>.internal(
-  monthlyProjection,
-  name: r'monthlyProjectionProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$monthlyProjectionHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  GetPersonalFinanceSummaryUseCase create(Ref ref) {
+    return getPersonalFinanceSummaryUseCase(ref);
+  }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef MonthlyProjectionRef
-    = AutoDisposeFutureProviderRef<MonthlyProjectionData>;
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetPersonalFinanceSummaryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<GetPersonalFinanceSummaryUseCase>(value),
+    );
+  }
+}
+
+String _$getPersonalFinanceSummaryUseCaseHash() =>
+    r'2b227e71c7e60499dd67155c555caae3ebde027c';
+
+@ProviderFor(PersonalFinanceSummary)
+final personalFinanceSummaryProvider = PersonalFinanceSummaryProvider._();
+
+final class PersonalFinanceSummaryProvider extends $AsyncNotifierProvider<
+    PersonalFinanceSummary, Map<String, dynamic>> {
+  PersonalFinanceSummaryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'personalFinanceSummaryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$personalFinanceSummaryHash();
+
+  @$internal
+  @override
+  PersonalFinanceSummary create() => PersonalFinanceSummary();
+}
+
 String _$personalFinanceSummaryHash() =>
     r'0323d22f5eaaaf2c959ab5a09c5e291895a240f6';
 
-/// See also [PersonalFinanceSummary].
-@ProviderFor(PersonalFinanceSummary)
-final personalFinanceSummaryProvider = AutoDisposeAsyncNotifierProvider<
-    PersonalFinanceSummary, Map<String, dynamic>>.internal(
-  PersonalFinanceSummary.new,
-  name: r'personalFinanceSummaryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$personalFinanceSummaryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$PersonalFinanceSummary
+    extends $AsyncNotifier<Map<String, dynamic>> {
+  FutureOr<Map<String, dynamic>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref
+        as $Ref<AsyncValue<Map<String, dynamic>>, Map<String, dynamic>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<Map<String, dynamic>>, Map<String, dynamic>>,
+        AsyncValue<Map<String, dynamic>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$PersonalFinanceSummary
-    = AutoDisposeAsyncNotifier<Map<String, dynamic>>;
+@ProviderFor(ExpenseBalances)
+final expenseBalancesProvider = ExpenseBalancesProvider._();
+
+final class ExpenseBalancesProvider extends $AsyncNotifierProvider<
+    ExpenseBalances, List<HouseholdBalanceModel>> {
+  ExpenseBalancesProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseBalancesProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseBalancesHash();
+
+  @$internal
+  @override
+  ExpenseBalances create() => ExpenseBalances();
+}
+
 String _$expenseBalancesHash() => r'ed9878a7b5b3e783c8a3a043b39aab15dd2753fa';
 
-/// See also [ExpenseBalances].
-@ProviderFor(ExpenseBalances)
-final expenseBalancesProvider = AsyncNotifierProvider<ExpenseBalances,
-    List<HouseholdBalanceModel>>.internal(
-  ExpenseBalances.new,
-  name: r'expenseBalancesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseBalancesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$ExpenseBalances
+    extends $AsyncNotifier<List<HouseholdBalanceModel>> {
+  FutureOr<List<HouseholdBalanceModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<HouseholdBalanceModel>>,
+        List<HouseholdBalanceModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<HouseholdBalanceModel>>,
+            List<HouseholdBalanceModel>>,
+        AsyncValue<List<HouseholdBalanceModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$ExpenseBalances = AsyncNotifier<List<HouseholdBalanceModel>>;
-String _$expenseControllerHash() => r'7eed4017b89ce763df5c3a3250b3c63a27f4f0c4';
-
-/// See also [ExpenseController].
 @ProviderFor(ExpenseController)
-final expenseControllerProvider = AutoDisposeAsyncNotifierProvider<
-    ExpenseController, List<ExpenseModel>>.internal(
-  ExpenseController.new,
-  name: r'expenseControllerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseControllerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final expenseControllerProvider = ExpenseControllerProvider._();
 
-typedef _$ExpenseController = AutoDisposeAsyncNotifier<List<ExpenseModel>>;
-String _$combinedFeedControllerHash() =>
-    r'3934382215ed808135dc59952798baffa6b0bad5';
+final class ExpenseControllerProvider
+    extends $AsyncNotifierProvider<ExpenseController, List<ExpenseModel>> {
+  ExpenseControllerProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [CombinedFeedController].
+  @override
+  String debugGetCreateSourceHash() => _$expenseControllerHash();
+
+  @$internal
+  @override
+  ExpenseController create() => ExpenseController();
+}
+
+String _$expenseControllerHash() => r'abbbfdaa1a41529d34055154d3f27d7c6247a7c5';
+
+abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
+  FutureOr<List<ExpenseModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<AsyncValue<List<ExpenseModel>>, List<ExpenseModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<ExpenseModel>>, List<ExpenseModel>>,
+        AsyncValue<List<ExpenseModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(CombinedFeedController)
-final combinedFeedControllerProvider = AutoDisposeAsyncNotifierProvider<
-    CombinedFeedController, List<FeedItemModel>>.internal(
-  CombinedFeedController.new,
-  name: r'combinedFeedControllerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$combinedFeedControllerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final combinedFeedControllerProvider = CombinedFeedControllerProvider._();
 
-typedef _$CombinedFeedController
-    = AutoDisposeAsyncNotifier<List<FeedItemModel>>;
+final class CombinedFeedControllerProvider extends $AsyncNotifierProvider<
+    CombinedFeedController, List<FeedItemModel>> {
+  CombinedFeedControllerProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'combinedFeedControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$combinedFeedControllerHash();
+
+  @$internal
+  @override
+  CombinedFeedController create() => CombinedFeedController();
+}
+
+String _$combinedFeedControllerHash() =>
+    r'0da6a68d8846ed480ce4c17b73e0ab7318c8f722';
+
+abstract class _$CombinedFeedController
+    extends $AsyncNotifier<List<FeedItemModel>> {
+  FutureOr<List<FeedItemModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<AsyncValue<List<FeedItemModel>>, List<FeedItemModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<FeedItemModel>>, List<FeedItemModel>>,
+        AsyncValue<List<FeedItemModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(ExpenseTemplateController)
+final expenseTemplateControllerProvider = ExpenseTemplateControllerProvider._();
+
+final class ExpenseTemplateControllerProvider extends $AsyncNotifierProvider<
+    ExpenseTemplateController, List<ExpenseTemplateModel>> {
+  ExpenseTemplateControllerProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseTemplateControllerProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseTemplateControllerHash();
+
+  @$internal
+  @override
+  ExpenseTemplateController create() => ExpenseTemplateController();
+}
+
 String _$expenseTemplateControllerHash() =>
     r'4116020e7c8072eb9f3c61c54bf70c0a7a9c024c';
 
-/// See also [ExpenseTemplateController].
-@ProviderFor(ExpenseTemplateController)
-final expenseTemplateControllerProvider = AutoDisposeAsyncNotifierProvider<
-    ExpenseTemplateController, List<ExpenseTemplateModel>>.internal(
-  ExpenseTemplateController.new,
-  name: r'expenseTemplateControllerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseTemplateControllerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$ExpenseTemplateController
+    extends $AsyncNotifier<List<ExpenseTemplateModel>> {
+  FutureOr<List<ExpenseTemplateModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<ExpenseTemplateModel>>,
+        List<ExpenseTemplateModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<ExpenseTemplateModel>>,
+            List<ExpenseTemplateModel>>,
+        AsyncValue<List<ExpenseTemplateModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$ExpenseTemplateController
-    = AutoDisposeAsyncNotifier<List<ExpenseTemplateModel>>;
+@ProviderFor(monthlyPendingPlannedExpenses)
+final monthlyPendingPlannedExpensesProvider =
+    MonthlyPendingPlannedExpensesProvider._();
+
+final class MonthlyPendingPlannedExpensesProvider extends $FunctionalProvider<
+        AsyncValue<List<FeedItemModel>>,
+        List<FeedItemModel>,
+        FutureOr<List<FeedItemModel>>>
+    with
+        $FutureModifier<List<FeedItemModel>>,
+        $FutureProvider<List<FeedItemModel>> {
+  MonthlyPendingPlannedExpensesProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'monthlyPendingPlannedExpensesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$monthlyPendingPlannedExpensesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<FeedItemModel>> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<FeedItemModel>> create(Ref ref) {
+    return monthlyPendingPlannedExpenses(ref);
+  }
+}
+
+String _$monthlyPendingPlannedExpensesHash() =>
+    r'22a8a77ee75ce6d1bf65e6e8db41aa98dad6ba0a';
+
+@ProviderFor(monthlyProjection)
+final monthlyProjectionProvider = MonthlyProjectionProvider._();
+
+final class MonthlyProjectionProvider extends $FunctionalProvider<
+        AsyncValue<MonthlyProjectionData>,
+        MonthlyProjectionData,
+        FutureOr<MonthlyProjectionData>>
+    with
+        $FutureModifier<MonthlyProjectionData>,
+        $FutureProvider<MonthlyProjectionData> {
+  MonthlyProjectionProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'monthlyProjectionProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$monthlyProjectionHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<MonthlyProjectionData> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<MonthlyProjectionData> create(Ref ref) {
+    return monthlyProjection(ref);
+  }
+}
+
+String _$monthlyProjectionHash() => r'29000c214d4de889017ec3241ddbedd2c4710da2';
+
+@ProviderFor(ExpenseFiltersNotifier)
+final expenseFiltersProvider = ExpenseFiltersNotifierProvider._();
+
+final class ExpenseFiltersNotifierProvider
+    extends $NotifierProvider<ExpenseFiltersNotifier, Map<String, dynamic>> {
+  ExpenseFiltersNotifierProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseFiltersProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseFiltersNotifierHash();
+
+  @$internal
+  @override
+  ExpenseFiltersNotifier create() => ExpenseFiltersNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, dynamic> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, dynamic>>(value),
+    );
+  }
+}
+
 String _$expenseFiltersNotifierHash() =>
     r'668f4d76d09978368ddf7e1f5aac78c322f4982f';
 
-/// See also [ExpenseFiltersNotifier].
-@ProviderFor(ExpenseFiltersNotifier)
-final expenseFiltersNotifierProvider = AutoDisposeNotifierProvider<
-    ExpenseFiltersNotifier, Map<String, dynamic>>.internal(
-  ExpenseFiltersNotifier.new,
-  name: r'expenseFiltersNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseFiltersNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$ExpenseFiltersNotifier
+    extends $Notifier<Map<String, dynamic>> {
+  Map<String, dynamic> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<Map<String, dynamic>, Map<String, dynamic>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<Map<String, dynamic>, Map<String, dynamic>>,
+        Map<String, dynamic>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$ExpenseFiltersNotifier = AutoDisposeNotifier<Map<String, dynamic>>;
+@ProviderFor(MercadopagoMovements)
+final mercadopagoMovementsProvider = MercadopagoMovementsProvider._();
+
+final class MercadopagoMovementsProvider extends $AsyncNotifierProvider<
+    MercadopagoMovements, List<Map<String, dynamic>>> {
+  MercadopagoMovementsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'mercadopagoMovementsProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$mercadopagoMovementsHash();
+
+  @$internal
+  @override
+  MercadopagoMovements create() => MercadopagoMovements();
+}
+
 String _$mercadopagoMovementsHash() =>
     r'04581643c0618bcfa24e58ac6275b1e95178d3ef';
 
-/// See also [MercadopagoMovements].
-@ProviderFor(MercadopagoMovements)
-final mercadopagoMovementsProvider = AutoDisposeAsyncNotifierProvider<
-    MercadopagoMovements, List<Map<String, dynamic>>>.internal(
-  MercadopagoMovements.new,
-  name: r'mercadopagoMovementsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$mercadopagoMovementsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$MercadopagoMovements
-    = AutoDisposeAsyncNotifier<List<Map<String, dynamic>>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$MercadopagoMovements
+    extends $AsyncNotifier<List<Map<String, dynamic>>> {
+  FutureOr<List<Map<String, dynamic>>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<Map<String, dynamic>>>,
+        List<Map<String, dynamic>>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<Map<String, dynamic>>>,
+            List<Map<String, dynamic>>>,
+        AsyncValue<List<Map<String, dynamic>>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}

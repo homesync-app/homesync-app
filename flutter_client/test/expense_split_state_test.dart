@@ -53,7 +53,9 @@ void main() {
       expect(manager.controllerForMember(memberB.userId).text, '65');
     });
 
-    test('onChanged updates entered member and auto-fills remainder for two members', () {
+    test(
+        'onChanged updates entered member and auto-fills remainder for two members',
+        () {
       var stateChangeCount = 0;
       final manager = _buildManager(
         readTotalInput: () => '100',

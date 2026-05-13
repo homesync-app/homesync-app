@@ -249,8 +249,11 @@ class AnalyticsService {
           stackTrace: stackTrace,
         );
       } else {
-        log.w('Analytics skipped in $context',
-            error: error, stackTrace: stackTrace,);
+        log.w(
+          'Analytics skipped in $context',
+          error: error,
+          stackTrace: stackTrace,
+        );
       }
     }
   }

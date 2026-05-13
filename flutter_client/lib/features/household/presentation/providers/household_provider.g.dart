@@ -6,38 +6,83 @@ part of 'household_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$householdHash() => r'aa777f3da76f5e435388ac2a449f4ceefe40e064';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [household].
-@ProviderFor(household)
-final householdProvider = FutureProvider<HouseholdModel?>.internal(
-  household,
-  name: r'householdProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$householdHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+@ProviderFor(HouseholdMembersNotifier)
+final householdMembersProvider = HouseholdMembersNotifierProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef HouseholdRef = FutureProviderRef<HouseholdModel?>;
+final class HouseholdMembersNotifierProvider extends $AsyncNotifierProvider<
+    HouseholdMembersNotifier, List<MemberModel>> {
+  HouseholdMembersNotifierProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'householdMembersProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$householdMembersNotifierHash();
+
+  @$internal
+  @override
+  HouseholdMembersNotifier create() => HouseholdMembersNotifier();
+}
+
 String _$householdMembersNotifierHash() =>
     r'df65d92f4c8b34b8e30b2b299cddbff19b14b444';
 
-/// See also [HouseholdMembersNotifier].
-@ProviderFor(HouseholdMembersNotifier)
-final householdMembersNotifierProvider =
-    AsyncNotifierProvider<HouseholdMembersNotifier, List<MemberModel>>.internal(
-  HouseholdMembersNotifier.new,
-  name: r'householdMembersNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$householdMembersNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$HouseholdMembersNotifier
+    extends $AsyncNotifier<List<MemberModel>> {
+  FutureOr<List<MemberModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<AsyncValue<List<MemberModel>>, List<MemberModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<MemberModel>>, List<MemberModel>>,
+        AsyncValue<List<MemberModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$HouseholdMembersNotifier = AsyncNotifier<List<MemberModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(household)
+final householdProvider = HouseholdProvider._();
+
+final class HouseholdProvider extends $FunctionalProvider<
+        AsyncValue<HouseholdModel?>, HouseholdModel?, FutureOr<HouseholdModel?>>
+    with $FutureModifier<HouseholdModel?>, $FutureProvider<HouseholdModel?> {
+  HouseholdProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'householdProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$householdHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<HouseholdModel?> $createElement(
+          $ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<HouseholdModel?> create(Ref ref) {
+    return household(ref);
+  }
+}
+
+String _$householdHash() => r'aa777f3da76f5e435388ac2a449f4ceefe40e064';

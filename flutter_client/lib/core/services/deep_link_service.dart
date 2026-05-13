@@ -29,16 +29,20 @@ class DeepLinkService {
         if (status == 'success') {
           showToast('✅ Mercado Pago conectado con éxito', AppColors.success);
         } else if (status == 'error') {
-          showToast('❌ Error al conectar: ${message ?? "Desconocido"}',
-              AppColors.error,);
+          showToast(
+            '❌ Error al conectar: ${message ?? "Desconocido"}',
+            AppColors.error,
+          );
         }
       }
 
       // 2. Mercado Pago Payment callbacks
       if (uri.host == 'payment-success' ||
           uri.path.contains('payment-success')) {
-        showToast('🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
-            AppColors.success,);
+        showToast(
+          '🎉 ¡Acreditado! Se verá reflejado en unos segundos.',
+          AppColors.success,
+        );
 
         // Refresh all relevant data
         ref.invalidate(savingsGoalsProvider);
@@ -55,7 +59,9 @@ class DeepLinkService {
       if (uri.host == 'payment-pending' ||
           uri.path.contains('payment-pending')) {
         showToast(
-            '⏳ Pago en proceso. Te avisaremos al acreditarse.', Colors.orange,);
+          '⏳ Pago en proceso. Te avisaremos al acreditarse.',
+          Colors.orange,
+        );
       }
     });
   }

@@ -54,7 +54,7 @@ class ConnectivityState {
 }
 
 @Riverpod(keepAlive: true)
-ConnectivityClient connectivityClient(ConnectivityClientRef ref) {
+ConnectivityClient connectivityClient(Ref ref) {
   return ConnectivityPlusClient();
 }
 
@@ -97,7 +97,8 @@ class ConnectivityNotifier extends _$ConnectivityNotifier {
 
   Future<void> _checkConnection() async {
     try {
-      final results = await ref.read(connectivityClientProvider).checkConnectivity();
+      final results =
+          await ref.read(connectivityClientProvider).checkConnectivity();
       _applyConnectivityResult(results);
     } catch (e, stack) {
       log.w('Connectivity check failed: $e', error: e, stackTrace: stack);
@@ -130,11 +131,11 @@ class ConnectivityNotifier extends _$ConnectivityNotifier {
 }
 
 @riverpod
-bool isOnline(IsOnlineRef ref) {
-  return ref.watch(connectivityNotifierProvider).isOnline;
+bool isOnline(Ref ref) {
+  return ref.watch(connectivityProvider).isOnline;
 }
 
 @riverpod
-ConnectivityStatus connectivityStatus(ConnectivityStatusRef ref) {
-  return ref.watch(connectivityNotifierProvider).status;
+ConnectivityStatus connectivityStatus(Ref ref) {
+  return ref.watch(connectivityProvider).status;
 }

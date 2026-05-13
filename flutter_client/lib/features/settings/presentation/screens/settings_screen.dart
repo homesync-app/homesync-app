@@ -6,6 +6,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
@@ -22,7 +23,6 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
@@ -75,14 +75,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(userProfileProvider);
     ref.invalidate(currentHouseholdProvider);
     ref.invalidate(householdMembersProvider);
-    ref.invalidate(householdMembersNotifierProvider);
+    ref.invalidate(householdMembersProvider);
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(userBalanceProvider);
     ref.invalidate(todayTasksProvider);
     ref.invalidate(tasksProvider);
     ref.invalidate(recentActivityProvider);
     ref.invalidate(qaAdminRecentEventsProvider);
-    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+    await ref.read(householdMembersProvider.notifier).refresh();
   }
 
   Future<void> _loadData() async {
@@ -378,6 +378,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _buildAppearanceCard(isMinor: isMinor),
                           const SizedBox(height: 16),
                           _buildLanguageCard(),
+                          const SizedBox(height: 16),
+                          _buildCurrencyCard(),
                           const SizedBox(height: 24),
                           _buildNotificationsCard(),
                           const SizedBox(height: 16),
@@ -734,7 +736,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         (_) {},
       );
 
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       await _loadData();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1012,8 +1014,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildCurrencyCard() {
+    return SettingsCurrencyCard(
+      currentCurrency: ref.watch(currencyProvider),
+      onCurrencyChanged: (currency) {
+        HapticFeedback.lightImpact();
+        ref.read(currencyProvider.notifier).setCurrency(currency);
+      },
+    );
+  }
+
   Widget _buildAppearanceCard({bool isMinor = false}) {
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
     final currentColor = ref.watch(primaryColorProvider);
     final defaultPalette = ThemePalette.all.firstWhere(
       (palette) => palette.name == 'Naranja (Original)',
@@ -1063,7 +1075,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildPremiumCard() {
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
     final t = AppLocalizations.of(context);
 
     return SettingsPremiumCard(
@@ -1103,7 +1115,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Invalidate profile cache so header updates
       ref.invalidate(userProfileProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
 
       if (mounted) {
         final messenger = ScaffoldMessenger.of(context);
@@ -1248,7 +1260,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.invalidate(householdIdProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(currentHouseholdProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       ref.invalidate(qaAdminRecentEventsProvider);
       await _loadData();
 

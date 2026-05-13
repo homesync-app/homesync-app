@@ -42,9 +42,8 @@ class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
             value: currentUserId,
           ),
           callback: (payload) {
-            final newNote =
-                LoveNoteModel.fromJson(payload.newRecord);
-            state = AsyncData([newNote, ...state.valueOrNull ?? []]);
+            final newNote = LoveNoteModel.fromJson(payload.newRecord);
+            state = AsyncData([newNote, ...state.value ?? []]);
           },
         )
         .subscribe();
@@ -65,7 +64,7 @@ class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
     required String toUserId,
     required String householdId,
   }) async {
-    if (!(ref.read(premiumProvider).valueOrNull ?? false)) return;
+    if (!(ref.read(premiumProvider).value ?? false)) return;
     if (content.trim().isEmpty) return;
 
     await _supabase.from('love_notes').insert({
@@ -91,13 +90,10 @@ class LoveNotesNotifier extends AsyncNotifier<List<LoveNoteModel>> {
 
   /// Marca la nota como leída en Supabase y la saca del estado local.
   Future<void> markAsRead(String id) async {
-    await _supabase
-        .from('love_notes')
-        .update({'is_read': true})
-        .eq('id', id);
+    await _supabase.from('love_notes').update({'is_read': true}).eq('id', id);
 
     state = AsyncData(
-      (state.valueOrNull ?? []).where((n) => n.id != id).toList(),
+      (state.value ?? []).where((n) => n.id != id).toList(),
     );
   }
 }
@@ -109,5 +105,5 @@ final loveNotesProvider =
 
 /// Primera nota no leída para el usuario actual (la que muestra el sobre).
 final pendingLoveNoteProvider = Provider<LoveNoteModel?>((ref) {
-  return ref.watch(loveNotesProvider).valueOrNull?.firstOrNull;
+  return ref.watch(loveNotesProvider).value?.firstOrNull;
 });

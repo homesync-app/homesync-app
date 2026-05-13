@@ -9,7 +9,8 @@ class DeleteExpenseUseCase {
 
   Future<Either<Failure, void>> call(String expenseId) async {
     if (expenseId.isEmpty) {
-      return left(const ValidationFailure('El ID del gasto no puede estar vacío'));
+      return left(
+          const ValidationFailure('El ID del gasto no puede estar vacío'),);
     }
     return await _repository.deleteExpense(expenseId);
   }

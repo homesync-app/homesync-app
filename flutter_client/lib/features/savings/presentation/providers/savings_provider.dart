@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -53,38 +52,39 @@ class _SavingsGoalsChunk {
 }
 
 @riverpod
-SavingsRepository savingsRepository(SavingsRepositoryRef ref) {
+SavingsRepository savingsRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseSavingsRepository(client: client, ref: ref);
 }
 
 @riverpod
-GetSavingsGoalsUseCase getSavingsGoalsUseCase(GetSavingsGoalsUseCaseRef ref) {
+GetSavingsGoalsUseCase getSavingsGoalsUseCase(Ref ref) {
   return GetSavingsGoalsUseCase(ref.watch(savingsRepositoryProvider));
 }
 
 @riverpod
-GetGoalContributionsUseCase getGoalContributionsUseCase(GetGoalContributionsUseCaseRef ref) {
+GetGoalContributionsUseCase getGoalContributionsUseCase(Ref ref) {
   return GetGoalContributionsUseCase(ref.watch(savingsRepositoryProvider));
 }
 
 @riverpod
-CreateSavingsGoalUseCase createSavingsGoalUseCase(CreateSavingsGoalUseCaseRef ref) {
+CreateSavingsGoalUseCase createSavingsGoalUseCase(Ref ref) {
   return CreateSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
 }
 
 @riverpod
-AddContributionUseCase addContributionUseCase(AddContributionUseCaseRef ref) {
+AddContributionUseCase addContributionUseCase(Ref ref) {
   return AddContributionUseCase(ref.watch(savingsRepositoryProvider));
 }
 
 @riverpod
-DeleteSavingsGoalUseCase deleteSavingsGoalUseCase(DeleteSavingsGoalUseCaseRef ref) {
+DeleteSavingsGoalUseCase deleteSavingsGoalUseCase(Ref ref) {
   return DeleteSavingsGoalUseCase(ref.watch(savingsRepositoryProvider));
 }
 
 @riverpod
-Future<List<SavingsContributionModel>> goalContributions(GoalContributionsRef ref, String goalId) async {
+Future<List<SavingsContributionModel>> goalContributions(
+    Ref ref, String goalId,) async {
   final getGoalContributions = ref.watch(getGoalContributionsUseCaseProvider);
   final result = await getGoalContributions.execute(goalId);
   return result.fold(
@@ -99,7 +99,7 @@ class SavingsGoals extends _$SavingsGoals {
   Future<List<SavingsGoalModel>> build() async {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
-    
+
     final getSavingsGoals = ref.watch(getSavingsGoalsUseCaseProvider);
     final result = await getSavingsGoals.execute(householdId);
     return result.fold(
@@ -108,19 +108,20 @@ class SavingsGoals extends _$SavingsGoals {
     );
   }
 
-  Future<void> addGoal(String title, double targetAmount, String color, String icon) async {
+  Future<void> addGoal(
+      String title, double targetAmount, String color, String icon,) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(createSavingsGoalUseCaseProvider).execute(
-        householdId: householdId,
-        title: title,
-        targetAmount: targetAmount,
-        color: color,
-        icon: icon,
-      );
+            householdId: householdId,
+            title: title,
+            targetAmount: targetAmount,
+            color: color,
+            icon: icon,
+          );
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
       ref.invalidate(paginatedSavingsGoalsProvider);
@@ -131,7 +132,8 @@ class SavingsGoals extends _$SavingsGoals {
     });
   }
 
-  Future<void> contribute(String goalId, double amount, {String? note, required String goalTitle}) async {
+  Future<void> contribute(String goalId, double amount,
+      {String? note, required String goalTitle,}) async {
     final userId = ref.read(currentUserIdProvider);
     final householdId = await ref.read(householdIdProvider.future);
     if (userId == null || householdId == null) return;
@@ -140,11 +142,11 @@ class SavingsGoals extends _$SavingsGoals {
     state = await AsyncValue.guard(() async {
       // 1. Add the contribution to the savings goal
       await ref.read(addContributionUseCaseProvider).execute(
-        goalId: goalId,
-        userId: userId,
-        amount: amount,
-        note: note,
-      );
+            goalId: goalId,
+            userId: userId,
+            amount: amount,
+            note: note,
+          );
 
       // 2. Create a corresponding PERSONAL expense to reflect in global balance
       try {
@@ -168,12 +170,12 @@ class SavingsGoals extends _$SavingsGoals {
           stackTrace: stack,
         );
       }
-      
+
       ref.invalidate(goalContributionsProvider(goalId));
-      ref.invalidate(personalFinanceSummaryProvider); 
+      ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(expenseControllerProvider);
       ref.invalidate(paginatedSavingsGoalsProvider);
-      
+
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);
       final result = await getSavingsGoals.execute(householdId);
       return result.fold(
@@ -236,8 +238,7 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
   }
 
   Future<void> refresh() async {
-    state =
-        const AsyncLoading<SavingsGoalsPageState>().copyWithPrevious(state);
+    state = const AsyncLoading<SavingsGoalsPageState>();
     state = await AsyncValue.guard(() async {
       final chunk = await _fetchChunk(offset: 0);
       return SavingsGoalsPageState(
@@ -249,7 +250,7 @@ class PaginatedSavingsGoals extends _$PaginatedSavingsGoals {
   }
 
   Future<void> loadMore() async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null || current.isLoadingMore || !current.hasMore) {
       return;
     }
@@ -281,42 +282,45 @@ class SavingsSuggestion {
   final String message;
   final SavingsGoalModel? goal;
   final double surplus;
-  
+
   SavingsSuggestion({required this.message, this.goal, required this.surplus});
 }
 
 @riverpod
-Future<SavingsSuggestion?> savingsSuggester(SavingsSuggesterRef ref) async {
+Future<SavingsSuggestion?> savingsSuggester(Ref ref) async {
   final summary = await ref.watch(personalFinanceSummaryProvider.future);
   final projection = await ref.watch(monthlyProjectionProvider.future);
   final goals = await ref.watch(savingsGoalsProvider.future);
-  
+
   if (goals.isEmpty) return null;
-  
+
   final income = (summary['income'] as num?)?.toDouble() ?? 0.0;
   final totalExpectedSpend = projection.total;
-  
+
   // If income is not registered, we can't calculate surplus accurately
   if (income <= 0) return null;
-  
+
   final surplus = income - totalExpectedSpend;
-  
-  if (surplus > 1000) { // Only suggest if surplus is relevant (e.g. > $1000 ARS)
+
+  if (surplus > 1000) {
+    // Only suggest if surplus is relevant (e.g. > $1000 ARS)
     // Find the goal with the highest progress but not yet completed
-    final eligibleGoals = goals.where((g) => g.currentAmount < g.targetAmount).toList();
+    final eligibleGoals =
+        goals.where((g) => g.currentAmount < g.targetAmount).toList();
     if (eligibleGoals.isEmpty) return null;
-    
+
     eligibleGoals.sort((a, b) => b.progress.compareTo(a.progress));
     final targetGoal = eligibleGoals.first;
-    
+
     final percentageBoost = (surplus / targetGoal.targetAmount) * 100;
-    
+
     return SavingsSuggestion(
-      message: 'Basado en tu plan, podrías ahorrar \$${surplus.toStringAsFixed(0)} extra este mes. ¡Eso adelantaría un ${percentageBoost.toStringAsFixed(1)}% tu meta de "${targetGoal.title}"!',
+      message:
+          'Basado en tu plan, podrías ahorrar \$${surplus.toStringAsFixed(0)} extra este mes. ¡Eso adelantaría un ${percentageBoost.toStringAsFixed(1)}% tu meta de "${targetGoal.title}"!',
       goal: targetGoal,
       surplus: surplus,
     );
   }
-  
+
   return null;
 }

@@ -11,7 +11,6 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/activity
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -20,11 +19,13 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
   final String householdId;
+  final VoidCallback? onAvatarTap;
 
   const HomeSoloView({
     super.key,
     required this.onRefresh,
     required this.householdId,
+    this.onAvatarTap,
   });
 
   @override
@@ -69,7 +70,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
@@ -96,10 +97,14 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
               ).animateEntrance(),
             ),
             const SizedBox(width: AppSpacing.sm),
-            CustomUserAvatar(
-              name: currentMember?.displayName,
-              avatarUrl: currentMember?.avatarUrl,
-              radius: 24,
+            GestureDetector(
+              onTap: widget.onAvatarTap,
+              behavior: HitTestBehavior.opaque,
+              child: CustomUserAvatar(
+                name: currentMember?.displayName,
+                avatarUrl: currentMember?.avatarUrl,
+                radius: 24,
+              ),
             ).animateScaleIn(delay: 70),
           ],
         ),

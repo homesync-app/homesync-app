@@ -141,16 +141,25 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await expectLater(
-      container.read(tasksProvider.future),
-      throwsA(
-        isA<ServerFailure>()
-            .having((failure) => failure.message, 'message', 'repo boom'),
+    final subscription = container.listen(
+      tasksProvider,
+      (_, __) {},
+      fireImmediately: true,
+    );
+    addTearDown(subscription.close);
+
+    await container.pump();
+    await container.pump();
+
+    final state = subscription.read();
+    expect(state.hasError, isTrue);
+    expect(
+      state.error,
+      isA<ServerFailure>().having(
+        (failure) => failure.message,
+        'message',
+        'repo boom',
       ),
     );
-
-    final state = container.read(tasksProvider);
-    expect(state.hasError, isTrue);
-    expect(state.error, isA<ServerFailure>());
   });
 }

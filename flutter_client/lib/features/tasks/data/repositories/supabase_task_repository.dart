@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
@@ -23,7 +22,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'supabase_task_repository.g.dart';
 
 @riverpod
-TaskRepository taskRepository(TaskRepositoryRef ref) {
+TaskRepository taskRepository(Ref ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(taskRpcServiceProvider);
   return SupabaseTaskRepository(client: client, rpc: rpc, ref: ref);

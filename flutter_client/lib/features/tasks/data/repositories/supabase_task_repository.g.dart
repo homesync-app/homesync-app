@@ -6,22 +6,46 @@ part of 'supabase_task_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$taskRepositoryHash() => r'386a43146a4da344b7e53e93f5aaae305e037664';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [taskRepository].
 @ProviderFor(taskRepository)
-final taskRepositoryProvider = AutoDisposeProvider<TaskRepository>.internal(
-  taskRepository,
-  name: r'taskRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$taskRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final taskRepositoryProvider = TaskRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TaskRepositoryRef = AutoDisposeProviderRef<TaskRepository>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class TaskRepositoryProvider
+    extends $FunctionalProvider<TaskRepository, TaskRepository, TaskRepository>
+    with $Provider<TaskRepository> {
+  TaskRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$taskRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<TaskRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  TaskRepository create(Ref ref) {
+    return taskRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TaskRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TaskRepository>(value),
+    );
+  }
+}
+
+String _$taskRepositoryHash() => r'd124453466809ba95ababc5104d9007bca6d7648';

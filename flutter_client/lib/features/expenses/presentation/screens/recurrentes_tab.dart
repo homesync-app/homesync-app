@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
@@ -26,9 +27,10 @@ class RecurrentesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
     if (!isPremium) return _buildPremiumLockedRecurrentes(context);
 
+    final t = AppLocalizations.of(context);
     final templatesAsync = ref.watch(expenseTemplateControllerProvider);
 
     return templatesAsync.when(
@@ -37,10 +39,8 @@ class RecurrentesTab extends ConsumerWidget {
         child: Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
       ),
       data: (templates) {
-        final incomes =
-            templates.where((t) => t.isIncome).toList();
-        final expenses =
-            templates.where((t) => !t.isIncome).toList();
+        final incomes = templates.where((t) => t.isIncome).toList();
+        final expenses = templates.where((t) => !t.isIncome).toList();
 
         return RefreshIndicator(
           onRefresh: () async =>
@@ -72,9 +72,9 @@ class RecurrentesTab extends ConsumerWidget {
                           ).animatePulse(),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'Sin recurrentes',
-                          style: TextStyle(
+                        Text(
+                          t.expensesRecurringEmptyTitle,
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
                             color: AppColors.textPrimary,
@@ -82,12 +82,12 @@ class RecurrentesTab extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 48),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 48),
                           child: Text(
-                            'Crea plantillas para tus suscripciones, alquileres o ingresos fijos.',
+                            t.expensesRecurringEmptySubtitle,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -101,7 +101,11 @@ class RecurrentesTab extends ConsumerWidget {
                 )
               else ...[
                 if (incomes.isNotEmpty) ...[
-                  _buildSectionHeader(context, 'INGRESOS FIJOS', AppColors.success),
+                  _buildSectionHeader(
+                    context,
+                    t.expensesRecurringIncomeSection,
+                    AppColors.success,
+                  ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                     sliver: SliverList(
@@ -118,7 +122,11 @@ class RecurrentesTab extends ConsumerWidget {
                   ),
                 ],
                 if (expenses.isNotEmpty) ...[
-                  _buildSectionHeader(context, 'GASTOS FIJOS', AppColors.primary),
+                  _buildSectionHeader(
+                    context,
+                    t.expensesRecurringExpenseSection,
+                    AppColors.primary,
+                  ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
                     sliver: SliverList(
@@ -161,7 +169,10 @@ class RecurrentesTab extends ConsumerWidget {
   }
 
   Widget _buildSectionHeader(
-      BuildContext context, String label, Color color,) {
+    BuildContext context,
+    String label,
+    Color color,
+  ) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
@@ -253,7 +264,13 @@ class RecurrentesTab extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      template.title,
+                      localizedFinanceTitle(
+                        AppLocalizations.of(context),
+                        title: template.title,
+                        titleKey: template.titleKey,
+                        category: template.category,
+                        transactionType: template.type,
+                      ),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
@@ -262,8 +279,8 @@ class RecurrentesTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                       AppLocalizations.of(context)
-                           .expensesRecurrentesDayOfMonth(template.dayOfMonth),
+                      AppLocalizations.of(context)
+                          .expensesRecurrentesDayOfMonth(template.dayOfMonth),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 13,
@@ -277,7 +294,7 @@ class RecurrentesTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '\$ ${formatCurrency(template.defaultAmount)}',
+                    formatCurrency(template.defaultAmount),
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
@@ -298,7 +315,7 @@ class RecurrentesTab extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                         _templateSplitLabel(context, template.splitType),
+                        _templateSplitLabel(context, template.splitType),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -335,8 +352,8 @@ class RecurrentesTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 32),
-             Text(
-               AppLocalizations.of(context).expensesRecurrentesPremiumTitle,
+            Text(
+              AppLocalizations.of(context).expensesRecurrentesPremiumTitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 24,
@@ -346,8 +363,8 @@ class RecurrentesTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-             Text(
-               AppLocalizations.of(context).expensesRecurrentesPremiumSubtitle,
+            Text(
+              AppLocalizations.of(context).expensesRecurrentesPremiumSubtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 15,
@@ -372,7 +389,10 @@ class RecurrentesTab extends ConsumerWidget {
                 ),
                 child: Text(
                   AppLocalizations.of(context).expensesRecurrentesPremiumCta,
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
@@ -382,4 +402,3 @@ class RecurrentesTab extends ConsumerWidget {
     );
   }
 }
-

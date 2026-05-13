@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/debt_simplifier.dart';
@@ -102,8 +103,11 @@ class DebtSettlementSection extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded,
-              color: AppColors.success, size: 24,),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: AppColors.success,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -137,6 +141,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final debt = widget.debt;
+    final currency = ref.watch(currencyProvider);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -191,7 +196,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '\$${debt.amount.toStringAsFixed(0)}',
+                  currency.format(debt.amount),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
@@ -232,7 +237,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
   Future<void> _confirmSettle() async {
     final theme = context.theme;
     final debt = widget.debt;
-    final formattedAmount = '\$${debt.amount.toStringAsFixed(0)}';
+    final formattedAmount = ref.read(currencyProvider).format(debt.amount);
 
     final confirmed = await showDialog<bool>(
       context: context,

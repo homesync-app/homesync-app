@@ -18,6 +18,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsLanguageSubtitle => 'Elegí el idioma de la app';
 
   @override
+  String get settingsCurrencyTitle => 'Moneda';
+
+  @override
+  String get settingsCurrencySubtitle =>
+      'Elegí cómo se muestran los importes de Finanzas';
+
+  @override
   String get languageSystem => 'Predeterminado del sistema';
 
   @override
@@ -612,13 +619,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String homeCoupleSettlementDialogBodyPay(String amount, String partnerName) {
-    return 'Se va a registrar un pago de \$ $amount para saldar el balance con $partnerName.';
+    return 'Se va a registrar un pago de $amount para saldar el balance con $partnerName.';
   }
 
   @override
   String homeCoupleSettlementDialogBodyReceive(
       String partnerName, String amount) {
-    return 'Se va a registrar que $partnerName te compenso \$ $amount para dejar el balance al dia.';
+    return 'Se va a registrar que $partnerName te compensó $amount para dejar el balance al día.';
   }
 
   @override
@@ -2133,6 +2140,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get taskDetailUndoErrorNotFound =>
       'No se puede deshacer: actividad no encontrada';
+
+  @override
+  String get taskDetailUndoSuccess => 'Tarea devuelta a pendientes.';
 
   @override
   String get taskDetailUndoError => 'No se pudo deshacer';
@@ -4501,6 +4511,64 @@ class AppLocalizationsEs extends AppLocalizations {
   String get expensesRecurrentesPremiumCta => 'SABER MÁS';
 
   @override
+  String get expensesRecurringEmptyTitle => 'Sin recurrentes';
+
+  @override
+  String get expensesRecurringEmptySubtitle =>
+      'Creá plantillas para tus suscripciones, alquileres o ingresos fijos.';
+
+  @override
+  String get expensesRecurringIncomeSection => 'INGRESOS FIJOS';
+
+  @override
+  String get expensesRecurringExpenseSection => 'GASTOS FIJOS';
+
+  @override
+  String get financeTitleSupermarket => 'Supermercado';
+
+  @override
+  String get financeTitleOnlineShopping => 'Compras online';
+
+  @override
+  String get financeTitleBalanceSettlement => 'Liquidación de balance';
+
+  @override
+  String get financeTitlePartnerSettlement => 'Liquidación de pareja';
+
+  @override
+  String get financeTitleSalary => 'Sueldo';
+
+  @override
+  String get financeTitleRent => 'Alquiler';
+
+  @override
+  String get financeTitleBuildingFees => 'Expensas';
+
+  @override
+  String get financeTitleGas => 'Gas';
+
+  @override
+  String get financeTitleElectricity => 'Luz';
+
+  @override
+  String get financeTitleWater => 'Agua';
+
+  @override
+  String get financeTitleInternet => 'Internet';
+
+  @override
+  String get financeTitleNetflix => 'Netflix';
+
+  @override
+  String get financeTitleMovies => 'Películas';
+
+  @override
+  String get financeTitleInsurance => 'Seguro';
+
+  @override
+  String get financeTitlePhone => 'Celular';
+
+  @override
   String get expensesSavingsGoalNameLabel => 'Nombre';
 
   @override
@@ -4511,4 +4579,972 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expensesSavingsGoalAmountHint => '¿Cuánto quieren juntar?';
+
+  @override
+  String get coupleChallenge1Title => 'Recreando la primera cita';
+
+  @override
+  String get coupleChallenge1Description => '';
+
+  @override
+  String get coupleChallenge1Motivation =>
+      'A veces volver atrás es la mejor forma de ver cuánto han avanzado juntos.';
+
+  @override
+  String get coupleChallenge1Category => 'Experiencial';
+
+  @override
+  String get coupleChallenge1Location => 'Exterior';
+
+  @override
+  String get coupleChallenge1Timing => 'Cualquier momento';
+
+  @override
+  String get coupleChallenge2Title => 'Cena a la luz de las velas';
+
+  @override
+  String get coupleChallenge2Description => '';
+
+  @override
+  String get coupleChallenge2Motivation =>
+      'Una cita perfecta para reconectar sin distracciones y recordar por qué se eligen cada día.';
+
+  @override
+  String get coupleChallenge2Category => 'Romántico';
+
+  @override
+  String get coupleChallenge2Location => 'En casa';
+
+  @override
+  String get coupleChallenge2Timing => 'Noche';
+
+  @override
+  String get coupleChallenge3Title => 'Lista de sueños compartidos';
+
+  @override
+  String get coupleChallenge3Description => '';
+
+  @override
+  String get coupleChallenge3Motivation =>
+      'Tener sueños en común no solo une, sino que da dirección a su historia.';
+
+  @override
+  String get coupleChallenge3Category => 'Emocional';
+
+  @override
+  String get coupleChallenge3Location => 'En casa';
+
+  @override
+  String get coupleChallenge3Timing => 'Tarde';
+
+  @override
+  String get coupleChallenge4Title => 'Karaoke casero';
+
+  @override
+  String get coupleChallenge4Description => '';
+
+  @override
+  String get coupleChallenge4Motivation =>
+      'El amor también se canta desafinando, pero al mismo ritmo.';
+
+  @override
+  String get coupleChallenge4Category => 'Lúdico';
+
+  @override
+  String get coupleChallenge4Location => 'En casa';
+
+  @override
+  String get coupleChallenge4Timing => 'Noche';
+
+  @override
+  String get coupleChallenge5Title => 'Pintando juntos';
+
+  @override
+  String get coupleChallenge5Description => '';
+
+  @override
+  String get coupleChallenge5Motivation =>
+      'Porque el arte no busca perfección, busca conexión.';
+
+  @override
+  String get coupleChallenge5Category => 'Creativo';
+
+  @override
+  String get coupleChallenge5Location => 'En casa';
+
+  @override
+  String get coupleChallenge5Timing => 'A definir';
+
+  @override
+  String get coupleChallenge6Title => 'Maratón de películas';
+
+  @override
+  String get coupleChallenge6Description => '';
+
+  @override
+  String get coupleChallenge6Motivation =>
+      'Pequeñas cosas que hacen grande el amor.';
+
+  @override
+  String get coupleChallenge6Category => 'Relajado';
+
+  @override
+  String get coupleChallenge6Location => 'En casa';
+
+  @override
+  String get coupleChallenge6Timing => 'Noche';
+
+  @override
+  String get coupleChallenge7Title => 'Caminata fotográfica';
+
+  @override
+  String get coupleChallenge7Description => '';
+
+  @override
+  String get coupleChallenge7Motivation =>
+      'A veces mirar el mundo a través del lente es la mejor forma de volver a mirarse entre sí.';
+
+  @override
+  String get coupleChallenge7Category => 'Aventura';
+
+  @override
+  String get coupleChallenge7Location => 'Ciudad';
+
+  @override
+  String get coupleChallenge7Timing => 'Tarde';
+
+  @override
+  String get coupleChallenge8Title => 'Picnic improvisado';
+
+  @override
+  String get coupleChallenge8Description => '';
+
+  @override
+  String get coupleChallenge8Motivation =>
+      'No hace falta ir lejos para sentir que se escapan del mundo.';
+
+  @override
+  String get coupleChallenge8Category => 'Experiencial';
+
+  @override
+  String get coupleChallenge8Location => 'Al aire libre';
+
+  @override
+  String get coupleChallenge8Timing => 'Tarde';
+
+  @override
+  String get coupleChallenge9Title => 'Cartas que no se borran';
+
+  @override
+  String get coupleChallenge9Description => '';
+
+  @override
+  String get coupleChallenge9Motivation =>
+      'Las cartas quedan, las palabras se leen, pero lo que más perdura es cómo te hacen sentir.';
+
+  @override
+  String get coupleChallenge9Category => 'Emocional';
+
+  @override
+  String get coupleChallenge9Location => 'En casa';
+
+  @override
+  String get coupleChallenge9Timing => 'Noche';
+
+  @override
+  String get coupleChallenge10Title => 'Desconexión total';
+
+  @override
+  String get coupleChallenge10Description => '';
+
+  @override
+  String get coupleChallenge10Motivation =>
+      'Esta cita no se mide en minutos, sino en conexión real.';
+
+  @override
+  String get coupleChallenge10Category => 'Emocional';
+
+  @override
+  String get coupleChallenge10Location => 'En casa';
+
+  @override
+  String get coupleChallenge10Timing => 'Noche';
+
+  @override
+  String get coupleChallenge11Title => 'Frasco de preguntas';
+
+  @override
+  String get coupleChallenge11Description => '';
+
+  @override
+  String get coupleChallenge11Motivation =>
+      'Algunas charlas no surgen hasta que se invitan.';
+
+  @override
+  String get coupleChallenge11Category => 'Lúdico';
+
+  @override
+  String get coupleChallenge11Location => 'En casa';
+
+  @override
+  String get coupleChallenge11Timing => 'Cualquier momento';
+
+  @override
+  String get coupleChallenge23Title => 'Desayuno con vista';
+
+  @override
+  String get coupleChallenge23Description => '';
+
+  @override
+  String get coupleChallenge23Motivation =>
+      'El café sabe mejor cuando el horizonte es el límite.';
+
+  @override
+  String get coupleChallenge23Category => 'Exploración';
+
+  @override
+  String get coupleChallenge23Location => 'Exterior';
+
+  @override
+  String get coupleChallenge23Timing => 'Mañana';
+
+  @override
+  String get coupleChallenge24Title => 'A la orilla del mundo';
+
+  @override
+  String get coupleChallenge24Description => '';
+
+  @override
+  String get coupleChallenge24Motivation =>
+      'El silencio compartido frente al agua dice más que mil palabras.';
+
+  @override
+  String get coupleChallenge24Category => 'Emocional';
+
+  @override
+  String get coupleChallenge24Location => 'Naturaleza';
+
+  @override
+  String get coupleChallenge24Timing => 'Atardecer';
+
+  @override
+  String get coupleChallenge25Title => 'Destino incierto';
+
+  @override
+  String get coupleChallenge25Description => '';
+
+  @override
+  String get coupleChallenge25Motivation =>
+      'Perderse juntos es la mejor forma de encontrarse.';
+
+  @override
+  String get coupleChallenge25Category => 'Exploración';
+
+  @override
+  String get coupleChallenge25Location => 'Ciudad';
+
+  @override
+  String get coupleChallenge25Timing => 'Tarde';
+
+  @override
+  String get coupleChallenge26Title => 'Ritual del presente';
+
+  @override
+  String get coupleChallenge26Description => '';
+
+  @override
+  String get coupleChallenge26Motivation =>
+      'Limpiar el pasado deja lugar para un futuro más brillante.';
+
+  @override
+  String get coupleChallenge26Category => 'Emocional';
+
+  @override
+  String get coupleChallenge26Location => 'En casa';
+
+  @override
+  String get coupleChallenge26Timing => 'Noche';
+
+  @override
+  String get coupleChallenge27Title => 'Arquitecto de sorpresas';
+
+  @override
+  String get coupleChallenge27Description => '';
+
+  @override
+  String get coupleChallenge27Motivation =>
+      'El amor vive en los detalles que dicen \"pensé en vos\".';
+
+  @override
+  String get coupleChallenge27Category => 'Detallista';
+
+  @override
+  String get coupleChallenge27Location => 'Cualquier lugar';
+
+  @override
+  String get coupleChallenge27Timing => 'Sorpresa';
+
+  @override
+  String get coupleChallenge28Title => 'Al servicio del amor';
+
+  @override
+  String get coupleChallenge28Description => '';
+
+  @override
+  String get coupleChallenge28Motivation =>
+      'Cuidar es una forma silenciosa y poderosa de amar.';
+
+  @override
+  String get coupleChallenge28Category => 'Cotidiano';
+
+  @override
+  String get coupleChallenge28Location => 'En casa';
+
+  @override
+  String get coupleChallenge28Timing => 'Noche';
+
+  @override
+  String get coupleChallenge29Title => 'Historias en escena';
+
+  @override
+  String get coupleChallenge29Description => '';
+
+  @override
+  String get coupleChallenge29Motivation =>
+      'Jugar a ser otros ayuda a redescubrir quiénes son ustedes.';
+
+  @override
+  String get coupleChallenge29Category => 'Lúdico';
+
+  @override
+  String get coupleChallenge29Location => 'En casa';
+
+  @override
+  String get coupleChallenge29Timing => 'Cualquier momento';
+
+  @override
+  String get coupleChallenge30Title => 'Sabores con historia';
+
+  @override
+  String get coupleChallenge30Description => '';
+
+  @override
+  String get coupleChallenge30Motivation =>
+      'Cada bocado es una puerta abierta a un recuerdo.';
+
+  @override
+  String get coupleChallenge30Category => 'Experiencial';
+
+  @override
+  String get coupleChallenge30Location => 'Cualquier lugar';
+
+  @override
+  String get coupleChallenge30Timing => 'Noche';
+
+  @override
+  String get coupleChallenge31Title => 'El arte de no hacer nada';
+
+  @override
+  String get coupleChallenge31Description => '';
+
+  @override
+  String get coupleChallenge31Motivation =>
+      'El tiempo \"perdido\" juntos es tiempo ganado en conexión.';
+
+  @override
+  String get coupleChallenge31Category => 'Relajado';
+
+  @override
+  String get coupleChallenge31Location => 'En casa';
+
+  @override
+  String get coupleChallenge31Timing => 'Todo el día';
+
+  @override
+  String get coupleChallenge32Title => 'Domingo de mercado';
+
+  @override
+  String get coupleChallenge32Description => '';
+
+  @override
+  String get coupleChallenge32Motivation =>
+      'La rutina también tiene su propia magia artesanal.';
+
+  @override
+  String get coupleChallenge32Category => 'Exploración';
+
+  @override
+  String get coupleChallenge32Location => 'Ciudad';
+
+  @override
+  String get coupleChallenge32Timing => 'Mañana';
+
+  @override
+  String get coupleChallenge33Title => 'Bajo las estrellas';
+
+  @override
+  String get coupleChallenge33Description => '';
+
+  @override
+  String get coupleChallenge33Motivation =>
+      'El universo entero cabe en el espacio entre los dos.';
+
+  @override
+  String get coupleChallenge33Category => 'Romántico';
+
+  @override
+  String get coupleChallenge33Location => 'Naturaleza';
+
+  @override
+  String get coupleChallenge33Timing => 'Noche';
+
+  @override
+  String get coupleChallenge34Title => 'Noche de los sentidos';
+
+  @override
+  String get coupleChallenge34Description => '';
+
+  @override
+  String get coupleChallenge34Motivation =>
+      'El amor se saborea, se huele y se toca.';
+
+  @override
+  String get coupleChallenge34Category => 'Sensoral';
+
+  @override
+  String get coupleChallenge34Location => 'En casa';
+
+  @override
+  String get coupleChallenge34Timing => 'Noche';
+
+  @override
+  String get coupleChallenge35Title => 'Lectura compartida';
+
+  @override
+  String get coupleChallenge35Description => '';
+
+  @override
+  String get coupleChallenge35Motivation =>
+      'Las palabras son el puente que une dos mentes.';
+
+  @override
+  String get coupleChallenge35Category => 'Intelectual';
+
+  @override
+  String get coupleChallenge35Location => 'Tranquilo';
+
+  @override
+  String get coupleChallenge35Timing => 'Noche';
+
+  @override
+  String get coupleChallenge36Title => 'Microteatro en pareja';
+
+  @override
+  String get coupleChallenge36Description => '';
+
+  @override
+  String get coupleChallenge36Motivation =>
+      'Vivir mil vidas en una noche, siempre de la mano.';
+
+  @override
+  String get coupleChallenge36Category => 'Cultural';
+
+  @override
+  String get coupleChallenge36Location => 'Ciudad';
+
+  @override
+  String get coupleChallenge36Timing => 'Noche';
+
+  @override
+  String get coupleChallenge37Title => 'Viaje sin maletas';
+
+  @override
+  String get coupleChallenge37Description => '';
+
+  @override
+  String get coupleChallenge37Motivation =>
+      'El mejor destino es aquel que crean entre los dos.';
+
+  @override
+  String get coupleChallenge37Category => 'Creativo';
+
+  @override
+  String get coupleChallenge37Location => 'En casa';
+
+  @override
+  String get coupleChallenge37Timing => 'Noche';
+
+  @override
+  String get coupleChallenge38Title => 'El sobre secreto';
+
+  @override
+  String get coupleChallenge38Description => '';
+
+  @override
+  String get coupleChallenge38Motivation =>
+      'Cada sobre es un \"te pensé\" esperando ser abierto.';
+
+  @override
+  String get coupleChallenge38Category => 'Aventura';
+
+  @override
+  String get coupleChallenge38Location => 'Sorpresa';
+
+  @override
+  String get coupleChallenge38Timing => 'Toda la tarde';
+
+  @override
+  String get coupleChallenge39Title => 'Propósitos al alba';
+
+  @override
+  String get coupleChallenge39Description => '';
+
+  @override
+  String get coupleChallenge39Motivation =>
+      'Cada amanecer es la oportunidad de empezar de nuevo.';
+
+  @override
+  String get coupleChallenge39Category => 'Emocional';
+
+  @override
+  String get coupleChallenge39Location => 'Exterior';
+
+  @override
+  String get coupleChallenge39Timing => 'Alba';
+
+  @override
+  String get coupleChallenge40Title => 'Construyendo paciencia';
+
+  @override
+  String get coupleChallenge40Description => '';
+
+  @override
+  String get coupleChallenge40Motivation =>
+      'Armar lo pequeño es practicar la paciencia para lo grande.';
+
+  @override
+  String get coupleChallenge40Category => 'Relajado';
+
+  @override
+  String get coupleChallenge40Location => 'En casa';
+
+  @override
+  String get coupleChallenge40Timing => 'Tarde';
+
+  @override
+  String get coupleChallenge41Title => 'Día de gratitud absoluta';
+
+  @override
+  String get coupleChallenge41Description => '';
+
+  @override
+  String get coupleChallenge41Motivation =>
+      'Cambiar el foco cambia la relación entera.';
+
+  @override
+  String get coupleChallenge41Category => 'Emocional';
+
+  @override
+  String get coupleChallenge41Location => 'Cualquier lugar';
+
+  @override
+  String get coupleChallenge41Timing => 'Todo el día';
+
+  @override
+  String get coupleChallenge42Title => 'Cápsula del tiempo';
+
+  @override
+  String get coupleChallenge42Description => '';
+
+  @override
+  String get coupleChallenge42Motivation =>
+      'Guardar el presente es dejarle un regalo al futuro.';
+
+  @override
+  String get coupleChallenge42Category => 'Emocional';
+
+  @override
+  String get coupleChallenge42Location => 'En casa';
+
+  @override
+  String get coupleChallenge42Timing => 'Noche';
+
+  @override
+  String get coupleChallenge43Title => 'Pintura a ciegas';
+
+  @override
+  String get coupleChallenge43Description => '';
+
+  @override
+  String get coupleChallenge43Motivation =>
+      'El amor también se pinta con los ojos cerrados.';
+
+  @override
+  String get coupleChallenge43Category => 'Lúdico';
+
+  @override
+  String get coupleChallenge43Location => 'En casa';
+
+  @override
+  String get coupleChallenge43Timing => 'Cualquier momento';
+
+  @override
+  String get coupleChallenge44Title => 'Nuestro propio Podcast';
+
+  @override
+  String get coupleChallenge44Description => '';
+
+  @override
+  String get coupleChallenge44Motivation =>
+      'Grabar la voz del amor es guardar una memoria viva.';
+
+  @override
+  String get coupleChallenge44Category => 'Creativo';
+
+  @override
+  String get coupleChallenge44Location => 'Tranquilo';
+
+  @override
+  String get coupleChallenge44Timing => 'Cualquier momento';
+
+  @override
+  String get coupleChallenge45Title => 'Mensajes diferidos';
+
+  @override
+  String get coupleChallenge45Description => '';
+
+  @override
+  String get coupleChallenge45Motivation =>
+      'El amor también se escribe en tiempo diferido.';
+
+  @override
+  String get coupleChallenge45Category => 'Emocional';
+
+  @override
+  String get coupleChallenge45Location => 'En casa';
+
+  @override
+  String get coupleChallenge45Timing => 'Noche';
+
+  @override
+  String get coupleChallenge46Title => 'Proyección de recuerdos';
+
+  @override
+  String get coupleChallenge46Description => '';
+
+  @override
+  String get coupleChallenge46Motivation =>
+      'Mirar atrás es la mejor forma de valorar el presente.';
+
+  @override
+  String get coupleChallenge46Category => 'Emocional';
+
+  @override
+  String get coupleChallenge46Location => 'En casa';
+
+  @override
+  String get coupleChallenge46Timing => 'Noche';
+
+  @override
+  String get coupleChallenge47Title => 'El día del \"Sí\"';
+
+  @override
+  String get coupleChallenge47Description => '';
+
+  @override
+  String get coupleChallenge47Motivation =>
+      'La estructura cansa, la fluidez conecta.';
+
+  @override
+  String get coupleChallenge47Category => 'Lúdico';
+
+  @override
+  String get coupleChallenge47Location => 'Cualquier lugar';
+
+  @override
+  String get coupleChallenge47Timing => 'Todo el día';
+
+  @override
+  String get coupleChallenge48Title => 'Brindis por el futuro';
+
+  @override
+  String get coupleChallenge48Description => '';
+
+  @override
+  String get coupleChallenge48Motivation =>
+      'Brindar por lo que viene es honrar lo que ya son.';
+
+  @override
+  String get coupleChallenge48Category => 'Emocional';
+
+  @override
+  String get coupleChallenge48Location => 'Cualquier lugar';
+
+  @override
+  String get coupleChallenge48Timing => 'Noche';
+
+  @override
+  String get coupleChallenge49Title => 'Cocina experimental';
+
+  @override
+  String get coupleChallenge49Description => '';
+
+  @override
+  String get coupleChallenge49Motivation =>
+      'El sabor de lo improvisado siempre tiene un toque especial.';
+
+  @override
+  String get coupleChallenge49Category => 'Creativo';
+
+  @override
+  String get coupleChallenge49Location => 'Cocina';
+
+  @override
+  String get coupleChallenge49Timing => 'Almuerzo/Cena';
+
+  @override
+  String get coupleChallenge50Title => 'Muro de los deseos';
+
+  @override
+  String get coupleChallenge50Description => '';
+
+  @override
+  String get coupleChallenge50Motivation =>
+      'Hacer visible el deseo es empezar a cumplirlo.';
+
+  @override
+  String get coupleChallenge50Category => 'Detallista';
+
+  @override
+  String get coupleChallenge50Location => 'En casa';
+
+  @override
+  String get coupleChallenge50Timing => 'Toda la semana';
+
+  @override
+  String get rewardCategoryTreats => 'Mimos';
+
+  @override
+  String get rewardCategoryMoments => 'Momentos';
+
+  @override
+  String get rewardCategoryPerks => 'Libertades';
+
+  @override
+  String get rewardCategoryExperiences => 'Experiencias';
+
+  @override
+  String get rewardCategoryFamily => 'Familia';
+
+  @override
+  String get rewardCategoryOther => 'Otros';
+
+  @override
+  String get rewardTemplateCoffeeMatePrepared => 'Café o mate preparado';
+
+  @override
+  String get rewardTemplateCoffeeMatePreparedDescription =>
+      'Una pausa rica preparada con cariño';
+
+  @override
+  String get rewardTemplateSurpriseSnack => 'Snack sorpresa';
+
+  @override
+  String get rewardTemplateSurpriseSnackDescription =>
+      'Un antojo inesperado para alegrar el día';
+
+  @override
+  String get rewardTemplateMiniRomanticNote => 'Mini nota romántica';
+
+  @override
+  String get rewardTemplateMiniRomanticNoteDescription =>
+      'Un mensaje corto para sonreír';
+
+  @override
+  String get rewardTemplateMassage15Minutes => '15 minutos de masajes';
+
+  @override
+  String get rewardTemplateMassage15MinutesDescription =>
+      'Masaje relajante de 15 minutos';
+
+  @override
+  String get rewardTemplateIceCreamChoice => 'Helado de tu elección';
+
+  @override
+  String get rewardTemplateIceCreamChoiceDescription =>
+      'Un postre frío para celebrar';
+
+  @override
+  String get rewardTemplateMovieNightHome => 'Noche de cine en casa';
+
+  @override
+  String get rewardTemplateMovieNightHomeDescription =>
+      'Película y ambiente especial en casa';
+
+  @override
+  String get rewardTemplateGamingAfternoon => 'Tarde de gaming';
+
+  @override
+  String get rewardTemplateGamingAfternoonDescription =>
+      'Partida juntos con snacks incluidos';
+
+  @override
+  String get rewardTemplateBoardGameNight => 'Noche de juegos de mesa';
+
+  @override
+  String get rewardTemplateBoardGameNightDescription =>
+      'Tiempo de juego y risas';
+
+  @override
+  String get rewardTemplateSpecialHomemadeDinner => 'Cena casera especial';
+
+  @override
+  String get rewardTemplateSpecialHomemadeDinnerDescription =>
+      'Tu comida favorita hecha en casa';
+
+  @override
+  String get rewardTemplateHomePicnic => 'Picnic en casa';
+
+  @override
+  String get rewardTemplateHomePicnicDescription =>
+      'Manta, algo rico y desconexión';
+
+  @override
+  String get rewardTemplateNoScreensNight => 'Noche sin pantallas';
+
+  @override
+  String get rewardTemplateNoScreensNightDescription =>
+      'Tiempo de charla y conexión';
+
+  @override
+  String get rewardTemplateEpisodeMarathonChoice =>
+      'Maratón de episodios a elección';
+
+  @override
+  String get rewardTemplateEpisodeMarathonChoiceDescription =>
+      'Vos elegís la serie y el ritmo';
+
+  @override
+  String get rewardTemplateNoDishesVoucher => 'Vale por no lavar los platos';
+
+  @override
+  String get rewardTemplateNoDishesVoucherDescription =>
+      'Hoy te salvás de esa tarea';
+
+  @override
+  String get rewardTemplateChooseMovieVoucher => 'Vale por elegir la peli';
+
+  @override
+  String get rewardTemplateChooseMovieVoucherDescription =>
+      'Vos elegís qué ver';
+
+  @override
+  String get rewardTemplateChooseSeriesWeekVoucher =>
+      'Vale por elegir la serie una semana';
+
+  @override
+  String get rewardTemplateChooseSeriesWeekVoucherDescription =>
+      'Tu serie, tus reglas por 7 días';
+
+  @override
+  String get rewardTemplateWeekendPlanVoucher =>
+      'Vale por decidir el plan del finde';
+
+  @override
+  String get rewardTemplateWeekendPlanVoucherDescription =>
+      'Vos elegís el plan principal';
+
+  @override
+  String get rewardTemplateSkipOneChoreVoucher =>
+      'Vale por no hacer una tarea puntual';
+
+  @override
+  String get rewardTemplateSkipOneChoreVoucherDescription =>
+      'Elegís una tarea para delegar';
+
+  @override
+  String get rewardTemplateYesToAnyPlanVoucher =>
+      'Vale por “sí a cualquier plan”';
+
+  @override
+  String get rewardTemplateYesToAnyPlanVoucherDescription =>
+      'Hoy tu idea se cumple';
+
+  @override
+  String get rewardTemplateDinnerOut => 'Cena afuera';
+
+  @override
+  String get rewardTemplateDinnerOutDescription =>
+      'Salida a cenar a un lugar especial';
+
+  @override
+  String get rewardTemplatePlannedDate => 'Cita planeada completa';
+
+  @override
+  String get rewardTemplatePlannedDateDescription =>
+      'Plan completo organizado de principio a fin';
+
+  @override
+  String get rewardTemplateChoreFreeDay => 'Día libre de tareas';
+
+  @override
+  String get rewardTemplateChoreFreeDayDescription =>
+      'Cero obligaciones por todo el día';
+
+  @override
+  String get rewardTemplateExtraScreen15Minutes =>
+      '15 minutos extra de pantalla';
+
+  @override
+  String get rewardTemplateExtraScreen15MinutesDescription =>
+      'Un ratito más para jugar o mirar algo.';
+
+  @override
+  String get rewardTemplateChooseDinner => 'Elegir la cena';
+
+  @override
+  String get rewardTemplateChooseDinnerDescription =>
+      'Decidir el menú de una noche en casa.';
+
+  @override
+  String get rewardTemplateIceCreamForEveryone => 'Helado para todos';
+
+  @override
+  String get rewardTemplateIceCreamForEveryoneDescription =>
+      'Salida o pedido de helado familiar.';
+
+  @override
+  String get rewardTemplateSmallToyPrize => 'Juguete o premio pequeño';
+
+  @override
+  String get rewardTemplateSmallToyPrizeDescription =>
+      'Canje por algo simple elegido con un adulto.';
+
+  @override
+  String get rewardTemplateFamilyMovieNight => 'Noche de peli';
+
+  @override
+  String get rewardTemplateFamilyMovieNightDescription =>
+      'Plan simple para disfrutar todos juntos.';
+
+  @override
+  String get rewardTemplateOrderTakeout => 'Pedir comida';
+
+  @override
+  String get rewardTemplateOrderTakeoutDescription =>
+      'Una noche sin cocinar para toda la familia.';
+
+  @override
+  String get rewardTemplateWeekendFamilyPlan => 'Plan del fin de semana';
+
+  @override
+  String get rewardTemplateWeekendFamilyPlanDescription =>
+      'Elegir una salida o actividad para hacer juntos.';
+
+  @override
+  String get rewardTemplateSpecialDessert => 'Postre especial';
+
+  @override
+  String get rewardTemplateSpecialDessertDescription =>
+      'Elegir un postre favorito para después de cenar.';
 }

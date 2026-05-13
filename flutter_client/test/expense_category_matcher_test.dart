@@ -43,7 +43,8 @@ void main() {
       expect(result.selectedCategory?['id'], 'salary');
     });
 
-    test('switches from income mode to expense mode for supermarket keywords', () {
+    test('switches from income mode to expense mode for supermarket keywords',
+        () {
       final result = resolveExpenseCategoryMatch(
         title: 'Compra en supermercado',
         isIncome: true,

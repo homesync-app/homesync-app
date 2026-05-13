@@ -300,7 +300,8 @@ class _RankingContent extends StatelessWidget {
                       Text(
                         selectedTab == 0
                             ? t.householdSocialHubRankingEmpty
-                            : t.householdSocialHubRankingEmptyTab(tabs[selectedTab]),
+                            : t.householdSocialHubRankingEmptyTab(
+                                tabs[selectedTab],),
                         style: TextStyle(
                           fontSize: 13,
                           color: theme.textSecondary,
@@ -378,8 +379,8 @@ class _RankingRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
-    final members = membersAsync.valueOrNull ?? [];
+    final membersAsync = ref.watch(householdMembersProvider);
+    final members = membersAsync.value ?? [];
 
     String? resolvedAvatar = avatarUrl;
     if (resolvedAvatar == null || resolvedAvatar.isEmpty) {
@@ -488,8 +489,12 @@ class _RankingRow extends ConsumerWidget {
                 ),
                 child: Text(
                   hideLiveScores
-                      ? AppLocalizations.of(context).householdSocialHubRankingHidden
-                      : (xp > 0 ? AppLocalizations.of(context).householdSocialHubRankingPoints(xp) : '0 pts'),
+                      ? AppLocalizations.of(context)
+                          .householdSocialHubRankingHidden
+                      : (xp > 0
+                          ? AppLocalizations.of(context)
+                              .householdSocialHubRankingPoints(xp)
+                          : '0 pts'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -504,7 +509,8 @@ class _RankingRow extends ConsumerWidget {
               if (!hideLiveScores && tasks > 0) ...[
                 const SizedBox(height: 3),
                 Text(
-                  AppLocalizations.of(context).householdSocialHubRankingTasksCount(tasks),
+                  AppLocalizations.of(context)
+                      .householdSocialHubRankingTasksCount(tasks),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,

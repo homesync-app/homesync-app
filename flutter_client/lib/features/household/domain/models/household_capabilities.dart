@@ -84,8 +84,7 @@ class HouseholdCapabilities {
   String emptyStateTasksSubtitle(AppLocalizations t) =>
       t.householdEmptyTasksSubtitle(type.name);
 
-  String memberLabel(AppLocalizations t) =>
-      t.householdMemberLabel(type.name);
+  String memberLabel(AppLocalizations t) => t.householdMemberLabel(type.name);
 
   String actionMemberLabel(AppLocalizations t) =>
       t.householdActionMemberLabel(type.name);

@@ -17,7 +17,9 @@ class ToggleShoppingItemUseCase {
     }
     if (completed && (userId == null || userId.isEmpty)) {
       return Future.value(
-          const Left(ValidationFailure('userId is required when marking as completed')),);
+        const Left(
+            ValidationFailure('userId is required when marking as completed'),),
+      );
     }
 
     return repository.toggleItem(

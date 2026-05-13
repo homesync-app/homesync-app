@@ -202,7 +202,11 @@ class _LoveNoteEnvelopeState extends ConsumerState<LoveNoteEnvelope>
     )
         .animate()
         .slideX(
-            begin: 0.45, end: 0, duration: 560.ms, curve: Curves.easeOutBack,)
+          begin: 0.45,
+          end: 0,
+          duration: 560.ms,
+          curve: Curves.easeOutBack,
+        )
         .fadeIn(duration: 260.ms)
         .scaleXY(
           begin: 0.74,
@@ -401,7 +405,11 @@ class _LoveEnvelopePainter extends CustomPainter {
     final flap = Path()
       ..moveTo(6, 5 + flapLift)
       ..quadraticBezierTo(
-          size.width * 0.50, 0 - flapLift, size.width - 6, 5 + flapLift,)
+        size.width * 0.50,
+        0 - flapLift,
+        size.width - 6,
+        5 + flapLift,
+      )
       ..lineTo(size.width * 0.50, size.height * 0.54 + (progress * 3))
       ..close();
     canvas.drawPath(flap, flapPaint);

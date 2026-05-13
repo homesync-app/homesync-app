@@ -24,7 +24,8 @@ class AddShoppingItemUseCase {
   }) {
     if (householdId.isEmpty) {
       return Future.value(
-          const Left(ValidationFailure('householdId is required')),);
+        const Left(ValidationFailure('householdId is required')),
+      );
     }
     if (name.trim().isEmpty) {
       return Future.value(const Left(ValidationFailure('name is required')));

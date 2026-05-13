@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -81,7 +80,7 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
     log.i(
       'HouseholdMembersNotifier.refresh requested household=$householdId viewer=$currentUserId',
     );
-    state = const AsyncLoading<List<MemberModel>>().copyWithPrevious(state);
+    state = const AsyncLoading<List<MemberModel>>();
     state = await AsyncValue.guard(() => build());
   }
 }

@@ -24,46 +24,53 @@ part 'shopping_provider.g.dart';
 // ── Repositories & Use Cases ──────────────────────────────────────────────────
 
 @riverpod
-ShoppingRepository shoppingRepository(ShoppingRepositoryRef ref) {
+ShoppingRepository shoppingRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseShoppingRepository(client: client, ref: ref);
 }
 
 @riverpod
 GetShoppingItemsUseCase getShoppingItemsUseCase(
-    GetShoppingItemsUseCaseRef ref,) {
+  Ref ref,
+) {
   return GetShoppingItemsUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
-AddShoppingItemUseCase addShoppingItemUseCase(AddShoppingItemUseCaseRef ref) {
+AddShoppingItemUseCase addShoppingItemUseCase(Ref ref) {
   return AddShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
 ToggleShoppingItemUseCase toggleShoppingItemUseCase(
-    ToggleShoppingItemUseCaseRef ref,) {
+  Ref ref,
+) {
   return ToggleShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
 DeleteShoppingItemUseCase deleteShoppingItemUseCase(
-    DeleteShoppingItemUseCaseRef ref,) {
+  Ref ref,
+) {
   return DeleteShoppingItemUseCase(ref.watch(shoppingRepositoryProvider));
 }
 
 @riverpod
 ClearCompletedShoppingItemsUseCase clearCompletedShoppingItemsUseCase(
-    ClearCompletedShoppingItemsUseCaseRef ref,) {
+  Ref ref,
+) {
   return ClearCompletedShoppingItemsUseCase(
-      ref.watch(shoppingRepositoryProvider),);
+    ref.watch(shoppingRepositoryProvider),
+  );
 }
 
 @riverpod
 UncompleteAllShoppingItemsUseCase uncompleteAllShoppingItemsUseCase(
-    UncompleteAllShoppingItemsUseCaseRef ref,) {
+  Ref ref,
+) {
   return UncompleteAllShoppingItemsUseCase(
-      ref.watch(shoppingRepositoryProvider),);
+    ref.watch(shoppingRepositoryProvider),
+  );
 }
 
 // ── Main Shopping Controller ──────────────────────────────────────────────────

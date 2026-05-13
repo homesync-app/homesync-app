@@ -142,7 +142,8 @@ void main() {
   });
 
   group('ShoppingCategories', () {
-    test('returns category metadata and falls back to general for unknown ids', () {
+    test('returns category metadata and falls back to general for unknown ids',
+        () {
       expect(ShoppingCategories.nameFor('dairy'), 'Lácteos');
       expect(ShoppingCategories.emojiFor('dairy'), '🥛');
       expect(ShoppingCategories.colorFor('dairy'), 0xFF3B82F6);
@@ -193,7 +194,8 @@ void main() {
         emoji: '🥛',
         note: 'Descremada',
       );
-      final fetched = await GetShoppingItemsUseCase(repository).execute('house-1');
+      final fetched =
+          await GetShoppingItemsUseCase(repository).execute('house-1');
 
       expect(added.getRight().toNullable()?.name, 'Leche');
       expect(added.getRight().toNullable()?.displayQuantity, '2 l');

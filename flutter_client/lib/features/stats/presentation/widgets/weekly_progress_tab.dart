@@ -93,15 +93,10 @@ class WeeklyProgressTab extends ConsumerWidget {
               if (content.isEmpty) return;
 
               final currentUserId = ref.read(currentUserIdProvider);
-              final householdId =
-                  await ref.read(householdIdProvider.future);
-              final members = ref
-                      .read(householdMembersNotifierProvider)
-                      .valueOrNull ??
-                  [];
-              final partner = members
-                  .where((m) => m.userId != currentUserId)
-                  .firstOrNull;
+              final householdId = await ref.read(householdIdProvider.future);
+              final members = ref.read(householdMembersProvider).value ?? [];
+              final partner =
+                  members.where((m) => m.userId != currentUserId).firstOrNull;
 
               if (currentUserId == null ||
                   householdId == null ||
@@ -144,7 +139,7 @@ class WeeklyProgressTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -295,7 +290,8 @@ class WeeklyProgressTab extends ConsumerWidget {
                                         ? const Color(0xFFFECACA)
                                         : const Color(0xFFB91C1C))
                                     .withValues(
-                                        alpha: theme.isDarkMode ? 0.82 : 0.7,)
+                                    alpha: theme.isDarkMode ? 0.82 : 0.7,
+                                  )
                                 : theme.textSecondary,
                           ),
                         ),

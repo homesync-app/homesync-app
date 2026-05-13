@@ -166,15 +166,17 @@ class FakeHouseholdRepository implements HouseholdRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>> getHouseholdMembersRaw() async =>
+  Future<Either<Failure, List<Map<String, dynamic>>>>
+      getHouseholdMembersRaw() async => const Right([]);
+
+  @override
+  Future<Either<Failure, List<String>>> getMemberIds(
+          String householdId,) async =>
       const Right([]);
 
   @override
-  Future<Either<Failure, List<String>>> getMemberIds(String householdId) async =>
-      const Right([]);
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> joinHousehold(String code) async =>
+  Future<Either<Failure, Map<String, dynamic>>> joinHousehold(
+          String code,) async =>
       const Right({});
 
   @override
@@ -205,8 +207,8 @@ class FakeHouseholdRepository implements HouseholdRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> resetAndClearHousehold() async =>
-      const Right({});
+  Future<Either<Failure, Map<String, dynamic>>>
+      resetAndClearHousehold() async => const Right({});
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> resetUserAccount() async =>
@@ -268,7 +270,8 @@ void main() {
       expect(container.read(notificationEnabledProvider), isFalse);
     });
 
-    test('UpdateAvatarUseCase validates empty avatar and delegates valid one', () async {
+    test('UpdateAvatarUseCase validates empty avatar and delegates valid one',
+        () async {
       final repository = FakeSettingsRepository();
       final useCase = UpdateAvatarUseCase(repository);
 
@@ -292,12 +295,15 @@ void main() {
       expect(capabilities.type, equals(HouseholdType.family));
     });
 
-    test('householdMembersProvider returns empty list when household is unresolved', () async {
+    test(
+        'householdMembersProvider returns empty list when household is unresolved',
+        () async {
       final container = ProviderContainer(
         overrides: [
           householdIdProvider.overrideWith((ref) async => null),
           currentUserIdProvider.overrideWith((ref) => null),
-          householdRepositoryProvider.overrideWithValue(FakeHouseholdRepository()),
+          householdRepositoryProvider
+              .overrideWithValue(FakeHouseholdRepository()),
         ],
       );
       addTearDown(container.dispose);
@@ -335,7 +341,9 @@ void main() {
       );
     });
 
-    test('shoppingItemsProvider returns empty list when household is unresolved', () async {
+    test(
+        'shoppingItemsProvider returns empty list when household is unresolved',
+        () async {
       final container = ProviderContainer(
         overrides: [
           householdIdProvider.overrideWith((ref) async => null),
@@ -349,7 +357,8 @@ void main() {
   });
 
   group('Savings', () {
-    test('CreateSavingsGoalUseCase rejects non-positive target amount', () async {
+    test('CreateSavingsGoalUseCase rejects non-positive target amount',
+        () async {
       final useCase = CreateSavingsGoalUseCase(FakeSavingsRepository());
 
       final result = await useCase.execute(
@@ -383,7 +392,8 @@ void main() {
       );
     });
 
-    test('savingsGoalsProvider returns empty list when household is unresolved', () async {
+    test('savingsGoalsProvider returns empty list when household is unresolved',
+        () async {
       final container = ProviderContainer(
         overrides: [
           householdIdProvider.overrideWith((ref) async => null),

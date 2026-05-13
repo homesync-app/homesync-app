@@ -74,10 +74,12 @@ class AppButton extends StatelessWidget {
     }
 
     return AnimatedPress(
-      onTap: (isDisabled || isLoading) ? null : () {
-        HapticFeedback.lightImpact();
-        onTap?.call();
-      },
+      onTap: (isDisabled || isLoading)
+          ? null
+          : () {
+              HapticFeedback.lightImpact();
+              onTap?.call();
+            },
       child: Opacity(
         opacity: (isDisabled || isLoading) ? 0.6 : 1.0,
         child: Container(
@@ -86,16 +88,19 @@ class AppButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(AppRadii.pill),
-            border: borderColor != null ? Border.all(color: borderColor, width: 1.5) : null,
-            boxShadow: variant == AppButtonVariant.primary && !isDisabled && !isDark
-                ? [
-                    BoxShadow(
-                      color: theme.primary.withValues(alpha: 0.2),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
+            border: borderColor != null
+                ? Border.all(color: borderColor, width: 1.5)
                 : null,
+            boxShadow:
+                variant == AppButtonVariant.primary && !isDisabled && !isDark
+                    ? [
+                        BoxShadow(
+                          color: theme.primary.withValues(alpha: 0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
+                        ),
+                      ]
+                    : null,
           ),
           child: Center(child: content),
         ),
@@ -108,7 +113,9 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.primary:
         return theme.primary;
       case AppButtonVariant.secondary:
-        return isDark ? theme.surfaceVariant : theme.primary.withValues(alpha: 0.1);
+        return isDark
+            ? theme.surfaceVariant
+            : theme.primary.withValues(alpha: 0.1);
       case AppButtonVariant.outline:
       case AppButtonVariant.ghost:
         return Colors.transparent;
@@ -169,9 +176,11 @@ class AppButton extends StatelessWidget {
       case AppButtonSize.small:
         return const TextStyle(fontSize: 14, fontWeight: FontWeight.w700);
       case AppButtonSize.medium:
-        return const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.3);
+        return const TextStyle(
+            fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.3,);
       case AppButtonSize.large:
-        return const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.4);
+        return const TextStyle(
+            fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.4,);
     }
   }
 

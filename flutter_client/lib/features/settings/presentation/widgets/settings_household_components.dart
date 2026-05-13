@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -676,7 +676,8 @@ Future<void> showSettingsJoinHouseholdDialog(
                 size: 22,
               ),
               const SizedBox(width: 10),
-              Text(AppLocalizations.of(context).settingsHouseholdJoinDialogTitle),
+              Text(AppLocalizations.of(context)
+                  .settingsHouseholdJoinDialogTitle,),
             ],
           ),
           content: Column(

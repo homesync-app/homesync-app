@@ -2,6 +2,7 @@ class ExpenseTemplateModel {
   final String id;
   final String householdId;
   final String title;
+  final String? titleKey;
   final double defaultAmount;
   final String category;
   final String frequency;
@@ -18,6 +19,7 @@ class ExpenseTemplateModel {
     required this.id,
     required this.householdId,
     required this.title,
+    this.titleKey,
     required this.defaultAmount,
     required this.category,
     this.frequency = 'monthly',
@@ -38,6 +40,7 @@ class ExpenseTemplateModel {
       id: json['id'] as String,
       householdId: json['household_id'] as String,
       title: json['title'] as String,
+      titleKey: json['title_key'] as String?,
       defaultAmount: (json['default_amount'] as num?)?.toDouble() ?? 0.0,
       category: json['category'] as String,
       frequency: json['frequency'] as String? ?? 'monthly',
@@ -46,9 +49,15 @@ class ExpenseTemplateModel {
       payerDefault: json['payer_default'] as String,
       isActive: json['is_active'] as bool? ?? true,
       type: json['type'] as String? ?? 'expense',
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
-      nextExecutionDate: json['next_execution_date'] != null ? DateTime.parse(json['next_execution_date'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
+      nextExecutionDate: json['next_execution_date'] != null
+          ? DateTime.parse(json['next_execution_date'] as String)
+          : null,
     );
   }
 
@@ -57,6 +66,7 @@ class ExpenseTemplateModel {
       'id': id,
       'household_id': householdId,
       'title': title,
+      'title_key': titleKey,
       'default_amount': defaultAmount,
       'category': category,
       'frequency': frequency,
@@ -65,7 +75,8 @@ class ExpenseTemplateModel {
       'payer_default': payerDefault,
       'is_active': isActive,
       'type': type,
-      if (nextExecutionDate != null) 'next_execution_date': nextExecutionDate!.toIso8601String(),
+      if (nextExecutionDate != null)
+        'next_execution_date': nextExecutionDate!.toIso8601String(),
     };
   }
 
@@ -73,6 +84,7 @@ class ExpenseTemplateModel {
     String? id,
     String? householdId,
     String? title,
+    String? titleKey,
     double? defaultAmount,
     String? category,
     String? frequency,
@@ -89,6 +101,7 @@ class ExpenseTemplateModel {
       id: id ?? this.id,
       householdId: householdId ?? this.householdId,
       title: title ?? this.title,
+      titleKey: titleKey ?? this.titleKey,
       defaultAmount: defaultAmount ?? this.defaultAmount,
       category: category ?? this.category,
       frequency: frequency ?? this.frequency,

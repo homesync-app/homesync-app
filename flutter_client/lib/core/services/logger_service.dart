@@ -57,8 +57,11 @@ class LoggerService {
 
   /// Reports errors to Crashlytics in production (mobile only).
   void _reportToCrashlytics(
-      dynamic message, Object? error, StackTrace? stackTrace,
-      {required bool isFatal,}) {
+    dynamic message,
+    Object? error,
+    StackTrace? stackTrace, {
+    required bool isFatal,
+  }) {
     if (kDebugMode || kIsWeb) return;
 
     try {

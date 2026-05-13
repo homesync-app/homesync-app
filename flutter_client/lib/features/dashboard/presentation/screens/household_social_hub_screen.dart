@@ -8,7 +8,6 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
@@ -28,7 +27,7 @@ class _HouseholdSocialHubScreenState
     extends ConsumerState<HouseholdSocialHubScreen> {
   Future<void> _refreshData() async {
     ref.invalidate(currentHouseholdProvider);
-    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+    await ref.read(householdMembersProvider.notifier).refresh();
   }
 
   void _openPremiumPaywall() {
@@ -39,12 +38,12 @@ class _HouseholdSocialHubScreenState
 
   @override
   Widget build(BuildContext context) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final theme = context.theme;
 
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final canSeeFamilyTracking = currentMember?.isAdult ?? false;

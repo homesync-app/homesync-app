@@ -1,5 +1,6 @@
 import 'package:homesync_client/features/shopping/data/shopping_predefined.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 
 /// Utilidad centralizada para matching entre items detectados por OCR
 /// y la lista de compras activa.
@@ -32,19 +33,61 @@ class ReceiptMatcher {
   );
 
   static final _stopWords = {
-    'de', 'la', 'el', 'los', 'las', 'un', 'una', 'con', 'sin',
-    'del', 'al', 'por', 'para', 'en', 'y', 'o', 'the',
+    'de',
+    'la',
+    'el',
+    'los',
+    'las',
+    'un',
+    'una',
+    'con',
+    'sin',
+    'del',
+    'al',
+    'por',
+    'para',
+    'en',
+    'y',
+    'o',
+    'the',
   };
 
   /// Palabras que indican que la línea es metadata del ticket, no un producto.
   /// Si alguna aparece en la línea, se descarta por completo.
   static const _blacklistWords = {
-    'total', 'subtotal', 'iva', 'efectivo', 'vuelto', 'cambio',
-    'tarjeta', 'credito', 'debito', 'cuotas', 'descuento', 'descuentos',
-    'promo', 'promocion', 'bonif', 'bonificacion', 'ticket', 'factura',
-    'cuit', 'cuil', 'dni', 'gracias', 'operacion', 'caja', 'cajero',
-    'vendedor', 'atencion', 'cliente', 'fecha', 'hora', 'neto',
-    'importe', 'precio',
+    'total',
+    'subtotal',
+    'iva',
+    'efectivo',
+    'vuelto',
+    'cambio',
+    'tarjeta',
+    'credito',
+    'debito',
+    'cuotas',
+    'descuento',
+    'descuentos',
+    'promo',
+    'promocion',
+    'bonif',
+    'bonificacion',
+    'ticket',
+    'factura',
+    'cuit',
+    'cuil',
+    'dni',
+    'gracias',
+    'operacion',
+    'caja',
+    'cajero',
+    'vendedor',
+    'atencion',
+    'cliente',
+    'fecha',
+    'hora',
+    'neto',
+    'importe',
+    'precio',
   };
 
   static final _blacklistPattern = RegExp(
@@ -86,11 +129,19 @@ class ReceiptMatcher {
 
   static List<CatalogEntry> get _flatCatalog {
     return _catalog ??= ShoppingPredefined.itemsPerCategory.entries
-        .expand((entry) => entry.value.map((item) => CatalogEntry(
-              name: item['name'] ?? '',
-              emoji: item['emoji'] ?? '🛒',
-              category: entry.key,
-            ),),)
+        .expand(
+          (entry) => entry.value.map(
+            (item) {
+              final name = item['name'] ?? '';
+              return CatalogEntry(
+                name: name,
+                nameKey: shoppingCatalogKeyForName(name),
+                emoji: item['emoji'] ?? '🛒',
+                category: entry.key,
+              );
+            },
+          ),
+        )
         .toList();
   }
 
@@ -106,8 +157,8 @@ class ReceiptMatcher {
 
     CatalogEntry? best;
     double bestScore = 0;
-    int bestCatLen = 0;    // tie-breaker 1: más tokens = más específico
-    int bestCatChars = 0;  // tie-breaker 2: token más largo = más específico
+    int bestCatLen = 0; // tie-breaker 1: más tokens = más específico
+    int bestCatChars = 0; // tie-breaker 2: token más largo = más específico
     // "ANTITRAN DOVE M PEPINO": tanto Antitranspirante como Pepino tienen
     // 1 token con score 1.0. Gana Antitranspirante porque 'antitranspirante'
     // (16 chars) > 'pepino' (6 chars).
@@ -118,9 +169,11 @@ class ReceiptMatcher {
       final s = _scoreByCatalog(ocrTokens, catTokens);
       final catChars = catTokens.fold(0, (sum, t) => sum + t.length);
       if (s > bestScore ||
-          (s == bestScore && s >= _catalogMinScore &&
+          (s == bestScore &&
+              s >= _catalogMinScore &&
               (catTokens.length > bestCatLen ||
-               (catTokens.length == bestCatLen && catChars > bestCatChars)))) {
+                  (catTokens.length == bestCatLen &&
+                      catChars > bestCatChars)))) {
         bestScore = s;
         bestCatLen = catTokens.length;
         bestCatChars = catChars;
@@ -194,7 +247,10 @@ class ReceiptMatcher {
   /// Pregunta "¿cuánto del nombre del catálogo aparece en el texto OCR?"
   /// Permite que "APERITIVO TERMA SERR C 1350Cm3" matchee "Terma" con 1.0
   /// aunque el OCR tenga muchos tokens adicionales de marca/tamaño.
-  static double _scoreByCatalog(List<String> ocrTokens, List<String> catTokens) {
+  static double _scoreByCatalog(
+    List<String> ocrTokens,
+    List<String> catTokens,
+  ) {
     if (ocrTokens.isEmpty || catTokens.isEmpty) return 0;
     int shared = 0;
     for (final tc in catTokens) {
@@ -256,7 +312,10 @@ class ReceiptMatcher {
 
   /// "¿Cuánto del [target] aparece en [source]?" — igual que _scoreByCatalog.
   /// Útil para comparar tokens OCR crudos contra un item de la lista.
-  static double scoreByTarget(List<String> sourceTokens, List<String> targetTokens) =>
+  static double scoreByTarget(
+    List<String> sourceTokens,
+    List<String> targetTokens,
+  ) =>
       _scoreByCatalog(sourceTokens, targetTokens);
 
   static List<String> _tokenize(String raw) {
@@ -268,18 +327,24 @@ class ReceiptMatcher {
         // evitar que "COCA COLA SIN AZUCAR" matchee "Azúcar".
         .replaceAll(RegExp(r'\bsin\s+\w+', caseSensitive: false), ' ')
         .toLowerCase()
-        .replaceAll('á', 'a').replaceAll('é', 'e').replaceAll('í', 'i')
-        .replaceAll('ó', 'o').replaceAll('ú', 'u').replaceAll('ü', 'u')
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
         .replaceAll('ñ', 'n')
         .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ');
 
     return cleaned
         .split(RegExp(r'\s+'))
         .map((t) => t.trim())
-        .where((t) =>
-            t.length >= 3 &&
-            !_stopWords.contains(t) &&
-            !_brandWords.contains(t),)
+        .where(
+          (t) =>
+              t.length >= 3 &&
+              !_stopWords.contains(t) &&
+              !_brandWords.contains(t),
+        )
         .map(_stem)
         .toList();
   }
@@ -292,7 +357,14 @@ class ReceiptMatcher {
   static String _stem(String token) {
     if (token.length < 5) return token;
     const diminutives = [
-      'citos', 'citas', 'cito', 'cita', 'itos', 'itas', 'ito', 'ita',
+      'citos',
+      'citas',
+      'cito',
+      'cita',
+      'itos',
+      'itas',
+      'ito',
+      'ita',
     ];
     for (final suf in diminutives) {
       if (token.endsWith(suf) && token.length > suf.length + 2) {
@@ -368,8 +440,7 @@ class ReceiptMatcher {
     if (_blacklistPattern.hasMatch(t)) return false;
 
     // Cuenta letras reales (con acentos)
-    final letters =
-        RegExp(r'[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]').allMatches(t).length;
+    final letters = RegExp(r'[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]').allMatches(t).length;
     if (letters < 3) return false;
 
     // Al menos 40% del string deben ser letras (filtra "golos1", "SERR-C1")
@@ -398,9 +469,15 @@ class ReceiptMatcher {
 
 class CatalogEntry {
   final String name;
+  final String? nameKey;
   final String emoji;
   final String category;
-  const CatalogEntry({required this.name, required this.emoji, required this.category});
+  const CatalogEntry({
+    required this.name,
+    this.nameKey,
+    required this.emoji,
+    required this.category,
+  });
 }
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────
@@ -430,7 +507,8 @@ class ScanMatchResult {
   });
 
   /// Todos los items que van a quedar vinculados (para mostrar en el card)
-  List<ShoppingItemModel> get allLinked => [...toMarkPurchased, ...toAddAndMark];
+  List<ShoppingItemModel> get allLinked =>
+      [...toMarkPurchased, ...toAddAndMark];
 }
 
 /// Resuelve cada item OCR al flujo correcto dados los items pendientes.
@@ -523,7 +601,10 @@ ScanMatchResult resolveScanItems({
     double bestScore = 0;
 
     for (final item in pendingShoppingItems) {
-      final s = ReceiptMatcher.scoreTokens(catalogTokens, ReceiptMatcher.tokenize(item.name));
+      final s = ReceiptMatcher.scoreTokens(
+        catalogTokens,
+        ReceiptMatcher.tokenize(item.name),
+      );
       if (s > bestScore) {
         bestScore = s;
         pendingMatch = item;
@@ -539,14 +620,17 @@ ScanMatchResult resolveScanItems({
       // ambos resuelven al catálogo "Porotos" → se ofrece una sola vez.
       final key = catalog.name.toLowerCase();
       if (seenAdded.add(key)) {
-        toAddAndMark.add(ShoppingItemModel(
-          id: 'temp_${key.replaceAll(' ', '_')}',
-          name: catalog.name,
-          emoji: catalog.emoji,
-          category: catalog.category,
-          householdId: householdId,
-          createdAt: DateTime.now(),
-        ),);
+        toAddAndMark.add(
+          ShoppingItemModel(
+            id: 'temp_${key.replaceAll(' ', '_')}',
+            name: catalog.name,
+            nameKey: catalog.nameKey,
+            emoji: catalog.emoji,
+            category: catalog.category,
+            householdId: householdId,
+            createdAt: DateTime.now(),
+          ),
+        );
       }
     }
   }

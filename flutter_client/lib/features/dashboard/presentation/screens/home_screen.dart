@@ -168,6 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       HouseholdType.solo => HomeSoloView(
           onRefresh: _refreshHome,
           householdId: householdId,
+          onAvatarTap: () => widget.onAvatarTap?.call(),
         ),
       HouseholdType.family => HomeFamilyView(
           onRefresh: _refreshHome,

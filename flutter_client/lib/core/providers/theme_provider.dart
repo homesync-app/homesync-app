@@ -31,12 +31,13 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
     state = mode;
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setString(
-        _kThemeKey,
-        switch (mode) {
-          ThemeMode.light => 'light',
-          ThemeMode.dark => 'dark',
-          ThemeMode.system => 'system',
-        },);
+      _kThemeKey,
+      switch (mode) {
+        ThemeMode.light => 'light',
+        ThemeMode.dark => 'dark',
+        ThemeMode.system => 'system',
+      },
+    );
   }
 
   void toggle() {

@@ -52,11 +52,11 @@ void main() {
       final map = {
         'id': 'task-2',
         'title': 'Tarea minimal',
-        'status': null,       // should default to 'active'
-        'xp_reward': null,    // should default to 0
-        'coin_reward': null,  // should default to 0
+        'status': null, // should default to 'active'
+        'xp_reward': null, // should default to 0
+        'coin_reward': null, // should default to 0
         'household_id': null, // should default to ''
-        'created_at': null,   // should default to now
+        'created_at': null, // should default to now
         'recurrence_interval': null, // should default to 1
       };
 
@@ -188,7 +188,7 @@ void main() {
         coinReward: 5,
         householdId: 'h1',
         createdAt: DateTime(2026, 1, 1),
-        dueAt: DateTime.now().subtract(const Duration(hours: 1)),
+        dueAt: DateTime.now().subtract(const Duration(days: 1)),
       );
       expect(task.isOverdue, isTrue);
     });
@@ -234,10 +234,22 @@ void main() {
         ).recurrenceLabel;
 
     test('daily → "Diaria"', () => expect(labelFor('daily'), equals('Diaria')));
-    test('weekly → "Semanal"', () => expect(labelFor('weekly'), equals('Semanal')));
-    test('monthly → "Mensual"', () => expect(labelFor('monthly'), equals('Mensual')));
-    test('custom → "Personalizada"', () => expect(labelFor('custom'), equals('Personalizada')));
-    test('null → "Sin repetición"', () => expect(labelFor(null), equals('Sin repetición')));
+    test(
+      'weekly → "Semanal"',
+      () => expect(labelFor('weekly'), equals('Semanal')),
+    );
+    test(
+      'monthly → "Mensual"',
+      () => expect(labelFor('monthly'), equals('Mensual')),
+    );
+    test(
+      'custom → "Personalizada"',
+      () => expect(labelFor('custom'), equals('Personalizada')),
+    );
+    test(
+      'null → "Sin repetición"',
+      () => expect(labelFor(null), equals('Sin repetición')),
+    );
   });
 
   group('✅ TaskModel — copyWith()', () {
@@ -252,11 +264,12 @@ void main() {
     );
 
     test('copyWith changes only specified fields', () {
-      final updated = original.copyWith(status: TaskStatus.verified, title: 'Modified');
-      expect(updated.id, equals('task-1'));       // unchanged
+      final updated =
+          original.copyWith(status: TaskStatus.verified, title: 'Modified');
+      expect(updated.id, equals('task-1')); // unchanged
       expect(updated.householdId, equals('h1')); // unchanged
       expect(updated.status, equals(TaskStatus.verified)); // changed
-      expect(updated.title, equals('Modified'));   // changed
+      expect(updated.title, equals('Modified')); // changed
     });
 
     test('copyWith preserves all fields if nothing specified', () {
@@ -269,19 +282,47 @@ void main() {
 
   group('✅ TaskModel — equality & hashCode', () {
     test('Two tasks with same id are equal', () {
-      final t1 = TaskModel(id: 'x', title: 'A', status: TaskStatus.active, xpReward: 10,
-          coinReward: 5, householdId: 'h', createdAt: DateTime(2026),);
-      final t2 = TaskModel(id: 'x', title: 'B', status: TaskStatus.verified, xpReward: 99,
-          coinReward: 0, householdId: 'h2', createdAt: DateTime(2025),);
+      final t1 = TaskModel(
+        id: 'x',
+        title: 'A',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h',
+        createdAt: DateTime(2026),
+      );
+      final t2 = TaskModel(
+        id: 'x',
+        title: 'B',
+        status: TaskStatus.verified,
+        xpReward: 99,
+        coinReward: 0,
+        householdId: 'h2',
+        createdAt: DateTime(2025),
+      );
       expect(t1, equals(t2));
       expect(t1.hashCode, equals(t2.hashCode));
     });
 
     test('Tasks with different ids are not equal', () {
-      final t1 = TaskModel(id: 'a', title: 'T', status: TaskStatus.active, xpReward: 0,
-          coinReward: 0, householdId: 'h', createdAt: DateTime(2026),);
-      final t2 = TaskModel(id: 'b', title: 'T', status: TaskStatus.active, xpReward: 0,
-          coinReward: 0, householdId: 'h', createdAt: DateTime(2026),);
+      final t1 = TaskModel(
+        id: 'a',
+        title: 'T',
+        status: TaskStatus.active,
+        xpReward: 0,
+        coinReward: 0,
+        householdId: 'h',
+        createdAt: DateTime(2026),
+      );
+      final t2 = TaskModel(
+        id: 'b',
+        title: 'T',
+        status: TaskStatus.active,
+        xpReward: 0,
+        coinReward: 0,
+        householdId: 'h',
+        createdAt: DateTime(2026),
+      );
       expect(t1, isNot(equals(t2)));
     });
   });
@@ -379,11 +420,17 @@ void main() {
         );
 
     test('payerDisplayName uses first name from full name', () {
-      expect(makeExpense(fullName: 'Blas Oroná').payerDisplayName, equals('Blas'));
+      expect(
+        makeExpense(fullName: 'Blas Oroná').payerDisplayName,
+        equals('Blas'),
+      );
     });
 
     test('payerDisplayName falls back to email prefix', () {
-      expect(makeExpense(email: 'blas@email.com').payerDisplayName, equals('blas'));
+      expect(
+        makeExpense(email: 'blas@email.com').payerDisplayName,
+        equals('blas'),
+      );
     });
 
     test('payerDisplayName returns "Alguien" when both are null', () {
@@ -410,7 +457,7 @@ void main() {
 
     test('isSettled when balance is ~0', () {
       expect(makeBalance(0.0).isSettled, isTrue);
-      expect(makeBalance(0.005).isSettled, isTrue);  // < 0.01 threshold
+      expect(makeBalance(0.005).isSettled, isTrue); // < 0.01 threshold
       expect(makeBalance(-0.005).isSettled, isTrue);
     });
 
@@ -483,32 +530,48 @@ void main() {
 
     test('progress is 0.0 when nothing saved', () {
       final goal = SavingsGoalModel(
-        id: 'g', householdId: 'h', title: 'Test',
-        targetAmount: 1000.0, currentAmount: 0.0, createdAt: DateTime(2026),
+        id: 'g',
+        householdId: 'h',
+        title: 'Test',
+        targetAmount: 1000.0,
+        currentAmount: 0.0,
+        createdAt: DateTime(2026),
       );
       expect(goal.progress, equals(0.0));
     });
 
     test('progress is 0.25 when 25% saved', () {
       final goal = SavingsGoalModel(
-        id: 'g', householdId: 'h', title: 'Test',
-        targetAmount: 1000.0, currentAmount: 250.0, createdAt: DateTime(2026),
+        id: 'g',
+        householdId: 'h',
+        title: 'Test',
+        targetAmount: 1000.0,
+        currentAmount: 250.0,
+        createdAt: DateTime(2026),
       );
       expect(goal.progress, closeTo(0.25, 0.001));
     });
 
     test('progress is 1.0 when fully funded', () {
       final goal = SavingsGoalModel(
-        id: 'g', householdId: 'h', title: 'Test',
-        targetAmount: 1000.0, currentAmount: 1000.0, createdAt: DateTime(2026),
+        id: 'g',
+        householdId: 'h',
+        title: 'Test',
+        targetAmount: 1000.0,
+        currentAmount: 1000.0,
+        createdAt: DateTime(2026),
       );
       expect(goal.progress, closeTo(1.0, 0.001));
     });
 
     test('progress can exceed 1.0 when overfunded', () {
       final goal = SavingsGoalModel(
-        id: 'g', householdId: 'h', title: 'Test',
-        targetAmount: 1000.0, currentAmount: 1200.0, createdAt: DateTime(2026),
+        id: 'g',
+        householdId: 'h',
+        title: 'Test',
+        targetAmount: 1000.0,
+        currentAmount: 1200.0,
+        createdAt: DateTime(2026),
       );
       expect(goal.progress, greaterThan(1.0));
     });
@@ -538,7 +601,10 @@ void main() {
         'amount': 5000.0,
         'note': 'Mi parte del mes',
         'created_at': '2026-02-15T10:00:00.000Z',
-        'user': {'full_name': 'Blas Oroná', 'avatar_url': 'https://example.com/avatar.png'},
+        'user': {
+          'full_name': 'Blas Oroná',
+          'avatar_url': 'https://example.com/avatar.png',
+        },
       };
 
       final contrib = SavingsContributionModel.fromJson(json);

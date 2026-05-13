@@ -15,7 +15,8 @@ class GetSavingsGoalsUseCase {
     int? offset,
   }) {
     if (householdId.isEmpty) {
-      return Future.value(const Left(ValidationFailure('householdId is required')));
+      return Future.value(
+          const Left(ValidationFailure('householdId is required')),);
     }
     return repository.getGoals(
       householdId: householdId,

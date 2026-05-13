@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -23,11 +23,11 @@ class ExpenseFormHeader extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final title = isEditing
         ? (isIncome
-              ? t.expensesFormHeaderEditIncome
-              : t.expensesFormHeaderEditExpense)
+            ? t.expensesFormHeaderEditIncome
+            : t.expensesFormHeaderEditExpense)
         : (isIncome
-              ? t.expensesFormHeaderNewIncome
-              : t.expensesFormHeaderNewExpense);
+            ? t.expensesFormHeaderNewIncome
+            : t.expensesFormHeaderNewExpense);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -451,8 +451,8 @@ class ExpenseTitleField extends StatelessWidget {
               ),
               decoration: InputDecoration(
                 hintText: isIncome
-                    ? 'Â¿De quÃ© es el ingreso? (Opcional)'
-                    : 'Â¿QuÃ© compraste? (Opcional)',
+                    ? '¿De qué es el ingreso? (Opcional)'
+                    : '¿Qué compraste? (Opcional)',
                 hintStyle: TextStyle(
                   color: theme.textMuted,
                   fontSize: 16,
@@ -478,4 +478,3 @@ class ExpenseTitleField extends StatelessWidget {
     );
   }
 }
-

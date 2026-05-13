@@ -16,7 +16,6 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
@@ -76,19 +75,19 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     final tasksAsync = ref.watch(todayTasksProvider);
     final shoppingAsync = ref.watch(shoppingItemsProvider);
 
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     final hasTasksContent = tasksAsync.isLoading ||
-        ((tasksAsync.valueOrNull ?? const <TaskModel>[])
+        ((tasksAsync.value ?? const <TaskModel>[])
             .where((task) => task.isPending)
             .isNotEmpty);
     final hasShoppingContent = shoppingAsync.isLoading ||
-        ((shoppingAsync.valueOrNull ?? const [])
+        ((shoppingAsync.value ?? const [])
             .where((item) => !item.completed)
             .isNotEmpty);
 
@@ -126,7 +125,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final t = AppLocalizations.of(context);
 
@@ -253,7 +252,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
+          const Icon(Icons.info_outline_rounded,
+              color: AppColors.warning, size: 22,),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -268,7 +268,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
           const SizedBox(width: 8),
           TextButton(
             onPressed: () {
-              ref.invalidate(householdMembersNotifierProvider);
+              ref.invalidate(householdMembersProvider);
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
@@ -356,8 +356,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
   Widget _buildTasksSection(AppThemeColors theme, HouseholdCapabilities caps) {
     final tasksAsync = ref.watch(todayTasksProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final membersAsync = ref.watch(householdMembersProvider);
+    final members = membersAsync.value ?? const <MemberModel>[];
     final t = AppLocalizations.of(context);
 
     return Column(
@@ -512,8 +512,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                   return Column(
                     children: [
                       ListTile(
-                        leading: Text(item.emoji,
-                            style: const TextStyle(fontSize: 20),),
+                        leading: Text(
+                          item.emoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
                         title: Text(
                           item.name,
                           style: TextStyle(
@@ -614,7 +616,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildActivityItem(
-      Map<String, dynamic> activity, AppThemeColors theme,) {
+    Map<String, dynamic> activity,
+    AppThemeColors theme,
+  ) {
     final activityMap = activity;
     final currentUserId = ref.watch(currentUserIdProvider);
     return ActivityChatBubble(

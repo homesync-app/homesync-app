@@ -81,7 +81,8 @@ class TaskRpcService extends BaseRpcService {
           'p_xp_reward': xpReward,
           'p_coin_reward': coinReward,
           'p_task_title': taskTitle,
-          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+          if (completedAt != null)
+            'p_completed_at': completedAt.toIso8601String(),
         },
       );
 
@@ -115,7 +116,8 @@ class TaskRpcService extends BaseRpcService {
           'p_user_ids': userIds ?? [userId],
           'p_task_ids': taskIds,
           'p_household_id': householdId,
-          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+          if (completedAt != null)
+            'p_completed_at': completedAt.toIso8601String(),
         },
       );
 
@@ -242,8 +244,9 @@ class TaskRpcService extends BaseRpcService {
     return Map<String, dynamic>.from(response);
   }
 
-  Future<Map<String, dynamic>> restoreTaskCoins(
-      {required String taskId,}) async {
+  Future<Map<String, dynamic>> restoreTaskCoins({
+    required String taskId,
+  }) async {
     final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'restore_task_coins',

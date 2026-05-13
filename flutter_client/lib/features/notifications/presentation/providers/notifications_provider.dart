@@ -47,7 +47,8 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   );
 });
 
-final getNotificationsUseCaseProvider = Provider<GetNotificationsUseCase>((ref) {
+final getNotificationsUseCaseProvider =
+    Provider<GetNotificationsUseCase>((ref) {
   return GetNotificationsUseCase(ref.read(notificationRepositoryProvider));
 });
 
@@ -82,12 +83,12 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<NotificationsState>().copyWithPrevious(state);
+    state = const AsyncLoading<NotificationsState>();
     state = await AsyncValue.guard(_load);
   }
 
   Future<void> loadMore() async {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null || current.isLoadingMore || !current.hasMore) {
       return;
     }
@@ -119,20 +120,24 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
   }
 
   Future<void> markAsRead(String notificationId) async {
-    final previous = state.valueOrNull;
+    final previous = state.value;
     if (previous == null) {
       await ref.read(markNotificationReadUseCaseProvider).call(notificationId);
       await refresh();
       return;
     }
 
-    state = AsyncData(previous.copyWith(items: [
-      for (final notification in previous.items)
-        if (notification.id == notificationId)
-          notification.copyWith(isRead: true)
-        else
-          notification,
-    ],),);
+    state = AsyncData(
+      previous.copyWith(
+        items: [
+          for (final notification in previous.items)
+            if (notification.id == notificationId)
+              notification.copyWith(isRead: true)
+            else
+              notification,
+        ],
+      ),
+    );
 
     try {
       await ref.read(markNotificationReadUseCaseProvider).call(notificationId);
@@ -148,7 +153,7 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
   }
 
   Future<void> markAllAsRead() async {
-    final previous = state.valueOrNull;
+    final previous = state.value;
     if (previous == null) {
       await ref.read(markAllNotificationsReadUseCaseProvider).call();
       await refresh();
@@ -180,5 +185,5 @@ class NotificationsController extends AsyncNotifier<NotificationsState> {
 
 final notificationsControllerProvider =
     AsyncNotifierProvider<NotificationsController, NotificationsState>(
-      NotificationsController.new,
-    );
+  NotificationsController.new,
+);

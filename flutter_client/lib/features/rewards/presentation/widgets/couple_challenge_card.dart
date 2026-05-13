@@ -29,6 +29,12 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final title = widget.challenge.localizedTitle(t);
+    final description = widget.challenge.localizedDescription(t);
+    final location = widget.challenge.localizedLocation(t);
+    final category = widget.challenge.localizedCategory(t);
+    final timing = widget.challenge.localizedTiming(t);
+    final motivation = widget.challenge.localizedMotivation(t);
     const highlight = Color(0xFF6B8E85);
     final theme = context.theme;
 
@@ -59,7 +65,9 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     _softPill(
                       icon: Icons.auto_awesome_rounded,
                       label: t.coupleChallengeWeeklyPill(
-                          widget.challengeNumber, widget.totalChallenges,),
+                        widget.challengeNumber,
+                        widget.totalChallenges,
+                      ),
                       textColor: highlight,
                       background: highlight.withValues(alpha: 0.08),
                     ),
@@ -105,7 +113,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        widget.challenge.title,
+                        title,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -121,7 +129,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  widget.challenge.description,
+                  description,
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 14,
@@ -154,7 +162,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.challenge.title,
+                        title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -167,7 +175,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _collapsedSummary(widget.challenge.description),
+                        _collapsedSummary(description),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -197,7 +205,9 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
               size: 18,
             ),
             label: Text(
-              _isExpanded ? t.coupleChallengeShowLess : t.coupleChallengeShowMore,
+              _isExpanded
+                  ? t.coupleChallengeShowLess
+                  : t.coupleChallengeShowMore,
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
@@ -225,19 +235,19 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                     children: [
                       _softPill(
                         icon: Icons.place_rounded,
-                        label: widget.challenge.location,
+                        label: location,
                         textColor: highlight,
                         background: highlight.withValues(alpha: 0.08),
                       ),
                       _softPill(
                         icon: Icons.favorite_outline_rounded,
-                        label: widget.challenge.category,
+                        label: category,
                         textColor: highlight,
                         background: highlight.withValues(alpha: 0.08),
                       ),
                       _softPill(
                         icon: Icons.schedule_rounded,
-                        label: widget.challenge.timing,
+                        label: timing,
                         textColor: theme.textSecondary,
                         background: theme.surface,
                       ),
@@ -245,7 +255,7 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.challenge.motivation,
+                    motivation,
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 13,
@@ -286,7 +296,8 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        t.coupleChallengeSharedRewardBody(widget.challenge.coinReward),
+                        t.coupleChallengeSharedRewardBody(
+                            widget.challenge.coinReward,),
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 14,

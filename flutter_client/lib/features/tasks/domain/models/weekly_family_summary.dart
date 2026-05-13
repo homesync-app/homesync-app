@@ -45,8 +45,7 @@ class WeeklyFamilySummary {
       tasksDone: (map['tasks_done'] as num?)?.toInt() ?? 0,
       tasksPlanned: (map['tasks_planned'] as num?)?.toInt() ?? 0,
       completionRate: (map['completion_rate'] as num?)?.toDouble() ?? 0,
-      tasksDoneLastWeek:
-          (map['tasks_done_last_week'] as num?)?.toInt() ?? 0,
+      tasksDoneLastWeek: (map['tasks_done_last_week'] as num?)?.toInt() ?? 0,
       tasksDoneDelta: (map['tasks_done_delta'] as num?)?.toInt() ?? 0,
       mvp: map['mvp'] is Map
           ? SummaryMember.fromMap(

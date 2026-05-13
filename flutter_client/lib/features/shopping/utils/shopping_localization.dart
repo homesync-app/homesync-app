@@ -94,7 +94,10 @@ const List<ShoppingCatalogEntry> shoppingCatalogEntries = [
   ShoppingCatalogEntry('glassCleaner', 'Limpiavidrios', 'Glass cleaner'),
   ShoppingCatalogEntry('floorCleaner', 'Limpiador pisos', 'Floor cleaner'),
   ShoppingCatalogEntry(
-      'multipurposeCleaner', 'Multiuso', 'Multi-purpose cleaner',),
+    'multipurposeCleaner',
+    'Multiuso',
+    'Multi-purpose cleaner',
+  ),
   ShoppingCatalogEntry('degreaser', 'Desengrasante', 'Degreaser'),
   ShoppingCatalogEntry('disinfectant', 'Desinfectante', 'Disinfectant'),
   ShoppingCatalogEntry('insecticide', 'Insecticida', 'Insecticide'),
@@ -168,7 +171,10 @@ const List<ShoppingCatalogEntry> shoppingCatalogEntries = [
   ShoppingCatalogEntry('petBags', 'Bolsitas', 'Pet bags'),
   ShoppingCatalogEntry('frozenFries', 'Papas congeladas', 'Frozen fries'),
   ShoppingCatalogEntry(
-      'frozenVegetables', 'Verdura congelada', 'Frozen vegetables',),
+    'frozenVegetables',
+    'Verdura congelada',
+    'Frozen vegetables',
+  ),
   ShoppingCatalogEntry('frozenFish', 'Pescado congelado', 'Frozen fish'),
   ShoppingCatalogEntry('nuggets', 'Nuggets', 'Nuggets'),
   ShoppingCatalogEntry('ice', 'Hielo', 'Ice'),
@@ -200,7 +206,10 @@ const List<ShoppingCatalogEntry> shoppingCatalogEntries = [
   ShoppingCatalogEntry('mustard', 'Mostaza', 'Mustard'),
   ShoppingCatalogEntry('jam', 'Mermelada', 'Jam'),
   ShoppingCatalogEntry(
-      'bakingChocolate', 'Chocolate cobertura', 'Baking chocolate',),
+    'bakingChocolate',
+    'Chocolate cobertura',
+    'Baking chocolate',
+  ),
   ShoppingCatalogEntry('gelatin', 'Gelatina', 'Gelatin'),
 ];
 

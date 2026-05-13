@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 export 'package:homesync_client/shared/widgets/animated_press.dart';
@@ -59,8 +60,10 @@ class AppTransitions {
     );
   }
 
-  static Route<T> slideHorizontal<T>(
-      {required Widget page, bool fromRight = true,}) {
+  static Route<T> slideHorizontal<T>({
+    required Widget page,
+    bool fromRight = true,
+  }) {
     return PageRouteBuilder<T>(
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -94,11 +97,12 @@ extension AppAnimationsExtension on Widget {
     return animate()
         .fadeIn(duration: 400.ms, delay: delay.ms, curve: Curves.easeOutCubic)
         .slideY(
-            begin: 0.1,
-            end: 0,
-            duration: 400.ms,
-            delay: delay.ms,
-            curve: Curves.easeOutCubic,);
+          begin: 0.1,
+          end: 0,
+          duration: 400.ms,
+          delay: delay.ms,
+          curve: Curves.easeOutCubic,
+        );
   }
 
   Widget animateStaggered(int index) {
@@ -121,9 +125,10 @@ extension AppAnimationsExtension on Widget {
     if (!active) return this;
     return animate(onPlay: (controller) => controller.repeat(reverse: true))
         .scale(
-            begin: const Offset(1, 1),
-            end: const Offset(1.02, 1.02),
-            duration: 1000.ms,);
+      begin: const Offset(1, 1),
+      end: const Offset(1.02, 1.02),
+      duration: 1000.ms,
+    );
   }
 }
 
@@ -136,7 +141,7 @@ class FadeIndexedStack extends StatefulWidget {
     super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 200),
+    this.duration = const Duration(milliseconds: 220),
   });
 
   @override
@@ -178,14 +183,28 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
 
   @override
   Widget build(BuildContext context) {
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+
     return IndexedStack(
       index: _currentIndex,
       children: List.generate(widget.children.length, (i) {
         // Only animate the currently active child; the rest stay alive but hidden.
         if (i == _currentIndex) {
           return FadeTransition(
-            opacity: _controller,
-            child: widget.children[i],
+            opacity: curve,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.018),
+                end: Offset.zero,
+              ).animate(curve),
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.992, end: 1).animate(curve),
+                child: widget.children[i],
+              ),
+            ),
           );
         }
         return widget.children[i];
@@ -236,20 +255,21 @@ class CelebrationOverlay extends StatelessWidget {
 }
 
 class SuccessCelebration {
-  static void show(BuildContext context,
-      {required String title, required String message, String? icon,}) {
-    final confettiController =
-        ConfettiController(duration: const Duration(seconds: 3));
-    confettiController.play();
+  static void show(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String? icon,
+  }) {
+    HapticFeedback.mediumImpact();
 
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (context) => _CelebrationDialog(
         title: title,
         message: message,
         icon: icon,
-        confettiController: confettiController,
       ),
     );
   }
@@ -259,106 +279,110 @@ class _CelebrationDialog extends StatelessWidget {
   final String title;
   final String message;
   final String? icon;
-  final ConfettiController confettiController;
 
   const _CelebrationDialog({
     required this.title,
     required this.message,
     this.icon,
-    required this.confettiController,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        ConfettiWidget(
-          confettiController: confettiController,
-          blastDirectionality: BlastDirectionality.explosive,
-          shouldLoop: false,
-          colors: const [
-            Colors.green,
-            Colors.blue,
-            Colors.pink,
-            Colors.orange,
-            Colors.purple,
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final successColor = colorScheme.primary;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 30,
+              offset: const Offset(0, 16),
+            ),
           ],
         ),
-        Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 30,
-                  offset: const Offset(0, 15),
-                ),
-              ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: successColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon == null ? Icons.check_rounded : Icons.emoji_events_rounded,
+                color: successColor,
+                size: 32,
+              ),
+            )
+                .animate()
+                .scale(
+                  begin: const Offset(0.86, 0.86),
+                  end: const Offset(1, 1),
+                  duration: 260.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .fadeIn(duration: 180.ms),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+              ),
+              textAlign: TextAlign.center,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF0FDF4),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    icon ?? '🎉',
-                    style: const TextStyle(fontSize: 48),
-                  ),
-                ).animate().shake(delay: 400.ms),
-                const SizedBox(height: 24),
-                Text(
-                  title,
-                  style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF166534),),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  message,
-                  style: TextStyle(
-                      fontSize: 16, color: Colors.grey[600], height: 1.5,),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      confettiController.stop();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF22C55E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),),
-                      elevation: 0,
-                    ),
-                    child: const Text('¡GENIAL!',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w900, letterSpacing: 1,),),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.35,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: successColor.withValues(alpha: 0.14),
+                  foregroundColor: successColor,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: const Text(
+                  'Listo',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ).animate().fadeIn(duration: 160.ms, curve: Curves.easeOutCubic).scale(
+            begin: const Offset(0.96, 0.96),
+            end: const Offset(1, 1),
+            duration: 220.ms,
+            curve: Curves.easeOutCubic,
+          ),
     );
   }
 }

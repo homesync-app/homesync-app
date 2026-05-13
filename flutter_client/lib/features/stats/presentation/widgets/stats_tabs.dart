@@ -44,7 +44,10 @@ class WeeklyTab extends ConsumerWidget {
   });
 
   void _showLoveNoteDialog(
-      BuildContext context, WidgetRef ref, AppThemeColors theme,) {
+    BuildContext context,
+    WidgetRef ref,
+    AppThemeColors theme,
+  ) {
     final t = AppLocalizations.of(context);
     final controller = TextEditingController();
     showDialog(
@@ -60,7 +63,9 @@ class WeeklyTab extends ConsumerWidget {
             Text(
               t.loveNoteDialogTitle,
               style: TextStyle(
-                  fontWeight: FontWeight.w900, color: theme.textPrimary,),
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+              ),
             ),
           ],
         ),
@@ -81,7 +86,8 @@ class WeeklyTab extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(t.commonCancel, style: TextStyle(color: theme.textMuted)),
+            child:
+                Text(t.commonCancel, style: TextStyle(color: theme.textMuted)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -89,15 +95,10 @@ class WeeklyTab extends ConsumerWidget {
               if (content.isEmpty) return;
 
               final currentUserId = ref.read(currentUserIdProvider);
-              final householdId =
-                  await ref.read(householdIdProvider.future);
-              final members = ref
-                      .read(householdMembersNotifierProvider)
-                      .valueOrNull ??
-                  [];
-              final partner = members
-                  .where((m) => m.userId != currentUserId)
-                  .firstOrNull;
+              final householdId = await ref.read(householdIdProvider.future);
+              final members = ref.read(householdMembersProvider).value ?? [];
+              final partner =
+                  members.where((m) => m.userId != currentUserId).firstOrNull;
 
               if (currentUserId == null ||
                   householdId == null ||
@@ -126,7 +127,8 @@ class WeeklyTab extends ConsumerWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(t.commonSend),
           ),
@@ -139,13 +141,17 @@ class WeeklyTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.jumbo,
+        ),
         children: [
           // ── Weekly Duel ──────────────────────────────────────────────────
           SectionLabel(label: t.statsWeeklyDuel, icon: '⚔️'),
@@ -293,8 +299,11 @@ class WeeklyTab extends ConsumerWidget {
                     ),
                   ),
                   if (!isPremium)
-                    const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 16, color: AppColors.textMuted,),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: AppColors.textMuted,
+                    ),
                 ],
               ),
             ),
@@ -413,7 +422,11 @@ class _ProgressTabState extends State<ProgressTab> {
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.jumbo,
+        ),
         children: [
           // ── Header ───────────────────────────────────────────────────────
           SectionLabel(label: t.personalEvolutionTitle, icon: '📈'),
@@ -443,7 +456,11 @@ class _ProgressTabState extends State<ProgressTab> {
           Container(
             height: 240,
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md, AppSpacing.xl, AppSpacing.md, AppSpacing.md,),
+              AppSpacing.md,
+              AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(32),
@@ -501,13 +518,17 @@ class _ProgressTabState extends State<ProgressTab> {
                       ),
                       titlesData: const FlTitlesData(
                         bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),),
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                         leftTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),),
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                         rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),),
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                         topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),),
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
                       ),
                       borderData: FlBorderData(show: false),
                       lineBarsData: [
@@ -566,7 +587,8 @@ class _ProgressTabState extends State<ProgressTab> {
                   value:
                       '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
                   color: AppColors.primary,
-                  subtitle: t.statsXPToNextLevel('${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()}'),
+                  subtitle: t.statsXPToNextLevel(
+                      '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()}',),
                 ),
               ),
             ],
@@ -611,32 +633,40 @@ class CategoriesTab extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.insights_outlined,
-                    size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),),
+                Icon(
+                  Icons.insights_outlined,
+                  size: 18,
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                ),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(Icons.favorite_border_rounded,
-                    size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),),
+                Icon(
+                  Icons.favorite_border_rounded,
+                  size: 18,
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                ),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(Icons.auto_graph_outlined,
-                    size: 18,
-                    color: AppColors.textMuted.withValues(alpha: 0.5),),
+                Icon(
+                  Icons.auto_graph_outlined,
+                  size: 18,
+                  color: AppColors.textMuted.withValues(alpha: 0.5),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               t.statsNoDataTitle,
               style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               t.statsNoDataSubtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+              style:
+                  const TextStyle(color: AppColors.textSecondary, height: 1.4),
             ),
             const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
@@ -645,9 +675,12 @@ class CategoriesTab extends StatelessWidget {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg, vertical: AppSpacing.sm,),
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Text(t.commonRefresh),
             ),
@@ -661,7 +694,11 @@ class CategoriesTab extends StatelessWidget {
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.jumbo,),
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.jumbo,
+        ),
         children: [
           // ── Premium Dominance Header ─────────────────────────────────────
           SectionLabel(label: t.categoriesDominance, icon: '💎'),

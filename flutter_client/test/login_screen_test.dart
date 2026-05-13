@@ -8,6 +8,7 @@ import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/auth/domain/repositories/auth_repository.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FakeAuthRepository implements AuthRepository {
@@ -30,7 +31,9 @@ class FakeAuthRepository implements AuthRepository {
     lastEmailed = email;
     didCallSignIn = true;
     if (shouldFail) {
-      return const Left(AuthFailure('Credenciales invalidas o cuenta no existente'));
+      return const Left(
+        AuthFailure('Credenciales invalidas o cuenta no existente'),
+      );
     }
     return const Right(null);
   }
@@ -65,6 +68,9 @@ Future<void> _pumpLoginScreen(
         authRepositoryProvider.overrideWithValue(fakeRepo),
       ],
       child: MaterialApp(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: ThemeData(useMaterial3: true),
         home: withScaffold
             ? Scaffold(body: LoginScreen(prefs: fakePrefs))

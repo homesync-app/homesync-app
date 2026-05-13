@@ -9,7 +9,8 @@ class ClearCompletedShoppingItemsUseCase {
 
   Future<Either<Failure, void>> execute(String householdId) {
     if (householdId.isEmpty) {
-      return Future.value(const Left(ValidationFailure('householdId is required')));
+      return Future.value(
+          const Left(ValidationFailure('householdId is required')),);
     }
     return repository.clearCompleted(householdId);
   }

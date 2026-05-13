@@ -62,6 +62,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
             usersMap = {for (var u in usersResponse) u['id']: u};
           }
 
+          final tasksMap = await _loadActivityTasks(rows);
+
           final mapped = rows.map((item) {
             final creatorId = item['user_id'] as String?;
             final eventType = item['event_type'] as String;
@@ -80,11 +82,16 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
             if (eventType == 'task_completed') {
               uiType = 'task';
-              final taskTitle =
-                  metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
+              final taskId = metadata['task_id'] ?? metadata['id'];
+              final task = tasksMap[taskId?.toString()];
+              final taskTitle = task?['title'] ??
+                  metadata['task_title'] ??
+                  item['title'] ??
+                  'Tarea del hogar';
               data['title'] = taskTitle;
               data['task_title'] = taskTitle;
-              data['task_id'] = metadata['task_id'] ?? metadata['id'];
+              data['title_key'] = task?['title_key'] ?? metadata['title_key'];
+              data['task_id'] = taskId;
               data['category'] = metadata['category'] ??
                   metadata['task_category'] ??
                   metadata['category_name'];
@@ -192,9 +199,12 @@ class SupabaseDashboardRepository implements DashboardRepository {
               .order('created_at', ascending: false)
               .limit(30);
 
-      final mappedActivities = (response as List)
+      final rows = (response as List)
           .map((item) => Map<String, dynamic>.from(item as Map))
-          .map((item) {
+          .toList();
+      final tasksMap = await _loadActivityTasks(rows);
+
+      final mappedActivities = rows.map((item) {
         final eventType = item['event_type'] as String;
         final user = item['user'] as Map<String, dynamic>?;
         final creatorId = item['user_id'] as String?;
@@ -212,11 +222,16 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         if (eventType == 'task_completed') {
           uiType = 'task';
-          final taskTitle =
-              metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
+          final taskId = metadata['task_id'] ?? metadata['id'];
+          final task = tasksMap[taskId?.toString()];
+          final taskTitle = task?['title'] ??
+              metadata['task_title'] ??
+              item['title'] ??
+              'Tarea del hogar';
           data['title'] = taskTitle;
           data['task_title'] = taskTitle;
-          data['task_id'] = metadata['task_id'] ?? metadata['id'];
+          data['title_key'] = task?['title_key'] ?? metadata['title_key'];
+          data['task_id'] = taskId;
           data['category'] = metadata['category'] ??
               metadata['task_category'] ??
               metadata['category_name'];
@@ -244,13 +259,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
           uiType = 'reward';
-          data['title'] = metadata['reward_title'] ??
-              item['title'] ??
-              'Premio canjeado';
+          data['title'] =
+              metadata['reward_title'] ?? item['title'] ?? 'Premio canjeado';
           data['reward_icon'] = metadata['reward_icon'] ?? metadata['icon'];
-          data['reward_cost'] = metadata['cost'] ??
-              metadata['coins'] ??
-              metadata['coin_cost'];
+          data['reward_cost'] =
+              metadata['cost'] ?? metadata['coins'] ?? metadata['coin_cost'];
         } else {
           data['title'] = item['title'] ??
               item['description'] ??
@@ -342,6 +355,30 @@ class SupabaseDashboardRepository implements DashboardRepository {
     return 'Gasto del hogar';
   }
 
+  Future<Map<String, Map<String, dynamic>>> _loadActivityTasks(
+    List<Map<String, dynamic>> rows,
+  ) async {
+    final taskIds = rows
+        .where((row) => row['event_type'] == 'task_completed')
+        .map((row) => Map<String, dynamic>.from(row['metadata'] ?? {}))
+        .map((metadata) => metadata['task_id'] ?? metadata['id'])
+        .whereType<String>()
+        .toSet()
+        .toList();
+
+    if (taskIds.isEmpty) return const {};
+
+    final response = await _client
+        .from('tasks')
+        .select('id, title, title_key')
+        .inFilter('id', taskIds);
+
+    return {
+      for (final task in response)
+        task['id'] as String: Map<String, dynamic>.from(task),
+    };
+  }
+
   String _localizedCategoryTitle(String value) {
     final lower = value.toLowerCase().trim();
     if (CategoryMapping.categoryNames.containsKey(lower)) {
@@ -358,7 +395,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
       final response = await _client
           .from('tasks')
           .select(
-            'id, title, category, xp_reward, coin_reward, completed_at, completed_by, assigned_to, status',
+            'id, title, title_key, category, xp_reward, coin_reward, completed_at, completed_by, assigned_to, status',
           )
           .eq('household_id', householdId)
           .eq('status', 'pending_approval')
@@ -404,6 +441,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
             'avatar_url': user?['avatar_url'],
             'title': title,
             'task_title': title,
+            'title_key': task['title_key'],
             'task_id': task['id'],
             'category': task['category'],
             'xp_reward': task['xp_reward'],

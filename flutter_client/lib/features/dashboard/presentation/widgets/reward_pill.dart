@@ -44,7 +44,8 @@ class RewardPill extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
+            style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.w800, color: color,),
           ),
         ],
       ),

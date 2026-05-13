@@ -65,6 +65,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   // MainScreen so the registry stays consistent across rebuilds.
   final GlobalKey _rewardsTabKey = GlobalKey(debugLabel: 'tour_rewards_tab');
   final GlobalKey _expensesTabKey = GlobalKey(debugLabel: 'tour_expenses_tab');
+  TourTargetKeysNotifier? _tourTargetKeys;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
@@ -83,9 +84,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         index: ref.read(bottomNavIndexProvider),
         source: 'initial_load',
       );
-      final keys = ref.read(tourTargetKeysProvider.notifier);
-      keys.register(TourTarget.rewardsTab, _rewardsTabKey);
-      keys.register(TourTarget.expensesTab, _expensesTabKey);
+      _tourTargetKeys = ref.read(tourTargetKeysProvider.notifier);
+      _tourTargetKeys!.register(TourTarget.rewardsTab, _rewardsTabKey);
+      _tourTargetKeys!.register(TourTarget.expensesTab, _expensesTabKey);
     });
   }
 
@@ -93,9 +94,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void dispose() {
     _notifService.dispose();
     _linkSubscription?.cancel();
-    final keys = ref.read(tourTargetKeysProvider.notifier);
-    keys.unregister(TourTarget.rewardsTab, _rewardsTabKey);
-    keys.unregister(TourTarget.expensesTab, _expensesTabKey);
+    _tourTargetKeys?.unregister(TourTarget.rewardsTab, _rewardsTabKey);
+    _tourTargetKeys?.unregister(TourTarget.expensesTab, _expensesTabKey);
     super.dispose();
   }
 
@@ -338,7 +338,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           );
         }
-        if (onboardingDone.valueOrNull == false) {
+        if (onboardingDone.value == false) {
           return MemberOnboardingScreen(
             onComplete: () {
               ref.invalidate(memberOnboardingProvider);
@@ -419,6 +419,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   theme: theme,
                 ),
                 toolbarHeight: 86,
+                actionsPadding: const EdgeInsets.only(right: 12),
                 actions: [
                   SizedBox(
                     width: 48,

@@ -856,8 +856,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             emoji: cat['emoji'],
                             accentColor: Color(cat['color'] as int),
                             count: ShoppingPredefined.itemsForCategory(
-                                    cat['id'], context,)
-                                .length,
+                              cat['id'],
+                              context,
+                            ).length,
                           ),
                           if (_expandedSections.contains(cat['id']))
                             _buildPredefinedGrid(cat, pending, done),

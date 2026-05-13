@@ -10,19 +10,19 @@ void main() {
     // They are checked against the properly UTF-8-decoded text, so valid
     // accented characters (á, é, ñ, etc.) will NOT trigger false positives.
     final forbiddenMarkers = <String>[
-      'Ã\u00A1',  // á double-encoded
-      'Ã\u00A9',  // é double-encoded
-      'Ã\u00AD',  // í double-encoded
-      'Ã\u00B3',  // ó double-encoded
-      'Ã\u00BA',  // ú double-encoded
-      'Ã\u00B1',  // ñ double-encoded
-      'Ã\u0083',  // Ã double-encoded (triple)
+      'Ã\u00A1', // á double-encoded
+      'Ã\u00A9', // é double-encoded
+      'Ã\u00AD', // í double-encoded
+      'Ã\u00B3', // ó double-encoded
+      'Ã\u00BA', // ú double-encoded
+      'Ã\u00B1', // ñ double-encoded
+      'Ã\u0083', // Ã double-encoded (triple)
       'â\u0080\u0093', // – (en dash) double-encoded
       'â\u0080\u0094', // — (em dash) double-encoded
       'â\u0080\u009C', // " double-encoded
       'â\u0080\u009D', // " double-encoded
       'â\u0080\u0099', // ' double-encoded
-      'ðŸ',       // emoji double-encoded prefix
+      'ðŸ', // emoji double-encoded prefix
     ];
 
     final failures = <String>[];
@@ -90,14 +90,12 @@ void main() {
     final normalizedFailures = failures
         .map((line) => line.replaceAll('\\', '/'))
         .toList(growable: false);
-    final newFailures = normalizedFailures
-        .where((line) {
-          final path = line.split(':').first.trim().replaceAll('\\', '/');
-          return !baseline.contains(line) &&
-              !baselinePaths.contains(path) &&
-              !legacyPaths.contains(path);
-        })
-        .toList(growable: false);
+    final newFailures = normalizedFailures.where((line) {
+      final path = line.split(':').first.trim().replaceAll('\\', '/');
+      return !baseline.contains(line) &&
+          !baselinePaths.contains(path) &&
+          !legacyPaths.contains(path);
+    }).toList(growable: false);
 
     expect(
       newFailures,

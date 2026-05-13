@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 part 'estimated_income_provider.g.dart';
 
+final estimatedIncomeNotifierProvider = estimatedIncomeProvider;
+
 const _kAmount = 'estimated_income_amount';
 const _kDay = 'estimated_income_day';
 

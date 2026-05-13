@@ -244,7 +244,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
 
   Future<void> _completeTaskFromEdit() async {
     final currentUserId = ref.read(currentUserIdProvider);
-    final members = ref.read(householdMembersProvider).valueOrNull ?? const [];
+    final members = ref.read(householdMembersProvider).value ?? const [];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
@@ -654,7 +654,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
 
   Widget _buildHeader(AppThemeColors theme) {
     final currentUserId = ref.watch(currentUserIdProvider);
-    final members = ref.watch(householdMembersProvider).valueOrNull ?? const [];
+    final members = ref.watch(householdMembersProvider).value ?? const [];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;

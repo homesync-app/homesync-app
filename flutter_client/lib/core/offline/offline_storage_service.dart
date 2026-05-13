@@ -47,8 +47,11 @@ class OfflineStorageService {
     );
   }
 
-  Future<void> set(String key, Map<String, dynamic> data,
-      {Duration? expiresIn,}) async {
+  Future<void> set(
+    String key,
+    Map<String, dynamic> data, {
+    Duration? expiresIn,
+  }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final expiresAt = expiresIn != null ? now + expiresIn.inMilliseconds : null;
 
@@ -157,8 +160,9 @@ class OfflineStorageService {
     if (kIsWeb) {
       await clearExpired();
       return _webCache.values
-          .map((row) =>
-              jsonDecode(row['value'] as String) as Map<String, dynamic>,)
+          .map(
+            (row) => jsonDecode(row['value'] as String) as Map<String, dynamic>,
+          )
           .toList();
     }
 
@@ -166,7 +170,8 @@ class OfflineStorageService {
     final results = await db.query('offline_cache', orderBy: 'created_at ASC');
     return results
         .map(
-            (row) => jsonDecode(row['value'] as String) as Map<String, dynamic>,)
+          (row) => jsonDecode(row['value'] as String) as Map<String, dynamic>,
+        )
         .toList();
   }
 }

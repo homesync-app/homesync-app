@@ -68,12 +68,15 @@ class AppIdentityService extends ChangeNotifier {
     _isRefreshing = true;
     try {
       if (_client != null) {
-        final result = await _client!.rpc<dynamic>('ensure_user_profile', params: {
-          'p_firebase_uid': firebaseUser.uid,
-          'p_email': firebaseUser.email ?? '',
-          'p_full_name': firebaseUser.displayName,
-          'p_avatar_url': firebaseUser.photoURL,
-        },);
+        final result = await _client!.rpc<dynamic>(
+          'ensure_user_profile',
+          params: {
+            'p_firebase_uid': firebaseUser.uid,
+            'p_email': firebaseUser.email ?? '',
+            'p_full_name': firebaseUser.displayName,
+            'p_avatar_url': firebaseUser.photoURL,
+          },
+        );
         final userId = result?.toString();
         if (userId != null && userId.isNotEmpty) {
           _currentUserId = userId;

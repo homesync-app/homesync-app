@@ -10,7 +10,6 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/data/repositories/supabase_household_repository.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/shared/widgets/admin_panel.dart';
@@ -31,13 +30,13 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
     ref.invalidate(userProfileProvider);
     ref.invalidate(currentHouseholdProvider);
     ref.invalidate(householdMembersProvider);
-    ref.invalidate(householdMembersNotifierProvider);
+    ref.invalidate(householdMembersProvider);
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(userBalanceProvider);
     ref.invalidate(todayTasksProvider);
     ref.invalidate(tasksProvider);
     ref.invalidate(recentActivityProvider);
-    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+    await ref.read(householdMembersProvider.notifier).refresh();
   }
 
   Future<void> _selectScenario(AdminTestingScenario scenario) async {
@@ -275,7 +274,7 @@ class _AdminWorkspaceScreenState extends ConsumerState<AdminWorkspaceScreen> {
     final admin = ref.watch(adminProvider);
     final selectedScenario =
         AdminTestingConfig.scenarioByHouseholdId(admin.selectedHouseholdId);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final eventsAsync = ref.watch(qaAdminRecentEventsProvider);
 
     return Scaffold(
@@ -1024,7 +1023,8 @@ final _userFeedbackProvider =
   final client = ref.read(supabaseClientProvider);
   final response = await client
       .from('user_feedback')
-      .select('id, type, title, description, email, app_version, platform, created_at')
+      .select(
+          'id, type, title, description, email, app_version, platform, created_at',)
       .order('created_at', ascending: false)
       .limit(100);
   return List<Map<String, dynamic>>.from(response as List);
@@ -1087,7 +1087,8 @@ class _UserFeedbackSectionState extends ConsumerState<_UserFeedbackSection> {
                     ),
                     Text(
                       'Reportes y sugerencias enviados desde la app',
-                      style: TextStyle(fontSize: 12, color: theme.textSecondary),
+                      style:
+                          TextStyle(fontSize: 12, color: theme.textSecondary),
                     ),
                   ],
                 ),
@@ -1222,7 +1223,8 @@ class _FeedbackTileState extends State<_FeedbackTile> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
@@ -1280,7 +1282,8 @@ class _FeedbackTileState extends State<_FeedbackTile> {
                     if (platform != null)
                       _metaChip(theme, Icons.smartphone_outlined, platform),
                     if (appVersion != null)
-                      _metaChip(theme, Icons.info_outline_rounded, 'v$appVersion'),
+                      _metaChip(
+                          theme, Icons.info_outline_rounded, 'v$appVersion',),
                   ],
                 ),
               ],
@@ -1303,7 +1306,8 @@ class _FeedbackTileState extends State<_FeedbackTile> {
         children: [
           Icon(icon, size: 11, color: theme.textMuted),
           const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 10, color: theme.textSecondary)),
+          Text(label,
+              style: TextStyle(fontSize: 10, color: theme.textSecondary),),
         ],
       ),
     );
@@ -1326,7 +1330,8 @@ final _errorLogsProvider =
   final response = await client
       .from('application_logs')
       .select(
-          'id, level, message, stack_trace, context, device_info, created_at',)
+        'id, level, message, stack_trace, context, device_info, created_at',
+      )
       .order('created_at', ascending: false)
       .limit(50);
   return List<Map<String, dynamic>>.from(response as List);
@@ -1557,7 +1562,9 @@ class _ErrorLogTile extends StatelessWidget {
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2,),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: levelColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
@@ -1575,7 +1582,9 @@ class _ErrorLogTile extends StatelessWidget {
                       if (library != null) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2,),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.surfaceContainer,
                             borderRadius: BorderRadius.circular(6),
@@ -1641,18 +1650,23 @@ class _ErrorLogTile extends StatelessWidget {
                     ],
                     if (stackTrace != null && stackTrace.isNotEmpty) ...[
                       _buildDetailBlock(
-                          'Stack trace completo', stackTrace, theme,),
+                        'Stack trace completo',
+                        stackTrace,
+                        theme,
+                      ),
                     ],
                     if (contextData != null) ...[
                       const SizedBox(height: 8),
                       _buildDetailBlock(
                         'Context JSON',
                         contextData.entries
-                            .where((e) =>
-                                e.key != 'full_diagnostics' &&
-                                e.key != 'stack_frames_head' &&
-                                e.key != 'context' &&
-                                e.key != 'library',)
+                            .where(
+                              (e) =>
+                                  e.key != 'full_diagnostics' &&
+                                  e.key != 'stack_frames_head' &&
+                                  e.key != 'context' &&
+                                  e.key != 'library',
+                            )
                             .map((e) => '${e.key}: ${e.value}')
                             .join('\n'),
                         theme,
@@ -1682,7 +1696,10 @@ class _ErrorLogTile extends StatelessWidget {
   }
 
   Widget _buildDetailBlock(
-      String label, String content, AppThemeColors theme,) {
+    String label,
+    String content,
+    AppThemeColors theme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

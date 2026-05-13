@@ -71,7 +71,7 @@ class PremiumNotifier extends AsyncNotifier<bool> {
       },
     );
     ref.invalidate(userProfileProvider);
-    ref.invalidate(householdMembersNotifierProvider);
+    ref.invalidate(householdMembersProvider);
   }
 
   /// FOR DEMO/DEVELOPMENT ONLY: Toggles local mock premium
@@ -81,7 +81,7 @@ class PremiumNotifier extends AsyncNotifier<bool> {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<bool>().copyWithPrevious(state);
+    state = const AsyncLoading<bool>();
     state = await AsyncValue.guard(_fetchPremiumStatus);
   }
 }
@@ -126,5 +126,5 @@ final premiumProductsProvider = FutureProvider((ref) async {
 /// - Vincular el ticket con la lista de compras (auto-match, sugerencia de
 ///   items nuevos, flujo desde shopping): PREMIUM.
 final canUseReceiptShoppingLinkProvider = Provider<bool>((ref) {
-  return ref.watch(premiumProvider).valueOrNull ?? false;
+  return ref.watch(premiumProvider).value ?? false;
 });

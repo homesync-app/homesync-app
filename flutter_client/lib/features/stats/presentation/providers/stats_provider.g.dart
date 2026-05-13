@@ -6,215 +6,491 @@ part of 'stats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$statsRepositoryHash() => r'3bee19c955ce7eaaa622acdd3502c5457b9f1ae1';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [statsRepository].
 @ProviderFor(statsRepository)
-final statsRepositoryProvider = Provider<StatsRepository>.internal(
-  statsRepository,
-  name: r'statsRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$statsRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final statsRepositoryProvider = StatsRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef StatsRepositoryRef = ProviderRef<StatsRepository>;
-String _$taskStatsByCategoryUseCaseHash() =>
-    r'8e1979c394524897823584ac5c2e883da4197ffc';
+final class StatsRepositoryProvider extends $FunctionalProvider<StatsRepository,
+    StatsRepository, StatsRepository> with $Provider<StatsRepository> {
+  StatsRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'statsRepositoryProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [taskStatsByCategoryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$statsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<StatsRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  StatsRepository create(Ref ref) {
+    return statsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StatsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StatsRepository>(value),
+    );
+  }
+}
+
+String _$statsRepositoryHash() => r'673ccf19eb0453c2f116eed95212f2dff25c44ea';
+
 @ProviderFor(taskStatsByCategoryUseCase)
 final taskStatsByCategoryUseCaseProvider =
-    AutoDisposeProvider<GetTaskStatsByCategoryUseCase>.internal(
-  taskStatsByCategoryUseCase,
-  name: r'taskStatsByCategoryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$taskStatsByCategoryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    TaskStatsByCategoryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TaskStatsByCategoryUseCaseRef
-    = AutoDisposeProviderRef<GetTaskStatsByCategoryUseCase>;
-String _$xpHistoryUseCaseHash() => r'd8f7445216cc5f10bcf0cce3379f543be9f6a679';
+final class TaskStatsByCategoryUseCaseProvider extends $FunctionalProvider<
+        GetTaskStatsByCategoryUseCase,
+        GetTaskStatsByCategoryUseCase,
+        GetTaskStatsByCategoryUseCase>
+    with $Provider<GetTaskStatsByCategoryUseCase> {
+  TaskStatsByCategoryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskStatsByCategoryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [xpHistoryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$taskStatsByCategoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetTaskStatsByCategoryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetTaskStatsByCategoryUseCase create(Ref ref) {
+    return taskStatsByCategoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetTaskStatsByCategoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<GetTaskStatsByCategoryUseCase>(value),
+    );
+  }
+}
+
+String _$taskStatsByCategoryUseCaseHash() =>
+    r'5878609b52130b0d306a9ddf53ddda85226e2382';
+
 @ProviderFor(xpHistoryUseCase)
-final xpHistoryUseCaseProvider =
-    AutoDisposeProvider<GetXpHistoryUseCase>.internal(
-  xpHistoryUseCase,
-  name: r'xpHistoryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$xpHistoryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final xpHistoryUseCaseProvider = XpHistoryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef XpHistoryUseCaseRef = AutoDisposeProviderRef<GetXpHistoryUseCase>;
-String _$coinHistoryUseCaseHash() =>
-    r'1ede60f0f1c62e973f2e872d92dbb27adba54923';
+final class XpHistoryUseCaseProvider extends $FunctionalProvider<
+    GetXpHistoryUseCase,
+    GetXpHistoryUseCase,
+    GetXpHistoryUseCase> with $Provider<GetXpHistoryUseCase> {
+  XpHistoryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'xpHistoryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [coinHistoryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$xpHistoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetXpHistoryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetXpHistoryUseCase create(Ref ref) {
+    return xpHistoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetXpHistoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetXpHistoryUseCase>(value),
+    );
+  }
+}
+
+String _$xpHistoryUseCaseHash() => r'2aed77b65547a535e595923b22825090a18c558a';
+
 @ProviderFor(coinHistoryUseCase)
-final coinHistoryUseCaseProvider =
-    AutoDisposeProvider<GetCoinHistoryUseCase>.internal(
-  coinHistoryUseCase,
-  name: r'coinHistoryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$coinHistoryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final coinHistoryUseCaseProvider = CoinHistoryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CoinHistoryUseCaseRef = AutoDisposeProviderRef<GetCoinHistoryUseCase>;
-String _$expenseStatsByCategoryUseCaseHash() =>
-    r'2b2ad9458d26fad05933694b9b0a8010ae52792b';
+final class CoinHistoryUseCaseProvider extends $FunctionalProvider<
+    GetCoinHistoryUseCase,
+    GetCoinHistoryUseCase,
+    GetCoinHistoryUseCase> with $Provider<GetCoinHistoryUseCase> {
+  CoinHistoryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'coinHistoryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [expenseStatsByCategoryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$coinHistoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetCoinHistoryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetCoinHistoryUseCase create(Ref ref) {
+    return coinHistoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetCoinHistoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetCoinHistoryUseCase>(value),
+    );
+  }
+}
+
+String _$coinHistoryUseCaseHash() =>
+    r'119f95671b38754be4f2a7a8bc0e1947b3e3da6a';
+
 @ProviderFor(expenseStatsByCategoryUseCase)
 final expenseStatsByCategoryUseCaseProvider =
-    AutoDisposeProvider<GetExpenseStatsByCategoryUseCase>.internal(
-  expenseStatsByCategoryUseCase,
-  name: r'expenseStatsByCategoryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$expenseStatsByCategoryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    ExpenseStatsByCategoryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ExpenseStatsByCategoryUseCaseRef
-    = AutoDisposeProviderRef<GetExpenseStatsByCategoryUseCase>;
-String _$memberActivityStatsUseCaseHash() =>
-    r'710830dd206b3692731c097ee49eb190a9bf1b57';
+final class ExpenseStatsByCategoryUseCaseProvider extends $FunctionalProvider<
+        GetExpenseStatsByCategoryUseCase,
+        GetExpenseStatsByCategoryUseCase,
+        GetExpenseStatsByCategoryUseCase>
+    with $Provider<GetExpenseStatsByCategoryUseCase> {
+  ExpenseStatsByCategoryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'expenseStatsByCategoryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [memberActivityStatsUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$expenseStatsByCategoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetExpenseStatsByCategoryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetExpenseStatsByCategoryUseCase create(Ref ref) {
+    return expenseStatsByCategoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetExpenseStatsByCategoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<GetExpenseStatsByCategoryUseCase>(value),
+    );
+  }
+}
+
+String _$expenseStatsByCategoryUseCaseHash() =>
+    r'73fd72eb7ccbfd5f61daff312fc158ba029b9404';
+
 @ProviderFor(memberActivityStatsUseCase)
 final memberActivityStatsUseCaseProvider =
-    AutoDisposeProvider<GetMemberActivityStatsUseCase>.internal(
-  memberActivityStatsUseCase,
-  name: r'memberActivityStatsUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$memberActivityStatsUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    MemberActivityStatsUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef MemberActivityStatsUseCaseRef
-    = AutoDisposeProviderRef<GetMemberActivityStatsUseCase>;
-String _$weeklyRankingUseCaseHash() =>
-    r'6cd31f4b15d4ac250b9100709492552090e78ba3';
+final class MemberActivityStatsUseCaseProvider extends $FunctionalProvider<
+        GetMemberActivityStatsUseCase,
+        GetMemberActivityStatsUseCase,
+        GetMemberActivityStatsUseCase>
+    with $Provider<GetMemberActivityStatsUseCase> {
+  MemberActivityStatsUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'memberActivityStatsUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [weeklyRankingUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$memberActivityStatsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetMemberActivityStatsUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetMemberActivityStatsUseCase create(Ref ref) {
+    return memberActivityStatsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetMemberActivityStatsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<GetMemberActivityStatsUseCase>(value),
+    );
+  }
+}
+
+String _$memberActivityStatsUseCaseHash() =>
+    r'31f9f0bf48e49f0cab669e17d12139fb439224e3';
+
 @ProviderFor(weeklyRankingUseCase)
-final weeklyRankingUseCaseProvider =
-    AutoDisposeProvider<GetWeeklyRankingUseCase>.internal(
-  weeklyRankingUseCase,
-  name: r'weeklyRankingUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$weeklyRankingUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final weeklyRankingUseCaseProvider = WeeklyRankingUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef WeeklyRankingUseCaseRef
-    = AutoDisposeProviderRef<GetWeeklyRankingUseCase>;
-String _$weeklyDuelHistoryUseCaseHash() =>
-    r'6450c87ad55d1284d2dac971bbe162e70a9f1141';
+final class WeeklyRankingUseCaseProvider extends $FunctionalProvider<
+    GetWeeklyRankingUseCase,
+    GetWeeklyRankingUseCase,
+    GetWeeklyRankingUseCase> with $Provider<GetWeeklyRankingUseCase> {
+  WeeklyRankingUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'weeklyRankingUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [weeklyDuelHistoryUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$weeklyRankingUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetWeeklyRankingUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetWeeklyRankingUseCase create(Ref ref) {
+    return weeklyRankingUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetWeeklyRankingUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetWeeklyRankingUseCase>(value),
+    );
+  }
+}
+
+String _$weeklyRankingUseCaseHash() =>
+    r'27d59d2e4eec7a64d63b378e914019c2591d3272';
+
 @ProviderFor(weeklyDuelHistoryUseCase)
-final weeklyDuelHistoryUseCaseProvider =
-    AutoDisposeProvider<GetWeeklyDuelHistoryUseCase>.internal(
-  weeklyDuelHistoryUseCase,
-  name: r'weeklyDuelHistoryUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$weeklyDuelHistoryUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final weeklyDuelHistoryUseCaseProvider = WeeklyDuelHistoryUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef WeeklyDuelHistoryUseCaseRef
-    = AutoDisposeProviderRef<GetWeeklyDuelHistoryUseCase>;
-String _$weeklyWinnerAwardUseCaseHash() =>
-    r'840c6feaf7075d1884c31e89152acc550cf5c68b';
+final class WeeklyDuelHistoryUseCaseProvider extends $FunctionalProvider<
+    GetWeeklyDuelHistoryUseCase,
+    GetWeeklyDuelHistoryUseCase,
+    GetWeeklyDuelHistoryUseCase> with $Provider<GetWeeklyDuelHistoryUseCase> {
+  WeeklyDuelHistoryUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'weeklyDuelHistoryUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [weeklyWinnerAwardUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$weeklyDuelHistoryUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetWeeklyDuelHistoryUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetWeeklyDuelHistoryUseCase create(Ref ref) {
+    return weeklyDuelHistoryUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetWeeklyDuelHistoryUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetWeeklyDuelHistoryUseCase>(value),
+    );
+  }
+}
+
+String _$weeklyDuelHistoryUseCaseHash() =>
+    r'de821aac9175fdcc22103fc0977211b28f848abb';
+
 @ProviderFor(weeklyWinnerAwardUseCase)
-final weeklyWinnerAwardUseCaseProvider =
-    AutoDisposeProvider<AwardWeeklyWinnerUseCase>.internal(
-  weeklyWinnerAwardUseCase,
-  name: r'weeklyWinnerAwardUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$weeklyWinnerAwardUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final weeklyWinnerAwardUseCaseProvider = WeeklyWinnerAwardUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef WeeklyWinnerAwardUseCaseRef
-    = AutoDisposeProviderRef<AwardWeeklyWinnerUseCase>;
-String _$weeklyDuelResultSaveUseCaseHash() =>
-    r'f6934142e2889c332e1adbd7414b98e4c9cd215a';
+final class WeeklyWinnerAwardUseCaseProvider extends $FunctionalProvider<
+    AwardWeeklyWinnerUseCase,
+    AwardWeeklyWinnerUseCase,
+    AwardWeeklyWinnerUseCase> with $Provider<AwardWeeklyWinnerUseCase> {
+  WeeklyWinnerAwardUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'weeklyWinnerAwardUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [weeklyDuelResultSaveUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$weeklyWinnerAwardUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<AwardWeeklyWinnerUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AwardWeeklyWinnerUseCase create(Ref ref) {
+    return weeklyWinnerAwardUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AwardWeeklyWinnerUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AwardWeeklyWinnerUseCase>(value),
+    );
+  }
+}
+
+String _$weeklyWinnerAwardUseCaseHash() =>
+    r'b1a662d6876961d47e1db2cc74352e3764473118';
+
 @ProviderFor(weeklyDuelResultSaveUseCase)
 final weeklyDuelResultSaveUseCaseProvider =
-    AutoDisposeProvider<SaveWeeklyDuelResultUseCase>.internal(
-  weeklyDuelResultSaveUseCase,
-  name: r'weeklyDuelResultSaveUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$weeklyDuelResultSaveUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    WeeklyDuelResultSaveUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef WeeklyDuelResultSaveUseCaseRef
-    = AutoDisposeProviderRef<SaveWeeklyDuelResultUseCase>;
-String _$statsControllerHash() => r'cd9fd3d96dea1ef7f52648324a72356c675c33d4';
+final class WeeklyDuelResultSaveUseCaseProvider extends $FunctionalProvider<
+    SaveWeeklyDuelResultUseCase,
+    SaveWeeklyDuelResultUseCase,
+    SaveWeeklyDuelResultUseCase> with $Provider<SaveWeeklyDuelResultUseCase> {
+  WeeklyDuelResultSaveUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'weeklyDuelResultSaveUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [StatsController].
+  @override
+  String debugGetCreateSourceHash() => _$weeklyDuelResultSaveUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<SaveWeeklyDuelResultUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SaveWeeklyDuelResultUseCase create(Ref ref) {
+    return weeklyDuelResultSaveUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SaveWeeklyDuelResultUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SaveWeeklyDuelResultUseCase>(value),
+    );
+  }
+}
+
+String _$weeklyDuelResultSaveUseCaseHash() =>
+    r'decf9a68d69a9dcbaf923f513917e7f0f9cc7e0c';
+
 @ProviderFor(StatsController)
-final statsControllerProvider =
-    AsyncNotifierProvider<StatsController, StatsData>.internal(
-  StatsController.new,
-  name: r'statsControllerProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$statsControllerHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final statsControllerProvider = StatsControllerProvider._();
 
-typedef _$StatsController = AsyncNotifier<StatsData>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class StatsControllerProvider
+    extends $AsyncNotifierProvider<StatsController, StatsData> {
+  StatsControllerProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'statsControllerProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$statsControllerHash();
+
+  @$internal
+  @override
+  StatsController create() => StatsController();
+}
+
+String _$statsControllerHash() => r'48fd28b923624165f04257bb9bb342675bcf3d60';
+
+abstract class _$StatsController extends $AsyncNotifier<StatsData> {
+  FutureOr<StatsData> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<StatsData>, StatsData>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<StatsData>, StatsData>,
+        AsyncValue<StatsData>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}

@@ -13,8 +13,10 @@ import {
   Loader2,
   CheckCircle2,
   Circle,
+  Send,
 } from 'lucide-react';
 import { EmptyState, ErrorState } from '../components/PageState';
+import { Modal } from '../components/Modal';
 
 interface FeedbackItem {
   id: string;
@@ -30,6 +32,9 @@ interface FeedbackItem {
   locale: string | null;
   screen_name: string | null;
   resolved: boolean;
+  status: 'open' | 'replied' | 'resolved' | 'closed';
+  response_count: number;
+  last_response_at: string | null;
   created_at: string;
 }
 
@@ -56,6 +61,11 @@ export const Feedback = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<FeedbackItem | null>(null);
+  const [replySubject, setReplySubject] = useState('');
+  const [replyBody, setReplyBody] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
 
   const fetchFeedback = useCallback(async () => {
     setLoading(true);
@@ -105,6 +115,50 @@ export const Feedback = () => {
       );
     }
     setTogglingId(null);
+  };
+
+  const openReply = (item: FeedbackItem) => {
+    setReplyingTo(item);
+    setReplySubject(`Respuesta de HomeSync: ${item.title}`);
+    setReplyBody('');
+    setReplyError(null);
+  };
+
+  const sendReply = async () => {
+    if (!replyingTo || replySending || !replyBody.trim()) return;
+
+    setReplySending(true);
+    setReplyError(null);
+    const { error: invokeError } = await supabase.functions.invoke('send-feedback-reply', {
+      body: {
+        feedback_id: replyingTo.id,
+        subject: replySubject.trim(),
+        body: replyBody.trim(),
+      },
+    });
+
+    if (invokeError) {
+      setReplyError(invokeError.message || 'No pudimos enviar la respuesta.');
+      setReplySending(false);
+      return;
+    }
+
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === replyingTo.id
+          ? {
+              ...i,
+              resolved: true,
+              status: 'replied',
+              response_count: (i.response_count ?? 0) + 1,
+              last_response_at: new Date().toISOString(),
+            }
+          : i
+      )
+    );
+    setReplySending(false);
+    setReplyingTo(null);
+    setReplyBody('');
   };
 
   const filtered = items.filter((i) => {
@@ -347,12 +401,30 @@ export const Feedback = () => {
                           <p className="text-xs text-gray-200 font-medium">{item.email}</p>
                         </div>
                       )}
+                      {item.response_count > 0 && (
+                        <div className="bg-emerald-500/10 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-emerald-400 uppercase tracking-widest mb-0.5">Respuesta</p>
+                          <p className="text-xs text-emerald-100 font-medium">
+                            {item.response_count} enviada{item.response_count !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      )}
                       {item.user_id && (
                         <div className="bg-white/5 rounded-xl px-3 py-2 col-span-2 md:col-span-3">
                           <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">User ID</p>
                           <p className="text-xs text-gray-400 font-mono">{item.user_id}</p>
                         </div>
                       )}
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <button
+                        onClick={() => openReply(item)}
+                        disabled={!item.email}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/15 text-secondary border border-secondary/20 text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary/20 transition-colors"
+                      >
+                        <Send className="w-4 h-4" />
+                        Responder por email
+                      </button>
                     </div>
                   </div>
                 )}
@@ -361,6 +433,57 @@ export const Feedback = () => {
           })}
         </div>
       )}
+
+      <Modal
+        isOpen={Boolean(replyingTo)}
+        onClose={() => {
+          if (!replySending) setReplyingTo(null);
+        }}
+        title="Responder feedback"
+      >
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Para</p>
+            <p className="text-sm text-white font-semibold">{replyingTo?.email ?? 'Sin email'}</p>
+            <p className="text-xs text-gray-400 mt-3">{replyingTo?.title}</p>
+          </div>
+
+          <label className="block">
+            <span className="block text-xs text-gray-500 uppercase tracking-widest mb-2">Asunto</span>
+            <input
+              value={replySubject}
+              onChange={(event) => setReplySubject(event.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm"
+            />
+          </label>
+
+          <label className="block">
+            <span className="block text-xs text-gray-500 uppercase tracking-widest mb-2">Mensaje</span>
+            <textarea
+              value={replyBody}
+              onChange={(event) => setReplyBody(event.target.value)}
+              rows={7}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm resize-none leading-relaxed"
+              placeholder="Hola, gracias por escribir. Lo estuve revisando..."
+            />
+          </label>
+
+          {replyError && (
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+              {replyError}
+            </div>
+          )}
+
+          <button
+            onClick={() => void sendReply()}
+            disabled={replySending || !replyBody.trim() || !replyingTo?.email}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+          >
+            {replySending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            Enviar respuesta
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
