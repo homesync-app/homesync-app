@@ -8,6 +8,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para owner/admin del hogar.
 ///
@@ -239,8 +240,11 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
+    AppSnackBar.show(
+      context,
+      message: msg,
+      type: AppSnackBarType.success,
+      duration: const Duration(milliseconds: 1500),
     );
   }
 

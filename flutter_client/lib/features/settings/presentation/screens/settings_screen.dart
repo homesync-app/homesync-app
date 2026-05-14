@@ -379,8 +379,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 16),
                           _buildLanguageCard(),
                           const SizedBox(height: 16),
-                          _buildCurrencyCard(),
-                          const SizedBox(height: 24),
+                          if (!isMinor) ...[
+                            _buildCurrencyCard(),
+                            const SizedBox(height: 24),
+                          ] else
+                            const SizedBox(height: 8),
                           _buildNotificationsCard(),
                           const SizedBox(height: 16),
                           if (AppEnvironment.enableAdminTesting) ...[

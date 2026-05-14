@@ -298,7 +298,7 @@ final class TasksProvider
   Tasks create() => Tasks();
 }
 
-String _$tasksHash() => r'aa053c123b5a4f4cae9000195d8a7587a6c396ee';
+String _$tasksHash() => r'f3880d2985b10b6ee672dbc91f4d94fe1e5e14ca';
 
 abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
   FutureOr<List<TaskModel>> build();
@@ -442,7 +442,7 @@ final class TodayTasksProvider extends $FunctionalProvider<
   }
 }
 
-String _$todayTasksHash() => r'23031010ef8c857fc946cc5f0bd4e701d2bde1d2';
+String _$todayTasksHash() => r'5cb7f3d8f231c829efc493e4323ea80a75ea53c6';
 
 @ProviderFor(taskStatusCount)
 final taskStatusCountProvider = TaskStatusCountProvider._();

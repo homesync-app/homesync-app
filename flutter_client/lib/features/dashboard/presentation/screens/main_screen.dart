@@ -80,8 +80,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // bottomNavIndexProvider es un NotifierProvider plano (sin autoDispose),
+      // asi que su estado persiste entre sesiones. Sin este reset, al loguearse
+      // un usuario nuevo MainScreen abre en la tab donde quedo el anterior.
+      ref.read(bottomNavIndexProvider.notifier).setIndex(0);
       _trackMainTabIfNeeded(
-        index: ref.read(bottomNavIndexProvider),
+        index: 0,
         source: 'initial_load',
       );
       _tourTargetKeys = ref.read(tourTargetKeysProvider.notifier);
@@ -94,8 +98,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void dispose() {
     _notifService.dispose();
     _linkSubscription?.cancel();
-    _tourTargetKeys?.unregister(TourTarget.rewardsTab, _rewardsTabKey);
-    _tourTargetKeys?.unregister(TourTarget.expensesTab, _expensesTabKey);
+    // Diferido a microtask: modificar un provider durante dispose() tira
+    // "Tried to modify a provider while the widget tree was building".
+    // El unregister es idempotente (no-op si el key cambio) asi que es
+    // seguro correr fuera del ciclo de vida del widget.
+    final keys = _tourTargetKeys;
+    if (keys != null) {
+      final rewardsKey = _rewardsTabKey;
+      final expensesKey = _expensesTabKey;
+      Future.microtask(() {
+        keys.unregister(TourTarget.rewardsTab, rewardsKey);
+        keys.unregister(TourTarget.expensesTab, expensesKey);
+      });
+    }
     super.dispose();
   }
 
@@ -288,6 +303,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
         if ((householdId == null || householdId.isEmpty) &&
             currentUserId == null) {
+          return const SplashScreen();
+        }
+
+        // Tras un cambio de usuario, householdIdProvider hace refresh manteniendo
+        // el valor previo (AsyncData stale + isRefreshing). Si todavia esta en
+        // vuelo el query y el valor stale es null/vacio, evitamos el flash de
+        // SetupScreen mostrando splash hasta que resuelva.
+        if (householdAsync.isLoading &&
+            (householdId == null || householdId.isEmpty) &&
+            currentUserId != null) {
           return const SplashScreen();
         }
 

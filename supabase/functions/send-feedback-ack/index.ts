@@ -98,12 +98,13 @@ serve(async (req) => {
 
     const { data: feedback, error: feedbackError } = await supabase
       .from("user_feedback")
-      .select("id, user_id, email, type, title, locale, ack_sent_at")
+      .select("id, user_id, email, type, title, locale, wants_email_response, ack_sent_at")
       .eq("id", feedbackId)
       .maybeSingle();
 
     if (feedbackError || !feedback) return json({ error: "Feedback not found" }, 404);
     if (feedback.user_id !== userRow.id) return json({ error: "Forbidden" }, 403);
+    if (!feedback.wants_email_response) return json({ ok: true, skipped: "email_opt_out" });
     if (!feedback.email) return json({ error: "Feedback has no recipient email" }, 400);
     if (feedback.ack_sent_at) return json({ ok: true, skipped: "already_sent" });
 

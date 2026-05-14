@@ -13,6 +13,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -133,18 +134,11 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
           widget.onChanged?.call();
           if (!mounted) return;
           navigator.pop();
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                t.taskDetailUndoSuccess,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+          AppSnackBar.show(
+            messenger.context,
+            message: t.taskDetailUndoSuccess,
+            type: AppSnackBarType.success,
+            duration: const Duration(milliseconds: 1500),
           );
         },
       );
@@ -172,13 +166,12 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
   }
 
   void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+    AppSnackBar.show(
+      context,
+      message: msg,
+      type: color == AppColors.error
+          ? AppSnackBarType.error
+          : AppSnackBarType.neutral,
     );
   }
 

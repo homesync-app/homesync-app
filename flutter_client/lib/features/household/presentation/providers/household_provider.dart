@@ -21,9 +21,17 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
     final currentUserId = ref.read(currentUserIdProvider);
     final admin = ref.read(adminProvider);
     if (householdId == null) {
-      log.w(
-        'HouseholdMembersNotifier.build without householdId viewer=$currentUserId adminQa=${admin.isAdminUser} selectedHousehold=${admin.selectedHouseholdId}',
-      );
+      // Sin usuario, no tener household es lo esperado (logout / pre-login).
+      // Solo warning si hay usuario pero el provider no resolvio household.
+      if (currentUserId == null) {
+        log.d(
+          'HouseholdMembersNotifier.build skipped: no user yet',
+        );
+      } else {
+        log.w(
+          'HouseholdMembersNotifier.build without householdId viewer=$currentUserId adminQa=${admin.isAdminUser} selectedHousehold=${admin.selectedHouseholdId}',
+        );
+      }
       return [];
     }
 

@@ -322,6 +322,9 @@ class _RankingContent extends StatelessWidget {
                   final isThird = !hideLiveScores && rank == 3 && xp > 0;
                   final isLast = index == filtered.length - 1;
 
+                  final memberRole = item['role'] as String?;
+                  final isAdmin =
+                      memberRole == 'owner' || memberRole == 'admin';
                   return Padding(
                     padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
                     child: _RankingRow(
@@ -329,6 +332,7 @@ class _RankingContent extends StatelessWidget {
                       name: _displayName(item),
                       role: _roleLabel(item, t),
                       memberType: item['member_type'] as String?,
+                      isAdmin: isAdmin,
                       avatarUrl: item['avatar_url'] as String?,
                       xp: xp,
                       tasks: tasks,
@@ -354,6 +358,7 @@ class _RankingRow extends ConsumerWidget {
     required this.name,
     required this.role,
     this.memberType,
+    this.isAdmin = false,
     required this.avatarUrl,
     required this.xp,
     required this.tasks,
@@ -368,6 +373,7 @@ class _RankingRow extends ConsumerWidget {
   final String name;
   final String role;
   final String? memberType;
+  final bool isAdmin;
   final String? avatarUrl;
   final int xp;
   final int tasks;
@@ -441,27 +447,65 @@ class _RankingRow extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _roleColor(memberType).withValues(alpha: 0.11),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      role,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        color: _roleColor(memberType),
-                        height: 1,
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _roleColor(memberType).withValues(alpha: 0.11),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        role,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: _roleColor(memberType),
+                          height: 1,
+                        ),
                       ),
                     ),
-                  ),
+                    if (isAdmin)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.30),
+                            width: 0.6,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.shield_rounded,
+                              size: 11,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: 3),
+                            Text(
+                              'Admin',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                height: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),

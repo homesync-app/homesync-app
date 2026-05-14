@@ -369,7 +369,7 @@
   "balanceCardMyBudget": "Mi presupuesto",
   "balanceCardBalanced": "Balance en calma",
   "balanceCardNeedsSettlement": "Hace falta equilibrar",
-  "balanceCardInYourFavor": "Qued? a tu favor",
+  "balanceCardInYourFavor": "Quedó a tu favor",
   "balanceCardSettleButton": "Equilibrar",
   "balanceCardXpLabel": "XP",
   "balanceCardCoinsLabel": "coins",
@@ -1724,6 +1724,14 @@
   "feedbackSuggestionHint": "Ej: Filtrar tareas por semana",
   "feedbackBugDescHint": "Descripción opcional: pasos para reproducirlo, qué esperabas ver...",
   "feedbackSuggestionDescHint": "Descripción opcional: contexto, por qué sería útil...",
+  "feedbackEmailResponseTitle": "Quiero recibir respuesta por mail",
+  "@feedbackEmailResponseTitle": {
+    "description": "Toggle label in the feedback form. Enabled by default. User can turn it off if they do not want email follow-up."
+  },
+  "feedbackEmailResponseSubtitle": "Te escribiremos a tu correo si necesitamos más contexto o tenemos novedades.",
+  "@feedbackEmailResponseSubtitle": {
+    "description": "Toggle subtitle in the feedback form explaining that follow-up replies will be sent to the user's registered email."
+  },
   "feedbackSendBugReport": "Enviar reporte",
   "feedbackSendSuggestion": "Enviar sugerencia",
   "feedbackReportErrorOption": "Reportar error",

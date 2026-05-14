@@ -24,6 +24,7 @@ import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sh
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 import 'package:homesync_client/shared/widgets/schedule_dialog.dart'
     show ScheduleDialog, TaskRepeatMode;
@@ -189,14 +190,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
               if (mounted) {
                 _showSnack(
                   t.tasksSnackFrequencyUpdated,
-                  AppColors.accentGreen,
+                  AppSnackBarType.success,
+                  duration: const Duration(milliseconds: 1400),
                 );
               }
             } catch (e) {
               if (mounted) {
                 _showSnack(
                   t.commonErrorWithDetails(e.toString()),
-                  AppColors.error,
+                  AppSnackBarType.error,
                 );
               }
             }
@@ -231,16 +233,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     }
   }
 
-  void _showSnack(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text(message, style: const TextStyle(fontWeight: FontWeight.w600)),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.all(16),
-      ),
+  void _showSnack(
+    String message,
+    AppSnackBarType type, {
+    Duration? duration,
+  }) {
+    AppSnackBar.show(
+      context,
+      message: message,
+      type: type,
+      duration: duration,
     );
   }
 
@@ -650,12 +652,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                 shouldLoop: false,
                 colors: const [
                   AppColors.success,
-                  AppColors.accentGold,
                   AppColors.primary,
-                  Colors.white,
+                  Color(0xFFFFE4D5),
                 ],
-                numberOfParticles: 24,
-                gravity: 0.12,
+                emissionFrequency: 0.018,
+                maxBlastForce: 3.2,
+                minBlastForce: 1.0,
+                numberOfParticles: 10,
+                gravity: 0.18,
               ),
             ),
           ),
@@ -666,7 +670,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
   void _showCompletionCelebration() {
     _completionConfettiController.play();
-    HapticFeedback.heavyImpact();
+    HapticFeedback.mediumImpact();
   }
 
   Widget _buildSearchChip() {
@@ -1042,9 +1046,13 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
         parentModeActive &&
         (currentMember?.canApprove ?? false);
     // Teens and children must send completions through the adult review
-    // queue instead of marking tasks done directly.
-    final requiresApprovalSubmission =
-        isFamilyMode && (currentMember?.submissionRequiresApproval ?? false);
+    // queue, but only if the household has approvals enabled. Mirrors the SQL
+    // logic in public.should_require_task_approval so the dialog matches what
+    // the server will actually do.
+    final approvalMode =
+        ref.watch(currentHouseholdProvider).value?.taskApprovalMode;
+    final requiresApprovalSubmission = isFamilyMode &&
+        (currentMember?.needsSubmissionApproval(approvalMode) ?? false);
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;
     final localizedTitle = localizedTaskTitle(
@@ -1616,12 +1624,11 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     try {
       await ref.read(tasksProvider.notifier).submitTaskForApproval(widget.task);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).familyTasksSubmittedSnack,
-          ),
-        ),
+      AppSnackBar.show(
+        context,
+        message: AppLocalizations.of(context).familyTasksSubmittedSnack,
+        type: AppSnackBarType.info,
+        duration: const Duration(milliseconds: 1500),
       );
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
@@ -1639,25 +1646,18 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
       if (result == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.tasksSnackCompleteError)),
+        AppSnackBar.show(
+          context,
+          message: t.tasksSnackCompleteError,
+          type: AppSnackBarType.error,
         );
       } else {
         widget.onCompletedFeedback();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              t.tasksSnackCompleted,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.tasksSnackCompleted,
+          type: AppSnackBarType.success,
+          duration: const Duration(milliseconds: 1500),
         );
         ref.invalidate(tasksProvider);
         ref.invalidate(todayTasksProvider);

@@ -13,6 +13,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
+import 'package:homesync_client/core/providers/riverpod_retry.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
@@ -253,6 +254,7 @@ void main() async {
 
   runApp(
     ProviderScope(
+      retry: appRiverpodRetry,
       overrides: [
         authServiceProvider.overrideWithValue(auth),
         rpcServiceProvider.overrideWithValue(rpc),
@@ -419,7 +421,13 @@ class _MyAppState extends ConsumerState<MyApp> {
     // the provider cache so subsequent watchers resolve synchronously.
     // ignore: unused_local_variable
     final nonBlocking = <Future<void>>[
-      ref.read(recentActivityProvider.future).then((_) {}).catchError((_) {}),
+      // recentActivityProvider es sync (combina remote + optimistic) y no
+      // expone .future. Pre-suscribimos al stream remoto subyacente para
+      // warm-cache el feed.
+      ref
+          .read(recentActivityRemoteProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
       ref
           .read(combinedFeedControllerProvider.future)
           .then((_) {})

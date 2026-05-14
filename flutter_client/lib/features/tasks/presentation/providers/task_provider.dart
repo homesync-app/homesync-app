@@ -19,6 +19,7 @@ import '../../domain/usecases/complete_task_usecase.dart';
 import '../../domain/usecases/create_task_usecase.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/utils/task_completion_utils.dart';
+import 'family_member_dashboard_provider.dart';
 import 'pending_approvals_provider.dart';
 
 part 'task_provider.g.dart';
@@ -523,9 +524,16 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.deleteTask(task.id);
+      if (ref.read(isOnlineProvider)) {
+        ref.invalidate(recentActivityProvider);
+        ref.invalidate(pendingTaskApprovalsProvider);
+        ref.invalidate(familyMemberDashboardProvider);
+        silentRefresh();
+      }
     } catch (e, stack) {
       log.w('Delete task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      rethrow;
     }
   }
 
@@ -691,7 +699,7 @@ AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
 
       if (task.recurrenceType == 'daily') return true;
 
-      if (task.dueAt != null && task.dueAt!.isBefore(DateTime.now())) {
+      if (task.isOverdue) {
         return true;
       }
 

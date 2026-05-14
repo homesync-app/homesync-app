@@ -17,6 +17,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
@@ -804,7 +805,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                             ),
                             Text(
                               _formatCurrency(
-                                  _plannedShareAmount(item, userId),),
+                                _plannedShareAmount(item, userId),
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 14,
@@ -1460,17 +1462,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           result['success'] != true) {
                         return;
                       }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context)
-                                .expensesPlannedPaymentSnack(
-                              result['title'].toString(),
-                            ),
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
+                      AppSnackBar.show(
+                        context,
+                        message: AppLocalizations.of(context)
+                            .expensesPlannedPaymentSnack(
+                          result['title'].toString(),
                         ),
+                        type: AppSnackBarType.success,
+                        duration: const Duration(milliseconds: 1500),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -1633,10 +1632,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       },
       onDismissed: (_) {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).expensesDeletedSnack),
-          ),
+        AppSnackBar.show(
+          context,
+          message: AppLocalizations.of(context).expensesDeletedSnack,
+          type: AppSnackBarType.success,
+          duration: const Duration(milliseconds: 1500),
         );
       },
       child: AnimatedPress(

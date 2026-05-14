@@ -1,4 +1,3 @@
-import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -21,6 +20,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/widgets/complete_task_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -36,14 +36,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  late ConfettiController _confettiController;
   ProviderSubscription<AsyncValue<List<TaskModel>>>? _taskCompletionListener;
 
   @override
   void initState() {
     super.initState();
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 2));
     _taskCompletionListener = ref.listenManual(todayTasksProvider, (
       previous,
       next,
@@ -54,8 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           !next.hasError) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          _confettiController.play();
-          HapticFeedback.heavyImpact();
+          HapticFeedback.mediumImpact();
         });
       }
     });
@@ -64,7 +60,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _taskCompletionListener?.close();
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -98,28 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           );
         }
-        return Stack(
-          children: [
-            _buildMainContent(householdId, theme),
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: [
-                  theme.primary,
-                  AppColors.success,
-                  AppColors.accentOrange,
-                  Colors.blue,
-                  Colors.pink,
-                ],
-                numberOfParticles: 30,
-                gravity: 0.1,
-              ),
-            ),
-          ],
-        );
+        return _buildMainContent(householdId, theme);
       },
     );
   }
@@ -196,8 +170,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // label text without this offset due to shorter bottom padding.
     final fabOffsetY = caps.type == HouseholdType.friends ? 28.0 : 0.0;
 
-    return Transform.translate(
-      offset: Offset(0, fabOffsetY),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppSnackBar.isVisible,
+      builder: (context, snackVisible, child) {
+        return IgnorePointer(
+          ignoring: snackVisible,
+          child: AnimatedOpacity(
+            opacity: snackVisible ? 0 : 1,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOutCubic,
+            child: AnimatedScale(
+              scale: snackVisible ? 0.94 : 1,
+              duration: const Duration(milliseconds: 170),
+              curve: Curves.easeOutCubic,
+              child: Transform.translate(
+                offset: Offset(0, fabOffsetY),
+                child: child,
+              ),
+            ),
+          ),
+        );
+      },
       child: AppFloatingActionButton(
         label: caps.showTasks
             ? AppLocalizations.of(context).homeFabActions

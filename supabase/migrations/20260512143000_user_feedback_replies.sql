@@ -4,6 +4,7 @@ alter table public.user_feedback
   add column if not exists locale text,
   add column if not exists screen_name text,
   add column if not exists breadcrumbs jsonb,
+  add column if not exists wants_email_response boolean not null default true,
   add column if not exists resolved boolean not null default false,
   add column if not exists status text not null default 'open'
     check (status in ('open', 'replied', 'resolved', 'closed')),

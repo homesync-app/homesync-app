@@ -174,12 +174,18 @@ class AppTheme {
         elevation: 0,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.textPrimary,
+        backgroundColor: Colors.white,
         contentTextStyle: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          fontSize: 13.5,
+          height: 1.18,
         ),
-        shape: RoundedRectangleBorder(borderRadius: AppRadii.control),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadii.control,
+          side: const BorderSide(color: AppColors.border),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -372,9 +378,15 @@ class AppTheme {
         backgroundColor: darkSurface2,
         contentTextStyle: const TextStyle(
           color: darkText,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
+          fontSize: 13.5,
+          height: 1.18,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: darkBorder),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -346,7 +346,10 @@ class SupabaseExpenseRepository
   Future<Either<Failure, void>> deleteExpense(String id) async {
     return executeWithHandling(
       () async {
-        await _client.from('expenses').delete().eq('id', id);
+        await _client.rpc(
+          'delete_expense_v1',
+          params: {'p_expense_id': id},
+        );
       },
       context: 'SupabaseExpenseRepository.deleteExpense',
       isOnline: _isOnline,

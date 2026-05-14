@@ -193,6 +193,21 @@ void main() {
       expect(task.isOverdue, isTrue);
     });
 
+    test('Task due earlier today is not overdue', () {
+      final now = DateTime.now();
+      final task = TaskModel(
+        id: 't',
+        title: 'Today task',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h1',
+        createdAt: DateTime(2026, 1, 1),
+        dueAt: DateTime(now.year, now.month, now.day),
+      );
+      expect(task.isOverdue, isFalse);
+    });
+
     test('Verified task with past due date is NOT overdue', () {
       final task = TaskModel(
         id: 't',
@@ -218,6 +233,49 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
       );
       expect(task.isOverdue, isFalse);
+    });
+
+    test('Daily recurring task completed today is not overdue with stale due_at',
+        () {
+      final now = DateTime.now();
+      final task = TaskModel(
+        id: 't',
+        title: 'Daily task',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h1',
+        createdAt: DateTime(2026, 1, 1),
+        dueAt: DateTime(now.year, now.month, now.day)
+            .subtract(const Duration(days: 3)),
+        recurrenceType: 'daily',
+        lastCompletedAt: now.toIso8601String(),
+      );
+
+      expect(task.isOverdue, isFalse);
+      expect(task.isDueToday, isFalse);
+    });
+
+    test('Daily recurring task completed yesterday is due today, not overdue',
+        () {
+      final now = DateTime.now();
+      final yesterday = DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 1));
+      final task = TaskModel(
+        id: 't',
+        title: 'Daily task',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h1',
+        createdAt: DateTime(2026, 1, 1),
+        dueAt: yesterday.subtract(const Duration(days: 2)),
+        recurrenceType: 'daily',
+        lastCompletedAt: yesterday.toIso8601String(),
+      );
+
+      expect(task.isOverdue, isFalse);
+      expect(task.isDueToday, isTrue);
     });
   });
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -23,6 +24,7 @@ import 'package:homesync_client/features/stats/presentation/providers/stats_prov
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -252,8 +254,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
-              color: AppColors.warning, size: 22,),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.warning,
+            size: 22,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -433,6 +438,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     setState(() => _completedTaskIds.add(task.id));
     try {
       log.d('[friends] completing task id=${task.id} title=${task.title}');
+      await Future<void>.delayed(const Duration(milliseconds: 240));
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
 
       if (!mounted) return;
@@ -440,16 +446,26 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       if (result == null) {
         log.w('[friends] task completion returned null id=${task.id}');
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.homeFriendsTaskCompleteError),
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.homeFriendsTaskCompleteError,
+          type: AppSnackBarType.error,
         );
         return;
       }
 
       log.i(
         '[friends] task completion success id=${task.id} queued=${result.queued}',
+      );
+      ref
+          .read(optimisticRecentActivityProvider.notifier)
+          .addTaskCompleted(task);
+      HapticFeedback.mediumImpact();
+      final t = AppLocalizations.of(context);
+      AppSnackBar.show(
+        context,
+        message: t.tasksSnackCompleted,
+        type: AppSnackBarType.success,
       );
       ref.invalidate(statsControllerProvider);
       ref.invalidate(tasksProvider);
@@ -459,8 +475,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       log.e('[friends] task completion threw id=${task.id}', error: e);
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {

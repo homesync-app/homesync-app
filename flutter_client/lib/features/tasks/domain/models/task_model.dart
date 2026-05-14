@@ -250,21 +250,28 @@ class TaskModel {
   bool get isPending => isActive;
   bool get isRecurring => recurrenceType != null;
   bool get isOverdue {
-    if (dueAt == null || !isActive) return false;
+    if (dueAt == null) return false;
+    // Once a task was submitted/completed, it should not continue surfacing
+    // as overdue while waiting for approval/verification.
+    if (isPendingApproval || isPendingVerification || isVerified) return false;
+    if (!isActive) return false;
     final now = DateTime.now();
-    // Only tasks due BEFORE today count as overdue.
-    // Tasks due today (even if past midnight) are handled by isDueToday to
-    // avoid appearing in both the "today" and "overdue" lists simultaneously.
-    final startOfToday = DateTime(now.year, now.month, now.day);
-    return dueAt!.isBefore(startOfToday);
+    // due_at is treated as a calendar day by the task flows. Supabase stores
+    // many scheduled tasks at UTC midnight, so compare dates instead of the
+    // raw instant to avoid marking today's task as overdue in negative offsets.
+    final dueLocal = _effectiveDueAt.toLocal();
+    final dueDate = DateTime(dueLocal.year, dueLocal.month, dueLocal.day);
+    final today = DateTime(now.year, now.month, now.day);
+    return dueDate.isBefore(today);
   }
 
   bool get isDueToday {
     if (dueAt == null) return false;
     final now = DateTime.now();
-    return dueAt!.year == now.year &&
-        dueAt!.month == now.month &&
-        dueAt!.day == now.day;
+    final dueLocal = _effectiveDueAt.toLocal();
+    return dueLocal.year == now.year &&
+        dueLocal.month == now.month &&
+        dueLocal.day == now.day;
   }
 
   String get recurrenceLabel {
@@ -371,5 +378,69 @@ class TaskModel {
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;
     return DateTime.tryParse(value.toString());
+  }
+
+  DateTime get _effectiveDueAt {
+    if (!isRecurring) return dueAt!;
+
+    final completedLocal = (completedAt ?? _parseDate(lastCompletedAt))
+        ?.toLocal();
+    if (completedLocal == null) return dueAt!;
+
+    final nextDue = _nextDueAfterCompletion(completedLocal);
+    if (nextDue == null) return dueAt!;
+
+    final dueLocal = dueAt!.toLocal();
+    final dueDate = DateTime(dueLocal.year, dueLocal.month, dueLocal.day);
+    final nextDate = DateTime(nextDue.year, nextDue.month, nextDue.day);
+    return nextDate.isAfter(dueDate) ? nextDate : dueLocal;
+  }
+
+  DateTime? _nextDueAfterCompletion(DateTime completedLocal) {
+    final completedDate = DateTime(
+      completedLocal.year,
+      completedLocal.month,
+      completedLocal.day,
+    );
+    final interval = recurrenceInterval < 1 ? 1 : recurrenceInterval;
+
+    switch (recurrenceType) {
+      case 'daily':
+        return completedDate.add(Duration(days: interval));
+      case 'weekly':
+        return completedDate.add(Duration(days: interval * 7));
+      case 'monthly':
+        return DateTime(
+          completedDate.year,
+          completedDate.month + interval,
+          completedDate.day,
+        );
+      case 'custom':
+        return _nextCustomDueAfter(completedDate);
+      default:
+        return null;
+    }
+  }
+
+  DateTime _nextCustomDueAfter(DateTime completedDate) {
+    if (recurrenceWeekdays.isNotEmpty) {
+      for (var daysAhead = 1; daysAhead <= 7; daysAhead++) {
+        final candidate = completedDate.add(Duration(days: daysAhead));
+        if (recurrenceWeekdays.contains(candidate.weekday)) {
+          return candidate;
+        }
+      }
+    }
+
+    if (recurrenceMonthDays.isNotEmpty) {
+      for (var daysAhead = 1; daysAhead <= 62; daysAhead++) {
+        final candidate = completedDate.add(Duration(days: daysAhead));
+        if (recurrenceMonthDays.contains(candidate.day)) {
+          return candidate;
+        }
+      }
+    }
+
+    return completedDate.add(const Duration(days: 1));
   }
 }

@@ -50,6 +50,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   final _descCtrl = TextEditingController();
   bool _isSending = false;
   bool _sent = false;
+  bool _wantsEmailResponse = true;
 
   @override
   void initState() {
@@ -114,26 +115,29 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             'locale': locale,
             'screen_name': widget.currentScreen ?? breadcrumb.currentScreen,
             'breadcrumbs': breadcrumb.getBreadcrumbs(),
+            'wants_email_response': _wantsEmailResponse,
           })
           .select('id')
           .single();
 
-      try {
-        final accessToken =
-            await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
-        if (accessToken != null) {
-          await client.functions.invoke(
-            'send-feedback-ack',
-            body: {'feedback_id': insertedFeedback['id']},
-            headers: {'Authorization': 'Bearer $accessToken'},
+      if (_wantsEmailResponse) {
+        try {
+          final accessToken =
+              await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
+          if (accessToken != null) {
+            await client.functions.invoke(
+              'send-feedback-ack',
+              body: {'feedback_id': insertedFeedback['id']},
+              headers: {'Authorization': 'Bearer $accessToken'},
+            );
+          }
+        } catch (ackError, ackStack) {
+          log.w(
+            'No se pudo enviar el acuse automatico de feedback',
+            error: ackError,
+            stackTrace: ackStack,
           );
         }
-      } catch (ackError, ackStack) {
-        log.w(
-          'No se pudo enviar el acuse automatico de feedback',
-          error: ackError,
-          stackTrace: ackStack,
-        );
       }
 
       setState(() {
@@ -331,6 +335,30 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             counterStyle: TextStyle(fontSize: 11, color: theme.textMuted),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SwitchListTile.adaptive(
+          value: _wantsEmailResponse,
+          onChanged: _isSending
+              ? null
+              : (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _wantsEmailResponse = value);
+                },
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: theme.primary,
+          title: Text(
+            t.feedbackEmailResponseTitle,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            t.feedbackEmailResponseSubtitle,
+            style: TextStyle(fontSize: 12, color: theme.textSecondary),
           ),
         ),
         const SizedBox(height: 20),

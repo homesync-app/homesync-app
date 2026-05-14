@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @balanceCardInYourFavor.
   ///
   /// In es, this message translates to:
-  /// **'Qued? a tu favor'**
+  /// **'Quedó a tu favor'**
   String get balanceCardInYourFavor;
 
   /// No description provided for @balanceCardSettleButton.
@@ -5162,6 +5162,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Descripción opcional: contexto, por qué sería útil...'**
   String get feedbackSuggestionDescHint;
+
+  /// Toggle label in the feedback form. Enabled by default. User can turn it off if they do not want email follow-up.
+  ///
+  /// In es, this message translates to:
+  /// **'Quiero recibir respuesta por mail'**
+  String get feedbackEmailResponseTitle;
+
+  /// Toggle subtitle in the feedback form explaining that follow-up replies will be sent to the user's registered email.
+  ///
+  /// In es, this message translates to:
+  /// **'Te escribiremos a tu correo si necesitamos más contexto o tenemos novedades.'**
+  String get feedbackEmailResponseSubtitle;
 
   /// No description provided for @feedbackSendBugReport.
   ///

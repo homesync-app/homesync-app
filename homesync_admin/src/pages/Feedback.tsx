@@ -31,6 +31,7 @@ interface FeedbackItem {
   os_version: string | null;
   locale: string | null;
   screen_name: string | null;
+  wants_email_response: boolean;
   resolved: boolean;
   status: 'open' | 'replied' | 'resolved' | 'closed';
   response_count: number;
@@ -401,6 +402,14 @@ export const Feedback = () => {
                           <p className="text-xs text-gray-200 font-medium">{item.email}</p>
                         </div>
                       )}
+                      <div className={`${item.wants_email_response ? 'bg-emerald-500/10' : 'bg-amber-500/10'} rounded-xl px-3 py-2`}>
+                        <p className={`text-[10px] uppercase tracking-widest mb-0.5 ${item.wants_email_response ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          Contacto
+                        </p>
+                        <p className={`text-xs font-medium ${item.wants_email_response ? 'text-emerald-100' : 'text-amber-100'}`}>
+                          {item.wants_email_response ? 'Acepta respuesta por mail' : 'No quiere respuesta por mail'}
+                        </p>
+                      </div>
                       {item.response_count > 0 && (
                         <div className="bg-emerald-500/10 rounded-xl px-3 py-2">
                           <p className="text-[10px] text-emerald-400 uppercase tracking-widest mb-0.5">Respuesta</p>
@@ -419,11 +428,11 @@ export const Feedback = () => {
                     <div className="flex justify-end pt-2">
                       <button
                         onClick={() => openReply(item)}
-                        disabled={!item.email}
+                        disabled={!item.email || !item.wants_email_response}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary/15 text-secondary border border-secondary/20 text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-secondary/20 transition-colors"
                       >
                         <Send className="w-4 h-4" />
-                        Responder por email
+                        {item.wants_email_response ? 'Responder por email' : 'Email desactivado'}
                       </button>
                     </div>
                   </div>

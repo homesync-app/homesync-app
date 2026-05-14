@@ -155,6 +155,7 @@ class ExpenseController extends _$ExpenseController {
     final combinedFeedNotifier =
         ref.read(combinedFeedControllerProvider.notifier);
     final previousFeed = ref.read(combinedFeedControllerProvider).value;
+    final hiddenExpenseIds = ref.read(hiddenRecentExpenseIdsProvider.notifier);
 
     if (previousExpenses != null) {
       state = AsyncData(
@@ -162,6 +163,7 @@ class ExpenseController extends _$ExpenseController {
       );
     }
     combinedFeedNotifier.removeRealExpenseLocally(id);
+    hiddenExpenseIds.hide(id);
 
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.deleteExpense(id);
@@ -175,6 +177,7 @@ class ExpenseController extends _$ExpenseController {
         if (previousFeed != null) {
           combinedFeedNotifier.replaceLocalFeed(previousFeed);
         }
+        hiddenExpenseIds.restore(id);
         throw failure;
       },
       (_) {},
@@ -248,17 +251,15 @@ class CombinedFeedController extends _$CombinedFeedController {
         await repo.processRecurringExpenses(householdId);
         await prefs.setString(storageKey, now.toIso8601String());
         // If processing generated new entries, refresh the feed + balances so
-        // the user sees them without a manual pull-to-refresh. Guard against
-        // the provider being disposed mid-flight (user signed out, etc.).
-        try {
-          ref.invalidateSelf();
-          ref.invalidate(expenseBalancesProvider);
-          ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
-          ref.invalidate(recentActivityProvider);
-        } catch (_) {
-          // Provider disposed before recurring processing finished; ignore.
-        }
+        // the user sees them without a manual pull-to-refresh.
+        if (!ref.mounted) return;
+        ref.invalidateSelf();
+        ref.invalidate(expenseBalancesProvider);
+        ref.invalidate(monthlyPendingPlannedExpensesProvider);
+        // monthlyProjectionProvider depende de combinedFeed via ref.watch, asi
+        // que invalidateSelf() ya lo refresca. Invalidar aca tambien crea un
+        // ciclo (CircularDependencyError) durante el build.
+        ref.invalidate(recentActivityProvider);
       } catch (e, stack) {
         log.w(
           'CombinedFeed recurring expense processing failed: $e',

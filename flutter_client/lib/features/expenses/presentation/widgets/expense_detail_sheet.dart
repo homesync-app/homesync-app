@@ -191,8 +191,17 @@ class _ExpenseDetailSheetContentState
                             color: AppColors.primary,
                           ),
                           onPressed: () {
+                            final rootContext =
+                                Navigator.of(context, rootNavigator: true)
+                                    .context;
                             Navigator.pop(context);
-                            ExpenseFormSheet.show(context, expense: expense);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!rootContext.mounted) return;
+                              ExpenseFormSheet.show(
+                                rootContext,
+                                expense: expense,
+                              );
+                            });
                           },
                         ),
                       ).animateScaleIn(delay: 100),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -15,6 +16,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -288,12 +290,28 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   Future<void> _completeTask(TaskModel task) async {
     setState(() => _completedTaskIds.add(task.id));
     try {
-      await ref.read(tasksProvider.notifier).completeTask(task);
+      await Future<void>.delayed(const Duration(milliseconds: 240));
+      final result = await ref.read(tasksProvider.notifier).completeTask(task);
+      if (!mounted) return;
+      if (result != null) {
+        ref
+            .read(optimisticRecentActivityProvider.notifier)
+            .addTaskCompleted(task);
+        HapticFeedback.mediumImpact();
+        final t = AppLocalizations.of(context);
+        AppSnackBar.show(
+          context,
+          message: t.tasksSnackCompleted,
+          type: AppSnackBarType.success,
+        );
+      }
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {

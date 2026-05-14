@@ -76,11 +76,14 @@ serve(async (req) => {
 
     const { data: feedback, error: feedbackError } = await supabase
       .from("user_feedback")
-      .select("id, email, title, type, locale, user_id, response_count")
+      .select("id, email, title, type, locale, user_id, wants_email_response, response_count")
       .eq("id", feedbackId)
       .maybeSingle();
 
     if (feedbackError || !feedback) return json({ error: "Feedback not found" }, 404);
+    if (!feedback.wants_email_response) {
+      return json({ error: "User opted out of email replies" }, 409);
+    }
     if (!feedback.email) return json({ error: "Feedback has no recipient email" }, 400);
 
     const { data: feedbackUser } = await supabase

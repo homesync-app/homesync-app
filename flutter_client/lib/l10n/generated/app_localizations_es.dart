@@ -545,7 +545,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get balanceCardNeedsSettlement => 'Hace falta equilibrar';
 
   @override
-  String get balanceCardInYourFavor => 'Qued? a tu favor';
+  String get balanceCardInYourFavor => 'Quedó a tu favor';
 
   @override
   String get balanceCardSettleButton => 'Equilibrar';
@@ -3058,6 +3058,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get feedbackSuggestionDescHint =>
       'Descripción opcional: contexto, por qué sería útil...';
+
+  @override
+  String get feedbackEmailResponseTitle => 'Quiero recibir respuesta por mail';
+
+  @override
+  String get feedbackEmailResponseSubtitle =>
+      'Te escribiremos a tu correo si necesitamos más contexto o tenemos novedades.';
 
   @override
   String get feedbackSendBugReport => 'Enviar reporte';

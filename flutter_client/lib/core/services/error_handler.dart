@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import '../errors/failures.dart';
 import 'logger_service.dart';
 
@@ -78,26 +79,13 @@ class ErrorHandler {
     // Avoid "use_build_context_synchronously" issues by checking if context is still valid
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: isError ? Colors.red.shade800 : Colors.blue.shade800,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
-      ),
+    AppSnackBar.show(
+      context,
+      message: message,
+      type: isError ? AppSnackBarType.error : AppSnackBarType.info,
+      duration: isError
+          ? const Duration(milliseconds: 3200)
+          : const Duration(milliseconds: 2200),
     );
   }
 }

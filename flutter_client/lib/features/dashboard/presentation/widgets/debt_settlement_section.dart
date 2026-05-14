@@ -9,6 +9,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class DebtSettlementSection extends ConsumerWidget {
@@ -308,13 +309,18 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       ref.invalidate(combinedFeedControllerProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pago de $formattedAmount registrado.')),
+      AppSnackBar.show(
+        context,
+        message: 'Pago de $formattedAmount registrado.',
+        type: AppSnackBarType.success,
+        duration: const Duration(milliseconds: 1500),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo registrar el pago: $e')),
+      AppSnackBar.show(
+        context,
+        message: 'No se pudo registrar el pago: $e',
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) setState(() => _isSettling = false);

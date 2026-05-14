@@ -34,7 +34,7 @@ final class HouseholdMembersNotifierProvider extends $AsyncNotifierProvider<
 }
 
 String _$householdMembersNotifierHash() =>
-    r'df65d92f4c8b34b8e30b2b299cddbff19b14b444';
+    r'1002599df0930d5c3eba706cad92d0d4cf17a32e';
 
 abstract class _$HouseholdMembersNotifier
     extends $AsyncNotifier<List<MemberModel>> {

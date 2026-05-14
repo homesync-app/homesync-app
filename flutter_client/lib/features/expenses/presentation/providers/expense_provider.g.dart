@@ -342,7 +342,7 @@ final class ExpenseControllerProvider
   ExpenseController create() => ExpenseController();
 }
 
-String _$expenseControllerHash() => r'abbbfdaa1a41529d34055154d3f27d7c6247a7c5';
+String _$expenseControllerHash() => r'8c021728e1c66ff1fb982548541db521b930eb23';
 
 abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
   FutureOr<List<ExpenseModel>> build();
@@ -385,7 +385,7 @@ final class CombinedFeedControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$combinedFeedControllerHash() =>
-    r'0da6a68d8846ed480ce4c17b73e0ab7318c8f722';
+    r'03e0e828d6c28b377f6f9fd16f18d6bc8fcce6a3';
 
 abstract class _$CombinedFeedController
     extends $AsyncNotifier<List<FeedItemModel>> {

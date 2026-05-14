@@ -126,8 +126,27 @@ class MemberModel {
   bool get isAdult => isParent || isGuardian;
   // Parents and guardians can approve / reject pending tasks.
   bool get canApprove => isAdult;
-  // Teens and children must route completions through the approval queue.
-  bool get submissionRequiresApproval => isTeen || isChild;
+  // Whether this member needs an adult to approve task completions.
+  // Mirrors public.should_require_task_approval (see migrations). Source of
+  // truth is the server; this getter is for UI gating only — don't show the
+  // approval dialog when the server would just complete directly.
+  //
+  // [approvalMode] is the household's task_approval_mode column.
+  bool needsSubmissionApproval(String? approvalMode) {
+    switch (approvalMode) {
+      case 'all':
+        return true;
+      case 'children_only':
+        return isChild || isTeen;
+      case 'per_member':
+        // members.requires_task_approval is not cached client-side. Conservative
+        // default: assume child/teen need approval; adults don't.
+        return isChild || isTeen;
+      case 'off':
+      default:
+        return false;
+    }
+  }
 
   bool get canSeeSharedExpenses => isAdult;
   bool get canSeePersonalFinance => isAdult || isTeen;

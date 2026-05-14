@@ -3044,6 +3044,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional description: context, why would it be useful...';
 
   @override
+  String get feedbackEmailResponseTitle => 'I want to receive a reply by email';
+
+  @override
+  String get feedbackEmailResponseSubtitle =>
+      'We\'ll write to your email if we need more context or have an update.';
+
+  @override
   String get feedbackSendBugReport => 'Send report';
 
   @override

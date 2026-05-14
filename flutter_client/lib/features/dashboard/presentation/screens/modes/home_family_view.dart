@@ -179,6 +179,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
     final t = AppLocalizations.of(context);
     final localeTag = Localizations.localeOf(context).toString();
+    final avatarYOffset = currentMember?.isChild == true ? -10.0 : 0.0;
 
     return Row(
       children: [
@@ -240,7 +241,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         GestureDetector(
           onTap: widget.onAvatarTap,
           child: Transform.translate(
-            offset: const Offset(6, 0),
+            offset: Offset(6, avatarYOffset),
             child: SizedBox(
               width: 96,
               height: 58,
@@ -511,28 +512,33 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildSectionStateSwitcher({
     required Widget child,
   }) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 380),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        final fade = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        final slide = Tween<Offset>(
-          begin: const Offset(0, 0.035),
-          end: Offset.zero,
-        ).animate(fade);
-        return FadeTransition(
-          opacity: fade,
-          child: SlideTransition(
-            position: slide,
-            child: child,
-          ),
-        );
-      },
-      child: child,
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 190),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 170),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(fade);
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
+        child: child,
+      ),
     );
   }
 
@@ -818,7 +824,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           }
 
           return KeyedSubtree(
-            key: ValueKey('activity-data-${activities.length.clamp(0, 4)}'),
+            key: const ValueKey('activity-data'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -827,11 +833,15 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: (activities.length > 4) ? 4 : activities.length,
+                  itemCount: (activities.length > 8) ? 8 : activities.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    return FamilyActivityFeedItem(
-                      activity: activities[index],
+                    final activity = activities[index];
+                    return _ActivityFeedEntry(
+                      key: ValueKey(_activityStableKey(activity)),
+                      child: FamilyActivityFeedItem(
+                        activity: activity,
+                      ),
                     );
                   },
                 ),
@@ -841,6 +851,27 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         },
       ),
     );
+  }
+
+  String _activityStableKey(Map<String, dynamic> activity) {
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final taskId = data['task_id']?.toString();
+    final expenseId = data['expense_id']?.toString();
+    // Cuando hay un recurso semantico (task_id / expense_id) usamos ESE como
+    // identidad estable. Asi la entrada optimista y la real que llega despues
+    // por realtime comparten la misma key -> mismo widget -> la animacion de
+    // entrada corre completa sin remount/flash a mitad.
+    if (taskId != null && taskId.isNotEmpty) {
+      return 'task-$taskId';
+    }
+    if (expenseId != null && expenseId.isNotEmpty) {
+      return 'expense-$expenseId';
+    }
+    return [
+      activity['id'],
+      activity['type'],
+      activity['created_at'],
+    ].whereType<Object>().join('-');
   }
 
   Widget _buildActivityLoadingState(AppThemeColors theme) {
@@ -1035,6 +1066,41 @@ extension _StringExtension on String {
     final trimmed = trim();
     if (trimmed.isEmpty) return this;
     return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
+  }
+}
+
+class _ActivityFeedEntry extends StatelessWidget {
+  final Widget child;
+
+  const _ActivityFeedEntry({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      // Entrada combinada: fade + slide desde arriba + scale-in sutil.
+      // El offset negativo (slide hacia abajo) refuerza la lectura visual de
+      // que la tarea "bajó" desde la lista de arriba al feed.
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, -24 * (1 - value)),
+            child: Transform.scale(
+              scale: 0.96 + 0.04 * value,
+              alignment: Alignment.topCenter,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 

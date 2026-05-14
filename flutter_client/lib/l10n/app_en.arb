@@ -1724,6 +1724,14 @@
   "feedbackSuggestionHint": "E.g.: Filter tasks by week",
   "feedbackBugDescHint": "Optional description: steps to reproduce, what you expected to see...",
   "feedbackSuggestionDescHint": "Optional description: context, why would it be useful...",
+  "feedbackEmailResponseTitle": "I want to receive a reply by email",
+  "@feedbackEmailResponseTitle": {
+    "description": "Toggle label in the feedback form. Enabled by default. User can turn it off if they do not want email follow-up."
+  },
+  "feedbackEmailResponseSubtitle": "We'll write to your email if we need more context or have an update.",
+  "@feedbackEmailResponseSubtitle": {
+    "description": "Toggle subtitle in the feedback form explaining that follow-up replies will be sent to the user's registered email."
+  },
   "feedbackSendBugReport": "Send report",
   "feedbackSendSuggestion": "Send suggestion",
   "feedbackReportErrorOption": "Report error",

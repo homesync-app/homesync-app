@@ -1,4 +1,3 @@
-import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +12,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -58,13 +58,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   DateTime _customDate = DateTime.now();
   bool _isRightNow = true;
-  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 2));
     _loadData();
     final currentUserId = ref.read(currentUserIdProvider);
     if (currentUserId != null) {
@@ -74,7 +71,6 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
   @override
   void dispose() {
-    _confettiController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -121,11 +117,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
     final t = AppLocalizations.of(context);
     if (_selectedTaskIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.completeTaskSnackPickAtLeastOne),
-          backgroundColor: AppColors.accentOrange,
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.completeTaskSnackPickAtLeastOne,
+        type: AppSnackBarType.warning,
       );
       return;
     }
@@ -139,21 +134,19 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           };
 
     if (effectiveSelectedMemberIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.completeTaskSnackPickWho),
-          backgroundColor: AppColors.accentOrange,
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.completeTaskSnackPickWho,
+        type: AppSnackBarType.warning,
       );
       return;
     }
 
     if (!_isRightNow && _customDate.isAfter(DateTime.now())) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.completeTaskSnackFutureDate),
-          backgroundColor: AppColors.accentOrange,
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.completeTaskSnackFutureDate,
+        type: AppSnackBarType.warning,
       );
       return;
     }
@@ -223,8 +216,7 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       }
 
       if (mounted) {
-        _confettiController.play();
-        HapticFeedback.heavyImpact();
+        HapticFeedback.mediumImpact();
         Navigator.pop(context);
 
         final approvalCount = selectedMembersRequiringApproval.length;
@@ -242,19 +234,13 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           message = '⭐ $verb $totalXp XP y $totalCoins Coins!';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              message,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ),
+        AppSnackBar.show(
+          context,
+          message: message,
+          type: approvalCount > 0
+              ? AppSnackBarType.info
+              : AppSnackBarType.success,
+          duration: const Duration(milliseconds: 1900),
         );
 
         widget.onTasksCompleted();
@@ -263,13 +249,11 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
       log.e('Error completing tasks: $e', error: e);
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        AppSnackBar.show(
+          context,
+          message:
               AppLocalizations.of(context).commonErrorWithDetails(e.toString()),
-            ),
-            backgroundColor: AppColors.accentRed,
-          ),
+          type: AppSnackBarType.error,
         );
       }
     }
@@ -365,20 +349,6 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
           child: FractionallySizedBox(
             heightFactor: 0.86,
             child: _buildBody(tasksToShow, categories),
-          ),
-        ),
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              AppColors.primary,
-              AppColors.accentGold,
-              AppColors.success,
-              AppColors.accentBlue,
-            ],
           ),
         ),
       ],

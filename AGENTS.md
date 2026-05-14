@@ -39,6 +39,12 @@ cd flutter_client && flutter build apk --debug         # Build debug
 cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyxms
 ```
 
+## Diseño
+
+- Antes de tocar UI, leer `DESIGN.md` y `docs/design-system.md`.
+- `DESIGN.md` sigue el formato de `google-labs-code/design.md`: tokens YAML validables + criterio visual en Markdown.
+- Validar cambios de tokens con `npx @google/design.md lint DESIGN.md` o, en Windows si `npx` se cuelga, con el bin `design.md` instalado localmente.
+
 ## Distribución / OTA updates (Shorebird)
 
 Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id: `3da773b5-655d-47c6-8277-5d90b3417d86`).

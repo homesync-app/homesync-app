@@ -16,6 +16,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 
 class FamilyTasksSection extends ConsumerStatefulWidget {
@@ -36,6 +37,10 @@ class FamilyTasksSection extends ConsumerStatefulWidget {
 
 class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   final Set<String> _completedTaskIds = {};
+  // Tareas en proceso de salir visualmente (fade + collapse). Separado de
+  // _completedTaskIds porque la pulse animation ocurre PRIMERO (al tap) y el
+  // fade-out ocurre DESPUES de que el RPC confirma.
+  final Set<String> _exitingTaskIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -207,28 +212,33 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
   Widget _buildSectionStateSwitcher({
     required Widget child,
   }) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 380),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        final fade = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        final slide = Tween<Offset>(
-          begin: const Offset(0, 0.035),
-          end: Offset.zero,
-        ).animate(fade);
-        return FadeTransition(
-          opacity: fade,
-          child: SlideTransition(
-            position: slide,
-            child: child,
-          ),
-        );
-      },
-      child: child,
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 190),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 170),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(fade);
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
+        child: child,
+      ),
     );
   }
 
@@ -318,8 +328,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
     final isAdultView = currentMember?.canApprove ?? false;
+    final approvalMode = ref.watch(householdProvider).value?.taskApprovalMode;
     final requiresApprovalSubmission =
-        currentMember?.submissionRequiresApproval ?? false;
+        currentMember?.needsSubmissionApproval(approvalMode) ?? false;
     final assignedMember =
         members.where((member) => member.userId == task.assignedTo).firstOrNull;
     final completedMember = members
@@ -376,6 +387,7 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     return FamilyTaskCard(
       task: task,
       isCompleting: _completedTaskIds.contains(task.id),
+      isExiting: _exitingTaskIds.contains(task.id),
       isChildView: isChildView,
       assignedMember: assignedMember,
       completedMember: completedMember,
@@ -470,10 +482,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     final t = AppLocalizations.of(context);
     final ownerName =
         assignedMember?.displayName ?? t.familyTasksLockedOwnerFallback;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(t.familyTasksLockedMessage(ownerName)),
-      ),
+    AppSnackBar.show(
+      context,
+      message: t.familyTasksLockedMessage(ownerName),
+      type: AppSnackBarType.info,
     );
   }
 
@@ -485,10 +497,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       await ref.read(tasksProvider.notifier).submitTaskForApproval(task);
       if (!mounted) return;
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.familyTasksSubmittedSnack),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.familyTasksSubmittedSnack,
+        type: AppSnackBarType.info,
       );
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
@@ -496,8 +508,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     } catch (e) {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.familyTasksSubmitError(e.toString()))),
+      AppSnackBar.show(
+        context,
+        message: t.familyTasksSubmitError(e.toString()),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -594,12 +608,16 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
       if (result == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.familyTasksApproveError)),
+        AppSnackBar.show(
+          context,
+          message: t.familyTasksApproveError,
+          type: AppSnackBarType.error,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.familyTasksApproveSuccess)),
+        AppSnackBar.show(
+          context,
+          message: t.familyTasksApproveSuccess,
+          type: AppSnackBarType.success,
         );
         ref.invalidate(tasksProvider);
         ref.invalidate(todayTasksProvider);
@@ -609,10 +627,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     } catch (e) {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.familyTasksApproveErrorWithDetails(e.toString())),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.familyTasksApproveErrorWithDetails(e.toString()),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -629,8 +647,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       await ref.read(tasksProvider.notifier).rejectPendingTask(task);
       if (!mounted) return;
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.familyTasksRejectSuccess)),
+      AppSnackBar.show(
+        context,
+        message: t.familyTasksRejectSuccess,
+        type: AppSnackBarType.info,
       );
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
@@ -638,8 +658,10 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     } catch (e) {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.familyTasksRejectError(e.toString()))),
+      AppSnackBar.show(
+        context,
+        message: t.familyTasksRejectError(e.toString()),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) {
@@ -655,8 +677,20 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     if (_completedTaskIds.contains(task.id)) return;
 
     setState(() => _completedTaskIds.add(task.id));
+    // Haptic inmediato al tap — feedback fisico tiene que coincidir con la
+    // intencion del usuario, no con el resultado del RPC.
+    HapticFeedback.mediumImpact();
+    // Optimistic feed update INMEDIATO: la entrada del feed empieza a animar
+    // ya, sin esperar al RPC. Cuando llega la data real, _mergeActivity
+    // dedupea por task_id (ver dashboard_provider.dart) asi que el placeholder
+    // se reemplaza transparentemente. En caso de fallo, invalidamos el
+    // optimistic provider abajo para limpiar.
+    ref.read(optimisticRecentActivityProvider.notifier).addTaskCompleted(task);
     try {
       log.d('[family] completing task id=${task.id} title=${task.title}');
+      // Pausa breve para que la animacion de feedback del card (240ms internos)
+      // tenga aire antes de que reordenemos la lista al invalidar.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
       final result = await ref
           .read(tasksProvider.notifier)
           .completeTask(task, userIds: userIds);
@@ -665,11 +699,13 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
 
       if (result == null) {
         log.w('[family] task completion returned null id=${task.id}');
+        // Rollback de la entrada optimista del feed.
+        ref.invalidate(optimisticRecentActivityProvider);
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.homeFriendsTaskCompleteError),
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.homeFriendsTaskCompleteError,
+          type: AppSnackBarType.error,
         );
         return;
       }
@@ -677,38 +713,48 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
       log.i(
         '[family] task completion success id=${task.id} queued=${result.queued} message=${result.message}',
       );
-      HapticFeedback.heavyImpact();
+
+      // Iniciar el fade-out del card. AnimatedSize + AnimatedOpacity en
+      // FamilyTaskCard se encargan; el padre solo necesita esperar
+      // exitAnimationDuration antes de invalidar para que la animacion se
+      // vea completa.
+      if (mounted) {
+        setState(() => _exitingTaskIds.add(task.id));
+      }
+      await Future<void>.delayed(FamilyTaskCard.exitAnimationDuration);
+      if (!mounted) return;
+
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            t.tasksSnackCompleted,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.tasksSnackCompleted,
+        type: AppSnackBarType.success,
       );
       ref.invalidate(statsControllerProvider);
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
-      ref.invalidate(recentActivityProvider);
+      // No invalidamos recentActivityProvider: es un StreamProvider con
+      // realtime de Supabase + merge con el optimistic. Invalidar destruye
+      // la subscripcion y pasa por AsyncLoading -> la seccion del feed se
+      // pone en blanco. El stream emite la actualizacion real solo.
     } catch (e) {
       log.e('[family] task completion threw id=${task.id}', error: e);
+      // Rollback de la entrada optimista del feed.
+      ref.invalidate(optimisticRecentActivityProvider);
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {
       if (mounted) {
-        setState(() => _completedTaskIds.remove(task.id));
+        setState(() {
+          _completedTaskIds.remove(task.id);
+          _exitingTaskIds.remove(task.id);
+        });
       }
     }
   }

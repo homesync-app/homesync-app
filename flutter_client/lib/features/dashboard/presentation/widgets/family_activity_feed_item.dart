@@ -17,6 +17,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/task_provi
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -375,7 +376,11 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   ) async {
     final taskId = data['task_id']?.toString();
     if (taskId == null || taskId.isEmpty) {
-      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      _showSnackBar(
+        context,
+        'No encontramos esa tarea para revisar.',
+        AppSnackBarType.error,
+      );
       return;
     }
 
@@ -383,14 +388,22 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       final ok = await ref.read(taskApprovalActionsProvider).approve(taskId);
       if (!context.mounted) return;
       if (!ok) {
-        _showSnackBar(context, 'No pudimos aprobar la tarea.');
+        _showSnackBar(
+          context,
+          'No pudimos aprobar la tarea.',
+          AppSnackBarType.error,
+        );
         return;
       }
       _refreshAfterReview(ref);
-      _showSnackBar(context, 'Tarea aprobada.');
+      _showSnackBar(context, 'Tarea aprobada.', AppSnackBarType.success);
     } catch (error) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'No pudimos aprobar la tarea: $error');
+      _showSnackBar(
+        context,
+        'No pudimos aprobar la tarea: $error',
+        AppSnackBarType.error,
+      );
     }
   }
 
@@ -401,7 +414,11 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   ) async {
     final taskId = data['task_id']?.toString();
     if (taskId == null || taskId.isEmpty) {
-      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      _showSnackBar(
+        context,
+        'No encontramos esa tarea para revisar.',
+        AppSnackBarType.error,
+      );
       return;
     }
 
@@ -409,14 +426,26 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       final ok = await ref.read(taskApprovalActionsProvider).reject(taskId);
       if (!context.mounted) return;
       if (!ok) {
-        _showSnackBar(context, 'No pudimos devolver la tarea.');
+        _showSnackBar(
+          context,
+          'No pudimos devolver la tarea.',
+          AppSnackBarType.error,
+        );
         return;
       }
       _refreshAfterReview(ref);
-      _showSnackBar(context, 'La tarea volvio para corregir.');
+      _showSnackBar(
+        context,
+        'La tarea volvio para corregir.',
+        AppSnackBarType.info,
+      );
     } catch (error) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'No pudimos devolver la tarea: $error');
+      _showSnackBar(
+        context,
+        'No pudimos devolver la tarea: $error',
+        AppSnackBarType.error,
+      );
     }
   }
 
@@ -429,9 +458,15 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     ref.invalidate(statsControllerProvider);
   }
 
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  void _showSnackBar(
+    BuildContext context,
+    String message,
+    AppSnackBarType type,
+  ) {
+    AppSnackBar.show(
+      context,
+      message: message,
+      type: type,
     );
   }
 }
