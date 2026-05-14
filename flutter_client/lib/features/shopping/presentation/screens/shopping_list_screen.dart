@@ -107,7 +107,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
       }
     });
 
-    _suggestionsVal.value = matches.take(query.length < 2 ? 5 : 10).toList();
+    _suggestionsVal.value = matches.take(5).toList();
   }
 
   // -- Actions --------------------------------------------------------------
@@ -434,6 +434,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     List<ShoppingItemModel> done,
   ) {
     final t = AppLocalizations.of(context);
+    final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final maxSuggestionsHeight = isKeyboardOpen ? 320.0 : 420.0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -441,28 +443,41 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
           valueListenable: _suggestionsVal,
           builder: (context, suggestions, child) {
             if (suggestions.isEmpty) return const SizedBox();
-            return Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: context.theme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: suggestions
-                    .map(
-                      (s) => ListTile(
+            return ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxSuggestionsHeight),
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: context.theme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Scrollbar(
+                  thumbVisibility: suggestions.length > 4,
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    physics: suggestions.length > 4
+                        ? const BouncingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    itemCount: suggestions.length,
+                    itemBuilder: (context, index) {
+                      final s = suggestions[index];
+                      return ListTile(
                         leading: Text(
                           s['emoji']!,
                           style: const TextStyle(fontSize: 20),
                         ),
                         title: Text(
                           s['name']!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(color: context.theme.textPrimary),
                         ),
                         trailing: const Icon(
@@ -471,9 +486,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         ),
                         onTap: () =>
                             _handleSelection(s['name']!, pending, done),
-                      ),
-                    )
-                    .toList(),
+                      );
+                    },
+                  ),
+                ),
               ),
             );
           },
@@ -856,8 +872,9 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                             emoji: cat['emoji'],
                             accentColor: Color(cat['color'] as int),
                             count: ShoppingPredefined.itemsForCategory(
-                                    cat['id'], context,)
-                                .length,
+                              cat['id'],
+                              context,
+                            ).length,
                           ),
                           if (_expandedSections.contains(cat['id']))
                             _buildPredefinedGrid(cat, pending, done),

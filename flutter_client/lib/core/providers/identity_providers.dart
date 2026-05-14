@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/admin_providers.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';

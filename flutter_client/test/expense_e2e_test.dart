@@ -48,7 +48,10 @@ class ExpenseFlowSimulator {
   }
 
   Future<void> settleDebt(
-      String fromUserId, String toUserId, double amount,) async {
+    String fromUserId,
+    String toUserId,
+    double amount,
+  ) async {
     await repository.settleDebt(
       householdId: 'household-1',
       fromUserId: fromUserId,
@@ -70,12 +73,14 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-          String householdId,) async =>
+    String householdId,
+  ) async =>
       right(_expenses);
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-      String expenseId,) async {
+    String expenseId,
+  ) async {
     try {
       final expense = _expenses.firstWhere((e) => e.id == expenseId);
       return right({'expense': expense, 'splits': []});
@@ -86,7 +91,8 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-      String householdId,) async {
+    String householdId,
+  ) async {
     final balances = <String, double>{};
     for (final expense in _expenses) {
       final splitAmount = expense.amount / 2;
@@ -95,12 +101,16 @@ class MockExpenseRepository implements ExpenseRepository {
       balances['other'] = (balances['other'] ?? 0) - splitAmount;
     }
 
-    return right(balances.entries
-        .map((e) => HouseholdBalanceModel(
+    return right(
+      balances.entries
+          .map(
+            (e) => HouseholdBalanceModel(
               userId: e.key,
               balance: e.value,
-            ),)
-        .toList(),);
+            ),
+          )
+          .toList(),
+    );
   }
 
   @override
@@ -120,17 +130,19 @@ class MockExpenseRepository implements ExpenseRepository {
     List<Map<String, dynamic>>? splits,
     String? receiptPath,
   }) async {
-    _expenses.add(ExpenseModel(
-      id: id ?? 'expense-${_expenses.length + 1}',
-      title: title,
-      amount: amount,
-      category: category,
-      householdId: householdId,
-      paidBy: paidBy,
-      paidAt: paidAt,
-      createdAt: DateTime.now(),
-      splitType: splitType.name,
-    ),);
+    _expenses.add(
+      ExpenseModel(
+        id: id ?? 'expense-${_expenses.length + 1}',
+        title: title,
+        amount: amount,
+        category: category,
+        householdId: householdId,
+        paidBy: paidBy,
+        paidAt: paidAt,
+        createdAt: DateTime.now(),
+        splitType: splitType.name,
+      ),
+    );
     return const Right(null);
   }
 
@@ -152,7 +164,9 @@ class MockExpenseRepository implements ExpenseRepository {
 
   @override
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-      String userId, String householdId,) async {
+    String userId,
+    String householdId,
+  ) async {
     return {
       'total_spent': 0.0,
       'personal_balance': 0.0,
@@ -160,22 +174,26 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(String householdId) async {
+  Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(String householdId) async {
+  Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
+      String householdId,) async {
     return const Right([]);
   }
 
   @override
-  Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template) async {
+  Future<Either<Failure, Unit>> saveTemplate(
+      ExpenseTemplateModel template,) async {
     return const Right(unit);
   }
 
   @override
-  Future<Either<Failure, Unit>> toggleTemplateActivity(String templateId, bool isActive) async {
+  Future<Either<Failure, Unit>> toggleTemplateActivity(
+      String templateId, bool isActive,) async {
     return const Right(unit);
   }
 
@@ -190,7 +208,8 @@ class MockExpenseRepository implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> processRecurringExpenses(String householdId) async {
+  Future<Either<Failure, Unit>> processRecurringExpenses(
+      String householdId,) async {
     return const Right(unit);
   }
 

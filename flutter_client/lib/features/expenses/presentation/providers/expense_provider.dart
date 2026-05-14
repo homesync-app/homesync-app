@@ -24,32 +24,32 @@ part 'expense_provider.g.dart';
 // --- Providers ---
 
 @riverpod
-ExpenseRepository expenseRepository(ExpenseRepositoryRef ref) {
+ExpenseRepository expenseRepository(Ref ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseExpenseRepository(client, ref);
 }
 
 @riverpod
-GetExpensesUseCase getExpensesUseCase(GetExpensesUseCaseRef ref) {
+GetExpensesUseCase getExpensesUseCase(Ref ref) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetExpensesUseCase(repo);
 }
 
 @riverpod
-GetCombinedFeedUseCase getCombinedFeedUseCase(GetCombinedFeedUseCaseRef ref) {
+GetCombinedFeedUseCase getCombinedFeedUseCase(Ref ref) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetCombinedFeedUseCase(repo);
 }
 
 @riverpod
-GetBalancesUseCase getBalancesUseCase(GetBalancesUseCaseRef ref) {
+GetBalancesUseCase getBalancesUseCase(Ref ref) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetBalancesUseCase(repo);
 }
 
 @riverpod
 GetPersonalFinanceSummaryUseCase getPersonalFinanceSummaryUseCase(
-  GetPersonalFinanceSummaryUseCaseRef ref,
+  Ref ref,
 ) {
   final repo = ref.watch(expenseRepositoryProvider);
   return GetPersonalFinanceSummaryUseCase(repo);
@@ -151,10 +151,11 @@ class ExpenseController extends _$ExpenseController {
   }
 
   Future<void> deleteExpense(String id) async {
-    final previousExpenses = state.valueOrNull;
+    final previousExpenses = state.value;
     final combinedFeedNotifier =
         ref.read(combinedFeedControllerProvider.notifier);
-    final previousFeed = ref.read(combinedFeedControllerProvider).valueOrNull;
+    final previousFeed = ref.read(combinedFeedControllerProvider).value;
+    final hiddenExpenseIds = ref.read(hiddenRecentExpenseIdsProvider.notifier);
 
     if (previousExpenses != null) {
       state = AsyncData(
@@ -162,6 +163,7 @@ class ExpenseController extends _$ExpenseController {
       );
     }
     combinedFeedNotifier.removeRealExpenseLocally(id);
+    hiddenExpenseIds.hide(id);
 
     final repo = ref.read(expenseRepositoryProvider);
     final result = await repo.deleteExpense(id);
@@ -175,6 +177,7 @@ class ExpenseController extends _$ExpenseController {
         if (previousFeed != null) {
           combinedFeedNotifier.replaceLocalFeed(previousFeed);
         }
+        hiddenExpenseIds.restore(id);
         throw failure;
       },
       (_) {},
@@ -248,17 +251,15 @@ class CombinedFeedController extends _$CombinedFeedController {
         await repo.processRecurringExpenses(householdId);
         await prefs.setString(storageKey, now.toIso8601String());
         // If processing generated new entries, refresh the feed + balances so
-        // the user sees them without a manual pull-to-refresh. Guard against
-        // the provider being disposed mid-flight (user signed out, etc.).
-        try {
-          ref.invalidateSelf();
-          ref.invalidate(expenseBalancesProvider);
-          ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
-          ref.invalidate(recentActivityProvider);
-        } catch (_) {
-          // Provider disposed before recurring processing finished; ignore.
-        }
+        // the user sees them without a manual pull-to-refresh.
+        if (!ref.mounted) return;
+        ref.invalidateSelf();
+        ref.invalidate(expenseBalancesProvider);
+        ref.invalidate(monthlyPendingPlannedExpensesProvider);
+        // monthlyProjectionProvider depende de combinedFeed via ref.watch, asi
+        // que invalidateSelf() ya lo refresca. Invalidar aca tambien crea un
+        // ciclo (CircularDependencyError) durante el build.
+        ref.invalidate(recentActivityProvider);
       } catch (e, stack) {
         log.w(
           'CombinedFeed recurring expense processing failed: $e',
@@ -336,7 +337,7 @@ class CombinedFeedController extends _$CombinedFeedController {
   }
 
   void removeRealExpenseLocally(String expenseId) {
-    final currentFeed = state.valueOrNull;
+    final currentFeed = state.value;
     if (currentFeed == null) return;
 
     state = AsyncData(
@@ -440,7 +441,7 @@ double _projectedShareForUser({
 
 @riverpod
 Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
-  MonthlyPendingPlannedExpensesRef ref,
+  Ref ref,
 ) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return const <FeedItemModel>[];
@@ -470,7 +471,7 @@ Future<List<FeedItemModel>> monthlyPendingPlannedExpenses(
 
 @riverpod
 Future<MonthlyProjectionData> monthlyProjection(
-  MonthlyProjectionRef ref,
+  Ref ref,
 ) async {
   final feedAsync = await ref.watch(combinedFeedControllerProvider.future);
   final monthlyPendingItems =

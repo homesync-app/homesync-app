@@ -4,6 +4,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class NewItemsSuggestionBanner extends ConsumerStatefulWidget {
@@ -56,14 +57,16 @@ class _NewItemsSuggestionBannerState
           category: predefined?.category ?? 'general',
         );
 
-        addedItems.add(ShoppingItemModel(
-          id: 'temp_${displayName.toLowerCase().replaceAll(' ', '_')}',
-          name: displayName,
-          emoji: predefined?.emoji ?? '🛒',
-          category: predefined?.category ?? 'general',
-          householdId: widget.householdId,
-          createdAt: DateTime.now(),
-        ),);
+        addedItems.add(
+          ShoppingItemModel(
+            id: 'temp_${displayName.toLowerCase().replaceAll(' ', '_')}',
+            name: displayName,
+            emoji: predefined?.emoji ?? '🛒',
+            category: predefined?.category ?? 'general',
+            householdId: widget.householdId,
+            createdAt: DateTime.now(),
+          ),
+        );
       }
 
       if (mounted) {
@@ -150,7 +153,7 @@ class _NewItemsSuggestionBannerState
               final isSelected = _selected.contains(item);
               final predefined = ReceiptMatcher.findPredefined(item);
               final label = predefined != null
-                  ? '${predefined.emoji} ${predefined.name}'
+                  ? '${predefined.emoji} ${localizedShoppingCatalogName(context, name: predefined.name, nameKey: predefined.nameKey)}'
                   : ReceiptMatcher.cleanName(item);
               return FilterChip(
                 label: Text(

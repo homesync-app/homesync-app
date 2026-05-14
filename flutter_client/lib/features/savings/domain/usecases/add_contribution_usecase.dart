@@ -21,7 +21,8 @@ class AddContributionUseCase {
     }
     if (amount <= 0) {
       return Future.value(
-          const Left(ValidationFailure('amount must be greater than zero')),);
+        const Left(ValidationFailure('amount must be greater than zero')),
+      );
     }
 
     return repository.addContribution(

@@ -16,64 +16,64 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'stats_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-StatsRepository statsRepository(StatsRepositoryRef ref) {
+StatsRepository statsRepository(Ref ref) {
   final statsRpc = ref.watch(statsRpcServiceProvider);
   return SupabaseStatsRepository(statsRpc);
 }
 
 @riverpod
 GetTaskStatsByCategoryUseCase taskStatsByCategoryUseCase(
-  TaskStatsByCategoryUseCaseRef ref,
+  Ref ref,
 ) {
   return GetTaskStatsByCategoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
-GetXpHistoryUseCase xpHistoryUseCase(XpHistoryUseCaseRef ref) {
+GetXpHistoryUseCase xpHistoryUseCase(Ref ref) {
   return GetXpHistoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
-GetCoinHistoryUseCase coinHistoryUseCase(CoinHistoryUseCaseRef ref) {
+GetCoinHistoryUseCase coinHistoryUseCase(Ref ref) {
   return GetCoinHistoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
 GetExpenseStatsByCategoryUseCase expenseStatsByCategoryUseCase(
-  ExpenseStatsByCategoryUseCaseRef ref,
+  Ref ref,
 ) {
   return GetExpenseStatsByCategoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
 GetMemberActivityStatsUseCase memberActivityStatsUseCase(
-  MemberActivityStatsUseCaseRef ref,
+  Ref ref,
 ) {
   return GetMemberActivityStatsUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
-GetWeeklyRankingUseCase weeklyRankingUseCase(WeeklyRankingUseCaseRef ref) {
+GetWeeklyRankingUseCase weeklyRankingUseCase(Ref ref) {
   return GetWeeklyRankingUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
 GetWeeklyDuelHistoryUseCase weeklyDuelHistoryUseCase(
-  WeeklyDuelHistoryUseCaseRef ref,
+  Ref ref,
 ) {
   return GetWeeklyDuelHistoryUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
 AwardWeeklyWinnerUseCase weeklyWinnerAwardUseCase(
-  WeeklyWinnerAwardUseCaseRef ref,
+  Ref ref,
 ) {
   return AwardWeeklyWinnerUseCase(ref.watch(statsRepositoryProvider));
 }
 
 @riverpod
 SaveWeeklyDuelResultUseCase weeklyDuelResultSaveUseCase(
-  WeeklyDuelResultSaveUseCaseRef ref,
+  Ref ref,
 ) {
   return SaveWeeklyDuelResultUseCase(ref.watch(statsRepositoryProvider));
 }
@@ -110,7 +110,7 @@ class StatsController extends _$StatsController {
   }
 
   Future<void> refresh() async {
-    state = const AsyncLoading<StatsData>().copyWithPrevious(state);
+    state = const AsyncLoading<StatsData>();
     state = await AsyncValue.guard(() => build());
   }
 }
@@ -135,12 +135,12 @@ class StatsData {
   });
 
   factory StatsData.empty() => StatsData(
-    taskStats: [],
-    xpHistory: [],
-    coinHistory: [],
-    expenseStats: [],
-    memberActivity: [],
-    weeklyRanking: [],
-    duelHistory: [],
-  );
+        taskStats: [],
+        xpHistory: [],
+        coinHistory: [],
+        expenseStats: [],
+        memberActivity: [],
+        weeklyRanking: [],
+        duelHistory: [],
+      );
 }

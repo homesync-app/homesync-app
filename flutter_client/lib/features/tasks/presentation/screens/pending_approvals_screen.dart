@@ -8,6 +8,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 /// Sprint 1 Modo Padres: bandeja de aprobaciones para owner/admin del hogar.
 ///
@@ -82,8 +83,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
             return _EmptyState(theme: theme);
           }
           return RefreshIndicator(
-            onRefresh: () async =>
-                ref.invalidate(pendingTaskApprovalsProvider),
+            onRefresh: () async => ref.invalidate(pendingTaskApprovalsProvider),
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               itemCount: items.length,
@@ -206,7 +206,8 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
       // Construimos un TaskModel minimo para reusar approvePendingTask del
       // notifier — solo le importa el id para invocar la RPC.
       final stub = TaskModel.minimalForApproval(id: widget.approval.taskId);
-      final res = await ref.read(tasksProvider.notifier).approvePendingTask(stub);
+      final res =
+          await ref.read(tasksProvider.notifier).approvePendingTask(stub);
       if (!mounted) return;
       if (res != null) {
         _snack(
@@ -239,8 +240,11 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
+    AppSnackBar.show(
+      context,
+      message: msg,
+      type: AppSnackBarType.success,
+      duration: const Duration(milliseconds: 1500),
     );
   }
 
@@ -266,8 +270,7 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
               child: Text(t.commonCancel),
             ),
             FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogCtx, controller.text.trim()),
+              onPressed: () => Navigator.pop(dialogCtx, controller.text.trim()),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.accentRed,
               ),

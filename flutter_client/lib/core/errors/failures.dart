@@ -38,9 +38,10 @@ class HouseholdFailure extends Failure {
 class InsufficientCoinsFailure extends Failure {
   final int available;
   final int required;
-  const InsufficientCoinsFailure(
-      {required this.available, required this.required,})
-      : super('Coins insuficientes: tenés $available, necesitás $required');
+  const InsufficientCoinsFailure({
+    required this.available,
+    required this.required,
+  }) : super('Coins insuficientes: tenés $available, necesitás $required');
 }
 
 /// Exception thrown when rate limited (429)

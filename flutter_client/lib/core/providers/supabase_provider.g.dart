@@ -6,25 +6,53 @@ part of 'supabase_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$supabaseClientHash() => r'36e9cae00709545a85bfe4a5a2cb98d8686a01ea';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+/// Single source of truth for the SupabaseClient.
+/// All repositories get the client via this provider, never via Supabase.instance.
+
+@ProviderFor(supabaseClient)
+final supabaseClientProvider = SupabaseClientProvider._();
 
 /// Single source of truth for the SupabaseClient.
 /// All repositories get the client via this provider, never via Supabase.instance.
-///
-/// Copied from [supabaseClient].
-@ProviderFor(supabaseClient)
-final supabaseClientProvider = AutoDisposeProvider<SupabaseClient>.internal(
-  supabaseClient,
-  name: r'supabaseClientProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$supabaseClientHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SupabaseClientRef = AutoDisposeProviderRef<SupabaseClient>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class SupabaseClientProvider
+    extends $FunctionalProvider<SupabaseClient, SupabaseClient, SupabaseClient>
+    with $Provider<SupabaseClient> {
+  /// Single source of truth for the SupabaseClient.
+  /// All repositories get the client via this provider, never via Supabase.instance.
+  SupabaseClientProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'supabaseClientProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$supabaseClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<SupabaseClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SupabaseClient create(Ref ref) {
+    return supabaseClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SupabaseClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SupabaseClient>(value),
+    );
+  }
+}
+
+String _$supabaseClientHash() => r'834a58d6ae4b94e36f4e04a10d8a7684b929310e';

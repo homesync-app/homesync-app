@@ -18,6 +18,7 @@ import '../../../tasks/presentation/providers/task_provider.dart';
 import '../../domain/models/couple_challenge.dart';
 import '../../domain/models/reward_model.dart';
 import '../providers/reward_provider.dart';
+import '../utils/reward_localization.dart';
 import '../widgets/couple_challenge_card.dart';
 
 class CoupleRewardsScreen extends ConsumerStatefulWidget {
@@ -104,7 +105,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Future<void> _loadDuelStats() async {
     if (mounted) {
-      setState(() => _isStatsLoading = true);
+      final hasCachedDuelData = _weeklyRanking.isNotEmpty ||
+          _memberStats.isNotEmpty ||
+          _taskStats.isNotEmpty ||
+          _duelHistory.isNotEmpty;
+      if (!hasCachedDuelData) {
+        setState(() => _isStatsLoading = true);
+      }
     }
 
     try {
@@ -223,8 +230,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final currentUserId = ref.read(currentUserIdProvider);
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final List<String> tabLabels =
-        widget.showDuel ? [t.rewardsTabDuel, t.rewardsTabPrizes] : [t.rewardsTabPrizes];
+    final List<String> tabLabels = widget.showDuel
+        ? [t.rewardsTabDuel, t.rewardsTabPrizes]
+        : [t.rewardsTabPrizes];
     final tabViews = [
       if (widget.showDuel) _buildDuelTab(),
       rewardsAsync.when(
@@ -307,9 +315,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildDuelTab() {
     if (_isStatsLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return _buildDuelLoadingState();
     }
 
     return WeeklyProgressTab(
@@ -325,7 +331,50 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     );
   }
 
+  Widget _buildDuelLoadingState() {
+    final theme = context.theme;
 
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        2,
+        AppSpacing.lg,
+        132,
+      ),
+      children: [
+        ShimmerLoading(
+          child: Container(
+            height: 300,
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(32),
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+        ShimmerLoading(
+          child: Container(
+            height: 98,
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        ShimmerLoading(
+          child: Container(
+            height: 98,
+            decoration: BoxDecoration(
+              color: theme.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildHeroPill({
     required IconData icon,
@@ -444,6 +493,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildGroupedRewards(List<RewardModel> rewards) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final grouped = <String, List<RewardModel>>{};
     for (final reward in rewards) {
       final normalized = _getNormalizedCategory(reward.category);
@@ -484,7 +534,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        _getCategoryDisplayTitle(category),
+                        localizedRewardCategoryByKey(t, null, category),
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 15,
@@ -506,7 +556,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Widget _buildPendingProposalsSection(
-      List<RewardModel> suggestions, String? currentUserId,) {
+    List<RewardModel> suggestions,
+    String? currentUserId,
+  ) {
     final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,6 +603,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final t = AppLocalizations.of(context);
     final isMine = reward.createdBy == currentUserId;
     final accent = isMine ? AppColors.primary : AppColors.accentPurple;
+    final title = localizedRewardTitle(t, reward);
+    final description = localizedRewardDescription(t, reward) ??
+        t.rewardsWaitingPartnerDecision;
 
     return Material(
       color: Colors.transparent,
@@ -577,7 +632,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       icon: isMine
                           ? Icons.hourglass_top_rounded
                           : Icons.mark_email_unread_outlined,
-                      label: isMine ? t.rewardsStatusPending : t.rewardsStatusReview,
+                      label: isMine
+                          ? t.rewardsStatusPending
+                          : t.rewardsStatusReview,
                       color: accent,
                       background: accent.withValues(alpha: 0.10),
                     ),
@@ -599,7 +656,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  reward.title,
+                  title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -611,8 +668,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  (reward.description ?? t.rewardsWaitingPartnerDecision)
-                      .trim(),
+                  description.trim(),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -773,10 +829,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
   Widget _buildRewardCard(RewardModel reward) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final balanceData = ref.watch(userBalanceProvider).value;
     final userBalance = (balanceData?['coins'] as num?) ?? 0;
     final canAfford = userBalance >= reward.cost;
     final buttonAccent = canAfford ? theme.primary : theme.textMuted;
+    final title = localizedRewardTitle(t, reward);
 
     return Container(
       decoration: BoxDecoration(
@@ -842,7 +900,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     Expanded(
                       child: Center(
                         child: Text(
-                          reward.title,
+                          title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -882,7 +940,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${reward.cost} coins',
+                            t.rewardsPrizeCostCoins(reward.cost),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: buttonAccent,
@@ -1029,7 +1087,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Future<void> _handleChallengeCompletion(
-      CoupleChallenge challenge, String householdId,) async {
+    CoupleChallenge challenge,
+    String householdId,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1067,26 +1127,32 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Future<void> _executeChallengeCompletion(
-      CoupleChallenge challenge, String householdId,) async {
+    CoupleChallenge challenge,
+    String householdId,
+  ) async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
+    final t = AppLocalizations.of(context);
     try {
-      final members = ref.read(householdMembersNotifierProvider).value ?? [];
+      final members = ref.read(householdMembersProvider).value ?? [];
       final userIds = members.map((m) => m.userId).toList();
       final currentUserId = ref.read(currentUserIdProvider);
       if (userIds.isEmpty && currentUserId != null) {
         userIds.add(currentUserId);
       }
 
+      final challengeTitle = challenge.localizedTitle(t);
+      final challengeDescription = challenge.localizedDescription(t);
+      final challengeCategory = challenge.localizedCategory(t);
       final taskRpc = ref.read(taskRpcServiceProvider);
       final newTaskId = await taskRpc.createTask(
-        title: 'Desafío: ${challenge.title}',
-        description: challenge.description,
-        category: 'Conexión',
+        title: t.rewardsChallengeTitle(challengeTitle),
+        description: challengeDescription,
+        category: challengeCategory,
         coinReward: challenge.coinReward,
         xpReward: 10,
         type: 'one_time',
@@ -1095,7 +1161,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       final rpc = ref.read(rpcServiceProvider);
       await rpc.completeTaskTransaction(
         taskId: newTaskId,
-        taskTitle: 'Desafío: ${challenge.title}',
+        taskTitle: t.rewardsChallengeTitle(challengeTitle),
         xpReward: 10,
         coinReward: challenge.coinReward,
         householdId: householdId,
@@ -1106,10 +1172,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       Navigator.pop(context);
       SuccessCelebration.show(
         context,
-        title: 'Desafío completado',
-        message:
-            'Ambos ganaron ${challenge.coinReward} coins. Sigan cultivando su conexión.',
-        icon: '✨',
+        title: t.rewardsChallengeCompleted,
+        message: t.rewardsChallengeCompletedBody(challenge.coinReward),
+        icon: '\u2728',
       );
       ref.invalidate(userBalanceProvider);
       ref.invalidate(tasksProvider);
@@ -1118,7 +1183,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error al completar el desafío: $e'),
+          content: Text(t.rewardsChallengeError(e.toString())),
           backgroundColor: AppColors.error,
         ),
       );
@@ -1249,6 +1314,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       backgroundColor: Colors.transparent,
       builder: (context) {
         final theme = context.theme;
+        final t = AppLocalizations.of(context);
+        final title = localizedRewardTitle(t, reward);
+        final description = localizedRewardDescription(t, reward) ??
+            t.rewardsWaitingPartnerDecision;
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           decoration: BoxDecoration(
@@ -1290,7 +1359,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        reward.title,
+                        title,
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 20,
@@ -1313,7 +1382,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  (reward.description ?? 'Sin motivo adicional.').trim(),
+                  description.trim(),
                   style: TextStyle(
                     color: theme.textPrimary,
                     fontSize: 14,
@@ -1323,7 +1392,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Costo: ${reward.cost} coins',
+                  t.rewardsCostLabel(reward.cost),
                   style: TextStyle(
                     color: theme.textSecondary,
                     fontSize: 13,
@@ -1390,6 +1459,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   void _showRewardEditor({required bool isSuggestion}) {
+    final t = AppLocalizations.of(context);
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -1574,12 +1644,19 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                     children: categories.map((category) {
                       final selected = selectedCategory == category;
                       return ChoiceChip(
-                        label: Text(_getCategoryDisplayTitle(category)),
+                        label: Text(
+                          localizedRewardCategoryByKey(
+                            t,
+                            null,
+                            category,
+                          ),
+                        ),
                         selected: selected,
                         onSelected: isSubmitting
                             ? null
                             : (_) => setModalState(
-                                () => selectedCategory = category,),
+                                  () => selectedCategory = category,
+                                ),
                         selectedColor:
                             AppColors.primary.withValues(alpha: 0.14),
                         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -1632,8 +1709,10 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                                 width: 2,
                               ),
                             ),
-                            child: Text(icon,
-                                style: const TextStyle(fontSize: 30),),
+                            child: Text(
+                              icon,
+                              style: const TextStyle(fontSize: 30),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -1744,20 +1823,5 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       return 'experiencias';
     }
     return 'otros';
-  }
-
-  String _getCategoryDisplayTitle(String category) {
-    switch (category) {
-      case 'mimos':
-        return 'Mimos';
-      case 'momentos':
-        return 'Momentos juntos';
-      case 'libertades':
-        return 'Libertades';
-      case 'experiencias':
-        return 'Experiencias grandes';
-      default:
-        return 'Otros';
-    }
   }
 }

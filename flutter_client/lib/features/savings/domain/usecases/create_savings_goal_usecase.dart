@@ -15,14 +15,16 @@ class CreateSavingsGoalUseCase {
     required String icon,
   }) {
     if (householdId.isEmpty) {
-      return Future.value(const Left(ValidationFailure('householdId is required')));
+      return Future.value(
+          const Left(ValidationFailure('householdId is required')),);
     }
     if (title.isEmpty) {
       return Future.value(const Left(ValidationFailure('title is required')));
     }
     if (targetAmount <= 0) {
       return Future.value(
-          const Left(ValidationFailure('targetAmount must be greater than zero')),);
+        const Left(ValidationFailure('targetAmount must be greater than zero')),
+      );
     }
 
     return repository.createGoal(

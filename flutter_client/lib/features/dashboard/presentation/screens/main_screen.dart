@@ -65,6 +65,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   // MainScreen so the registry stays consistent across rebuilds.
   final GlobalKey _rewardsTabKey = GlobalKey(debugLabel: 'tour_rewards_tab');
   final GlobalKey _expensesTabKey = GlobalKey(debugLabel: 'tour_expenses_tab');
+  TourTargetKeysNotifier? _tourTargetKeys;
 
   // ── In-app notification banner state ──────────────────────────────────────
   final GlobalKey<InAppNotificationBannerState> _bannerKey = GlobalKey();
@@ -79,13 +80,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // bottomNavIndexProvider es un NotifierProvider plano (sin autoDispose),
+      // asi que su estado persiste entre sesiones. Sin este reset, al loguearse
+      // un usuario nuevo MainScreen abre en la tab donde quedo el anterior.
+      ref.read(bottomNavIndexProvider.notifier).setIndex(0);
       _trackMainTabIfNeeded(
-        index: ref.read(bottomNavIndexProvider),
+        index: 0,
         source: 'initial_load',
       );
-      final keys = ref.read(tourTargetKeysProvider.notifier);
-      keys.register(TourTarget.rewardsTab, _rewardsTabKey);
-      keys.register(TourTarget.expensesTab, _expensesTabKey);
+      _tourTargetKeys = ref.read(tourTargetKeysProvider.notifier);
+      _tourTargetKeys!.register(TourTarget.rewardsTab, _rewardsTabKey);
+      _tourTargetKeys!.register(TourTarget.expensesTab, _expensesTabKey);
     });
   }
 
@@ -93,9 +98,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void dispose() {
     _notifService.dispose();
     _linkSubscription?.cancel();
-    final keys = ref.read(tourTargetKeysProvider.notifier);
-    keys.unregister(TourTarget.rewardsTab, _rewardsTabKey);
-    keys.unregister(TourTarget.expensesTab, _expensesTabKey);
+    // Diferido a microtask: modificar un provider durante dispose() tira
+    // "Tried to modify a provider while the widget tree was building".
+    // El unregister es idempotente (no-op si el key cambio) asi que es
+    // seguro correr fuera del ciclo de vida del widget.
+    final keys = _tourTargetKeys;
+    if (keys != null) {
+      final rewardsKey = _rewardsTabKey;
+      final expensesKey = _expensesTabKey;
+      Future.microtask(() {
+        keys.unregister(TourTarget.rewardsTab, rewardsKey);
+        keys.unregister(TourTarget.expensesTab, expensesKey);
+      });
+    }
     super.dispose();
   }
 
@@ -291,6 +306,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           return const SplashScreen();
         }
 
+        // Tras un cambio de usuario, householdIdProvider hace refresh manteniendo
+        // el valor previo (AsyncData stale + isRefreshing). Si todavia esta en
+        // vuelo el query y el valor stale es null/vacio, evitamos el flash de
+        // SetupScreen mostrando splash hasta que resuelva.
+        if (householdAsync.isLoading &&
+            (householdId == null || householdId.isEmpty) &&
+            currentUserId != null) {
+          return const SplashScreen();
+        }
+
         final admin = ref.watch(adminProvider);
         if (admin.isAdminUser && (householdId == null || householdId.isEmpty)) {
           return const AdminWorkspaceScreen();
@@ -338,7 +363,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           );
         }
-        if (onboardingDone.valueOrNull == false) {
+        if (onboardingDone.value == false) {
           return MemberOnboardingScreen(
             onComplete: () {
               ref.invalidate(memberOnboardingProvider);
@@ -419,6 +444,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   theme: theme,
                 ),
                 toolbarHeight: 86,
+                actionsPadding: const EdgeInsets.only(right: 12),
                 actions: [
                   SizedBox(
                     width: 48,

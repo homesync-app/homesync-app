@@ -211,12 +211,15 @@ class FirebaseAuthService {
       // ensure_user_profile is security-definer and returns the user's UUID.
       // We use the return value directly instead of a follow-up anon query
       // (which would fail RLS since there is no Supabase auth session).
-      final result = await _client.rpc<dynamic>('ensure_user_profile', params: {
-        'p_firebase_uid': firebaseUid,
-        'p_email': email,
-        'p_full_name': fullName,
-        'p_avatar_url': avatarUrl,
-      },);
+      final result = await _client.rpc<dynamic>(
+        'ensure_user_profile',
+        params: {
+          'p_firebase_uid': firebaseUid,
+          'p_email': email,
+          'p_full_name': fullName,
+          'p_avatar_url': avatarUrl,
+        },
+      );
 
       final userId = result?.toString();
       if (userId != null && userId.isNotEmpty) {
@@ -228,8 +231,11 @@ class FirebaseAuthService {
         log.i('User profile ensured successfully (via refresh fallback)');
       }
     } catch (e, stack) {
-      log.e('Error in _createUserProfileIfNeeded: $e',
-          error: e, stackTrace: stack,);
+      log.e(
+        'Error in _createUserProfileIfNeeded: $e',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -241,8 +247,11 @@ class FirebaseAuthService {
         try {
           await GoogleSignIn.instance.signOut();
         } catch (e, stack) {
-          log.w('Error signing out from Google: $e',
-              error: e, stackTrace: stack,);
+          log.w(
+            'Error signing out from Google: $e',
+            error: e,
+            stackTrace: stack,
+          );
         }
       }
 

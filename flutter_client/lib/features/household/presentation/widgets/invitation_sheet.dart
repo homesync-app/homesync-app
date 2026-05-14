@@ -42,7 +42,8 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
       if (hId == null) return;
 
       // Intentar buscar código existente o generar uno nuevo
-      final result = await ref.read(generateInvitationCodeUseCaseProvider).call();
+      final result =
+          await ref.read(generateInvitationCodeUseCaseProvider).call();
       result.fold(
         (failure) => _showError(failure.message),
         (code) => setState(() => _invitationCode = code),
@@ -74,19 +75,22 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
 
   Future<void> _shareViaWhatsApp() async {
     if (_invitationCode == null) return;
-    
+
     final caps = ref.read(householdCapabilitiesProvider);
     String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
-    
+
     if (caps.type == HouseholdType.couple) {
-      intro = '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+      intro =
+          '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
     } else if (caps.type == HouseholdType.family) {
       intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
     } else if (caps.type == HouseholdType.friends) {
-      intro = '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
+      intro =
+          '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
     }
 
-    final text = '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
+    final text =
+        '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -96,7 +100,8 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
         _copyCode();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo abrir WhatsApp. Código copiado.')),
+            const SnackBar(
+                content: Text('No se pudo abrir WhatsApp. Código copiado.'),),
           );
         }
       }
@@ -160,7 +165,8 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
             GestureDetector(
               onTap: _copyCode,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),

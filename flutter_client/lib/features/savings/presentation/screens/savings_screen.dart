@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:intl/intl.dart';
-
-final _fmt = NumberFormat.decimalPattern('es_AR');
 
 class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
@@ -178,7 +177,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '\$${_fmt.format(total.round())}',
+            ref.read(currencyProvider).format(total),
             style: TextStyle(
               color: context.theme.textPrimary,
               fontSize: 42,
@@ -269,7 +268,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             ),
           ),
           subtitle: Text(
-            '\$${_fmt.format(goal.currentAmount.round())} de \$${_fmt.format(goal.targetAmount.round())}',
+            '${ref.read(currencyProvider).format(goal.currentAmount)} de ${ref.read(currencyProvider).format(goal.targetAmount)}',
             style: TextStyle(color: theme.textSecondary, fontSize: 13),
           ),
           trailing: Text(
@@ -373,7 +372,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          '${contribution.userName?.split(' ')[0] ?? 'Alguien'} sumó \$${contribution.amount.toStringAsFixed(0)}',
+                          '${contribution.userName?.split(' ')[0] ?? 'Alguien'} sumó ${ref.read(currencyProvider).format(contribution.amount)}',
                           style: TextStyle(
                             fontSize: 13,
                             color: context.theme.textPrimary,
@@ -473,7 +472,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                 color: context.theme.textPrimary,
               ),
               decoration: InputDecoration(
-                prefixText: '\$ ',
+                prefixText: ref.watch(currencyProvider).inputPrefix(),
                 hintText: '0.00',
                 filled: true,
                 fillColor: context.theme.surfaceVariant,
@@ -710,7 +709,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'Monto objetivo',
                                   hintText: '¿Cuánto quieren juntar?',
-                                  prefixText: '\$ ',
+                                  prefixText:
+                                      ref.watch(currencyProvider).inputPrefix(),
                                   prefixStyle: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 20,

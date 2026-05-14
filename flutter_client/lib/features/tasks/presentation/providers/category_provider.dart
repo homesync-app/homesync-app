@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'category_provider.g.dart';
 
 @riverpod
-Future<List<CategoryModel>> categories(CategoriesRef ref) async {
+Future<List<CategoryModel>> categories(Ref ref) async {
   final client = ref.read(supabaseClientProvider);
   final response = await client
       .from('categories')
@@ -16,7 +16,7 @@ Future<List<CategoryModel>> categories(CategoriesRef ref) async {
 }
 
 @riverpod
-Map<String, CategoryModel> categoryMap(CategoryMapRef ref) {
+Map<String, CategoryModel> categoryMap(Ref ref) {
   final categoriesAsync = ref.watch(categoriesProvider);
   return categoriesAsync.maybeWhen(
     data: (list) => {for (var c in list) c.id: c},

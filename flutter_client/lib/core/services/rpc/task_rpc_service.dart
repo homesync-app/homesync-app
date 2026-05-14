@@ -72,7 +72,7 @@ class TaskRpcService extends BaseRpcService {
       final requestId = generateRequestId();
 
       final response = await client.rpc(
-        'complete_task_transaction',
+        'complete_task_v1',
         params: {
           'p_request_id': requestId,
           'p_user_ids': userIds ?? [userId],
@@ -81,7 +81,8 @@ class TaskRpcService extends BaseRpcService {
           'p_xp_reward': xpReward,
           'p_coin_reward': coinReward,
           'p_task_title': taskTitle,
-          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+          if (completedAt != null)
+            'p_completed_at': completedAt.toIso8601String(),
         },
       );
 
@@ -115,7 +116,8 @@ class TaskRpcService extends BaseRpcService {
           'p_user_ids': userIds ?? [userId],
           'p_task_ids': taskIds,
           'p_household_id': householdId,
-          if (completedAt != null) 'p_completed_at': completedAt.toIso8601String(),
+          if (completedAt != null)
+            'p_completed_at': completedAt.toIso8601String(),
         },
       );
 
@@ -137,7 +139,7 @@ class TaskRpcService extends BaseRpcService {
     final requestId = generateRequestId();
 
     final rawResponse = await client.rpc(
-      'verify_task_transaction',
+      'approve_task_v1',
       params: {
         'p_request_id': requestId,
         'p_user_id': userId,
@@ -179,6 +181,21 @@ class TaskRpcService extends BaseRpcService {
       'message': response['message'] ?? '',
       'data': response,
     };
+  }
+
+  Future<Map<String, dynamic>> deleteTask({
+    required String taskId,
+  }) async {
+    final rawResponse = await client.rpc(
+      'delete_task_v1',
+      params: {'p_task_id': taskId},
+    );
+
+    final response = Map<String, dynamic>.from(rawResponse as Map);
+    if (response['success'] != true) {
+      throw Exception(response['message'] ?? 'No se pudo borrar la tarea');
+    }
+    return response;
   }
 
   Future<List<Map<String, dynamic>>> getTasks({
@@ -242,8 +259,9 @@ class TaskRpcService extends BaseRpcService {
     return Map<String, dynamic>.from(response);
   }
 
-  Future<Map<String, dynamic>> restoreTaskCoins(
-      {required String taskId,}) async {
+  Future<Map<String, dynamic>> restoreTaskCoins({
+    required String taskId,
+  }) async {
     final userId = await requireCurrentUserId();
     final response = await client.rpc(
       'restore_task_coins',

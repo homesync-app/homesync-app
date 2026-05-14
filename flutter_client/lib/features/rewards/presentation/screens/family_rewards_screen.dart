@@ -6,6 +6,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
+import 'package:homesync_client/features/rewards/presentation/utils/reward_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 
@@ -21,7 +22,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
     final membersAsync = ref.watch(householdMembersProvider);
     final balance = ref.watch(userBalanceProvider).value?['coins'] ?? 0;
 
-    final currentMember = membersAsync.valueOrNull
+    final currentMember = membersAsync.value
         ?.where((member) => member.userId == currentUserId)
         .firstOrNull;
     final isAdult = currentMember?.isAdult ?? false;
@@ -30,7 +31,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.background,
-      appBar: AppBar(title: Text(isChild ? t.rewardsChildStoreTitle : t.rewardsFamilyStoreTitle)),
+      appBar: AppBar(
+        title: Text(
+          isChild ? t.rewardsChildStoreTitle : t.rewardsFamilyStoreTitle,
+        ),
+      ),
       floatingActionButton: isAdmin
           ? AppFloatingActionButton(
               heroTag: 'family-rewards-create',
@@ -448,6 +453,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         final theme = sheetContext.theme;
+        final t = AppLocalizations.of(sheetContext);
         return Container(
           padding: EdgeInsets.fromLTRB(
             20,
@@ -497,7 +503,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          reward.title,
+                          localizedRewardTitle(t, reward),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -508,7 +514,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${reward.cost} monedas',
+                          t.rewardsPrizeCostCoins(reward.cost),
                           style: TextStyle(
                             color: theme.textSecondary,
                             fontWeight: FontWeight.w700,
@@ -566,11 +572,13 @@ class FamilyRewardsScreen extends ConsumerWidget {
     WidgetRef ref,
     RewardModel reward,
   ) async {
+    final t = AppLocalizations.of(context);
+    final title = localizedRewardTitle(t, reward);
     final balance =
         (ref.read(userBalanceProvider).value?['coins'] as num?)?.toInt() ?? 0;
     if (balance < reward.cost) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No te alcanzan las monedas todavia.')),
+        SnackBar(content: Text(t.rewardsNotEnoughCoins)),
       );
       return;
     }
@@ -578,18 +586,16 @@ class FamilyRewardsScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Canjear premio'),
-        content: Text(
-          'Queres canjear "${reward.title}" por ${reward.cost} monedas?',
-        ),
+        title: Text(t.rewardsRedeemDialogTitle),
+        content: Text(t.rewardsRedeemDialogBody(title, reward.cost)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Canjear'),
+            child: Text(t.rewardsRedeem),
           ),
         ],
       ),
@@ -599,7 +605,7 @@ class FamilyRewardsScreen extends ConsumerWidget {
       await ref.read(rewardsProvider.notifier).redeem(reward.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Canjeaste "${reward.title}".')),
+          SnackBar(content: Text(t.rewardsRedeemedSnack(title))),
         );
       }
     }
@@ -931,6 +937,7 @@ class _RewardGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final userBalance =
         (ref.watch(userBalanceProvider).value?['coins'] as num?)?.toInt() ?? 0;
 
@@ -1019,7 +1026,7 @@ class _RewardGrid extends ConsumerWidget {
                               Expanded(
                                 child: Center(
                                   child: Text(
-                                    reward.title,
+                                    localizedRewardTitle(t, reward),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
@@ -1057,7 +1064,7 @@ class _RewardGrid extends ConsumerWidget {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${reward.cost} monedas',
+                                      t.rewardsPrizeCostCoins(reward.cost),
                                       style: TextStyle(
                                         color: accent,
                                         fontSize: 10,
@@ -1097,11 +1104,14 @@ class _PendingRewardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final audience = switch (reward.targetType) {
-      'adult' => 'Adultos',
-      'child' => 'Chicos',
-      _ => 'Familia',
+      'adult' => t.rewardsAdults,
+      'child' => t.rewardsKids,
+      _ => t.rewardsWholeFamily,
     };
+    final title = localizedRewardTitle(t, reward);
+    final description = localizedRewardDescription(t, reward);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1132,7 +1142,7 @@ class _PendingRewardCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      reward.title,
+                      title,
                       style: TextStyle(
                         color: theme.textPrimary,
                         fontWeight: FontWeight.w900,
@@ -1150,13 +1160,13 @@ class _PendingRewardCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const _CountPill(label: 'Revisar'),
+              _CountPill(label: t.rewardsStatusReview),
             ],
           ),
-          if (reward.description != null && reward.description!.isNotEmpty) ...[
+          if (description != null && description.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
-              reward.description!,
+              description,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontSize: 13,
@@ -1170,14 +1180,14 @@ class _PendingRewardCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: onDelete,
-                  child: const Text('Quitar'),
+                  child: Text(t.rewardsRemovePrize),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
                   onPressed: onApprove,
-                  child: const Text('Aprobar'),
+                  child: Text(t.rewardsApprove),
                 ),
               ),
             ],

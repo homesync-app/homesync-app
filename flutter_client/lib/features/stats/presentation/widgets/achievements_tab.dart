@@ -19,16 +19,19 @@ class AchievementsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     // Definimos algunos logros predeterminados basados en las estadísticas
     final totalTasks = taskStats.fold<int>(
-        0,
-        (sum, item) =>
-            sum + ((item['completed_count'] as num?)?.toInt() ?? 0),);
+      0,
+      (sum, item) => sum + ((item['completed_count'] as num?)?.toInt() ?? 0),
+    );
     final totalXp = memberStats.fold<int>(
-        0, (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),);
+      0,
+      (sum, item) => sum + ((item['xp_earned'] as num?)?.toInt() ?? 0),
+    );
 
     // Contar desafíos de conexión
     final connectionTasks = taskStats.firstWhere(
-        (e) => e['category'] == 'Conexión',
-        orElse: () => {'completed_count': 0},)['completed_count'] as int;
+      (e) => e['category'] == 'Conexión',
+      orElse: () => {'completed_count': 0},
+    )['completed_count'] as int;
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -38,7 +41,8 @@ class AchievementsTab extends StatelessWidget {
         children: [
           const SectionLabel(label: 'Tus Medallas', icon: '🏅'),
           const SizedBox(height: 20),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Primeros Pasos',
             description: 'Completaste tu primera tarea en pareja.',
             icon: '🌱',
@@ -46,7 +50,8 @@ class AchievementsTab extends StatelessWidget {
             progress: totalTasks >= 1 ? 1.0 : 0.0,
             progressText: totalTasks >= 1 ? '1/1' : '0/1',
           ),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Equipo Imparable',
             description: 'Completaron 50 tareas juntos.',
             icon: '🚀',
@@ -54,7 +59,8 @@ class AchievementsTab extends StatelessWidget {
             progress: (totalTasks / 50).clamp(0.0, 1.0),
             progressText: '$totalTasks/50',
           ),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Maestros del Hogar',
             description: 'Llegaron a los 5000 XP acumulados.',
             icon: '👑',
@@ -65,7 +71,8 @@ class AchievementsTab extends StatelessWidget {
           const SizedBox(height: 32),
           const SectionLabel(label: 'Desafíos de Pareja', icon: '💖'),
           const SizedBox(height: 16),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Coleccionista de Citas',
             description: 'Completaron 7 desafíos especiales.',
             icon: '📸',
@@ -73,7 +80,8 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 7).clamp(0.0, 1.0),
             progressText: '$connectionTasks/7',
           ),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Amor en Movimiento',
             description: 'Completaron 15 desafíos especiales.',
             icon: '💃',
@@ -81,7 +89,8 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 15).clamp(0.0, 1.0),
             progressText: '$connectionTasks/15',
           ),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Conexión Profunda',
             description: 'Completaron 30 desafíos especiales.',
             icon: '♾️',
@@ -89,7 +98,8 @@ class AchievementsTab extends StatelessWidget {
             progress: (connectionTasks / 30).clamp(0.0, 1.0),
             progressText: '$connectionTasks/30',
           ),
-          _buildAchievementCard(context, 
+          _buildAchievementCard(
+            context,
             title: 'Leyendas del Romance',
             description: '¡Completaron los 50 desafíos del año!',
             icon: '🏆',
@@ -141,7 +151,9 @@ class AchievementsTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: theme.cardShadow,
         border: Border.all(
-          color: isUnlocked ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.02),
+          color: isUnlocked
+              ? AppColors.accentGold.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.02),
           width: 1.5,
         ),
       ),
@@ -151,7 +163,9 @@ class AchievementsTab extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: isUnlocked ? AppColors.accentGold.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+              color: isUnlocked
+                  ? AppColors.accentGold.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -176,7 +190,9 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: isUnlocked ? AppColors.textPrimary : AppColors.textPrimary.withValues(alpha: 0.4),
+                    color: isUnlocked
+                        ? AppColors.textPrimary
+                        : AppColors.textPrimary.withValues(alpha: 0.4),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -195,7 +211,9 @@ class AchievementsTab extends StatelessWidget {
                     value: progress,
                     backgroundColor: Colors.black.withValues(alpha: 0.05),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isUnlocked ? AppColors.accentGold : AppColors.primary.withValues(alpha: 0.3),
+                      isUnlocked
+                          ? AppColors.accentGold
+                          : AppColors.primary.withValues(alpha: 0.3),
                     ),
                     minHeight: 6,
                   ),
@@ -230,7 +248,9 @@ class AchievementsTab extends StatelessWidget {
         color: isUnlocked ? Colors.white : Colors.black.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isUnlocked ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isUnlocked
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
         ),
       ),
       child: Row(
@@ -249,7 +269,9 @@ class AchievementsTab extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: isUnlocked ? AppColors.textPrimary : AppColors.textMuted,
+                    color: isUnlocked
+                        ? AppColors.textPrimary
+                        : AppColors.textMuted,
                   ),
                 ),
                 if (isUnlocked)
@@ -264,9 +286,11 @@ class AchievementsTab extends StatelessWidget {
             ),
           ),
           if (isUnlocked)
-            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20)
+            const Icon(Icons.check_circle_rounded,
+                color: AppColors.success, size: 20,)
           else
-            const Icon(Icons.lock_outline_rounded, color: AppColors.textMuted, size: 18),
+            const Icon(Icons.lock_outline_rounded,
+                color: AppColors.textMuted, size: 18,),
         ],
       ),
     );

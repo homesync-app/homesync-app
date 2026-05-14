@@ -6,6 +6,10 @@ class RewardModel {
   final String householdId;
   final String title;
   final String? description;
+  final String? sourceTemplateId;
+  final String? titleKey;
+  final String? descriptionKey;
+  final String? categoryKey;
   final int cost;
   final String icon;
   final String? category;
@@ -20,6 +24,10 @@ class RewardModel {
     required this.householdId,
     required this.title,
     this.description,
+    this.sourceTemplateId,
+    this.titleKey,
+    this.descriptionKey,
+    this.categoryKey,
     required this.cost,
     required this.icon,
     this.category,
@@ -42,6 +50,10 @@ class RewardModel {
       householdId: (json['household_id'] as String?) ?? '',
       title: (json['title'] as String?) ?? 'Premio sin título',
       description: json['description'] as String?,
+      sourceTemplateId: json['source_template_id'] as String?,
+      titleKey: json['title_key'] as String?,
+      descriptionKey: json['description_key'] as String?,
+      categoryKey: json['category_key'] as String?,
       cost: (json['cost'] as num?)?.toInt() ?? 0,
       icon: json['icon'] as String? ?? '🎁',
       category: json['category'] as String?,
@@ -59,6 +71,10 @@ class RewardModel {
       'household_id': householdId,
       'title': title,
       'description': description,
+      'source_template_id': sourceTemplateId,
+      'title_key': titleKey,
+      'description_key': descriptionKey,
+      'category_key': categoryKey,
       'cost': cost,
       'icon': icon,
       'category': category,
@@ -75,6 +91,10 @@ class RewardModel {
     String? householdId,
     String? title,
     String? description,
+    String? sourceTemplateId,
+    String? titleKey,
+    String? descriptionKey,
+    String? categoryKey,
     int? cost,
     String? icon,
     String? category,
@@ -89,6 +109,10 @@ class RewardModel {
       householdId: householdId ?? this.householdId,
       title: title ?? this.title,
       description: description ?? this.description,
+      sourceTemplateId: sourceTemplateId ?? this.sourceTemplateId,
+      titleKey: titleKey ?? this.titleKey,
+      descriptionKey: descriptionKey ?? this.descriptionKey,
+      categoryKey: categoryKey ?? this.categoryKey,
       cost: cost ?? this.cost,
       icon: icon ?? this.icon,
       category: category ?? this.category,
@@ -107,8 +131,10 @@ class RewardModel {
           runtimeType == other.runtimeType &&
           id == other.id &&
           title == other.title &&
+          titleKey == other.titleKey &&
           cost == other.cost &&
           category == other.category &&
+          categoryKey == other.categoryKey &&
           isApproved == other.isApproved &&
           isActive == other.isActive &&
           targetType == other.targetType;
@@ -117,8 +143,10 @@ class RewardModel {
   int get hashCode =>
       id.hashCode ^
       title.hashCode ^
+      titleKey.hashCode ^
       cost.hashCode ^
       category.hashCode ^
+      categoryKey.hashCode ^
       isApproved.hashCode ^
       isActive.hashCode ^
       targetType.hashCode;

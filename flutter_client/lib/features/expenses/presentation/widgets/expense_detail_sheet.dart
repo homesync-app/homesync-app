@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -96,9 +98,13 @@ class _ExpenseDetailSheetContentState
             (expense.description?.toLowerCase().contains('lista') ?? false) ||
             expense.category == 'shopping';
 
-    final String displayTitle = expense.title.startsWith('Compras:')
-        ? expense.categoryLabel
-        : expense.title;
+    final String displayTitle = localizedFinanceTitle(
+      t,
+      title: expense.title.startsWith('Compras:') ? '' : expense.title,
+      titleKey: expense.titleKey,
+      category: expense.category,
+      transactionType: expense.type,
+    );
 
     final bool hasSimpleDescription = expense.description != null &&
         expense.description!.isNotEmpty &&
@@ -146,8 +152,10 @@ class _ExpenseDetailSheetContentState
                         ),
                       ),
                       Text(
-                        DateFormat("EEEE, d 'de' MMMM", 'es')
-                            .format(expense.paidAt),
+                        DateFormat(
+                          'EEEE, d MMMM',
+                          Localizations.localeOf(context).toString(),
+                        ).format(expense.paidAt),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 16,
@@ -183,8 +191,17 @@ class _ExpenseDetailSheetContentState
                             color: AppColors.primary,
                           ),
                           onPressed: () {
+                            final rootContext =
+                                Navigator.of(context, rootNavigator: true)
+                                    .context;
                             Navigator.pop(context);
-                            ExpenseFormSheet.show(context, expense: expense);
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!rootContext.mounted) return;
+                              ExpenseFormSheet.show(
+                                rootContext,
+                                expense: expense,
+                              );
+                            });
                           },
                         ),
                       ).animateScaleIn(delay: 100),
@@ -255,7 +272,7 @@ class _ExpenseDetailSheetContentState
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            '\$ ${_formatCurrency(expense.amount)}',
+                            _formatCurrency(expense.amount),
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w900,
@@ -280,7 +297,9 @@ class _ExpenseDetailSheetContentState
                               ),
                               if (expense.payerDisplayName != 'Alguien')
                                 _buildTypeBadge(
-                                  t.expensesDetailPaidBy(expense.payerDisplayName),
+                                  t.expensesDetailPaidBy(
+                                    expense.payerDisplayName,
+                                  ),
                                   AppColors.accentBlue,
                                   isSmall: true,
                                 ),
@@ -413,7 +432,7 @@ class _ExpenseDetailSheetContentState
                                       ),
                                     ),
                               trailing: Text(
-                                '\$ ${_formatCurrency(split.amount)}',
+                                _formatCurrency(split.amount),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 16,
@@ -449,8 +468,8 @@ class _ExpenseDetailSheetContentState
     return t.expensesDetailSplitPersonal;
   }
 
-  static String _formatCurrency(num amount) {
-    return NumberFormat.decimalPattern('es_AR').format(amount);
+  String _formatCurrency(num amount) {
+    return ref.read(currencyProvider).format(amount);
   }
 
   static Widget _buildTypeBadge(
@@ -548,4 +567,3 @@ class _ExpenseDetailSheetContentState
     );
   }
 }
-

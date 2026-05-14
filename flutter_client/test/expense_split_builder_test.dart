@@ -99,7 +99,8 @@ void main() {
       ]);
     });
 
-    test('requires selected members for equal split when not using ratio mode', () {
+    test('requires selected members for equal split when not using ratio mode',
+        () {
       final result = ExpenseSplitBuilder.build(
         showSplit: true,
         splitMode: SplitType.equal,

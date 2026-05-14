@@ -29,7 +29,7 @@ class _CoupleSplitStrategyScreenState
   }
 
   void _loadCurrentRatio() {
-    final household = ref.read(currentHouseholdProvider).valueOrNull;
+    final household = ref.read(currentHouseholdProvider).value;
     if (household != null) {
       setState(() {
         _splitRatio = household.defaultSplitRatio;
@@ -43,7 +43,7 @@ class _CoupleSplitStrategyScreenState
     HapticFeedback.mediumImpact();
 
     try {
-      final household = ref.read(currentHouseholdProvider).valueOrNull;
+      final household = ref.read(currentHouseholdProvider).value;
 
       if (household != null) {
         final result =
@@ -84,7 +84,7 @@ class _CoupleSplitStrategyScreenState
 
   @override
   Widget build(BuildContext context) {
-    final household = ref.watch(currentHouseholdProvider).valueOrNull;
+    final household = ref.watch(currentHouseholdProvider).value;
     final isFamily = household?.householdType == 'family';
     final isShared = _financeMode == 'shared';
     final t = AppLocalizations.of(context);
@@ -137,8 +137,10 @@ class _CoupleSplitStrategyScreenState
                             color: AppColors.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Text('âš–ï¸',
-                              style: TextStyle(fontSize: 48),),
+                          child: const Text(
+                            'âš–ï¸',
+                            style: TextStyle(fontSize: 48),
+                          ),
                         ),
                       ],
                     ),
@@ -180,7 +182,9 @@ class _CoupleSplitStrategyScreenState
                       Text(
                         t.coupleSplitStrategiesTitle,
                         style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w800,),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       _buildStrategyItem(
@@ -201,7 +205,9 @@ class _CoupleSplitStrategyScreenState
                       Text(
                         t.coupleSplitCustomTitle,
                         style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.w800,),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -224,7 +230,8 @@ class _CoupleSplitStrategyScreenState
                               AppColors.primary.withValues(alpha: 0.2),
                           trackHeight: 8,
                           thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 15,),
+                            enabledThumbRadius: 15,
+                          ),
                         ),
                         child: Slider(
                           value: _splitRatio,

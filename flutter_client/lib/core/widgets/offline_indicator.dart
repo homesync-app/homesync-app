@@ -8,7 +8,7 @@ class OfflineIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityNotifierProvider);
+    final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
 
     if (connectivity.isOnline &&
@@ -79,7 +79,9 @@ class OfflineIndicator extends ConsumerWidget {
   }
 
   Color _getBackgroundColor(
-      ConnectivityState connectivity, SyncState syncState,) {
+    ConnectivityState connectivity,
+    SyncState syncState,
+  ) {
     if (!connectivity.isOnline) {
       return Colors.red.shade600;
     } else if (syncState.isSyncing) {
@@ -118,7 +120,7 @@ class SyncFAB extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectivity = ref.watch(connectivityNotifierProvider);
+    final connectivity = ref.watch(connectivityProvider);
     final syncState = ref.watch(syncProvider);
 
     if (connectivity.isOnline &&

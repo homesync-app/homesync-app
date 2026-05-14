@@ -159,15 +159,22 @@ class SupabaseAuthRepository
     String? fullName,
     String? avatarUrl,
   }) async {
-    return executeWithHandling(() async {
-      if (fullName == null && avatarUrl == null) return;
+    return executeWithHandling(
+      () async {
+        if (fullName == null && avatarUrl == null) return;
 
-      // Use the SECURITY DEFINER RPC so the update bypasses RLS and
-      // resolves the caller via current_app_user_id() (works with Firebase JWTs).
-      await _client.rpc('update_own_profile', params: {
-        'p_full_name': fullName,
-        'p_avatar_url': avatarUrl,
-      },);
-    }, context: 'SupabaseAuthRepository.updateProfile', isOnline: _isOnline,);
+        // Use the SECURITY DEFINER RPC so the update bypasses RLS and
+        // resolves the caller via current_app_user_id() (works with Firebase JWTs).
+        await _client.rpc(
+          'update_own_profile',
+          params: {
+            'p_full_name': fullName,
+            'p_avatar_url': avatarUrl,
+          },
+        );
+      },
+      context: 'SupabaseAuthRepository.updateProfile',
+      isOnline: _isOnline,
+    );
   }
 }

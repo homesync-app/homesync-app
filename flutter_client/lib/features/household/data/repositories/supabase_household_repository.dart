@@ -303,7 +303,8 @@ class SupabaseHouseholdRepository
 
         if (!_isAdminTestingActive && householdMember['role'] != 'owner') {
           throw const ServerFailure(
-              'Solo el propietario puede quitar miembros',);
+            'Solo el propietario puede quitar miembros',
+          );
         }
 
         await _client
@@ -382,7 +383,8 @@ class SupabaseHouseholdRepository
     return executeWithHandling(
       () async {
         await _client.from(AppConstants.tableHouseholds).update(
-            {'household_type': type.toLowerCase()},).eq('id', householdId);
+          {'household_type': type.toLowerCase()},
+        ).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateHouseholdType',
       isOnline: _isOnline,
@@ -429,16 +431,18 @@ class SupabaseHouseholdRepository
     String userId,
     String type,
   ) async {
-    return executeWithHandling(() async {
-      final householdMember = await _requireCurrentHouseholdMembership();
-      await _client
-          .from(AppConstants.tableHouseholdMembers)
-          .update({'member_type': type})
-          .eq('user_id', userId)
-          .eq('household_id', householdMember['household_id']);
-    },
-        context: 'SupabaseHouseholdRepository.updateMemberType',
-        isOnline: _isOnline,);
+    return executeWithHandling(
+      () async {
+        final householdMember = await _requireCurrentHouseholdMembership();
+        await _client
+            .from(AppConstants.tableHouseholdMembers)
+            .update({'member_type': type})
+            .eq('user_id', userId)
+            .eq('household_id', householdMember['household_id']);
+      },
+      context: 'SupabaseHouseholdRepository.updateMemberType',
+      isOnline: _isOnline,
+    );
   }
 
   @override

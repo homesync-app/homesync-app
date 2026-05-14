@@ -39,6 +39,12 @@ cd flutter_client && flutter build apk --debug         # Build debug
 cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyxms
 ```
 
+## Diseño
+
+- Antes de tocar UI, leer `DESIGN.md` y `docs/design-system.md`.
+- `DESIGN.md` sigue el formato de `google-labs-code/design.md`: tokens YAML validables + criterio visual en Markdown.
+- Validar cambios de tokens con `npx @google/design.md lint DESIGN.md` o, en Windows si `npx` se cuelga, con el bin `design.md` instalado localmente.
+
 ## Distribución / OTA updates (Shorebird)
 
 Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id: `3da773b5-655d-47c6-8277-5d90b3417d86`).
@@ -65,6 +71,24 @@ Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id
 - **Storage policies**: usar `current_app_user_id()` no `auth.uid()`
 - **Edge Functions**: verificar Firebase JWT con `jose` + `createRemoteJWKSet`
 - **Updates en tabla users**: SIEMPRE usar RPC security-definer (`update_own_profile`). RLS directo falla con Firebase JWTs
+
+## Supabase / Seguridad
+
+Antes de aplicar migraciones que cambien RLS, policies, grants, `SECURITY DEFINER`,
+`search_path`, permisos de storage o ejecucion de funciones, correr smoke tests de
+RPC criticos y dejar evidencia en el resumen del cambio. Checklist minimo:
+
+- Completar una tarea normal.
+- Completar una tarea recurrente.
+- Aprobar/verificar una tarea pendiente.
+- Enviar feedback desde la app.
+- Crear/usar una solicitud del catalogo de shopping.
+- Cargar el feed de finanzas.
+
+Si una migracion crea o reemplaza un RPC usado por otros RPCs, verificar que todas
+sus dependencias existan en la base remota antes de tocar grants globales. Un error
+`function ... does not exist` indica drift de migraciones o una dependencia faltante;
+un error `permission denied for function` indica grants/permisos.
 
 ## Proyecto
 

@@ -11,16 +11,20 @@ abstract class ExpenseRepository {
   Future<Either<Failure, String>> getHouseholdId(String userId);
 
   Future<Either<Failure, List<ExpenseModel>>> getRecentExpenses(
-      String householdId,);
+    String householdId,
+  );
 
   Future<Either<Failure, List<FeedItemModel>>> getCombinedFeed(
-      String householdId,);
+    String householdId,
+  );
 
   Future<Either<Failure, Map<String, dynamic>>> getExpenseWithSplits(
-      String expenseId,);
+    String expenseId,
+  );
 
   Future<Either<Failure, List<HouseholdBalanceModel>>> getHouseholdBalances(
-      String householdId,);
+    String householdId,
+  );
 
   Future<Either<Failure, void>> saveExpense({
     String? id,
@@ -47,11 +51,14 @@ abstract class ExpenseRepository {
   });
 
   Future<Map<String, dynamic>> getPersonalFinanceSummary(
-      String userId, String householdId,);
+    String userId,
+    String householdId,
+  );
 
   // Template Management
   Future<Either<Failure, List<ExpenseTemplateModel>>> getTemplates(
-      String householdId,);
+    String householdId,
+  );
   Future<Either<Failure, Unit>> saveTemplate(ExpenseTemplateModel template);
   Future<Either<Failure, Unit>> toggleTemplateActivity(String id, bool active);
 

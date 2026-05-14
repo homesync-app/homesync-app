@@ -33,10 +33,12 @@ class DebtSimplifier {
     for (final b in balances) {
       if (b.balance > 0.01) {
         creditors.add(
-            _BalanceEntry(b.userId, b.displayName, b.avatarUrl, b.balance),);
+          _BalanceEntry(b.userId, b.displayName, b.avatarUrl, b.balance),
+        );
       } else if (b.balance < -0.01) {
         debtors.add(
-            _BalanceEntry(b.userId, b.displayName, b.avatarUrl, -b.balance),);
+          _BalanceEntry(b.userId, b.displayName, b.avatarUrl, -b.balance),
+        );
       }
     }
 
@@ -53,15 +55,17 @@ class DebtSimplifier {
           creditor.amount < debtor.amount ? creditor.amount : debtor.amount;
 
       if (transfer > 0.01) {
-        result.add(SimplifiedDebt(
-          fromUserId: debtor.userId,
-          fromName: debtor.name,
-          fromAvatarUrl: debtor.avatarUrl,
-          toUserId: creditor.userId,
-          toName: creditor.name,
-          toAvatarUrl: creditor.avatarUrl,
-          amount: transfer,
-        ),);
+        result.add(
+          SimplifiedDebt(
+            fromUserId: debtor.userId,
+            fromName: debtor.name,
+            fromAvatarUrl: debtor.avatarUrl,
+            toUserId: creditor.userId,
+            toName: creditor.name,
+            toAvatarUrl: creditor.avatarUrl,
+            amount: transfer,
+          ),
+        );
       }
 
       creditor.amount -= transfer;

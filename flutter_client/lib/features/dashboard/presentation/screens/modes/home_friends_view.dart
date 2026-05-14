@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
@@ -16,7 +17,6 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
@@ -24,6 +24,7 @@ import 'package:homesync_client/features/stats/presentation/providers/stats_prov
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -76,19 +77,19 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     final tasksAsync = ref.watch(todayTasksProvider);
     final shoppingAsync = ref.watch(shoppingItemsProvider);
 
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((m) => m.userId == currentUserId).firstOrNull;
     final membersLoaded = membersAsync.hasValue && !membersAsync.isLoading;
     final memberNotFound = membersLoaded && currentMember == null;
     final hasTasksContent = tasksAsync.isLoading ||
-        ((tasksAsync.valueOrNull ?? const <TaskModel>[])
+        ((tasksAsync.value ?? const <TaskModel>[])
             .where((task) => task.isPending)
             .isNotEmpty);
     final hasShoppingContent = shoppingAsync.isLoading ||
-        ((shoppingAsync.valueOrNull ?? const [])
+        ((shoppingAsync.value ?? const [])
             .where((item) => !item.completed)
             .isNotEmpty);
 
@@ -126,7 +127,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final t = AppLocalizations.of(context);
 
@@ -253,7 +254,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: AppColors.warning, size: 22),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.warning,
+            size: 22,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -268,7 +273,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
           const SizedBox(width: 8),
           TextButton(
             onPressed: () {
-              ref.invalidate(householdMembersNotifierProvider);
+              ref.invalidate(householdMembersProvider);
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
@@ -356,8 +361,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
   Widget _buildTasksSection(AppThemeColors theme, HouseholdCapabilities caps) {
     final tasksAsync = ref.watch(todayTasksProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final membersAsync = ref.watch(householdMembersProvider);
+    final members = membersAsync.value ?? const <MemberModel>[];
     final t = AppLocalizations.of(context);
 
     return Column(
@@ -433,6 +438,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     setState(() => _completedTaskIds.add(task.id));
     try {
       log.d('[friends] completing task id=${task.id} title=${task.title}');
+      await Future<void>.delayed(const Duration(milliseconds: 240));
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
 
       if (!mounted) return;
@@ -440,16 +446,26 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       if (result == null) {
         log.w('[friends] task completion returned null id=${task.id}');
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.homeFriendsTaskCompleteError),
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.homeFriendsTaskCompleteError,
+          type: AppSnackBarType.error,
         );
         return;
       }
 
       log.i(
         '[friends] task completion success id=${task.id} queued=${result.queued}',
+      );
+      ref
+          .read(optimisticRecentActivityProvider.notifier)
+          .addTaskCompleted(task);
+      HapticFeedback.mediumImpact();
+      final t = AppLocalizations.of(context);
+      AppSnackBar.show(
+        context,
+        message: t.tasksSnackCompleted,
+        type: AppSnackBarType.success,
       );
       ref.invalidate(statsControllerProvider);
       ref.invalidate(tasksProvider);
@@ -459,8 +475,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
       log.e('[friends] task completion threw id=${task.id}', error: e);
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {
@@ -512,8 +530,10 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
                   return Column(
                     children: [
                       ListTile(
-                        leading: Text(item.emoji,
-                            style: const TextStyle(fontSize: 20),),
+                        leading: Text(
+                          item.emoji,
+                          style: const TextStyle(fontSize: 20),
+                        ),
                         title: Text(
                           item.name,
                           style: TextStyle(
@@ -614,7 +634,9 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
   }
 
   Widget _buildActivityItem(
-      Map<String, dynamic> activity, AppThemeColors theme,) {
+    Map<String, dynamic> activity,
+    AppThemeColors theme,
+  ) {
     final activityMap = activity;
     final currentUserId = ref.watch(currentUserIdProvider);
     return ActivityChatBubble(

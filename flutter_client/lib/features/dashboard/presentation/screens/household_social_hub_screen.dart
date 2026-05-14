@@ -8,10 +8,10 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/settings_parent_mode_card.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -28,7 +28,7 @@ class _HouseholdSocialHubScreenState
     extends ConsumerState<HouseholdSocialHubScreen> {
   Future<void> _refreshData() async {
     ref.invalidate(currentHouseholdProvider);
-    await ref.read(householdMembersNotifierProvider.notifier).refresh();
+    await ref.read(householdMembersProvider.notifier).refresh();
   }
 
   void _openPremiumPaywall() {
@@ -39,12 +39,12 @@ class _HouseholdSocialHubScreenState
 
   @override
   Widget build(BuildContext context) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final caps = ref.watch(householdCapabilitiesProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final theme = context.theme;
 
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final canSeeFamilyTracking = currentMember?.isAdult ?? false;
@@ -79,6 +79,11 @@ class _HouseholdSocialHubScreenState
               ),
               const SizedBox(height: 18),
               FamilyRankingSection(currentMember: currentMember),
+              // Configuracion del Modo Padres (toggle de aprobacion de tareas,
+              // bandeja de pendientes). El widget se auto-oculta si el usuario
+              // no es admin adulto de una familia, asi que es seguro siempre.
+              const SizedBox(height: 18),
+              const SettingsParentModeCard(),
               if (caps.type == HouseholdType.family &&
                   canSeeFamilyTracking) ...[
                 const SizedBox(height: 18),
@@ -220,7 +225,12 @@ class _HeaderCard extends StatelessWidget {
                   currentMember == null
                       ? t.householdSocialHubRoleFallback
                       : t.householdSocialHubYourRole(
-                          currentMember!.localizedRoleLabel(t),
+                          // Si el usuario es admin/owner del hogar, lo agregamos
+                          // como sufijo para que sepa que tiene permisos
+                          // adicionales (aprobar tareas, configurar, etc.).
+                          currentMember!.isAdmin
+                              ? '${currentMember!.localizedRoleLabel(t)} · Admin'
+                              : currentMember!.localizedRoleLabel(t),
                         ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

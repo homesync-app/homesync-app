@@ -9,7 +9,8 @@ class GetGoalContributionsUseCase {
 
   GetGoalContributionsUseCase(this.repository);
 
-  Future<Either<Failure, List<SavingsContributionModel>>> execute(String goalId) {
+  Future<Either<Failure, List<SavingsContributionModel>>> execute(
+      String goalId,) {
     if (goalId.isEmpty) {
       return Future.value(const Left(ValidationFailure('goalId is required')));
     }

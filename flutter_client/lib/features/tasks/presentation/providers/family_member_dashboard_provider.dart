@@ -8,8 +8,8 @@ import 'package:homesync_client/features/tasks/domain/models/family_member_dashb
 ///
 /// El periodo es un argumento del provider (family) para que la pantalla pueda
 /// alternar entre semana/mes sin invalidar el cache del otro.
-final familyMemberDashboardProvider = FutureProvider.autoDispose
-    .family<FamilyMemberDashboard?, DashboardPeriod>(
+final familyMemberDashboardProvider =
+    FutureProvider.autoDispose.family<FamilyMemberDashboard?, DashboardPeriod>(
   (ref, period) async {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return null;

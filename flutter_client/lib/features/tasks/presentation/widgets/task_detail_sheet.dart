@@ -5,10 +5,15 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/data/repositories/supabase_task_repository.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -115,6 +120,8 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     try {
@@ -123,8 +130,16 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
       result.fold(
         (failure) => _showSnack(t.taskDetailUndoError, AppColors.error),
         (_) {
+          _refreshAfterUndo();
           widget.onChanged?.call();
-          if (mounted) Navigator.pop(context);
+          if (!mounted) return;
+          navigator.pop();
+          AppSnackBar.show(
+            messenger.context,
+            message: t.taskDetailUndoSuccess,
+            type: AppSnackBarType.success,
+            duration: const Duration(milliseconds: 1500),
+          );
         },
       );
     } catch (error, stackTrace) {
@@ -140,14 +155,23 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
     }
   }
 
+  void _refreshAfterUndo() {
+    ref.invalidate(tasksProvider);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(combinedFeedControllerProvider);
+    ref.invalidate(expenseBalancesProvider);
+    ref.invalidate(personalFinanceSummaryProvider);
+    ref.invalidate(statsControllerProvider);
+  }
+
   void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
+    AppSnackBar.show(
+      context,
+      message: msg,
+      type: color == AppColors.error
+          ? AppSnackBarType.error
+          : AppSnackBarType.neutral,
     );
   }
 

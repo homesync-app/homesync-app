@@ -6,191 +6,482 @@ part of 'task_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$getTasksUseCaseHash() => r'87dc118144b883d9068381fd14c4ea5a34b69362';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [getTasksUseCase].
 @ProviderFor(getTasksUseCase)
-final getTasksUseCaseProvider = AutoDisposeProvider<GetTasksUseCase>.internal(
-  getTasksUseCase,
-  name: r'getTasksUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getTasksUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getTasksUseCaseProvider = GetTasksUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetTasksUseCaseRef = AutoDisposeProviderRef<GetTasksUseCase>;
-String _$completeTaskUseCaseHash() =>
-    r'efb67b39b2602c68f3ca08eb2c8c49409e1db9b1';
+final class GetTasksUseCaseProvider extends $FunctionalProvider<GetTasksUseCase,
+    GetTasksUseCase, GetTasksUseCase> with $Provider<GetTasksUseCase> {
+  GetTasksUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getTasksUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [completeTaskUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$getTasksUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetTasksUseCase> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetTasksUseCase create(Ref ref) {
+    return getTasksUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetTasksUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetTasksUseCase>(value),
+    );
+  }
+}
+
+String _$getTasksUseCaseHash() => r'037c85270e9450e2d214d653005f0610163580b9';
+
 @ProviderFor(completeTaskUseCase)
-final completeTaskUseCaseProvider =
-    AutoDisposeProvider<CompleteTaskUseCase>.internal(
-  completeTaskUseCase,
-  name: r'completeTaskUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$completeTaskUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final completeTaskUseCaseProvider = CompleteTaskUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CompleteTaskUseCaseRef = AutoDisposeProviderRef<CompleteTaskUseCase>;
-String _$createTaskUseCaseHash() => r'541b8e52a4cc6bc665b12c34c530c312593ec9cc';
+final class CompleteTaskUseCaseProvider extends $FunctionalProvider<
+    CompleteTaskUseCase,
+    CompleteTaskUseCase,
+    CompleteTaskUseCase> with $Provider<CompleteTaskUseCase> {
+  CompleteTaskUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'completeTaskUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [createTaskUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$completeTaskUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CompleteTaskUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CompleteTaskUseCase create(Ref ref) {
+    return completeTaskUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CompleteTaskUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CompleteTaskUseCase>(value),
+    );
+  }
+}
+
+String _$completeTaskUseCaseHash() =>
+    r'40f8a0f3a07a70d57b3be3d5cb3515946464dfc3';
+
 @ProviderFor(createTaskUseCase)
-final createTaskUseCaseProvider =
-    AutoDisposeProvider<CreateTaskUseCase>.internal(
-  createTaskUseCase,
-  name: r'createTaskUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$createTaskUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final createTaskUseCaseProvider = CreateTaskUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CreateTaskUseCaseRef = AutoDisposeProviderRef<CreateTaskUseCase>;
-String _$filteredTasksHash() => r'50ffcd222c7f5e52b532049d6ce0a4ed25476114';
+final class CreateTaskUseCaseProvider extends $FunctionalProvider<
+    CreateTaskUseCase,
+    CreateTaskUseCase,
+    CreateTaskUseCase> with $Provider<CreateTaskUseCase> {
+  CreateTaskUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'createTaskUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [filteredTasks].
-@ProviderFor(filteredTasks)
-final filteredTasksProvider =
-    AutoDisposeProvider<AsyncValue<List<TaskModel>>>.internal(
-  filteredTasks,
-  name: r'filteredTasksProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$filteredTasksHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  String debugGetCreateSourceHash() => _$createTaskUseCaseHash();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef FilteredTasksRef = AutoDisposeProviderRef<AsyncValue<List<TaskModel>>>;
-String _$activeCategoriesHash() => r'95968adf9e3c57e04ed2825447fd2fe14a49b7b5';
+  @$internal
+  @override
+  $ProviderElement<CreateTaskUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
-/// See also [activeCategories].
-@ProviderFor(activeCategories)
-final activeCategoriesProvider =
-    AutoDisposeProvider<AsyncValue<List<String>>>.internal(
-  activeCategories,
-  name: r'activeCategoriesProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$activeCategoriesHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  CreateTaskUseCase create(Ref ref) {
+    return createTaskUseCase(ref);
+  }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ActiveCategoriesRef = AutoDisposeProviderRef<AsyncValue<List<String>>>;
-String _$todayTasksHash() => r'a0fc1ad84ece14088f4c89627d6c200ae53e0f3b';
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateTaskUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateTaskUseCase>(value),
+    );
+  }
+}
 
-/// See also [todayTasks].
-@ProviderFor(todayTasks)
-final todayTasksProvider =
-    AutoDisposeProvider<AsyncValue<List<TaskModel>>>.internal(
-  todayTasks,
-  name: r'todayTasksProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$todayTasksHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+String _$createTaskUseCaseHash() => r'30da0aa1ce95a757cc504b8de1932976d085c5bd';
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TodayTasksRef = AutoDisposeProviderRef<AsyncValue<List<TaskModel>>>;
-String _$taskStatusCountHash() => r'277ecf0d52f88550b413aea62189f2405b5ab9b2';
+@ProviderFor(TaskCategoryFilter)
+final taskCategoryFilterProvider = TaskCategoryFilterProvider._();
 
-/// See also [taskStatusCount].
-@ProviderFor(taskStatusCount)
-final taskStatusCountProvider = AutoDisposeProvider<Map<String, int>>.internal(
-  taskStatusCount,
-  name: r'taskStatusCountProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$taskStatusCountHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final class TaskCategoryFilterProvider
+    extends $NotifierProvider<TaskCategoryFilter, Set<String>> {
+  TaskCategoryFilterProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskCategoryFilterProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TaskStatusCountRef = AutoDisposeProviderRef<Map<String, int>>;
+  @override
+  String debugGetCreateSourceHash() => _$taskCategoryFilterHash();
+
+  @$internal
+  @override
+  TaskCategoryFilter create() => TaskCategoryFilter();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Set<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Set<String>>(value),
+    );
+  }
+}
+
 String _$taskCategoryFilterHash() =>
     r'cfb2706997f9c31a24af8668e7ca7239d7dff5f0';
 
-/// See also [TaskCategoryFilter].
-@ProviderFor(TaskCategoryFilter)
-final taskCategoryFilterProvider =
-    AutoDisposeNotifierProvider<TaskCategoryFilter, Set<String>>.internal(
-  TaskCategoryFilter.new,
-  name: r'taskCategoryFilterProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$taskCategoryFilterHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$TaskCategoryFilter extends $Notifier<Set<String>> {
+  Set<String> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<Set<String>, Set<String>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<Set<String>, Set<String>>, Set<String>, Object?, Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$TaskCategoryFilter = AutoDisposeNotifier<Set<String>>;
+@ProviderFor(TaskSearchQuery)
+final taskSearchQueryProvider = TaskSearchQueryProvider._();
+
+final class TaskSearchQueryProvider
+    extends $NotifierProvider<TaskSearchQuery, String> {
+  TaskSearchQueryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskSearchQueryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$taskSearchQueryHash();
+
+  @$internal
+  @override
+  TaskSearchQuery create() => TaskSearchQuery();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
 String _$taskSearchQueryHash() => r'25146e733180fee73f9c58890d815c6a6745e363';
 
-/// See also [TaskSearchQuery].
-@ProviderFor(TaskSearchQuery)
-final taskSearchQueryProvider =
-    AutoDisposeNotifierProvider<TaskSearchQuery, String>.internal(
-  TaskSearchQuery.new,
-  name: r'taskSearchQueryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$taskSearchQueryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$TaskSearchQuery extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<String, String>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<String, String>, String, Object?, Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$TaskSearchQuery = AutoDisposeNotifier<String>;
+@ProviderFor(TaskViewMode)
+final taskViewModeProvider = TaskViewModeProvider._();
+
+final class TaskViewModeProvider extends $NotifierProvider<TaskViewMode, bool> {
+  TaskViewModeProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskViewModeProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$taskViewModeHash();
+
+  @$internal
+  @override
+  TaskViewMode create() => TaskViewMode();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
 String _$taskViewModeHash() => r'e92eb7fd1c438418bbdb57ee7de030dfbb8e627a';
 
-/// See also [TaskViewMode].
-@ProviderFor(TaskViewMode)
-final taskViewModeProvider =
-    AutoDisposeNotifierProvider<TaskViewMode, bool>.internal(
-  TaskViewMode.new,
-  name: r'taskViewModeProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$taskViewModeHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$TaskViewMode extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<bool, bool>, bool, Object?, Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$TaskViewMode = AutoDisposeNotifier<bool>;
-String _$tasksHash() => r'e3b259c6cedf050854a7a017277edbca0733852a';
-
-/// See also [Tasks].
 @ProviderFor(Tasks)
-final tasksProvider = AsyncNotifierProvider<Tasks, List<TaskModel>>.internal(
-  Tasks.new,
-  name: r'tasksProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$tasksHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final tasksProvider = TasksProvider._();
 
-typedef _$Tasks = AsyncNotifier<List<TaskModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class TasksProvider
+    extends $AsyncNotifierProvider<Tasks, List<TaskModel>> {
+  TasksProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'tasksProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$tasksHash();
+
+  @$internal
+  @override
+  Tasks create() => Tasks();
+}
+
+String _$tasksHash() => r'f3880d2985b10b6ee672dbc91f4d94fe1e5e14ca';
+
+abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
+  FutureOr<List<TaskModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<TaskModel>>, List<TaskModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<TaskModel>>, List<TaskModel>>,
+        AsyncValue<List<TaskModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(filteredTasks)
+final filteredTasksProvider = FilteredTasksProvider._();
+
+final class FilteredTasksProvider extends $FunctionalProvider<
+    AsyncValue<List<TaskModel>>,
+    AsyncValue<List<TaskModel>>,
+    AsyncValue<List<TaskModel>>> with $Provider<AsyncValue<List<TaskModel>>> {
+  FilteredTasksProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'filteredTasksProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredTasksHash();
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<List<TaskModel>>> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<TaskModel>> create(Ref ref) {
+    return filteredTasks(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<TaskModel>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<TaskModel>>>(value),
+    );
+  }
+}
+
+String _$filteredTasksHash() => r'07b0cf2cbbd5dd576513fdb45d7f8846d5c1daaf';
+
+@ProviderFor(activeCategories)
+final activeCategoriesProvider = ActiveCategoriesProvider._();
+
+final class ActiveCategoriesProvider extends $FunctionalProvider<
+    AsyncValue<List<String>>,
+    AsyncValue<List<String>>,
+    AsyncValue<List<String>>> with $Provider<AsyncValue<List<String>>> {
+  ActiveCategoriesProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'activeCategoriesProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeCategoriesHash();
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<List<String>>> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<String>> create(Ref ref) {
+    return activeCategories(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<String>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<String>>>(value),
+    );
+  }
+}
+
+String _$activeCategoriesHash() => r'f3e787e90242b435c321b007d360e32f89a6b3b3';
+
+@ProviderFor(todayTasks)
+final todayTasksProvider = TodayTasksProvider._();
+
+final class TodayTasksProvider extends $FunctionalProvider<
+    AsyncValue<List<TaskModel>>,
+    AsyncValue<List<TaskModel>>,
+    AsyncValue<List<TaskModel>>> with $Provider<AsyncValue<List<TaskModel>>> {
+  TodayTasksProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'todayTasksProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$todayTasksHash();
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<List<TaskModel>>> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<TaskModel>> create(Ref ref) {
+    return todayTasks(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<TaskModel>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<TaskModel>>>(value),
+    );
+  }
+}
+
+String _$todayTasksHash() => r'5cb7f3d8f231c829efc493e4323ea80a75ea53c6';
+
+@ProviderFor(taskStatusCount)
+final taskStatusCountProvider = TaskStatusCountProvider._();
+
+final class TaskStatusCountProvider extends $FunctionalProvider<
+    Map<String, int>,
+    Map<String, int>,
+    Map<String, int>> with $Provider<Map<String, int>> {
+  TaskStatusCountProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'taskStatusCountProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$taskStatusCountHash();
+
+  @$internal
+  @override
+  $ProviderElement<Map<String, int>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Map<String, int> create(Ref ref) {
+    return taskStatusCount(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, int> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, int>>(value),
+    );
+  }
+}
+
+String _$taskStatusCountHash() => r'9cfc50c69666276489a030071efc7a475363355c';

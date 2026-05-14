@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
@@ -55,109 +57,143 @@ class DashboardTaskCard extends ConsumerWidget {
         ? AppColors.fromHex(categoryData.color)
         : dashboardCategoryAccent(context, task.category);
 
-    return AnimatedPress(
-      onTap: isCompleting ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: theme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: accent.withValues(alpha: 0.12),
-          ),
-          boxShadow: [
-            ...theme.cardShadow,
-            BoxShadow(
-              color: accent.withValues(alpha: 0.04),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
+      duration: Duration(milliseconds: isCompleting ? 240 : 130),
+      curve: Curves.easeOutCubic,
+      builder: (context, progress, child) {
+        final pulse = math.sin(progress * math.pi);
+        final scale = 1 - (pulse * 0.008);
+
+        return Transform.scale(
+          scale: scale,
+          child: AnimatedPress(
+            onTap: isCompleting ? null : onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    accent.withValues(alpha: 0.15),
-                    accent.withValues(alpha: 0.05),
-                  ],
+                color: Color.lerp(
+                  theme.surface,
+                  accent.withValues(alpha: 0.018),
+                  progress,
                 ),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: accent.withValues(alpha: 0.12 + (pulse * 0.12)),
+                ),
+                boxShadow: [
+                  ...theme.cardShadow,
+                  BoxShadow(
+                    color: accent.withValues(alpha: 0.04 + (pulse * 0.055)),
+                    blurRadius: 22 + (pulse * 10),
+                    offset: Offset(0, 10 + (pulse * 2)),
+                  ),
+                ],
               ),
-              child: Icon(
-                dashboardCategoryIcon(task.category),
-                color: accent.withValues(alpha: 0.72),
-                size: 21,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    localizedTaskTitle(AppLocalizations.of(context), task),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15.5,
-                      color: theme.textPrimary,
-                      height: 1.18,
-                      letterSpacing: -0.25,
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          accent.withValues(alpha: 0.15),
+                          accent.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(
+                      dashboardCategoryIcon(task.category),
+                      color: accent.withValues(alpha: 0.72),
+                      size: 21,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _TaskMetricPill(
-                        icon: Icons.star_rounded,
-                        label: '${task.xpReward} XP',
-                        color: const Color(0xFFF0A146),
-                      ),
-                      if (task.coinReward > 0)
-                        _TaskMetricPill(
-                          icon: Icons.monetization_on_rounded,
-                          label: '${task.coinReward}',
-                          color: const Color(0xFF7CB08B),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localizedTaskTitle(
+                            AppLocalizations.of(context),
+                            task,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                            color: theme.textPrimary,
+                            height: 1.18,
+                            letterSpacing: -0.25,
+                          ),
                         ),
-                    ],
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _TaskMetricPill(
+                              icon: Icons.star_rounded,
+                              label: '${task.xpReward} XP',
+                              color: const Color(0xFFF0A146),
+                            ),
+                            if (task.coinReward > 0)
+                              _TaskMetricPill(
+                                icon: Icons.monetization_on_rounded,
+                                label: '${task.coinReward}',
+                                color: const Color(0xFF7CB08B),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Transform.scale(
+                    scale: 1 + (pulse * 0.075),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          accent.withValues(alpha: 0.09),
+                          accent.withValues(alpha: 0.98),
+                          progress,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color:
+                              accent.withValues(alpha: 0.12 * (1 - progress)),
+                        ),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child:
+                              ScaleTransition(scale: animation, child: child),
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          key: ValueKey(isCompleting),
+                          size: isCompleting ? 22 : 18,
+                          color: isCompleting ? Colors.white : accent,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.09),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.12),
-                ),
-              ),
-              child: isCompleting
-                  ? const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      Icons.check_rounded,
-                      size: 18,
-                      color: accent,
-                    ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

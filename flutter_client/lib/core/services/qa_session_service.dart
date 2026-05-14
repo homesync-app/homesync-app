@@ -64,4 +64,3 @@ class QaSessionService {
     log.i('QA real session closed');
   }
 }
-

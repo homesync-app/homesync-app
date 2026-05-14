@@ -250,8 +250,8 @@ class _UnlockedBody extends ConsumerWidget {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final householdAsync = ref.watch(currentHouseholdProvider);
-    final mode = householdAsync.valueOrNull?.taskApprovalMode ?? 'off';
-    final pending = ref.watch(pendingTaskApprovalsProvider).valueOrNull ?? [];
+    final mode = householdAsync.value?.taskApprovalMode ?? 'off';
+    final pending = ref.watch(pendingTaskApprovalsProvider).value ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -715,8 +715,12 @@ class _MemberApprovalRow {
       'guardian' => t.settingsParentModeMemberTypeGuardian,
       _ => t.settingsParentModeMemberTypeAdult,
     };
-    if (role == 'owner') return '$type · ${t.settingsParentModeRoleOwnerSuffix}';
-    if (role == 'admin') return '$type · ${t.settingsParentModeRoleAdminSuffix}';
+    if (role == 'owner') {
+      return '$type · ${t.settingsParentModeRoleOwnerSuffix}';
+    }
+    if (role == 'admin') {
+      return '$type · ${t.settingsParentModeRoleAdminSuffix}';
+    }
     return type;
   }
 }

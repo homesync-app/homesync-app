@@ -27,7 +27,7 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
   @override
   Widget build(BuildContext context) {
     final admin = ref.watch(adminProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final theme = Theme.of(context);
 
     // Listen for transitions to show SnackBars
@@ -51,9 +51,9 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
         final isReset = next.impersonatedUserId == null;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isReset
-                ? '👤 Identidad Restaurada'
-                : '🎭 Impersonando Usuario',),
+            content: Text(
+              isReset ? '👤 Identidad Restaurada' : '🎭 Impersonando Usuario',
+            ),
             backgroundColor:
                 isReset ? AppColors.textSecondary : AppColors.primary,
             behavior: SnackBarBehavior.floating,
@@ -110,27 +110,36 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
                         title: const Text('Admin (Tú)'),
                         selected: admin.impersonatedUserId == null,
                         trailing: admin.impersonatedUserId == null
-                            ? const Icon(Icons.check_circle,
-                                color: AppColors.success,)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                              )
                             : null,
                         onTap: () =>
                             ref.read(adminProvider.notifier).impersonate(null),
                       ),
-                      ...members.map((m) => ListTile(
-                            leading: CustomUserAvatar(
-                                avatarUrl: m.avatarUrl, radius: 16,),
-                            title: Text(m.displayName),
-                            subtitle: Text(
-                                m.role == 'owner' ? 'Propietario' : 'Miembro',),
-                            selected: admin.impersonatedUserId == m.userId,
-                            trailing: admin.impersonatedUserId == m.userId
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.primary,)
-                                : null,
-                            onTap: () => ref
-                                .read(adminProvider.notifier)
-                                .impersonate(m.userId),
-                          ),),
+                      ...members.map(
+                        (m) => ListTile(
+                          leading: CustomUserAvatar(
+                            avatarUrl: m.avatarUrl,
+                            radius: 16,
+                          ),
+                          title: Text(m.displayName),
+                          subtitle: Text(
+                            m.role == 'owner' ? 'Propietario' : 'Miembro',
+                          ),
+                          selected: admin.impersonatedUserId == m.userId,
+                          trailing: admin.impersonatedUserId == m.userId
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: AppColors.primary,
+                                )
+                              : null,
+                          onTap: () => ref
+                              .read(adminProvider.notifier)
+                              .impersonate(m.userId),
+                        ),
+                      ),
                     ],
                   ),
                   loading: () =>
@@ -192,8 +201,10 @@ class _AdminPanelState extends ConsumerState<AdminPanel> {
           ),
           child: Icon(icon, color: color),
         ),
-        title: Text(scenario.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),),
+        title: Text(
+          scenario.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text(scenario.description),
         trailing: isSelected
             ? Icon(Icons.check_circle, color: color)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/theme_palettes.dart';
@@ -394,7 +395,8 @@ class SettingsLanguageCard extends StatelessWidget {
               final isSelected =
                   currentLocale?.languageCode == locale?.languageCode;
               return Padding(
-                padding: EdgeInsets.only(bottom: i < options.length - 1 ? 8 : 0),
+                padding:
+                    EdgeInsets.only(bottom: i < options.length - 1 ? 8 : 0),
                 child: GestureDetector(
                   onTap: () => onLocaleChanged(locale),
                   child: AnimatedContainer(
@@ -420,9 +422,8 @@ class SettingsLanguageCard extends StatelessWidget {
                         Icon(
                           icon,
                           size: 18,
-                          color: isSelected
-                              ? theme.primary
-                              : theme.textSecondary,
+                          color:
+                              isSelected ? theme.primary : theme.textSecondary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -458,6 +459,144 @@ class SettingsLanguageCard extends StatelessWidget {
   }
 }
 
+class SettingsCurrencyCard extends StatelessWidget {
+  final AppCurrency currentCurrency;
+  final ValueChanged<AppCurrency> onCurrencyChanged;
+
+  const SettingsCurrencyCard({
+    super.key,
+    required this.currentCurrency,
+    required this.onCurrencyChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadow.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.payments_rounded,
+                  color: theme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.settingsCurrencyTitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: theme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      t.settingsCurrencySubtitle,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: supportedCurrencies.map((currency) {
+              final isSelected = currentCurrency.code == currency.code;
+              return GestureDetector(
+                onTap: () => onCurrencyChanged(currency),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.primary.withValues(alpha: 0.12)
+                        : theme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.primary
+                          : theme.border.withValues(alpha: 0.3),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        currency.symbol,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color:
+                              isSelected ? theme.primary : theme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        currency.label(languageCode),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected ? theme.primary : theme.textPrimary,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: theme.primary,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SettingsThemeModeSelector extends StatelessWidget {
   final ThemeMode currentMode;
   final ValueChanged<ThemeMode> onModeChanged;
@@ -476,7 +615,11 @@ class SettingsThemeModeSelector extends StatelessWidget {
     final options = [
       (ThemeMode.light, Icons.light_mode_rounded, t.settingsThemeModeLight),
       (ThemeMode.dark, Icons.dark_mode_rounded, t.settingsThemeModeDark),
-      (ThemeMode.system, Icons.brightness_auto_rounded, t.settingsThemeModeSystem),
+      (
+        ThemeMode.system,
+        Icons.brightness_auto_rounded,
+        t.settingsThemeModeSystem
+      ),
     ];
 
     return Column(

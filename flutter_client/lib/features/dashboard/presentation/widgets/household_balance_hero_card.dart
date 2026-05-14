@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -9,7 +10,6 @@ import 'package:homesync_client/features/expenses/presentation/providers/expense
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
-import 'package:intl/intl.dart';
 
 class HouseholdBalanceHeroCard extends ConsumerWidget {
   const HouseholdBalanceHeroCard({super.key});
@@ -124,7 +124,7 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _currency(balance.abs()),
+                          _currency(ref, balance.abs()),
                           style: TextStyle(
                             color: theme.textPrimary,
                             fontSize: 34,
@@ -232,10 +232,8 @@ class HouseholdBalanceHeroCard extends ConsumerWidget {
     return 'Aca van a ver cuando alguno puso un poco de mas y toca compensar con carino.';
   }
 
-  String _currency(double amount) {
-    final formatted =
-        NumberFormat.decimalPattern('es_AR').format(amount.round());
-    return '\$ $formatted';
+  String _currency(WidgetRef ref, double amount) {
+    return ref.read(currencyProvider).format(amount);
   }
 }
 

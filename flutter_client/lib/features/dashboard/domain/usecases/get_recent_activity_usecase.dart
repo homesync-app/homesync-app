@@ -5,7 +5,8 @@ class GetRecentActivityUseCase {
 
   GetRecentActivityUseCase(this.repository);
 
-  Future<List<Map<String, dynamic>>> execute(String householdId, String userId) {
+  Future<List<Map<String, dynamic>>> execute(
+      String householdId, String userId,) {
     return repository.getRecentActivity(householdId, userId);
   }
 }

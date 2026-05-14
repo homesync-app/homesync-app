@@ -15,9 +15,9 @@ class CategoryBarChart extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     final totalValue = taskStats.fold<double>(
-        0,
-        (sum, item) =>
-            sum + ((item['completed_count'] as num?)?.toDouble() ?? 0),);
+      0,
+      (sum, item) => sum + ((item['completed_count'] as num?)?.toDouble() ?? 0),
+    );
 
     return Container(
       padding: const EdgeInsets.all(28),
@@ -201,8 +201,11 @@ class CategoryDetailCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.check_circle_rounded,
-                        size: 14, color: color.withValues(alpha: 0.5),),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 14,
+                      color: color.withValues(alpha: 0.5),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       t.categoriesCompletedCount(count),

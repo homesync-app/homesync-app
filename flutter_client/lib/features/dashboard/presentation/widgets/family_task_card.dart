@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
@@ -10,8 +12,15 @@ import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class FamilyTaskCard extends StatelessWidget {
+  static const Duration exitAnimationDuration = Duration(milliseconds: 420);
+
   final TaskModel task;
   final bool isCompleting;
+  // Cuando el card esta "saliendo" (post-completion), anima opacity+size hasta
+  // colapsar. El padre debe esperar `exitAnimationDuration` antes de invalidar
+  // el provider para que la animacion se vea entera. Ver
+  // family_tasks_section._completeTask.
+  final bool isExiting;
   final bool isChildView;
   final bool canApprovePending;
   final MemberModel? assignedMember;
@@ -27,6 +36,7 @@ class FamilyTaskCard extends StatelessWidget {
     required this.isCompleting,
     required this.isChildView,
     required this.actionIcon,
+    this.isExiting = false,
     this.canApprovePending = false,
     this.assignedMember,
     this.completedMember,
@@ -40,6 +50,22 @@ class FamilyTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: exitAnimationDuration,
+      curve: Curves.easeInOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedOpacity(
+        duration: exitAnimationDuration,
+        curve: Curves.easeInOutCubic,
+        opacity: isExiting ? 0 : 1,
+        child: isExiting
+            ? const SizedBox(width: double.infinity)
+            : _buildCard(context),
+      ),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final theme = context.theme;
     final isPendingReview = task.isPendingApproval;
     final accent = isPendingReview
@@ -48,133 +74,170 @@ class FamilyTaskCard extends StatelessWidget {
     final contextLabel = _contextLabel();
     final urgency = _urgencyLabel();
 
-    return AnimatedPress(
-      onTap: isCompleting ? null : onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color:
-              isPendingReview ? accent.withValues(alpha: 0.08) : theme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isPendingReview
-                ? accent.withValues(alpha: 0.22)
-                : accent.withValues(alpha: 0.12),
-          ),
-          boxShadow: [
-            ...theme.cardShadow,
-            BoxShadow(
-              color: accent.withValues(alpha: isPendingReview ? 0.08 : 0.04),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _buildLeading(accent),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
+      duration: Duration(milliseconds: isCompleting ? 240 : 130),
+      curve: Curves.easeOutCubic,
+      builder: (context, progress, child) {
+        final pulse = math.sin(progress * math.pi);
+        final scale = 1 - (pulse * 0.008);
+
+        return Transform.scale(
+          scale: scale,
+          child: AnimatedPress(
+            onTap: isCompleting ? null : onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Color.lerp(
+                  isPendingReview
+                      ? accent.withValues(alpha: 0.08)
+                      : theme.surface,
+                  accent.withValues(alpha: 0.018),
+                  progress,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: accent.withValues(
+                    alpha: (isPendingReview ? 0.22 : 0.12) + (pulse * 0.12),
+                  ),
+                ),
+                boxShadow: [
+                  ...theme.cardShadow,
+                  BoxShadow(
+                    color: accent.withValues(
+                      alpha: (isPendingReview ? 0.08 : 0.04) + (pulse * 0.055),
+                    ),
+                    blurRadius: 22 + (pulse * 10),
+                    offset: Offset(0, 10 + (pulse * 2)),
+                  ),
+                ],
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    localizedTaskTitle(AppLocalizations.of(context), task),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15.5,
-                      color: theme.textPrimary,
-                      height: 1.18,
-                      letterSpacing: -0.25,
+                  _buildLeading(accent),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localizedTaskTitle(
+                            AppLocalizations.of(context),
+                            task,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                            color: theme.textPrimary,
+                            height: 1.18,
+                            letterSpacing: -0.25,
+                          ),
+                        ),
+                        if (contextLabel != null) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            contextLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textSecondary,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (urgency != null)
+                              _FamilyTaskPill(
+                                icon: task.isPendingApproval
+                                    ? Icons.fact_check_rounded
+                                    : task.isOverdue
+                                        ? Icons.priority_high_rounded
+                                        : Icons.today_rounded,
+                                label: urgency,
+                                color: task.isPendingApproval
+                                    ? accent
+                                    : task.isOverdue
+                                        ? const Color(0xFFD96A5F)
+                                        : accent,
+                              ),
+                            _FamilyTaskPill(
+                              icon: Icons.star_rounded,
+                              label: '${task.xpReward} XP',
+                              color: const Color(0xFFF0A146),
+                            ),
+                            if (task.coinReward > 0)
+                              _FamilyTaskPill(
+                                icon: Icons.monetization_on_rounded,
+                                label: '${task.coinReward}',
+                                color: const Color(0xFF7CB08B),
+                              ),
+                            // Sprint 3 Modo Padres: badge de rotacion.
+                            if (task.hasRotation)
+                              _FamilyTaskPill(
+                                icon: Icons.autorenew_rounded,
+                                label: 'Rota entre ${task.rotationPool.length}',
+                                color: const Color(0xFF5A94E1),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  if (contextLabel != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      contextLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: theme.textSecondary,
+                  Transform.scale(
+                    scale: 1 + (pulse * 0.075),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          isActionEnabled
+                              ? accent.withValues(alpha: 0.055)
+                              : theme.textMuted.withValues(alpha: 0.08),
+                          accent.withValues(alpha: 0.98),
+                          progress,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: (isActionEnabled ? accent : theme.textMuted)
+                              .withValues(alpha: 0.12 * (1 - progress)),
+                        ),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child:
+                              ScaleTransition(scale: animation, child: child),
+                        ),
+                        child: Icon(
+                          isCompleting ? Icons.check_rounded : actionIcon,
+                          key: ValueKey(isCompleting),
+                          size: isCompleting ? 21 : 17,
+                          color: isCompleting
+                              ? Colors.white
+                              : isActionEnabled
+                                  ? accent.withValues(alpha: 0.88)
+                                  : theme.textMuted,
+                        ),
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (urgency != null)
-                        _FamilyTaskPill(
-                          icon: task.isPendingApproval
-                              ? Icons.fact_check_rounded
-                              : task.isOverdue
-                                  ? Icons.priority_high_rounded
-                                  : Icons.today_rounded,
-                          label: urgency,
-                          color: task.isPendingApproval
-                              ? accent
-                              : task.isOverdue
-                                  ? const Color(0xFFD96A5F)
-                                  : accent,
-                        ),
-                      _FamilyTaskPill(
-                        icon: Icons.star_rounded,
-                        label: '${task.xpReward} XP',
-                        color: const Color(0xFFF0A146),
-                      ),
-                      if (task.coinReward > 0)
-                        _FamilyTaskPill(
-                          icon: Icons.monetization_on_rounded,
-                          label: '${task.coinReward}',
-                          color: const Color(0xFF7CB08B),
-                        ),
-                      // Sprint 3 Modo Padres: badge de rotacion.
-                      if (task.hasRotation)
-                        _FamilyTaskPill(
-                          icon: Icons.autorenew_rounded,
-                          label: 'Rota entre ${task.rotationPool.length}',
-                          color: const Color(0xFF5A94E1),
-                        ),
-                    ],
                   ),
                 ],
               ),
             ),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isActionEnabled
-                    ? accent.withValues(alpha: 0.055)
-                    : theme.textMuted.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isActionEnabled
-                      ? accent.withValues(alpha: 0.10)
-                      : theme.textMuted.withValues(alpha: 0.12),
-                ),
-              ),
-              child: isCompleting
-                  ? const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      actionIcon,
-                      size: 17,
-                      color: isActionEnabled
-                          ? accent.withValues(alpha: 0.88)
-                          : theme.textMuted,
-                    ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -230,6 +293,9 @@ class FamilyTaskCard extends StatelessWidget {
       return 'Esperando revisión de un adulto';
     }
     if (task.isOverdue) {
+      if (task.assignedTo == null) {
+        return 'Pendiente de coordinar';
+      }
       if (!_isAssignedToCurrentUser && assignedMember != null) {
         final name = assignedMember!.displayName;
         return name.isNotEmpty
@@ -239,6 +305,9 @@ class FamilyTaskCard extends StatelessWidget {
       return 'Te quedó pendiente';
     }
     if (task.isDueToday) {
+      if (task.assignedTo == null) {
+        return 'A coordinar';
+      }
       if (!_isAssignedToCurrentUser && assignedMember != null) {
         final name = assignedMember!.displayName;
         return name.isNotEmpty

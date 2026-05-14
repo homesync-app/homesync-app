@@ -8,8 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 typedef OfflineRequestProcessor = Future<void> Function(QueuedRequest request);
 
-final offlineActionProcessorProvider =
-    Provider<OfflineRequestProcessor>((ref) {
+final offlineActionProcessorProvider = Provider<OfflineRequestProcessor>((ref) {
   final client = ref.read(supabaseClientProvider);
   final taskRpc = ref.read(taskRpcServiceProvider);
   return OfflineActionProcessor(client: client, taskRpc: taskRpc).process;
@@ -87,8 +86,7 @@ class OfflineActionProcessor {
           ? DateTime.tryParse(params['dueAt'] as String)
           : null,
       recurrenceType: params['recurrenceType'] as String?,
-      recurrenceInterval:
-          (params['recurrenceInterval'] as num?)?.toInt() ?? 1,
+      recurrenceInterval: (params['recurrenceInterval'] as num?)?.toInt() ?? 1,
       recurrenceEndAt: params['recurrenceEndAt'] != null
           ? DateTime.tryParse(params['recurrenceEndAt'] as String)
           : null,

@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
@@ -93,7 +92,10 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signUpWithEmail(
-      String email, String password, String? fullName,) async {
+    String email,
+    String password,
+    String? fullName,
+  ) async {
     final analytics = ref.read(analyticsServiceProvider);
     state = const AsyncValue.loading();
     await analytics.trackAuthStarted(method: 'email', isSignUp: true);
@@ -150,7 +152,8 @@ class AuthController extends _$AuthController {
             reason: 'cancelled_or_incomplete',
           );
           state = const AsyncValue.data(
-              AuthState(AuthChangeEvent.initialSession, null),);
+            AuthState(AuthChangeEvent.initialSession, null),
+          );
         }
         return success;
       },
@@ -254,18 +257,18 @@ class AuthController extends _$AuthController {
 /// Provides the current authenticated user from Supabase.
 /// Provides whether the user is currently authenticated.
 @riverpod
-bool isAuthenticated(IsAuthenticatedRef ref) {
+bool isAuthenticated(Ref ref) {
   final isAdmin =
       AppEnvironment.enableAdminTesting && ref.watch(adminProvider).isAdminUser;
   if (isAdmin) return true;
 
-  final authState = ref.watch(authStateProvider).valueOrNull;
+  final authState = ref.watch(authStateProvider).value;
   return authState?.isAuthenticated ?? false;
 }
 
 /// Provides the user profile from the database, updated when the user changes.
 @riverpod
-Future<UserModel?> currentUserProfile(CurrentUserProfileRef ref) async {
+Future<UserModel?> currentUserProfile(Ref ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null || userId.isEmpty) return null;
 

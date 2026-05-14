@@ -1,8 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
+import 'package:homesync_client/core/providers/rpc_providers.dart';
+import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/ocr_log_service.dart';
 import 'package:homesync_client/core/services/receipt_scan_service.dart';
@@ -23,6 +27,7 @@ import 'package:homesync_client/features/shopping/domain/models/shopping_model.d
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:image_picker/image_picker.dart';
@@ -42,12 +47,14 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
   final ExpenseModel? expense;
   final bool defaultOnlyMe;
   final bool triggerScanOnOpen;
+  final ValueChanged<bool?>? onCloseWithResult;
 
   const ExpenseFormSheet({
     super.key,
     this.expense,
     this.defaultOnlyMe = false,
     this.triggerScanOnOpen = false,
+    this.onCloseWithResult,
   });
 
   @override
@@ -58,12 +65,14 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
     ExpenseModel? expense,
     bool defaultOnlyMe = false,
     bool triggerScanOnOpen = false,
-  }) {
-    return showModalBottomSheet(
+  }) async {
+    final t = AppLocalizations.of(context);
+    final deleted = await showModalBottomSheet<bool>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Align(
+      builder: (sheetContext) => Align(
         alignment: Alignment.bottomCenter,
         child: FractionallySizedBox(
           heightFactor: 0.92,
@@ -71,10 +80,20 @@ class ExpenseFormSheet extends ConsumerStatefulWidget {
             expense: expense,
             defaultOnlyMe: defaultOnlyMe,
             triggerScanOnOpen: triggerScanOnOpen,
+            onCloseWithResult: (result) {
+              Navigator.of(sheetContext).pop(result);
+            },
           ),
         ),
       ),
     );
+    if (deleted == true && context.mounted) {
+      AppSnackBar.show(
+        context,
+        message: t.expensesDeletedSnack,
+        type: AppSnackBarType.success,
+      );
+    }
   }
 }
 
@@ -263,8 +282,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       _prefillFromScan(result);
 
       // Logging asÃ­ncrono â€” no bloquea la UI ni rompe si falla.
-      final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
-      final householdId = ref.read(currentHouseholdProvider).valueOrNull?.id;
+      final isPremium = ref.read(premiumProvider).value ?? false;
+      final householdId = ref.read(currentHouseholdProvider).value?.id;
       OcrLogService(Supabase.instance.client)
           .logScan(
         merchant: result.merchant,
@@ -289,12 +308,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.expensesFormOcrError(e.toString())),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 6),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.expensesFormOcrError(e.toString()),
+        type: AppSnackBarType.error,
+        duration: const Duration(milliseconds: 3200),
       );
     } finally {
       if (mounted) setState(() => _isScanningReceipt = false);
@@ -328,11 +346,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
     if (result.hasLowConfidence && mounted) {
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t.expensesFormOcrLowConfidence),
-          duration: const Duration(seconds: 3),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.expensesFormOcrLowConfidence,
+        type: AppSnackBarType.warning,
+        duration: const Duration(milliseconds: 2400),
       );
     }
   }
@@ -340,13 +358,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   void _matchOcrItemsToShoppingList(List<String> ocrItems) {
     final pending = ref
             .read(shoppingItemsProvider)
-            .valueOrNull
+            .value
             ?.where((item) => !item.completed)
             .toList() ??
         const <ShoppingItemModel>[];
 
-    final householdId =
-        ref.read(currentHouseholdProvider).valueOrNull?.id ?? '';
+    final householdId = ref.read(currentHouseholdProvider).value?.id ?? '';
 
     final result = resolveScanItems(
       ocrItems: ocrItems,
@@ -400,8 +417,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final amountParsed = double.tryParse(cleanAmtStr);
     if (amountParsed == null || amountParsed <= 0) {
       final t = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.expensesFormValidationAmountRequired)),
+      AppSnackBar.show(
+        context,
+        message: t.expensesFormValidationAmountRequired,
+        type: AppSnackBarType.warning,
       );
       return;
     }
@@ -432,7 +451,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       final caps = ref.read(householdCapabilitiesProvider);
-      final household = ref.read(currentHouseholdProvider).valueOrNull;
+      final household = ref.read(currentHouseholdProvider).value;
       final showSplit = _shouldShowSplitControls(caps);
       final splitResult = ExpenseSplitBuilder.build(
         showSplit: showSplit,
@@ -448,11 +467,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
       if (splitResult.hasValidationError) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(splitResult.validationMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        AppSnackBar.show(
+          context,
+          message: splitResult.validationMessage!,
+          type: AppSnackBarType.error,
         );
         setState(() => _isLoading = false);
         return;
@@ -571,23 +589,22 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                 ? t.expensesFormSavedIncome
                 : t.expensesFormSavedExpense);
         final shoppingMsg = shoppingItemsSynced > 0
-            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ✅'
+            ? ' · ${t.expensesFormShoppingSynced(shoppingItemsSynced)} ?'
             : '';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$baseMsg$shoppingMsg'),
-            backgroundColor: AppColors.primary,
-          ),
+        AppSnackBar.show(
+          context,
+          message: '$baseMsg$shoppingMsg',
+          type: AppSnackBarType.success,
+          duration: const Duration(milliseconds: 1500),
         );
       }
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(t.commonErrorWithDetails(e.toString())),
-            backgroundColor: AppColors.error,
-          ),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {
@@ -698,14 +715,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                             shoppingItemsAsync,
                           ),
                           if (_unmatchedOcrItems.isNotEmpty &&
-                              (ref.watch(premiumProvider).valueOrNull ??
-                                  false)) ...[
+                              (ref.watch(premiumProvider).value ?? false)) ...[
                             const SizedBox(height: 12),
                             NewItemsSuggestionBanner(
                               items: _unmatchedOcrItems,
                               householdId: ref
                                       .read(currentHouseholdProvider)
-                                      .valueOrNull
+                                      .value
                                       ?.id ??
                                   '',
                               onDismiss: () =>
@@ -761,9 +777,18 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return ExpenseFormHeader(
       isEditing: widget.expense != null,
       isIncome: _isIncome,
-      onClose: () => Navigator.pop(context),
+      onClose: () => _closeSheet(),
       onDelete: widget.expense != null ? _confirmDelete : null,
     );
+  }
+
+  void _closeSheet([bool? result]) {
+    final close = widget.onCloseWithResult;
+    if (close != null) {
+      close(result);
+      return;
+    }
+    Navigator.of(context).pop(result);
   }
 
   Widget _buildSectionIntro({
@@ -778,6 +803,8 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   Future<void> _confirmDelete() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.hide'));
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -813,31 +840,100 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
 
     if (confirm == true) {
-      setState(() => _isLoading = true);
-      try {
-        await ref
-            .read(expenseControllerProvider.notifier)
-            .deleteExpense(widget.expense!.id);
-        ref.invalidate(personalFinanceSummaryProvider);
-        ref.invalidate(recentActivityProvider);
-        ref.invalidate(expenseBalancesProvider);
-        ref.invalidate(userBalanceProvider);
-        if (mounted) Navigator.pop(context);
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-                SnackBar(
-                  content: Text(
-                    AppLocalizations.of(context).commonErrorWithDetails('$e'),
-                  ),
-                ),
-              );
-        }
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
-      }
+      if (!mounted) return;
+      final t = AppLocalizations.of(context);
+      final container = ProviderScope.containerOf(context, listen: false);
+      final client = container.read(supabaseClientProvider);
+      final messenger = ScaffoldMessenger.of(context);
+      final expenseId = widget.expense!.id;
+      final successMessage = t.expensesDeletedSnack;
+      String errorMessage(Object error) => t.commonErrorWithDetails('$error');
+
+      container
+          .read(combinedFeedControllerProvider.notifier)
+          .removeRealExpenseLocally(expenseId);
+      container.read(hiddenRecentExpenseIdsProvider.notifier).hide(expenseId);
+      _closeSheet();
+      unawaited(
+        _deleteExpenseAfterClose(
+          container: container,
+          client: client,
+          messenger: messenger,
+          expenseId: expenseId,
+          successMessage: successMessage,
+          errorMessage: errorMessage,
+        ),
+      );
     }
+  }
+
+  Future<void> _deleteExpenseAfterClose({
+    required ProviderContainer container,
+    required SupabaseClient client,
+    required ScaffoldMessengerState messenger,
+    required String expenseId,
+    required String successMessage,
+    required String Function(Object error) errorMessage,
+  }) async {
+    try {
+      await client.rpc(
+        'delete_expense_v1',
+        params: {'p_expense_id': expenseId},
+      );
+      container.invalidate(expenseControllerProvider);
+      container.invalidate(combinedFeedControllerProvider);
+      container.invalidate(personalFinanceSummaryProvider);
+      container.invalidate(recentActivityProvider);
+      container.invalidate(expenseBalancesProvider);
+      container.invalidate(userBalanceProvider);
+
+      _showDeleteResultSnackBar(
+        messenger,
+        message: successMessage,
+        isError: false,
+      );
+    } catch (e, stack) {
+      log.w(
+        'Delete expense after close failed: $e',
+        error: e,
+        stackTrace: stack,
+      );
+      unawaited(
+        container.read(adminRpcServiceProvider).logApplicationError(
+          message: 'Delete expense after close failed: $e',
+          stackTrace: stack.toString(),
+          level: 'error',
+          context: {
+            'source': 'expense_form_sheet',
+            'operation': 'delete_expense_after_close',
+            'expense_id': expenseId,
+          },
+        ),
+      );
+      container
+          .read(hiddenRecentExpenseIdsProvider.notifier)
+          .restore(expenseId);
+      container.invalidate(combinedFeedControllerProvider);
+      container.invalidate(recentActivityProvider);
+      _showDeleteResultSnackBar(
+        messenger,
+        message: errorMessage(e),
+        isError: true,
+      );
+    }
+  }
+
+  void _showDeleteResultSnackBar(
+    ScaffoldMessengerState messenger, {
+    required String message,
+    required bool isError,
+  }) {
+    AppSnackBar.show(
+      messenger.context,
+      message: message,
+      type: isError ? AppSnackBarType.error : AppSnackBarType.success,
+      duration: Duration(milliseconds: isError ? 3200 : 1500),
+    );
   }
 
   void _onAmountChanged(String val) {
@@ -882,7 +978,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   }
 
   bool _shouldShowSplitControls(HouseholdCapabilities caps) {
-    final household = ref.read(currentHouseholdProvider).valueOrNull;
+    final household = ref.read(currentHouseholdProvider).value;
     if (household?.householdType == 'family' &&
         household?.financeMode != 'divided') {
       return false;
@@ -1227,11 +1323,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
   ) {
     if (_isIncome) return const SizedBox.shrink();
 
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
-
-    if (!isPremium && _scanResult?.detectedItems.isEmpty != false) {
-      return const SizedBox.shrink();
-    }
+    final isPremium = ref.watch(premiumProvider).value ?? false;
 
     return shoppingItemsAsync.when(
       data: (allItems) {
@@ -1267,35 +1359,27 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
                     _unmatchedOcrItems = [];
                   });
 
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          AppLocalizations.of(context).expensesFormShoppingUnlinkedSnack,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        backgroundColor: AppColors.textPrimary,
-                        duration: const Duration(seconds: 4),
-                        behavior: SnackBarBehavior.floating,
-                        action: SnackBarAction(
-                          label: AppLocalizations.of(context).expensesFormShoppingUnlinkedUndo,
-                          textColor: AppColors.primary,
-                          onPressed: () {
-                            if (!mounted) return;
-                            setState(() {
-                              _selectedShoppingItems
-                                ..clear()
-                                ..addAll(prevSelected);
-                              _ocrMatchedShoppingItems
-                                ..clear()
-                                ..addAll(prevMatched);
-                              _unmatchedOcrItems = prevUnmatched;
-                            });
-                          },
-                        ),
-                      ),
-                    );
+                  AppSnackBar.show(
+                    context,
+                    message: AppLocalizations.of(context)
+                        .expensesFormShoppingUnlinkedSnack,
+                    type: AppSnackBarType.neutral,
+                    duration: const Duration(seconds: 4),
+                    actionLabel: AppLocalizations.of(context)
+                        .expensesFormShoppingUnlinkedUndo,
+                    onAction: () {
+                      if (!mounted) return;
+                      setState(() {
+                        _selectedShoppingItems
+                          ..clear()
+                          ..addAll(prevSelected);
+                        _ocrMatchedShoppingItems
+                          ..clear()
+                          ..addAll(prevMatched);
+                        _unmatchedOcrItems = prevUnmatched;
+                      });
+                    },
+                  );
                 }
               : null,
           onRemoveItem: _scanResult != null
@@ -1412,7 +1496,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
     if (_splitMode == SplitType.equal) {
-      final household = ref.watch(currentHouseholdProvider).valueOrNull;
+      final household = ref.watch(currentHouseholdProvider).value;
       final defaultRatio = household?.defaultSplitRatio ?? 0.5;
 
       if (members.length == 2 && defaultRatio != 0.5) {
@@ -1591,6 +1675,3 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     );
   }
 }
-
-
-

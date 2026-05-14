@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
@@ -11,20 +12,22 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/activity
 import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeSoloView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
   final String householdId;
+  final VoidCallback? onAvatarTap;
 
   const HomeSoloView({
     super.key,
     required this.onRefresh,
     required this.householdId,
+    this.onAvatarTap,
   });
 
   @override
@@ -69,7 +72,7 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
 
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
@@ -96,10 +99,14 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
               ).animateEntrance(),
             ),
             const SizedBox(width: AppSpacing.sm),
-            CustomUserAvatar(
-              name: currentMember?.displayName,
-              avatarUrl: currentMember?.avatarUrl,
-              radius: 24,
+            GestureDetector(
+              onTap: widget.onAvatarTap,
+              behavior: HitTestBehavior.opaque,
+              child: CustomUserAvatar(
+                name: currentMember?.displayName,
+                avatarUrl: currentMember?.avatarUrl,
+                radius: 24,
+              ),
             ).animateScaleIn(delay: 70),
           ],
         ),
@@ -283,12 +290,28 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView> {
   Future<void> _completeTask(TaskModel task) async {
     setState(() => _completedTaskIds.add(task.id));
     try {
-      await ref.read(tasksProvider.notifier).completeTask(task);
+      await Future<void>.delayed(const Duration(milliseconds: 240));
+      final result = await ref.read(tasksProvider.notifier).completeTask(task);
+      if (!mounted) return;
+      if (result != null) {
+        ref
+            .read(optimisticRecentActivityProvider.notifier)
+            .addTaskCompleted(task);
+        HapticFeedback.mediumImpact();
+        final t = AppLocalizations.of(context);
+        AppSnackBar.show(
+          context,
+          message: t.tasksSnackCompleted,
+          type: AppSnackBarType.success,
+        );
+      }
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.commonErrorWithDetails(e.toString()))),
+        AppSnackBar.show(
+          context,
+          message: t.commonErrorWithDetails(e.toString()),
+          type: AppSnackBarType.error,
         );
       }
     } finally {

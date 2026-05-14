@@ -35,7 +35,7 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
       return _buildWeeklySummaryLoading(theme);
     }
 
-    final stats = statsAsync.valueOrNull;
+    final stats = statsAsync.value;
 
     final completedTasks = stats?.taskStats
             .fold(0, (sum, cat) => sum + (cat['count'] as int? ?? 0)) ??
@@ -224,9 +224,8 @@ class FamilyWeeklySummarySection extends ConsumerWidget {
       );
     }
 
-    final stats = statsAsync.valueOrNull;
-    final members =
-        ref.watch(householdMembersNotifierProvider).valueOrNull ?? [];
+    final stats = statsAsync.value;
+    final members = ref.watch(householdMembersProvider).value ?? [];
 
     final ranking = stats?.weeklyRanking ?? [];
 

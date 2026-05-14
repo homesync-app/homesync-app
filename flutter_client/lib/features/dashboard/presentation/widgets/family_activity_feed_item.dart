@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -13,7 +14,10 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_detail_sheet.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -40,7 +44,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final avatarUrl =
         (data['avatar_url'] ?? data['creator_avatar_url']) as String?;
     final detailTitle = _normalizedText(
-      data['task_title'] ?? data['title'] ?? data['description'] ?? 'Actividad',
+      _localizedActivityTitle(context, data),
     );
     final amount = _parseAmount(data['amount']);
     final xpReward =
@@ -178,7 +182,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           theme: theme,
                           color: accent,
                           icon: Icons.payments_rounded,
-                          label: _formatCurrency(amount),
+                          label: _formatCurrency(ref, amount),
                         ),
                       if (xpReward != null && xpReward > 0)
                         _metaPill(
@@ -338,8 +342,23 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     return value.split(' ').first;
   }
 
-  String _formatCurrency(double amount) {
-    return '\$ ${NumberFormat.decimalPattern('es_AR').format(amount.round())}';
+  String _formatCurrency(WidgetRef ref, double amount) {
+    return ref.read(currencyProvider).format(amount);
+  }
+
+  String _localizedActivityTitle(
+    BuildContext context,
+    Map<String, dynamic> data,
+  ) {
+    final fallback = data['task_title'] ??
+        data['title'] ??
+        data['description'] ??
+        'Actividad';
+    return localizedTaskCatalogText(
+      AppLocalizations.of(context),
+      data['title_key'] as String?,
+      fallback.toString(),
+    );
   }
 
   String _formatTime(DateTime time) {
@@ -357,7 +376,11 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   ) async {
     final taskId = data['task_id']?.toString();
     if (taskId == null || taskId.isEmpty) {
-      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      _showSnackBar(
+        context,
+        'No encontramos esa tarea para revisar.',
+        AppSnackBarType.error,
+      );
       return;
     }
 
@@ -365,14 +388,22 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       final ok = await ref.read(taskApprovalActionsProvider).approve(taskId);
       if (!context.mounted) return;
       if (!ok) {
-        _showSnackBar(context, 'No pudimos aprobar la tarea.');
+        _showSnackBar(
+          context,
+          'No pudimos aprobar la tarea.',
+          AppSnackBarType.error,
+        );
         return;
       }
       _refreshAfterReview(ref);
-      _showSnackBar(context, 'Tarea aprobada.');
+      _showSnackBar(context, 'Tarea aprobada.', AppSnackBarType.success);
     } catch (error) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'No pudimos aprobar la tarea: $error');
+      _showSnackBar(
+        context,
+        'No pudimos aprobar la tarea: $error',
+        AppSnackBarType.error,
+      );
     }
   }
 
@@ -383,7 +414,11 @@ class FamilyActivityFeedItem extends ConsumerWidget {
   ) async {
     final taskId = data['task_id']?.toString();
     if (taskId == null || taskId.isEmpty) {
-      _showSnackBar(context, 'No encontramos esa tarea para revisar.');
+      _showSnackBar(
+        context,
+        'No encontramos esa tarea para revisar.',
+        AppSnackBarType.error,
+      );
       return;
     }
 
@@ -391,14 +426,26 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       final ok = await ref.read(taskApprovalActionsProvider).reject(taskId);
       if (!context.mounted) return;
       if (!ok) {
-        _showSnackBar(context, 'No pudimos devolver la tarea.');
+        _showSnackBar(
+          context,
+          'No pudimos devolver la tarea.',
+          AppSnackBarType.error,
+        );
         return;
       }
       _refreshAfterReview(ref);
-      _showSnackBar(context, 'La tarea volvio para corregir.');
+      _showSnackBar(
+        context,
+        'La tarea volvio para corregir.',
+        AppSnackBarType.info,
+      );
     } catch (error) {
       if (!context.mounted) return;
-      _showSnackBar(context, 'No pudimos devolver la tarea: $error');
+      _showSnackBar(
+        context,
+        'No pudimos devolver la tarea: $error',
+        AppSnackBarType.error,
+      );
     }
   }
 
@@ -411,9 +458,15 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     ref.invalidate(statsControllerProvider);
   }
 
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  void _showSnackBar(
+    BuildContext context,
+    String message,
+    AppSnackBarType type,
+  ) {
+    AppSnackBar.show(
+      context,
+      message: message,
+      type: type,
     );
   }
 }

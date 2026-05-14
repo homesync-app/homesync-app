@@ -45,7 +45,9 @@ class ReceiptScanResult {
   });
 
   factory ReceiptScanResult.fromJson(
-      Map<String, dynamic> json, String localImagePath,) {
+    Map<String, dynamic> json,
+    String localImagePath,
+  ) {
     final raw = (json['items'] as List<dynamic>?)
             ?.map((e) => e.toString().trim())
             .where((e) => e.isNotEmpty)
@@ -59,10 +61,8 @@ class ReceiptScanResult {
           : null,
       category: json['category'] as String?,
       rawItems: raw,
-      detectedItems: raw
-          .map(ReceiptMatcher.cleanName)
-          .where((e) => e.isNotEmpty)
-          .toList(),
+      detectedItems:
+          raw.map(ReceiptMatcher.cleanName).where((e) => e.isNotEmpty).toList(),
       localImagePath: localImagePath,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
     );

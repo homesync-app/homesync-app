@@ -58,8 +58,10 @@ class AppEnvironment {
       case Environment.staging:
         return supabaseUrl;
       case Environment.production:
-        return const String.fromEnvironment('API_URL_PROD',
-            defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co',);
+        return const String.fromEnvironment(
+          'API_URL_PROD',
+          defaultValue: 'https://tfavamqszdkoeabpyxms.supabase.co',
+        );
     }
   }
 

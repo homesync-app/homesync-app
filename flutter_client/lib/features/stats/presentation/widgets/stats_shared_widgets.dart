@@ -81,8 +81,11 @@ class PrivacyBadge extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.shield_rounded,
-                color: AppColors.primary, size: 24,),
+            child: const Icon(
+              Icons.shield_rounded,
+              color: AppColors.primary,
+              size: 24,
+            ),
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
@@ -144,7 +147,9 @@ class MiniStatCard extends StatelessWidget {
     final theme = context.theme;
     return Container(
       padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.lg, horizontal: AppSpacing.sm,),
+        vertical: AppSpacing.lg,
+        horizontal: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: theme.surface,
         borderRadius: BorderRadius.circular(28),
@@ -287,9 +292,13 @@ class DuelHistoryWidget extends StatelessWidget {
                                   : AppColors.textPrimary,
                             ),
                           ),
-                          const Text(' vs ',
-                              style: TextStyle(
-                                  color: AppColors.textMuted, fontSize: 12,),),
+                          const Text(
+                            ' vs ',
+                            style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
                           Text(
                             loserName,
                             style: const TextStyle(
@@ -313,7 +322,9 @@ class DuelHistoryWidget extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm, vertical: AppSpacing.xs,),
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                   decoration: BoxDecoration(
                     color: userResult == 'win'
                         ? AppColors.success.withValues(alpha: 0.1)

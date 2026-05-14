@@ -33,7 +33,7 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final productsAsync = ref.watch(premiumProductsProvider);
-    final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+    final isPremium = ref.watch(premiumProvider).value ?? false;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -165,7 +165,8 @@ class _PremiumPaywallScreenState extends ConsumerState<PremiumPaywallScreen> {
                         ref.read(restorePremiumPurchasesUseCaseProvider).call(),
                     child: Text(
                       t.premiumRestorePurchases,
-                      style: const TextStyle(color: Colors.white54, fontSize: 13),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ),
 
@@ -256,8 +257,8 @@ class _ProductList extends ConsumerWidget {
           children: [
             Text(
               t.premiumFreeTrialAvailable,
-              style:
-                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold,),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -436,7 +437,8 @@ class _StoreError extends ConsumerWidget {
         const SizedBox(height: 16),
         Text(
           t.premiumStoreErrorTitle,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         Text(
           error,

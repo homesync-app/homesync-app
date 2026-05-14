@@ -16,7 +16,8 @@ class StatsScreen extends ConsumerStatefulWidget {
 
 class _StatsScreenState extends ConsumerState<StatsScreen>
     with SingleTickerProviderStateMixin {
-  List<String> _getTabs(AppLocalizations t) => [t.statsTabWeek, t.statsTabEvolution, t.statsTabAchievements];
+  List<String> _getTabs(AppLocalizations t) =>
+      [t.statsTabWeek, t.statsTabEvolution, t.statsTabAchievements];
 
   late TabController _tabController;
 
@@ -32,8 +33,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     super.dispose();
   }
 
-  int _totalTasksCompleted(List<Map<String, dynamic>> taskStats,
-      List<Map<String, dynamic>> memberStats,) {
+  int _totalTasksCompleted(
+    List<Map<String, dynamic>> taskStats,
+    List<Map<String, dynamic>> memberStats,
+  ) {
     final fromTasks = taskStats.fold(
       0,
       (s, e) => s + ((e['completed_count'] as num?)?.toInt() ?? 0),
@@ -49,7 +52,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
   }
 
   int _totalXpEarned(
-      List<Map<String, dynamic>> taskStats, List<Map<String, dynamic>> memberStats,) {
+    List<Map<String, dynamic>> taskStats,
+    List<Map<String, dynamic>> memberStats,
+  ) {
     final fromTasks = taskStats.fold(
       0,
       (s, e) => s + ((e['total_xp'] as num?)?.toInt() ?? 0),
@@ -64,7 +69,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
     );
   }
 
-  int _totalCoinsEarned(List<Map<String, dynamic>> memberStats) => memberStats.fold(
+  int _totalCoinsEarned(List<Map<String, dynamic>> memberStats) =>
+      memberStats.fold(
         0,
         (s, e) => s + ((e['coins_earned'] as num?)?.toInt() ?? 0),
       );
@@ -103,7 +109,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
             ),
             error: (_, __) => Center(
               child: TextButton(
-                onPressed: () => ref.read(statsControllerProvider.notifier).refresh(),
+                onPressed: () =>
+                    ref.read(statsControllerProvider.notifier).refresh(),
                 child: Text(t.statsRetry),
               ),
             ),
@@ -115,9 +122,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
                   memberStats: stats.memberActivity,
                   duelHistory: stats.duelHistory,
                   weekRange: _getWeekRange(),
-                  totalTasks:
-                      _totalTasksCompleted(stats.taskStats, stats.memberActivity),
-                  totalXp: _totalXpEarned(stats.taskStats, stats.memberActivity),
+                  totalTasks: _totalTasksCompleted(
+                      stats.taskStats, stats.memberActivity,),
+                  totalXp:
+                      _totalXpEarned(stats.taskStats, stats.memberActivity),
                   totalCoins: _totalCoinsEarned(stats.memberActivity),
                   onRefresh: ref.read(statsControllerProvider.notifier).refresh,
                 ),

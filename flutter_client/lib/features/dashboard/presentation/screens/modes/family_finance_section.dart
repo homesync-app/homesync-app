@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
@@ -8,11 +9,9 @@ import 'package:homesync_client/features/expenses/domain/models/feed_item_model.
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
-import 'package:intl/intl.dart';
 
 class FamilyFinanceSection extends ConsumerWidget {
   final HouseholdCapabilities caps;
@@ -28,10 +27,10 @@ class FamilyFinanceSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final feedAsync = ref.watch(combinedFeedControllerProvider);
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final t = AppLocalizations.of(context);
 
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final isChild = currentMember?.isChild ?? false;
     final isTeen = currentMember?.isTeen ?? false;
     final adultMembers = members.where((m) => m.isAdult).toList();
@@ -71,7 +70,7 @@ class FamilyFinanceSection extends ConsumerWidget {
         ],
       );
     } else {
-      final feed = feedAsync.valueOrNull ?? const <FeedItemModel>[];
+      final feed = feedAsync.value ?? const <FeedItemModel>[];
 
       child = Column(
         key: ValueKey('finance-ready-${adultMembers.length}'),
@@ -278,7 +277,7 @@ class FamilyFinanceSection extends ConsumerWidget {
   }
 }
 
-class _SharedFamilyFinanceCard extends StatelessWidget {
+class _SharedFamilyFinanceCard extends ConsumerWidget {
   final double spent;
 
   const _SharedFamilyFinanceCard({
@@ -286,12 +285,10 @@ class _SharedFamilyFinanceCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final formatter = NumberFormat.decimalPattern(
-      Localizations.localeOf(context).toString(),
-    );
+    final currency = ref.watch(currencyProvider);
     final hasActivity = spent > 0;
 
     return Container(
@@ -348,7 +345,7 @@ class _SharedFamilyFinanceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$ ${formatter.format(spent.round())}',
+                  currency.format(spent),
                   style: TextStyle(
                     color: theme.textPrimary,
                     fontSize: 31,

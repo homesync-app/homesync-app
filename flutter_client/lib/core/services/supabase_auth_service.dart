@@ -40,8 +40,6 @@ class SupabaseAuthService {
     }
   }
 
-
-
   SupabaseClient get client => _client;
 
   // Auth Methods
@@ -60,14 +58,22 @@ class SupabaseAuthService {
 
     if (response.user != null) {
       await _createUserProfile(
-          response.user!.id, email, fullName, householdType,);
+        response.user!.id,
+        email,
+        fullName,
+        householdType,
+      );
     }
 
     return response;
   }
 
-  Future<void> _createUserProfile(String userId, String email, String? fullName,
-      String householdType,) async {
+  Future<void> _createUserProfile(
+    String userId,
+    String email,
+    String? fullName,
+    String householdType,
+  ) async {
     // 1. Generate household ID beforehand
     final householdId = const Uuid().v4();
 

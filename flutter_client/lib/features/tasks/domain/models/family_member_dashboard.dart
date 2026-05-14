@@ -46,7 +46,9 @@ class FamilyMemberSnapshot {
     return tasksDone / total;
   }
 
-  bool get isAdult => memberType == 'adult' || memberType == 'parent' ||
+  bool get isAdult =>
+      memberType == 'adult' ||
+      memberType == 'parent' ||
       memberType == 'guardian';
   bool get isChild => memberType == 'child';
   bool get isTeen => memberType == 'teen';
@@ -129,9 +131,8 @@ class FamilyMemberDashboard {
 
   factory FamilyMemberDashboard.fromMap(Map<String, dynamic> map) {
     final periodStr = (map['period'] as String?) ?? 'week';
-    final period = periodStr == 'month'
-        ? DashboardPeriod.month
-        : DashboardPeriod.week;
+    final period =
+        periodStr == 'month' ? DashboardPeriod.month : DashboardPeriod.week;
     final raw = map['members'];
     return FamilyMemberDashboard(
       period: period,

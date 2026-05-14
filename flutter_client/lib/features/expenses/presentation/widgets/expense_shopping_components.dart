@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/utils/receipt_matcher.dart';
@@ -6,6 +6,7 @@ import 'package:homesync_client/features/shopping/data/shopping_predefined.dart'
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class ExpenseShoppingIntegrationCard extends StatelessWidget {
@@ -313,8 +314,13 @@ class ExpenseShoppingIntegrationCard extends StatelessWidget {
                     final catalogEntry = ReceiptMatcher.findPredefined(raw);
                     final emoji = catalogEntry?.emoji ?? 'ðŸ›’';
                     final cleanRaw = ReceiptMatcher.cleanName(raw);
-                    final displayName = catalogEntry?.name ??
-                        (cleanRaw.isNotEmpty ? cleanRaw : raw);
+                    final displayName = catalogEntry != null
+                        ? localizedShoppingCatalogName(
+                            context,
+                            name: catalogEntry.name,
+                            nameKey: catalogEntry.nameKey,
+                          )
+                        : (cleanRaw.isNotEmpty ? cleanRaw : raw);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -395,7 +401,7 @@ class _ItemChip extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            item.name,
+            localizedShoppingItemName(context, item),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -652,7 +658,7 @@ class _ShoppingItemsSelectorSheetState
                             style: const TextStyle(fontSize: 24),
                           ),
                           title: Text(
-                            item.name,
+                            localizedShoppingItemName(context, item),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -705,7 +711,10 @@ class _ShoppingItemsSelectorSheetState
                               style: const TextStyle(fontSize: 22),
                             ),
                             title: Text(
-                              item['name']!,
+                              localizedShoppingCatalogName(
+                                context,
+                                name: item['name']!,
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textPrimary,
@@ -781,5 +790,3 @@ class _ShoppingItemsSelectorSheetState
     );
   }
 }
-
-

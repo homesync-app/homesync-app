@@ -41,7 +41,8 @@ AppNotification _notification(int index) {
 }
 
 void main() {
-  test('notificationsControllerProvider loads next page and updates hasMore', () async {
+  test('notificationsControllerProvider loads next page and updates hasMore',
+      () async {
     final repository = FakeNotificationRepository(
       List.generate(25, _notification),
     );
@@ -52,14 +53,15 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final initial = await container.read(notificationsControllerProvider.future);
+    final initial =
+        await container.read(notificationsControllerProvider.future);
     expect(initial.items, hasLength(20));
     expect(initial.hasMore, isTrue);
     expect(initial.isLoadingMore, isFalse);
 
     await container.read(notificationsControllerProvider.notifier).loadMore();
 
-    final paged = container.read(notificationsControllerProvider).valueOrNull;
+    final paged = container.read(notificationsControllerProvider).value;
     expect(paged, isNotNull);
     expect(paged!.items, hasLength(25));
     expect(paged.hasMore, isFalse);

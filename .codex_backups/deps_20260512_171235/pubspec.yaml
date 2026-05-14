@@ -1,0 +1,145 @@
+name: homesync_client
+description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
+publish_to: "none"
+version: 1.0.0+59
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Supabase client
+  supabase_flutter: ^2.12.0
+
+  # HTTP client
+  http: ^1.2.0
+
+  # Local storage
+  shared_preferences: ^2.3.0
+
+  # State management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # UI Framework / Icons
+  font_awesome_flutter: ^11.0.0
+  google_fonts: ^8.0.2
+
+  # Date and formatting
+  intl: ^0.20.2
+
+  # Charts
+  fl_chart: ^1.1.1
+
+  # Firebase Services
+  firebase_core: ^4.5.0
+  firebase_auth: ^6.2.0
+  firebase_analytics: ^12.1.3
+  firebase_crashlytics: ^5.0.8
+  firebase_messaging: ^16.1.2
+
+  # Utils
+  logger: ^2.4.0
+  uuid: ^4.4.0
+  permission_handler: ^12.0.1
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  path_provider: ^2.1.4
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  confetti: ^0.8.0
+  url_launcher: ^6.3.0
+  app_links: ^7.0.0
+  share_plus: ^12.0.1
+  vibration: ^3.1.8
+  local_auth: ^3.0.1
+  google_sign_in: ^7.2.0
+  fpdart: ^1.2.0
+  connectivity_plus: ^7.0.0
+  timeago: ^3.7.1
+  video_player: ^2.11.0
+  table_calendar: ^3.2.0
+
+  # Offline Storage
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  flutter_animate: ^4.5.2
+  package_info_plus: ^8.0.0
+  device_info_plus: ^10.1.0
+
+  in_app_purchase: ^3.2.3
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+  # Code generation
+  riverpod_generator: ^2.4.0
+  build_runner: ^2.4.11
+
+  # Linting
+  flutter_lints: ^3.0.0
+
+  # Mocking
+  mockito: ^5.4.6
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
+
+  # i18n: AI-assisted ARB translation. Activate globally instead of as a
+  # dev dep — locking it here forced intl ^0.19, which clashes with
+  # table_calendar (intl ^0.20). Run via:
+  #   dart pub global activate arb_translate
+  #   dart pub global run arb_translate
+  # See AGENTS.md for the workflow.
+  # arb_translate: ^1.1.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/images/premium_3d_avatars/
+    - assets/images/custom_avatars/
+    - assets/fonts/outfit/
+    - shorebird.yaml
+
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/outfit/Outfit-Regular.ttf
+        - asset: assets/fonts/outfit/Outfit-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/outfit/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/outfit/Outfit-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/outfit/Outfit-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/outfit/Outfit-Black.ttf
+          weight: 900
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon_full.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFF7F0"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  adaptive_icon_foreground_inset: 6
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#FFF7F0"
+  image: "assets/images/splash_logo_padded.png"
+  android_12:
+    image: "assets/images/splash_logo_padded.png"
+    icon_background_color: "#FFF7F0"
+  web: false

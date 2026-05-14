@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fa;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,13 +19,19 @@ enum FeedbackType { bug, suggestion }
 class FeedbackSheet extends ConsumerStatefulWidget {
   final FeedbackType initialType;
 
-  const FeedbackSheet(
-      {super.key, this.initialType = FeedbackType.bug, this.currentScreen,});
+  const FeedbackSheet({
+    super.key,
+    this.initialType = FeedbackType.bug,
+    this.currentScreen,
+  });
 
   final String? currentScreen;
 
-  static void show(BuildContext context,
-      {FeedbackType type = FeedbackType.bug, String? screen,}) {
+  static void show(
+    BuildContext context, {
+    FeedbackType type = FeedbackType.bug,
+    String? screen,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -43,6 +50,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   final _descCtrl = TextEditingController();
   bool _isSending = false;
   bool _sent = false;
+  bool _wantsEmailResponse = true;
 
   @override
   void initState() {
@@ -67,7 +75,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
     try {
       final client = ref.read(supabaseClientProvider);
       final userId = ref.read(currentUserIdProvider);
-      final profile = ref.read(userProfileProvider).valueOrNull;
+      final profile = ref.read(userProfileProvider).value;
       final email = profile?['email'] as String?;
       final info = await PackageInfo.fromPlatform();
 
@@ -87,25 +95,50 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
 
       final locale = Platform.localeName;
 
-      await client.from('user_feedback').insert({
-        'user_id': userId,
-        'email': email,
-        'type': _type.name,
-        'title': title,
-        'description':
-            _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-        'app_version': '${info.version}+${info.buildNumber}',
-        'platform': Platform.isAndroid
-            ? 'android'
-            : Platform.isIOS
-                ? 'ios'
-                : 'unknown',
-        'device_model': deviceModel,
-        'os_version': osVersion,
-        'locale': locale,
-        'screen_name': widget.currentScreen ?? breadcrumb.currentScreen,
-        'breadcrumbs': breadcrumb.getBreadcrumbs(),
-      });
+      final insertedFeedback = await client
+          .from('user_feedback')
+          .insert({
+            'user_id': userId,
+            'email': email,
+            'type': _type.name,
+            'title': title,
+            'description':
+                _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+            'app_version': '${info.version}+${info.buildNumber}',
+            'platform': Platform.isAndroid
+                ? 'android'
+                : Platform.isIOS
+                    ? 'ios'
+                    : 'unknown',
+            'device_model': deviceModel,
+            'os_version': osVersion,
+            'locale': locale,
+            'screen_name': widget.currentScreen ?? breadcrumb.currentScreen,
+            'breadcrumbs': breadcrumb.getBreadcrumbs(),
+            'wants_email_response': _wantsEmailResponse,
+          })
+          .select('id')
+          .single();
+
+      if (_wantsEmailResponse) {
+        try {
+          final accessToken =
+              await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
+          if (accessToken != null) {
+            await client.functions.invoke(
+              'send-feedback-ack',
+              body: {'feedback_id': insertedFeedback['id']},
+              headers: {'Authorization': 'Bearer $accessToken'},
+            );
+          }
+        } catch (ackError, ackStack) {
+          log.w(
+            'No se pudo enviar el acuse automatico de feedback',
+            error: ackError,
+            stackTrace: ackStack,
+          );
+        }
+      }
 
       setState(() {
         _isSending = false;
@@ -174,8 +207,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
             color: AppColors.success.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.check_rounded,
-              color: AppColors.success, size: 32,),
+          child: const Icon(
+            Icons.check_rounded,
+            color: AppColors.success,
+            size: 32,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -223,17 +259,27 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
         // tipo selector
         Row(
           children: [
-            _typeChip(theme, FeedbackType.bug, Icons.bug_report_outlined,
-                t.feedbackReportErrorOption,),
+            _typeChip(
+              theme,
+              FeedbackType.bug,
+              Icons.bug_report_outlined,
+              t.feedbackReportErrorOption,
+            ),
             const SizedBox(width: 10),
-            _typeChip(theme, FeedbackType.suggestion,
-                Icons.lightbulb_outline_rounded, t.feedbackSuggestImprovementOption,),
+            _typeChip(
+              theme,
+              FeedbackType.suggestion,
+              Icons.lightbulb_outline_rounded,
+              t.feedbackSuggestImprovementOption,
+            ),
           ],
         ),
         const SizedBox(height: 20),
 
         Text(
-          _type == FeedbackType.bug ? t.feedbackBugTitlePlaceholder : t.feedbackSuggestionTitlePlaceholder,
+          _type == FeedbackType.bug
+              ? t.feedbackBugTitlePlaceholder
+              : t.feedbackSuggestionTitlePlaceholder,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w800,
@@ -291,6 +337,30 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
+        const SizedBox(height: 10),
+        SwitchListTile.adaptive(
+          value: _wantsEmailResponse,
+          onChanged: _isSending
+              ? null
+              : (value) {
+                  HapticFeedback.selectionClick();
+                  setState(() => _wantsEmailResponse = value);
+                },
+          contentPadding: EdgeInsets.zero,
+          activeThumbColor: theme.primary,
+          title: Text(
+            t.feedbackEmailResponseTitle,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: theme.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            t.feedbackEmailResponseSubtitle,
+            style: TextStyle(fontSize: 12, color: theme.textSecondary),
+          ),
+        ),
         const SizedBox(height: 20),
 
         SizedBox(
@@ -304,7 +374,8 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
               foregroundColor: Colors.white,
               disabledBackgroundColor: theme.primary.withValues(alpha: 0.35),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),),
+                borderRadius: BorderRadius.circular(18),
+              ),
               elevation: 0,
             ),
             child: _isSending
@@ -321,7 +392,9 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
                         ? t.feedbackSendBugReport
                         : t.feedbackSendSuggestion,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 16,),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
                   ),
           ),
         ),
@@ -330,7 +403,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   }
 
   Widget _typeChip(
-      AppThemeColors theme, FeedbackType type, IconData icon, String label,) {
+    AppThemeColors theme,
+    FeedbackType type,
+    IconData icon,
+    String label,
+  ) {
     final isSelected = _type == type;
     return Expanded(
       child: GestureDetector(
@@ -356,9 +433,11 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: 18,
-                  color: isSelected ? theme.primary : theme.textSecondary,),
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? theme.primary : theme.textSecondary,
+              ),
               const SizedBox(width: 6),
               Text(
                 label,

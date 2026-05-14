@@ -82,11 +82,13 @@ class MockTaskRepository implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> updateSchedule(
-      String taskId, String? recurrenceType,
-      {int? recurrenceInterval,
-      List<int>? recurrenceWeekdays,
-      List<int>? recurrenceMonthDays,
-      String? assignedTo,}) async {
+    String taskId,
+    String? recurrenceType, {
+    int? recurrenceInterval,
+    List<int>? recurrenceWeekdays,
+    List<int>? recurrenceMonthDays,
+    String? assignedTo,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failMessage ?? 'Mock error'));
     return const Right(null);
   }

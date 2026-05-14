@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
@@ -23,7 +22,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 part 'supabase_task_repository.g.dart';
 
 @riverpod
-TaskRepository taskRepository(TaskRepositoryRef ref) {
+TaskRepository taskRepository(Ref ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(taskRpcServiceProvider);
   return SupabaseTaskRepository(client: client, rpc: rpc, ref: ref);
@@ -77,23 +76,26 @@ class SupabaseTaskRepository
     int limit = 100,
     int offset = 0,
   }) async {
+    final isAdminTestingActive = _isAdminTestingActive;
+    final selectedAdminHouseholdId = _selectedAdminHouseholdId;
+    final effectiveHouseholdId = selectedAdminHouseholdId ?? householdId;
     return executeWithHandling(
       () async {
-        final raw = _isAdminTestingActive
+        final raw = isAdminTestingActive
             ? await _client.rpc(
                 'qa_admin_get_tasks',
-                params: {'p_household_id': _selectedAdminHouseholdId},
+                params: {'p_household_id': selectedAdminHouseholdId},
               )
             : await _rpc.getTasks(limit: limit, offset: offset);
         final tasks = (raw as List)
             .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
             .toList();
         log.i(
-          'TaskRepository.getTasks household=${_selectedAdminHouseholdId ?? householdId} count=${tasks.length} adminQa=$_isAdminTestingActive',
+          'TaskRepository.getTasks household=$effectiveHouseholdId count=${tasks.length} adminQa=$isAdminTestingActive',
         );
         try {
           await OfflineStorageService().set(
-            'tasks_cache_${_selectedAdminHouseholdId ?? householdId}',
+            'tasks_cache_$effectiveHouseholdId',
             {'tasks': raw},
           );
         } catch (error, stackTrace) {
@@ -109,7 +111,7 @@ class SupabaseTaskRepository
       isOnline: _isOnline,
       onOffline: () async {
         final cached = await OfflineStorageService()
-            .get('tasks_cache_${_selectedAdminHouseholdId ?? householdId}');
+            .get('tasks_cache_$effectiveHouseholdId');
         if (cached != null && cached['tasks'] != null) {
           log.i(
             'TaskRepository.getTasks: Recovered from persistent offline cache',
@@ -176,7 +178,7 @@ class SupabaseTaskRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'complete_task_transaction',
+            target: 'complete_task_v1',
             params: {
               'p_request_id':
                   'offline_${DateTime.now().millisecondsSinceEpoch}',
@@ -358,16 +360,20 @@ class SupabaseTaskRepository
   Future<Either<Failure, void>> deleteTask(String taskId) async {
     return executeWithHandling(
       () async {
-        await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
+        if (_isAdminTestingActive) {
+          await _client.from(AppConstants.tableTasks).delete().eq('id', taskId);
+          return;
+        }
+        await _rpc.deleteTask(taskId: taskId);
       },
       context: 'SupabaseTaskRepository.deleteTask',
       isOnline: _isOnline,
       onOffline: () async {
         await _queueAction(
           OfflineAction(
-            type: OfflineActionType.tableDelete,
-            target: AppConstants.tableTasks,
-            filters: [OfflineFilter(column: 'id', value: taskId)],
+            type: OfflineActionType.rpc,
+            target: 'delete_task_v1',
+            params: {'p_task_id': taskId},
           ),
         );
       },

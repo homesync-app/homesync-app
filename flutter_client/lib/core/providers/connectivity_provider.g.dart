@@ -6,75 +6,183 @@ part of 'connectivity_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$connectivityClientHash() =>
-    r'bed594ed64879e16572909372e8ff7e82e5b1448';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [connectivityClient].
 @ProviderFor(connectivityClient)
-final connectivityClientProvider = Provider<ConnectivityClient>.internal(
-  connectivityClient,
-  name: r'connectivityClientProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$connectivityClientHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final connectivityClientProvider = ConnectivityClientProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ConnectivityClientRef = ProviderRef<ConnectivityClient>;
-String _$isOnlineHash() => r'3d820b85138d26a6af8be902c7c7a39ff58aa744';
+final class ConnectivityClientProvider extends $FunctionalProvider<
+    ConnectivityClient,
+    ConnectivityClient,
+    ConnectivityClient> with $Provider<ConnectivityClient> {
+  ConnectivityClientProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'connectivityClientProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [isOnline].
-@ProviderFor(isOnline)
-final isOnlineProvider = AutoDisposeProvider<bool>.internal(
-  isOnline,
-  name: r'isOnlineProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$isOnlineHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  String debugGetCreateSourceHash() => _$connectivityClientHash();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef IsOnlineRef = AutoDisposeProviderRef<bool>;
-String _$connectivityStatusHash() =>
-    r'6824b3ceb8e44f09505b13f53ad9f32fa6ac02e3';
+  @$internal
+  @override
+  $ProviderElement<ConnectivityClient> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
-/// See also [connectivityStatus].
-@ProviderFor(connectivityStatus)
-final connectivityStatusProvider =
-    AutoDisposeProvider<ConnectivityStatus>.internal(
-  connectivityStatus,
-  name: r'connectivityStatusProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$connectivityStatusHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+  @override
+  ConnectivityClient create(Ref ref) {
+    return connectivityClient(ref);
+  }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ConnectivityStatusRef = AutoDisposeProviderRef<ConnectivityStatus>;
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ConnectivityClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectivityClient>(value),
+    );
+  }
+}
+
+String _$connectivityClientHash() =>
+    r'd7693cc3801a05a007ebd9d42abfdf5bcabacdda';
+
+@ProviderFor(ConnectivityNotifier)
+final connectivityProvider = ConnectivityNotifierProvider._();
+
+final class ConnectivityNotifierProvider
+    extends $NotifierProvider<ConnectivityNotifier, ConnectivityState> {
+  ConnectivityNotifierProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'connectivityProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectivityNotifierHash();
+
+  @$internal
+  @override
+  ConnectivityNotifier create() => ConnectivityNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ConnectivityState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectivityState>(value),
+    );
+  }
+}
+
 String _$connectivityNotifierHash() =>
     r'a8545c3466f6c696bd2ccdf9ec9d77f277b8af76';
 
-/// See also [ConnectivityNotifier].
-@ProviderFor(ConnectivityNotifier)
-final connectivityNotifierProvider =
-    NotifierProvider<ConnectivityNotifier, ConnectivityState>.internal(
-  ConnectivityNotifier.new,
-  name: r'connectivityNotifierProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$connectivityNotifierHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+abstract class _$ConnectivityNotifier extends $Notifier<ConnectivityState> {
+  ConnectivityState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<ConnectivityState, ConnectivityState>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<ConnectivityState, ConnectivityState>,
+        ConnectivityState,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}
 
-typedef _$ConnectivityNotifier = Notifier<ConnectivityState>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+@ProviderFor(isOnline)
+final isOnlineProvider = IsOnlineProvider._();
+
+final class IsOnlineProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  IsOnlineProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'isOnlineProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$isOnlineHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return isOnline(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$isOnlineHash() => r'3d2ac554928b736fbda0d82997a79f9c93f05be9';
+
+@ProviderFor(connectivityStatus)
+final connectivityStatusProvider = ConnectivityStatusProvider._();
+
+final class ConnectivityStatusProvider extends $FunctionalProvider<
+    ConnectivityStatus,
+    ConnectivityStatus,
+    ConnectivityStatus> with $Provider<ConnectivityStatus> {
+  ConnectivityStatusProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'connectivityStatusProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$connectivityStatusHash();
+
+  @$internal
+  @override
+  $ProviderElement<ConnectivityStatus> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ConnectivityStatus create(Ref ref) {
+    return connectivityStatus(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ConnectivityStatus value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectivityStatus>(value),
+    );
+  }
+}
+
+String _$connectivityStatusHash() =>
+    r'174e70db1b8b627546c9d2a75cb6485dfcd35731';

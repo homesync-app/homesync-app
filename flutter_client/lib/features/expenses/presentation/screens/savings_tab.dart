@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 class SavingsTab extends ConsumerWidget {
   const SavingsTab({super.key});
@@ -21,10 +21,10 @@ class SavingsTab extends ConsumerWidget {
       data: (goals) {
         if (goals.isEmpty) {
           return _buildEmptyState(
-            'No hay metas activas aÃºn',
-            icon: 'ðŸŽ¯',
+            'No hay metas activas aún',
+            icon: '🎯',
             subtitle:
-                'EmpezÃ¡ a guardar para algo que de verdad les entusiasme.',
+                'Empezá a guardar para algo que de verdad les entusiasme.',
           );
         }
 
@@ -43,13 +43,9 @@ class SavingsTab extends ConsumerWidget {
     );
   }
 
-  static String formatCurrency(num amount) {
-    return NumberFormat('#,###', 'es_AR').format(amount).replaceAll(',', '.');
-  }
-
   static Widget _buildEmptyState(
     String message, {
-    String icon = 'ðŸ“‰',
+    String icon = '📉',
     String? subtitle,
   }) {
     return Center(
@@ -80,7 +76,7 @@ class SavingsTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
               subtitle ??
-                  'EmpezÃ¡ hoy mismo a organizar tus finanzas del hogar.',
+                  'Empezá hoy mismo a organizar tus finanzas del hogar.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -95,7 +91,10 @@ class SavingsTab extends ConsumerWidget {
   }
 
   static Widget _buildGoalCard(
-      BuildContext context, SavingsGoalModel goal, WidgetRef ref,) {
+    BuildContext context,
+    SavingsGoalModel goal,
+    WidgetRef ref,
+  ) {
     final theme = context.theme;
     return AnimatedPress(
       onTap: () => _showContributionDialog(context, goal, ref),
@@ -137,7 +136,7 @@ class SavingsTab extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Meta: \$ ${formatCurrency(goal.targetAmount)}',
+                        'Meta: ${ref.read(currencyProvider).format(goal.targetAmount)}',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
@@ -183,7 +182,7 @@ class SavingsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Ahorrado: \$ ${formatCurrency(goal.currentAmount)}',
+                  'Ahorrado: ${ref.read(currencyProvider).format(goal.currentAmount)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textSecondary,
@@ -226,7 +225,7 @@ class SavingsTab extends ConsumerWidget {
   static void showGoalSheet(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController();
     final amountController = TextEditingController();
-    String selectedEmoji = 'ðŸŽ¯';
+    String selectedEmoji = '🎯';
     Color selectedColor = AppColors.primary;
 
     showModalBottomSheet(
@@ -306,7 +305,7 @@ class SavingsTab extends ConsumerWidget {
                                         ),
                                         SizedBox(height: 10),
                                         Text(
-                                          'DefinÃ­ quÃ© quieren lograr y cuÃ¡nto necesitan juntar para hacerlo realidad.',
+                                          'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.',
                                           style: TextStyle(
                                             fontSize: 16,
                                             height: 1.4,
@@ -331,7 +330,7 @@ class SavingsTab extends ConsumerWidget {
                               ),
                               const SizedBox(height: 12),
                               const Text(
-                                'QuÃ© quieren alcanzar',
+                                'Qué quieren alcanzar',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
@@ -348,8 +347,10 @@ class SavingsTab extends ConsumerWidget {
                                   color: AppColors.textPrimary,
                                 ),
                                 decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(context).expensesSavingsGoalNameLabel,
-                                  hintText: AppLocalizations.of(context).expensesSavingsGoalNameHint,
+                                  labelText: AppLocalizations.of(context)
+                                      .expensesSavingsGoalNameLabel,
+                                  hintText: AppLocalizations.of(context)
+                                      .expensesSavingsGoalNameHint,
                                   prefixIcon: const Icon(
                                     Icons.flag_rounded,
                                     color: AppColors.primary,
@@ -393,9 +394,12 @@ class SavingsTab extends ConsumerWidget {
                                   color: AppColors.textPrimary,
                                 ),
                                 decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(context).expensesSavingsGoalAmountLabel,
-                                  hintText: AppLocalizations.of(context).expensesSavingsGoalAmountHint,
-                                  prefixText: '\$ ',
+                                  labelText: AppLocalizations.of(context)
+                                      .expensesSavingsGoalAmountLabel,
+                                  hintText: AppLocalizations.of(context)
+                                      .expensesSavingsGoalAmountHint,
+                                  prefixText:
+                                      ref.watch(currencyProvider).inputPrefix(),
                                   prefixStyle: const TextStyle(
                                     fontWeight: FontWeight.w800,
                                     fontSize: 20,
@@ -432,7 +436,7 @@ class SavingsTab extends ConsumerWidget {
                               ),
                               const SizedBox(height: 32),
                               const Text(
-                                'PERSONALIZACIÃ“N',
+                                'PERSONALIZACIÓN',
                                 style: TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 12,
@@ -458,20 +462,20 @@ class SavingsTab extends ConsumerWidget {
                                     value: selectedEmoji,
                                     onTap: () {
                                       final emojis = [
-                                        'ðŸŽ¯',
-                                        'ðŸ¡',
-                                        'âœˆï¸',
-                                        'ðŸš—',
-                                        'ðŸ’',
-                                        'ðŸ›‹ï¸',
-                                        'ðŸ¼',
-                                        'ðŸŽ“',
-                                        'ðŸ¶',
-                                        'ðŸ’»',
+                                        '🎯',
+                                        '🏡',
+                                        '✈️',
+                                        '🚗',
+                                        '💍',
+                                        '🛋️',
+                                        '🍼',
+                                        '🎓',
+                                        '🐶',
+                                        '💻',
                                       ];
                                       _showSimplePicker(
                                         context,
-                                        'ElegÃ­ un Ã­cono',
+                                        'Elegí un ícono',
                                         emojis,
                                         (e) => setModalState(
                                           () => selectedEmoji = e,
@@ -599,7 +603,10 @@ class SavingsTab extends ConsumerWidget {
   }
 
   static void _showContributionDialog(
-      BuildContext context, SavingsGoalModel goal, WidgetRef ref,) {
+    BuildContext context,
+    SavingsGoalModel goal,
+    WidgetRef ref,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -672,7 +679,7 @@ class SavingsTab extends ConsumerWidget {
                 ),
                 decoration: InputDecoration(
                   hintText: '0',
-                  prefixText: '\$ ',
+                  prefixText: ref.watch(currencyProvider).inputPrefix(),
                   prefixStyle: const TextStyle(color: AppColors.textMuted),
                   border: InputBorder.none,
                   hintStyle: TextStyle(
@@ -767,8 +774,12 @@ class SavingsTab extends ConsumerWidget {
     );
   }
 
-  static void _showSimplePicker(BuildContext context, String title,
-      List<String> options, Function(String) onSelect,) {
+  static void _showSimplePicker(
+    BuildContext context,
+    String title,
+    List<String> options,
+    Function(String) onSelect,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
@@ -818,7 +829,10 @@ class SavingsTab extends ConsumerWidget {
   }
 
   static void _showColorPicker(
-      BuildContext context, List<Color> colors, Function(Color) onSelect,) {
+    BuildContext context,
+    List<Color> colors,
+    Function(Color) onSelect,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.theme.scaffoldBackground,
@@ -831,7 +845,7 @@ class SavingsTab extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'ElegÃ­ un color',
+              'Elegí un color',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 20),
@@ -864,4 +878,3 @@ class SavingsTab extends ConsumerWidget {
     );
   }
 }
-

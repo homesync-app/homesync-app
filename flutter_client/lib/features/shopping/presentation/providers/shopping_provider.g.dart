@@ -6,160 +6,362 @@ part of 'shopping_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$shoppingRepositoryHash() =>
-    r'fb6f2bbad2f60c7b06f19eb0d0a78b7ec6505d1d';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [shoppingRepository].
 @ProviderFor(shoppingRepository)
-final shoppingRepositoryProvider =
-    AutoDisposeProvider<ShoppingRepository>.internal(
-  shoppingRepository,
-  name: r'shoppingRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$shoppingRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final shoppingRepositoryProvider = ShoppingRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ShoppingRepositoryRef = AutoDisposeProviderRef<ShoppingRepository>;
-String _$getShoppingItemsUseCaseHash() =>
-    r'71ebe8eb6ade084a00afddb8d5e06329fcee1ada';
+final class ShoppingRepositoryProvider extends $FunctionalProvider<
+    ShoppingRepository,
+    ShoppingRepository,
+    ShoppingRepository> with $Provider<ShoppingRepository> {
+  ShoppingRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'shoppingRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [getShoppingItemsUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$shoppingRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<ShoppingRepository> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ShoppingRepository create(Ref ref) {
+    return shoppingRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ShoppingRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ShoppingRepository>(value),
+    );
+  }
+}
+
+String _$shoppingRepositoryHash() =>
+    r'b8b5bc49de5c59dd47e7484b8d5ad7142969d4b9';
+
 @ProviderFor(getShoppingItemsUseCase)
-final getShoppingItemsUseCaseProvider =
-    AutoDisposeProvider<GetShoppingItemsUseCase>.internal(
-  getShoppingItemsUseCase,
-  name: r'getShoppingItemsUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$getShoppingItemsUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final getShoppingItemsUseCaseProvider = GetShoppingItemsUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GetShoppingItemsUseCaseRef
-    = AutoDisposeProviderRef<GetShoppingItemsUseCase>;
-String _$addShoppingItemUseCaseHash() =>
-    r'f1cf420157c60fad2169c7363bbce8f349e519d5';
+final class GetShoppingItemsUseCaseProvider extends $FunctionalProvider<
+    GetShoppingItemsUseCase,
+    GetShoppingItemsUseCase,
+    GetShoppingItemsUseCase> with $Provider<GetShoppingItemsUseCase> {
+  GetShoppingItemsUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'getShoppingItemsUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [addShoppingItemUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$getShoppingItemsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<GetShoppingItemsUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GetShoppingItemsUseCase create(Ref ref) {
+    return getShoppingItemsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GetShoppingItemsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GetShoppingItemsUseCase>(value),
+    );
+  }
+}
+
+String _$getShoppingItemsUseCaseHash() =>
+    r'a11f7235edadfd24e9d0270afd883a397df7d8b7';
+
 @ProviderFor(addShoppingItemUseCase)
-final addShoppingItemUseCaseProvider =
-    AutoDisposeProvider<AddShoppingItemUseCase>.internal(
-  addShoppingItemUseCase,
-  name: r'addShoppingItemUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$addShoppingItemUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final addShoppingItemUseCaseProvider = AddShoppingItemUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef AddShoppingItemUseCaseRef
-    = AutoDisposeProviderRef<AddShoppingItemUseCase>;
-String _$toggleShoppingItemUseCaseHash() =>
-    r'54d280dd9284ad4b62746911ae5bd7dd17c0e405';
+final class AddShoppingItemUseCaseProvider extends $FunctionalProvider<
+    AddShoppingItemUseCase,
+    AddShoppingItemUseCase,
+    AddShoppingItemUseCase> with $Provider<AddShoppingItemUseCase> {
+  AddShoppingItemUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'addShoppingItemUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [toggleShoppingItemUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$addShoppingItemUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<AddShoppingItemUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AddShoppingItemUseCase create(Ref ref) {
+    return addShoppingItemUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AddShoppingItemUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AddShoppingItemUseCase>(value),
+    );
+  }
+}
+
+String _$addShoppingItemUseCaseHash() =>
+    r'daff1b4481a0e8076860bd7a2342c143b686475f';
+
 @ProviderFor(toggleShoppingItemUseCase)
-final toggleShoppingItemUseCaseProvider =
-    AutoDisposeProvider<ToggleShoppingItemUseCase>.internal(
-  toggleShoppingItemUseCase,
-  name: r'toggleShoppingItemUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$toggleShoppingItemUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final toggleShoppingItemUseCaseProvider = ToggleShoppingItemUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ToggleShoppingItemUseCaseRef
-    = AutoDisposeProviderRef<ToggleShoppingItemUseCase>;
-String _$deleteShoppingItemUseCaseHash() =>
-    r'32a9cf2ee6b6afcab501ea2b32bfe91252b6caa5';
+final class ToggleShoppingItemUseCaseProvider extends $FunctionalProvider<
+    ToggleShoppingItemUseCase,
+    ToggleShoppingItemUseCase,
+    ToggleShoppingItemUseCase> with $Provider<ToggleShoppingItemUseCase> {
+  ToggleShoppingItemUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'toggleShoppingItemUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [deleteShoppingItemUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$toggleShoppingItemUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ToggleShoppingItemUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ToggleShoppingItemUseCase create(Ref ref) {
+    return toggleShoppingItemUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ToggleShoppingItemUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ToggleShoppingItemUseCase>(value),
+    );
+  }
+}
+
+String _$toggleShoppingItemUseCaseHash() =>
+    r'24f02f1866b7b1aaead51cc9b0e1308927dee1b7';
+
 @ProviderFor(deleteShoppingItemUseCase)
-final deleteShoppingItemUseCaseProvider =
-    AutoDisposeProvider<DeleteShoppingItemUseCase>.internal(
-  deleteShoppingItemUseCase,
-  name: r'deleteShoppingItemUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$deleteShoppingItemUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final deleteShoppingItemUseCaseProvider = DeleteShoppingItemUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DeleteShoppingItemUseCaseRef
-    = AutoDisposeProviderRef<DeleteShoppingItemUseCase>;
-String _$clearCompletedShoppingItemsUseCaseHash() =>
-    r'096a6e86287b5de060519b20c9119e852c4a4789';
+final class DeleteShoppingItemUseCaseProvider extends $FunctionalProvider<
+    DeleteShoppingItemUseCase,
+    DeleteShoppingItemUseCase,
+    DeleteShoppingItemUseCase> with $Provider<DeleteShoppingItemUseCase> {
+  DeleteShoppingItemUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'deleteShoppingItemUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [clearCompletedShoppingItemsUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$deleteShoppingItemUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<DeleteShoppingItemUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DeleteShoppingItemUseCase create(Ref ref) {
+    return deleteShoppingItemUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DeleteShoppingItemUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DeleteShoppingItemUseCase>(value),
+    );
+  }
+}
+
+String _$deleteShoppingItemUseCaseHash() =>
+    r'b6f9f7b27675141d383648c20c978caf48f04c08';
+
 @ProviderFor(clearCompletedShoppingItemsUseCase)
 final clearCompletedShoppingItemsUseCaseProvider =
-    AutoDisposeProvider<ClearCompletedShoppingItemsUseCase>.internal(
-  clearCompletedShoppingItemsUseCase,
-  name: r'clearCompletedShoppingItemsUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$clearCompletedShoppingItemsUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    ClearCompletedShoppingItemsUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ClearCompletedShoppingItemsUseCaseRef
-    = AutoDisposeProviderRef<ClearCompletedShoppingItemsUseCase>;
-String _$uncompleteAllShoppingItemsUseCaseHash() =>
-    r'814b67045b00df4ef40a8bf4364dba5827e0fb68';
+final class ClearCompletedShoppingItemsUseCaseProvider
+    extends $FunctionalProvider<ClearCompletedShoppingItemsUseCase,
+        ClearCompletedShoppingItemsUseCase, ClearCompletedShoppingItemsUseCase>
+    with $Provider<ClearCompletedShoppingItemsUseCase> {
+  ClearCompletedShoppingItemsUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'clearCompletedShoppingItemsUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [uncompleteAllShoppingItemsUseCase].
+  @override
+  String debugGetCreateSourceHash() =>
+      _$clearCompletedShoppingItemsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ClearCompletedShoppingItemsUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ClearCompletedShoppingItemsUseCase create(Ref ref) {
+    return clearCompletedShoppingItemsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ClearCompletedShoppingItemsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<ClearCompletedShoppingItemsUseCase>(value),
+    );
+  }
+}
+
+String _$clearCompletedShoppingItemsUseCaseHash() =>
+    r'34e60a213fa50ba1ae7c4e0dac06aba0077ea13e';
+
 @ProviderFor(uncompleteAllShoppingItemsUseCase)
 final uncompleteAllShoppingItemsUseCaseProvider =
-    AutoDisposeProvider<UncompleteAllShoppingItemsUseCase>.internal(
-  uncompleteAllShoppingItemsUseCase,
-  name: r'uncompleteAllShoppingItemsUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$uncompleteAllShoppingItemsUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+    UncompleteAllShoppingItemsUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef UncompleteAllShoppingItemsUseCaseRef
-    = AutoDisposeProviderRef<UncompleteAllShoppingItemsUseCase>;
-String _$shoppingItemsHash() => r'b33545f0c791ccec0b5fcb32a52419fa010fca46';
+final class UncompleteAllShoppingItemsUseCaseProvider
+    extends $FunctionalProvider<UncompleteAllShoppingItemsUseCase,
+        UncompleteAllShoppingItemsUseCase, UncompleteAllShoppingItemsUseCase>
+    with $Provider<UncompleteAllShoppingItemsUseCase> {
+  UncompleteAllShoppingItemsUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'uncompleteAllShoppingItemsUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [ShoppingItems].
+  @override
+  String debugGetCreateSourceHash() =>
+      _$uncompleteAllShoppingItemsUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UncompleteAllShoppingItemsUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UncompleteAllShoppingItemsUseCase create(Ref ref) {
+    return uncompleteAllShoppingItemsUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UncompleteAllShoppingItemsUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride:
+          $SyncValueProvider<UncompleteAllShoppingItemsUseCase>(value),
+    );
+  }
+}
+
+String _$uncompleteAllShoppingItemsUseCaseHash() =>
+    r'fe49d3c404a878cfff2a78126a343cd1611e8731';
+
 @ProviderFor(ShoppingItems)
-final shoppingItemsProvider =
-    AsyncNotifierProvider<ShoppingItems, List<ShoppingItemModel>>.internal(
-  ShoppingItems.new,
-  name: r'shoppingItemsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$shoppingItemsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final shoppingItemsProvider = ShoppingItemsProvider._();
 
-typedef _$ShoppingItems = AsyncNotifier<List<ShoppingItemModel>>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class ShoppingItemsProvider
+    extends $AsyncNotifierProvider<ShoppingItems, List<ShoppingItemModel>> {
+  ShoppingItemsProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'shoppingItemsProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$shoppingItemsHash();
+
+  @$internal
+  @override
+  ShoppingItems create() => ShoppingItems();
+}
+
+String _$shoppingItemsHash() => r'7f20095efc247f3eacf1891b8ed8a5c5b592d087';
+
+abstract class _$ShoppingItems extends $AsyncNotifier<List<ShoppingItemModel>> {
+  FutureOr<List<ShoppingItemModel>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref
+        as $Ref<AsyncValue<List<ShoppingItemModel>>, List<ShoppingItemModel>>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<AsyncValue<List<ShoppingItemModel>>,
+            List<ShoppingItemModel>>,
+        AsyncValue<List<ShoppingItemModel>>,
+        Object?,
+        Object?>;
+    element.handleCreate(ref, build);
+  }
+}

@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
@@ -66,7 +67,8 @@ class _RecurringExpenseFormSheetState
   bool _isLoading = false;
   late String _type;
 
-  final List<Map<String, dynamic>> _expenseCategories = buildExpenseCategories();
+  final List<Map<String, dynamic>> _expenseCategories =
+      buildExpenseCategories();
 
   late final List<Map<String, dynamic>> _incomeCategories;
 
@@ -183,8 +185,10 @@ class _RecurringExpenseFormSheetState
     if (title.isEmpty || parsedAmount == null || parsedAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(AppLocalizations.of(context)
-                .recurringExpenseValidationTitleAmount,),),
+          content: Text(
+            AppLocalizations.of(context).recurringExpenseValidationTitleAmount,
+          ),
+        ),
       );
       return;
     }
@@ -193,7 +197,8 @@ class _RecurringExpenseFormSheetState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              AppLocalizations.of(context).recurringExpenseValidationPayer,),
+            AppLocalizations.of(context).recurringExpenseValidationPayer,
+          ),
         ),
       );
       return;
@@ -209,6 +214,11 @@ class _RecurringExpenseFormSheetState
         id: widget.template?.id ?? const Uuid().v4(),
         householdId: householdId,
         title: title,
+        titleKey: financeTitleKeyFor(
+          title,
+          category: _category,
+          transactionType: _type,
+        ),
         defaultAmount: parsedAmount,
         category: _category,
         dayOfMonth: _dayOfMonth,
@@ -463,9 +473,11 @@ class _RecurringExpenseFormSheetState
           OutlinedButton.icon(
             onPressed: _delete,
             icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: Text(isIncome
-                ? t.recurringExpenseDeleteIncome
-                : t.recurringExpenseDeleteSubscription,),
+            label: Text(
+              isIncome
+                  ? t.recurringExpenseDeleteIncome
+                  : t.recurringExpenseDeleteSubscription,
+            ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.error,
               side: BorderSide(color: AppColors.error.withValues(alpha: 0.22)),
@@ -532,8 +544,11 @@ class _RecurringExpenseFormSheetState
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: 16, color: isSelected ? color : AppColors.textMuted,),
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? color : AppColors.textMuted,
+              ),
               const SizedBox(width: 6),
               Text(
                 label,
@@ -754,14 +769,18 @@ class _RecurringExpenseFormSheetState
                 children: [
                   Icon(
                     CategoryMapping.getCategoryMaterialIcon(
-                        category['id'] as String,),
+                      category['id'] as String,
+                    ),
                     size: 16,
                     color: categoryColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     _type == 'income'
-                        ? localizedIncomeCategoryName(t, category['id'] as String)
+                        ? localizedIncomeCategoryName(
+                            t,
+                            category['id'] as String,
+                          )
                         : localizedExpenseCategoryName(
                             t,
                             category['id'] as String,
@@ -1010,5 +1029,3 @@ class _RecurringExpenseFormSheetState
     );
   }
 }
-
-

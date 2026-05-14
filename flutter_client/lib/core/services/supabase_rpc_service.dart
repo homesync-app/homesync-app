@@ -12,7 +12,7 @@ import 'rpc/task_rpc_service.dart';
 /// while the app transitions to the new split services.
 class SupabaseRpcService {
   final SupabaseClient _client;
-  
+
   late final AdminRpcService _admin;
   late final TaskRpcService _task;
   late final StatsRpcService _stats;
@@ -26,7 +26,6 @@ class SupabaseRpcService {
     _stats = StatsRpcService(clientOverride: _client);
     _balance = BalanceRpcService(clientOverride: _client);
     _household = HouseholdRpcService(clientOverride: _client);
-
   }
 
   Future<void> initialize() async {
@@ -40,25 +39,32 @@ class SupabaseRpcService {
     String? stackTrace,
     String level = 'error',
     Map<String, dynamic>? context,
-  }) => _admin.logApplicationError(
-    message: message, 
-    stackTrace: stackTrace, 
-    level: level, 
-    context: context,
-  );
+  }) =>
+      _admin.logApplicationError(
+        message: message,
+        stackTrace: stackTrace,
+        level: level,
+        context: context,
+      );
 
   // --- Stats / Weekly ---
   Future<bool> isWeekProcessed() => _stats.isWeekProcessed();
-  Future<List<Map<String, dynamic>>> getWeeklyRanking() => _stats.getWeeklyRanking();
-  Future<List<Map<String, dynamic>>> getTaskStatsByCategory() => _stats.getTaskStatsByCategory();
-  Future<List<Map<String, dynamic>>> getMemberActivityStats() => _stats.getMemberActivityStats();
+  Future<List<Map<String, dynamic>>> getWeeklyRanking() =>
+      _stats.getWeeklyRanking();
+  Future<List<Map<String, dynamic>>> getTaskStatsByCategory() =>
+      _stats.getTaskStatsByCategory();
+  Future<List<Map<String, dynamic>>> getMemberActivityStats() =>
+      _stats.getMemberActivityStats();
   Future<List<Map<String, dynamic>>> getXpHistory() => _stats.getXpHistory();
-  Future<List<Map<String, dynamic>>> getCoinHistory() => _stats.getCoinHistory();
-  Future<List<Map<String, dynamic>>> getWeeklyDuelHistory() => _stats.getWeeklyDuelHistory();
-  Future<Map<String, dynamic>> awardWeeklyWinner() => _stats.awardWeeklyWinner();
+  Future<List<Map<String, dynamic>>> getCoinHistory() =>
+      _stats.getCoinHistory();
+  Future<List<Map<String, dynamic>>> getWeeklyDuelHistory() =>
+      _stats.getWeeklyDuelHistory();
+  Future<Map<String, dynamic>> awardWeeklyWinner() =>
+      _stats.awardWeeklyWinner();
 
   // --- Balance ---
-  Future<Map<String, dynamic>> getUserBalance({required String householdId}) => 
+  Future<Map<String, dynamic>> getUserBalance({required String householdId}) =>
       _balance.getUserBalance(householdId: householdId);
 
   // --- Task ---
@@ -69,16 +75,17 @@ class SupabaseRpcService {
     required int coinReward,
     required String householdId,
     List<String>? userIds,
-  }) => _task.completeTaskTransaction(
-    taskId: taskId,
-    taskTitle: taskTitle,
-    xpReward: xpReward,
-    coinReward: coinReward,
-    householdId: householdId,
-    userIds: userIds,
-  );
+  }) =>
+      _task.completeTaskTransaction(
+        taskId: taskId,
+        taskTitle: taskTitle,
+        xpReward: xpReward,
+        coinReward: coinReward,
+        householdId: householdId,
+        userIds: userIds,
+      );
 
   // --- Household ---
-  Future<List<Map<String, dynamic>>> getHouseholdMembers() => 
+  Future<List<Map<String, dynamic>>> getHouseholdMembers() =>
       _household.getHouseholdMembers();
 }

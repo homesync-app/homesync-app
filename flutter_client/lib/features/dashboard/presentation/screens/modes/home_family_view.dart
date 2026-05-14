@@ -9,7 +9,6 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_activity_feed_item.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
@@ -38,9 +37,9 @@ class HomeFamilyView extends ConsumerStatefulWidget {
 
 class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   MemberModel? get _currentMember {
-    final membersAsync = ref.read(householdMembersNotifierProvider);
+    final membersAsync = ref.read(householdMembersProvider);
     final currentUserId = ref.read(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     return members.where((m) => m.userId == currentUserId).firstOrNull;
   }
 
@@ -49,9 +48,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final theme = context.theme;
     final caps = ref.watch(householdCapabilitiesProvider);
 
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
-    final members = membersAsync.valueOrNull ?? const <MemberModel>[];
+    final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChild = currentMember?.isChild ?? false;
@@ -102,7 +101,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
               delayMs: 120,
               child: _buildActivitySection(
                 theme,
-                title: AppLocalizations.of(context).homeFamilyChildActivityTitle,
+                title:
+                    AppLocalizations.of(context).homeFamilyChildActivityTitle,
               ),
             ),
           ] else if (isTeen) ...[
@@ -123,11 +123,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox(height: 22),
             _buildStaggeredSection(
               delayMs: 260,
-              child:
-                  _buildActivitySection(
-                    theme,
-                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
-                  ),
+              child: _buildActivitySection(
+                theme,
+                title: AppLocalizations.of(context).homeFamilyActivityTitle,
+              ),
             ),
           ] else ...[
             if (hasSharedAdultFinance) ...[
@@ -153,11 +152,10 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             const SizedBox(height: 26),
             _buildStaggeredSection(
               delayMs: 240,
-              child:
-                  _buildActivitySection(
-                    theme,
-                    title: AppLocalizations.of(context).homeFamilyActivityTitle,
-                  ),
+              child: _buildActivitySection(
+                theme,
+                title: AppLocalizations.of(context).homeFamilyActivityTitle,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.xxl + 80),
@@ -167,7 +165,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   Widget _buildHeader(AppThemeColors theme, HouseholdCapabilities caps) {
-    final membersAsync = ref.watch(householdMembersNotifierProvider);
+    final membersAsync = ref.watch(householdMembersProvider);
     final balanceAsync = ref.watch(userBalanceProvider);
     final currentUserId = ref.watch(currentUserIdProvider) ?? '';
     final members = membersAsync.whenOrNull(data: (m) => m) ?? const [];
@@ -181,6 +179,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
     final t = AppLocalizations.of(context);
     final localeTag = Localizations.localeOf(context).toString();
+    final avatarYOffset = currentMember?.isChild == true ? -10.0 : 0.0;
 
     return Row(
       children: [
@@ -242,7 +241,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         GestureDetector(
           onTap: widget.onAvatarTap,
           child: Transform.translate(
-            offset: const Offset(6, 0),
+            offset: Offset(6, avatarYOffset),
             child: SizedBox(
               width: 96,
               height: 58,
@@ -305,7 +304,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           const SizedBox(width: 8),
           TextButton(
             onPressed: () {
-              ref.invalidate(householdMembersNotifierProvider);
+              ref.invalidate(householdMembersProvider);
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColors.warning,
@@ -370,7 +369,8 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     final xp =
         balanceAsync.whenOrNull(data: (balance) => balance?['xp'] as int?) ?? 0;
     final t = AppLocalizations.of(context);
-    final firstName = currentMember?.displayName ?? t.homeFamilyChildFallbackName;
+    final firstName =
+        currentMember?.displayName ?? t.homeFamilyChildFallbackName;
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return Container(
@@ -512,28 +512,33 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   Widget _buildSectionStateSwitcher({
     required Widget child,
   }) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 380),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        final fade = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        );
-        final slide = Tween<Offset>(
-          begin: const Offset(0, 0.035),
-          end: Offset.zero,
-        ).animate(fade);
-        return FadeTransition(
-          opacity: fade,
-          child: SlideTransition(
-            position: slide,
-            child: child,
-          ),
-        );
-      },
-      child: child,
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 190),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 170),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final fade = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          final slide = Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(fade);
+          return FadeTransition(
+            opacity: fade,
+            child: SlideTransition(
+              position: slide,
+              child: child,
+            ),
+          );
+        },
+        child: child,
+      ),
     );
   }
 
@@ -819,7 +824,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
           }
 
           return KeyedSubtree(
-            key: ValueKey('activity-data-${activities.length.clamp(0, 4)}'),
+            key: const ValueKey('activity-data'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -828,11 +833,15 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: (activities.length > 4) ? 4 : activities.length,
+                  itemCount: (activities.length > 8) ? 8 : activities.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    return FamilyActivityFeedItem(
-                      activity: activities[index],
+                    final activity = activities[index];
+                    return _ActivityFeedEntry(
+                      key: ValueKey(_activityStableKey(activity)),
+                      child: FamilyActivityFeedItem(
+                        activity: activity,
+                      ),
                     );
                   },
                 ),
@@ -842,6 +851,27 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         },
       ),
     );
+  }
+
+  String _activityStableKey(Map<String, dynamic> activity) {
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final taskId = data['task_id']?.toString();
+    final expenseId = data['expense_id']?.toString();
+    // Cuando hay un recurso semantico (task_id / expense_id) usamos ESE como
+    // identidad estable. Asi la entrada optimista y la real que llega despues
+    // por realtime comparten la misma key -> mismo widget -> la animacion de
+    // entrada corre completa sin remount/flash a mitad.
+    if (taskId != null && taskId.isNotEmpty) {
+      return 'task-$taskId';
+    }
+    if (expenseId != null && expenseId.isNotEmpty) {
+      return 'expense-$expenseId';
+    }
+    return [
+      activity['id'],
+      activity['type'],
+      activity['created_at'],
+    ].whereType<Object>().join('-');
   }
 
   Widget _buildActivityLoadingState(AppThemeColors theme) {
@@ -1036,6 +1066,41 @@ extension _StringExtension on String {
     final trimmed = trim();
     if (trimmed.isEmpty) return this;
     return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
+  }
+}
+
+class _ActivityFeedEntry extends StatelessWidget {
+  final Widget child;
+
+  const _ActivityFeedEntry({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      // Entrada combinada: fade + slide desde arriba + scale-in sutil.
+      // El offset negativo (slide hacia abajo) refuerza la lectura visual de
+      // que la tarea "bajó" desde la lista de arriba al feed.
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, -24 * (1 - value)),
+            child: Transform.scale(
+              scale: 0.96 + 0.04 * value,
+              alignment: Alignment.topCenter,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: child,
+    );
   }
 }
 

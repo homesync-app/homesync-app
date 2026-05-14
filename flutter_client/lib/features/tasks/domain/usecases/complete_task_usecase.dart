@@ -16,9 +16,13 @@ class CompleteTaskUseCase {
     DateTime? completedAt,
   }) async {
     if (!task.isActive) {
-      return left(ValidationFailure(
-          'No se puede completar una tarea que no está activa (status: ${task.status})',),);
+      return left(
+        ValidationFailure(
+          'No se puede completar una tarea que no está activa (status: ${task.status})',
+        ),
+      );
     }
-    return _repository.completeTask(task, userIds: userIds, completedAt: completedAt);
+    return _repository.completeTask(task,
+        userIds: userIds, completedAt: completedAt,);
   }
 }

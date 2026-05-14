@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/providers/premium_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -11,10 +12,12 @@ import 'package:homesync_client/features/expenses/domain/models/expense_template
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
@@ -104,7 +107,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         VoidCallback onPressed = () => _showExpenseSheet();
 
         if (_tabController.index == 1) {
-          final isPremium = ref.watch(premiumProvider).valueOrNull ?? false;
+          final isPremium = ref.watch(premiumProvider).value ?? false;
           label = t.expensesFabNewSubscription;
           onPressed = isPremium
               ? () => _showTemplateForm(context)
@@ -178,7 +181,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   final rpcBalance =
                       (summary['balance'] as num?)?.toDouble() ?? 0.0;
 
-                  final estimated = estimatedIncomeAsync.valueOrNull;
+                  final estimated = estimatedIncomeAsync.value;
                   final isIncomeEstimated =
                       realIncome == 0 && estimated?.isSet == true;
 
@@ -356,44 +359,28 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     }
   }
 
-  String _compactMovementTitle(String title, {String? category}) {
-    final normalized = title.trim();
-    if (normalized.isEmpty) return CategoryMapping.displayName(category);
-
-    final lower = normalized.toLowerCase();
-    final categoryId = category?.toLowerCase();
-
-    if (lower == categoryId ||
-        CategoryMapping.categoryNames.containsKey(lower)) {
-      return CategoryMapping.displayName(normalized);
-    }
-
-    if (categoryId == 'supermarket' &&
-        (lower.contains('supermerc') || lower.contains('compras del'))) {
-      return 'Supermercado';
-    }
-
-    if (lower == 'compras del supermercado' ||
-        lower == 'compras de supermercado' ||
-        lower == 'compra del supermercado') {
-      return 'Supermercado';
-    }
-
-    if (categoryId == 'mercadolibre' &&
-        (lower.contains('mercado libre') || lower.contains('compras online'))) {
-      return 'Compras online';
-    }
-
-    return normalized;
+  String _compactMovementTitle(
+    String title, {
+    String? titleKey,
+    String? category,
+    String? transactionType,
+  }) {
+    return localizedFinanceTitle(
+      AppLocalizations.of(context),
+      title: title,
+      titleKey: titleKey,
+      category: category,
+      transactionType: transactionType,
+    );
   }
 
   List<FeedItemModel> _effectiveFeedForBreakdowns() {
-    final feed = ref.read(combinedFeedControllerProvider).valueOrNull ??
+    final feed = ref.read(combinedFeedControllerProvider).value ??
         const <FeedItemModel>[];
     if (feed.isNotEmpty) return feed;
 
-    final expenses = ref.read(expenseControllerProvider).valueOrNull ??
-        const <ExpenseModel>[];
+    final expenses =
+        ref.read(expenseControllerProvider).value ?? const <ExpenseModel>[];
     return expenses
         .map(
           (e) => FeedItemModel(
@@ -401,6 +388,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             transactionType: e.type,
             id: e.id,
             title: e.title,
+            titleKey: e.titleKey,
             amount: e.amount,
             category: e.category,
             splitType: e.splitType,
@@ -417,7 +405,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   List<FeedItemModel> _effectiveMonthlyPendingForBreakdowns() {
     final monthlyPending =
-        ref.read(monthlyPendingPlannedExpensesProvider).valueOrNull;
+        ref.read(monthlyPendingPlannedExpensesProvider).value;
     if (monthlyPending != null) return monthlyPending;
 
     final now = DateTime.now();
@@ -433,7 +421,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   ExpenseModel _expenseFromFeedItem(FeedItemModel item) {
-    final expenses = ref.read(expenseControllerProvider).valueOrNull;
+    final expenses = ref.read(expenseControllerProvider).value;
     final matches = expenses?.where((e) => e.id == item.id).toList() ??
         const <ExpenseModel>[];
     if (matches.isNotEmpty) return matches.first;
@@ -441,6 +429,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     return ExpenseModel(
       id: item.id,
       title: item.title,
+      titleKey: item.titleKey,
       amount: item.amount,
       category: item.category,
       householdId: '',
@@ -456,7 +445,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   int _householdMemberCount() {
-    final members = ref.read(householdMembersProvider).valueOrNull;
+    final members = ref.read(householdMembersProvider).value;
     if (members != null && members.isNotEmpty) return members.length;
     return 2;
   }
@@ -497,7 +486,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            '\$ ${_formatCurrency(amount)}',
+            _formatCurrency(amount),
             style: TextStyle(
               color: isBold ? theme.textPrimary : color,
               fontSize: isBold ? 20 : 17,
@@ -564,7 +553,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '\$ ${_formatCurrency(mainAmount)}',
+                    _formatCurrency(mainAmount),
                     style: TextStyle(
                       color: theme.textPrimary,
                       fontSize: 40,
@@ -815,7 +804,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               ),
                             ),
                             Text(
-                              '\$ ${_formatCurrency(_plannedShareAmount(item, userId))}',
+                              _formatCurrency(
+                                _plannedShareAmount(item, userId),
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 14,
@@ -878,7 +869,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           ),
         ),
         Text(
-          '${amount > 0 ? "+" : ""}\$ ${_formatCurrency(amount.abs())}',
+          _formatCurrency(amount, signed: true),
           style: TextStyle(
             color: amount < 0
                 ? AppColors.primary
@@ -939,7 +930,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '\$ ${_formatCurrency(amount)}',
+                      _formatCurrency(amount),
                       style: TextStyle(
                         color: theme.textPrimary,
                         fontSize: 19,
@@ -1036,7 +1027,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           children: items
               .map(
                 (item) => _buildMovementDetailRow(
-                  title: item.title,
+                  title: _compactMovementTitle(
+                    item.title,
+                    titleKey: item.titleKey,
+                    category: item.category,
+                    transactionType: item.transactionType,
+                  ),
                   amount: _plannedShareAmount(item, userId),
                   date: item.date,
                   icon: CategoryMapping.getSmartExpenseDisplayIcon(
@@ -1086,7 +1082,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               : items
                   .map(
                     (e) => _buildMovementDetailRow(
-                      title: e.title,
+                      title: _compactMovementTitle(
+                        e.title,
+                        titleKey: e.titleKey,
+                        category: e.category,
+                        transactionType: e.type,
+                      ),
                       amount: e.amount,
                       date: e.paidAt,
                       icon: CategoryMapping.getSmartExpenseDisplayIcon(
@@ -1176,7 +1177,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                         ),
                       ),
                       Text(
-                        '\$ ${_formatCurrency(total)}',
+                        _formatCurrency(total),
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 24,
@@ -1230,9 +1231,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Entendido',
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context).expensesGotIt,
+                      style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
                       ),
@@ -1280,7 +1281,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                   ),
                 ),
                 Text(
-                  DateFormat('d MMM', 'es').format(date),
+                  DateFormat(
+                    'd MMM',
+                    Localizations.localeOf(context).toString(),
+                  ).format(date),
                   style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11,
@@ -1291,7 +1295,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
           Text(
-            '\$ ${_formatCurrency(amount)}',
+            _formatCurrency(amount),
             style: const TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 15,
@@ -1305,11 +1309,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildFeedItemCard(FeedItemModel item) {
     if (item.isRealExpense) {
-      final expenses = ref.read(expenseControllerProvider).valueOrNull;
+      final expenses = ref.read(expenseControllerProvider).value;
       final expense = expenses?.where((e) => e.id == item.id).firstOrNull ??
           ExpenseModel(
             id: item.id,
             title: item.title,
+            titleKey: item.titleKey,
             amount: item.amount,
             category: item.category,
             householdId: '',
@@ -1383,7 +1388,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 Text(
                   _compactMovementTitle(
                     item.title,
+                    titleKey: item.titleKey,
                     category: item.category,
+                    transactionType: item.transactionType,
                   ),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
@@ -1409,7 +1416,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
                 child: Text(
-                  '\$ ${_formatCurrency(item.amount)}',
+                  _formatCurrency(item.amount),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 18,
@@ -1455,17 +1462,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           result['success'] != true) {
                         return;
                       }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context)
-                                .expensesPlannedPaymentSnack(
-                              result['title'].toString(),
-                            ),
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
+                      AppSnackBar.show(
+                        context,
+                        message: AppLocalizations.of(context)
+                            .expensesPlannedPaymentSnack(
+                          result['title'].toString(),
                         ),
+                        type: AppSnackBarType.success,
+                        duration: const Duration(milliseconds: 1500),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -1628,10 +1632,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
       },
       onDismissed: (_) {
         ref.read(expenseControllerProvider.notifier).deleteExpense(expense.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).expensesDeletedSnack),
-          ),
+        AppSnackBar.show(
+          context,
+          message: AppLocalizations.of(context).expensesDeletedSnack,
+          type: AppSnackBarType.success,
+          duration: const Duration(milliseconds: 1500),
         );
       },
       child: AnimatedPress(
@@ -1674,7 +1679,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     Text(
                       _compactMovementTitle(
                         expense.title,
+                        titleKey: expense.titleKey,
                         category: expense.category,
+                        transactionType: expense.type,
                       ),
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
@@ -1689,7 +1696,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     Row(
                       children: [
                         Text(
-                          DateFormat('d MMM', 'es').format(expense.paidAt),
+                          DateFormat(
+                            'd MMM',
+                            Localizations.localeOf(context).toString(),
+                          ).format(expense.paidAt),
                           style: TextStyle(
                             color: theme.textSecondary,
                             fontSize: 11,
@@ -1730,7 +1740,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${isIncome ? '+' : ''}\$ ${_formatCurrency(expense.amount)}',
+                    _formatCurrency(expense.amount, signed: isIncome),
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 16.5,
@@ -1743,7 +1753,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                     expense.splitType == 'gift'
                         ? AppLocalizations.of(context).expensesTypeBadgeGift
                         : (isShared
-                            ? AppLocalizations.of(context).expensesTypeBadgeShared
+                            ? AppLocalizations.of(context)
+                                .expensesTypeBadgeShared
                             : AppLocalizations.of(context)
                                 .expensesTypeBadgePersonal),
                     expense.splitType == 'gift'
@@ -1815,7 +1826,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             ),
           ),
           Text(
-            '\$ ${_formatCurrency(expense.amount)}',
+            _formatCurrency(expense.amount),
             style: const TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 16,
@@ -1852,8 +1863,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   // --- Helpers ---
 
-  String _formatCurrency(num amount) {
-    return NumberFormat('#,###', 'es_AR').format(amount).replaceAll(',', '.');
+  String _formatCurrency(num amount, {bool signed = false}) {
+    return ref.read(currencyProvider).format(amount, signed: signed);
   }
 
   Widget _buildEmptyState(
@@ -1923,4 +1934,3 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 }
-

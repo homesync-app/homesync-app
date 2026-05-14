@@ -111,8 +111,8 @@ class RetryService {
   Duration _applyJitter(Duration delay, double jitterRatio) {
     if (jitterRatio <= 0) return delay;
     final jitter = (Random().nextDouble() * 2 - 1) * jitterRatio;
-    final adjusted =
-        (delay.inMilliseconds * (1 + jitter)).clamp(0, delay.inMilliseconds * 2);
+    final adjusted = (delay.inMilliseconds * (1 + jitter))
+        .clamp(0, delay.inMilliseconds * 2);
     return Duration(milliseconds: adjusted.toInt());
   }
 }

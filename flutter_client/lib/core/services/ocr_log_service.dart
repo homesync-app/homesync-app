@@ -56,8 +56,7 @@ class OcrLogService {
     try {
       await _client
           .from('ocr_scan_logs')
-          .update({'matcher_result': matcherResult})
-          .eq('id', logId);
+          .update({'matcher_result': matcherResult}).eq('id', logId);
     } catch (e) {
       debugPrint('[OcrLog] update matcher failed: $e');
     }
@@ -70,8 +69,7 @@ class OcrLogService {
     try {
       await _client
           .from('ocr_scan_logs')
-          .update({'user_action': action})
-          .eq('id', logId);
+          .update({'user_action': action}).eq('id', logId);
     } catch (e) {
       debugPrint('[OcrLog] update action failed: $e');
     }

@@ -72,7 +72,8 @@ SavingsGoalModel _goal(int index) {
 }
 
 void main() {
-  test('paginatedSavingsGoalsProvider loads another page and updates hasMore', () async {
+  test('paginatedSavingsGoalsProvider loads another page and updates hasMore',
+      () async {
     final container = ProviderContainer(
       overrides: [
         savingsRepositoryProvider.overrideWith(
@@ -91,7 +92,7 @@ void main() {
 
     await container.read(paginatedSavingsGoalsProvider.notifier).loadMore();
 
-    final paged = container.read(paginatedSavingsGoalsProvider).valueOrNull;
+    final paged = container.read(paginatedSavingsGoalsProvider).value;
     expect(paged, isNotNull);
     expect(paged!.items, hasLength(15));
     expect(paged.hasMore, isFalse);

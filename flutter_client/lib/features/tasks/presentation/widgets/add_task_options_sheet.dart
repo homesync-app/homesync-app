@@ -12,6 +12,7 @@ import 'package:homesync_client/features/tasks/presentation/providers/category_p
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 import 'create_task_dialog.dart';
 
@@ -127,33 +128,18 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
       if (!mounted) return;
       final t = AppLocalizations.of(context);
       final title = localizedTaskTemplateTitle(t, template);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(child: Text(t.addTaskOptionsAddedSnack(title))),
-            ],
-          ),
-          backgroundColor: AppColors.accentGreen,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
+      AppSnackBar.show(
+        context,
+        message: t.addTaskOptionsAddedSnack(title),
+        type: AppSnackBarType.success,
+        duration: const Duration(milliseconds: 1500),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.error,
-        ),
+      AppSnackBar.show(
+        context,
+        message: 'Error: $e',
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) setState(() => _addingIds.remove(template.id));

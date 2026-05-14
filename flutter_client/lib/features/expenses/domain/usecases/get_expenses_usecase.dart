@@ -12,7 +12,8 @@ class GetExpensesUseCase {
   Future<Either<Failure, List<ExpenseModel>>> call(String householdId) async {
     if (householdId.isEmpty) {
       return left(
-          const ValidationFailure('El ID del hogar no puede estar vacío'),);
+        const ValidationFailure('El ID del hogar no puede estar vacío'),
+      );
     }
     return await _repository.getRecentExpenses(householdId);
   }

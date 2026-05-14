@@ -61,12 +61,14 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _recurrenceInterval = widget.currentInterval > 0 ? widget.currentInterval : 1;
+    _recurrenceInterval =
+        widget.currentInterval > 0 ? widget.currentInterval : 1;
     _selectedAssignedTo = widget.currentAssignedTo;
     _selectedDays.addAll(widget.currentWeekdays);
     _selectedMonthDays.addAll(widget.currentMonthDays);
-    _selectedWeeklyDay =
-        widget.currentWeekdays.isNotEmpty ? widget.currentWeekdays.first : now.weekday;
+    _selectedWeeklyDay = widget.currentWeekdays.isNotEmpty
+        ? widget.currentWeekdays.first
+        : now.weekday;
     _selectedMonthlyDay = widget.currentMonthDays.isNotEmpty
         ? widget.currentMonthDays.first
         : now.day.clamp(1, 31);
@@ -255,11 +257,16 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _buildModeChip(theme, 'Ninguna', TaskRepeatMode.none, Icons.block_rounded),
-        _buildModeChip(theme, 'Diaria', TaskRepeatMode.daily, Icons.today_rounded),
-        _buildModeChip(theme, 'Semanal', TaskRepeatMode.weekly, Icons.date_range_rounded),
-        _buildModeChip(theme, 'Mensual', TaskRepeatMode.monthly, Icons.calendar_month_rounded),
-        _buildModeChip(theme, 'Personalizada', TaskRepeatMode.custom, Icons.tune_rounded),
+        _buildModeChip(
+            theme, 'Ninguna', TaskRepeatMode.none, Icons.block_rounded,),
+        _buildModeChip(
+            theme, 'Diaria', TaskRepeatMode.daily, Icons.today_rounded,),
+        _buildModeChip(
+            theme, 'Semanal', TaskRepeatMode.weekly, Icons.date_range_rounded,),
+        _buildModeChip(theme, 'Mensual', TaskRepeatMode.monthly,
+            Icons.calendar_month_rounded,),
+        _buildModeChip(
+            theme, 'Personalizada', TaskRepeatMode.custom, Icons.tune_rounded,),
       ],
     );
   }
@@ -323,7 +330,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildModeConfig(AppThemeColors theme) {
-    if (_selectedMode == TaskRepeatMode.none || _selectedMode == TaskRepeatMode.daily) {
+    if (_selectedMode == TaskRepeatMode.none ||
+        _selectedMode == TaskRepeatMode.daily) {
       return const SizedBox.shrink();
     }
 
@@ -624,9 +632,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: selected
-              ? theme.primary.withValues(alpha: 0.14)
-              : theme.surface,
+          color:
+              selected ? theme.primary.withValues(alpha: 0.14) : theme.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected
@@ -660,9 +667,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.sage.withValues(alpha: 0.15)
-              : theme.surface,
+          color:
+              selected ? AppColors.sage.withValues(alpha: 0.15) : theme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
@@ -732,9 +738,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: selected
-              ? theme.primary.withValues(alpha: 0.06)
-              : theme.surface,
+          color:
+              selected ? theme.primary.withValues(alpha: 0.06) : theme.surface,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: selected
@@ -897,7 +902,8 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
       case TaskRepeatMode.custom:
         if (_customRecurrenceMode == 'weekdays') {
           if (_selectedDays.isEmpty) {
-            _showError('Elegí al menos un día para la repetición personalizada.');
+            _showError(
+                'Elegí al menos un día para la repetición personalizada.',);
             return;
           }
           weekdays = _selectedDays.toList()..sort();

@@ -6,79 +6,184 @@ part of 'settings_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsRepositoryHash() =>
-    r'472083d52cc5f43285f85e37f8a0497ca53af37d';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [settingsRepository].
 @ProviderFor(settingsRepository)
-final settingsRepositoryProvider =
-    AutoDisposeProvider<SettingsRepository>.internal(
-  settingsRepository,
-  name: r'settingsRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$settingsRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final settingsRepositoryProvider = SettingsRepositoryProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SettingsRepositoryRef = AutoDisposeProviderRef<SettingsRepository>;
-String _$resetAccountUseCaseHash() =>
-    r'b9eb707a0c7cfb4b647bef12940e637b4c5e932c';
+final class SettingsRepositoryProvider extends $FunctionalProvider<
+    SettingsRepository,
+    SettingsRepository,
+    SettingsRepository> with $Provider<SettingsRepository> {
+  SettingsRepositoryProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'settingsRepositoryProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [resetAccountUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$settingsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SettingsRepository> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SettingsRepository create(Ref ref) {
+    return settingsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SettingsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SettingsRepository>(value),
+    );
+  }
+}
+
+String _$settingsRepositoryHash() =>
+    r'c6e9a6bfb312b0655ac88d857f9b3760f001aee5';
+
 @ProviderFor(resetAccountUseCase)
-final resetAccountUseCaseProvider =
-    AutoDisposeProvider<ResetAccountUseCase>.internal(
-  resetAccountUseCase,
-  name: r'resetAccountUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$resetAccountUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final resetAccountUseCaseProvider = ResetAccountUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ResetAccountUseCaseRef = AutoDisposeProviderRef<ResetAccountUseCase>;
-String _$updateAvatarUseCaseHash() =>
-    r'ea89b02f4f4262846e34d1a3636a0844a49447ce';
+final class ResetAccountUseCaseProvider extends $FunctionalProvider<
+    ResetAccountUseCase,
+    ResetAccountUseCase,
+    ResetAccountUseCase> with $Provider<ResetAccountUseCase> {
+  ResetAccountUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'resetAccountUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
-/// See also [updateAvatarUseCase].
+  @override
+  String debugGetCreateSourceHash() => _$resetAccountUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ResetAccountUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ResetAccountUseCase create(Ref ref) {
+    return resetAccountUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResetAccountUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResetAccountUseCase>(value),
+    );
+  }
+}
+
+String _$resetAccountUseCaseHash() =>
+    r'a00a5c169f3e4cb4d5e1e20bc9131e02f59ff537';
+
 @ProviderFor(updateAvatarUseCase)
-final updateAvatarUseCaseProvider =
-    AutoDisposeProvider<UpdateAvatarUseCase>.internal(
-  updateAvatarUseCase,
-  name: r'updateAvatarUseCaseProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$updateAvatarUseCaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final updateAvatarUseCaseProvider = UpdateAvatarUseCaseProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef UpdateAvatarUseCaseRef = AutoDisposeProviderRef<UpdateAvatarUseCase>;
+final class UpdateAvatarUseCaseProvider extends $FunctionalProvider<
+    UpdateAvatarUseCase,
+    UpdateAvatarUseCase,
+    UpdateAvatarUseCase> with $Provider<UpdateAvatarUseCase> {
+  UpdateAvatarUseCaseProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'updateAvatarUseCaseProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$updateAvatarUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UpdateAvatarUseCase> $createElement(
+          $ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UpdateAvatarUseCase create(Ref ref) {
+    return updateAvatarUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UpdateAvatarUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UpdateAvatarUseCase>(value),
+    );
+  }
+}
+
+String _$updateAvatarUseCaseHash() =>
+    r'230cdeaef63a7b56a9053cb94e217b116e485e37';
+
+@ProviderFor(NotificationEnabled)
+final notificationEnabledProvider = NotificationEnabledProvider._();
+
+final class NotificationEnabledProvider
+    extends $NotifierProvider<NotificationEnabled, bool> {
+  NotificationEnabledProvider._()
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'notificationEnabledProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
+
+  @override
+  String debugGetCreateSourceHash() => _$notificationEnabledHash();
+
+  @$internal
+  @override
+  NotificationEnabled create() => NotificationEnabled();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
 String _$notificationEnabledHash() =>
     r'ee6e9c6286cbf1305c5e370a85d4ebc6252b2fd2';
 
-/// See also [NotificationEnabled].
-@ProviderFor(NotificationEnabled)
-final notificationEnabledProvider =
-    AutoDisposeNotifierProvider<NotificationEnabled, bool>.internal(
-  NotificationEnabled.new,
-  name: r'notificationEnabledProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$notificationEnabledHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef _$NotificationEnabled = AutoDisposeNotifier<bool>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+abstract class _$NotificationEnabled extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<bool, bool>, bool, Object?, Object?>;
+    element.handleCreate(ref, build);
+  }
+}

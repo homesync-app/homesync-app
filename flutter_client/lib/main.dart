@@ -13,6 +13,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/locale_provider.dart';
+import 'package:homesync_client/core/providers/riverpod_retry.dart';
 import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
@@ -253,6 +254,7 @@ void main() async {
 
   runApp(
     ProviderScope(
+      retry: appRiverpodRetry,
       overrides: [
         authServiceProvider.overrideWithValue(auth),
         rpcServiceProvider.overrideWithValue(rpc),
@@ -396,8 +398,8 @@ class _MyAppState extends ConsumerState<MyApp> {
           ref.read(householdIdProvider.future).then((_) {}).catchError((_) {}),
       'userProfileProvider':
           ref.read(userProfileProvider.future).then((_) {}).catchError((_) {}),
-      'householdMembersNotifierProvider': ref
-          .read(householdMembersNotifierProvider.future)
+      'householdMembersProvider': ref
+          .read(householdMembersProvider.future)
           .then((_) {})
           .catchError((_) {}),
       'expenseBalancesProvider': ref
@@ -419,7 +421,13 @@ class _MyAppState extends ConsumerState<MyApp> {
     // the provider cache so subsequent watchers resolve synchronously.
     // ignore: unused_local_variable
     final nonBlocking = <Future<void>>[
-      ref.read(recentActivityProvider.future).then((_) {}).catchError((_) {}),
+      // recentActivityProvider es sync (combina remote + optimistic) y no
+      // expone .future. Pre-suscribimos al stream remoto subyacente para
+      // warm-cache el feed.
+      ref
+          .read(recentActivityRemoteProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
       ref
           .read(combinedFeedControllerProvider.future)
           .then((_) {})
@@ -445,9 +453,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   Future<void> _precacheStartupImages() async {
     if (!mounted) return;
 
-    final profile = ref.read(userProfileProvider).valueOrNull;
-    final members =
-        ref.read(householdMembersNotifierProvider).valueOrNull ?? const [];
+    final profile = ref.read(userProfileProvider).value;
+    final members = ref.read(householdMembersProvider).value ?? const [];
 
     final avatarUrls = <String>{
       if (profile?['avatar_url'] is String) profile!['avatar_url'] as String,
@@ -518,15 +525,16 @@ class _MyAppState extends ConsumerState<MyApp> {
     } else {
       // If null, it will follow the platform locale which Flutter handles via MaterialApp,
       // but we help Intl a bit by using the first supported locale if no default is set.
-      Intl.defaultLocale = WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag();
+      Intl.defaultLocale =
+          WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag();
     }
     final authState = ref.watch(authStateProvider);
 
     // ── Reactive sign-out: imperatively navigate when auth state changes to
     // isAuthenticated=false, regardless of any route stack sitting on top.
     ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {
-      final prev = previous?.valueOrNull;
-      final curr = next.valueOrNull;
+      final prev = previous?.value;
+      final curr = next.value;
 
       if (curr != null) {
         log.i(

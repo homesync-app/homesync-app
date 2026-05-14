@@ -70,7 +70,7 @@ class AvatarPickerSheet extends ConsumerWidget {
       final normalizedAvatar =
           UserAvatar.normalizeAvatarValue(avatarValue) ?? avatarValue;
       final isPremiumAvatar = UserAvatar.isPremiumAvatarValue(normalizedAvatar);
-      final isPremium = ref.read(premiumProvider).valueOrNull ?? false;
+      final isPremium = ref.read(premiumProvider).value ?? false;
       if (isPremiumAvatar && !isPremium) {
         PremiumPaywall.show(context);
         return;
@@ -85,7 +85,7 @@ class AvatarPickerSheet extends ConsumerWidget {
       );
 
       ref.invalidate(userProfileProvider);
-      ref.invalidate(householdMembersNotifierProvider);
+      ref.invalidate(householdMembersProvider);
       ref.invalidate(recentActivityProvider);
       ref.invalidate(customAvatarOptionsProvider);
 
@@ -205,7 +205,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                     Consumer(
                       builder: (context, ref, _) {
                         final isPremium =
-                            ref.watch(premiumProvider).valueOrNull ?? false;
+                            ref.watch(premiumProvider).value ?? false;
                         return Column(
                           children: [
                             _CustomAvatarOptionsSection(
@@ -273,7 +273,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                     Consumer(
                       builder: (context, ref, _) {
                         final isPremium =
-                            ref.watch(premiumProvider).valueOrNull ?? false;
+                            ref.watch(premiumProvider).value ?? false;
                         return OutlinedButton.icon(
                           onPressed: isPremium
                               ? () => _showCustomAvatarSourceSheet(context, ref)
