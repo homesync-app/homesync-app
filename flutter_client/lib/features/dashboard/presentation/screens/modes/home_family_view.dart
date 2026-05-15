@@ -1084,7 +1084,7 @@ class _ActivityFeedEntry extends StatelessWidget {
       // Entrada combinada: fade + slide desde arriba + scale-in sutil.
       // El offset negativo (slide hacia abajo) refuerza la lectura visual de
       // que la tarea "bajó" desde la lista de arriba al feed.
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
       builder: (context, value, child) {
         return Opacity(

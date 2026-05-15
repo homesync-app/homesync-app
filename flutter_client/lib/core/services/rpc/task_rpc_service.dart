@@ -165,7 +165,7 @@ class TaskRpcService extends BaseRpcService {
     final requestId = generateRequestId();
 
     final rawResponse = await client.rpc(
-      'reject_task_transaction',
+      'reject_task_v1',
       params: {
         'p_request_id': requestId,
         'p_user_id': userId,
@@ -249,7 +249,7 @@ class TaskRpcService extends BaseRpcService {
   }) async {
     final userId = await requireCurrentUserId();
     final response = await client.rpc(
-      'undo_task_completion',
+      'undo_task_completion_v1',
       params: {
         'p_activity_id': activityId,
         'p_user_id': userId,

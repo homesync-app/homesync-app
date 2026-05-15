@@ -2899,32 +2899,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Cerrar';
 
   @override
-  String get premiumPaywallTitle => 'Llevá tu hogar\nal siguiente nivel';
+  String get premiumPaywallEyebrow =>
+      'Premium para hogares que se organizan en serio';
+
+  @override
+  String get premiumPaywallTitle =>
+      'Automatizá tu hogar sin cargar todo dos veces';
 
   @override
   String get premiumPaywallSubtitle =>
-      'Desbloqueá todas las funciones pro y simplificá la vida en equipo.';
+      'Pagos, compras y estadísticas trabajando juntos para que el balance esté siempre claro.';
 
   @override
-  String get premiumBenefitAdvancedStats => 'Estadísticas Avanzadas';
+  String get premiumBenefitRecurringPayments => 'Pagos recurrentes';
+
+  @override
+  String get premiumBenefitRecurringPaymentsDesc =>
+      'Programá suscripciones, servicios y cuotas para que se repitan solas y no se pierdan en el mes.';
+
+  @override
+  String get premiumBenefitShoppingFinanceSync =>
+      'Compras conectadas a Finanzas';
+
+  @override
+  String get premiumBenefitShoppingFinanceSyncDesc =>
+      'Vinculá productos de la lista con gastos reales y evitá cargar la misma compra dos veces.';
+
+  @override
+  String get premiumBenefitAdvancedStats => 'Estadísticas avanzadas';
 
   @override
   String get premiumBenefitAdvancedStatsDesc =>
-      'Analizá tus gastos y tareas por categoría con gráficos detallados.';
+      'Analizá gastos, tareas y progreso con vistas más profundas por categoría y período.';
 
   @override
-  String get premiumBenefitUnlimitedHouseholds => 'Hogares Ilimitados';
-
-  @override
-  String get premiumBenefitUnlimitedHouseholdsDesc =>
-      'Creá múltiples hogares para tu pareja, familia, amigos o proyectos.';
-
-  @override
-  String get premiumBenefitFullCustomization => 'Personalización Completa';
+  String get premiumBenefitFullCustomization => 'Personalización completa';
 
   @override
   String get premiumBenefitFullCustomizationDesc =>
-      'Accedé a temas premium, colores únicos y widgets personalizados.';
+      'Elegí colores, temas y avatares personalizados para que el hogar se sienta propio.';
 
   @override
   String get premiumRestorePurchases => 'Restaurar compras';
@@ -4289,44 +4302,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recurringExpenseValidationTitleAmount =>
-      'Complet? t?tulo y monto v?lido.';
+      'Completá título y monto válido.';
 
   @override
   String get recurringExpenseValidationPayer =>
-      'Eleg? qui?n suele abonarla para dejarla lista.';
+      'Elegí quién suele abonarla para dejarla lista.';
 
   @override
-  String get recurringExpenseDeleteTitle => '?Eliminar suscripci?n?';
+  String get recurringExpenseDeleteTitle => '¿Eliminar suscripción?';
 
   @override
   String get recurringExpenseDeleteBody =>
-      'Dejar? de aparecer en futuros meses.';
+      'Dejará de aparecer en futuros meses.';
 
   @override
   String get recurringExpenseDetailEyebrow => 'DETALLE';
 
   @override
-  String get recurringExpenseDetailTitle => 'Qu? se renueva cada mes';
+  String get recurringExpenseDetailTitle => 'Qué se renueva cada mes';
 
   @override
   String get recurringExpenseDetailSubtitle =>
-      'Defin? el nombre y el monto para reconocerla r?pido.';
+      'Definí el nombre y el monto para reconocerla rápido.';
 
   @override
   String get recurringExpenseCalendarEyebrow => 'CALENDARIO';
 
   @override
-  String get recurringExpenseCalendarTitle => 'Cu?ndo se registra';
+  String get recurringExpenseCalendarTitle => 'Cuándo se registra';
 
   @override
   String get recurringExpenseCalendarSubtitle =>
-      'Elegimos el d?a habitual para programarla sola.';
+      'Elegimos el día habitual para programarla sola.';
 
   @override
-  String get recurringExpenseCategoryEyebrow => 'CATEGOR?A';
+  String get recurringExpenseCategoryEyebrow => 'CATEGORÍA';
 
   @override
-  String get recurringExpenseCategoryTitle => 'D?nde encaja mejor';
+  String get recurringExpenseCategoryTitle => 'Dónde encaja mejor';
 
   @override
   String get recurringExpenseCategorySubtitle =>
@@ -4336,41 +4349,41 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recurringExpenseSplitEyebrow => 'REPARTO';
 
   @override
-  String get recurringExpenseSplitTitle => 'C?mo se reparte';
+  String get recurringExpenseSplitTitle => 'Cómo se reparte';
 
   @override
   String get recurringExpenseSplitSubtitle =>
-      'Defin? si se comparte en el hogar o si queda como personal.';
+      'Definí si se comparte en el hogar o si queda como personal.';
 
   @override
   String get recurringExpensePayerEyebrow => 'PAGADOR';
 
   @override
-  String get recurringExpensePayerTitle => 'Qui?n suele abonarla';
+  String get recurringExpensePayerTitle => 'Quién suele abonarla';
 
   @override
   String get recurringExpensePayerSubtitle =>
-      'Esto deja una sugerencia lista para los pr?ximos meses.';
+      'Esto deja una sugerencia lista para los próximos meses.';
 
   @override
   String get recurringExpenseHeaderEditIncome => 'Editar ingreso';
 
   @override
-  String get recurringExpenseHeaderEditSubscription => 'Editar suscripci?n';
+  String get recurringExpenseHeaderEditSubscription => 'Editar suscripción';
 
   @override
   String get recurringExpenseHeaderNewIncome => 'Nuevo ingreso fijo';
 
   @override
-  String get recurringExpenseHeaderNewSubscription => 'Nueva suscripci?n';
+  String get recurringExpenseHeaderNewSubscription => 'Nueva suscripción';
 
   @override
   String get recurringExpenseHeaderEditSubtitle =>
-      'Ajust? monto, categor?a y reparto para mantenerlo al d?a.';
+      'Ajustá monto, categoría y reparto para mantenerlo al día.';
 
   @override
   String get recurringExpenseHeaderNewIncomeSubtitle =>
-      'Se sumar? autom?ticamente a tu balance cada mes.';
+      'Se sumará automáticamente a tu balance cada mes.';
 
   @override
   String get recurringExpenseHeaderNewSubscriptionSubtitle =>
@@ -4380,14 +4393,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recurringExpenseDeleteIncome => 'Eliminar ingreso';
 
   @override
-  String get recurringExpenseDeleteSubscription => 'Eliminar suscripci?n';
+  String get recurringExpenseDeleteSubscription => 'Eliminar suscripción';
 
   @override
   String get recurringExpenseNameRequired =>
-      'Escrib? un nombre para reconocerla.';
+      'Escribí un nombre para reconocerla.';
 
   @override
-  String get recurringExpenseNameMinLength => 'Us? al menos 3 caracteres.';
+  String get recurringExpenseNameMinLength => 'Usá al menos 3 caracteres.';
 
   @override
   String get recurringExpenseNameLabel => 'Nombre';
@@ -4402,23 +4415,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String get recurringExpenseSaveIncome => 'Guardar ingreso';
 
   @override
-  String get recurringExpenseSaveSubscription => 'Guardar suscripci?n';
+  String get recurringExpenseSaveSubscription => 'Guardar suscripción';
 
   @override
-  String get recurringExpenseCategoryLabel => 'Categor?a:';
+  String get recurringExpenseCategoryLabel => 'Categoría:';
 
   @override
   String get recurringExpenseSplitLabel => 'Reparto de gasto:';
 
   @override
-  String get recurringExpenseAmountInvalid => 'Ingres? un monto v?lido.';
+  String get recurringExpenseAmountInvalid => 'Ingresá un monto válido.';
 
   @override
   String get recurringExpenseAmountPositive =>
       'El monto debe ser mayor a cero.';
 
   @override
-  String get recurringExpenseDayLabel => 'Se cobra el d?a:';
+  String get recurringExpenseDayLabel => 'Se cobra el día:';
 
   @override
   String get recurringExpenseRegularPayerLabel => 'Pagador habitual:';

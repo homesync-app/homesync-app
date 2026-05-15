@@ -485,7 +485,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Future<void> _completeTask(TaskModel task) async {
     setState(() => _completedTaskIds.add(task.id));
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 240));
+      await Future<void>.delayed(const Duration(milliseconds: 360));
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
       if (!mounted) return;
       if (result != null) {

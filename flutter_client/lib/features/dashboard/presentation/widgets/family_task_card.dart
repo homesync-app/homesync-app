@@ -3,7 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
-    show dashboardCategoryAccent, dashboardCategoryIcon;
+    show
+        CompletionSparkleBurst,
+        dashboardCategoryAccent,
+        dashboardCategoryIcon,
+        dashboardTaskCompletionColor,
+        dashboardTaskCompletionDuration;
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
@@ -76,11 +81,12 @@ class FamilyTaskCard extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
-      duration: Duration(milliseconds: isCompleting ? 240 : 130),
-      curve: Curves.easeOutCubic,
+      duration: dashboardTaskCompletionDuration(context, isCompleting),
+      curve: Curves.easeInOutCubic,
       builder: (context, progress, child) {
         final pulse = math.sin(progress * math.pi);
-        final scale = 1 - (pulse * 0.008);
+        final scale = 1 + (pulse * 0.0015);
+        final completionColor = dashboardTaskCompletionColor(accent);
 
         return Transform.scale(
           scale: scale,
@@ -93,23 +99,29 @@ class FamilyTaskCard extends StatelessWidget {
                   isPendingReview
                       ? accent.withValues(alpha: 0.08)
                       : theme.surface,
-                  accent.withValues(alpha: 0.018),
+                  Color.alphaBlend(
+                    completionColor.withValues(alpha: 0.012),
+                    theme.surface,
+                  ),
                   progress,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: accent.withValues(
-                    alpha: (isPendingReview ? 0.22 : 0.12) + (pulse * 0.12),
-                  ),
+                  color: Color.lerp(
+                    accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
+                    completionColor.withValues(alpha: 0.18),
+                    progress,
+                  )!,
                 ),
                 boxShadow: [
                   ...theme.cardShadow,
                   BoxShadow(
-                    color: accent.withValues(
-                      alpha: (isPendingReview ? 0.08 : 0.04) + (pulse * 0.055),
+                    color: completionColor.withValues(
+                      alpha:
+                          (isPendingReview ? 0.040 : 0.018) + (pulse * 0.025),
                     ),
-                    blurRadius: 22 + (pulse * 10),
-                    offset: Offset(0, 10 + (pulse * 2)),
+                    blurRadius: 18 + (pulse * 5),
+                    offset: Offset(0, 8 + pulse),
                   ),
                 ],
               ),
@@ -179,7 +191,6 @@ class FamilyTaskCard extends StatelessWidget {
                                 label: '${task.coinReward}',
                                 color: const Color(0xFF7CB08B),
                               ),
-                            // Sprint 3 Modo Padres: badge de rotacion.
                             if (task.hasRotation)
                               _FamilyTaskPill(
                                 icon: Icons.autorenew_rounded,
@@ -191,46 +202,63 @@ class FamilyTaskCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Transform.scale(
-                    scale: 1 + (pulse * 0.075),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Color.lerp(
-                          isActionEnabled
-                              ? accent.withValues(alpha: 0.055)
-                              : theme.textMuted.withValues(alpha: 0.08),
-                          accent.withValues(alpha: 0.98),
-                          progress,
-                        ),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: (isActionEnabled ? accent : theme.textMuted)
-                              .withValues(alpha: 0.12 * (1 - progress)),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      CompletionSparkleBurst(
+                        progress: progress,
+                        color: completionColor,
+                      ),
+                      Transform.scale(
+                        scale: 1 + (pulse * 0.045),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Color.lerp(
+                              isActionEnabled
+                                  ? accent.withValues(alpha: 0.055)
+                                  : theme.textMuted.withValues(alpha: 0.08),
+                              completionColor.withValues(alpha: 0.90),
+                              progress,
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Color.lerp(
+                                (isActionEnabled ? accent : theme.textMuted)
+                                    .withValues(alpha: 0.12),
+                                Colors.white.withValues(alpha: 0.62),
+                                progress,
+                              )!,
+                            ),
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 180),
+                            switchInCurve: Curves.easeOutBack,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              ),
+                            ),
+                            child: Icon(
+                              isCompleting ? Icons.check_rounded : actionIcon,
+                              key: ValueKey(isCompleting),
+                              size: isCompleting ? 21 : 17,
+                              color: isCompleting
+                                  ? Colors.white
+                                  : isActionEnabled
+                                      ? accent.withValues(alpha: 0.88)
+                                      : theme.textMuted,
+                            ),
+                          ),
                         ),
                       ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        switchInCurve: Curves.easeOutBack,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child:
-                              ScaleTransition(scale: animation, child: child),
-                        ),
-                        child: Icon(
-                          isCompleting ? Icons.check_rounded : actionIcon,
-                          key: ValueKey(isCompleting),
-                          size: isCompleting ? 21 : 17,
-                          color: isCompleting
-                              ? Colors.white
-                              : isActionEnabled
-                                  ? accent.withValues(alpha: 0.88)
-                                  : theme.textMuted,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),

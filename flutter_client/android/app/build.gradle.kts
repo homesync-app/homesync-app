@@ -79,6 +79,9 @@ android {
 }
 
 dependencies {
+    // Android 15 edge-to-edge backport for SDK < 35.
+    implementation("androidx.activity:activity:1.10.1")
+
     // Emoji2: renderiza emojis nuevos en Android < 10 sin actualización del sistema
     implementation("androidx.emoji2:emoji2:1.4.0")
     implementation("androidx.emoji2:emoji2-bundled:1.4.0")

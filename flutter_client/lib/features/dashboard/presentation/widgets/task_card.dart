@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -59,11 +60,12 @@ class DashboardTaskCard extends ConsumerWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
-      duration: Duration(milliseconds: isCompleting ? 240 : 130),
-      curve: Curves.easeOutCubic,
+      duration: dashboardTaskCompletionDuration(context, isCompleting),
+      curve: Curves.easeInOutCubic,
       builder: (context, progress, child) {
         final pulse = math.sin(progress * math.pi);
-        final scale = 1 - (pulse * 0.008);
+        final scale = 1 + (pulse * 0.002);
+        final completionColor = dashboardTaskCompletionColor(accent);
 
         return Transform.scale(
           scale: scale,
@@ -74,119 +76,187 @@ class DashboardTaskCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Color.lerp(
                   theme.surface,
-                  accent.withValues(alpha: 0.018),
+                  Color.alphaBlend(
+                    completionColor.withValues(alpha: 0.035),
+                    theme.surface,
+                  ),
                   progress,
                 ),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: accent.withValues(alpha: 0.12 + (pulse * 0.12)),
+                  color: Color.lerp(
+                    accent.withValues(alpha: 0.12),
+                    completionColor.withValues(alpha: 0.26),
+                    progress,
+                  )!,
                 ),
                 boxShadow: [
                   ...theme.cardShadow,
                   BoxShadow(
-                    color: accent.withValues(alpha: 0.04 + (pulse * 0.055)),
-                    blurRadius: 22 + (pulse * 10),
-                    offset: Offset(0, 10 + (pulse * 2)),
+                    color: completionColor.withValues(
+                      alpha: 0.028 + (pulse * 0.04),
+                    ),
+                    blurRadius: 18 + (pulse * 8),
+                    offset: Offset(0, 8 + (pulse * 2)),
                   ),
                 ],
               ),
-              child: Row(
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accent.withValues(alpha: 0.15),
-                          accent.withValues(alpha: 0.05),
-                        ],
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: TaskCompletionSheen(
+                        progress: progress,
+                        color: completionColor,
                       ),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      dashboardCategoryIcon(task.category),
-                      color: accent.withValues(alpha: 0.72),
-                      size: 21,
                     ),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          localizedTaskTitle(
-                            AppLocalizations.of(context),
-                            task,
+                  Row(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color.lerp(
+                                accent.withValues(alpha: 0.15),
+                                completionColor.withValues(alpha: 0.20),
+                                progress,
+                              )!,
+                              Color.lerp(
+                                accent.withValues(alpha: 0.05),
+                                completionColor.withValues(alpha: 0.08),
+                                progress,
+                              )!,
+                            ],
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15.5,
-                            color: theme.textPrimary,
-                            height: 1.18,
-                            letterSpacing: -0.25,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: AppMotion.fast,
+                          switchInCurve: Curves.easeOutBack,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            ),
+                          ),
+                          child: Icon(
+                            isCompleting
+                                ? Icons.check_rounded
+                                : dashboardCategoryIcon(task.category),
+                            key: ValueKey(isCompleting),
+                            color: Color.lerp(
+                              accent.withValues(alpha: 0.72),
+                              completionColor,
+                              progress,
+                            ),
+                            size: isCompleting ? 24 : 21,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _TaskMetricPill(
-                              icon: Icons.star_rounded,
-                              label: '${task.xpReward} XP',
-                              color: const Color(0xFFF0A146),
-                            ),
-                            if (task.coinReward > 0)
-                              _TaskMetricPill(
-                                icon: Icons.monetization_on_rounded,
-                                label: '${task.coinReward}',
-                                color: const Color(0xFF7CB08B),
+                            Text(
+                              localizedTaskTitle(
+                                AppLocalizations.of(context),
+                                task,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15.5,
+                                color: theme.textPrimary,
+                                height: 1.18,
+                                letterSpacing: -0.25,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _TaskMetricPill(
+                                  icon: Icons.star_rounded,
+                                  label: '${task.xpReward} XP',
+                                  color: const Color(0xFFF0A146),
+                                ),
+                                if (task.coinReward > 0)
+                                  _TaskMetricPill(
+                                    icon: Icons.monetization_on_rounded,
+                                    label: '${task.coinReward}',
+                                    color: const Color(0xFF7CB08B),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-                  Transform.scale(
-                    scale: 1 + (pulse * 0.075),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Color.lerp(
-                          accent.withValues(alpha: 0.09),
-                          accent.withValues(alpha: 0.98),
-                          progress,
-                        ),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color:
-                              accent.withValues(alpha: 0.12 * (1 - progress)),
-                        ),
                       ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 180),
-                        switchInCurve: Curves.easeOutBack,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child:
-                              ScaleTransition(scale: animation, child: child),
-                        ),
-                        child: Icon(
-                          Icons.check_rounded,
-                          key: ValueKey(isCompleting),
-                          size: isCompleting ? 22 : 18,
-                          color: isCompleting ? Colors.white : accent,
-                        ),
+                      Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          CompletionSparkleBurst(
+                            progress: progress,
+                            color: completionColor,
+                          ),
+                          Transform.scale(
+                            scale: 1 + (pulse * 0.045),
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Color.lerp(
+                                  accent.withValues(alpha: 0.09),
+                                  completionColor.withValues(alpha: 0.90),
+                                  progress,
+                                ),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Color.lerp(
+                                    accent.withValues(alpha: 0.12),
+                                    Colors.white.withValues(alpha: 0.62),
+                                    progress,
+                                  )!,
+                                ),
+                              ),
+                              child: AnimatedSwitcher(
+                                duration: AppMotion.fast,
+                                switchInCurve: Curves.easeOutBack,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                  opacity: animation,
+                                  child: ScaleTransition(
+                                    scale: animation,
+                                    child: child,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  key: ValueKey(isCompleting),
+                                  size: isCompleting ? 22 : 18,
+                                  color: isCompleting
+                                      ? Colors.white
+                                      : completionColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -194,6 +264,151 @@ class DashboardTaskCard extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+Duration dashboardTaskCompletionDuration(
+  BuildContext context,
+  bool isCompleting,
+) {
+  final media = MediaQuery.maybeOf(context);
+  if (media?.accessibleNavigation ?? false) {
+    return Duration.zero;
+  }
+  return Duration(milliseconds: isCompleting ? 420 : 220);
+}
+
+Color dashboardTaskCompletionColor(Color accent) {
+  return Color.alphaBlend(
+    const Color(0xFF22C55E).withValues(alpha: 0.62),
+    accent,
+  );
+}
+
+class TaskCompletionSheen extends StatelessWidget {
+  final double progress;
+  final Color color;
+
+  const TaskCompletionSheen({
+    super.key,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (progress <= 0) return const SizedBox.shrink();
+
+    final eased = Curves.easeInOutCubic.transform(progress.clamp(0.0, 1.0));
+    return Opacity(
+      opacity: (1 - (eased * 0.55)).clamp(0.0, 1.0) * 0.22,
+      child: FractionalTranslation(
+        translation: Offset(-0.8 + (eased * 1.18), 0),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: 0.46,
+            heightFactor: 1,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.transparent,
+                    color.withValues(alpha: 0.16),
+                    Colors.white.withValues(alpha: 0.16),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CompletionSparkleBurst extends StatelessWidget {
+  final double progress;
+  final Color color;
+
+  const CompletionSparkleBurst({
+    super.key,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (progress <= 0) return const SizedBox.shrink();
+
+    final eased = Curves.easeInOutCubic.transform(progress.clamp(0.0, 1.0));
+    final opacity = math.sin(progress * math.pi).clamp(0.0, 1.0);
+    final distance = 10 + (eased * 7);
+
+    return Opacity(
+      opacity: opacity * 0.45,
+      child: SizedBox(
+        width: 58,
+        height: 58,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            _SparkleDot(
+              color: color,
+              size: 4,
+              offset: Offset(29 + distance * 0.52, 25 - distance),
+            ),
+            _SparkleDot(
+              color: const Color(0xFFFFBD3D),
+              size: 3,
+              offset: Offset(27 - distance * 0.72, 31 - distance * 0.54),
+            ),
+            _SparkleDot(
+              color: color,
+              size: 2.5,
+              offset: Offset(30 + distance * 0.68, 34 + distance * 0.34),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SparkleDot extends StatelessWidget {
+  final Color color;
+  final double size;
+  final Offset offset;
+
+  const _SparkleDot({
+    required this.color,
+    required this.size,
+    required this.offset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: offset.dx,
+      top: offset.dy,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.35),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

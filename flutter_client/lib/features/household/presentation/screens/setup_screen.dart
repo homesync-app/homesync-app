@@ -351,7 +351,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     });
   }
 
-  Future<String?> _ensureHouseholdForSetupCompletion() async {
+  String get _creatorMemberTypeForOnboarding =>
+      _selectedMode == 'family' ? _selectedCreatorMemberType : 'parent';
+
+  String get _creatorDisplayRoleForOnboarding =>
+      _selectedMode == 'family' ? _familyRole : 'Adulto';
+
+  String? _memberOnboardingErrorMessage(
+    Object? rpcResult,
+    String fallbackMessage,
+  ) {
+    if (rpcResult == false) return fallbackMessage;
+    if (rpcResult is Map<String, dynamic> && rpcResult['ok'] == false) {
+      return rpcResult['error'] as String? ?? fallbackMessage;
+    }
+    return null;
+  }
+
+  Future<String?> _ensureHouseholdForSetupCompletion({
+    bool refreshSessionImmediately = true,
+  }) async {
     final selectedMode = _selectedMode ?? 'solo';
     var householdId = await ref.read(householdIdProvider.future);
 
@@ -362,7 +381,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
       if (householdId == null || householdId.isEmpty) {
         throw Exception('No se pudo crear el hogar');
       }
-      _invalidateHouseholdSession();
+      if (refreshSessionImmediately) {
+        _invalidateHouseholdSession();
+      }
     }
 
     // Only update household type when the user CREATED the household.
@@ -372,7 +393,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           .read(updateHouseholdTypeUseCaseProvider)
           .call(householdId, _selectedMode!);
       result.fold((failure) => throw failure, (_) {});
-      _invalidateHouseholdSession();
+      if (refreshSessionImmediately) {
+        _invalidateHouseholdSession();
+      }
     }
 
     return householdId;
@@ -483,7 +506,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     final client = ref.read(supabaseClientProvider);
 
     try {
-      await _ensureHouseholdForSetupCompletion();
+      log.i(
+        'SetupScreen._saveAndComplete: starting mode=${_selectedMode ?? 'solo'} '
+        'selectedTemplates=${_selectedTemplateIds.length}',
+      );
+      final householdId = await _ensureHouseholdForSetupCompletion(
+        refreshSessionImmediately: false,
+      );
+      if (householdId == null || householdId.isEmpty) {
+        throw Exception('No se pudo resolver el hogar para finalizar setup');
+      }
 
       if (!mounted) return;
 
@@ -528,9 +560,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         log.i(
           '_saveAndComplete: cloning ${_selectedTemplateIds.length} templates',
         );
-        final count = await _templateService
-            .cloneTemplates(_selectedTemplateIds.toList());
-        log.i('_saveAndComplete: cloned $count tasks');
+        final count = await _templateService.cloneTemplates(
+          _selectedTemplateIds.toList(),
+          householdId: householdId,
+        );
+        if (count <= 0) {
+          throw Exception('No se pudieron crear las tareas iniciales');
+        }
+        log.i('_saveAndComplete: cloned $count tasks household=$householdId');
       }
 
       if (!mounted) return;
@@ -540,18 +577,22 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           final rpcResult = await client.rpc(
             'complete_member_onboarding',
             params: {
-              'p_member_type': _selectedCreatorMemberType,
-              'p_display_role': _familyRole,
+              'p_member_type': _creatorMemberTypeForOnboarding,
+              'p_display_role': _creatorDisplayRoleForOnboarding,
             },
           );
-          if (rpcResult is Map<String, dynamic> && rpcResult['ok'] == false) {
-            final errorMsg =
-                rpcResult['error'] as String? ?? t.setupSnackUnknownError;
-            log.w('complete_member_onboarding (creator) returned: $errorMsg');
+          final onboardingError = _memberOnboardingErrorMessage(
+            rpcResult,
+            t.setupSnackUnknownError,
+          );
+          if (onboardingError != null) {
+            log.w(
+              'complete_member_onboarding (creator) returned: $onboardingError',
+            );
             if (mounted) {
               setState(() => _isSaving = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(errorMsg)),
+                SnackBar(content: Text(onboardingError)),
               );
             }
             return;

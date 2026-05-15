@@ -2884,32 +2884,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Close';
 
   @override
-  String get premiumPaywallTitle => 'Take your home\\nto the next level';
+  String get premiumPaywallEyebrow =>
+      'Premium for households that stay organized';
+
+  @override
+  String get premiumPaywallTitle =>
+      'Automate your household without entering everything twice';
 
   @override
   String get premiumPaywallSubtitle =>
-      'Unlock all pro features and simplify your team life.';
+      'Payments, shopping, and stats working together so the balance always stays clear.';
 
   @override
-  String get premiumBenefitAdvancedStats => 'Advanced Statistics';
+  String get premiumBenefitRecurringPayments => 'Recurring payments';
+
+  @override
+  String get premiumBenefitRecurringPaymentsDesc =>
+      'Schedule subscriptions, services, and installments so they repeat on their own and do not get lost during the month.';
+
+  @override
+  String get premiumBenefitShoppingFinanceSync =>
+      'Shopping connected to Finance';
+
+  @override
+  String get premiumBenefitShoppingFinanceSyncDesc =>
+      'Link shopping-list products with real expenses and avoid entering the same purchase twice.';
+
+  @override
+  String get premiumBenefitAdvancedStats => 'Advanced stats';
 
   @override
   String get premiumBenefitAdvancedStatsDesc =>
-      'Analyze your expenses and tasks by category with detailed charts.';
+      'Analyze expenses, tasks, and progress with deeper views by category and period.';
 
   @override
-  String get premiumBenefitUnlimitedHouseholds => 'Unlimited Households';
-
-  @override
-  String get premiumBenefitUnlimitedHouseholdsDesc =>
-      'Create multiple households for your partner, family, friends, or projects.';
-
-  @override
-  String get premiumBenefitFullCustomization => 'Full Customization';
+  String get premiumBenefitFullCustomization => 'Full customization';
 
   @override
   String get premiumBenefitFullCustomizationDesc =>
-      'Access premium themes, unique colors, and custom widgets.';
+      'Choose colors, themes, and custom avatars so the household feels like yours.';
 
   @override
   String get premiumRestorePurchases => 'Restore purchases';

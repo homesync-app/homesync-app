@@ -393,7 +393,7 @@ class _AnimatedDigitCounter extends StatelessWidget {
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: value),
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 700),
       curve: Curves.easeOutExpo,
       builder: (context, val, child) {
         final formatted = NumberFormat.decimalPattern(locale).format(
