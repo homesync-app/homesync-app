@@ -549,9 +549,13 @@ expense_templates.id ← planned_expenses.template_id
 |---------|---------|-----------|
 | create_task(...) | UUID | Crea tarea |
 | complete_task_transaction(...) | JSONB | Completa + XP/coins + reprograma |
+| complete_task_v1(...) | JSONB | Comando canonico versionado para completar tarea |
 | complete_tasks_batch(...) | JSONB | Completar batch |
 | verify_task_transaction(...) | JSONB | Verifica tarea completada |
+| approve_task_v1(...) | JSONB | Comando canonico versionado para aprobar tarea |
 | reject_task_transaction(...) | JSONB | Rechaza tarea |
+| reject_task_v1(...) | JSONB | Comando canonico versionado para rechazar tarea pendiente |
+| undo_task_completion_v1(p_activity_id, p_user_id) | JSONB | Revierte activity de tarea completada + rewards |
 | get_task_stats_by_category(p_user_id) | TABLE | Stats por categoria |
 
 ### Stats / Gamification

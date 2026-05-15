@@ -1325,7 +1325,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             payerEmail: item.payerEmail,
             splitType: item.splitType,
             isShared: item.splitType != SplitType.personal.name,
-            type: item.title.toLowerCase().contains('liquidaciÃ³n')
+            type: item.title.toLowerCase().contains('liquidación')
                 ? 'settlement'
                 : 'expense',
           );
@@ -1869,30 +1869,40 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
 
   Widget _buildEmptyState(
     String message, {
-    String icon = 'ðŸ“‰',
     String? subtitle,
   }) {
+    final theme = context.theme;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(32),
+            width: 112,
+            height: 112,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
+              color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child:
-                Text(icon, style: const TextStyle(fontSize: 48)).animatePulse(),
+            child: Icon(
+              Icons.receipt_long_rounded,
+              size: 44,
+              color: AppColors.primary.withValues(alpha: 0.82),
+            ).animatePulse(),
           ),
           const SizedBox(height: 24),
-          Text(
-            message,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0,
+                height: 1.18,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -1902,10 +1912,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
               subtitle ??
                   AppLocalizations.of(context).expensesEmptyDefaultSubtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: theme.textSecondary,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+                letterSpacing: 0,
               ),
             ),
           ),

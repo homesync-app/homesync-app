@@ -438,7 +438,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     setState(() => _completedTaskIds.add(task.id));
     try {
       log.d('[friends] completing task id=${task.id} title=${task.title}');
-      await Future<void>.delayed(const Duration(milliseconds: 240));
+      await Future<void>.delayed(const Duration(milliseconds: 360));
       final result = await ref.read(tasksProvider.notifier).completeTask(task);
 
       if (!mounted) return;

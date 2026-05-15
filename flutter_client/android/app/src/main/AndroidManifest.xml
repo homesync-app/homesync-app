@@ -3,8 +3,7 @@
     <application
         android:label="HomeSync"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon"
-        android:windowOptOutEdgeToEdgeEnforcement="true">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

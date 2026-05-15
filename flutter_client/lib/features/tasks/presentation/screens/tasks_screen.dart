@@ -48,6 +48,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchOpen = false;
+  bool _showTodayDoneCelebration = false;
 
   @override
   void initState() {
@@ -55,7 +56,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     timeago.setLocaleMessages('es', EsMessages());
     _tabController = TabController(length: 2, vsync: this);
     _completionConfettiController =
-        ConfettiController(duration: const Duration(milliseconds: 1400));
+        ConfettiController(duration: const Duration(milliseconds: 1100));
 
     // Sync tab controller with provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -656,10 +657,40 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                   Color(0xFFFFE4D5),
                 ],
                 emissionFrequency: 0.018,
-                maxBlastForce: 3.2,
+                maxBlastForce: 2.8,
                 minBlastForce: 1.0,
-                numberOfParticles: 10,
+                numberOfParticles: 7,
                 gravity: 0.18,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 16,
+            left: 24,
+            right: 24,
+            child: IgnorePointer(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.96, end: 1).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutBack,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                ),
+                child: _showTodayDoneCelebration
+                    ? _TodayDoneCelebration(
+                        key: const ValueKey('today-done-celebration'),
+                        message: AppLocalizations.of(context).homeAllDoneToday,
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
           ),
@@ -668,9 +699,21 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     );
   }
 
-  void _showCompletionCelebration() {
+  void _showCompletionFeedback({required bool isFinalTodayTask}) {
+    final media = MediaQuery.maybeOf(context);
+    if (!isFinalTodayTask || (media?.accessibleNavigation ?? false)) {
+      HapticFeedback.lightImpact();
+      return;
+    }
+
     _completionConfettiController.play();
     HapticFeedback.mediumImpact();
+    setState(() => _showTodayDoneCelebration = true);
+    Future<void>.delayed(const Duration(milliseconds: 1600), () {
+      if (mounted) {
+        setState(() => _showTodayDoneCelebration = false);
+      }
+    });
   }
 
   Widget _buildSearchChip() {
@@ -856,6 +899,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
           )
           .toList();
     }
+    final todayTasksLeft = deduped.where((task) => task.isDueToday).length;
+    final canCelebrateAllDoneToday =
+        selectedCategories.isEmpty && _searchController.text.trim().isEmpty;
 
     // 3. Group the tasks to display
     final grouped = <String, List<TaskModel>>{};
@@ -899,18 +945,90 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         catTasks.asMap().entries.map((entry) {
           final index = entry.key;
           final task = entry.value;
+          final isFinalTodayTask = canCelebrateAllDoneToday &&
+              task.isDueToday &&
+              todayTasksLeft == 1;
           return _TaskCard(
             key: ValueKey(task.id),
             task: task,
             onSchedule: () => _showScheduleDialog(task),
             onEdit: () => _showEditDialog(task),
-            onCompletedFeedback: _showCompletionCelebration,
+            onCompletedFeedback: () => _showCompletionFeedback(
+              isFinalTodayTask: isFinalTodayTask,
+            ),
           ).animateStaggered(index);
         }),
       );
     }
 
     return widgets;
+  }
+}
+
+class _TodayDoneCelebration extends StatelessWidget {
+  final String message;
+
+  const _TodayDoneCelebration({
+    super.key,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Center(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: AppColors.accentGreen.withValues(alpha: 0.26),
+          ),
+          boxShadow: [
+            ...theme.cardShadow,
+            BoxShadow(
+              color: AppColors.accentGreen.withValues(alpha: 0.10),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGreen.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 16,
+                  color: AppColors.accentGreen,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Flexible(
+                child: Text(
+                  message,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

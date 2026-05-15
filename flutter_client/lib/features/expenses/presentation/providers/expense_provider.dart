@@ -146,7 +146,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 
@@ -187,7 +187,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 
@@ -219,7 +219,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 }
@@ -259,7 +259,7 @@ class CombinedFeedController extends _$CombinedFeedController {
         // monthlyProjectionProvider depende de combinedFeed via ref.watch, asi
         // que invalidateSelf() ya lo refresca. Invalidar aca tambien crea un
         // ciclo (CircularDependencyError) durante el build.
-        ref.invalidate(recentActivityProvider);
+        ref.invalidate(recentActivityRemoteProvider);
       } catch (e, stack) {
         log.w(
           'CombinedFeed recurring expense processing failed: $e',
@@ -306,7 +306,7 @@ class CombinedFeedController extends _$CombinedFeedController {
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
-          ref.invalidate(recentActivityProvider);
+          ref.invalidate(recentActivityRemoteProvider);
         }
         return r;
       },

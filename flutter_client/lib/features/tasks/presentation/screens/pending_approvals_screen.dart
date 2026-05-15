@@ -14,7 +14,7 @@ import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 ///
 /// Lista las submisiones en estado `pending` y permite aprobarlas o rechazarlas
 /// con motivo. Las acciones invocan `verify_task_transaction` /
-/// `reject_task_transaction` (RPCs que validan rol del lado servidor).
+/// `reject_task_v1` (RPCs que validan rol del lado servidor).
 ///
 /// Si el usuario no esta en modo "Modo Padres" (no es admin de un hogar
 /// familiar premium), la pantalla muestra el placeholder hacia el paywall.

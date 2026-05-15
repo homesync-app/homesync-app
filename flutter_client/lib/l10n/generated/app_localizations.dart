@@ -4875,52 +4875,70 @@ abstract class AppLocalizations {
   /// **'Cerrar'**
   String get premiumPaywallCloseTooltip;
 
+  /// Short premium paywall badge shown above the title.
+  ///
+  /// In es, this message translates to:
+  /// **'Premium para hogares que se organizan en serio'**
+  String get premiumPaywallEyebrow;
+
   /// No description provided for @premiumPaywallTitle.
   ///
   /// In es, this message translates to:
-  /// **'Llevá tu hogar\nal siguiente nivel'**
+  /// **'Automatizá tu hogar sin cargar todo dos veces'**
   String get premiumPaywallTitle;
 
   /// No description provided for @premiumPaywallSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Desbloqueá todas las funciones pro y simplificá la vida en equipo.'**
+  /// **'Pagos, compras y estadísticas trabajando juntos para que el balance esté siempre claro.'**
   String get premiumPaywallSubtitle;
+
+  /// Premium benefit title for scheduled or recurring payments.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagos recurrentes'**
+  String get premiumBenefitRecurringPayments;
+
+  /// Premium benefit description for scheduled or recurring payments.
+  ///
+  /// In es, this message translates to:
+  /// **'Programá suscripciones, servicios y cuotas para que se repitan solas y no se pierdan en el mes.'**
+  String get premiumBenefitRecurringPaymentsDesc;
+
+  /// Premium benefit title for linking shopping list items with finance expenses.
+  ///
+  /// In es, this message translates to:
+  /// **'Compras conectadas a Finanzas'**
+  String get premiumBenefitShoppingFinanceSync;
+
+  /// Premium benefit description for linking shopping list items with finance expenses.
+  ///
+  /// In es, this message translates to:
+  /// **'Vinculá productos de la lista con gastos reales y evitá cargar la misma compra dos veces.'**
+  String get premiumBenefitShoppingFinanceSyncDesc;
 
   /// No description provided for @premiumBenefitAdvancedStats.
   ///
   /// In es, this message translates to:
-  /// **'Estadísticas Avanzadas'**
+  /// **'Estadísticas avanzadas'**
   String get premiumBenefitAdvancedStats;
 
   /// No description provided for @premiumBenefitAdvancedStatsDesc.
   ///
   /// In es, this message translates to:
-  /// **'Analizá tus gastos y tareas por categoría con gráficos detallados.'**
+  /// **'Analizá gastos, tareas y progreso con vistas más profundas por categoría y período.'**
   String get premiumBenefitAdvancedStatsDesc;
-
-  /// No description provided for @premiumBenefitUnlimitedHouseholds.
-  ///
-  /// In es, this message translates to:
-  /// **'Hogares Ilimitados'**
-  String get premiumBenefitUnlimitedHouseholds;
-
-  /// No description provided for @premiumBenefitUnlimitedHouseholdsDesc.
-  ///
-  /// In es, this message translates to:
-  /// **'Creá múltiples hogares para tu pareja, familia, amigos o proyectos.'**
-  String get premiumBenefitUnlimitedHouseholdsDesc;
 
   /// No description provided for @premiumBenefitFullCustomization.
   ///
   /// In es, this message translates to:
-  /// **'Personalización Completa'**
+  /// **'Personalización completa'**
   String get premiumBenefitFullCustomization;
 
   /// No description provided for @premiumBenefitFullCustomizationDesc.
   ///
   /// In es, this message translates to:
-  /// **'Accedé a temas premium, colores únicos y widgets personalizados.'**
+  /// **'Elegí colores, temas y avatares personalizados para que el hogar se sienta propio.'**
   String get premiumBenefitFullCustomizationDesc;
 
   /// No description provided for @premiumRestorePurchases.
@@ -7296,25 +7314,25 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseValidationTitleAmount.
   ///
   /// In es, this message translates to:
-  /// **'Complet? t?tulo y monto v?lido.'**
+  /// **'Completá título y monto válido.'**
   String get recurringExpenseValidationTitleAmount;
 
   /// No description provided for @recurringExpenseValidationPayer.
   ///
   /// In es, this message translates to:
-  /// **'Eleg? qui?n suele abonarla para dejarla lista.'**
+  /// **'Elegí quién suele abonarla para dejarla lista.'**
   String get recurringExpenseValidationPayer;
 
   /// No description provided for @recurringExpenseDeleteTitle.
   ///
   /// In es, this message translates to:
-  /// **'?Eliminar suscripci?n?'**
+  /// **'¿Eliminar suscripción?'**
   String get recurringExpenseDeleteTitle;
 
   /// No description provided for @recurringExpenseDeleteBody.
   ///
   /// In es, this message translates to:
-  /// **'Dejar? de aparecer en futuros meses.'**
+  /// **'Dejará de aparecer en futuros meses.'**
   String get recurringExpenseDeleteBody;
 
   /// No description provided for @recurringExpenseDetailEyebrow.
@@ -7326,13 +7344,13 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseDetailTitle.
   ///
   /// In es, this message translates to:
-  /// **'Qu? se renueva cada mes'**
+  /// **'Qué se renueva cada mes'**
   String get recurringExpenseDetailTitle;
 
   /// No description provided for @recurringExpenseDetailSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Defin? el nombre y el monto para reconocerla r?pido.'**
+  /// **'Definí el nombre y el monto para reconocerla rápido.'**
   String get recurringExpenseDetailSubtitle;
 
   /// No description provided for @recurringExpenseCalendarEyebrow.
@@ -7344,25 +7362,25 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseCalendarTitle.
   ///
   /// In es, this message translates to:
-  /// **'Cu?ndo se registra'**
+  /// **'Cuándo se registra'**
   String get recurringExpenseCalendarTitle;
 
   /// No description provided for @recurringExpenseCalendarSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Elegimos el d?a habitual para programarla sola.'**
+  /// **'Elegimos el día habitual para programarla sola.'**
   String get recurringExpenseCalendarSubtitle;
 
   /// No description provided for @recurringExpenseCategoryEyebrow.
   ///
   /// In es, this message translates to:
-  /// **'CATEGOR?A'**
+  /// **'CATEGORÍA'**
   String get recurringExpenseCategoryEyebrow;
 
   /// No description provided for @recurringExpenseCategoryTitle.
   ///
   /// In es, this message translates to:
-  /// **'D?nde encaja mejor'**
+  /// **'Dónde encaja mejor'**
   String get recurringExpenseCategoryTitle;
 
   /// No description provided for @recurringExpenseCategorySubtitle.
@@ -7380,13 +7398,13 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseSplitTitle.
   ///
   /// In es, this message translates to:
-  /// **'C?mo se reparte'**
+  /// **'Cómo se reparte'**
   String get recurringExpenseSplitTitle;
 
   /// No description provided for @recurringExpenseSplitSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Defin? si se comparte en el hogar o si queda como personal.'**
+  /// **'Definí si se comparte en el hogar o si queda como personal.'**
   String get recurringExpenseSplitSubtitle;
 
   /// No description provided for @recurringExpensePayerEyebrow.
@@ -7398,13 +7416,13 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpensePayerTitle.
   ///
   /// In es, this message translates to:
-  /// **'Qui?n suele abonarla'**
+  /// **'Quién suele abonarla'**
   String get recurringExpensePayerTitle;
 
   /// No description provided for @recurringExpensePayerSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Esto deja una sugerencia lista para los pr?ximos meses.'**
+  /// **'Esto deja una sugerencia lista para los próximos meses.'**
   String get recurringExpensePayerSubtitle;
 
   /// No description provided for @recurringExpenseHeaderEditIncome.
@@ -7416,7 +7434,7 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseHeaderEditSubscription.
   ///
   /// In es, this message translates to:
-  /// **'Editar suscripci?n'**
+  /// **'Editar suscripción'**
   String get recurringExpenseHeaderEditSubscription;
 
   /// No description provided for @recurringExpenseHeaderNewIncome.
@@ -7428,19 +7446,19 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseHeaderNewSubscription.
   ///
   /// In es, this message translates to:
-  /// **'Nueva suscripci?n'**
+  /// **'Nueva suscripción'**
   String get recurringExpenseHeaderNewSubscription;
 
   /// No description provided for @recurringExpenseHeaderEditSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Ajust? monto, categor?a y reparto para mantenerlo al d?a.'**
+  /// **'Ajustá monto, categoría y reparto para mantenerlo al día.'**
   String get recurringExpenseHeaderEditSubtitle;
 
   /// No description provided for @recurringExpenseHeaderNewIncomeSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Se sumar? autom?ticamente a tu balance cada mes.'**
+  /// **'Se sumará automáticamente a tu balance cada mes.'**
   String get recurringExpenseHeaderNewIncomeSubtitle;
 
   /// No description provided for @recurringExpenseHeaderNewSubscriptionSubtitle.
@@ -7458,19 +7476,19 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseDeleteSubscription.
   ///
   /// In es, this message translates to:
-  /// **'Eliminar suscripci?n'**
+  /// **'Eliminar suscripción'**
   String get recurringExpenseDeleteSubscription;
 
   /// No description provided for @recurringExpenseNameRequired.
   ///
   /// In es, this message translates to:
-  /// **'Escrib? un nombre para reconocerla.'**
+  /// **'Escribí un nombre para reconocerla.'**
   String get recurringExpenseNameRequired;
 
   /// No description provided for @recurringExpenseNameMinLength.
   ///
   /// In es, this message translates to:
-  /// **'Us? al menos 3 caracteres.'**
+  /// **'Usá al menos 3 caracteres.'**
   String get recurringExpenseNameMinLength;
 
   /// No description provided for @recurringExpenseNameLabel.
@@ -7500,13 +7518,13 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseSaveSubscription.
   ///
   /// In es, this message translates to:
-  /// **'Guardar suscripci?n'**
+  /// **'Guardar suscripción'**
   String get recurringExpenseSaveSubscription;
 
   /// No description provided for @recurringExpenseCategoryLabel.
   ///
   /// In es, this message translates to:
-  /// **'Categor?a:'**
+  /// **'Categoría:'**
   String get recurringExpenseCategoryLabel;
 
   /// No description provided for @recurringExpenseSplitLabel.
@@ -7518,7 +7536,7 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseAmountInvalid.
   ///
   /// In es, this message translates to:
-  /// **'Ingres? un monto v?lido.'**
+  /// **'Ingresá un monto válido.'**
   String get recurringExpenseAmountInvalid;
 
   /// No description provided for @recurringExpenseAmountPositive.
@@ -7530,7 +7548,7 @@ abstract class AppLocalizations {
   /// No description provided for @recurringExpenseDayLabel.
   ///
   /// In es, this message translates to:
-  /// **'Se cobra el d?a:'**
+  /// **'Se cobra el día:'**
   String get recurringExpenseDayLabel;
 
   /// No description provided for @recurringExpenseRegularPayerLabel.

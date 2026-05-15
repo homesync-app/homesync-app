@@ -112,7 +112,10 @@ class TemplateService {
     throw Exception('Usuario no autenticado');
   }
 
-  Future<int> cloneTemplates(List<String> templateIds) async {
+  Future<int> cloneTemplates(
+    List<String> templateIds, {
+    String? householdId,
+  }) async {
     final userId = await _requireCurrentUserId();
 
     final response = await _client.rpc(
@@ -120,6 +123,7 @@ class TemplateService {
       params: {
         'p_user_id': userId,
         'p_template_ids': templateIds.isEmpty ? null : templateIds,
+        if (householdId != null) 'p_household_id': householdId,
       },
     );
 

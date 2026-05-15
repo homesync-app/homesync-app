@@ -1092,8 +1092,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       premiumFeatures: [
         t.settingsPremiumFeatureShoppingFinanceSync,
         t.settingsPremiumFeatureRecurringPayments,
-        t.settingsPremiumFeatureLoveNotes,
-        t.settingsPremiumFeatureExclusiveAvatars,
+        t.premiumBenefitAdvancedStats,
+        t.premiumBenefitFullCustomization,
       ],
     );
   }

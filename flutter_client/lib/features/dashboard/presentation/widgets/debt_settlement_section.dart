@@ -305,7 +305,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       HapticFeedback.mediumImpact();
 
       ref.invalidate(expenseBalancesProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
       ref.invalidate(combinedFeedControllerProvider);
 
       if (!mounted) return;

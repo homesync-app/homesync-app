@@ -633,7 +633,7 @@ class SupabaseTaskRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'undo_task_completion',
+            target: 'undo_task_completion_v1',
             params: {
               'p_activity_id': activityId,
               'p_user_id': currentUserId,

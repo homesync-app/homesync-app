@@ -688,9 +688,9 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     ref.read(optimisticRecentActivityProvider.notifier).addTaskCompleted(task);
     try {
       log.d('[family] completing task id=${task.id} title=${task.title}');
-      // Pausa breve para que la animacion de feedback del card (240ms internos)
+      // Pausa breve para que la animacion de feedback del card tenga aire
       // tenga aire antes de que reordenemos la lista al invalidar.
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await Future<void>.delayed(const Duration(milliseconds: 360));
       final result = await ref
           .read(tasksProvider.notifier)
           .completeTask(task, userIds: userIds);

@@ -252,7 +252,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
       if (!mounted) return;
       HapticFeedback.mediumImpact();
       setState(() => _showSuccessState = true);
-      await Future<void>.delayed(const Duration(milliseconds: 420));
+      await Future<void>.delayed(const Duration(milliseconds: 220));
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {

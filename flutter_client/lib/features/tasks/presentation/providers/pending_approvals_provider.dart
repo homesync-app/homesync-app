@@ -41,8 +41,8 @@ final pendingTaskApprovalsProvider =
   }
 });
 
-/// Wrapper de acciones de aprobacion. Encapsula las RPCs `verify_task_transaction`
-/// y `reject_task_transaction` (ambas ya existen en `TaskRpcService`) y refresca
+/// Wrapper de acciones de aprobacion. Encapsula las RPCs versionadas de
+/// aprobacion/rechazo en `TaskRpcService` y refresca
 /// el listado de pendientes despues de cada decision.
 class TaskApprovalActions {
   final Ref _ref;

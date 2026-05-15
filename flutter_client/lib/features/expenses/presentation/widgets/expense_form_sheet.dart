@@ -564,7 +564,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ref.invalidate(expenseControllerProvider);
       ref.invalidate(combinedFeedControllerProvider);
       ref.invalidate(personalFinanceSummaryProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(userBalanceProvider);
 
@@ -580,7 +580,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       if (mounted) {
         HapticFeedback.mediumImpact();
         setState(() => _showSuccessState = true);
-        await Future<void>.delayed(const Duration(milliseconds: 420));
+        await Future<void>.delayed(const Duration(milliseconds: 220));
         if (!mounted) return;
         Navigator.pop(context);
         final baseMsg = widget.expense != null
@@ -883,7 +883,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       container.invalidate(expenseControllerProvider);
       container.invalidate(combinedFeedControllerProvider);
       container.invalidate(personalFinanceSummaryProvider);
-      container.invalidate(recentActivityProvider);
+      container.invalidate(recentActivityRemoteProvider);
       container.invalidate(expenseBalancesProvider);
       container.invalidate(userBalanceProvider);
 
@@ -914,7 +914,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
           .read(hiddenRecentExpenseIdsProvider.notifier)
           .restore(expenseId);
       container.invalidate(combinedFeedControllerProvider);
-      container.invalidate(recentActivityProvider);
+      container.invalidate(recentActivityRemoteProvider);
       _showDeleteResultSnackBar(
         messenger,
         message: errorMessage(e),

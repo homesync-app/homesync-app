@@ -144,7 +144,7 @@ class TaskModel {
   bool get hasRotation => rotationPool.isNotEmpty;
 
   /// Sprint 1 Modo Padres: stub para invocar RPCs que solo necesitan el id
-  /// (verify_task_transaction / reject_task_transaction). Evita tener que
+  /// (approve_task_v1 / reject_task_v1). Evita tener que
   /// pasar un TaskModel completo cuando solo conocemos el id desde la lista
   /// de aprobaciones pendientes.
   factory TaskModel.minimalForApproval({required String id}) {
@@ -383,8 +383,8 @@ class TaskModel {
   DateTime get _effectiveDueAt {
     if (!isRecurring) return dueAt!;
 
-    final completedLocal = (completedAt ?? _parseDate(lastCompletedAt))
-        ?.toLocal();
+    final completedLocal =
+        (completedAt ?? _parseDate(lastCompletedAt))?.toLocal();
     if (completedLocal == null) return dueAt!;
 
     final nextDue = _nextDueAfterCompletion(completedLocal);

@@ -3,6 +3,17 @@
 Documento vivo para ordenar mejoras posteriores al upgrade de dependencias y Riverpod 3.
 La idea no es hacer todo junto, sino elegir cortes chicos, testeables y con impacto claro antes del lanzamiento.
 
+## Estado actual del backlog
+
+Ultima actualizacion: 2026-05-14.
+
+- Hecho: `delete_expense_v1`, `complete_task_v1`, `approve_task_v1`, `reject_task_v1`, `undo_task_completion_v1`.
+- Hecho: `docs/rpc_contracts.md`, `docs/db_schema.md`, `docs/optimistic_policy.md`, `docs/conventions.md`, `docs/antipatterns.md`, `docs/feed_contract.md`.
+- Parcial: `get_combined_feed` tiene contrato funcional y contrato de RPC, pero falta `FeedItemKind` en el modelo.
+- Parcial: `save_expense_v4` queda como canonico actual, pero falta contrato completo en `docs/rpc_contracts.md`.
+- Pendiente: `complete_tasks_batch_v1`, `settle_debt_v1`, `create_shopping_request_v1`, `approve_shopping_request_v1`.
+- Pendiente: tests de providers/notifiers como especificacion ejecutable para delete expense, complete task, approve task y undo task.
+
 ## Filosofia guia: vibe coding first
 
 Toda mejora se evalua con un solo criterio: **le hace la vida mas facil o mas dificil a la IA cuando vuelva a tocar este codigo?**
@@ -111,7 +122,7 @@ Modelo:
 
 Primer corte:
 
-- Documentar contrato de `get_combined_feed` en `docs/rpc_contracts.md`.
+- Hecho: documentar contrato de `get_combined_feed` en `docs/rpc_contracts.md`.
 - Ajustar `FeedItemModel` para distinguir tipo visual de tipo de recurso.
 - Cada card decide accion por `kind`, no por strings.
 

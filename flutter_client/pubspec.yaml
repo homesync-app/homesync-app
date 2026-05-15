@@ -1,7 +1,7 @@
 name: homesync_client
 description: HomeSync Flutter Client - App de gestión de tareas, gastos y recompensas para parejas
 publish_to: "none"
-version: 1.0.0+61
+version: 1.0.0+63
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

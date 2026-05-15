@@ -17,30 +17,28 @@ class NotificationBell extends ConsumerStatefulWidget {
 class _NotificationBellState extends ConsumerState<NotificationBell>
     with SingleTickerProviderStateMixin {
   int _unreadCount = 0;
-  late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation;
+  late AnimationController _attentionController;
+  late Animation<double> _attentionScale;
 
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(
+    _attentionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 240),
     );
-    _shakeAnimation = TweenSequence([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.15), weight: 20),
-      TweenSequenceItem(tween: Tween(begin: -0.15, end: 0.15), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 0.15, end: -0.1), weight: 20),
-      TweenSequenceItem(tween: Tween(begin: -0.1, end: 0.0), weight: 20),
+    _attentionScale = TweenSequence([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.08), weight: 45),
+      TweenSequenceItem(tween: Tween(begin: 1.08, end: 1.0), weight: 55),
     ]).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _attentionController, curve: Curves.easeOutCubic),
     );
     _loadUnreadCount();
   }
 
   @override
   void dispose() {
-    _shakeController.dispose();
+    _attentionController.dispose();
     super.dispose();
   }
 
@@ -58,8 +56,9 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
       final count = (data as List).length;
       if (mounted && count != _unreadCount) {
         setState(() => _unreadCount = count);
-        if (count > 0) {
-          _shakeController.forward(from: 0);
+        final media = MediaQuery.maybeOf(context);
+        if (count > 0 && !(media?.accessibleNavigation ?? false)) {
+          _attentionController.forward(from: 0);
         }
       }
     } catch (error, stackTrace) {
@@ -77,9 +76,9 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
       alignment: Alignment.center,
       children: [
         AnimatedBuilder(
-          animation: _shakeAnimation,
-          builder: (context, child) => Transform.rotate(
-            angle: _shakeAnimation.value,
+          animation: _attentionScale,
+          builder: (context, child) => Transform.scale(
+            scale: _attentionScale.value,
             child: child,
           ),
           child: IconButton(
