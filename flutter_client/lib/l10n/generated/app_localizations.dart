@@ -3009,6 +3009,24 @@ abstract class AppLocalizations {
   /// **'No puede ser negativo'**
   String get createTaskValidationNotNegative;
 
+  /// No description provided for @createTaskValidationTitleMinLength.
+  ///
+  /// In es, this message translates to:
+  /// **'Usá al menos 3 caracteres'**
+  String get createTaskValidationTitleMinLength;
+
+  /// No description provided for @createTaskValidationIntervalMin.
+  ///
+  /// In es, this message translates to:
+  /// **'El intervalo debe ser de al menos 1 día.'**
+  String get createTaskValidationIntervalMin;
+
+  /// No description provided for @createTaskValidationPositiveRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe ser mayor a 0'**
+  String get createTaskValidationPositiveRequired;
+
   /// No description provided for @createTaskSnackCategoryNotReady.
   ///
   /// In es, this message translates to:
@@ -3062,6 +3080,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Notas (opcional)'**
   String get createTaskFieldNotesLabel;
+
+  /// No description provided for @createTaskFieldNotesHint.
+  ///
+  /// In es, this message translates to:
+  /// **'ej: \"usar el limpiapisos azul\", \"revisar el filtro también\"'**
+  String get createTaskFieldNotesHint;
 
   /// No description provided for @createTaskSectionCategoryEyebrow.
   ///
@@ -3177,6 +3201,12 @@ abstract class AppLocalizations {
   /// **'Elegí al menos dos. Cada vez que se complete, le toca al siguiente.'**
   String get createTaskSectionRotationSubtitle;
 
+  /// No description provided for @createTaskRotationMinPoolWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Necesitás al menos 2 personas en el pool.'**
+  String get createTaskRotationMinPoolWarning;
+
   /// No description provided for @createTaskCustomTabWeekdays.
   ///
   /// In es, this message translates to:
@@ -3200,6 +3230,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Repetir cada'**
   String get createTaskCustomRepeatEvery;
+
+  /// No description provided for @createTaskCustomIntervalDays.
+  ///
+  /// In es, this message translates to:
+  /// **'días'**
+  String get createTaskCustomIntervalDays;
 
   /// No description provided for @createTaskCustomDecreaseTooltip.
   ///

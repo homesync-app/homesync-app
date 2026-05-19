@@ -9,6 +9,9 @@ import { Economy } from './pages/Economy';
 import { Content } from './pages/Content';
 import { Inbox } from './pages/Inbox';
 import { OcrInsights } from './pages/OcrInsights';
+import { CrashReports } from './pages/CrashReports';
+import { Logs } from './pages/Logs';
+import { UserManagement } from './pages/UserManagement';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
@@ -71,6 +74,9 @@ function App() {
                   <Route path="/economy" element={<Economy />} />
                   <Route path="/content" element={<Content />} />
                   <Route path="/inbox" element={<Inbox />} />
+                  <Route path="/crash-reports" element={<CrashReports />} />
+                  <Route path="/logs" element={<Logs />} />
+                  <Route path="/users" element={<UserManagement />} />
                   <Route path="/ocr-insights" element={<OcrInsights />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

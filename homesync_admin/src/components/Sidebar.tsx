@@ -8,6 +8,8 @@ import {
   Home,
   Settings,
   MessageSquare,
+  ShieldAlert,
+  Terminal,
   X,
   Activity,
   ScanLine,
@@ -121,6 +123,15 @@ export const Sidebar = ({
           </SidebarItem>
           <SidebarItem to="/inbox" icon={MessageSquare} collapsed={collapsed} onNavigate={onCloseMobile}>
             Bandeja
+          </SidebarItem>
+          <SidebarItem to="/crash-reports" icon={ShieldAlert} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Crash Reports
+          </SidebarItem>
+          <SidebarItem to="/logs" icon={Terminal} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Logs & Errors
+          </SidebarItem>
+          <SidebarItem to="/users" icon={Users} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Usuarios
           </SidebarItem>
           <SidebarItem to="/ocr-insights" icon={ScanLine} collapsed={collapsed} onNavigate={onCloseMobile}>
             OCR Insights

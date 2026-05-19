@@ -70,3 +70,9 @@ APK/
 
 # ─── Data exports (PII) ──────────────────────────────────────────────────────
 *.csv
+
+# Local Open Design checkout (large external tool)
+tools/open-design/
+
+# Local video renders and promo assets
+homesync-video/

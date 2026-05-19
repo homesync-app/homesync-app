@@ -10,9 +10,9 @@ Este contrato cubre "Movimientos del hogar" y cualquier card que consuma `get_co
 
 ## Estado actual del codigo
 
-`get_combined_feed` hoy devuelve items financieros con `record_type` y `transaction_type`. El contrato de columnas vive en `docs/rpc_contracts.md`.
+`get_combined_feed` hoy devuelve solo items financieros con `record_type` y `transaction_type` (no manda `kind` todavia). El contrato de columnas vive en `docs/rpc_contracts.md`.
 
-`FeedItemModel` todavia no tiene `FeedItemKind`; por eso las cards no deben inferir acciones nuevas desde strings libres hasta hacer el corte de modelo.
+`FeedItemModel` ya expone `kind` (`FeedItemKind`: `resource` | `activity` | `system`). Se deriva de `map['kind']` con default `resource` (forward-compatible: cuando el RPC mande `kind`, se respeta sin tocar el modelo). Todo item es `resource` hoy.
 
 ## Reglas
 
@@ -20,9 +20,13 @@ Este contrato cubre "Movimientos del hogar" y cualquier card que consuma `get_co
 - Actividades derivadas no se editan como recurso financiero. Al deshacer una tarea, se borra/oculta la activity y se revierte el ledger asociado.
 - Si hay conflicto entre tabla fuente y `household_activities`, manda la tabla fuente para recursos financieros.
 - El feed combinado es cache/lectura. Despues de cualquier comando critico se invalida y se recarga desde backend.
+- **Las cards ramifican acciones por `kind` (gate `item.isResource`) y subtipo, NO por strings de titulo/categoria.**
 
-## Primer corte pendiente
+## Primer corte (hecho 2026-05-19)
 
-- Cambiar `FeedItemModel` para exponer `kind`: `resource`, `activity`, `system`.
-- Mantener `transactionType` solo como subtipo financiero (`expense`, `income`, `settlement`).
-- Cambiar cards para decidir acciones por `kind` y subtipo, no por strings de titulo/categoria.
+- ✅ `FeedItemModel.kind` (`FeedItemKind` resource/activity/system) + getter `isResource`.
+- ✅ `transactionType` queda como subtipo financiero (`expense`/`income`/`settlement`) y solo aplica cuando `kind == resource`.
+- ✅ `_buildFeedItemCard` gatea por `isResource` antes de tratar el item como gasto.
+- ✅ Eliminada la inferencia `title.contains('liquidación') ? 'settlement' : 'expense'`; ahora usa `transactionType` estructurado.
+
+Fuera de alcance (flag, no es accion del feed): `expense_detail_sheet.dart` infiere `isShoppingList` por `title.contains('compra')`. Es heuristica de display sobre `ExpenseModel`, no decide acciones del feed. Revisar solo si da bug real.

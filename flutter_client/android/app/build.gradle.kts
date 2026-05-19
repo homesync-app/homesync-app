@@ -17,6 +17,24 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// Guard: un build RELEASE jamas debe firmarse con la debug key. Si lo hace,
+// el APK queda con una firma distinta a la de Play/keystore y Android obliga
+// a desinstalar para actualizar (SHA1 mismatch). Si falta el keystore en un
+// release, fallamos de entrada con un mensaje claro en vez de degradar en
+// silencio. Debug / `flutter run` no se ven afectados.
+val hasReleaseSigning = keystorePropertiesFile.exists() &&
+    (keystoreProperties["storeFile"] as String?)?.let { rootProject.file(it).exists() } == true
+val isReleaseBuild = gradle.startParameter.taskNames.any {
+    it.contains("Release") || it.contains("bundleRelease") || it.contains("assembleRelease")
+}
+if (isReleaseBuild && !hasReleaseSigning) {
+    throw GradleException(
+        "Release sin firma valida: falta key.properties o el keystore (storeFile). " +
+        "NO se permite firmar un release con la debug key porque rompe las " +
+        "actualizaciones (hay que desinstalar). Restaura key.properties y el .keystore."
+    )
+}
+
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {

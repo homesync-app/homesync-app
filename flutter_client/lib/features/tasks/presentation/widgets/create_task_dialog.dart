@@ -149,7 +149,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
         break;
       case 'interval':
         if (_recurrenceInterval < 1) {
-          return 'El intervalo debe ser de al menos 1 dia.';
+          return t.createTaskValidationIntervalMin;
         }
         break;
     }
@@ -361,7 +361,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                   .createTaskValidationTitleRequired;
                             }
                             if (title.length < 3) {
-                              return 'Usa al menos 3 caracteres';
+                              return AppLocalizations.of(context)
+                                  .createTaskValidationTitleMinLength;
                             }
                             return null;
                           },
@@ -373,8 +374,8 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                           decoration: InputDecoration(
                             labelText: AppLocalizations.of(context)
                                 .createTaskFieldNotesLabel,
-                            hintText:
-                                'ej: "usar el limpiapisos azul", "revisar el filtro tambien"',
+                            hintText: AppLocalizations.of(context)
+                                .createTaskFieldNotesHint,
                             prefixIcon: const Padding(
                               padding: EdgeInsets.only(bottom: 24),
                               child: Icon(Icons.notes_rounded),
@@ -957,9 +958,9 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           ),
         ),
         const SizedBox(width: 12),
-        const Text(
-          'dias',
-          style: TextStyle(color: AppColors.textSecondary),
+        Text(
+          t.createTaskCustomIntervalDays,
+          style: const TextStyle(color: AppColors.textSecondary),
         ),
       ],
     );
@@ -1109,11 +1110,11 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
           }).toList(),
         ),
         if (_rotationPool.length == 1)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'Necesitas al menos 2 personas en el pool.',
-              style: TextStyle(
+              AppLocalizations.of(context).createTaskRotationMinPoolWarning,
+              style: const TextStyle(
                 color: AppColors.accentOrange,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
@@ -1336,7 +1337,7 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                       return AppLocalizations.of(context)
                           .createTaskValidationNumberRequired;
                     }
-                    if (parsed <= 0) return 'Debe ser mayor a 0';
+                    if (parsed <= 0) return AppLocalizations.of(context).createTaskValidationPositiveRequired;
                     return null;
                   },
                 ),

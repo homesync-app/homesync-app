@@ -1854,6 +1854,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createTaskValidationNotNegative => 'Can\'t be negative';
 
   @override
+  String get createTaskValidationTitleMinLength => 'Use at least 3 characters';
+
+  @override
+  String get createTaskValidationIntervalMin =>
+      'Interval must be at least 1 day.';
+
+  @override
+  String get createTaskValidationPositiveRequired => 'Must be greater than 0';
+
+  @override
   String get createTaskSnackCategoryNotReady =>
       'Hold on a moment and pick a category.';
 
@@ -1882,6 +1892,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createTaskFieldNotesLabel => 'Notes (optional)';
+
+  @override
+  String get createTaskFieldNotesHint =>
+      'e.g. \"use the blue mop\", \"check the filter too\"';
 
   @override
   String get createTaskSectionCategoryEyebrow => 'CATEGORY';
@@ -1946,6 +1960,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick at least two. Each completion shifts to the next person.';
 
   @override
+  String get createTaskRotationMinPoolWarning =>
+      'You need at least 2 people in the pool.';
+
+  @override
   String get createTaskCustomTabWeekdays => 'By day';
 
   @override
@@ -1956,6 +1974,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createTaskCustomRepeatEvery => 'Repeat every';
+
+  @override
+  String get createTaskCustomIntervalDays => 'days';
 
   @override
   String get createTaskCustomDecreaseTooltip => 'Decrease';

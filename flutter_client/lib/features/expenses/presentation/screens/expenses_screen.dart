@@ -1308,6 +1308,12 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
   }
 
   Widget _buildFeedItemCard(FeedItemModel item) {
+    // Solo los recursos financieros se renderizan como card editable/borrable.
+    // Cuando get_combined_feed sume activities/system (FeedItemKind), estos NO
+    // deben tratarse como gasto. Hoy todo item es resource (no-op defensivo).
+    if (!item.isResource) {
+      return _buildPlannedExpenseCard(item);
+    }
     if (item.isRealExpense) {
       final expenses = ref.read(expenseControllerProvider).value;
       final expense = expenses?.where((e) => e.id == item.id).firstOrNull ??
@@ -1325,9 +1331,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
             payerEmail: item.payerEmail,
             splitType: item.splitType,
             isShared: item.splitType != SplitType.personal.name,
-            type: item.title.toLowerCase().contains('liquidación')
-                ? 'settlement'
-                : 'expense',
+            // Subtipo financiero estructurado, no inferido del titulo.
+            type: item.transactionType,
           );
       return _buildRealExpenseCard(expense);
     } else {

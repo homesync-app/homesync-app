@@ -110,7 +110,7 @@ class TaskRpcService extends BaseRpcService {
       final requestId = generateRequestId();
 
       final response = await client.rpc(
-        'complete_tasks_batch',
+        'complete_tasks_batch_v1',
         params: {
           'p_request_id': requestId,
           'p_user_ids': userIds ?? [userId],

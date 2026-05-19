@@ -56,13 +56,19 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   void initState() {
     super.initState();
     _type = widget.initialType;
+    _titleCtrl.addListener(_onTitleChanged);
   }
 
   @override
   void dispose() {
+    _titleCtrl.removeListener(_onTitleChanged);
     _titleCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  void _onTitleChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _submit() async {

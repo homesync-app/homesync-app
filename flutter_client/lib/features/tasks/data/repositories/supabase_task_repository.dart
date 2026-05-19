@@ -260,7 +260,7 @@ class SupabaseTaskRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'complete_tasks_batch',
+            target: 'complete_tasks_batch_v1',
             params: {
               'p_request_id':
                   'offline_${DateTime.now().millisecondsSinceEpoch}',

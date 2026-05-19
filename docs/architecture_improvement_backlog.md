@@ -5,13 +5,14 @@ La idea no es hacer todo junto, sino elegir cortes chicos, testeables y con impa
 
 ## Estado actual del backlog
 
-Ultima actualizacion: 2026-05-14.
+Ultima actualizacion: 2026-05-19.
 
-- Hecho: `delete_expense_v1`, `complete_task_v1`, `approve_task_v1`, `reject_task_v1`, `undo_task_completion_v1`.
+- Hecho: `delete_expense_v1`, `complete_task_v1`, `approve_task_v1`, `reject_task_v1`, `undo_task_completion_v1`, `complete_tasks_batch_v1`, `settle_debt_v1`.
 - Hecho: `docs/rpc_contracts.md`, `docs/db_schema.md`, `docs/optimistic_policy.md`, `docs/conventions.md`, `docs/antipatterns.md`, `docs/feed_contract.md`.
-- Parcial: `get_combined_feed` tiene contrato funcional y contrato de RPC, pero falta `FeedItemKind` en el modelo.
-- Parcial: `save_expense_v4` queda como canonico actual, pero falta contrato completo en `docs/rpc_contracts.md`.
-- Pendiente: `complete_tasks_batch_v1`, `settle_debt_v1`, `create_shopping_request_v1`, `approve_shopping_request_v1`.
+- `settle_debt_v1` (2026-05-19): cerro el riesgo financiero. `expenses.request_id` + unique index parcial; reusa `save_expense_v4` y agrega guard idempotente. Cliente reusa el mismo `request_id` entre online y cola offline. Aplicado a prod via MCP.
+- Hecho (2026-05-19): contrato completo de `save_expense_v4` en `docs/rpc_contracts.md` (queda como canonico; deuda de naming `_v4`, no de comportamiento; no es idempotente para gastos comunes).
+- Hecho (2026-05-19): `FeedItemKind` (resource/activity/system) en `FeedItemModel` + getter `isResource`; cards gatean acciones por `kind`; eliminada inferencia de subtipo por string de titulo. `get_combined_feed` sigue devolviendo solo financieros (default resource, forward-compatible). Ver `docs/feed_contract.md`.
+- Pendiente: `create_shopping_request_v1`, `approve_shopping_request_v1`.
 - Pendiente: tests de providers/notifiers como especificacion ejecutable para delete expense, complete task, approve task y undo task.
 
 ## Filosofia guia: vibe coding first
@@ -120,11 +121,12 @@ Modelo:
 - `FeedItemKind.activity`: tarea completada, aprobacion, nota, recompensa.
 - `FeedItemKind.system`: eventos generados por reglas internas.
 
-Primer corte:
+Primer corte (hecho 2026-05-19):
 
 - Hecho: documentar contrato de `get_combined_feed` en `docs/rpc_contracts.md`.
-- Ajustar `FeedItemModel` para distinguir tipo visual de tipo de recurso.
-- Cada card decide accion por `kind`, no por strings.
+- Hecho: `FeedItemModel.kind` (`FeedItemKind`) separa categoria conceptual de `recordType`/`transactionType` (subtipo financiero).
+- Hecho: cards gatean por `kind` (`isResource`) y se elimino la inferencia de subtipo por string de titulo (`title.contains('liquidación')`).
+- Pendiente real (cuando aparezca): que `get_combined_feed` emita `activity`/`system`; el modelo ya esta listo.
 
 ## 4. Politica unica de optimistic updates (escrita)
 

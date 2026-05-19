@@ -66,6 +66,27 @@ interface ScanLog {
 
 type Tab = 'scans' | 'unmatched' | 'dropped' | 'manual' | 'stats';
 
+const errorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (
+    error &&
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+  if (
+    error &&
+    typeof error === 'object' &&
+    'error' in error &&
+    typeof error.error === 'string'
+  ) {
+    return error.error;
+  }
+  return 'Error desconocido';
+};
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const fmtDate = (iso: string) => {
@@ -169,8 +190,7 @@ export const OcrInsights = () => {
       setManual((m.data ?? []) as ManualRow[]);
       setStats((s.data ?? []) as DailyStats[]);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error desconocido';
-      setError(msg);
+      setError(errorMessage(e));
     } finally {
       setLoading(false);
       setRefreshing(false);

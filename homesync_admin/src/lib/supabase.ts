@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const useLocalProxy = import.meta.env.VITE_ADMIN_LOCAL_PROXY === 'true';
+const supabaseUrl = useLocalProxy
+  ? `${window.location.origin}/admin-api/supabase`
+  : import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {

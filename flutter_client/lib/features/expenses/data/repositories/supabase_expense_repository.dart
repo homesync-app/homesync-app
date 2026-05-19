@@ -10,6 +10,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/providers/connectivity_provider.dart';
@@ -372,27 +373,21 @@ class SupabaseExpenseRepository
     required String toUserId,
     required double amount,
   }) async {
+    // request_id estable generado UNA vez y reusado entre el intento online y
+    // la cola offline. Es la clave de idempotencia de settle_debt_v1: reintentar
+    // o reproducir la accion encolada no registra el pago dos veces.
+    final requestId = const Uuid().v4();
+    final params = {
+      'p_request_id': requestId,
+      'p_household_id': householdId,
+      'p_from_user_id': fromUserId,
+      'p_to_user_id': toUserId,
+      'p_amount': amount,
+    };
+
     return executeWithHandling(
       () async {
-        await _client.rpc(
-          'save_expense_v4',
-          params: {
-            'p_id': null,
-            'p_household_id': householdId,
-            'p_title': 'Liquidación de balance',
-            'p_amount': amount,
-            'p_category': 'other',
-            'p_paid_by': fromUserId,
-            'p_paid_at': DateTime.now().toIso8601String(),
-            'p_description': 'Saldar balance acumulado',
-            'p_split_type': 'fixed',
-            'p_is_shared': true,
-            'p_type': 'settlement',
-            'p_splits': [
-              {'user_id': toUserId, 'amount': amount},
-            ],
-          },
-        );
+        await _client.rpc('settle_debt_v1', params: params);
       },
       context: 'SupabaseExpenseRepository.settleDebt',
       isOnline: _isOnline,
@@ -400,23 +395,8 @@ class SupabaseExpenseRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'save_expense_v4',
-            params: {
-              'p_id': null,
-              'p_household_id': householdId,
-              'p_title': 'Liquidación de balance',
-              'p_amount': amount,
-              'p_category': 'other',
-              'p_paid_by': fromUserId,
-              'p_paid_at': DateTime.now().toIso8601String(),
-              'p_description': 'Saldar balance acumulado',
-              'p_split_type': 'fixed',
-              'p_is_shared': true,
-              'p_type': 'settlement',
-              'p_splits': [
-                {'user_id': toUserId, 'amount': amount},
-              ],
-            },
+            target: 'settle_debt_v1',
+            params: params,
           ),
         );
       },

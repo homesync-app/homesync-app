@@ -163,6 +163,66 @@ Error / no completable:
 
 ---
 
+## complete_tasks_batch_v1
+
+Completa varias tareas en un lote. El cliente solo manda `p_task_ids`; el batch resuelve `title`/`xp_reward`/`coin_reward` desde `public.tasks` por tarea y delega cada una a `complete_task_v1`. Hereda de `complete_task_v1` los dos caminos (directo / aprobacion) por tarea.
+
+- **Migration canonica**: `supabase/migrations/20260519002000_complete_tasks_batch_v1.sql`
+- **Legacy alias**: `complete_tasks_batch` (sin versionar) queda como wrapper SQL. REQUERIDO mientras existan colas offline persistidas en dispositivos con ese target. Borrar despues de 1-2 releases.
+- **Versionado**: ✅ `_v1`
+- **Transaccional**: ✅ una transaccion por lote (atomico)
+- **Idempotente full**: ✅ heredada de `complete_task_v1` via `request_id` por tarea
+
+**Inputs**
+
+| nombre | tipo | descripcion |
+|---|---|---|
+| `p_request_id` | `text` | clave de idempotencia del lote (cliente). Por tarea se deriva `p_request_id || ':' || task_id` |
+| `p_user_ids` | `uuid[]` | performers (al menos 1) |
+| `p_task_ids` | `uuid[]` | tareas a completar |
+| `p_household_id` | `uuid` | hogar |
+| `p_completed_at` | `timestamptz` | opcional, default null |
+
+**Output** (`jsonb`)
+
+```json
+{
+  "success": true,
+  "message": "Tareas procesadas: 3 ok, 1 omitidas",
+  "results": [ /* un payload de complete_task_v1 por tarea */ ],
+  "success_count": 3,
+  "skipped_count": 1
+}
+```
+
+`success` top-level es `true` si el lote corrio (mismo criterio que `qa_admin_complete_tasks_batch`); el detalle por tarea esta en `results`. Lista vacia -> `success: true`, `0/0`.
+
+**Tablas afectadas**
+
+Las mismas que `complete_task_v1` (delegacion), mas lectura de `public.tasks` para resolver title/xp/coin por tarea.
+
+**Idempotencia**
+
+Por `p_request_id` del lote. Cada tarea recibe `p_request_id || ':' || task_id`, que `complete_task_v1` namespacea (`complete:` / `approve:`) y deduplica con unique index parcial + ledger `on conflict`. Reintentar el lote completo o uno parcial NO duplica activities ni re-acredita XP/coins.
+
+**Errores** (devueltos como `success: false`, no exception)
+
+- `"At least one performer is required"` -> `p_user_ids` vacio (lote entero).
+- Por tarea: `"Task not found in household"` (`status: skipped`) o los de `complete_task_v1`.
+
+**Providers a invalidar en cliente (tras exito)**
+
+- `userBalanceProvider`
+- `recentActivityProvider`
+
+**Cliente**
+
+- Invocacion: [task_rpc_service.dart:102](flutter_client/lib/core/services/rpc/task_rpc_service.dart:102) (`completeTasksBatch` -> llama `complete_tasks_batch_v1`)
+- Offline queue target: `complete_tasks_batch_v1` ([supabase_task_repository.dart:263](flutter_client/lib/features/tasks/data/repositories/supabase_task_repository.dart:263))
+- Camino admin/QA aparte: `qa_admin_complete_tasks_batch` (no tocado por esta migracion).
+
+---
+
 ## approve_task_v1
 
 Aprueba la ultima `task_approval` pendiente de una tarea. Solo admins/owners. Aca recien se crea la activity y se acreditan recompensas.
@@ -383,6 +443,7 @@ Feed financiero combinado usado por "Movimientos del hogar".
 - **Transaccional**: lectura.
 - **Cliente**: [supabase_expense_repository.dart:183](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart:183)
 - **Contrato funcional**: ver `docs/feed_contract.md`.
+- **`kind`**: el RPC NO devuelve `kind` todavia (solo financieros). `FeedItemModel` lo deriva con default `FeedItemKind.resource`. Si en el futuro este RPC suma activities/system, debe emitir la columna `kind` (`resource`/`activity`/`system`) y el modelo la respeta sin cambios.
 
 **Inputs**
 
@@ -441,14 +502,123 @@ Feed financiero combinado usado por "Movimientos del hogar".
 
 ---
 
-## save_expense_v4 *(canonico actual, pendiente de wrapper/documentacion final)*
+## save_expense_v4 *(canonico actual)*
 
-RPC actual para crear/editar gastos.
+RPC canonico para **crear y editar** gastos/ingresos/settlements. Lo usa toda la creacion de gastos del cliente y `settle_debt_v1` por dentro.
 
-- **Cliente**: [supabase_expense_repository.dart:287](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart:287)
-- **Estado**: se mantiene como comando canonico por ahora. El backlog permite documentar `save_expense_v4` como principal o crear `save_expense_v1`; no hacer ambos sin motivo.
+- **Estado**: canonico. No se crea `save_expense_v1` salvo motivo concreto (backlog seccion 1). Naming legacy aceptado a proposito.
+- **Versionado**: ⚠️ `_v4` (no sigue la convencion `_v1`; es deuda de naming, no de comportamiento)
+- **Transaccional**: ✅ una transaccion (insert/update expense + regenera splits)
+- **Idempotente**: ❌ **NO**. `p_id` null siempre inserta una fila nueva. La idempotencia de settlements la aporta `settle_debt_v1` (ver su entrada). Para crear gastos comunes no hay guard: reintentar puede duplicar.
 
-Pendiente para un corte futuro: entrada completa con inputs/output/tablas/idempotencia/providers.
+**Overloads en prod** (hay 2; el cliente usa la de `p_id` primero):
+
+1. `(p_id, p_household_id, p_title, p_amount, p_category, p_paid_by, p_paid_at, p_description, p_split_type, p_is_shared, p_type, p_splits, p_receipt_path)` → `uuid` ← **usada por el cliente**
+2. `(p_household_id, p_title, p_amount, p_category, p_paid_by, p_type, p_description, p_split_type, p_splits, p_paid_at, p_id, p_receipt_path)` → `uuid` (overload heredada, no usada por el cliente)
+
+**Inputs** (overload 1)
+
+| nombre | tipo | descripcion |
+|---|---|---|
+| `p_id` | `uuid` | null → crear; presente → editar (solo si `created_by_id = caller`) |
+| `p_household_id` | `uuid` | si null, se resuelve por membresia del caller |
+| `p_title` | `text` | titulo |
+| `p_amount` | `numeric` | monto |
+| `p_category` | `text` | categoria |
+| `p_paid_by` | `uuid` | debe ser miembro del hogar |
+| `p_paid_at` | `timestamptz` | default `now()` |
+| `p_description` | `text` | opcional |
+| `p_split_type` | `text` | `equal` / `personal` / `gift` / `fixed` |
+| `p_is_shared` | `boolean` | forzado a false si `personal`/`gift` |
+| `p_type` | `text` | `expense` / `income` / `settlement` (cast a `transaction_type`) |
+| `p_splits` | `jsonb` | `[{user_id, amount}]`; ignorado en `personal`/`gift`; auto-equal si vacio y `equal` |
+| `p_receipt_path` | `text` | opcional |
+
+**Output**: `uuid` del gasto creado/editado.
+
+**Validaciones / errores** (via `RAISE EXCEPTION`)
+
+- `Not authenticated` → `current_app_user_id()` null.
+- `Household not found for user` / `User is not member of household`.
+- `paid_by must be a member of the household`.
+- `Expense not found or not owned by user` → editar un gasto de otro.
+- `One or more split users are not household members`.
+
+**Logica de splits**
+
+- `personal`/`gift` → `is_shared=false`, un split al pagador.
+- `equal` sin `p_splits` (o ≤1) → divide en partes iguales entre todos los miembros.
+- resto con `p_splits` → valida miembros e inserta los splits provistos (camino de `settlement`).
+- En edicion borra `expense_splits` previos y los regenera.
+
+**Tablas afectadas**
+
+| tabla | R/W | nota |
+|---|---|---|
+| `public.expenses` | W (insert o update) + R | en update exige `created_by_id = caller` |
+| `public.expense_splits` | W (delete+insert) | regenerados siempre |
+| `public.household_members` | R | validaciones de membresia |
+
+No escribe ledger ni tabla de balances: el balance se **deriva** de `expenses` + `expense_splits`.
+
+**Idempotencia**: ninguna propia. Settlements protegidos por `settle_debt_v1`. Gastos comunes: el reintento online/offline puede duplicar (riesgo conocido, fuera de alcance de este corte).
+
+**Cliente**
+
+- Crear/editar: [supabase_expense_repository.dart:285](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart:285) (`saveExpense`), mismo `target` en cola offline (linea 323).
+- Camino admin/QA: `qa_admin_save_expense_v1` (no tocado).
+- **Providers a invalidar tras exito** (de `expense_provider.dart`): `expenseBalancesProvider`, `personalFinanceSummaryProvider`, `combinedFeedControllerProvider`, `recentActivityRemoteProvider`.
+
+---
+
+## settle_debt_v1
+
+Salda una deuda entre dos miembros: registra un gasto `type = 'settlement'` (pagado por `from`, split fijo a `to`). Reusa `save_expense_v4` como capa canonica y agrega el guard de idempotencia que faltaba.
+
+- **Migration canonica**: `supabase/migrations/20260519003000_settle_debt_v1.sql`
+- **Sin wrapper legacy**: el cliente nunca llamo a un RPC `settle_debt`; saldaba via `save_expense_v4` directo (que NO se rerutea, lo usa toda la creacion de gastos). El cliente pasa a `settle_debt_v1`.
+- **Versionado**: ✅ `_v1`
+- **Transaccional**: ✅ una transaccion
+- **Idempotente full**: ✅ `expenses.request_id` + unique index parcial `uq_expenses_request_id`
+
+**Inputs**
+
+| nombre | tipo | descripcion |
+|---|---|---|
+| `p_request_id` | `text` | clave de idempotencia. **Generada UNA vez en el cliente y reusada entre el intento online y la cola offline** |
+| `p_household_id` | `uuid` | hogar |
+| `p_from_user_id` | `uuid` | quien paga (salda) |
+| `p_to_user_id` | `uuid` | quien recibe |
+| `p_amount` | `numeric` | monto, > 0 |
+
+**Output** (`jsonb`)
+
+```json
+{ "success": true, "status": "settled|idempotent", "expense_id": "uuid", "idempotent": false }
+```
+
+Errores (devueltos como `success: false`, no exception): `Not authenticated`, `request_id is required`, `household and users are required`, `amount must be greater than 0`.
+
+**Tablas afectadas**
+
+| tabla | R/W | nota |
+|---|---|---|
+| `public.expenses` | R (pre-check por `request_id`) + W (insert via `save_expense_v4`, update `request_id`) | |
+| `public.expense_splits` | W (insert via `save_expense_v4`) | split fijo a `to` |
+| `public.audit_logs` | W (insert) | `action = 'settle_debt'` |
+
+**Idempotencia**
+
+Por `p_request_id`. Pre-check: si ya existe expense con ese `request_id`, devuelve esa (no-op). Carrera: dos requests identicos crean su expense, el 2do UPDATE viola `uq_expenses_request_id` -> `exception when unique_violation` hace rollback de la expense duplicada (misma tx) y devuelve la existente. Persiste **exactamente una** liquidacion.
+
+**Providers a invalidar en cliente (tras exito)**
+
+- `userBalanceProvider`
+- `recentActivityProvider` / feed combinado
+
+**Cliente**
+
+- Invocacion + offline queue target: `settle_debt_v1` ([supabase_expense_repository.dart](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart) — `settleDebt`, mismo `requestId` en ambos caminos).
 
 ---
 
