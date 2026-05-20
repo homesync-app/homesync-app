@@ -5,6 +5,7 @@ import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
@@ -47,28 +48,38 @@ class _SettingsParentModeCardState
     return Container(
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(
+          color: available
+              ? theme.divider
+              : AppColors.accentGold.withValues(alpha: 0.24),
+          width: 0.8,
+        ),
+        boxShadow: AppElevation.card(
+          color: theme.shadow,
+          isDarkMode: theme.isDarkMode,
+        ),
       ),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
                 child: const Icon(
                   Icons.shield_rounded,
                   color: AppColors.primary,
-                  size: 20,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,14 +89,17 @@ class _SettingsParentModeCardState
                       style: TextStyle(
                         color: theme.textPrimary,
                         fontWeight: FontWeight.w900,
-                        fontSize: 17,
+                        fontSize: 19,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       t.settingsParentModeSubtitle,
-                      style:
-                          TextStyle(color: theme.textSecondary, fontSize: 12),
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -99,6 +113,9 @@ class _SettingsParentModeCardState
                   decoration: BoxDecoration(
                     color: AppColors.accentGold.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.22),
+                    ),
                   ),
                   child: Text(
                     t.settingsPremiumBadge,
@@ -112,7 +129,7 @@ class _SettingsParentModeCardState
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           if (!available)
             _LockedBody(onUnlock: _openPaywall)
           else
@@ -185,15 +202,28 @@ class _LockedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _bullet(theme, '✅', t.settingsParentModeBulletApproval),
-        _bullet(theme, '👀', t.settingsParentModeBulletPerMember),
-        _bullet(theme, '🔄', t.settingsParentModeBulletRotation),
-        const SizedBox(height: 14),
+        _LockedFeatureRow(
+          icon: Icons.verified_user_rounded,
+          color: AppColors.sage,
+          text: t.settingsParentModeBulletApproval,
+        ),
+        const SizedBox(height: 10),
+        _LockedFeatureRow(
+          icon: Icons.groups_2_rounded,
+          color: AppColors.accentBlue,
+          text: t.settingsParentModeBulletPerMember,
+        ),
+        const SizedBox(height: 10),
+        _LockedFeatureRow(
+          icon: Icons.sync_rounded,
+          color: AppColors.accentPurple,
+          text: t.settingsParentModeBulletRotation,
+        ),
+        const SizedBox(height: 18),
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -201,27 +231,83 @@ class _LockedBody extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              minimumSize: const Size.fromHeight(54),
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+              ),
             ),
-            child: Text(t.settingsParentModeUnlockButton),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.workspace_premium_rounded, size: 19),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    t.settingsParentModeUnlockButton,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _bullet(AppThemeColors theme, String emoji, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+class _LockedFeatureRow extends StatelessWidget {
+  const _LockedFeatureRow({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: theme.isDarkMode ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+          color: color.withValues(alpha: theme.isDarkMode ? 0.18 : 0.12),
+        ),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 8),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: theme.isDarkMode ? 0.20 : 0.14),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 11),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(color: theme.textSecondary, fontSize: 13),
+              style: TextStyle(
+                color: theme.textPrimary.withValues(alpha: 0.82),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                height: 1.25,
+              ),
             ),
           ),
         ],

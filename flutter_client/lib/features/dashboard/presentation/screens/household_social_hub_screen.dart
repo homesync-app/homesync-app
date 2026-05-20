@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
@@ -271,24 +272,22 @@ class _FamilyTrackingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
-    final titleColor = unlocked
-        ? theme.textPrimary
-        : theme.textSecondary.withValues(alpha: 0.76);
+    final accent = unlocked ? AppColors.primary : AppColors.accentGold;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.border.withValues(alpha: 0.62)),
-        boxShadow: [
-          BoxShadow(
-            color:
-                theme.shadow.withValues(alpha: theme.isDarkMode ? 0.18 : 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(
+          color: unlocked
+              ? theme.border.withValues(alpha: 0.62)
+              : AppColors.accentGold.withValues(alpha: 0.20),
+        ),
+        boxShadow: AppElevation.card(
+          color: theme.shadow,
+          isDarkMode: theme.isDarkMode,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,20 +295,21 @@ class _FamilyTrackingCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: (unlocked ? AppColors.primary : theme.textSecondary)
-                      .withValues(alpha: unlocked ? 0.1 : 0.08),
-                  borderRadius: BorderRadius.circular(14),
+                  color: accent.withValues(alpha: unlocked ? 0.10 : 0.16),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
                 child: Icon(
-                  unlocked ? Icons.insights_rounded : Icons.lock_rounded,
-                  color: unlocked ? AppColors.primary : const Color(0xFF9D9691),
-                  size: 21,
+                  unlocked
+                      ? Icons.insights_rounded
+                      : Icons.workspace_premium_rounded,
+                  color: accent,
+                  size: 23,
                 ),
               ),
-              const SizedBox(width: 11),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,10 +317,9 @@ class _FamilyTrackingCard extends StatelessWidget {
                     Text(
                       t.householdSocialHubTrackingTitle,
                       style: TextStyle(
-                        color: titleColor,
-                        fontSize: 17,
+                        color: theme.textPrimary,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: -0.25,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -328,19 +327,19 @@ class _FamilyTrackingCard extends StatelessWidget {
                       t.householdSocialHubTrackingSubtitle,
                       style: TextStyle(
                         color: theme.textSecondary,
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        height: 1.2,
+                        height: 1.25,
                       ),
                     ),
                   ],
                 ),
               ),
               if (!unlocked) const SizedBox(width: 8),
-              if (!unlocked) _PremiumBadge(theme: theme),
+              if (!unlocked) const _PremiumBadge(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -387,7 +386,14 @@ class _FamilyTrackingShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = unlocked ? color : const Color(0xFF9D9691);
+    final theme = context.theme;
+    final effectiveColor = unlocked ? color : color.withValues(alpha: 0.72);
+    final backgroundColor = unlocked
+        ? color.withValues(alpha: 0.10)
+        : color.withValues(alpha: theme.isDarkMode ? 0.10 : 0.07);
+    final borderColor = unlocked
+        ? color.withValues(alpha: 0.14)
+        : theme.border.withValues(alpha: theme.isDarkMode ? 0.42 : 0.80);
 
     return Material(
       color: Colors.transparent,
@@ -395,24 +401,32 @@ class _FamilyTrackingShortcut extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 54),
+          constraints: const BoxConstraints(minHeight: 68),
           child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: effectiveColor.withValues(alpha: unlocked ? 0.1 : 0.08),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: effectiveColor.withValues(alpha: unlocked ? 0.12 : 0.18),
-              ),
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(color: borderColor),
             ),
             child: Row(
               children: [
-                Icon(
-                  unlocked ? icon : Icons.lock_rounded,
-                  color: effectiveColor,
-                  size: 21,
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: unlocked
+                        ? effectiveColor.withValues(alpha: 0.13)
+                        : theme.surface.withValues(alpha: 0.86),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: Icon(
+                    unlocked ? icon : Icons.lock_rounded,
+                    color: effectiveColor,
+                    size: 19,
+                  ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     label,
@@ -420,15 +434,15 @@ class _FamilyTrackingShortcut extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: effectiveColor,
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w900,
-                      height: 1.08,
+                      height: 1.12,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: effectiveColor,
+                  color: effectiveColor.withValues(alpha: 0.82),
                   size: 19,
                 ),
               ],
@@ -441,29 +455,40 @@ class _FamilyTrackingShortcut extends StatelessWidget {
 }
 
 class _PremiumBadge extends StatelessWidget {
-  const _PremiumBadge({required this.theme});
-
-  final AppThemeColors theme;
+  const _PremiumBadge();
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: theme.textSecondary.withValues(alpha: 0.08),
+        color: AppColors.accentGold.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: theme.textSecondary.withValues(alpha: 0.14),
+          color: AppColors.accentGold.withValues(alpha: 0.24),
         ),
       ),
-      child: Text(
-        'PREMIUM',
-        style: TextStyle(
-          color: theme.textSecondary.withValues(alpha: 0.82),
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.4,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.workspace_premium_rounded,
+            color: AppColors.accentGold,
+            size: 13,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            t.settingsPremiumBadge,
+            style: const TextStyle(
+              color: AppColors.accentGold,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
       ),
     );
   }

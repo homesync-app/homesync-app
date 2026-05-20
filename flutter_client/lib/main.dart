@@ -25,7 +25,6 @@ import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
-import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -226,8 +225,11 @@ void main() async {
       warnAfterMs: 500,
     );
   } catch (e, stack) {
-    log.w('Auth service init failed (offline?)',
-        error: e, stackTrace: stack);
+    log.w(
+      'Auth service init failed (offline?)',
+      error: e,
+      stackTrace: stack,
+    );
   }
 
   final rpc = SupabaseRpcService(clientOverride: supabaseClient);
@@ -238,8 +240,11 @@ void main() async {
       warnAfterMs: 200,
     );
   } catch (e, stack) {
-    log.w('RPC service init failed (offline?)',
-        error: e, stackTrace: stack);
+    log.w(
+      'RPC service init failed (offline?)',
+      error: e,
+      stackTrace: stack,
+    );
   }
 
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs).
