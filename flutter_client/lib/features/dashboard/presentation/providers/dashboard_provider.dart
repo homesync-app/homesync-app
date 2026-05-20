@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/dashboard/data/repositories/supabase_dashboard_repository.dart';
@@ -9,6 +10,11 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_provider.g.dart';
+
+final recentActivityRealtimeDelayProvider = FutureProvider<bool>((ref) async {
+  await Future<void>.delayed(const Duration(seconds: 4));
+  return true;
+});
 
 @riverpod
 DashboardRepository dashboardRepository(Ref ref) {
@@ -53,10 +59,35 @@ Stream<List<Map<String, dynamic>>> recentActivityRemote(Ref ref) {
 // blanqueo de UI. La firma del consumer (.when sobre AsyncValue) no cambia.
 @riverpod
 AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
-  final remoteAsync = ref.watch(recentActivityRemoteProvider);
   final optimistic = ref.watch(optimisticRecentActivityProvider);
   final hiddenExpenseIds = ref.watch(hiddenRecentExpenseIdsProvider);
   final householdId = ref.watch(householdIdProvider).value;
+  final bootstrap = ref.watch(homeBootstrapProvider).value;
+  final realtimeReady =
+      ref.watch(recentActivityRealtimeDelayProvider).value ?? false;
+
+  if (!realtimeReady && bootstrap?.householdId == householdId) {
+    final visibleBootstrap = _filterHiddenExpenses(
+      bootstrap!.recentActivities,
+      hiddenExpenseIds,
+    );
+    final scopedOptimistic = optimistic.where((activity) {
+      return activity['household_id'] == householdId;
+    }).toList();
+    return AsyncValue.data(_mergeActivity(scopedOptimistic, visibleBootstrap));
+  }
+
+  final remoteAsync = ref.watch(recentActivityRemoteProvider);
+  if (remoteAsync.hasError && bootstrap?.householdId == householdId) {
+    final visibleBootstrap = _filterHiddenExpenses(
+      bootstrap!.recentActivities,
+      hiddenExpenseIds,
+    );
+    final scopedOptimistic = optimistic.where((activity) {
+      return activity['household_id'] == householdId;
+    }).toList();
+    return AsyncValue.data(_mergeActivity(scopedOptimistic, visibleBootstrap));
+  }
 
   return remoteAsync.whenData((remote) {
     final visibleRemote = _filterHiddenExpenses(remote, hiddenExpenseIds);

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/admin_providers.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 
 class AppAuthState {
   const AppAuthState({
@@ -86,12 +87,20 @@ Future<void> _syncSessionContextFromAuth(AppAuthState authState) async {
 }
 
 final authBootstrapProvider = FutureProvider<void>((ref) async {
-  await AppIdentityService.instance.initialize();
+  await PerformanceMonitor.measureFuture(
+    'auth_bootstrap.identity_initialize',
+    AppIdentityService.instance.initialize,
+    warnAfterMs: 700,
+  );
 
   final firebaseUser = fa.FirebaseAuth.instance.currentUser;
   if (firebaseUser != null) {
     try {
-      await firebaseUser.getIdToken(true);
+      await PerformanceMonitor.measureFuture(
+        'auth_bootstrap.firebase_token',
+        () => firebaseUser.getIdToken(false),
+        warnAfterMs: 900,
+      );
     } catch (_) {}
   }
 
@@ -101,12 +110,20 @@ final authBootstrapProvider = FutureProvider<void>((ref) async {
     });
   });
 
-  final initialAuthState = await ref.read(authStateProvider.future).catchError(
-        (_) => const AppAuthState(
-          isAuthenticated: false,
-          source: 'bootstrap_error',
+  final initialAuthState = await PerformanceMonitor.measureFuture(
+    'auth_bootstrap.initial_auth_state',
+    () => ref.read(authStateProvider.future).catchError(
+          (_) => const AppAuthState(
+            isAuthenticated: false,
+            source: 'bootstrap_error',
+          ),
         ),
-      );
+    warnAfterMs: 500,
+  );
 
-  await _syncSessionContextFromAuth(initialAuthState);
+  await PerformanceMonitor.measureFuture(
+    'auth_bootstrap.sync_session_context',
+    () => _syncSessionContextFromAuth(initialAuthState),
+    warnAfterMs: 900,
+  );
 });

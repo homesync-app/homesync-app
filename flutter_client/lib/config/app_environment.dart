@@ -76,6 +76,11 @@ class AppEnvironment {
     return !isProduction && override.toLowerCase() == 'true';
   }
 
+  static bool get enablePerformanceLogs {
+    const override = String.fromEnvironment('ENABLE_PERF_LOGS');
+    return !isProduction && _isTruthy(override);
+  }
+
   static String _readWebQueryParam(String key) {
     final value = Uri.base.queryParameters[key];
     return value?.trim() ?? '';

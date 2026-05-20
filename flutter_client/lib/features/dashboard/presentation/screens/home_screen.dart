@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/widgets/offline_indicator.dart';
@@ -37,6 +38,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   ProviderSubscription<AsyncValue<List<TaskModel>>>? _taskCompletionListener;
+  bool _reportedFirstHomeFrame = false;
 
   @override
   void initState() {
@@ -100,6 +102,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildMainContent(String householdId, AppThemeColors theme) {
     final caps = ref.watch(householdCapabilitiesProvider);
+    if (!_reportedFirstHomeFrame) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _reportedFirstHomeFrame) return;
+        _reportedFirstHomeFrame = true;
+        PerformanceMonitor.mark(
+          'startup.home_screen.first_content_frame',
+          context: {'householdId': householdId},
+        );
+      });
+    }
 
     return Scaffold(
       backgroundColor: theme.background,

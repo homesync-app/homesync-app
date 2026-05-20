@@ -6,6 +6,7 @@ import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
@@ -94,8 +95,24 @@ class Tasks extends _$Tasks {
 
     _setupRealtime(householdId);
 
+    final bootstrap = await ref.watch(homeBootstrapProvider.future);
+    if (bootstrap?.householdId == householdId) {
+      final tasks = bootstrap!.tasks
+          .map((task) => TaskModel.fromMap(task))
+          .toList(growable: false);
+      if (tasks.length < _pageSize) {
+        _hasMore = false;
+      }
+      return tasks;
+    }
+
     final useCase = ref.watch(getTasksUseCaseProvider);
-    final result = await useCase(householdId, limit: _pageSize, offset: 0);
+    final result = await PerformanceMonitor.measureFuture(
+      'provider.tasks.initial_page',
+      () => useCase(householdId, limit: _pageSize, offset: 0),
+      context: {'householdId': householdId, 'limit': _pageSize},
+      warnAfterMs: 900,
+    );
     return result.fold(
       (failure) => throw failure,
       (tasks) {

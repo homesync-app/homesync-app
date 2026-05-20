@@ -166,17 +166,22 @@ class FakeHouseholdRepository implements HouseholdRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>>
-      getHouseholdMembersRaw() async => const Right([]);
+  Future<Either<Failure, List<Map<String, dynamic>>>> getHouseholdMembersRaw({
+    String? householdId,
+    String? viewerUserId,
+  }) async =>
+      const Right([]);
 
   @override
   Future<Either<Failure, List<String>>> getMemberIds(
-          String householdId,) async =>
+    String householdId,
+  ) async =>
       const Right([]);
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> joinHousehold(
-          String code,) async =>
+    String code,
+  ) async =>
       const Right({});
 
   @override
