@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:developer' as dev;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,138 +28,74 @@ class SupabaseDashboardRepository implements DashboardRepository {
     String householdId,
     String userId,
   ) {
-    final now = DateTime.now();
-    final since = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).toUtc().toIso8601String();
+    late final StreamController<List<Map<String, dynamic>>> controller;
+    RealtimeChannel? channel;
+    Timer? debounce;
+    var disposed = false;
 
-    return _client
-        .from('household_activities')
-        .stream(primaryKey: ['id'])
-        .eq('household_id', householdId)
-        .order('created_at', ascending: false)
-        .asyncMap((rows) async {
-          // Filtrar por fecha en cliente porque SupabaseStreamBuilder no soporta .gte()
-          rows = rows.where((r) {
-            final createdAt = r['created_at'] as String?;
-            if (createdAt == null) return false;
-            return DateTime.tryParse(createdAt)
-                    ?.isAfter(DateTime.parse(since)) ??
-                false;
-          }).toList();
-          // Obtener los IDs de usuario únicos para buscar sus datos
-          final userIds = rows
-              .map((r) => r['user_id'] as String?)
-              .whereType<String>()
-              .toSet();
+    Future<void> emitLatest() async {
+      if (disposed) return;
+      try {
+        final activities = await getRecentActivity(householdId, userId);
+        if (!disposed && !controller.isClosed) {
+          controller.add(activities);
+        }
+      } catch (error, stackTrace) {
+        dev.log(
+          'Recent activity realtime refresh failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        if (!disposed && !controller.isClosed) {
+          controller.addError(error, stackTrace);
+        }
+      }
+    }
 
-          Map<String, Map<String, dynamic>> usersMap = {};
-          if (userIds.isNotEmpty) {
-            final usersResponse = await _client
-                .from('users')
-                .select('id, full_name, avatar_url')
-                .inFilter('id', userIds.toList());
-            usersMap = {for (var u in usersResponse) u['id']: u};
-          }
+    void scheduleRefresh() {
+      debounce?.cancel();
+      debounce = Timer(const Duration(milliseconds: 250), () {
+        unawaited(emitLatest());
+      });
+    }
 
-          final mapped = rows.map((item) {
-            final creatorId = item['user_id'] as String?;
-            final eventType = item['event_type'] as String;
-            final user = usersMap[creatorId];
-            final userName = user?['full_name'] ?? 'Alguien';
-            final userAvatar = user?['avatar_url'];
-            final metadata = Map<String, dynamic>.from(item['metadata'] ?? {});
+    controller = StreamController<List<Map<String, dynamic>>>(
+      onListen: () {
+        unawaited(emitLatest());
+        channel = _client
+            .channel('recent_activity:$householdId')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'household_activities',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'household_id',
+                value: householdId,
+              ),
+              callback: (_) => scheduleRefresh(),
+            )
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'tasks',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'household_id',
+                value: householdId,
+              ),
+              callback: (_) => scheduleRefresh(),
+            )
+            .subscribe();
+      },
+      onCancel: () {
+        disposed = true;
+        debounce?.cancel();
+        channel?.unsubscribe();
+      },
+    );
 
-            String uiType = 'unknown';
-            final data = <String, dynamic>{
-              'user_name': userName,
-              'avatar_url': userAvatar,
-              'title': item['title'],
-              ...metadata,
-            };
-
-            if (eventType == 'task_completed') {
-              uiType = 'task';
-              final taskTitle =
-                  metadata['task_title'] ?? item['title'] ?? 'Tarea del hogar';
-              data['title'] = taskTitle;
-              data['task_title'] = taskTitle;
-              data['task_id'] = metadata['task_id'] ?? metadata['id'];
-              data['category'] = metadata['category'] ??
-                  metadata['task_category'] ??
-                  metadata['category_name'];
-              data['xp_reward'] = metadata['xp_reward'] ??
-                  metadata['xpReward'] ??
-                  metadata['p_xp_reward'] ??
-                  metadata['score_impact'] ??
-                  metadata['xp'] ??
-                  metadata['reward'];
-              data['coins_reward'] = metadata['coins_reward'] ??
-                  metadata['coin_reward'] ??
-                  metadata['coinsReward'] ??
-                  metadata['p_coin_reward'] ??
-                  metadata['p_coins_reward'] ??
-                  metadata['coins'];
-            } else if (eventType == 'expense_added') {
-              uiType = 'expense';
-              final amount = metadata['amount'] ?? 0;
-              final expenseDesc = _resolveExpenseTitle(item, metadata);
-              data['title'] = expenseDesc;
-              data['amount'] = amount;
-              data['description'] = expenseDesc;
-              data['expense_id'] = metadata['expense_id'] ?? metadata['id'];
-              data['is_shared'] = metadata['is_shared'];
-              data['split_type'] = metadata['split_type'];
-            } else if (eventType == 'reward_redeemed') {
-              uiType = 'reward';
-              data['title'] = metadata['reward_title'] ??
-                  item['title'] ??
-                  'Premio canjeado';
-              data['reward_icon'] = metadata['reward_icon'] ?? metadata['icon'];
-              data['reward_cost'] = metadata['cost'] ??
-                  metadata['coins'] ??
-                  metadata['coin_cost'];
-            } else {
-              data['title'] = item['title'] ??
-                  item['description'] ??
-                  'Realiz\u00f3 una acci\u00f3n';
-            }
-
-            return {
-              'id': item['id'],
-              'type': uiType,
-              'data': data,
-              'created_at': item['created_at'],
-              'creator_id': creatorId,
-            };
-          }).toList();
-
-          final filtered = mapped.where((activity) {
-            final data = activity['data'] as Map<String, dynamic>;
-            final type = activity['type'] as String;
-            final creatorId = activity['creator_id'] as String?;
-
-            if (type == 'expense') {
-              final isIncome = data['type'] == 'income' ||
-                  data['type'] == 'ingreso' ||
-                  data['category'] == 'salary';
-              if (isIncome) return false;
-
-              final isShared = data['is_shared'] == true;
-              final splitType = (data['split_type'] as String?)?.toLowerCase();
-              final isGift = splitType == 'gift' || splitType == 'regalo';
-
-              return isShared || isGift || creatorId == userId;
-            }
-            return true;
-          }).toList();
-
-          final pendingApprovals =
-              await _getPendingApprovalActivities(householdId, since);
-          return _dedupeActivities([...filtered, ...pendingApprovals]);
-        });
+    return controller.stream;
   }
 
   @override
@@ -173,15 +111,20 @@ class SupabaseDashboardRepository implements DashboardRepository {
         now.day,
       ).toUtc().toIso8601String();
 
-      final response = _isAdminTestingActive
-          ? await _client.rpc(
+      final response = await PerformanceMonitor.measureFuture(
+        'repository.recent_activity.query',
+        () async {
+          if (_isAdminTestingActive) {
+            return _client.rpc(
               'qa_admin_get_recent_activity',
               params: {
                 'p_household_id': householdId,
                 'p_since': since,
               },
-            )
-          : await _client
+            );
+          }
+
+          return _client
               .from('household_activities')
               .select('''
                 id, event_type, title, description, metadata, created_at, user_id,
@@ -191,6 +134,10 @@ class SupabaseDashboardRepository implements DashboardRepository {
               .gte('created_at', since)
               .order('created_at', ascending: false)
               .limit(30);
+        },
+        context: {'householdId': householdId},
+        warnAfterMs: 700,
+      );
 
       final mappedActivities = (response as List)
           .map((item) => Map<String, dynamic>.from(item as Map))
@@ -244,13 +191,11 @@ class SupabaseDashboardRepository implements DashboardRepository {
           data['split_type'] = metadata['split_type'];
         } else if (eventType == 'reward_redeemed') {
           uiType = 'reward';
-          data['title'] = metadata['reward_title'] ??
-              item['title'] ??
-              'Premio canjeado';
+          data['title'] =
+              metadata['reward_title'] ?? item['title'] ?? 'Premio canjeado';
           data['reward_icon'] = metadata['reward_icon'] ?? metadata['icon'];
-          data['reward_cost'] = metadata['cost'] ??
-              metadata['coins'] ??
-              metadata['coin_cost'];
+          data['reward_cost'] =
+              metadata['cost'] ?? metadata['coins'] ?? metadata['coin_cost'];
         } else {
           data['title'] = item['title'] ??
               item['description'] ??

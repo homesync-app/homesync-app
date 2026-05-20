@@ -84,7 +84,12 @@ class SupabaseTaskRepository
                 'qa_admin_get_tasks',
                 params: {'p_household_id': _selectedAdminHouseholdId},
               )
-            : await _rpc.getTasks(limit: limit, offset: offset);
+            : await _client
+                .from(AppConstants.tableTasks)
+                .select()
+                .eq('household_id', effectiveHouseholdId)
+                .order('created_at', ascending: false)
+                .range(offset, offset + limit - 1);
         final tasks = (raw as List)
             .map((t) => TaskModel.fromMap(t as Map<String, dynamic>))
             .toList();

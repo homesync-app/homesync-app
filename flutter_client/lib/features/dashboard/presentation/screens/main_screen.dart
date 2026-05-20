@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/notification_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/core/widgets/app_background.dart';
@@ -60,6 +61,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   StreamSubscription<Uri>? _linkSubscription;
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
+  bool _reportedFirstMainFrame = false;
 
   // Anchor keys for the onboarding coachmark tour. Live for the lifetime of
   // MainScreen so the registry stays consistent across rebuilds.
@@ -79,6 +81,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _initDeepLinks();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (!_reportedFirstMainFrame) {
+        _reportedFirstMainFrame = true;
+        PerformanceMonitor.mark('startup.main_screen.first_frame');
+      }
+      // bottomNavIndexProvider es un NotifierProvider plano (sin autoDispose),
+      // asi que su estado persiste entre sesiones. Sin este reset, al loguearse
+      // un usuario nuevo MainScreen abre en la tab donde quedo el anterior.
+      ref.read(bottomNavIndexProvider.notifier).setIndex(0);
       _trackMainTabIfNeeded(
         index: ref.read(bottomNavIndexProvider),
         source: 'initial_load',

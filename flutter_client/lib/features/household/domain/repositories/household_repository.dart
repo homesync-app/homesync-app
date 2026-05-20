@@ -14,7 +14,10 @@ abstract class HouseholdRepository {
   Future<Either<Failure, List<String>>> getMemberIds(String householdId);
 
   /// Returns raw member data from Supabase
-  Future<Either<Failure, List<Map<String, dynamic>>>> getHouseholdMembersRaw();
+  Future<Either<Failure, List<Map<String, dynamic>>>> getHouseholdMembersRaw({
+    String? householdId,
+    String? viewerUserId,
+  });
 
   /// Generates a new invitation code for the user's current household
   Future<Either<Failure, String>> generateInvitationCode();

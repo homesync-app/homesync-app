@@ -143,19 +143,32 @@ class SupabaseHouseholdRepository
   }
 
   @override
-  Future<Either<Failure, List<Map<String, dynamic>>>>
-      getHouseholdMembersRaw() async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getHouseholdMembersRaw({
+    String? householdId,
+    String? viewerUserId,
+  }) async {
     return executeWithHandling(
       () async {
-        final householdMember = await _requireCurrentHouseholdMembership();
-        final resolvedHouseholdId = householdMember['household_id'] as String?;
-        final resolvedViewerId = householdMember['user_id'] as String?;
+        final resolvedHouseholdId = householdId;
+        final resolvedViewerId = viewerUserId;
+        final householdMember =
+            resolvedHouseholdId != null && resolvedViewerId != null
+                ? {
+                    'user_id': resolvedViewerId,
+                    'household_id': resolvedHouseholdId,
+                    'role': null,
+                  }
+                : await _requireCurrentHouseholdMembership();
+        final effectiveHouseholdId =
+            resolvedHouseholdId ?? householdMember['household_id'] as String?;
+        final effectiveViewerId =
+            resolvedViewerId ?? householdMember['user_id'] as String?;
 
         late final List<Map<String, dynamic>> members;
         if (_isAdminTestingActive) {
           final response = await _client.rpc(
             'qa_admin_get_household_members',
-            params: {'p_household_id': resolvedHouseholdId},
+            params: {'p_household_id': effectiveHouseholdId},
           );
 
           members = List<Map<String, dynamic>>.from(
@@ -185,7 +198,7 @@ class SupabaseHouseholdRepository
               .select(
                 'id, user_id, household_id, role, joined_at, display_role, member_type, onboarding_completed, users(full_name, email, avatar_url, mercadopago_alias)',
               )
-              .eq('household_id', resolvedHouseholdId!);
+              .eq('household_id', effectiveHouseholdId!);
 
           members = List<Map<String, dynamic>>.from(response);
         }
@@ -199,14 +212,14 @@ class SupabaseHouseholdRepository
             .toList();
 
         log.i(
-          'Household members raw fetched household=$resolvedHouseholdId viewer=$resolvedViewerId count=${members.length} names=$names adminQa=$_isAdminTestingActive',
+          'Household members raw fetched household=$effectiveHouseholdId viewer=$effectiveViewerId count=${members.length} names=$names adminQa=$_isAdminTestingActive',
         );
 
         // Save to persistence
-        if (resolvedHouseholdId != null) {
+        if (effectiveHouseholdId != null) {
           try {
             await OfflineStorageService().set(
-              'household_members_$resolvedHouseholdId',
+              'household_members_$effectiveHouseholdId',
               {'members': members},
             );
           } catch (error, stackTrace) {
@@ -223,8 +236,9 @@ class SupabaseHouseholdRepository
       context: 'SupabaseHouseholdRepository.getHouseholdMembersRaw',
       isOnline: _isOnline,
       onOffline: () async {
-        final householdMember = await _requireCurrentHouseholdMembership();
-        final resolvedHouseholdId = householdMember['household_id'] as String?;
+        final resolvedHouseholdId = householdId ??
+            (await _requireCurrentHouseholdMembership())['household_id']
+                as String?;
         final cached = await OfflineStorageService()
             .get('household_members_$resolvedHouseholdId');
         if (cached != null && cached['members'] != null) {

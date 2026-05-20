@@ -45,12 +45,32 @@ final getRecentActivityUseCaseProvider =
 // ignore: unused_element
 typedef GetRecentActivityUseCaseRef
     = AutoDisposeProviderRef<GetRecentActivityUseCase>;
-String _$recentActivityHash() => r'fce6e0d56c9f562382377bf82d2a1021431b6ce8';
+String _$recentActivityRemoteHash() =>
+    r'd800edd89e43e7808020eff674e48ebed094dbc1';
+
+/// See also [recentActivityRemote].
+@ProviderFor(recentActivityRemote)
+final recentActivityRemoteProvider =
+    AutoDisposeStreamProvider<List<Map<String, dynamic>>>.internal(
+  recentActivityRemote,
+  name: r'recentActivityRemoteProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$recentActivityRemoteHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef RecentActivityRemoteRef
+    = AutoDisposeStreamProviderRef<List<Map<String, dynamic>>>;
+String _$recentActivityHash() => r'6505c13ec68684340a769df8813d27ed243bc5da';
 
 /// See also [recentActivity].
 @ProviderFor(recentActivity)
 final recentActivityProvider =
-    AutoDisposeStreamProvider<List<Map<String, dynamic>>>.internal(
+    AutoDisposeProvider<AsyncValue<List<Map<String, dynamic>>>>.internal(
   recentActivity,
   name: r'recentActivityProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -63,6 +83,41 @@ final recentActivityProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RecentActivityRef
-    = AutoDisposeStreamProviderRef<List<Map<String, dynamic>>>;
+    = AutoDisposeProviderRef<AsyncValue<List<Map<String, dynamic>>>>;
+String _$hiddenRecentExpenseIdsHash() =>
+    r'd65a823985b412bd466ef9be753589feb55dbfb5';
+
+/// See also [HiddenRecentExpenseIds].
+@ProviderFor(HiddenRecentExpenseIds)
+final hiddenRecentExpenseIdsProvider =
+    AutoDisposeNotifierProvider<HiddenRecentExpenseIds, Set<String>>.internal(
+  HiddenRecentExpenseIds.new,
+  name: r'hiddenRecentExpenseIdsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$hiddenRecentExpenseIdsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$HiddenRecentExpenseIds = AutoDisposeNotifier<Set<String>>;
+String _$optimisticRecentActivityHash() =>
+    r'45e9a502173014ddc4b82d06ff480dc06ecbcf62';
+
+/// See also [OptimisticRecentActivity].
+@ProviderFor(OptimisticRecentActivity)
+final optimisticRecentActivityProvider = AutoDisposeNotifierProvider<
+    OptimisticRecentActivity, List<Map<String, dynamic>>>.internal(
+  OptimisticRecentActivity.new,
+  name: r'optimisticRecentActivityProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$optimisticRecentActivityHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$OptimisticRecentActivity
+    = AutoDisposeNotifier<List<Map<String, dynamic>>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

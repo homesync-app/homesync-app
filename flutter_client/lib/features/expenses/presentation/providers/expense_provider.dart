@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -82,8 +83,20 @@ class ExpenseBalances extends _$ExpenseBalances {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
+    final bootstrap = await ref.watch(homeBootstrapProvider.future);
+    if (bootstrap?.householdId == householdId) {
+      return bootstrap!.expenseBalances
+          .map(HouseholdBalanceModel.fromJson)
+          .toList(growable: false);
+    }
+
     final useCase = ref.watch(getBalancesUseCaseProvider);
-    final result = await useCase(householdId);
+    final result = await PerformanceMonitor.measureFuture(
+      'provider.expense_balances',
+      () => useCase(householdId),
+      context: {'householdId': householdId},
+      warnAfterMs: 900,
+    );
     return result.fold(
       (failure) => throw failure,
       (balances) => balances,
@@ -99,7 +112,12 @@ class ExpenseController extends _$ExpenseController {
     if (householdId == null) return [];
 
     final useCase = ref.watch(getExpensesUseCaseProvider);
-    final result = await useCase(householdId);
+    final result = await PerformanceMonitor.measureFuture(
+      'provider.expense_controller.initial_expenses',
+      () => useCase(householdId),
+      context: {'householdId': householdId},
+      warnAfterMs: 900,
+    );
     return result.fold(
       (failure) => throw failure,
       (expenses) => expenses,
@@ -146,7 +164,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 
@@ -184,7 +202,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 
@@ -216,7 +234,7 @@ class ExpenseController extends _$ExpenseController {
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(combinedFeedControllerProvider);
-      ref.invalidate(recentActivityProvider);
+      ref.invalidate(recentActivityRemoteProvider);
     }
   }
 }
@@ -229,47 +247,27 @@ class CombinedFeedController extends _$CombinedFeedController {
     if (householdId == null) return [];
 
     final repo = ref.watch(expenseRepositoryProvider);
+    unawaited(_processRecurringExpensesInBackground(repo, householdId));
+
+    final bootstrap = await ref.watch(homeBootstrapProvider.future);
+    if (bootstrap?.householdId == householdId) {
+      return bootstrap!.combinedFeed
+          .map(FeedItemModel.fromJson)
+          .toList(growable: false);
+    }
+
     // Fire-and-forget: recurring expense processing is a DB-writing RPC that
     // takes ~700ms on cold start. Awaiting it blocked the feed query behind it
     // and added roughly a second to TTI. We still throttle it to once every
     // 24h via SharedPreferences, but let the feed load in parallel and refresh
     // itself if new rows land.
-    unawaited(() async {
-      try {
-        final now = DateTime.now();
-        final storageKey = 'homesync_last_recurring_run_$householdId';
-        final prefs = await SharedPreferences.getInstance();
-        final lastRunStr = prefs.getString(storageKey);
-        final lastRun =
-            lastRunStr != null ? DateTime.tryParse(lastRunStr) : null;
-        final shouldRun =
-            lastRun == null || now.difference(lastRun).inHours >= 24;
-        if (!shouldRun) return;
-        await repo.processRecurringExpenses(householdId);
-        await prefs.setString(storageKey, now.toIso8601String());
-        // If processing generated new entries, refresh the feed + balances so
-        // the user sees them without a manual pull-to-refresh. Guard against
-        // the provider being disposed mid-flight (user signed out, etc.).
-        try {
-          ref.invalidateSelf();
-          ref.invalidate(expenseBalancesProvider);
-          ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
-          ref.invalidate(recentActivityProvider);
-        } catch (_) {
-          // Provider disposed before recurring processing finished; ignore.
-        }
-      } catch (e, stack) {
-        log.w(
-          'CombinedFeed recurring expense processing failed: $e',
-          error: e,
-          stackTrace: stack,
-        );
-      }
-    }());
-
     final useCase = ref.watch(getCombinedFeedUseCaseProvider);
-    final result = await useCase(householdId);
+    final result = await PerformanceMonitor.measureFuture(
+      'provider.combined_feed',
+      () => useCase(householdId),
+      context: {'householdId': householdId},
+      warnAfterMs: 900,
+    );
     return result.fold(
       (failure) {
         log.w('CombinedFeed build failed: ${failure.message}');
@@ -277,6 +275,38 @@ class CombinedFeedController extends _$CombinedFeedController {
       },
       (feed) => feed,
     );
+  }
+
+  Future<void> _processRecurringExpensesInBackground(
+    ExpenseRepository repo,
+    String householdId,
+  ) async {
+    try {
+      final now = DateTime.now();
+      final storageKey = 'homesync_last_recurring_run_$householdId';
+      final prefs = await SharedPreferences.getInstance();
+      final lastRunStr = prefs.getString(storageKey);
+      final lastRun = lastRunStr != null ? DateTime.tryParse(lastRunStr) : null;
+      final shouldRun =
+          lastRun == null || now.difference(lastRun).inHours >= 24;
+      if (!shouldRun) return;
+      await repo.processRecurringExpenses(householdId);
+      await prefs.setString(storageKey, now.toIso8601String());
+      try {
+        ref.invalidateSelf();
+        ref.invalidate(expenseBalancesProvider);
+        ref.invalidate(monthlyPendingPlannedExpensesProvider);
+        ref.invalidate(recentActivityRemoteProvider);
+      } catch (_) {
+        // Provider disposed before recurring processing finished; ignore.
+      }
+    } catch (e, stack) {
+      log.w(
+        'CombinedFeed recurring expense processing failed: $e',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   Future<Map<String, dynamic>> payPlannedExpense({
@@ -305,7 +335,7 @@ class CombinedFeedController extends _$CombinedFeedController {
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
           ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
-          ref.invalidate(recentActivityProvider);
+          ref.invalidate(recentActivityRemoteProvider);
         }
         return r;
       },
