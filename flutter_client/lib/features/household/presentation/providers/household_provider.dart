@@ -2,6 +2,7 @@ import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/features/household/domain/models/household_model.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -37,8 +38,27 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
 
     _setupRealtime(householdId);
 
+    final bootstrap = await ref.watch(homeBootstrapProvider.future);
+    if (bootstrap?.householdId == householdId) {
+      final members = bootstrap!.members
+          .map((member) => MemberModel.fromMap(member))
+          .toList(growable: false);
+      log.i(
+        'HouseholdMembersNotifier.build resolved from bootstrap household=$householdId viewer=$currentUserId count=${members.length}',
+      );
+      return members;
+    }
+
     final repo = ref.read(householdRepositoryProvider);
-    final result = await repo.getHouseholdMembersRaw();
+    final result = await PerformanceMonitor.measureFuture(
+      'provider.household_members',
+      () => repo.getHouseholdMembersRaw(
+        householdId: householdId,
+        viewerUserId: currentUserId,
+      ),
+      context: {'householdId': householdId},
+      warnAfterMs: 900,
+    );
 
     final members = result.fold<List<MemberModel>>(
       (l) {
@@ -98,8 +118,18 @@ Future<HouseholdModel?> household(Ref ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return null;
 
+  final bootstrap = await ref.watch(homeBootstrapProvider.future);
+  if (bootstrap?.householdId == householdId && bootstrap?.household != null) {
+    return HouseholdModel.fromJson(bootstrap!.household!);
+  }
+
   final repo = ref.read(householdRepositoryProvider);
-  final result = await repo.getHousehold(householdId);
+  final result = await PerformanceMonitor.measureFuture(
+    'provider.household',
+    () => repo.getHousehold(householdId),
+    context: {'householdId': householdId},
+    warnAfterMs: 700,
+  );
 
   return result.fold(
     (l) => null,

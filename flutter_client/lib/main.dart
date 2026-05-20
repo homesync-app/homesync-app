@@ -18,6 +18,7 @@ import 'package:homesync_client/core/providers/theme_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/breadcrumb_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/services/premium_service.dart';
 import 'package:homesync_client/core/services/supabase_auth_service.dart';
 import 'package:homesync_client/core/services/supabase_rpc_service.dart';
@@ -41,11 +42,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PerformanceMonitor.mark('app.main.start');
 
   // Force use of bundled assets for fonts to prevent network errors
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  final packageInfo = await PackageInfo.fromPlatform();
+  final packageInfo = await PerformanceMonitor.measureFuture(
+    'startup.package_info',
+    PackageInfo.fromPlatform,
+    warnAfterMs: 200,
+  );
   breadcrumb.setAppVersion(packageInfo.version, packageInfo.buildNumber);
   final deviceInfo = DeviceInfoPlugin();
   final deviceContext = <String, dynamic>{};
@@ -145,8 +151,12 @@ void main() async {
 
   // 1. Initialize Firebase
   try {
-    await Firebase.initializeApp(
-      options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+    await PerformanceMonitor.measureFuture(
+      'startup.firebase_initialize',
+      () => Firebase.initializeApp(
+        options: kIsWeb ? AppEnvironment.firebaseOptions : null,
+      ),
+      warnAfterMs: 700,
     );
     // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
     if (!kIsWeb) {
@@ -177,26 +187,38 @@ void main() async {
     log.e('Firebase initialization failed', error: e);
   }
 
-  await Supabase.initialize(
-    url: AppEnvironment.supabaseUrl,
-    anonKey: AppEnvironment.supabaseAnonKey,
-    // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
-    // Supabase validates it against Firebase's JWKS endpoint automatically.
-    // This replaces the manual session sync (_syncSupabaseSession).
-    accessToken: () async {
-      final user = fa.FirebaseAuth.instance.currentUser;
-      if (user == null) return null;
-      return await user.getIdToken(false);
-    },
+  await PerformanceMonitor.measureFuture(
+    'startup.supabase_initialize',
+    () => Supabase.initialize(
+      url: AppEnvironment.supabaseUrl,
+      anonKey: AppEnvironment.supabaseAnonKey,
+      // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
+      // Supabase validates it against Firebase's JWKS endpoint automatically.
+      // This replaces the manual session sync (_syncSupabaseSession).
+      accessToken: () async {
+        final user = fa.FirebaseAuth.instance.currentUser;
+        if (user == null) return null;
+        return await user.getIdToken(false);
+      },
+    ),
+    warnAfterMs: 700,
   );
 
   final supabaseClient = Supabase.instance.client;
   AppIdentityService.instance.configure(client: supabaseClient);
   final auth = SupabaseAuthService(client: supabaseClient);
-  await auth.initialize();
+  await PerformanceMonitor.measureFuture(
+    'startup.auth_service_initialize',
+    auth.initialize,
+    warnAfterMs: 500,
+  );
 
   final rpc = SupabaseRpcService(clientOverride: supabaseClient);
-  await rpc.initialize();
+  await PerformanceMonitor.measureFuture(
+    'startup.rpc_service_initialize',
+    rpc.initialize,
+    warnAfterMs: 200,
+  );
 
   // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
   FlutterError.onError = (details) {
@@ -248,9 +270,19 @@ void main() async {
     return true;
   };
 
-  await initializeDateFormatting('es', null);
-  await initializeDateFormatting('en_US', null);
-  final prefs = await SharedPreferences.getInstance();
+  await PerformanceMonitor.measureFuture(
+    'startup.date_formatting',
+    () async {
+      await initializeDateFormatting('es', null);
+      await initializeDateFormatting('en_US', null);
+    },
+    warnAfterMs: 300,
+  );
+  final prefs = await PerformanceMonitor.measureFuture(
+    'startup.shared_preferences',
+    SharedPreferences.getInstance,
+    warnAfterMs: 300,
+  );
 
   runApp(
     ProviderScope(
@@ -341,33 +373,47 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   Future<void> _configureAnalytics() async {
     final analytics = ref.read(analyticsServiceProvider);
-    await analytics.setUserProperty(
-      name: 'environment',
-      value: AppEnvironment.current.name,
-    );
-    await analytics.setUserProperty(
-      name: 'platform',
-      value: kIsWeb ? 'web' : defaultTargetPlatform.name,
-    );
-    await analytics.trackAppOpened(
-      environment: AppEnvironment.current.name,
-      platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
-      appVersion: widget.appVersion,
+    await PerformanceMonitor.measureFuture(
+      'startup.analytics_configure',
+      () async {
+        await analytics.setUserProperty(
+          name: 'environment',
+          value: AppEnvironment.current.name,
+        );
+        await analytics.setUserProperty(
+          name: 'platform',
+          value: kIsWeb ? 'web' : defaultTargetPlatform.name,
+        );
+        await analytics.trackAppOpened(
+          environment: AppEnvironment.current.name,
+          platform: kIsWeb ? 'web' : defaultTargetPlatform.name,
+          appVersion: widget.appVersion,
+        );
+      },
+      warnAfterMs: 800,
     );
   }
 
   Future<void> _completeStartupGate() async {
     log.i('🚀 StartupGate: waiting for authBootstrap...');
-    await ref.read(authBootstrapProvider.future).catchError((_) {});
+    await PerformanceMonitor.measureFuture(
+      'startup.auth_bootstrap_provider',
+      () => ref.read(authBootstrapProvider.future).catchError((_) {}),
+      warnAfterMs: 1200,
+    );
     log.i('🚀 StartupGate: authBootstrap done');
 
     log.i('🚀 StartupGate: reading authStateProvider...');
-    final authState = await ref.read(authStateProvider.future).catchError(
-          (_) => const AppAuthState(
-            isAuthenticated: false,
-            source: 'bootstrap_error',
+    final authState = await PerformanceMonitor.measureFuture(
+      'startup.auth_state_provider',
+      () => ref.read(authStateProvider.future).catchError(
+            (_) => const AppAuthState(
+              isAuthenticated: false,
+              source: 'bootstrap_error',
+            ),
           ),
-        );
+      warnAfterMs: 500,
+    );
     log.i(
       '🚀 StartupGate: authState resolved isAuthenticated=${authState.isAuthenticated} source=${authState.source}',
     );
@@ -378,7 +424,11 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     if (authState.isAuthenticated && authState.source != 'admin_testing') {
       log.i('StartupGate: preloading home data before entering...');
-      await _warmCriticalProviders();
+      await PerformanceMonitor.measureFuture(
+        'startup.warm_critical_providers',
+        _warmCriticalProviders,
+        warnAfterMs: 1800,
+      );
     }
 
     if (!mounted) return;
@@ -390,6 +440,12 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _warmCriticalProviders() async {
+    await PerformanceMonitor.measureFuture(
+      'startup.home_bootstrap_provider',
+      () => ref.read(homeBootstrapProvider.future).then((_) {}),
+      warnAfterMs: 900,
+    );
+
     // Blocking set: strictly needed to render the home above the fold without
     // skeletons. Everything else is kicked off fire-and-forget so it streams in
     // once the user is already past the splash.
@@ -412,26 +468,14 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     // Non-blocking: kick them off so the warm cache is ready by the time the
     // user scrolls, but don't hold the splash for them.
-    // - recentActivityProvider: occasionally times out on cold RPC, not above
-    //   the fold, can resolve lazily.
-    // - combinedFeedController: runs recurring expense processing internally.
+    // - recentActivityProvider and combinedFeedController are seeded by
+    //   homeBootstrapProvider, so we avoid starting duplicate remote work here.
     // - statsController / shopping / householdMembers (legacy) / userBalance:
     //   secondary views.
     // Kicked off, but not awaited — we only use the side effect of populating
     // the provider cache so subsequent watchers resolve synchronously.
     // ignore: unused_local_variable
     final nonBlocking = <Future<void>>[
-      // recentActivityProvider es sync (combina remote + optimistic) y no
-      // expone .future. Pre-suscribimos al stream remoto subyacente para
-      // warm-cache el feed.
-      ref
-          .read(recentActivityRemoteProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
-      ref
-          .read(combinedFeedControllerProvider.future)
-          .then((_) {})
-          .catchError((_) {}),
       ref.read(statsControllerProvider.future).then((_) {}).catchError((_) {}),
       ref.read(shoppingItemsProvider.future).then((_) {}).catchError((_) {}),
       ref.read(userBalanceProvider.future).then((_) {}).catchError((_) {}),
@@ -440,14 +484,22 @@ class _MyAppState extends ConsumerState<MyApp> {
     await Future.wait(
       blocking.entries.map((entry) async {
         try {
-          await entry.value.timeout(_criticalBootstrapTimeout);
+          await PerformanceMonitor.measureFuture(
+            'startup.blocking_provider.${entry.key}',
+            () => entry.value.timeout(_criticalBootstrapTimeout),
+            warnAfterMs: 700,
+          );
         } on TimeoutException {
           log.w('StartupGate: blocking preload timed out for ${entry.key}');
         }
       }),
     );
 
-    await _precacheStartupImages();
+    await PerformanceMonitor.measureFuture(
+      'startup.precache_images',
+      _precacheStartupImages,
+      warnAfterMs: 700,
+    );
   }
 
   Future<void> _precacheStartupImages() async {

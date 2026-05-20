@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/admin_providers.dart';
+import 'package:homesync_client/core/providers/home_bootstrap_provider.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
@@ -37,6 +38,11 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
     if (userId == null) return null;
   }
 
+  final bootstrap = await ref.watch(homeBootstrapProvider.future);
+  if (bootstrap?.userId == userId) {
+    return bootstrap?.householdId;
+  }
+
   final client = ref.read(supabaseClientProvider);
   final result = await client
       .from('household_members')
@@ -53,6 +59,11 @@ final memberOnboardingProvider = FutureProvider<bool>((ref) async {
 
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return true;
+
+  final bootstrap = await ref.watch(homeBootstrapProvider.future);
+  if (bootstrap?.userId == userId) {
+    return bootstrap?.memberOnboardingCompleted ?? true;
+  }
 
   final client = ref.read(supabaseClientProvider);
   final result = await client
@@ -83,6 +94,11 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 
+  final bootstrap = await ref.watch(homeBootstrapProvider.future);
+  if (bootstrap?.userId == userId && bootstrap?.profile != null) {
+    return bootstrap!.profile;
+  }
+
   final client = ref.read(supabaseClientProvider);
   return await client
       .from('users')
@@ -94,6 +110,11 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return null;
+
+  final bootstrap = await ref.watch(homeBootstrapProvider.future);
+  if (bootstrap?.householdId == householdId && bootstrap?.userBalance != null) {
+    return bootstrap!.userBalance;
+  }
 
   final rpc = ref.read(rpcServiceProvider);
   final result = await rpc.getUserBalance(householdId: householdId);
