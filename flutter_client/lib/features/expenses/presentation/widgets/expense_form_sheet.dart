@@ -1082,6 +1082,11 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     return ExpenseAmountField(
       controller: _amountController,
       onChanged: _onAmountChanged,
+      showScanAction: !_isIncome,
+      isScanningReceipt: _isScanningReceipt,
+      hasScanResult: _scanResult != null,
+      onScanReceipt:
+          _isScanningReceipt ? null : () => _scanReceipt(ImageSource.camera),
     );
   }
 
@@ -1098,45 +1103,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       ),
       child: Row(
         children: [
-          if (!_isIncome)
-            GestureDetector(
-              onTap: _isScanningReceipt
-                  ? null
-                  : () => _scanReceipt(ImageSource.camera),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _scanResult != null
-                      ? AppColors.accentGreen.withValues(alpha: 0.12)
-                      : AppColors.accentBlue.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: _isScanningReceipt
-                    ? const Padding(
-                        padding: EdgeInsets.all(9),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentBlue,
-                        ),
-                      )
-                    : Icon(
-                        _scanResult != null
-                            ? Icons.receipt_long_rounded
-                            : Icons.document_scanner_outlined,
-                        color: _scanResult != null
-                            ? AppColors.accentGreen
-                            : AppColors.accentBlue,
-                        size: 20,
-                      ),
-              ),
-            )
-          else
-            Icon(
-              Icons.account_balance_wallet_outlined,
-              color: theme.textSecondary,
-              size: 24,
-            ),
+          Icon(
+            _isIncome
+                ? Icons.account_balance_wallet_outlined
+                : Icons.receipt_long_rounded,
+            color: theme.textSecondary,
+            size: 24,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: TextField(

@@ -21,15 +21,12 @@ mixin RepositoryErrorHandler {
           final offlineResult = await onOffline();
           return right(offlineResult);
         } catch (e, stack) {
-          log.w(
-            '$context: Offline action failed - $e',
-            error: e,
-            stackTrace: stack,
-          );
+          log.i('$context: Offline action failed - $e');
+          log.d('Stack: $stack');
           return left(const NetworkFailure('Sin conexion a internet.'));
         }
       }
-      log.w('$context: Offline Guard - Refusing request while disconnected');
+      log.i('$context: Offline Guard - Refusing request while disconnected');
       return left(
         const NetworkFailure('Sin conexion a internet. Verifica tu red.'),
       );
@@ -39,25 +36,19 @@ mixin RepositoryErrorHandler {
       final result = await action();
       return right(result);
     } on Failure catch (e, stack) {
-      log.w(
-        '$context: Domain Failure - ${e.message}',
-        error: e,
-        stackTrace: stack,
-      );
+      // log.i: las Failure ya son resultados esperados del dominio (mostradas
+      // al usuario como snackbar/UI). No es ruido reportable a Crashlytics.
+      log.i('$context: Domain Failure - ${e.message}');
+      log.d('Stack: $stack');
       return left(e);
     } on AuthException catch (e, stack) {
-      log.w(
-        '$context: Auth Error (Supabase) - ${e.message}',
-        error: e,
-        stackTrace: stack,
-      );
+      log.i('$context: Auth Error (Supabase) - ${e.message}');
+      log.d('Stack: $stack');
       return left(AuthFailure(e.message));
     } on fa.FirebaseAuthException catch (e, stack) {
-      log.w(
-        '$context: Auth Error (Firebase) - [${e.code}] ${e.message}',
-        error: e,
-        stackTrace: stack,
-      );
+      // Errores conocidos de Firebase Auth = flujo válido, no ruido.
+      log.i('$context: Auth Error (Firebase) - [${e.code}] ${e.message}');
+      log.d('Stack: $stack');
       String userMessage = e.message ?? 'Error de autenticacion';
       if (e.code == 'user-not-found') userMessage = 'Usuario no encontrado.';
       if (e.code == 'wrong-password') userMessage = 'Contrasena incorrecta.';
@@ -70,7 +61,11 @@ mixin RepositoryErrorHandler {
       }
       return left(AuthFailure(userMessage));
     } on PostgrestException catch (e, stack) {
-      log.w('$context: DB Error - ${e.message}', error: e, stackTrace: stack);
+      // RLS (42501), 406, 409, etc. son del dominio del negocio: el caller
+      // los mapea a UI. No los enviamos a Crashlytics — antes inflaban issues
+      // como 68638317 (rewards RLS) y 8dc90b97 (user_feedback RLS).
+      log.i('$context: DB Error - [${e.code}] ${e.message}');
+      log.d('Stack: $stack');
       return left(ServerFailure('Error en la base de datos: ${e.message}'));
     } on OfflineException {
       if (onOffline != null) {
@@ -79,24 +74,22 @@ mixin RepositoryErrorHandler {
           final offlineResult = await onOffline();
           return right(offlineResult);
         } catch (e, stack) {
-          log.w(
-            '$context: Offline action failed after exception - $e',
-            error: e,
-            stackTrace: stack,
-          );
+          // Sin red Y sin cache: log.i porque es expected en flujo offline.
+          log.i('$context: Offline fallback also failed - $e');
+          log.d('Stack: $stack');
           return left(const NetworkFailure('No hay conexion a internet.'));
         }
       }
-      log.w('$context: Offline requested');
+      log.i('$context: Offline requested');
       return left(const NetworkFailure('No hay conexion a internet.'));
     } on NetworkException catch (e, stack) {
-      log.w(
-        '$context: Network issue - ${e.message}',
-        error: e,
-        stackTrace: stack,
-      );
+      // Sin red es estado esperado, no warning. log.i lo deja en la consola
+      // pero no lo manda a Crashlytics.
+      log.i('$context: Network issue - ${e.message}');
+      log.d('Stack: $stack');
       return left(NetworkFailure('Error de red: ${e.message}'));
     } on Exception catch (e, stack) {
+      // Excepción NO categorizada — sí es algo que necesitamos ver.
       log.e('$context: Unexpected Exception - $e', error: e, stackTrace: stack);
       final msg = e.toString();
       if (msg.contains('429') || msg.contains('rate limit')) {

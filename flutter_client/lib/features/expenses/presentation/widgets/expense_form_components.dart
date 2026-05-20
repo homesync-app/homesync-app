@@ -254,11 +254,19 @@ class ExpenseInfoBox extends StatelessWidget {
 class ExpenseAmountField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final bool showScanAction;
+  final bool isScanningReceipt;
+  final bool hasScanResult;
+  final VoidCallback? onScanReceipt;
 
   const ExpenseAmountField({
     super.key,
     required this.controller,
     required this.onChanged,
+    this.showScanAction = false,
+    this.isScanningReceipt = false,
+    this.hasScanResult = false,
+    this.onScanReceipt,
   });
 
   @override
@@ -276,79 +284,146 @@ class ExpenseAmountField extends StatelessWidget {
         ),
         boxShadow: theme.cardShadow,
       ),
-      child: Column(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Text(
-            'Monto total',
-            style: TextStyle(
-              color: theme.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+          if (showScanAction)
+            Positioned(
+              left: 0,
+              top: 34,
+              child: _ReceiptScanButton(
+                isScanningReceipt: isScanningReceipt,
+                hasScanResult: hasScanResult,
+                onTap: onScanReceipt,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10, top: 2),
-                child: Text(
-                  '\$',
-                  style: TextStyle(
-                    color: theme.textMuted,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                  ),
+              Text(
+                'Monto total',
+                style: TextStyle(
+                  color: theme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
-              SizedBox(
-                width: 150,
-                child: TextFormField(
-                  autofocus: true,
-                  controller: controller,
-                  onChanged: onChanged,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.2,
+              const SizedBox(height: 8),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  const SizedBox(width: double.infinity, height: 42),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10, top: 2),
+                        child: Text(
+                          '\$',
+                          style: TextStyle(
+                            color: theme.textMuted,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: TextFormField(
+                          autofocus: true,
+                          controller: controller,
+                          onChanged: onChanged,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(
+                            color: theme.textPrimary,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.2,
+                          ),
+                          textAlign: TextAlign.start,
+                          decoration: InputDecoration(
+                            hintText: '0',
+                            hintStyle: TextStyle(
+                              color: theme.textMuted,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            filled: false,
+                            fillColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            isCollapsed: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.start,
-                  decoration: InputDecoration(
-                    hintText: '0',
-                    hintStyle: TextStyle(
-                      color: theme.textMuted,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    filled: false,
-                    fillColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                    focusColor: Colors.transparent,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    isCollapsed: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Container(
+                width: 72,
+                height: 1,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
-          Container(
-            width: 72,
-            height: 1,
-            decoration: BoxDecoration(
-              color: theme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReceiptScanButton extends StatelessWidget {
+  final bool isScanningReceipt;
+  final bool hasScanResult;
+  final VoidCallback? onTap;
+
+  const _ReceiptScanButton({
+    required this.isScanningReceipt,
+    required this.hasScanResult,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: hasScanResult
+              ? AppColors.accentGreen.withValues(alpha: 0.12)
+              : AppColors.accentBlue.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: isScanningReceipt
+            ? const Padding(
+                padding: EdgeInsets.all(11),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accentBlue,
+                ),
+              )
+            : Icon(
+                hasScanResult
+                    ? Icons.receipt_long_rounded
+                    : Icons.document_scanner_outlined,
+                color: hasScanResult
+                    ? AppColors.accentGreen
+                    : AppColors.accentBlue,
+                size: 22,
+              ),
       ),
     );
   }

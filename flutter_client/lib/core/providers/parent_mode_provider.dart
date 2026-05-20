@@ -52,6 +52,11 @@ class HouseholdPremiumStatus {
 
 final householdPremiumStatusProvider =
     FutureProvider<HouseholdPremiumStatus>((ref) async {
+  // Keep the household-scoped premium cache synchronized with the user-facing
+  // premium refresh/toggle flow. Family features read this provider, while
+  // avatar/paywall UI reads premiumProvider directly.
+  ref.watch(premiumProvider);
+
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) {
     return HouseholdPremiumStatus.free;

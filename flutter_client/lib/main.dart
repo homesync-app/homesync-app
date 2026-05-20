@@ -158,10 +158,10 @@ void main() async {
       ),
       warnAfterMs: 700,
     );
-    // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only)
+    // Pass ALL uncaught Flutter errors to Crashlytics (Android/iOS only).
+    // El handler completo (con contexto + Supabase logs) se asigna más abajo,
+    // después de inicializar RPC. Acá sólo seteamos las custom keys.
     if (!kIsWeb) {
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
       FirebaseCrashlytics.instance
           .setCustomKey('environment', appContext['environment'] as String);
       FirebaseCrashlytics.instance
@@ -187,44 +187,69 @@ void main() async {
     log.e('Firebase initialization failed', error: e);
   }
 
-  await PerformanceMonitor.measureFuture(
-    'startup.supabase_initialize',
-    () => Supabase.initialize(
-      url: AppEnvironment.supabaseUrl,
-      anonKey: AppEnvironment.supabaseAnonKey,
-      // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
-      // Supabase validates it against Firebase's JWKS endpoint automatically.
-      // This replaces the manual session sync (_syncSupabaseSession).
-      accessToken: () async {
-        final user = fa.FirebaseAuth.instance.currentUser;
-        if (user == null) return null;
-        return await user.getIdToken(false);
-      },
-    ),
-    warnAfterMs: 700,
-  );
+  // Inicialización de Supabase + auth/rpc. Si no hay red la SDK reintenta
+  // internamente; este try/catch protege el arranque para que un fallo de
+  // DNS o handshake no mate la app antes de runApp. La sesión se reanudará
+  // sola cuando vuelva la conectividad.
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.supabase_initialize',
+      () => Supabase.initialize(
+        url: AppEnvironment.supabaseUrl,
+        anonKey: AppEnvironment.supabaseAnonKey,
+        // Firebase Third-Party Auth: each Supabase request carries the Firebase JWT.
+        // Supabase validates it against Firebase's JWKS endpoint automatically.
+        // This replaces the manual session sync (_syncSupabaseSession).
+        accessToken: () async {
+          final user = fa.FirebaseAuth.instance.currentUser;
+          if (user == null) return null;
+          return await user.getIdToken(false);
+        },
+      ),
+      warnAfterMs: 700,
+    );
+  } catch (e, stack) {
+    log.w(
+      'Supabase.initialize failed (offline?). App seguirá arrancando.',
+      error: e,
+      stackTrace: stack,
+    );
+  }
 
   final supabaseClient = Supabase.instance.client;
   AppIdentityService.instance.configure(client: supabaseClient);
   final auth = SupabaseAuthService(client: supabaseClient);
-  await PerformanceMonitor.measureFuture(
-    'startup.auth_service_initialize',
-    auth.initialize,
-    warnAfterMs: 500,
-  );
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.auth_service_initialize',
+      auth.initialize,
+      warnAfterMs: 500,
+    );
+  } catch (e, stack) {
+    log.w('Auth service init failed (offline?)',
+        error: e, stackTrace: stack);
+  }
 
   final rpc = SupabaseRpcService(clientOverride: supabaseClient);
-  await PerformanceMonitor.measureFuture(
-    'startup.rpc_service_initialize',
-    rpc.initialize,
-    warnAfterMs: 200,
-  );
+  try {
+    await PerformanceMonitor.measureFuture(
+      'startup.rpc_service_initialize',
+      rpc.initialize,
+      warnAfterMs: 200,
+    );
+  } catch (e, stack) {
+    log.w('RPC service init failed (offline?)',
+        error: e, stackTrace: stack);
+  }
 
-  // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs)
+  // Dual error pipeline: Crashlytics (Android/iOS) + Supabase (admin logs).
+  // OJO: usamos recordFlutterError (NO recordFlutterFatalError) — los errores
+  // capturados por el framework de Flutter no son crashes reales; el árbol
+  // sigue ejecutándose. Marcarlos como fatal contamina los "crash-free users".
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+      FirebaseCrashlytics.instance.recordFlutterError(details);
     }
     final diagnosticLines = <String>[
       details.exceptionAsString(),

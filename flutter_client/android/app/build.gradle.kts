@@ -26,6 +26,12 @@ if (localPropertiesFile.exists()) {
 val flutterVersionCode = localProperties.getProperty("flutter.versionCode") ?: "1"
 val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0.0"
 
+// NOTA: BillingClient 7.1.1 (traído por in_app_purchase_android) tiene un NPE
+// conocido en ProxyBillingActivity.onCreate (Crashlytics issue a0b58a19, 2
+// eventos / 2 users en 7d). No existe 7.1.2 en Maven y 8.x rompe API del
+// plugin. Si los eventos se vuelven significativos, bumpear in_app_purchase
+// en pubspec.yaml a una versión que use billing 8.x.
+
 android {
     namespace = "com.blas.homesync"
     compileSdk = flutter.compileSdkVersion
@@ -89,10 +95,13 @@ dependencies {
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:34.10.0"))
 
-    // Add dependencies for Credential Manager and Google Identity
-    // as recommended for the new Google Sign-In / One Tap flow
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    // Add dependencies for Credential Manager and Google Identity.
+    // Requerido por google_sign_in 7.x. Crashlytics issue 7d8e6d01
+    // ("providerConfigurationError: no provider dependencies found") se
+    // dispara en dispositivos donde credentials-play-services-auth < 1.5
+    // no registra el proveedor de Google. 1.5.0 ya es estable.
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 }
 

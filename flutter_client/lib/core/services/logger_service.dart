@@ -43,13 +43,16 @@ class LoggerService {
     _reportToCrashlytics(message, error, stackTrace, isFatal: false);
   }
 
-  /// Log an error message (something failed)
+  /// Log an error message (something failed but the app keeps running).
+  /// Reported to Crashlytics as a NON-fatal: muestra el error en el panel
+  /// pero no infla los "Crash-free users". Sólo `log.f(...)` marca fatal.
   void e(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.e(message, error: error, stackTrace: stackTrace);
-    _reportToCrashlytics(message, error, stackTrace, isFatal: true);
+    _reportToCrashlytics(message, error, stackTrace, isFatal: false);
   }
 
-  /// Log a fatal error (app is about to crash)
+  /// Log a fatal error (the app is about to crash and we know it).
+  /// Sólo usar cuando el flujo no puede continuar.
   void f(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.f(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: true);

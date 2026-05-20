@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'app_identity_service.dart';
+import 'logger_service.dart';
 
 /// Logger de uso del OCR para análisis offline desde el panel admin.
 ///
@@ -27,8 +29,12 @@ class OcrLogService {
     required String tier,
   }) async {
     try {
-      final userId = _client.auth.currentUser?.id;
-      if (userId == null) return null;
+      // OJO: NO usar _client.auth.currentUser?.id. Bajo el bridge de Firebase
+      // third-party auth eso devuelve el Firebase UID (sub del JWT), NO el
+      // users.id interno de la app. La RLS de ocr_scan_logs chequea
+      // current_app_user_id() y rechazaba todos los inserts en silencio.
+      final userId = await AppIdentityService.instance.refresh();
+      if (userId == null || userId.isEmpty) return null;
 
       final inserted = await _client
           .from('ocr_scan_logs')
@@ -43,8 +49,9 @@ class OcrLogService {
           .select('id')
           .single();
       return inserted['id'] as String?;
-    } catch (e) {
-      debugPrint('[OcrLog] insert failed: $e');
+    } catch (e, st) {
+      // log.e va a Crashlytics; debugPrint era invisible en release.
+      log.e('[OcrLog] insert failed', error: e, stackTrace: st);
       return null;
     }
   }
@@ -57,8 +64,8 @@ class OcrLogService {
       await _client
           .from('ocr_scan_logs')
           .update({'matcher_result': matcherResult}).eq('id', logId);
-    } catch (e) {
-      debugPrint('[OcrLog] update matcher failed: $e');
+    } catch (e, st) {
+      log.e('[OcrLog] update matcher failed', error: e, stackTrace: st);
     }
   }
 
@@ -70,8 +77,8 @@ class OcrLogService {
       await _client
           .from('ocr_scan_logs')
           .update({'user_action': action}).eq('id', logId);
-    } catch (e) {
-      debugPrint('[OcrLog] update action failed: $e');
+    } catch (e, st) {
+      log.e('[OcrLog] update action failed', error: e, stackTrace: st);
     }
   }
 }

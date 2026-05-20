@@ -89,9 +89,11 @@ class StatsRpcService extends BaseRpcService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error, stackTrace) {
-      log.w(
-        'StatsRpcService.getMemberActivityStats fallback to empty list',
-        error: error,
+      // log.d (no reporta a Crashlytics): es estado esperado para usuarios
+      // sin hogar todavía. Antes con log.w llenaba el panel con 16+ eventos
+      // diarios (issue 4a4cfda83d).
+      log.d(
+        'StatsRpcService.getMemberActivityStats fallback to empty list: $error',
         stackTrace: stackTrace,
       );
       return [];
@@ -109,9 +111,10 @@ class StatsRpcService extends BaseRpcService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (error, stackTrace) {
-      log.w(
-        'StatsRpcService.getWeeklyRanking fallback to empty list',
-        error: error,
+      // log.d: usuario sin hogar es estado válido (recién registrado).
+      // No es un error reportable; antes inflaba Crashlytics issue 4a4cfda8.
+      log.d(
+        'StatsRpcService.getWeeklyRanking fallback to empty list: $error',
         stackTrace: stackTrace,
       );
       return [];
