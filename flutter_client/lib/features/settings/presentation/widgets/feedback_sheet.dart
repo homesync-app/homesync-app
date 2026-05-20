@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -13,6 +14,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum FeedbackType { bug, suggestion }
 
@@ -56,13 +58,44 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
   void initState() {
     super.initState();
     _type = widget.initialType;
+    _titleCtrl.addListener(_handleTitleChanged);
   }
 
   @override
   void dispose() {
+    _titleCtrl.removeListener(_handleTitleChanged);
     _titleCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  void _handleTitleChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _sendFeedbackAck(
+    SupabaseClient client,
+    Object? feedbackId,
+  ) async {
+    if (!_wantsEmailResponse || feedbackId == null) return;
+
+    try {
+      final accessToken =
+          await fa.FirebaseAuth.instance.currentUser?.getIdToken(false);
+      if (accessToken == null) return;
+
+      await client.functions.invoke(
+        'send-feedback-ack',
+        body: {'feedback_id': feedbackId},
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+    } catch (ackError, ackStack) {
+      log.w(
+        'No se pudo enviar el acuse automatico de feedback',
+        error: ackError,
+        stackTrace: ackStack,
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -120,25 +153,7 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
           .select('id')
           .single();
 
-      if (_wantsEmailResponse) {
-        try {
-          final accessToken =
-              await fa.FirebaseAuth.instance.currentUser?.getIdToken(true);
-          if (accessToken != null) {
-            await client.functions.invoke(
-              'send-feedback-ack',
-              body: {'feedback_id': insertedFeedback['id']},
-              headers: {'Authorization': 'Bearer $accessToken'},
-            );
-          }
-        } catch (ackError, ackStack) {
-          log.w(
-            'No se pudo enviar el acuse automatico de feedback',
-            error: ackError,
-            stackTrace: ackStack,
-          );
-        }
-      }
+      unawaited(_sendFeedbackAck(client, insertedFeedback['id']));
 
       setState(() {
         _isSending = false;
