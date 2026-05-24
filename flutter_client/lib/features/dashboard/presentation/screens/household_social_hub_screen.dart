@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
-import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
-import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
-import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/rewards/presentation/screens/family_rewards_screen.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_parent_mode_card.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/family_dashboard_screen.dart';
-import 'package:homesync_client/features/tasks/presentation/screens/weekly_family_summary_screen.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class HouseholdSocialHubScreen extends ConsumerStatefulWidget {
@@ -32,12 +27,6 @@ class _HouseholdSocialHubScreenState
     await ref.read(householdMembersProvider.notifier).refresh();
   }
 
-  void _openPremiumPaywall() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()));
-  }
-
   @override
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(householdMembersProvider);
@@ -48,8 +37,6 @@ class _HouseholdSocialHubScreenState
     final members = membersAsync.value ?? const <MemberModel>[];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final canSeeFamilyTracking = currentMember?.isAdult ?? false;
-    final familyTrackingUnlocked = ref.watch(parentModeAvailableProvider);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -85,33 +72,6 @@ class _HouseholdSocialHubScreenState
               // no es admin adulto de una familia, asi que es seguro siempre.
               const SizedBox(height: 18),
               const SettingsParentModeCard(),
-              if (caps.type == HouseholdType.family &&
-                  canSeeFamilyTracking) ...[
-                const SizedBox(height: 18),
-                _FamilyTrackingCard(
-                  unlocked: familyTrackingUnlocked,
-                  onMemberView: familyTrackingUnlocked
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const FamilyDashboardScreen(),
-                            ),
-                          );
-                        }
-                      : _openPremiumPaywall,
-                  onWeeklySummary: familyTrackingUnlocked
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const WeeklyFamilySummaryScreen(),
-                            ),
-                          );
-                        }
-                      : _openPremiumPaywall,
-                ),
-              ],
             ],
           ),
         ),
@@ -250,243 +210,6 @@ class _HeaderCard extends StatelessWidget {
                 onPressed: onRewards,
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FamilyTrackingCard extends StatelessWidget {
-  const _FamilyTrackingCard({
-    required this.unlocked,
-    required this.onMemberView,
-    required this.onWeeklySummary,
-  });
-
-  final bool unlocked;
-  final VoidCallback onMemberView;
-  final VoidCallback onWeeklySummary;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final t = AppLocalizations.of(context);
-    final accent = unlocked ? AppColors.primary : AppColors.accentGold;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(
-          color: unlocked
-              ? theme.border.withValues(alpha: 0.62)
-              : AppColors.accentGold.withValues(alpha: 0.20),
-        ),
-        boxShadow: AppElevation.card(
-          color: theme.shadow,
-          isDarkMode: theme.isDarkMode,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: unlocked ? 0.10 : 0.16),
-                  borderRadius: BorderRadius.circular(AppRadii.lg),
-                ),
-                child: Icon(
-                  unlocked
-                      ? Icons.insights_rounded
-                      : Icons.workspace_premium_rounded,
-                  color: accent,
-                  size: 23,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.householdSocialHubTrackingTitle,
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      t.householdSocialHubTrackingSubtitle,
-                      style: TextStyle(
-                        color: theme.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!unlocked) const SizedBox(width: 8),
-              if (!unlocked) const _PremiumBadge(),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _FamilyTrackingShortcut(
-                  icon: Icons.groups_rounded,
-                  label: t.householdSocialHubShortcutMemberView,
-                  color: AppColors.accentBlue,
-                  unlocked: unlocked,
-                  onTap: onMemberView,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _FamilyTrackingShortcut(
-                  icon: Icons.celebration_rounded,
-                  label: t.householdSocialHubShortcutWeeklySummary,
-                  color: AppColors.accentPurple,
-                  unlocked: unlocked,
-                  onTap: onWeeklySummary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FamilyTrackingShortcut extends StatelessWidget {
-  const _FamilyTrackingShortcut({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.unlocked,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool unlocked;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final effectiveColor = unlocked ? color : color.withValues(alpha: 0.72);
-    final backgroundColor = unlocked
-        ? color.withValues(alpha: 0.10)
-        : color.withValues(alpha: theme.isDarkMode ? 0.10 : 0.07);
-    final borderColor = unlocked
-        ? color.withValues(alpha: 0.14)
-        : theme.border.withValues(alpha: theme.isDarkMode ? 0.42 : 0.80);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 68),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(AppRadii.lg),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: unlocked
-                        ? effectiveColor.withValues(alpha: 0.13)
-                        : theme.surface.withValues(alpha: 0.86),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: Icon(
-                    unlocked ? icon : Icons.lock_rounded,
-                    color: effectiveColor,
-                    size: 19,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: effectiveColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      height: 1.12,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: effectiveColor.withValues(alpha: 0.82),
-                  size: 19,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PremiumBadge extends StatelessWidget {
-  const _PremiumBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.accentGold.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: AppColors.accentGold.withValues(alpha: 0.24),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.workspace_premium_rounded,
-            color: AppColors.accentGold,
-            size: 13,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            t.settingsPremiumBadge,
-            style: const TextStyle(
-              color: AppColors.accentGold,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.4,
-            ),
           ),
         ],
       ),
