@@ -14,6 +14,7 @@ import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../utils/shopping_localization.dart';
 import '../providers/shopping_provider.dart';
+import '../widgets/shopping_icon.dart';
 import '../widgets/shopping_item_sheet.dart';
 
 // -----------------------------------------------------------------------------
@@ -95,13 +96,19 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 // Buscar por nombre de item y por nombre de categoria
     final itemsMap = ShoppingPredefined.allItems(context);
     itemsMap.forEach((catId, catList) {
-      final catName = ShoppingCategories.nameFor(catId).toLowerCase();
+      final catName =
+          localizedShoppingCategoryName(context, catId).toLowerCase();
       final catMatchesQuery = catName.contains(query);
 
       for (final item in catList) {
         if (item['name']!.toLowerCase().contains(query) || catMatchesQuery) {
           if (!matches.any((m) => m['name'] == item['name'])) {
-            matches.add(item);
+            final name = item['name'] ?? '';
+            matches.add({
+              ...item,
+              'category': catId,
+              'nameKey': shoppingCatalogKeyForName(name) ?? '',
+            });
           }
         }
       }
@@ -222,6 +229,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     String? emoji,
     int? count,
     Color? accentColor,
+    String? categoryId,
   }) {
     final isExpanded = _expandedSections.contains(sectionId);
     final theme = context.theme;
@@ -260,7 +268,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
             ),
             child: Row(
               children: [
-                if (emoji != null) ...[
+                if (emoji != null || categoryId != null) ...[
                   Container(
                     width: 34,
                     height: 34,
@@ -269,9 +277,11 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       color: highlightColor.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      emoji,
-                      style: const TextStyle(fontSize: 18),
+                    child: ShoppingIcon(
+                      categoryId: categoryId,
+                      fallbackEmoji: emoji,
+                      allowCategoryFallback: true,
+                      size: 30,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -411,6 +421,8 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
             return _PredefinedItemTile(
               item: prefItem,
+              categoryId: cat['id'] as String,
+              nameKey: nameKey,
               catColor: catColor,
               isPending: isPending,
               onTap: () => _handleSelection(
@@ -469,10 +481,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                     itemCount: suggestions.length,
                     itemBuilder: (context, index) {
                       final s = suggestions[index];
+                      final nameKey = s['nameKey'];
                       return ListTile(
-                        leading: Text(
-                          s['emoji']!,
-                          style: const TextStyle(fontSize: 20),
+                        leading: ShoppingIcon(
+                          productKey: nameKey == null || nameKey.isEmpty
+                              ? null
+                              : nameKey,
+                          categoryId: s['category'],
+                          fallbackEmoji: s['emoji'],
+                          size: 34,
                         ),
                         title: Text(
                           s['name']!,
@@ -484,8 +501,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                           Icons.add_circle_outline,
                           color: AppColors.accentGreen,
                         ),
-                        onTap: () =>
-                            _handleSelection(s['name']!, pending, done),
+                        onTap: () => _handleSelection(
+                          s['name']!,
+                          pending,
+                          done,
+                          emoji: s['emoji'],
+                          category: s['category'],
+                          nameKey: nameKey == null || nameKey.isEmpty
+                              ? null
+                              : nameKey,
+                        ),
                       );
                     },
                   ),
@@ -867,10 +892,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                         for (final cat in ShoppingCategories.all
                             .where((cat) => cat['id'] != 'general')) ...[
                           _buildSectionHeader(
-                            cat['name'],
+                            localizedShoppingCategoryName(
+                              context,
+                              cat['id'] as String,
+                              fallback: cat['name'] as String?,
+                            ),
                             cat['id'],
                             emoji: cat['emoji'],
                             accentColor: Color(cat['color'] as int),
+                            categoryId: cat['id'] as String,
                             count: ShoppingPredefined.itemsForCategory(
                               cat['id'],
                               context,
@@ -922,12 +952,16 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
 
 class _PredefinedItemTile extends StatelessWidget {
   final Map<String, String> item;
+  final String categoryId;
+  final String? nameKey;
   final Color catColor;
   final bool isPending;
   final VoidCallback onTap;
 
   const _PredefinedItemTile({
     required this.item,
+    required this.categoryId,
+    required this.nameKey,
     required this.catColor,
     required this.isPending,
     required this.onTap,
@@ -964,14 +998,12 @@ class _PredefinedItemTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              item['emoji']!,
-              style: TextStyle(
-                fontSize: 28,
-                color: isPending
-                    ? context.theme.textMuted.withValues(alpha: 0.5)
-                    : null,
-              ),
+            ShoppingIcon(
+              productKey: nameKey,
+              categoryId: categoryId,
+              fallbackEmoji: item['emoji'],
+              size: 48,
+              opacity: isPending ? 0.42 : 1,
             ),
             const SizedBox(height: 6),
             Padding(
@@ -1076,14 +1108,14 @@ class _ShoppingItemTile extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    item.emoji.isNotEmpty
+                  ShoppingIcon(
+                    productKey: item.nameKey,
+                    categoryId: item.category,
+                    fallbackEmoji: item.emoji.isNotEmpty
                         ? item.emoji
                         : catInfo['emoji'] as String,
-                    style: TextStyle(
-                      fontSize: isCompleted ? 20 : 32,
-                      color: isCompleted ? theme.textMuted : null,
-                    ),
+                    size: isCompleted ? 34 : 56,
+                    opacity: isCompleted ? 0.48 : 1,
                   ),
                   const SizedBox(height: 8),
                   Padding(

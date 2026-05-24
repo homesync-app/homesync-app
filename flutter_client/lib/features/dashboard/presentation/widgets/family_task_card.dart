@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
     show
@@ -8,6 +9,7 @@ import 'package:homesync_client/features/dashboard/presentation/widgets/task_car
         dashboardCategoryAccent,
         dashboardCategoryIcon,
         dashboardTaskCompletionColor,
+        dashboardTaskCompletionCurve,
         dashboardTaskCompletionDuration;
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -82,16 +84,22 @@ class FamilyTaskCard extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
       duration: dashboardTaskCompletionDuration(context, isCompleting),
-      curve: Curves.easeInOutCubic,
+      curve: dashboardTaskCompletionCurve(isCompleting),
       builder: (context, progress, child) {
         final pulse = math.sin(progress * math.pi);
-        final scale = 1 + (pulse * 0.0015);
+        final scale = 1 + (pulse * 0.016);
         final completionColor = dashboardTaskCompletionColor(accent);
 
         return Transform.scale(
           scale: scale,
           child: AnimatedPress(
-            onTap: isCompleting ? null : onTap,
+            scale: 0.985,
+            onTap: isCompleting
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onTap?.call();
+                  },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
@@ -100,7 +108,7 @@ class FamilyTaskCard extends StatelessWidget {
                       ? accent.withValues(alpha: 0.08)
                       : theme.surface,
                   Color.alphaBlend(
-                    completionColor.withValues(alpha: 0.012),
+                    completionColor.withValues(alpha: 0.080),
                     theme.surface,
                   ),
                   progress,
@@ -109,7 +117,7 @@ class FamilyTaskCard extends StatelessWidget {
                 border: Border.all(
                   color: Color.lerp(
                     accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
-                    completionColor.withValues(alpha: 0.18),
+                    completionColor.withValues(alpha: 0.36),
                     progress,
                   )!,
                 ),
@@ -118,10 +126,10 @@ class FamilyTaskCard extends StatelessWidget {
                   BoxShadow(
                     color: completionColor.withValues(
                       alpha:
-                          (isPendingReview ? 0.040 : 0.018) + (pulse * 0.025),
+                          (isPendingReview ? 0.046 : 0.032) + (pulse * 0.065),
                     ),
-                    blurRadius: 18 + (pulse * 5),
-                    offset: Offset(0, 8 + pulse),
+                    blurRadius: 18 + (pulse * 11),
+                    offset: Offset(0, 8 + (pulse * 3)),
                   ),
                 ],
               ),
@@ -211,7 +219,7 @@ class FamilyTaskCard extends StatelessWidget {
                         color: completionColor,
                       ),
                       Transform.scale(
-                        scale: 1 + (pulse * 0.045),
+                        scale: 1 + (pulse * 0.15),
                         child: Container(
                           width: 36,
                           height: 36,

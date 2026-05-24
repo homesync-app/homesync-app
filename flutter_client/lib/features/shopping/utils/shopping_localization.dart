@@ -54,12 +54,12 @@ const List<ShoppingCatalogEntry> shoppingCatalogEntries = [
   ShoppingCatalogEntry('pork', 'Cerdo', 'Pork'),
   ShoppingCatalogEntry('bondiola', 'Bondiola', 'Pork shoulder'),
   ShoppingCatalogEntry('flankSteak', 'Vacío', 'Flank steak'),
-  ShoppingCatalogEntry('matambre', 'Matambre', 'Matambre'),
-  ShoppingCatalogEntry('peceto', 'Peceto', 'Eye round'),
+  ShoppingCatalogEntry('matambre', 'Matambre', 'Rolled flank'),
+  ShoppingCatalogEntry('peceto', 'Peceto', 'Round roast'),
   ShoppingCatalogEntry('ribs', 'Costillas', 'Ribs'),
-  ShoppingCatalogEntry('milanesas', 'Milanesas', 'Milanesas'),
+  ShoppingCatalogEntry('milanesas', 'Milanesas', 'Breaded cutlets'),
   ShoppingCatalogEntry('sausages', 'Salchichas', 'Sausages'),
-  ShoppingCatalogEntry('chorizo', 'Chorizo', 'Chorizo'),
+  ShoppingCatalogEntry('chorizo', 'Chorizo', 'Chorizo sausage'),
   ShoppingCatalogEntry('burgers', 'Hamburguesas', 'Burgers'),
   ShoppingCatalogEntry('bacon', 'Panceta', 'Bacon'),
   ShoppingCatalogEntry('milk', 'Leche', 'Milk'),
@@ -241,6 +241,75 @@ String localizedShoppingCatalogName(
   }
 
   return name;
+}
+
+String localizedShoppingCategoryName(
+  BuildContext context,
+  String categoryId, {
+  String? fallback,
+}) {
+  final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+  if (!isEnglish) return fallback ?? _spanishShoppingCategoryName(categoryId);
+
+  switch (categoryId) {
+    case 'general':
+      return 'Frequent';
+    case 'fruits':
+      return 'Fruit & veg.';
+    case 'meat':
+      return 'Meat';
+    case 'dairy':
+      return 'Dairy';
+    case 'bakery':
+      return 'Bakery';
+    case 'pantry':
+      return 'Pantry';
+    case 'frozen':
+      return 'Frozen';
+    case 'cleaning':
+      return 'Cleaning';
+    case 'drinks':
+      return 'Drinks';
+    case 'snacks':
+      return 'Snacks';
+    case 'pharmacy':
+      return 'Pharmacy';
+    case 'pets':
+      return 'Pets';
+    default:
+      return fallback ?? categoryId;
+  }
+}
+
+String _spanishShoppingCategoryName(String categoryId) {
+  switch (categoryId) {
+    case 'general':
+      return 'Frecuentes';
+    case 'fruits':
+      return 'Frutas y verd.';
+    case 'meat':
+      return 'Carnes';
+    case 'dairy':
+      return 'Lácteos';
+    case 'bakery':
+      return 'Panadería';
+    case 'pantry':
+      return 'Despensa';
+    case 'frozen':
+      return 'Congelados';
+    case 'cleaning':
+      return 'Limpieza';
+    case 'drinks':
+      return 'Bebidas';
+    case 'snacks':
+      return 'Snacks';
+    case 'pharmacy':
+      return 'Farmacia';
+    case 'pets':
+      return 'Mascotas';
+    default:
+      return categoryId;
+  }
 }
 
 String localizedShoppingItemName(BuildContext context, ShoppingItemModel item) {

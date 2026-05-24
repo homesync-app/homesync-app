@@ -8,6 +8,7 @@ import '../../domain/models/shopping_categories.dart';
 import '../../domain/models/shopping_model.dart';
 import '../../utils/shopping_localization.dart';
 import '../providers/shopping_provider.dart';
+import 'shopping_icon.dart';
 
 class ShoppingItemSheet extends ConsumerStatefulWidget {
   final ShoppingItemModel? item;
@@ -96,6 +97,8 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final productKey =
+        widget.item?.nameKey ?? shoppingCatalogKeyForName(_nameController.text);
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 32,
@@ -130,7 +133,13 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                   color: AppColors.background,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Text(_emoji, style: const TextStyle(fontSize: 32)),
+                child: ShoppingIcon(
+                  productKey: productKey,
+                  categoryId: _category,
+                  fallbackEmoji: _emoji,
+                  allowCategoryFallback: true,
+                  size: 46,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -179,7 +188,20 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                 final cat = _visibleCategories[index];
                 final isSelected = _category == cat['id'];
                 return FilterChip(
-                  label: Text(cat['name']),
+                  avatar: ShoppingIcon(
+                    categoryId: cat['id'] as String,
+                    fallbackEmoji: cat['emoji'] as String?,
+                    allowCategoryFallback: true,
+                    size: 22,
+                    opacity: isSelected ? 1 : 0.72,
+                  ),
+                  label: Text(
+                    localizedShoppingCategoryName(
+                      context,
+                      cat['id'] as String,
+                      fallback: cat['name'] as String?,
+                    ),
+                  ),
                   selected: isSelected,
                   onSelected: (val) {
                     if (val) {

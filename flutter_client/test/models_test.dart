@@ -31,6 +31,7 @@ void main() {
         'priority': 'high',
         'type': 'recurring',
         'difficulty': 'easy',
+        'allow_multiple_daily_completions': true,
       };
 
       final task = TaskModel.fromMap(map);
@@ -46,6 +47,7 @@ void main() {
       expect(task.householdId, equals('house-1'));
       expect(task.priority, equals(TaskPriority.high));
       expect(task.difficulty, equals(TaskDifficulty.easy));
+      expect(task.allowMultipleDailyCompletions, isTrue);
     });
 
     test('Uses default values when optional fields are null', () {
@@ -69,6 +71,7 @@ void main() {
       expect(task.recurrenceInterval, equals(1));
       expect(task.priority, equals(TaskPriority.medium));
       expect(task.difficulty, equals(TaskDifficulty.medium));
+      expect(task.allowMultipleDailyCompletions, isFalse);
     });
 
     test('Defaults missing title to "Sin título"', () {
@@ -235,7 +238,8 @@ void main() {
       expect(task.isOverdue, isFalse);
     });
 
-    test('Daily recurring task completed today is not overdue with stale due_at',
+    test(
+        'Daily recurring task completed today is not overdue with stale due_at',
         () {
       final now = DateTime.now();
       final task = TaskModel(
@@ -249,7 +253,7 @@ void main() {
         dueAt: DateTime(now.year, now.month, now.day)
             .subtract(const Duration(days: 3)),
         recurrenceType: 'daily',
-        lastCompletedAt: now.toIso8601String(),
+        lastCompletedAt: now,
       );
 
       expect(task.isOverdue, isFalse);
@@ -271,11 +275,97 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
         dueAt: yesterday.subtract(const Duration(days: 2)),
         recurrenceType: 'daily',
-        lastCompletedAt: yesterday.toIso8601String(),
+        lastCompletedAt: yesterday,
       );
 
       expect(task.isOverdue, isFalse);
       expect(task.isDueToday, isTrue);
+    });
+
+    test('Tomorrow UTC-midnight due date is not treated as today locally', () {
+      final now = DateTime.now();
+      final tomorrowUtcMidnight =
+          DateTime.utc(now.year, now.month, now.day).add(
+        const Duration(days: 1),
+      );
+      final task = TaskModel(
+        id: 't',
+        title: 'Daily task',
+        status: TaskStatus.active,
+        xpReward: 10,
+        coinReward: 5,
+        householdId: 'h1',
+        createdAt: DateTime(2026, 1, 1),
+        dueAt: tomorrowUtcMidnight,
+        recurrenceType: 'daily',
+        completedAt: now,
+        lastCompletedAt: now,
+      );
+
+      expect(task.isOverdue, isFalse);
+      expect(task.isDueToday, isFalse);
+    });
+  });
+
+  group('✅ TaskModel — isScheduledForToday', () {
+    TaskModel makeTask({
+      String? recurrenceType,
+      DateTime? dueAt,
+      TaskStatus status = TaskStatus.active,
+    }) =>
+        TaskModel(
+          id: 't',
+          title: 'Test',
+          status: status,
+          xpReward: 0,
+          coinReward: 0,
+          householdId: 'h',
+          createdAt: DateTime(2026),
+          recurrenceType: recurrenceType,
+          dueAt: dueAt,
+        );
+
+    test('Task due today is scheduled for today', () {
+      final now = DateTime.now();
+      expect(
+        makeTask(dueAt: DateTime(now.year, now.month, now.day))
+            .isScheduledForToday,
+        isTrue,
+      );
+    });
+
+    test('Overdue task is scheduled for today', () {
+      expect(
+        makeTask(dueAt: DateTime.now().subtract(const Duration(days: 2)))
+            .isScheduledForToday,
+        isTrue,
+      );
+    });
+
+    test('Daily task with a future due date is still scheduled for today', () {
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      expect(
+        makeTask(
+          recurrenceType: 'daily',
+          dueAt: DateTime.utc(tomorrow.year, tomorrow.month, tomorrow.day),
+        ).isScheduledForToday,
+        isTrue,
+      );
+    });
+
+    test('Weekly task due in the future is NOT scheduled for today', () {
+      final nextWeek = DateTime.now().add(const Duration(days: 7));
+      expect(
+        makeTask(
+          recurrenceType: 'weekly',
+          dueAt: DateTime.utc(nextWeek.year, nextWeek.month, nextWeek.day),
+        ).isScheduledForToday,
+        isFalse,
+      );
+    });
+
+    test('Task with no due date and no recurrence is not scheduled', () {
+      expect(makeTask().isScheduledForToday, isFalse);
     });
   });
 

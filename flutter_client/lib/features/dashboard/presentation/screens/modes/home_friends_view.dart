@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -23,8 +21,8 @@ import 'package:homesync_client/features/shopping/presentation/providers/shoppin
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
-import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeFriendsView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -42,8 +40,8 @@ class HomeFriendsView extends ConsumerStatefulWidget {
   ConsumerState<HomeFriendsView> createState() => _HomeFriendsViewState();
 }
 
-class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
-  final Set<String> _completedTaskIds = {};
+class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
+    with TaskCompletionFlowMixin<HomeFriendsView> {
   int _unreadNotificationCount = 0;
 
   @override
@@ -416,7 +414,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
     if (assignedMember != null) {
       return FamilyTaskCard(
         task: task,
-        isCompleting: _completedTaskIds.contains(task.id),
+        isCompleting: completingTaskIds.contains(task.id),
         isChildView: false,
         actionIcon: Icons.check_rounded,
         assignedMember: assignedMember,
@@ -427,65 +425,26 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView> {
 
     return DashboardTaskCard(
       task: task,
-      isCompleting: _completedTaskIds.contains(task.id),
+      isCompleting: completingTaskIds.contains(task.id),
       onTap: () => _completeTask(task),
     );
   }
 
-  Future<void> _completeTask(TaskModel task) async {
-    if (_completedTaskIds.contains(task.id)) return;
-
-    setState(() => _completedTaskIds.add(task.id));
-    try {
-      log.d('[friends] completing task id=${task.id} title=${task.title}');
-      await Future<void>.delayed(const Duration(milliseconds: 360));
-      final result = await ref.read(tasksProvider.notifier).completeTask(task);
-
-      if (!mounted) return;
-
-      if (result == null) {
-        log.w('[friends] task completion returned null id=${task.id}');
-        final t = AppLocalizations.of(context);
-        AppSnackBar.show(
-          context,
-          message: t.homeFriendsTaskCompleteError,
-          type: AppSnackBarType.error,
-        );
-        return;
-      }
-
-      log.i(
-        '[friends] task completion success id=${task.id} queued=${result.queued}',
-      );
-      ref
-          .read(optimisticRecentActivityProvider.notifier)
-          .addTaskCompleted(task);
-      HapticFeedback.mediumImpact();
-      final t = AppLocalizations.of(context);
-      AppSnackBar.show(
-        context,
-        message: t.tasksSnackCompleted,
-        type: AppSnackBarType.success,
-      );
-      ref.invalidate(statsControllerProvider);
-      ref.invalidate(tasksProvider);
-      ref.invalidate(todayTasksProvider);
-      ref.invalidate(recentActivityProvider);
-    } catch (e) {
-      log.e('[friends] task completion threw id=${task.id}', error: e);
-      if (mounted) {
-        final t = AppLocalizations.of(context);
-        AppSnackBar.show(
-          context,
-          message: t.commonErrorWithDetails(e.toString()),
-          type: AppSnackBarType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _completedTaskIds.remove(task.id));
-      }
-    }
+  // Shared flow lives in TaskCompletionFlowMixin. The optimistic feed entry is
+  // added centrally by Tasks.completeTask (with the server activity_id), so the
+  // view must NOT add it again — that caused a duplicate row in the feed.
+  Future<void> _completeTask(TaskModel task) {
+    final t = AppLocalizations.of(context);
+    return runTaskCompletion(
+      task,
+      completionErrorMessage: t.homeFriendsTaskCompleteError,
+      onCompleted: (_) {
+        ref.invalidate(statsControllerProvider);
+        ref.invalidate(tasksProvider);
+        ref.invalidate(todayTasksProvider);
+        ref.invalidate(recentActivityProvider);
+      },
+    );
   }
 
   Widget _buildShoppingSection(AppThemeColors theme) {

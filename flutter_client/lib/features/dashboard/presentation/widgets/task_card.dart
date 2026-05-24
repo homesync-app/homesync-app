@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
@@ -61,23 +62,29 @@ class DashboardTaskCard extends ConsumerWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
       duration: dashboardTaskCompletionDuration(context, isCompleting),
-      curve: Curves.easeInOutCubic,
+      curve: dashboardTaskCompletionCurve(isCompleting),
       builder: (context, progress, child) {
         final pulse = math.sin(progress * math.pi);
-        final scale = 1 + (pulse * 0.002);
+        final scale = 1 + (pulse * 0.018);
         final completionColor = dashboardTaskCompletionColor(accent);
 
         return Transform.scale(
           scale: scale,
           child: AnimatedPress(
-            onTap: isCompleting ? null : onTap,
+            scale: 0.985,
+            onTap: isCompleting
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onTap?.call();
+                  },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: Color.lerp(
                   theme.surface,
                   Color.alphaBlend(
-                    completionColor.withValues(alpha: 0.035),
+                    completionColor.withValues(alpha: 0.085),
                     theme.surface,
                   ),
                   progress,
@@ -86,7 +93,7 @@ class DashboardTaskCard extends ConsumerWidget {
                 border: Border.all(
                   color: Color.lerp(
                     accent.withValues(alpha: 0.12),
-                    completionColor.withValues(alpha: 0.26),
+                    completionColor.withValues(alpha: 0.38),
                     progress,
                   )!,
                 ),
@@ -94,10 +101,10 @@ class DashboardTaskCard extends ConsumerWidget {
                   ...theme.cardShadow,
                   BoxShadow(
                     color: completionColor.withValues(
-                      alpha: 0.028 + (pulse * 0.04),
+                      alpha: 0.035 + (pulse * 0.075),
                     ),
-                    blurRadius: 18 + (pulse * 8),
-                    offset: Offset(0, 8 + (pulse * 2)),
+                    blurRadius: 18 + (pulse * 12),
+                    offset: Offset(0, 8 + (pulse * 3)),
                   ),
                 ],
               ),
@@ -212,14 +219,14 @@ class DashboardTaskCard extends ConsumerWidget {
                             color: completionColor,
                           ),
                           Transform.scale(
-                            scale: 1 + (pulse * 0.045),
+                            scale: 1 + (pulse * 0.16),
                             child: Container(
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
                                 color: Color.lerp(
                                   accent.withValues(alpha: 0.09),
-                                  completionColor.withValues(alpha: 0.90),
+                                  completionColor.withValues(alpha: 0.94),
                                   progress,
                                 ),
                                 shape: BoxShape.circle,
@@ -276,7 +283,11 @@ Duration dashboardTaskCompletionDuration(
   if (media?.accessibleNavigation ?? false) {
     return Duration.zero;
   }
-  return Duration(milliseconds: isCompleting ? 420 : 220);
+  return Duration(milliseconds: isCompleting ? 520 : 220);
+}
+
+Curve dashboardTaskCompletionCurve(bool isCompleting) {
+  return isCompleting ? Curves.easeOutCubic : Curves.easeInOutCubic;
 }
 
 Color dashboardTaskCompletionColor(Color accent) {

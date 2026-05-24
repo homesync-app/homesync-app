@@ -25,6 +25,7 @@ import 'package:homesync_client/core/services/supabase_rpc_service.dart';
 import 'package:homesync_client/core/theme/app_theme.dart';
 import 'package:homesync_client/features/auth/presentation/screens/login_screen.dart';
 import 'package:homesync_client/features/auth/presentation/screens/splash_screen.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/screens/main_screen.dart';
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -486,6 +487,11 @@ class _MyAppState extends ConsumerState<MyApp> {
           ref.read(userProfileProvider.future).then((_) {}).catchError((_) {}),
       'householdMembersProvider': ref
           .read(householdMembersProvider.future)
+          .then((_) {})
+          .catchError((_) {}),
+      'recentActivityRemoteProvider': ref
+          .read(recentActivityRemoteProvider.future)
+          .timeout(const Duration(milliseconds: 900), onTimeout: () => const [])
           .then((_) {})
           .catchError((_) {}),
       'expenseBalancesProvider': ref

@@ -1195,29 +1195,70 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : CategoryMapping.getCategoryColor(task.category);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
-      decoration: BoxDecoration(
-        color: theme.surface,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: _isExpanded ? theme.modalShadow : theme.cardShadow,
-        border: Border.all(
-          color: _isExpanded
-              ? categoryColor.withValues(alpha: 0.3)
-              : (task.isOverdue
-                  ? AppColors.accentRed.withValues(alpha: 0.3)
-                  : theme.border.withValues(alpha: 0.9)),
-          width: _isExpanded ? 1.5 : 1.2,
-        ),
-      ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: _isSubmitting ? 1 : 0),
+      duration: _taskListCompletionDuration(context, _isSubmitting),
+      curve: _isSubmitting ? Curves.easeOutCubic : Curves.easeInOutCubic,
+      builder: (context, completionProgress, child) {
+        final pulse = Curves.easeOutCubic.transform(completionProgress);
+        final completionColor = Color.alphaBlend(
+          AppColors.accentGreen.withValues(alpha: 0.68),
+          categoryColor,
+        );
+        final restingBorderColor = _isExpanded
+            ? categoryColor.withValues(alpha: 0.3)
+            : (task.isOverdue
+                ? AppColors.accentRed.withValues(alpha: 0.3)
+                : theme.border.withValues(alpha: 0.9));
+
+        return Transform.scale(
+          scale: 1 + (completionProgress * (1 - completionProgress) * 0.055),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+            decoration: BoxDecoration(
+              color: Color.lerp(
+                theme.surface,
+                Color.alphaBlend(
+                  completionColor.withValues(alpha: 0.085),
+                  theme.surface,
+                ),
+                completionProgress,
+              ),
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: [
+                ...(_isExpanded ? theme.modalShadow : theme.cardShadow),
+                if (completionProgress > 0)
+                  BoxShadow(
+                    color: completionColor.withValues(
+                      alpha: 0.04 + (pulse * 0.06),
+                    ),
+                    blurRadius: 18 + (pulse * 10),
+                    offset: Offset(0, 8 + (pulse * 3)),
+                  ),
+              ],
+              border: Border.all(
+                color: Color.lerp(
+                  restingBorderColor,
+                  completionColor.withValues(alpha: 0.38),
+                  completionProgress,
+                )!,
+                width: _isExpanded ? 1.5 : 1.2,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
-        onTap: () {
-          HapticFeedback.lightImpact();
-          setState(() => _isExpanded = !_isExpanded);
-        },
+        onTap: _isSubmitting
+            ? null
+            : () {
+                HapticFeedback.lightImpact();
+                setState(() => _isExpanded = !_isExpanded);
+              },
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
           child: Column(
@@ -1243,7 +1284,10 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
                           ),
                         ),
                       ),
-                      if (!_isExpanded && task.xpReward > 0) ...[
+                      if (!_isExpanded && _isSubmitting) ...[
+                        const SizedBox(width: 10),
+                        _completionBadge(categoryColor),
+                      ] else if (!_isExpanded && task.xpReward > 0) ...[
                         const SizedBox(width: 10),
                         _badge('XP ${task.xpReward}', AppColors.accentGold),
                       ],
@@ -1482,6 +1526,41 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
       icon: Icons.lock_outline_rounded,
       text: t.tasksStatusBelongsTo(ownerName),
       color: AppColors.textMuted,
+    );
+  }
+
+  Duration _taskListCompletionDuration(BuildContext context, bool completing) {
+    final media = MediaQuery.maybeOf(context);
+    if (media?.accessibleNavigation ?? false) return Duration.zero;
+    return Duration(milliseconds: completing ? 520 : 220);
+  }
+
+  Widget _completionBadge(Color categoryColor) {
+    final color = Color.alphaBlend(
+      AppColors.accentGreen.withValues(alpha: 0.68),
+      categoryColor,
+    );
+
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.92),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.62)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.check_rounded,
+        size: 20,
+        color: Colors.white,
+      ),
     );
   }
 
@@ -1757,6 +1836,7 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
   }
 
   Future<void> _completeTask() async {
+    HapticFeedback.lightImpact();
     setState(() => _isSubmitting = true);
     try {
       final result =

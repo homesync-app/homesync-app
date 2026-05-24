@@ -86,25 +86,19 @@ class Tasks extends _$Tasks {
   bool get hasMore => _hasMore;
   static const int _pageSize = 50;
   RealtimeChannel? _channel;
+  final Set<String> _completingTaskIds = <String>{};
 
   @override
   Future<List<TaskModel>> build() async {
+    return _loadTasks();
+  }
+
+  Future<List<TaskModel>> _loadTasks() async {
     _hasMore = true;
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
     _setupRealtime(householdId);
-
-    final bootstrap = await ref.watch(homeBootstrapProvider.future);
-    if (bootstrap?.householdId == householdId) {
-      final tasks = bootstrap!.tasks
-          .map((task) => TaskModel.fromMap(task))
-          .toList(growable: false);
-      if (tasks.length < _pageSize) {
-        _hasMore = false;
-      }
-      return tasks;
-    }
 
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await PerformanceMonitor.measureFuture(
@@ -153,11 +147,14 @@ class Tasks extends _$Tasks {
 
   Future<void> refresh() async {
     state = const AsyncLoading<List<TaskModel>>();
-    state = await AsyncValue.guard(() => build());
+    state = await AsyncValue.guard(_loadTasks);
   }
 
   Future<void> silentRefresh() async {
-    state = await AsyncValue.guard(() => build());
+    if (!ref.mounted) return;
+    final nextState = await AsyncValue.guard(_loadTasks);
+    if (!ref.mounted) return;
+    state = nextState;
   }
 
   Future<void> loadMore() async {
@@ -194,6 +191,8 @@ class Tasks extends _$Tasks {
     List<String>? userIds,
     DateTime? completedAt,
   }) async {
+    if (!_completingTaskIds.add(task.id)) return null;
+
     final currentUserId = ref.read(currentUserIdProvider);
     final performers =
         userIds ?? (currentUserId != null ? [currentUserId] : null);
@@ -201,21 +200,32 @@ class Tasks extends _$Tasks {
     final effectiveCompletedAt = completedAt ?? DateTime.now();
 
     final oldState = state.value;
+    _logTaskCompletionTrace(
+      'before_complete',
+      task.copyWith(
+        completedAt: effectiveCompletedAt,
+        completedBy: primaryUserId,
+      ),
+    );
 
     // Optimistic update
     if (oldState != null) {
-      state = AsyncValue.data(
-        oldState
-            .map(
-              (t) => t.id == task.id
-                  ? t.copyWith(
-                      status: TaskStatus.active,
-                      completedBy: primaryUserId,
-                      completedAt: effectiveCompletedAt,
-                    )
-                  : t,
-            )
-            .toList(),
+      final optimisticTasks = oldState
+          .map(
+            (t) => t.id == task.id
+                ? t.copyWith(
+                    status: TaskStatus.active,
+                    completedBy: primaryUserId,
+                    completedAt: effectiveCompletedAt,
+                  )
+                : t,
+          )
+          .toList();
+      state = AsyncValue.data(optimisticTasks);
+      _logTaskVisibilitySnapshot(
+        'after_optimistic_complete',
+        optimisticTasks,
+        focusTaskId: task.id,
       );
     }
 
@@ -228,15 +238,44 @@ class Tasks extends _$Tasks {
       );
 
       if (result.isRight()) {
+        if (!ref.mounted) {
+          return result.fold((_) => null, (data) => data);
+        }
         final isOnline = ref.read(isOnlineProvider);
         final queued = result.fold(
           (_) => false,
           (data) => data.queued,
         );
         if (isOnline && !queued) {
+          final completion = result.fold((_) => null, (data) => data);
+          final activityId = completion?.rawData['activity_id']?.toString();
+          ref.read(optimisticRecentActivityProvider.notifier).addTaskCompleted(
+                task,
+                activityId: activityId,
+                completedAt: effectiveCompletedAt,
+              );
+          final completedTask = task.copyWith(
+            completedAt: effectiveCompletedAt,
+            completedBy: primaryUserId,
+          );
+          log.i(
+            '[task-complete] success id=${task.id} queued=$queued '
+            'effectiveCompletedAt=${effectiveCompletedAt.toIso8601String()} '
+            'isDueToday=${completedTask.isDueToday} '
+            'isOverdue=${completedTask.isOverdue}',
+          );
           silentRefresh();
           ref.invalidate(userBalanceProvider);
-          ref.invalidate(recentActivityProvider);
+        } else if (queued) {
+          // Offline: the task is queued, not yet persisted, so there is no
+          // server activity_id. Still surface an optimistic feed entry — this
+          // used to be done by each home view, which caused a DOUBLE entry
+          // online (view added one without activity_id while this notifier
+          // added one with it). The optimistic feed is now owned solely here.
+          ref.read(optimisticRecentActivityProvider.notifier).addTaskCompleted(
+                task,
+                completedAt: effectiveCompletedAt,
+              );
         }
       }
 
@@ -251,7 +290,53 @@ class Tasks extends _$Tasks {
       log.w('Complete task failure: $e', error: e, stackTrace: stack);
       if (oldState != null) state = AsyncValue.data(oldState); // Rollback
       return null;
+    } finally {
+      _completingTaskIds.remove(task.id);
     }
+  }
+
+  void _logTaskCompletionTrace(String stage, TaskModel task) {
+    log.i(
+      '[task-complete][$stage] id=${task.id} title="${task.title}" '
+      'status=${task.status.dbValue} recurrence=${task.recurrenceType} '
+      'dueAt=${task.dueAt?.toIso8601String()} '
+      'completedAt=${task.completedAt?.toIso8601String()} '
+      'lastCompletedAt=${task.lastCompletedAt} '
+      'allowMultipleDaily=${task.allowMultipleDailyCompletions} '
+      'isDueToday=${task.isDueToday} isOverdue=${task.isOverdue}',
+    );
+  }
+
+  void _logTaskVisibilitySnapshot(
+    String stage,
+    List<TaskModel> tasks, {
+    required String? focusTaskId,
+  }) {
+    final interesting = tasks
+        .where(
+          (task) =>
+              task.id == focusTaskId ||
+              task.isDueToday ||
+              task.isOverdue ||
+              task.completedAt != null ||
+              task.lastCompletedAt != null,
+        )
+        .take(12)
+        .map(
+          (task) => '{id=${task.id}, title="${task.title}", '
+              'status=${task.status.dbValue}, recurrence=${task.recurrenceType}, '
+              'dueAt=${task.dueAt?.toIso8601String()}, '
+              'completedAt=${task.completedAt?.toIso8601String()}, '
+              'lastCompletedAt=${task.lastCompletedAt}, '
+              'allowMultipleDaily=${task.allowMultipleDailyCompletions}, '
+              'isDueToday=${task.isDueToday}, isOverdue=${task.isOverdue}}',
+        )
+        .join(' | ');
+
+    log.i(
+      '[tasks-visibility][$stage] count=${tasks.length} '
+      'focus=$focusTaskId interesting=[$interesting]',
+    );
   }
 
   Future<Map<String, dynamic>?> completeTasksBatch(
@@ -297,6 +382,7 @@ class Tasks extends _$Tasks {
         if (isOnline) {
           silentRefresh();
           ref.invalidate(userBalanceProvider);
+          ref.invalidate(recentActivityRemoteProvider);
           ref.invalidate(recentActivityProvider);
         }
       }
@@ -684,76 +770,111 @@ AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
   final isFamilyMode = caps.type == HouseholdType.family;
   final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
   final shouldUseFamilyHouseholdScope = isFamilyMode && !isFamilyChild;
+  final now = DateTime.now();
+  final recentActivityAsync = ref.watch(recentActivityProvider);
+  // During startup the merged recentActivityProvider serves an incomplete
+  // bootstrap snapshot for up to a few seconds before handing off to realtime.
+  // Union the raw realtime feed (resolves in ~250ms) so today's completions
+  // hide as soon as it lands instead of at the 4s handoff — this is what
+  // removes the "task flashes then disappears" flicker. Union only ever adds
+  // hides, so it is safe even if one source is still empty.
+  final remoteActivityAsync = ref.watch(recentActivityRemoteProvider);
+  final completedActivityTaskIds = <String>{
+    ..._completedActivityTaskIdsForLocalDate(
+      recentActivityAsync.value ?? const <Map<String, dynamic>>[],
+      now,
+    ),
+    ..._completedActivityTaskIdsForLocalDate(
+      remoteActivityAsync.value ?? const <Map<String, dynamic>>[],
+      now,
+    ),
+  };
+
+  // A task assigned to someone else is not "mine". Only filtered when the
+  // viewer is an individual (couple/solo/friends) or a family child; family
+  // adults keep the household-wide coordination view.
+  bool isAssignedToSomeoneElse(TaskModel task) {
+    final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
+    return shouldFilterByAssignment &&
+        task.assignedTo != null &&
+        task.assignedTo != currentUserId;
+  }
+
+  // Once completed for the day a task leaves the home "today" section and lives
+  // only in the activity feed — even repeatable ones (allowMultipleDaily); it
+  // can still be completed again from the full task list. Completion is read
+  // from the task fields OR today's activity feed, which is authoritative right
+  // after an optimistic completion (before the silent refresh lands).
+  bool isClosedForToday(TaskModel task) {
+    return isTaskCompletedOnLocalDate(task, now) ||
+        completedActivityTaskIds.contains(task.id);
+  }
 
   return tasksAsync.whenData((tasks) {
-    final now = DateTime.now();
     final visibleTasks = tasks.where((task) {
-      // In family mode, only children should default to "my tasks".
-      // Adults, and any temporarily unresolved family viewer in QA,
-      // should keep the household coordination view.
-      final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
-      if (shouldFilterByAssignment &&
-          task.assignedTo != null &&
-          task.assignedTo != currentUserId) {
-        return false;
-      }
-
-      // Completed-today tasks should leave "today" and remain only in activity.
-      // Exception: pending-approval tasks still need adult review visibility
-      // on the same day the child marked them done.
-      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
-        return false;
-      }
-
-      // Only actionable tasks belong in this list.
-      if (!task.isActive) return false;
-
-      // Pending-approval tasks must surface for adult review regardless
-      // of the original due date — the child already acted on them.
-      if (task.isPendingApproval) return false;
-
-      if (task.isDueToday) return true;
-
-      if (task.recurrenceType == 'daily') return true;
-
-      if (task.isOverdue) {
-        return true;
-      }
-
-      return false;
+      if (isAssignedToSomeoneElse(task)) return false;
+      // Only actionable tasks belong here. Pending-approval tasks are surfaced
+      // separately for adult review via pendingTaskApprovalsProvider.
+      if (!task.isActive || task.isPendingApproval) return false;
+      if (isClosedForToday(task)) return false;
+      return task.isScheduledForToday;
     }).toList();
 
-    if (visibleTasks.isNotEmpty || !shouldUseFamilyHouseholdScope) {
-      return visibleTasks;
-    }
+    final result = (visibleTasks.isNotEmpty || !shouldUseFamilyHouseholdScope)
+        ? visibleTasks
+        : (tasks.where((task) {
+            // Family QA and new households can have active tasks without a due
+            // date or explicit "today" schedule yet. In that case, show the
+            // next active tasks instead of leaving the home empty.
+            if (!task.isActive || task.isPendingApproval) return false;
+            if (task.completedAt != null && task.recurrenceType == null) {
+              return false;
+            }
+            if (isClosedForToday(task)) return false;
+            return true;
+          }).toList()
+          ..sort((a, b) {
+            final aDue = a.dueAt;
+            final bDue = b.dueAt;
+            if (aDue == null && bDue == null) {
+              return a.createdAt.compareTo(b.createdAt);
+            }
+            if (aDue == null) return 1;
+            if (bDue == null) return -1;
+            return aDue.compareTo(bDue);
+          }))
+            .take(3)
+            .toList();
 
-    // Family QA and new households can have active tasks without a due date or
-    // explicit "today" schedule yet. In that case, show the next active tasks
-    // instead of leaving the home empty.
-    final householdFallback = tasks.where((task) {
-      if (!task.isActive) return false;
-      if (task.isPendingApproval) return false;
-      if (task.completedAt != null && task.recurrenceType == null) {
-        return false;
-      }
-      if (!task.isPendingApproval && isTaskCompletedOnLocalDate(task, now)) {
-        return false;
-      }
-      return true;
-    }).toList()
-      ..sort((a, b) {
-        final aDue = a.dueAt;
-        final bDue = b.dueAt;
-        if (aDue == null && bDue == null) {
-          return a.createdAt.compareTo(b.createdAt);
-        }
-        if (aDue == null) return 1;
-        if (bDue == null) return -1;
-        return aDue.compareTo(bDue);
-      });
-
-    return householdFallback.take(3).toList();
+    return result;
   });
+}
+
+Set<String> _completedActivityTaskIdsForLocalDate(
+  List<Map<String, dynamic>> activities,
+  DateTime now,
+) {
+  final today = DateTime(now.year, now.month, now.day);
+  return activities
+      .where((activity) {
+        if (activity['type'] != 'task') return false;
+        final createdAt = DateTime.tryParse(
+          activity['created_at']?.toString() ?? '',
+        )?.toLocal();
+        if (createdAt == null) return false;
+        final createdDate = DateTime(
+          createdAt.year,
+          createdAt.month,
+          createdAt.day,
+        );
+        return createdDate == today;
+      })
+      .map((activity) {
+        final data = activity['data'] as Map<String, dynamic>? ?? {};
+        return data['task_id']?.toString();
+      })
+      .whereType<String>()
+      .toSet();
 }
 
 @riverpod

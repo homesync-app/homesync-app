@@ -99,7 +99,7 @@ class InMemoryRecurringTaskRepository implements TaskRepository {
     _task = _task!.copyWith(
       status: TaskStatus.pendingVerification,
       completedAt: _now,
-      lastCompletedAt: _now.toIso8601String(),
+      lastCompletedAt: _now,
       completedBy: userIds?.isNotEmpty == true ? userIds!.first : 'user-1',
     );
     _lastActivityId = 'activity-${_now.millisecondsSinceEpoch}';

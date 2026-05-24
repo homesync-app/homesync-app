@@ -6,7 +6,7 @@ void main() {
   group('isTaskCompletedOnLocalDate', () {
     TaskModel makeTask({
       DateTime? completedAt,
-      String? lastCompletedAt,
+      DateTime? lastCompletedAt,
     }) {
       return TaskModel(
         id: 'task-1',
@@ -40,7 +40,7 @@ void main() {
     test('falls back to lastCompletedAt when completedAt is null', () {
       final completedAtUtc = DateTime.parse('2026-03-19T01:10:51.429754Z');
       final nowLocal = completedAtUtc.toLocal();
-      final task = makeTask(lastCompletedAt: completedAtUtc.toIso8601String());
+      final task = makeTask(lastCompletedAt: completedAtUtc);
 
       expect(isTaskCompletedOnLocalDate(task, nowLocal), isTrue);
     });

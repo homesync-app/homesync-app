@@ -181,6 +181,7 @@ Unique: (template_id, due_date)
 | created_by_id | UUID | FK → users(id) nullable |
 | completed_at | TIMESTAMPTZ | nullable |
 | completed_by | UUID | nullable |
+| allow_multiple_daily_completions | BOOLEAN | default false, permite multiples registros diarios para tareas repetibles |
 | verified_by | UUID | nullable |
 | verified_at | TIMESTAMPTZ | nullable |
 | created_at | TIMESTAMPTZ | default now() |

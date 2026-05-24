@@ -10,6 +10,7 @@ import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
+import 'package:homesync_client/core/services/analytics_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/repository_error_handler.dart';
@@ -25,7 +26,13 @@ part 'supabase_task_repository.g.dart';
 TaskRepository taskRepository(Ref ref) {
   final client = ref.read(supabaseClientProvider);
   final rpc = ref.read(taskRpcServiceProvider);
-  return SupabaseTaskRepository(client: client, rpc: rpc, ref: ref);
+  final analytics = ref.read(analyticsServiceProvider);
+  return SupabaseTaskRepository(
+    client: client,
+    rpc: rpc,
+    analytics: analytics,
+    ref: ref,
+  );
 }
 
 /// Concrete Supabase implementation of TaskRepository.
@@ -35,15 +42,18 @@ class SupabaseTaskRepository
     implements TaskRepository {
   final SupabaseClient _client;
   final TaskRpcService _rpc;
+  final AnalyticsService _analytics;
   final Ref _ref;
   final OfflineQueueService _offlineQueue = OfflineQueueService();
 
   SupabaseTaskRepository({
     required SupabaseClient client,
     required TaskRpcService rpc,
+    required AnalyticsService analytics,
     required Ref ref,
   })  : _client = client,
         _rpc = rpc,
+        _analytics = analytics,
         _ref = ref;
 
   bool get _isOnline => _ref.read(isOnlineProvider);
@@ -98,6 +108,26 @@ class SupabaseTaskRepository
         log.i(
           'TaskRepository.getTasks household=$effectiveHouseholdId count=${tasks.length} adminQa=$isAdminTestingActive',
         );
+        final visibleTrace = tasks
+            .where(
+              (task) =>
+                  task.isDueToday ||
+                  task.isOverdue ||
+                  task.completedAt != null ||
+                  task.lastCompletedAt != null,
+            )
+            .take(12)
+            .map(
+              (task) => '{id=${task.id}, title="${task.title}", '
+                  'status=${task.status.dbValue}, recurrence=${task.recurrenceType}, '
+                  'dueAt=${task.dueAt?.toIso8601String()}, '
+                  'completedAt=${task.completedAt?.toIso8601String()}, '
+                  'lastCompletedAt=${task.lastCompletedAt}, '
+                  'allowMultipleDaily=${task.allowMultipleDailyCompletions}, '
+                  'isDueToday=${task.isDueToday}, isOverdue=${task.isOverdue}}',
+            )
+            .join(' | ');
+        log.i('[tasks-repository-snapshot] interesting=[$visibleTrace]');
         try {
           await OfflineStorageService().set(
             'tasks_cache_$effectiveHouseholdId',
@@ -138,18 +168,22 @@ class SupabaseTaskRepository
     List<String>? userIds,
     DateTime? completedAt,
   }) async {
+    final isAdminTestingActive = _isAdminTestingActive;
+    final selectedAdminHouseholdId = _selectedAdminHouseholdId;
+    final currentUserId = _ref.read(currentUserIdProvider);
+    final isOnline = _isOnline;
+
     return executeWithHandling(
       () async {
         final householdId =
-            _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
+            selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
         final performers = userIds ??
             [
-              _isAdminTestingActive
-                  ? (_ref.read(currentUserIdProvider) ??
-                      await _rpc.requireCurrentUserId())
+              isAdminTestingActive
+                  ? (currentUserId ?? await _rpc.requireCurrentUserId())
                   : await _rpc.requireCurrentUserId(),
             ];
-        final result = _isAdminTestingActive
+        final result = isAdminTestingActive
             ? TaskCompletionResult.fromRpcResponse(
                 await _client.rpc(
                   'qa_admin_complete_task',
@@ -177,7 +211,7 @@ class SupabaseTaskRepository
         return result;
       },
       context: 'SupabaseTaskRepository.completeTask',
-      isOnline: _isOnline,
+      isOnline: isOnline,
       onOffline: () async {
         final userId = await _rpc.requireCurrentUserId();
         await _queueAction(
@@ -190,7 +224,7 @@ class SupabaseTaskRepository
               'p_user_ids': userIds ?? [userId],
               'p_task_id': task.id,
               'p_household_id':
-                  _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
+                  selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
               'p_xp_reward': task.xpReward,
               'p_coin_reward': task.coinReward,
               'p_task_title': task.title,
@@ -214,18 +248,22 @@ class SupabaseTaskRepository
     List<String>? userIds,
     DateTime? completedAt,
   }) async {
+    final isAdminTestingActive = _isAdminTestingActive;
+    final selectedAdminHouseholdId = _selectedAdminHouseholdId;
+    final currentUserId = _ref.read(currentUserIdProvider);
+    final isOnline = _isOnline;
+
     return executeWithHandling(
       () async {
         final householdId =
-            _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
+            selectedAdminHouseholdId ?? await _rpc.requireHouseholdId();
         final performers = userIds ??
             [
-              _isAdminTestingActive
-                  ? (_ref.read(currentUserIdProvider) ??
-                      await _rpc.requireCurrentUserId())
+              isAdminTestingActive
+                  ? (currentUserId ?? await _rpc.requireCurrentUserId())
                   : await _rpc.requireCurrentUserId(),
             ];
-        if (_isAdminTestingActive) {
+        if (isAdminTestingActive) {
           final raw = await _client.rpc(
             'qa_admin_complete_tasks_batch',
             params: {
@@ -258,7 +296,7 @@ class SupabaseTaskRepository
         return result;
       },
       context: 'SupabaseTaskRepository.completeTasksBatch',
-      isOnline: _isOnline,
+      isOnline: isOnline,
       onOffline: () async {
         final userId = await _rpc.requireCurrentUserId();
         final taskIds = tasks.map((t) => t.id).toList();
@@ -272,7 +310,7 @@ class SupabaseTaskRepository
               'p_user_ids': userIds ?? [userId],
               'p_task_ids': taskIds,
               'p_household_id':
-                  _selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
+                  selectedAdminHouseholdId ?? await _rpc.requireHouseholdId(),
               if (completedAt != null)
                 'p_completed_at': completedAt.toIso8601String(),
             },
@@ -504,19 +542,24 @@ class SupabaseTaskRepository
     String? sourceTemplateId,
     String? titleKey,
   }) async {
+    final isAdminTestingActive = _isAdminTestingActive;
+    final selectedAdminHouseholdId = _selectedAdminHouseholdId;
+    final currentUserId = _ref.read(currentUserIdProvider);
+    final isOnline = _isOnline;
+
     return executeWithHandling(
       () async {
-        if (_isAdminTestingActive) {
-          final userId = _ref.read(currentUserIdProvider) ??
-              await AppIdentityService.instance.refresh();
-          if (userId == null || _selectedAdminHouseholdId == null) {
+        if (isAdminTestingActive) {
+          final userId =
+              currentUserId ?? await AppIdentityService.instance.refresh();
+          if (userId == null || selectedAdminHouseholdId == null) {
             throw Exception('QA admin sin viewer u hogar seleccionado');
           }
 
           await _client.rpc(
             'qa_admin_create_task',
             params: {
-              'p_household_id': _selectedAdminHouseholdId,
+              'p_household_id': selectedAdminHouseholdId,
               'p_created_by': userId,
               'p_title': title,
               'p_description': description,
@@ -534,12 +577,12 @@ class SupabaseTaskRepository
             },
           );
           log.i(
-            'TaskRepository.createTask QA created household=$_selectedAdminHouseholdId title=$title assignedTo=$assignedTo',
+            'TaskRepository.createTask QA created household=$selectedAdminHouseholdId title=$title assignedTo=$assignedTo',
           );
-          await _ref.read(analyticsServiceProvider).trackTaskCreated(
-                category: category,
-                difficulty: difficulty,
-              );
+          await _analytics.trackTaskCreated(
+            category: category,
+            difficulty: difficulty,
+          );
           return;
         }
 
@@ -581,13 +624,13 @@ class SupabaseTaskRepository
               .eq('id', taskId);
         }
 
-        await _ref.read(analyticsServiceProvider).trackTaskCreated(
-              category: category,
-              difficulty: difficulty,
-            );
+        await _analytics.trackTaskCreated(
+          category: category,
+          difficulty: difficulty,
+        );
       },
       context: 'SupabaseTaskRepository.createTask',
-      isOnline: _isOnline,
+      isOnline: isOnline,
       onOffline: () async {
         final userId = await AppIdentityService.instance.refresh();
         await _queueAction(

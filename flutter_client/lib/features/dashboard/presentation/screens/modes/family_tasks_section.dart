@@ -96,6 +96,12 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
             ...visibleOverdueTasks,
             ...todayTasks,
           ];
+          _logFamilyTaskVisibility(
+            allTasks: tasks,
+            todayTasks: todayTasks,
+            overdueTasks: overdueTasks,
+            visibleTasks: visibleTasks,
+          );
 
           final header = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -399,6 +405,43 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     );
   }
 
+  void _logFamilyTaskVisibility({
+    required List<TaskModel> allTasks,
+    required List<TaskModel> todayTasks,
+    required List<TaskModel> overdueTasks,
+    required List<TaskModel> visibleTasks,
+  }) {
+    String describe(TaskModel task) {
+      return '{id=${task.id}, title="${task.title}", '
+          'status=${task.status.dbValue}, recurrence=${task.recurrenceType}, '
+          'dueAt=${task.dueAt?.toIso8601String()}, '
+          'completedAt=${task.completedAt?.toIso8601String()}, '
+          'lastCompletedAt=${task.lastCompletedAt}, '
+          'isPending=${task.isPending}, '
+          'isPendingApproval=${task.isPendingApproval}, '
+          'isDueToday=${task.isDueToday}, isOverdue=${task.isOverdue}}';
+    }
+
+    final visible = visibleTasks.map(describe).join(' | ');
+    final interesting = allTasks
+        .where(
+          (task) =>
+              visibleTasks.any((visibleTask) => visibleTask.id == task.id) ||
+              task.completedAt != null ||
+              task.lastCompletedAt != null,
+        )
+        .take(12)
+        .map(describe)
+        .join(' | ');
+
+    log.i(
+      '[family-visible-tasks] all=${allTasks.length} '
+      'today=${todayTasks.length} overdue=${overdueTasks.length} '
+      'visible=${visibleTasks.length} visibleTasks=[$visible] '
+      'interesting=[$interesting]',
+    );
+  }
+
   Future<void> _confirmOpenTaskCompletion(
     TaskModel task, {
     required bool requiresApproval,
@@ -680,12 +723,11 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     // Haptic inmediato al tap — feedback fisico tiene que coincidir con la
     // intencion del usuario, no con el resultado del RPC.
     HapticFeedback.mediumImpact();
-    // Optimistic feed update INMEDIATO: la entrada del feed empieza a animar
-    // ya, sin esperar al RPC. Cuando llega la data real, _mergeActivity
-    // dedupea por task_id (ver dashboard_provider.dart) asi que el placeholder
-    // se reemplaza transparentemente. En caso de fallo, invalidamos el
+    // La entrada optimista del feed la agrega Tasks.completeTask de forma
+    // centralizada (con el activity_id del servidor para deduplicar bien).
+    // Antes tambien la agregabamos aca, lo que generaba un registro DUPLICADO
+    // en el feed de movimientos. En caso de fallo seguimos invalidando el
     // optimistic provider abajo para limpiar.
-    ref.read(optimisticRecentActivityProvider.notifier).addTaskCompleted(task);
     try {
       log.d('[family] completing task id=${task.id} title=${task.title}');
       // Pausa breve para que la animacion de feedback del card tenga aire

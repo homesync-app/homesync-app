@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $flutterAppDir = Join-Path $repoRoot "flutter_client"
+$gitSyncOk = $true
 
 Write-Host ""
 Write-Host "HomeSync - Lanzar en dispositivo fisico" -ForegroundColor Cyan
@@ -49,6 +50,7 @@ try {
     $lastMsg = git log "origin/$latestBranch" -1 --format="%s"
     Write-Host "  Ultimo commit: $lastMsg" -ForegroundColor DarkGray
 } catch {
+    $gitSyncOk = $false
     Write-Host "  Advertencia git: $($_.Exception.Message)" -ForegroundColor DarkYellow
 } finally {
     Pop-Location
@@ -56,6 +58,23 @@ try {
 
 Write-Host ""
 # ─────────────────────────────────────────────────────────────────────────────
+
+try {
+    $actualRepo = Split-Path -Parent $flutterAppDir
+    $actualBranch = git -C $actualRepo branch --show-current 2>$null
+    $actualCommit = git -C $actualRepo log -1 --oneline 2>$null
+    if (-not $actualBranch) { $actualBranch = "detached" }
+
+    Write-Host "Usando Flutter desde:" -ForegroundColor Yellow
+    Write-Host "  $flutterAppDir" -ForegroundColor DarkGray
+    Write-Host "  Git: $actualBranch @ $actualCommit" -ForegroundColor DarkGray
+    if (-not $gitSyncOk) {
+        Write-Host "  Nota: git sync fallo; se compila el estado local actual." -ForegroundColor DarkYellow
+    }
+    Write-Host ""
+} catch {
+    Write-Host "  No se pudo resolver rama/carpeta git actual: $($_.Exception.Message)" -ForegroundColor DarkYellow
+}
 
 Write-Host "Buscando dispositivos conectados..." -ForegroundColor Yellow
 $devicesOutput = flutter devices 2>&1

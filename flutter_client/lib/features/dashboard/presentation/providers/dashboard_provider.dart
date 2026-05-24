@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/features/dashboard/data/repositories/supabase_dashboard_repository.dart';
+import 'package:homesync_client/features/dashboard/domain/recent_activity_merge.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:homesync_client/features/dashboard/domain/usecases/get_recent_activity_usecase.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
@@ -66,27 +67,35 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
   final realtimeReady =
       ref.watch(recentActivityRealtimeDelayProvider).value ?? false;
 
-  if (!realtimeReady && bootstrap?.householdId == householdId) {
+  if (!realtimeReady &&
+      bootstrap != null &&
+      bootstrap.householdId == householdId) {
     final visibleBootstrap = _filterHiddenExpenses(
-      bootstrap!.recentActivities,
+      bootstrap.recentActivities,
       hiddenExpenseIds,
     );
     final scopedOptimistic = optimistic.where((activity) {
       return activity['household_id'] == householdId;
     }).toList();
-    return AsyncValue.data(_mergeActivity(scopedOptimistic, visibleBootstrap));
+    return AsyncValue.data(
+      mergeOptimisticActivities(scopedOptimistic, visibleBootstrap),
+    );
   }
 
   final remoteAsync = ref.watch(recentActivityRemoteProvider);
-  if (remoteAsync.hasError && bootstrap?.householdId == householdId) {
+  if (remoteAsync.hasError &&
+      bootstrap != null &&
+      bootstrap.householdId == householdId) {
     final visibleBootstrap = _filterHiddenExpenses(
-      bootstrap!.recentActivities,
+      bootstrap.recentActivities,
       hiddenExpenseIds,
     );
     final scopedOptimistic = optimistic.where((activity) {
       return activity['household_id'] == householdId;
     }).toList();
-    return AsyncValue.data(_mergeActivity(scopedOptimistic, visibleBootstrap));
+    return AsyncValue.data(
+      mergeOptimisticActivities(scopedOptimistic, visibleBootstrap),
+    );
   }
 
   return remoteAsync.whenData((remote) {
@@ -94,7 +103,7 @@ AsyncValue<List<Map<String, dynamic>>> recentActivity(Ref ref) {
     final scopedOptimistic = optimistic.where((activity) {
       return activity['household_id'] == householdId;
     }).toList();
-    return _mergeActivity(scopedOptimistic, visibleRemote);
+    return mergeOptimisticActivities(scopedOptimistic, visibleRemote);
   });
 }
 
@@ -117,21 +126,27 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
   @override
   List<Map<String, dynamic>> build() => const [];
 
-  void addTaskCompleted(TaskModel task) {
-    final householdId = ref.read(householdIdProvider).value;
+  void addTaskCompleted(
+    TaskModel task, {
+    String? activityId,
+    DateTime? completedAt,
+  }) {
+    final householdId = ref.read(householdIdProvider).value ?? task.householdId;
     final userId = ref.read(currentUserIdProvider);
-    if (householdId == null || userId == null) return;
+    if (householdId.isEmpty || userId == null) return;
 
     final members =
         ref.read(householdMembersProvider).value ?? const <MemberModel>[];
     final member = members.where((m) => m.userId == userId).firstOrNull;
     final now = DateTime.now();
+    final activityCreatedAt = completedAt ?? now;
 
     final activity = <String, dynamic>{
-      'id': 'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
+      'id': activityId ??
+          'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
       'household_id': householdId,
       'type': 'task',
-      'created_at': now.toIso8601String(),
+      'created_at': activityCreatedAt.toIso8601String(),
       'creator_id': userId,
       'optimistic': true,
       'data': {
@@ -140,6 +155,7 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
         'title': task.title,
         'task_title': task.title,
         'title_key': task.titleKey,
+        'activity_id': activityId,
         'task_id': task.id,
         'category': task.category,
         'xp_reward': task.xpReward,
@@ -151,7 +167,11 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
       activity,
       ...state.where((item) {
         final data = item['data'] as Map<String, dynamic>? ?? {};
-        return data['task_id']?.toString() != task.id;
+        final itemActivityId = data['activity_id']?.toString();
+        if (activityId != null && itemActivityId == activityId) {
+          return false;
+        }
+        return item['id'] != activity['id'];
       }),
     ].take(8).toList();
   }
@@ -171,30 +191,3 @@ List<Map<String, dynamic>> _filterHiddenExpenses(
   }).toList();
 }
 
-List<Map<String, dynamic>> _mergeActivity(
-  List<Map<String, dynamic>> optimistic,
-  List<Map<String, dynamic>> remote,
-) {
-  final remoteTaskIds = remote
-      .map((activity) => activity['data'] as Map<String, dynamic>? ?? {})
-      .map((data) => data['task_id']?.toString())
-      .whereType<String>()
-      .toSet();
-
-  final visibleOptimistic = optimistic.where((activity) {
-    final data = activity['data'] as Map<String, dynamic>? ?? {};
-    final taskId = data['task_id']?.toString();
-    return taskId == null || !remoteTaskIds.contains(taskId);
-  });
-
-  final merged = [...visibleOptimistic, ...remote];
-  merged.sort((a, b) {
-    final aTime = DateTime.tryParse(a['created_at'] as String? ?? '') ??
-        DateTime.fromMillisecondsSinceEpoch(0);
-    final bTime = DateTime.tryParse(b['created_at'] as String? ?? '') ??
-        DateTime.fromMillisecondsSinceEpoch(0);
-    return bTime.compareTo(aTime);
-  });
-
-  return merged.take(30).toList();
-}

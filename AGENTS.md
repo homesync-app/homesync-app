@@ -39,6 +39,17 @@ cd flutter_client && flutter build apk --debug         # Build debug
 cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyxms
 ```
 
+## Flujo Git
+
+- **`main`**: version estable / produccion.
+- **`develop`**: integracion y pruebas. Es la base normal para cambios de trabajo.
+- **`origin/main`**: respaldo remoto de `main` en GitHub.
+- **`origin/develop`**: respaldo remoto de `develop` en GitHub.
+- Para cambios medianos o grandes, crear ramas temporales desde `develop` con prefijo `codex/` y luego integrarlas a `develop`.
+- No trabajar directo sobre `main` salvo cambios muy puntuales y confirmados por el usuario.
+- Antes de tocar archivos, verificar y reportar `pwd`, `git branch --show-current` y `git status -sb`.
+- No borrar worktrees o ramas de agentes (`.codex`, `.claude`, `C:\hs_worktrees`) si tienen cambios sin guardar o si el usuario esta trabajando con otro agente.
+
 ## Diseño
 
 - Antes de tocar UI, leer `DESIGN.md` y `docs/design-system.md`.

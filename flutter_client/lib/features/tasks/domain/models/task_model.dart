@@ -90,7 +90,7 @@ class TaskModel {
   final String? completedBy;
   final String? verifiedBy;
   final DateTime? verifiedAt;
-  final String? lastCompletedAt;
+  final DateTime? lastCompletedAt;
   final String? lastVerifiedBy;
   final TaskPriority priority;
   final TaskType type;
@@ -98,6 +98,7 @@ class TaskModel {
   final String? createdById;
   final String? sourceTemplateId;
   final String? titleKey;
+  final bool allowMultipleDailyCompletions;
 
   /// Sprint 3 Modo Padres: lista de user_id que se turnan. Vacio = sin
   /// rotacion. `assigned_to` siempre es "a quien le toca ahora", sirve para
@@ -135,6 +136,7 @@ class TaskModel {
     this.createdById,
     this.sourceTemplateId,
     this.titleKey,
+    this.allowMultipleDailyCompletions = false,
     this.rotationPool = const [],
     this.rotationStrategy = 'round_robin',
     this.rotationIndex = 0,
@@ -184,7 +186,7 @@ class TaskModel {
       verifiedBy:
           map['verified_by'] as String? ?? map['last_verified_by'] as String?,
       verifiedAt: _parseDate(map['verified_at']),
-      lastCompletedAt: map['last_completed_at'] as String?,
+      lastCompletedAt: _parseDate(map['last_completed_at']),
       lastVerifiedBy: map['last_verified_by'] as String?,
       priority: TaskPriority.fromString(map['priority'] as String?),
       type: TaskType.fromString(map['type'] as String?),
@@ -192,6 +194,8 @@ class TaskModel {
       createdById: map['created_by_id'] as String?,
       sourceTemplateId: map['source_template_id'] as String?,
       titleKey: map['title_key'] as String?,
+      allowMultipleDailyCompletions:
+          map['allow_multiple_daily_completions'] == true,
       rotationPool:
           (map['rotation_pool'] as List?)?.map((e) => e.toString()).toList() ??
               const [],
@@ -221,7 +225,7 @@ class TaskModel {
         'completed_by': completedBy,
         'verified_by': verifiedBy,
         'verified_at': verifiedAt?.toIso8601String(),
-        'last_completed_at': lastCompletedAt,
+        'last_completed_at': lastCompletedAt?.toIso8601String(),
         'last_verified_by': lastVerifiedBy,
         'priority': priority.name,
         'type': type.dbValue,
@@ -229,6 +233,7 @@ class TaskModel {
         'created_by_id': createdById,
         'source_template_id': sourceTemplateId,
         'title_key': titleKey,
+        'allow_multiple_daily_completions': allowMultipleDailyCompletions,
         'rotation_pool': rotationPool,
         'rotation_strategy': rotationStrategy,
         'rotation_index': rotationIndex,
@@ -259,8 +264,7 @@ class TaskModel {
     // due_at is treated as a calendar day by the task flows. Supabase stores
     // many scheduled tasks at UTC midnight, so compare dates instead of the
     // raw instant to avoid marking today's task as overdue in negative offsets.
-    final dueLocal = _effectiveDueAt.toLocal();
-    final dueDate = DateTime(dueLocal.year, dueLocal.month, dueLocal.day);
+    final dueDate = _effectiveDueDate;
     final today = DateTime(now.year, now.month, now.day);
     return dueDate.isBefore(today);
   }
@@ -268,11 +272,25 @@ class TaskModel {
   bool get isDueToday {
     if (dueAt == null) return false;
     final now = DateTime.now();
-    final dueLocal = _effectiveDueAt.toLocal();
-    return dueLocal.year == now.year &&
-        dueLocal.month == now.month &&
-        dueLocal.day == now.day;
+    final dueDate = _effectiveDueDate;
+    return dueDate.year == now.year &&
+        dueDate.month == now.month &&
+        dueDate.day == now.day;
   }
+
+  /// Whether the task should surface in the home "today" section based purely
+  /// on its own schedule: due today, overdue, or any daily recurring task.
+  /// Completion state is handled separately by the caller — this only answers
+  /// "is this task on the schedule for today?".
+  bool get isScheduledForToday =>
+      isDueToday || isOverdue || recurrenceType == 'daily';
+
+  /// Canonical timestamp of the most recent completion. The backend keeps the
+  /// `completed_at` and `last_completed_at` columns in sync, but optimistic
+  /// updates only set `completedAt` and some older rows only have one of them.
+  /// Always read THIS for "when was this last done" logic — never parse the raw
+  /// fields by hand (that inconsistency was the root of past visibility bugs).
+  DateTime? get lastCompletionAt => completedAt ?? lastCompletedAt;
 
   String get recurrenceLabel {
     switch (recurrenceType) {
@@ -310,7 +328,7 @@ class TaskModel {
     String? completedBy,
     String? verifiedBy,
     DateTime? verifiedAt,
-    String? lastCompletedAt,
+    DateTime? lastCompletedAt,
     String? lastVerifiedBy,
     TaskPriority? priority,
     TaskType? type,
@@ -318,6 +336,7 @@ class TaskModel {
     String? createdById,
     String? sourceTemplateId,
     String? titleKey,
+    bool? allowMultipleDailyCompletions,
     List<String>? rotationPool,
     String? rotationStrategy,
     int? rotationIndex,
@@ -351,6 +370,8 @@ class TaskModel {
       createdById: createdById ?? this.createdById,
       sourceTemplateId: sourceTemplateId ?? this.sourceTemplateId,
       titleKey: titleKey ?? this.titleKey,
+      allowMultipleDailyCompletions:
+          allowMultipleDailyCompletions ?? this.allowMultipleDailyCompletions,
       rotationPool: rotationPool ?? this.rotationPool,
       rotationStrategy: rotationStrategy ?? this.rotationStrategy,
       rotationIndex: rotationIndex ?? this.rotationIndex,
@@ -383,8 +404,7 @@ class TaskModel {
   DateTime get _effectiveDueAt {
     if (!isRecurring) return dueAt!;
 
-    final completedLocal =
-        (completedAt ?? _parseDate(lastCompletedAt))?.toLocal();
+    final completedLocal = lastCompletionAt?.toLocal();
     if (completedLocal == null) return dueAt!;
 
     final nextDue = _nextDueAfterCompletion(completedLocal);
@@ -394,6 +414,21 @@ class TaskModel {
     final dueDate = DateTime(dueLocal.year, dueLocal.month, dueLocal.day);
     final nextDate = DateTime(nextDue.year, nextDue.month, nextDue.day);
     return nextDate.isAfter(dueDate) ? nextDate : dueLocal;
+  }
+
+  DateTime get _effectiveDueDate {
+    final due = _effectiveDueAt;
+    if (due.isUtc &&
+        due.hour == 0 &&
+        due.minute == 0 &&
+        due.second == 0 &&
+        due.millisecond == 0 &&
+        due.microsecond == 0) {
+      return DateTime(due.year, due.month, due.day);
+    }
+
+    final dueLocal = due.toLocal();
+    return DateTime(dueLocal.year, dueLocal.month, dueLocal.day);
   }
 
   DateTime? _nextDueAfterCompletion(DateTime completedLocal) {

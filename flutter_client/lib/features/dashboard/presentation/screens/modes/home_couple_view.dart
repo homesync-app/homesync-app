@@ -25,6 +25,7 @@ import 'package:homesync_client/features/onboarding/presentation/providers/coupl
 import 'package:homesync_client/features/onboarding/presentation/providers/tour_target_keys.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
@@ -44,8 +45,8 @@ class HomeCoupleView extends ConsumerStatefulWidget {
   ConsumerState<HomeCoupleView> createState() => _HomeCoupleViewState();
 }
 
-class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
-  final Set<String> _completedTaskIds = {};
+class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
+    with TaskCompletionFlowMixin<HomeCoupleView> {
   final GlobalKey _balanceKey = GlobalKey(debugLabel: 'tour_balance');
   final GlobalKey _tasksKey = GlobalKey(debugLabel: 'tour_tasks');
   bool _tourTriggered = false;
@@ -477,44 +478,15 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView> {
   Widget _buildTaskCard(TaskModel task, AppThemeColors theme) {
     return DashboardTaskCard(
       task: task,
-      isCompleting: _completedTaskIds.contains(task.id),
+      isCompleting: completingTaskIds.contains(task.id),
       onTap: () => _completeTask(task),
     );
   }
 
-  Future<void> _completeTask(TaskModel task) async {
-    setState(() => _completedTaskIds.add(task.id));
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 360));
-      final result = await ref.read(tasksProvider.notifier).completeTask(task);
-      if (!mounted) return;
-      if (result != null) {
-        ref
-            .read(optimisticRecentActivityProvider.notifier)
-            .addTaskCompleted(task);
-        HapticFeedback.mediumImpact();
-        final t = AppLocalizations.of(context);
-        AppSnackBar.show(
-          context,
-          message: t.tasksSnackCompleted,
-          type: AppSnackBarType.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final t = AppLocalizations.of(context);
-        AppSnackBar.show(
-          context,
-          message: t.commonErrorWithDetails(e.toString()),
-          type: AppSnackBarType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _completedTaskIds.remove(task.id));
-      }
-    }
-  }
+  // Shared flow lives in TaskCompletionFlowMixin. The optimistic feed entry is
+  // added centrally by Tasks.completeTask (with the server activity_id), so the
+  // view must NOT add it again — that caused a duplicate row in the feed.
+  Future<void> _completeTask(TaskModel task) => runTaskCompletion(task);
 
   Widget _buildActivitySection(AppThemeColors theme) {
     final activityAsync = ref.watch(recentActivityProvider);

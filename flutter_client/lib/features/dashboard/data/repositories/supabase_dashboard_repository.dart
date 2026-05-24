@@ -6,6 +6,7 @@ import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/dashboard/domain/recent_activity_merge.dart';
 import 'package:homesync_client/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -127,7 +128,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
           return _client
               .from('household_activities')
               .select('''
-                id, event_type, title, description, metadata, created_at, user_id,
+                id, request_id, event_type, title, description, metadata, created_at, user_id,
                 user:users!household_activities_user_id_fkey(id, full_name, avatar_url)
               ''')
               .eq('household_id', householdId)
@@ -212,6 +213,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
         return {
           'id': item['id'],
+          'request_id': item['request_id'],
           'type': uiType,
           'data': data,
           'created_at': item['created_at'],
@@ -246,7 +248,7 @@ class SupabaseDashboardRepository implements DashboardRepository {
 
       final pendingApprovals =
           await _getPendingApprovalActivities(householdId, since);
-      final activities = _dedupeActivities([
+      final activities = dedupeRemoteActivities([
         ...mappedActivities,
         ...pendingApprovals,
       ]);
@@ -404,59 +406,4 @@ class SupabaseDashboardRepository implements DashboardRepository {
     }
   }
 
-  List<Map<String, dynamic>> _dedupeActivities(
-    List<Map<String, dynamic>> activities,
-  ) {
-    final unique = <String, Map<String, dynamic>>{};
-
-    for (final activity in activities) {
-      final type = activity['type'] as String?;
-      final data = (activity['data'] as Map<String, dynamic>?) ?? const {};
-      final stableId = switch (type) {
-        'expense' => data['expense_id']?.toString(),
-        'task' => data['task_id']?.toString(),
-        'task_pending_approval' => data['task_id']?.toString(),
-        _ => null,
-      };
-
-      final key = stableId != null && stableId.isNotEmpty
-          ? '$type:$stableId'
-          : '${activity['id']}';
-
-      final current = unique[key];
-      if (current == null ||
-          _activityScore(activity) > _activityScore(current)) {
-        unique[key] = activity;
-      }
-    }
-
-    final deduped = unique.values.toList()
-      ..sort((a, b) {
-        final aDate = DateTime.tryParse(a['created_at'] as String? ?? '') ??
-            DateTime.fromMillisecondsSinceEpoch(0);
-        final bDate = DateTime.tryParse(b['created_at'] as String? ?? '') ??
-            DateTime.fromMillisecondsSinceEpoch(0);
-        return bDate.compareTo(aDate);
-      });
-
-    return deduped;
-  }
-
-  int _activityScore(Map<String, dynamic> activity) {
-    final data = (activity['data'] as Map<String, dynamic>?) ?? const {};
-    final title = (data['title'] ?? '').toString().trim().toLowerCase();
-    final description =
-        (data['description'] ?? '').toString().trim().toLowerCase();
-
-    var score = 0;
-    if (title.isNotEmpty &&
-        title != 'nuevo movimiento' &&
-        title != 'gasto del hogar') {
-      score += 3;
-    }
-    if (description.isNotEmpty) score += 1;
-    if (data['expense_id'] != null || data['task_id'] != null) score += 1;
-    if (data['approval_status'] == 'pending_approval') score += 2;
-    return score;
-  }
 }
