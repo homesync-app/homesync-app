@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -60,7 +61,9 @@ class FamilyActivityFeedItem extends ConsumerWidget {
               .where((member) => member.userId == currentUserId)
               .firstOrNull,
         );
-    final canReview = isPendingApproval && (currentMember?.isAdmin ?? false);
+    final canReview = isPendingApproval &&
+        ref.watch(parentModeAvailableProvider) &&
+        (currentMember?.isAdmin ?? false);
 
     if (isPendingApproval) {
       return _PendingApprovalActivityCard(
@@ -504,13 +507,13 @@ class _PendingApprovalActivityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(26),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 17),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: const Color(0xFFFFFBF2),
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: accent.withValues(alpha: 0.28),
             width: 1.1,
@@ -532,56 +535,56 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                 CustomUserAvatar(
                   name: userName,
                   avatarUrl: avatarUrl,
-                  radius: 21,
+                  radius: 20,
                   forceCircular: true,
                 ),
-                const SizedBox(width: 13),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          _ReviewStatusPill(accent: accent),
-                          const Spacer(),
-                          Container(
-                            width: 34,
-                            height: 34,
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$userName espera revisión de',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: accent.withValues(alpha: 0.94),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                height: 1.05,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.fact_check_rounded,
-                              color: accent,
-                              size: 18,
+                            const SizedBox(height: 2),
+                            Text(
+                              detailTitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: theme.textPrimary,
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.w800,
+                                height: 1.18,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 9),
-                      Text(
-                        '$userName dejó lista',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: accent.withValues(alpha: 0.94),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          height: 1.05,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        detailTitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w900,
-                          height: 1.08,
-                          letterSpacing: -0.35,
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: Icon(
+                          Icons.fact_check_rounded,
+                          color: accent,
+                          size: 16,
                         ),
                       ),
                     ],
@@ -645,40 +648,6 @@ class _PendingApprovalActivityCard extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ReviewStatusPill extends StatelessWidget {
-  final Color accent;
-
-  const _ReviewStatusPill({required this.accent});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.hourglass_top_rounded, size: 13, color: accent),
-          const SizedBox(width: 6),
-          Text(
-            'Revisión pendiente',
-            style: TextStyle(
-              color: accent,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w900,
-              height: 1,
-            ),
-          ),
-        ],
       ),
     );
   }

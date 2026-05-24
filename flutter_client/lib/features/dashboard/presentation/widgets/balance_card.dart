@@ -8,7 +8,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-class BalanceCard extends ConsumerWidget {
+class BalanceCard extends ConsumerStatefulWidget {
   final int coins;
   final int xp;
   final double? userBalance;
@@ -35,8 +35,13 @@ class BalanceCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final balance = userBalance ?? 0.0;
+  ConsumerState<BalanceCard> createState() => _BalanceCardState();
+}
+
+class _BalanceCardState extends ConsumerState<BalanceCard> {
+  @override
+  Widget build(BuildContext context) {
+    final balance = widget.userBalance ?? 0.0;
     final isPositive = balance > 0.01;
     final isNegative = balance < -0.01;
     final isBalanced = !isPositive && !isNegative;
@@ -45,27 +50,27 @@ class BalanceCard extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
 
     final statusColor = isNegative ? AppColors.accentOrange : AppColors.sage;
-    final surfaceColor = settlementJustCompleted
+    final surfaceColor = widget.settlementJustCompleted
         ? Color.alphaBlend(
             AppColors.sage.withValues(alpha: 0.035),
             theme.surface,
           )
         : theme.surface;
-    final elevatedSurfaceColor = settlementJustCompleted
+    final elevatedSurfaceColor = widget.settlementJustCompleted
         ? Color.alphaBlend(
             AppColors.sage.withValues(alpha: 0.05),
             theme.elevatedSurface,
           )
         : theme.elevatedSurface;
-    final borderColor = settlementJustCompleted
+    final borderColor = widget.settlementJustCompleted
         ? AppColors.sage.withValues(alpha: 0.22)
         : theme.border.withValues(alpha: 0.68);
-    final balanceMessage = settlementJustCompleted
+    final balanceMessage = widget.settlementJustCompleted
         ? t.balanceCardSettled
-        : partnerName == null
-            ? (neutralLabel ?? t.balanceCardMyBudget)
+        : widget.partnerName == null
+            ? (widget.neutralLabel ?? t.balanceCardMyBudget)
             : (isBalanced
-                ? (balancedLabel ?? t.balanceCardBalanced)
+                ? (widget.balancedLabel ?? t.balanceCardBalanced)
                 : (isNegative
                     ? t.balanceCardNeedsSettlement
                     : t.balanceCardInYourFavor));
@@ -82,24 +87,28 @@ class BalanceCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(compact ? 24 : 28),
+        borderRadius: BorderRadius.circular(widget.compact ? 24 : 28),
         border: Border.all(
           color: borderColor,
           width: 1.05,
         ),
         boxShadow: [
           BoxShadow(
-            color: settlementJustCompleted
+            color: widget.settlementJustCompleted
                 ? AppColors.sage.withValues(alpha: 0.075)
                 : theme.shadowBase.withValues(alpha: 0.036),
-            blurRadius: settlementJustCompleted ? 22 : 16,
-            offset: Offset(0, settlementJustCompleted ? 9 : 7),
+            blurRadius: widget.settlementJustCompleted ? 22 : 16,
+            offset: Offset(0, widget.settlementJustCompleted ? 9 : 7),
           ),
         ],
       ),
       child: Padding(
-        padding:
-            EdgeInsets.fromLTRB(20, compact ? 16 : 18, 20, compact ? 14 : 16),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          widget.compact ? 16 : 18,
+          20,
+          widget.compact ? 14 : 16,
+        ),
         child: Column(
           children: [
             Row(
@@ -111,19 +120,19 @@ class BalanceCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        settlementJustCompleted || !isBalanced
+                        widget.settlementJustCompleted || !isBalanced
                             ? balanceMessage
-                            : (balancedLabel ?? t.balanceCardBalanced),
+                            : (widget.balancedLabel ?? t.balanceCardBalanced),
                         style: TextStyle(
                           color: isBalanced
                               ? statusColor.withValues(alpha: 0.88)
                               : statusColor,
-                          fontSize: compact ? 11.5 : 12,
+                          fontSize: widget.compact ? 11.5 : 12,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0,
                         ),
                       ),
-                      SizedBox(height: compact ? 4 : 6),
+                      SizedBox(height: widget.compact ? 4 : 6),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -147,7 +156,7 @@ class BalanceCard extends ConsumerWidget {
                               color: isBalanced
                                   ? theme.textPrimary.withValues(alpha: 0.94)
                                   : statusColor,
-                              fontSize: compact
+                              fontSize: widget.compact
                                   ? (isBalanced ? 29 : 32)
                                   : (isBalanced ? 31 : 35),
                               fontWeight: isBalanced
@@ -161,9 +170,9 @@ class BalanceCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (isNegative && onSettle != null)
+                if (isNegative && widget.onSettle != null)
                   AnimatedPress(
-                    onTap: onSettle!,
+                    onTap: widget.onSettle!,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
@@ -224,16 +233,16 @@ class BalanceCard extends ConsumerWidget {
                       );
                     },
                     child: _BalanceSuccessBadge(
-                      key: ValueKey(settlementJustCompleted),
-                      emphasized: settlementJustCompleted,
+                      key: ValueKey(widget.settlementJustCompleted),
+                      emphasized: widget.settlementJustCompleted,
                     ),
                   ),
               ],
             ),
-            SizedBox(height: compact ? 10 : 13),
+            SizedBox(height: widget.compact ? 10 : 13),
             Container(
               width: double.infinity,
-              padding: EdgeInsets.only(top: compact ? 10 : 12),
+              padding: EdgeInsets.only(top: widget.compact ? 10 : 12),
               decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(
@@ -248,9 +257,9 @@ class BalanceCard extends ConsumerWidget {
                       context,
                       icon: Icons.star_rounded,
                       label: 'XP',
-                      value: NumberFormat.decimalPattern('es_AR').format(xp),
+                      value: widget.xp,
                       color: const Color(0xFFE8943A),
-                      subdued: isBalanced && xp == 0,
+                      subdued: isBalanced && widget.xp == 0,
                     ),
                   ),
                   Container(
@@ -264,9 +273,9 @@ class BalanceCard extends ConsumerWidget {
                       context,
                       icon: Icons.monetization_on_rounded,
                       label: 'coins',
-                      value: NumberFormat.decimalPattern('es_AR').format(coins),
+                      value: widget.coins,
                       color: AppColors.sage,
-                      subdued: isBalanced && coins == 0,
+                      subdued: isBalanced && widget.coins == 0,
                     ),
                   ),
                 ],
@@ -282,7 +291,7 @@ class BalanceCard extends ConsumerWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
-    required String value,
+    required int value,
     required Color color,
     bool subdued = false,
   }) {
@@ -305,34 +314,48 @@ class BalanceCard extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 8),
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(
-                  color: subdued
-                      ? theme.textPrimary.withValues(alpha: 0.86)
-                      : theme.textPrimary,
-                  fontSize: 14.5,
-                  fontWeight: subdued ? FontWeight.w700 : FontWeight.w800,
-                  letterSpacing: 0,
+        Flexible(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(
+              begin: value.toDouble(),
+              end: value.toDouble(),
+            ),
+            duration: const Duration(milliseconds: 520),
+            curve: Curves.easeOutCubic,
+            builder: (context, animatedValue, child) {
+              return RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: NumberFormat.decimalPattern('es_AR').format(
+                        animatedValue.round(),
+                      ),
+                      style: TextStyle(
+                        color: subdued
+                            ? theme.textPrimary.withValues(alpha: 0.86)
+                            : theme.textPrimary,
+                        fontSize: 14.5,
+                        fontWeight: subdued ? FontWeight.w700 : FontWeight.w800,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    TextSpan(
+                      text: label == 'XP'
+                          ? ' ${t.balanceCardXpLabel}'
+                          : ' ${t.balanceCardCoinsLabel}',
+                      style: TextStyle(
+                        color: subdued
+                            ? theme.textSecondary.withValues(alpha: 0.82)
+                            : theme.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              TextSpan(
-                text: label == 'XP'
-                    ? ' ${t.balanceCardXpLabel}'
-                    : ' ${t.balanceCardCoinsLabel}',
-                style: TextStyle(
-                  color: subdued
-                      ? theme.textSecondary.withValues(alpha: 0.82)
-                      : theme.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0,
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ],

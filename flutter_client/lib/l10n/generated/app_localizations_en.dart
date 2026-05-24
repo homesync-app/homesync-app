@@ -523,6 +523,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAllDoneToday => 'All done for today';
 
   @override
+  String get homeTaskAddedNoticeTitle => 'Task added';
+
+  @override
+  String homeTaskAddedNoticeBody(String taskTitle) {
+    return 'Now showing in Today at home: $taskTitle';
+  }
+
+  @override
   String get homeFabActions => 'Actions';
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
@@ -247,11 +248,14 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     final members = ref.read(householdMembersProvider).value ?? const [];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final isChildView = currentMember?.isChild ?? false;
+    final approvalMode =
+        ref.read(currentHouseholdProvider).value?.taskApprovalMode;
+    final requiresApprovalSubmission = ref.read(taskApprovalEnabledProvider) &&
+        (currentMember?.needsSubmissionApproval(approvalMode) ?? false);
 
     setState(() => _isLoading = true);
     try {
-      if (isChildView) {
+      if (requiresApprovalSubmission) {
         await ref
             .read(tasksProvider.notifier)
             .submitTaskForApproval(widget.task);
@@ -264,7 +268,7 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isChildView
+              requiresApprovalSubmission
                   ? AppLocalizations.of(context).editTaskSnackSentForReview
                   : AppLocalizations.of(context).tasksSnackCompleted,
             ),
@@ -657,7 +661,10 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
     final members = ref.watch(householdMembersProvider).value ?? const [];
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
-    final isChildView = currentMember?.isChild ?? false;
+    final approvalMode =
+        ref.watch(currentHouseholdProvider).value?.taskApprovalMode;
+    final requiresApprovalSubmission = ref.watch(taskApprovalEnabledProvider) &&
+        (currentMember?.needsSubmissionApproval(approvalMode) ?? false);
     final canComplete = widget.task.isPending;
 
     return Row(
@@ -721,11 +728,13 @@ class _EditTaskSheetState extends ConsumerState<EditTaskSheet> {
                     ),
                   ),
                   icon: Icon(
-                    isChildView ? Icons.send_rounded : Icons.check_rounded,
+                    requiresApprovalSubmission
+                        ? Icons.send_rounded
+                        : Icons.check_rounded,
                     size: 18,
                   ),
                   label: Text(
-                    isChildView
+                    requiresApprovalSubmission
                         ? AppLocalizations.of(context)
                             .editTaskSubmitForReviewButton
                         : AppLocalizations.of(context).editTaskCompleteButton,

@@ -34,7 +34,9 @@ import 'package:homesync_client/features/settings/presentation/screens/settings_
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/custom_bottom_nav.dart';
 import 'package:intl/intl.dart';
@@ -55,10 +57,12 @@ class MainScreen extends ConsumerStatefulWidget {
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen>
+    with WidgetsBindingObserver {
   bool _showWeeklyWinner = false;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  ProviderSubscription<TaskRealtimeNotice?>? _taskRealtimeNoticeSubscription;
   int? _lastTrackedTabIndex;
   MemberModel? _currentMember;
   bool _reportedFirstMainFrame = false;
@@ -76,10 +80,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _notifService = ref.read(notificationServiceProvider);
     _checkSetup();
     _initNotifications();
     _initDeepLinks();
+    _taskRealtimeNoticeSubscription = ref.listenManual<TaskRealtimeNotice?>(
+      taskRealtimeNoticeProvider,
+      (previous, next) {
+        if (next == null || previous?.nonce == next.nonce) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showTaskRealtimeNotice(next);
+        });
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (!_reportedFirstMainFrame) {
@@ -102,8 +117,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _notifService.dispose();
     _linkSubscription?.cancel();
+    _taskRealtimeNoticeSubscription?.close();
     // Diferido a microtask: modificar un provider durante dispose() tira
     // "Tried to modify a provider while the widget tree was building".
     // El unregister es idempotente (no-op si el key cambio) asi que es
@@ -118,6 +135,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       });
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshRealtimeBackedData();
+    }
   }
 
   void _initDeepLinks() {
@@ -260,6 +284,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Future<void> _markWinnerShown() async {
     await widget.prefs.setBool('last_winner_shown_${_getWeekKey()}', true);
     setState(() => _showWeeklyWinner = false);
+  }
+
+  void _refreshRealtimeBackedData() {
+    ref.read(tasksProvider.notifier).silentRefresh();
+    ref.invalidate(recentActivityProvider);
+  }
+
+  void _showTaskRealtimeNotice(TaskRealtimeNotice notice) {
+    final t = AppLocalizations.of(context);
+    final taskTitle = localizedTaskTitle(t, notice.task);
+    _bannerKey.currentState?.show(
+      title: t.homeTaskAddedNoticeTitle,
+      body: t.homeTaskAddedNoticeBody(taskTitle),
+      onTap: () => _setBottomNavIndex(0, source: 'task_realtime_banner'),
+    );
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -702,12 +741,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   void _setBottomNavIndex(int index, {required String source}) {
     final currentIndex = ref.read(bottomNavIndexProvider);
+    final caps = ref.read(householdCapabilitiesProvider);
+    final visibleTabs = visibleMainTabs(caps, currentMember: _currentMember);
+    final targetTab =
+        index >= 0 && index < visibleTabs.length ? visibleTabs[index] : null;
+
     if (currentIndex == index) {
       _trackMainTabIfNeeded(index: index, source: '${source}_repeat');
+      if (targetTab == MainTab.home || targetTab == MainTab.tasks) {
+        _refreshRealtimeBackedData();
+      }
       return;
     }
 
     ref.read(bottomNavIndexProvider.notifier).setIndex(index);
+    if (targetTab == MainTab.home || targetTab == MainTab.tasks) {
+      _refreshRealtimeBackedData();
+    }
     _trackMainTabIfNeeded(index: index, source: source, force: true);
   }
 

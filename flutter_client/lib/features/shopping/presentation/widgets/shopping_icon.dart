@@ -12,6 +12,7 @@ class ShoppingIcon extends StatelessWidget {
     this.allowCategoryFallback = false,
     this.size = 40,
     this.opacity = 1,
+    this.color,
   });
 
   final String? productKey;
@@ -21,17 +22,44 @@ class ShoppingIcon extends StatelessWidget {
   final bool allowCategoryFallback;
   final double size;
   final double opacity;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final visual = (allowProductAsset
-            ? ShoppingVisuals.product(productKey)
-            : null) ??
-        (allowCategoryFallback ? ShoppingVisuals.category(categoryId) : null);
-    final emoji = fallbackEmoji ?? visual?.fallbackEmoji ?? '🛒';
+    final productVisual =
+        allowProductAsset ? ShoppingVisuals.product(productKey) : null;
+    final categoryIcon =
+        allowCategoryFallback ? _categoryIcon(categoryId) : null;
+    final visual = productVisual ??
+        (categoryIcon == null && allowCategoryFallback
+            ? ShoppingVisuals.category(categoryId)
+            : null);
+    final emoji = fallbackEmoji ?? visual?.fallbackEmoji ?? '\u{1F6D2}';
 
     Widget child;
-    if (visual != null) {
+    if (productVisual != null) {
+      child = Image.asset(
+        productVisual.assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => _EmojiFallback(
+          emoji: emoji,
+          size: size,
+        ),
+      );
+    } else if (categoryIcon != null) {
+      child = SizedBox.square(
+        dimension: size,
+        child: Center(
+          child: Icon(
+            categoryIcon,
+            size: size * 0.68,
+            color: color ?? Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
+    } else if (visual != null) {
       child = Image.asset(
         visual.assetPath,
         width: size,
@@ -48,6 +76,36 @@ class ShoppingIcon extends StatelessWidget {
 
     if (opacity >= 1) return child;
     return Opacity(opacity: opacity, child: child);
+  }
+
+  IconData? _categoryIcon(String? id) {
+    switch (id) {
+      case 'general':
+        return Icons.shopping_cart_rounded;
+      case 'fruits':
+        return Icons.eco_rounded;
+      case 'meat':
+        return Icons.restaurant_rounded;
+      case 'dairy':
+        return Icons.local_drink_rounded;
+      case 'bakery':
+        return Icons.bakery_dining_rounded;
+      case 'pantry':
+        return Icons.inventory_2_rounded;
+      case 'frozen':
+        return Icons.ac_unit_rounded;
+      case 'cleaning':
+        return Icons.cleaning_services_rounded;
+      case 'drinks':
+        return Icons.local_bar_rounded;
+      case 'snacks':
+        return Icons.fastfood_rounded;
+      case 'pharmacy':
+        return Icons.medical_services_rounded;
+      case 'pets':
+        return Icons.pets_rounded;
+    }
+    return null;
   }
 }
 

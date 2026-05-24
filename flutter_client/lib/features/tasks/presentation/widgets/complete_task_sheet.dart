@@ -173,9 +173,10 @@ class _CompleteTaskSheetState extends ConsumerState<CompleteTaskSheet> {
 
       final onlyMe = effectiveSelectedMemberIds.length == 1 &&
           effectiveSelectedMemberIds.contains(currentUserId);
+      final approvalEnabled = ref.read(taskApprovalEnabledProvider);
       final currentMember =
           _members.where((m) => m['user_id'] == currentUserId).firstOrNull;
-      final currentMemberNeedsApproval =
+      final currentMemberNeedsApproval = approvalEnabled &&
           _requiresApproval(currentMember?['member_type'] as String?);
 
       final selectedMembersRequiringApproval = _members

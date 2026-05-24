@@ -4,6 +4,7 @@ import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/features/dashboard/domain/recent_activity_merge.dart';
@@ -246,8 +247,9 @@ class SupabaseDashboardRepository implements DashboardRepository {
         return true;
       }).toList();
 
-      final pendingApprovals =
-          await _getPendingApprovalActivities(householdId, since);
+      final pendingApprovals = _ref.read(parentModeAvailableProvider)
+          ? await _getPendingApprovalActivities(householdId, since)
+          : const <Map<String, dynamic>>[];
       final activities = dedupeRemoteActivities([
         ...mappedActivities,
         ...pendingApprovals,
@@ -405,5 +407,4 @@ class SupabaseDashboardRepository implements DashboardRepository {
       return [];
     }
   }
-
 }

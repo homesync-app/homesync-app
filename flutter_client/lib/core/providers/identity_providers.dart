@@ -107,9 +107,17 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
       .maybeSingle();
 });
 
+final userBalanceOverrideProvider =
+    StateProvider<Map<String, dynamic>?>((ref) => null);
+
 final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return null;
+
+  final override = ref.watch(userBalanceOverrideProvider);
+  if (override?['_household_id'] == householdId) {
+    return override;
+  }
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
   if (bootstrap?.householdId == householdId && bootstrap?.userBalance != null) {

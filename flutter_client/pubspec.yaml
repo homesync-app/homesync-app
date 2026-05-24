@@ -106,8 +106,6 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/shopping_icons/categories/
-    - assets/images/shopping_icons/products/
     - assets/images/premium_3d_avatars/
     - assets/images/custom_avatars/
     - assets/fonts/outfit/

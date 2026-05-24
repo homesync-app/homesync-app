@@ -13,6 +13,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
+import 'love_note_dialog.dart';
 import 'stats_shared_widgets.dart';
 
 class WeeklyProgressTab extends ConsumerWidget {
@@ -39,6 +40,7 @@ class WeeklyProgressTab extends ConsumerWidget {
     required this.onRefresh,
   });
 
+  // ignore: unused_element
   void _showLoveNoteDialog(
     BuildContext context,
     WidgetRef ref,
@@ -208,7 +210,7 @@ class WeeklyProgressTab extends ConsumerWidget {
                 PremiumPaywall.show(context);
               } else {
                 HapticFeedback.lightImpact();
-                _showLoveNoteDialog(context, ref, theme);
+                showLoveNoteDialog(context: context, ref: ref);
               }
             },
             child: Container(

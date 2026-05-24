@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/rpc/task_rpc_service.dart';
@@ -13,6 +14,8 @@ import 'package:homesync_client/features/tasks/domain/models/task_approval_model
 /// listado queda vacio.
 final pendingTaskApprovalsProvider =
     FutureProvider<List<TaskApprovalModel>>((ref) async {
+  if (!ref.watch(parentModeAvailableProvider)) return const [];
+
   final householdId = await ref.watch(householdIdProvider.future);
   if (householdId == null) return const [];
 

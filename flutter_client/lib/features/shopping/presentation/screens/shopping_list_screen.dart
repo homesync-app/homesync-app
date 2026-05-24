@@ -283,6 +283,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       fallbackEmoji: emoji,
                       allowCategoryFallback: true,
                       size: 30,
+                      color: highlightColor,
                     ),
                   ),
                   const SizedBox(width: 12),

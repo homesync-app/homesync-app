@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -333,10 +334,12 @@ class _FamilyTasksSectionState extends ConsumerState<FamilyTasksSection> {
     final currentMember =
         members.where((member) => member.userId == currentUserId).firstOrNull;
     final isChildView = currentMember?.isChild ?? false;
-    final isAdultView = currentMember?.canApprove ?? false;
+    final isAdultView = ref.watch(parentModeAvailableProvider) &&
+        (currentMember?.canApprove ?? false);
     final approvalMode = ref.watch(householdProvider).value?.taskApprovalMode;
-    final requiresApprovalSubmission =
-        currentMember?.needsSubmissionApproval(approvalMode) ?? false;
+    final approvalEnabled = ref.watch(taskApprovalEnabledProvider);
+    final requiresApprovalSubmission = approvalEnabled &&
+        (currentMember?.needsSubmissionApproval(approvalMode) ?? false);
     final assignedMember =
         members.where((member) => member.userId == task.assignedTo).firstOrNull;
     final completedMember = members

@@ -29,6 +29,7 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
   late final Animation<double> _scaleAnimation;
 
   Timer? _dismissTimer;
+  VoidCallback? _onTapOverride;
   String _title = '';
   String _body = '';
   bool _visible = false;
@@ -68,13 +69,18 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
   }
 
   /// Called by MainScreen when a new notification arrives.
-  void show({required String title, required String body}) {
+  void show({
+    required String title,
+    required String body,
+    VoidCallback? onTap,
+  }) {
     if (!mounted) return;
 
     _dismissTimer?.cancel();
     setState(() {
       _title = title;
       _body = body;
+      _onTapOverride = onTap;
       _visible = true;
     });
 
@@ -119,19 +125,28 @@ class InAppNotificationBannerState extends State<InAppNotificationBanner>
     _controller.reverse().then((_) {
       if (!mounted) return;
       _progressController.reset();
-      setState(() => _visible = false);
+      setState(() {
+        _visible = false;
+        _onTapOverride = null;
+      });
     });
   }
 
   void _dismissAfterSwipe() {
     _dismissTimer?.cancel();
     _progressController.reset();
-    if (mounted) setState(() => _visible = false);
+    if (mounted) {
+      setState(() {
+        _visible = false;
+        _onTapOverride = null;
+      });
+    }
   }
 
   void _openNotifications() {
+    final onTap = _onTapOverride ?? widget.onTap;
     _dismiss();
-    widget.onTap();
+    onTap();
   }
 
   @override

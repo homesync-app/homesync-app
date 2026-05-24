@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:homesync_client/core/constants/app_constants.dart';
 import 'package:homesync_client/core/models/task_completion_result.dart';
 import 'package:homesync_client/core/providers/connectivity_provider.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
+import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
 import 'package:homesync_client/core/services/performance_monitor.dart';
@@ -24,6 +26,22 @@ import 'family_member_dashboard_provider.dart';
 import 'pending_approvals_provider.dart';
 
 part 'task_provider.g.dart';
+
+class TaskRealtimeNotice {
+  final TaskModel task;
+  final PostgresChangeEvent eventType;
+  final int nonce;
+
+  const TaskRealtimeNotice({
+    required this.task,
+    required this.eventType,
+    required this.nonce,
+  });
+}
+
+final taskRealtimeNoticeProvider = StateProvider<TaskRealtimeNotice?>(
+  (ref) => null,
+);
 
 // ── Use Case Providers ────────────────────────────────────────────────────────
 
@@ -86,6 +104,8 @@ class Tasks extends _$Tasks {
   bool get hasMore => _hasMore;
   static const int _pageSize = 50;
   RealtimeChannel? _channel;
+  String? _channelHouseholdId;
+  Timer? _realtimeRefreshDebounce;
   final Set<String> _completingTaskIds = <String>{};
 
   @override
@@ -98,7 +118,7 @@ class Tasks extends _$Tasks {
     final householdId = await ref.watch(householdIdProvider.future);
     if (householdId == null) return [];
 
-    _setupRealtime(householdId);
+    await _setupRealtime(householdId);
 
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await PerformanceMonitor.measureFuture(
@@ -118,9 +138,16 @@ class Tasks extends _$Tasks {
     );
   }
 
-  void _setupRealtime(String householdId) {
+  Future<void> _setupRealtime(String householdId) async {
+    if (_channel != null && _channelHouseholdId == householdId) {
+      return;
+    }
+
     _channel?.unsubscribe();
+    _realtimeRefreshDebounce?.cancel();
     final client = ref.read(supabaseClientProvider);
+    await client.realtime.setAuth(null);
+    _channelHouseholdId = householdId;
 
     _channel = client
         .channel('tasks_realtime_$householdId')
@@ -134,15 +161,123 @@ class Tasks extends _$Tasks {
             value: householdId,
           ),
           callback: (payload) {
-            log.i('Realtime task change detected: ${payload.eventType}');
-            silentRefresh();
+            log.i(
+              'Realtime task change detected: ${payload.eventType.name}',
+            );
+            _applyRealtimeTaskPayload(payload);
+            _invalidateRealtimeTaskDependents();
+            _scheduleRealtimeRefresh();
           },
         )
-        .subscribe();
+        .subscribe((status, error) {
+      if (error != null) {
+        log.w(
+          'Tasks realtime subscription error status=$status household=$householdId',
+          error: error,
+        );
+      } else {
+        log.i('Tasks realtime subscription status=$status');
+      }
+    });
 
     ref.onDispose(() {
+      _realtimeRefreshDebounce?.cancel();
       _channel?.unsubscribe();
+      _channelHouseholdId = null;
     });
+  }
+
+  void _scheduleRealtimeRefresh() {
+    _realtimeRefreshDebounce?.cancel();
+    _realtimeRefreshDebounce = Timer(const Duration(milliseconds: 260), () {
+      if (ref.mounted) {
+        silentRefresh();
+      }
+    });
+  }
+
+  void _invalidateRealtimeTaskDependents() {
+    if (!ref.mounted) return;
+    ref.invalidate(recentActivityRemoteProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(pendingTaskApprovalsProvider);
+    ref.invalidate(familyMemberDashboardProvider);
+  }
+
+  void _applyRealtimeTaskPayload(PostgresChangePayload payload) {
+    final currentTasks = state.value;
+    if (currentTasks == null) return;
+
+    final record = payload.eventType == PostgresChangeEvent.delete
+        ? payload.oldRecord
+        : payload.newRecord;
+    final taskId = record['id']?.toString();
+    if (taskId == null || taskId.isEmpty) return;
+
+    if (payload.eventType == PostgresChangeEvent.delete) {
+      state = AsyncValue.data(
+        currentTasks.where((task) => task.id != taskId).toList(),
+      );
+      return;
+    }
+
+    try {
+      final incomingTask = TaskModel.fromMap(record);
+      final existingIndex = currentTasks.indexWhere(
+        (task) => task.id == incomingTask.id,
+      );
+      final nextTasks = [...currentTasks];
+      if (existingIndex >= 0) {
+        nextTasks[existingIndex] = incomingTask;
+      } else {
+        nextTasks.insert(0, incomingTask);
+      }
+      nextTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      state = AsyncValue.data(nextTasks);
+      _publishRealtimeNoticeIfRelevant(incomingTask, payload.eventType);
+    } catch (error, stackTrace) {
+      log.w(
+        'Failed to apply realtime task payload locally',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  void _publishRealtimeNoticeIfRelevant(
+    TaskModel task,
+    PostgresChangeEvent eventType,
+  ) {
+    if (eventType == PostgresChangeEvent.delete) return;
+    if (!task.isActive || task.isPendingApproval) return;
+    if (!task.isScheduledForToday) return;
+    if (isTaskCompletedOnLocalDate(task, DateTime.now())) return;
+
+    final currentUserId = ref.read(currentUserIdProvider);
+    if (currentUserId == null) return;
+    if (task.createdById == currentUserId) return;
+    if (!_isTaskRelevantForCurrentViewer(task, currentUserId)) return;
+
+    ref.read(taskRealtimeNoticeProvider.notifier).state = TaskRealtimeNotice(
+      task: task,
+      eventType: eventType,
+      nonce: DateTime.now().microsecondsSinceEpoch,
+    );
+  }
+
+  bool _isTaskRelevantForCurrentViewer(TaskModel task, String currentUserId) {
+    final caps = ref.read(householdCapabilitiesProvider);
+    final members = ref.read(householdMembersProvider).value ?? const [];
+    final currentMember =
+        members.where((member) => member.userId == currentUserId).firstOrNull;
+
+    final isFamilyMode = caps.type == HouseholdType.family;
+    final isFamilyChild = isFamilyMode && (currentMember?.isChild ?? false);
+    final shouldFilterByAssignment = isFamilyMode ? isFamilyChild : true;
+
+    return !shouldFilterByAssignment ||
+        task.assignedTo == null ||
+        task.assignedTo == currentUserId;
   }
 
   Future<void> refresh() async {
@@ -254,6 +389,11 @@ class Tasks extends _$Tasks {
                 activityId: activityId,
                 completedAt: effectiveCompletedAt,
               );
+          _applyRewardBalanceOverride(
+            xpReward: task.xpReward,
+            coinReward: task.coinReward,
+            performers: performers,
+          );
           final completedTask = task.copyWith(
             completedAt: effectiveCompletedAt,
             completedBy: primaryUserId,
@@ -276,6 +416,11 @@ class Tasks extends _$Tasks {
                 task,
                 completedAt: effectiveCompletedAt,
               );
+          _applyRewardBalanceOverride(
+            xpReward: task.xpReward,
+            coinReward: task.coinReward,
+            performers: performers,
+          );
         }
       }
 
@@ -380,6 +525,11 @@ class Tasks extends _$Tasks {
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
         if (isOnline) {
+          _applyRewardBalanceOverride(
+            xpReward: tasks.fold(0, (sum, task) => sum + task.xpReward),
+            coinReward: tasks.fold(0, (sum, task) => sum + task.coinReward),
+            performers: performers,
+          );
           silentRefresh();
           ref.invalidate(userBalanceProvider);
           ref.invalidate(recentActivityRemoteProvider);
@@ -399,6 +549,33 @@ class Tasks extends _$Tasks {
       if (oldState != null) state = AsyncValue.data(oldState);
       return null;
     }
+  }
+
+  void _applyRewardBalanceOverride({
+    required int xpReward,
+    required int coinReward,
+    required List<String>? performers,
+  }) {
+    final currentUserId = ref.read(currentUserIdProvider);
+    final householdId = ref.read(householdIdProvider).value;
+    if (currentUserId == null ||
+        householdId == null ||
+        performers == null ||
+        !performers.contains(currentUserId)) {
+      return;
+    }
+
+    final currentBalance = ref.read(userBalanceProvider).value;
+    if (currentBalance == null) return;
+
+    final currentXp = (currentBalance['xp'] as num?)?.toInt() ?? 0;
+    final currentCoins = (currentBalance['coins'] as num?)?.toInt() ?? 0;
+    ref.read(userBalanceOverrideProvider.notifier).state = {
+      ...currentBalance,
+      '_household_id': householdId,
+      'xp': currentXp + xpReward,
+      'coins': currentCoins + coinReward,
+    };
   }
 
   Future<void> verifyTask(TaskModel task) async {
@@ -499,6 +676,11 @@ class Tasks extends _$Tasks {
   }
 
   Future<void> submitTaskForApproval(TaskModel task) async {
+    if (!ref.read(taskApprovalEnabledProvider)) {
+      await completeTask(task);
+      return;
+    }
+
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) return;
 
@@ -833,16 +1015,16 @@ AsyncValue<List<TaskModel>> todayTasks(Ref ref) {
             if (isClosedForToday(task)) return false;
             return true;
           }).toList()
-          ..sort((a, b) {
-            final aDue = a.dueAt;
-            final bDue = b.dueAt;
-            if (aDue == null && bDue == null) {
-              return a.createdAt.compareTo(b.createdAt);
-            }
-            if (aDue == null) return 1;
-            if (bDue == null) return -1;
-            return aDue.compareTo(bDue);
-          }))
+              ..sort((a, b) {
+                final aDue = a.dueAt;
+                final bDue = b.dueAt;
+                if (aDue == null && bDue == null) {
+                  return a.createdAt.compareTo(b.createdAt);
+                }
+                if (aDue == null) return 1;
+                if (bDue == null) return -1;
+                return aDue.compareTo(bDue);
+              }))
             .take(3)
             .toList();
 

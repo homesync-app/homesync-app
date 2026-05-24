@@ -1170,7 +1170,9 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     // the server will actually do.
     final approvalMode =
         ref.watch(currentHouseholdProvider).value?.taskApprovalMode;
+    final approvalEnabled = ref.watch(taskApprovalEnabledProvider);
     final requiresApprovalSubmission = isFamilyMode &&
+        approvalEnabled &&
         (currentMember?.needsSubmissionApproval(approvalMode) ?? false);
     final isOpenTask = task.assignedTo == null;
     final isAssignedToCurrentUser = task.assignedTo == currentUserId;

@@ -902,6 +902,18 @@ abstract class AppLocalizations {
   /// **'Todo listo por hoy'**
   String get homeAllDoneToday;
 
+  /// Title for the in-app banner shown when another household member adds or schedules a task for today.
+  ///
+  /// In es, this message translates to:
+  /// **'Tarea agregada'**
+  String get homeTaskAddedNoticeTitle;
+
+  /// Body for the in-app banner shown when a task becomes available in the Home today section.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya aparece en Hoy en casa: {taskTitle}'**
+  String homeTaskAddedNoticeBody(String taskTitle);
+
   /// No description provided for @homeFabActions.
   ///
   /// In es, this message translates to:
@@ -5628,7 +5640,7 @@ abstract class AppLocalizations {
   /// No description provided for @rewardsRedeemedBody.
   ///
   /// In es, this message translates to:
-  /// **'Disfruta de \"{title}\". El amor también vive en los pequeños detalles.'**
+  /// **'Disfrutá de \"{title}\". El amor también vive en los pequeños detalles.'**
   String rewardsRedeemedBody(String title);
 
   /// No description provided for @rewardsApprovalReason.
@@ -7854,7 +7866,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge1Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Vuelvan al lugar donde todo empezó.\n\nIntenten recrear esos detalles chiquitos: la comida, la ropa, las frases, los nervios.\n\nCharlen sobre cómo eran en ese momento y cuánto crecieron juntos.\n\nVa a ser imposible no reírse de los recuerdos y agradecer todo lo que vivieron.'**
   String get coupleChallenge1Description;
 
   /// No description provided for @coupleChallenge1Motivation.
@@ -7890,7 +7902,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge2Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Solo necesitan unas velas o luces cálidas, una comida y algo rico para tomar.\n\nApaguen las luces, bajen el ritmo y dejen que el silencio se llene de música suave y miradas largas.\n\nNo importa tanto el menú como la presencia del otro.'**
   String get coupleChallenge2Description;
 
   /// No description provided for @coupleChallenge2Motivation.
@@ -7926,7 +7938,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge3Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Agarren papel y lápiz. Anoten al menos 10 cosas que les gustaría lograr como pareja: viajes, metas o sueños.\n\nLéanlas en voz alta y guarden esa lista como recordatorio.'**
   String get coupleChallenge3Description;
 
   /// No description provided for @coupleChallenge3Motivation.
@@ -7962,7 +7974,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge4Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Suban el volumen, elijan canciones y que empiece la diversión. No hace falta micrófono ni voz perfecta, solo actitud.\n\nEntre risas, van a descubrir lo liberador que es reírse juntos.'**
   String get coupleChallenge4Description;
 
   /// No description provided for @coupleChallenge4Motivation.
@@ -7998,7 +8010,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge5Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Consigan hojas y pinceles. No importa si no saben dibujar: la idea es soltar la mente, reírse de los trazos y disfrutar del color.\n\nPinten algo que los represente como pareja.'**
   String get coupleChallenge5Description;
 
   /// No description provided for @coupleChallenge5Motivation.
@@ -8034,7 +8046,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge6Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Armen su propio cine en casa: luz tenue, mantas, snacks y una lista de pelis elegidas por los dos.\n\nVer películas juntos también es cruzar miradas y reírse en sincronía.'**
   String get coupleChallenge6Description;
 
   /// No description provided for @coupleChallenge6Motivation.
@@ -8070,7 +8082,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge7Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Salgan a caminar sin plan y traten de capturar lo que normalmente pasa desapercibido: una sombra, una sonrisa, un reflejo.\n\nSaquen fotos de todo lo que los haga frenar un segundo.'**
   String get coupleChallenge7Description;
 
   /// No description provided for @coupleChallenge7Motivation.
@@ -8106,7 +8118,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge8Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Una manta, algo para picar, bebidas frías y ganas de compartir el momento.\n\nBusquen un parque, una plaza o incluso el patio de casa, acomódense y dejen que la charla fluya.\n\nSumen un juego de cartas, un libro o simplemente miren el cielo juntos.'**
   String get coupleChallenge8Description;
 
   /// No description provided for @coupleChallenge8Motivation.
@@ -8142,7 +8154,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge9Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Escríbanse una carta. No en el celular: en papel y tinta.\n\nPongan música suave, preparen algo rico y déjense llevar.\n\nEscriban qué admiran, qué agradecen y qué sueñan.\n\nAl final, intercámbienlas y léanlas en voz alta.'**
   String get coupleChallenge9Description;
 
   /// No description provided for @coupleChallenge9Motivation.
@@ -8178,7 +8190,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge10Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Apaguen celulares, TV y cualquier notificación por una noche.\n\nLean, cocinen, charlen, jueguen o simplemente abrácense sin interrupciones.\n\nCuando baja el ruido digital, aparece otro silencio: el que deja espacio para estar presentes.'**
   String get coupleChallenge10Description;
 
   /// No description provided for @coupleChallenge10Motivation.
@@ -8214,7 +8226,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge11Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Llenen un frasco con papelitos que tengan preguntas divertidas o profundas.\n\n\"¿Qué fue lo primero que pensaste cuando me conociste?\" o \"¿Qué sueño todavía no te animaste a contarme?\"\n\nSaquen una al azar y respondan sin filtros. Van a terminar entre risas y miradas largas.'**
   String get coupleChallenge11Description;
 
   /// No description provided for @coupleChallenge11Motivation.
@@ -8250,7 +8262,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge23Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Cambien la escena del desayuno: preparen algo rico y salgan a buscar una buena vista. Puede ser un parque, una terraza o un banco en la plaza.\n\nTómense el tiempo para disfrutar el aire fresco y el café sin mirar el reloj.'**
   String get coupleChallenge23Description;
 
   /// No description provided for @coupleChallenge23Motivation.
@@ -8286,7 +8298,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge24Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan un lugar donde el horizonte se sienta infinito: costa, río o laguna. Lleven algo para sentarse y miren cómo cae el sol.\n\nEscriban juntos una nota con lo que sueñan y guárdenla para el futuro.'**
   String get coupleChallenge24Description;
 
   /// No description provided for @coupleChallenge24Motivation.
@@ -8322,7 +8334,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge25Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Salgan a caminar sin mapa ni GPS. Elijan una dirección al azar y cada cinco cuadras uno decide hacia dónde doblar.\n\nDescubran rincones nuevos de su ciudad como si fueran turistas perdidos.'**
   String get coupleChallenge25Description;
 
   /// No description provided for @coupleChallenge25Motivation.
@@ -8358,7 +8370,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge26Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Armen un espacio con luz cálida y música suave. Cada uno anota tres cosas que quiere dejar atrás, como miedos o enojo, y tres cosas que agradece del otro.\n\nQuemen lo que quieren soltar y guarden las notas de gratitud en un frasco.'**
   String get coupleChallenge26Description;
 
   /// No description provided for @coupleChallenge26Motivation.
@@ -8394,7 +8406,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge27Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Uno de los dos prepara una sorpresa pequeña: una nota en la almohada, una comida favorita cocinada en secreto o una pista para una mini aventura.\n\nLa clave está en el misterio y en el detalle pensado solo para el otro.'**
   String get coupleChallenge27Description;
 
   /// No description provided for @coupleChallenge27Motivation.
@@ -8430,7 +8442,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge28Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Turnarse para \"cuidar\" al otro por un rato: preparar un baño, dar un masaje o cocinar mientras el otro no hace nada.\n\nNo se trata de servir, se trata de cuidar con ternura e intención.'**
   String get coupleChallenge28Description;
 
   /// No description provided for @coupleChallenge28Motivation.
@@ -8466,7 +8478,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge29Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan una escena famosa de una peli e intenten recrearla con lo que tengan en casa. No busquen perfección: busquen risas y complicidad.\n\nAl final, inventen juntos su propio final.'**
   String get coupleChallenge29Description;
 
   /// No description provided for @coupleChallenge29Motivation.
@@ -8502,7 +8514,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge30Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan tres sabores, como vino, chocolate o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.'**
   String get coupleChallenge30Description;
 
   /// No description provided for @coupleChallenge30Motivation.
@@ -8538,7 +8550,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge31Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Apaguen alarmas y suelten la lista de pendientes. Pasen un día sin horarios: leer en la cama, mirar series viejas o charlar sin destino.\n\nDense el lujo de habitar el tiempo sin presión por producir.'**
   String get coupleChallenge31Description;
 
   /// No description provided for @coupleChallenge31Motivation.
@@ -8574,7 +8586,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge32Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Vayan a una feria de barrio con bolsas de tela y mate. No se enfoquen en comprar mucho: miren colores, olores y gente.\n\nElijan un ingrediente raro y cocinen algo nuevo al volver a casa.'**
   String get coupleChallenge32Description;
 
   /// No description provided for @coupleChallenge32Motivation.
@@ -8610,7 +8622,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge33Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Busquen un lugar lejos de las luces de la ciudad. Lleven manta, cielo abierto y silencio.\n\nCuenten estrellas, inventen constelaciones o simplemente sientan la inmensidad juntos.'**
   String get coupleChallenge33Description;
 
   /// No description provided for @coupleChallenge33Motivation.
@@ -8646,7 +8658,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge34Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Preparen una mesa con texturas, aromas y sabores sorpresa. Con los ojos cerrados, el otro adivina qué está sintiendo.\n\nUna dinámica para entregarse a las sensaciones sin necesitar muchas palabras.'**
   String get coupleChallenge34Description;
 
   /// No description provided for @coupleChallenge34Motivation.
@@ -8682,7 +8694,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge35Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan un libro, poema o artículo y léanlo en voz alta, alternando partes. Escuchen el tono y las pausas del otro.\n\nAl terminar, compartan qué les hizo pensar o sentir esa historia.'**
   String get coupleChallenge35Description;
 
   /// No description provided for @coupleChallenge35Motivation.
@@ -8718,7 +8730,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge36Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Busquen una obra de microteatro o una función breve. Vivan la intensidad de una historia cercana y viva.\n\nDespués, salgan a caminar y charlen sobre lo que los hizo reír, llorar o pensar.'**
   String get coupleChallenge36Description;
 
   /// No description provided for @coupleChallenge36Motivation.
@@ -8754,7 +8766,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge37Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan un país y transformen su casa en ese destino por una noche: comida típica, música y clima de ese lugar.\n\nViajen sin pasaporte e imaginen qué harían si estuvieran ahí de verdad.'**
   String get coupleChallenge37Description;
 
   /// No description provided for @coupleChallenge37Motivation.
@@ -8790,7 +8802,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge38Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Uno prepara tres sobres con instrucciones para abrir por etapas: un look, un punto de encuentro y un cierre especial.\n\nLa magia está en la expectativa de no saber qué viene después.'**
   String get coupleChallenge38Description;
 
   /// No description provided for @coupleChallenge38Motivation.
@@ -8826,7 +8838,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge39Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Vayan a un lugar alto para ver salir el sol. Cuando aparezca el primer rayo, prometan una cosa chiquita para la relación.\n\nUn hábito, un deseo o un cambio para empezar con el nuevo día.'**
   String get coupleChallenge39Description;
 
   /// No description provided for @coupleChallenge39Motivation.
@@ -8862,7 +8874,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge40Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Pasen la tarde armando un rompecabezas lado a lado, con mate o vino cerca.\n\nEntre pieza y pieza, dejen que aparezcan charlas tranquilas y silencios cómodos.'**
   String get coupleChallenge40Description;
 
   /// No description provided for @coupleChallenge40Motivation.
@@ -8898,7 +8910,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge41Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'El desafío de hoy: pasar 24 horas sin quejarse. Cada vez que alguien se queje, lo compensa con algo que agradece.\n\nAl final del día, repasen todo lo bueno que registraron.'**
   String get coupleChallenge41Description;
 
   /// No description provided for @coupleChallenge41Motivation.
@@ -8934,7 +8946,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge42Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan cinco objetos que representen su presente: una foto, un ticket, una nota. Guárdenlos en una caja y ciérrenla con fecha de apertura futura.\n\nEscriban una carta para ustedes del futuro contando cómo se sienten hoy.'**
   String get coupleChallenge42Description;
 
   /// No description provided for @coupleChallenge42Motivation.
@@ -8970,7 +8982,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge43Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Una persona se tapa los ojos y la otra la guía con la voz para dibujar líneas y colores en una hoja. Después inviertan roles.\n\nConfíen en la voz del otro y ríanse del resultado abstracto que crearon juntos.'**
   String get coupleChallenge43Description;
 
   /// No description provided for @coupleChallenge43Motivation.
@@ -9006,7 +9018,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge44Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Grábense como si estuvieran haciendo un podcast. Elijan tema: su historia, un viaje o lo que les enseñó el amor.\n\nNo intenten sonar perfectos; intenten sonar reales. Guárdenlo como cápsula de voz.'**
   String get coupleChallenge44Description;
 
   /// No description provided for @coupleChallenge44Motivation.
@@ -9042,7 +9054,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge45Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Cada uno escribe una carta para el otro, pero no la lean ahora. Intercámbienlas y fijen una fecha dentro de una semana para abrirlas.\n\nDisfruten la espera y la calma de saber que hay un mensaje de amor esperándolos.'**
   String get coupleChallenge45Description;
 
   /// No description provided for @coupleChallenge45Motivation.
@@ -9078,7 +9090,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge46Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Busquen fotos, videos y mensajes de cuando se conocieron. Miren juntos cuánto crecieron y qué obstáculos superaron.\n\nRedescubran el camino que los trajo hasta hoy.'**
   String get coupleChallenge46Description;
 
   /// No description provided for @coupleChallenge46Motivation.
@@ -9114,7 +9126,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge47Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Por un día entero, la regla es decir sí a toda propuesta razonable del otro: helado, paseo, siesta.\n\nDéjense llevar por el flujo de un día sin tantos no.'**
   String get coupleChallenge47Description;
 
   /// No description provided for @coupleChallenge47Motivation.
@@ -9150,7 +9162,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge48Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Preparen su bebida favorita y brinden mirándose a los ojos. Anoten una intención para la etapa que viene: un viaje o una meta compartida.\n\nSellen el brindis con una sonrisa que diga \"gracias por estar\".'**
   String get coupleChallenge48Description;
 
   /// No description provided for @coupleChallenge48Motivation.
@@ -9186,7 +9198,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge49Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Elijan tres ingredientes al azar que ya tengan en casa e intenten crear un plato nuevo juntos.\n\nSin buscar recetas: usen intuición, prueben sobre la marcha y ríanse si sale raro.'**
   String get coupleChallenge49Description;
 
   /// No description provided for @coupleChallenge49Motivation.
@@ -9222,7 +9234,7 @@ abstract class AppLocalizations {
   /// No description provided for @coupleChallenge50Description.
   ///
   /// In es, this message translates to:
-  /// **''**
+  /// **'Peguen notas con deseos, agradecimientos o metas en una pared o espejo. Dejen que ese muro crezca durante la semana.\n\nAl final, lean cada nota y guárdenlas como testigos de sus intenciones.'**
   String get coupleChallenge50Description;
 
   /// No description provided for @coupleChallenge50Motivation.

@@ -362,6 +362,19 @@
   "@homeAllDoneToday": {
     "description": "Empty-state message shown on the dashboard when there are no tasks left for today."
   },
+  "homeTaskAddedNoticeTitle": "Task added",
+  "@homeTaskAddedNoticeTitle": {
+    "description": "Title for the in-app banner shown when another household member adds or schedules a task for today."
+  },
+  "homeTaskAddedNoticeBody": "Now showing in Today at home: {taskTitle}",
+  "@homeTaskAddedNoticeBody": {
+    "description": "Body for the in-app banner shown when a task becomes available in the Home today section.",
+    "placeholders": {
+      "taskTitle": {
+        "type": "String"
+      }
+    }
+  },
   "homeFabActions": "Actions",
   "homeFabExpenses": "Expenses",
   "homeFabTasks": "Tasks",

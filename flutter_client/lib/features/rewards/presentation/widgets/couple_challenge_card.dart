@@ -297,7 +297,8 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                       const SizedBox(height: 4),
                       Text(
                         t.coupleChallengeSharedRewardBody(
-                            widget.challenge.coinReward,),
+                          widget.challenge.coinReward,
+                        ),
                         style: TextStyle(
                           color: theme.textPrimary,
                           fontSize: 14,

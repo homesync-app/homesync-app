@@ -18,6 +18,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 import 'category_widgets.dart';
+import 'love_note_dialog.dart';
 import 'personal_metric_card.dart';
 import 'stats_shared_widgets.dart';
 
@@ -43,6 +44,7 @@ class WeeklyTab extends ConsumerWidget {
     required this.onRefresh,
   });
 
+  // ignore: unused_element
   void _showLoveNoteDialog(
     BuildContext context,
     WidgetRef ref,
@@ -228,7 +230,7 @@ class WeeklyTab extends ConsumerWidget {
                 PremiumPaywall.show(context);
               } else {
                 HapticFeedback.lightImpact();
-                _showLoveNoteDialog(context, ref, theme);
+                showLoveNoteDialog(context: context, ref: ref);
               }
             },
             child: Container(
@@ -588,7 +590,8 @@ class _ProgressTabState extends State<ProgressTab> {
                       '${((currentUserStats['xp_earned'] as num? ?? 0) / 1000).floor() + 1}',
                   color: AppColors.primary,
                   subtitle: t.statsXPToNextLevel(
-                      '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()}',),
+                    '${1000 - ((currentUserStats['xp_earned'] as num? ?? 0) % 1000).toInt()}',
+                  ),
                 ),
               ),
             ],

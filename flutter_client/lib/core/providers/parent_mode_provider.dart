@@ -126,6 +126,24 @@ final parentModeAvailableProvider = Provider<bool>((ref) {
   return me?.isAdult ?? false;
 });
 
+/// Whether task approvals are actually enabled for the current household.
+///
+/// This is intentionally different from [parentModeAvailableProvider]:
+/// children/teens need to know whether their completions should go to review,
+/// but they are not allowed to manage Parent Mode. The feature is active only
+/// when the household is family, premium is active, and the approval mode is
+/// not off.
+final taskApprovalEnabledProvider = Provider<bool>((ref) {
+  final caps = ref.watch(householdCapabilitiesProvider);
+  if (caps.type != HouseholdType.family) return false;
+
+  final isPremium = ref.watch(effectivePremiumProvider);
+  if (!isPremium) return false;
+
+  final mode = ref.watch(currentHouseholdProvider).value?.taskApprovalMode;
+  return mode != null && mode != 'off';
+});
+
 /// Misma logica que [parentModeAvailableProvider] pero sin exigir premium.
 /// Sirve para mostrar la entrada al paywall: si el usuario es adulto de una
 /// familia y todavia no compro, ahi mostramos el CTA.

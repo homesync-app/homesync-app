@@ -524,6 +524,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeAllDoneToday => 'Todo listo por hoy';
 
   @override
+  String get homeTaskAddedNoticeTitle => 'Tarea agregada';
+
+  @override
+  String homeTaskAddedNoticeBody(String taskTitle) {
+    return 'Ya aparece en Hoy en casa: $taskTitle';
+  }
+
+  @override
   String get homeFabActions => 'Acciones';
 
   @override
@@ -3351,7 +3359,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String rewardsRedeemedBody(String title) {
-    return 'Disfruta de \"$title\". El amor también vive en los pequeños detalles.';
+    return 'Disfrutá de \"$title\". El amor también vive en los pequeños detalles.';
   }
 
   @override
@@ -4604,7 +4612,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge1Title => 'Recreando la primera cita';
 
   @override
-  String get coupleChallenge1Description => '';
+  String get coupleChallenge1Description =>
+      'Vuelvan al lugar donde todo empezó.\n\nIntenten recrear esos detalles chiquitos: la comida, la ropa, las frases, los nervios.\n\nCharlen sobre cómo eran en ese momento y cuánto crecieron juntos.\n\nVa a ser imposible no reírse de los recuerdos y agradecer todo lo que vivieron.';
 
   @override
   String get coupleChallenge1Motivation =>
@@ -4623,7 +4632,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge2Title => 'Cena a la luz de las velas';
 
   @override
-  String get coupleChallenge2Description => '';
+  String get coupleChallenge2Description =>
+      'Solo necesitan unas velas o luces cálidas, una comida y algo rico para tomar.\n\nApaguen las luces, bajen el ritmo y dejen que el silencio se llene de música suave y miradas largas.\n\nNo importa tanto el menú como la presencia del otro.';
 
   @override
   String get coupleChallenge2Motivation =>
@@ -4642,7 +4652,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge3Title => 'Lista de sueños compartidos';
 
   @override
-  String get coupleChallenge3Description => '';
+  String get coupleChallenge3Description =>
+      'Agarren papel y lápiz. Anoten al menos 10 cosas que les gustaría lograr como pareja: viajes, metas o sueños.\n\nLéanlas en voz alta y guarden esa lista como recordatorio.';
 
   @override
   String get coupleChallenge3Motivation =>
@@ -4661,7 +4672,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge4Title => 'Karaoke casero';
 
   @override
-  String get coupleChallenge4Description => '';
+  String get coupleChallenge4Description =>
+      'Suban el volumen, elijan canciones y que empiece la diversión. No hace falta micrófono ni voz perfecta, solo actitud.\n\nEntre risas, van a descubrir lo liberador que es reírse juntos.';
 
   @override
   String get coupleChallenge4Motivation =>
@@ -4680,7 +4692,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge5Title => 'Pintando juntos';
 
   @override
-  String get coupleChallenge5Description => '';
+  String get coupleChallenge5Description =>
+      'Consigan hojas y pinceles. No importa si no saben dibujar: la idea es soltar la mente, reírse de los trazos y disfrutar del color.\n\nPinten algo que los represente como pareja.';
 
   @override
   String get coupleChallenge5Motivation =>
@@ -4699,7 +4712,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge6Title => 'Maratón de películas';
 
   @override
-  String get coupleChallenge6Description => '';
+  String get coupleChallenge6Description =>
+      'Armen su propio cine en casa: luz tenue, mantas, snacks y una lista de pelis elegidas por los dos.\n\nVer películas juntos también es cruzar miradas y reírse en sincronía.';
 
   @override
   String get coupleChallenge6Motivation =>
@@ -4718,7 +4732,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge7Title => 'Caminata fotográfica';
 
   @override
-  String get coupleChallenge7Description => '';
+  String get coupleChallenge7Description =>
+      'Salgan a caminar sin plan y traten de capturar lo que normalmente pasa desapercibido: una sombra, una sonrisa, un reflejo.\n\nSaquen fotos de todo lo que los haga frenar un segundo.';
 
   @override
   String get coupleChallenge7Motivation =>
@@ -4737,7 +4752,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge8Title => 'Picnic improvisado';
 
   @override
-  String get coupleChallenge8Description => '';
+  String get coupleChallenge8Description =>
+      'Una manta, algo para picar, bebidas frías y ganas de compartir el momento.\n\nBusquen un parque, una plaza o incluso el patio de casa, acomódense y dejen que la charla fluya.\n\nSumen un juego de cartas, un libro o simplemente miren el cielo juntos.';
 
   @override
   String get coupleChallenge8Motivation =>
@@ -4756,7 +4772,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge9Title => 'Cartas que no se borran';
 
   @override
-  String get coupleChallenge9Description => '';
+  String get coupleChallenge9Description =>
+      'Escríbanse una carta. No en el celular: en papel y tinta.\n\nPongan música suave, preparen algo rico y déjense llevar.\n\nEscriban qué admiran, qué agradecen y qué sueñan.\n\nAl final, intercámbienlas y léanlas en voz alta.';
 
   @override
   String get coupleChallenge9Motivation =>
@@ -4775,7 +4792,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge10Title => 'Desconexión total';
 
   @override
-  String get coupleChallenge10Description => '';
+  String get coupleChallenge10Description =>
+      'Apaguen celulares, TV y cualquier notificación por una noche.\n\nLean, cocinen, charlen, jueguen o simplemente abrácense sin interrupciones.\n\nCuando baja el ruido digital, aparece otro silencio: el que deja espacio para estar presentes.';
 
   @override
   String get coupleChallenge10Motivation =>
@@ -4794,7 +4812,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge11Title => 'Frasco de preguntas';
 
   @override
-  String get coupleChallenge11Description => '';
+  String get coupleChallenge11Description =>
+      'Llenen un frasco con papelitos que tengan preguntas divertidas o profundas.\n\n\"¿Qué fue lo primero que pensaste cuando me conociste?\" o \"¿Qué sueño todavía no te animaste a contarme?\"\n\nSaquen una al azar y respondan sin filtros. Van a terminar entre risas y miradas largas.';
 
   @override
   String get coupleChallenge11Motivation =>
@@ -4813,7 +4832,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge23Title => 'Desayuno con vista';
 
   @override
-  String get coupleChallenge23Description => '';
+  String get coupleChallenge23Description =>
+      'Cambien la escena del desayuno: preparen algo rico y salgan a buscar una buena vista. Puede ser un parque, una terraza o un banco en la plaza.\n\nTómense el tiempo para disfrutar el aire fresco y el café sin mirar el reloj.';
 
   @override
   String get coupleChallenge23Motivation =>
@@ -4832,7 +4852,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge24Title => 'A la orilla del mundo';
 
   @override
-  String get coupleChallenge24Description => '';
+  String get coupleChallenge24Description =>
+      'Elijan un lugar donde el horizonte se sienta infinito: costa, río o laguna. Lleven algo para sentarse y miren cómo cae el sol.\n\nEscriban juntos una nota con lo que sueñan y guárdenla para el futuro.';
 
   @override
   String get coupleChallenge24Motivation =>
@@ -4851,7 +4872,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge25Title => 'Destino incierto';
 
   @override
-  String get coupleChallenge25Description => '';
+  String get coupleChallenge25Description =>
+      'Salgan a caminar sin mapa ni GPS. Elijan una dirección al azar y cada cinco cuadras uno decide hacia dónde doblar.\n\nDescubran rincones nuevos de su ciudad como si fueran turistas perdidos.';
 
   @override
   String get coupleChallenge25Motivation =>
@@ -4870,7 +4892,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge26Title => 'Ritual del presente';
 
   @override
-  String get coupleChallenge26Description => '';
+  String get coupleChallenge26Description =>
+      'Armen un espacio con luz cálida y música suave. Cada uno anota tres cosas que quiere dejar atrás, como miedos o enojo, y tres cosas que agradece del otro.\n\nQuemen lo que quieren soltar y guarden las notas de gratitud en un frasco.';
 
   @override
   String get coupleChallenge26Motivation =>
@@ -4889,7 +4912,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge27Title => 'Arquitecto de sorpresas';
 
   @override
-  String get coupleChallenge27Description => '';
+  String get coupleChallenge27Description =>
+      'Uno de los dos prepara una sorpresa pequeña: una nota en la almohada, una comida favorita cocinada en secreto o una pista para una mini aventura.\n\nLa clave está en el misterio y en el detalle pensado solo para el otro.';
 
   @override
   String get coupleChallenge27Motivation =>
@@ -4908,7 +4932,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge28Title => 'Al servicio del amor';
 
   @override
-  String get coupleChallenge28Description => '';
+  String get coupleChallenge28Description =>
+      'Turnarse para \"cuidar\" al otro por un rato: preparar un baño, dar un masaje o cocinar mientras el otro no hace nada.\n\nNo se trata de servir, se trata de cuidar con ternura e intención.';
 
   @override
   String get coupleChallenge28Motivation =>
@@ -4927,7 +4952,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge29Title => 'Historias en escena';
 
   @override
-  String get coupleChallenge29Description => '';
+  String get coupleChallenge29Description =>
+      'Elijan una escena famosa de una peli e intenten recrearla con lo que tengan en casa. No busquen perfección: busquen risas y complicidad.\n\nAl final, inventen juntos su propio final.';
 
   @override
   String get coupleChallenge29Motivation =>
@@ -4946,7 +4972,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge30Title => 'Sabores con historia';
 
   @override
-  String get coupleChallenge30Description => '';
+  String get coupleChallenge30Description =>
+      'Elijan tres sabores, como vino, chocolate o queso, y con cada uno compartan un recuerdo personal: un viaje, una etapa, una persona.\n\nDejen que el sabor despierte historias que todavía no se contaron.';
 
   @override
   String get coupleChallenge30Motivation =>
@@ -4965,7 +4992,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge31Title => 'El arte de no hacer nada';
 
   @override
-  String get coupleChallenge31Description => '';
+  String get coupleChallenge31Description =>
+      'Apaguen alarmas y suelten la lista de pendientes. Pasen un día sin horarios: leer en la cama, mirar series viejas o charlar sin destino.\n\nDense el lujo de habitar el tiempo sin presión por producir.';
 
   @override
   String get coupleChallenge31Motivation =>
@@ -4984,7 +5012,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge32Title => 'Domingo de mercado';
 
   @override
-  String get coupleChallenge32Description => '';
+  String get coupleChallenge32Description =>
+      'Vayan a una feria de barrio con bolsas de tela y mate. No se enfoquen en comprar mucho: miren colores, olores y gente.\n\nElijan un ingrediente raro y cocinen algo nuevo al volver a casa.';
 
   @override
   String get coupleChallenge32Motivation =>
@@ -5003,7 +5032,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge33Title => 'Bajo las estrellas';
 
   @override
-  String get coupleChallenge33Description => '';
+  String get coupleChallenge33Description =>
+      'Busquen un lugar lejos de las luces de la ciudad. Lleven manta, cielo abierto y silencio.\n\nCuenten estrellas, inventen constelaciones o simplemente sientan la inmensidad juntos.';
 
   @override
   String get coupleChallenge33Motivation =>
@@ -5022,7 +5052,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge34Title => 'Noche de los sentidos';
 
   @override
-  String get coupleChallenge34Description => '';
+  String get coupleChallenge34Description =>
+      'Preparen una mesa con texturas, aromas y sabores sorpresa. Con los ojos cerrados, el otro adivina qué está sintiendo.\n\nUna dinámica para entregarse a las sensaciones sin necesitar muchas palabras.';
 
   @override
   String get coupleChallenge34Motivation =>
@@ -5041,7 +5072,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge35Title => 'Lectura compartida';
 
   @override
-  String get coupleChallenge35Description => '';
+  String get coupleChallenge35Description =>
+      'Elijan un libro, poema o artículo y léanlo en voz alta, alternando partes. Escuchen el tono y las pausas del otro.\n\nAl terminar, compartan qué les hizo pensar o sentir esa historia.';
 
   @override
   String get coupleChallenge35Motivation =>
@@ -5060,7 +5092,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge36Title => 'Microteatro en pareja';
 
   @override
-  String get coupleChallenge36Description => '';
+  String get coupleChallenge36Description =>
+      'Busquen una obra de microteatro o una función breve. Vivan la intensidad de una historia cercana y viva.\n\nDespués, salgan a caminar y charlen sobre lo que los hizo reír, llorar o pensar.';
 
   @override
   String get coupleChallenge36Motivation =>
@@ -5079,7 +5112,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge37Title => 'Viaje sin maletas';
 
   @override
-  String get coupleChallenge37Description => '';
+  String get coupleChallenge37Description =>
+      'Elijan un país y transformen su casa en ese destino por una noche: comida típica, música y clima de ese lugar.\n\nViajen sin pasaporte e imaginen qué harían si estuvieran ahí de verdad.';
 
   @override
   String get coupleChallenge37Motivation =>
@@ -5098,7 +5132,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge38Title => 'El sobre secreto';
 
   @override
-  String get coupleChallenge38Description => '';
+  String get coupleChallenge38Description =>
+      'Uno prepara tres sobres con instrucciones para abrir por etapas: un look, un punto de encuentro y un cierre especial.\n\nLa magia está en la expectativa de no saber qué viene después.';
 
   @override
   String get coupleChallenge38Motivation =>
@@ -5117,7 +5152,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge39Title => 'Propósitos al alba';
 
   @override
-  String get coupleChallenge39Description => '';
+  String get coupleChallenge39Description =>
+      'Vayan a un lugar alto para ver salir el sol. Cuando aparezca el primer rayo, prometan una cosa chiquita para la relación.\n\nUn hábito, un deseo o un cambio para empezar con el nuevo día.';
 
   @override
   String get coupleChallenge39Motivation =>
@@ -5136,7 +5172,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge40Title => 'Construyendo paciencia';
 
   @override
-  String get coupleChallenge40Description => '';
+  String get coupleChallenge40Description =>
+      'Pasen la tarde armando un rompecabezas lado a lado, con mate o vino cerca.\n\nEntre pieza y pieza, dejen que aparezcan charlas tranquilas y silencios cómodos.';
 
   @override
   String get coupleChallenge40Motivation =>
@@ -5155,7 +5192,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge41Title => 'Día de gratitud absoluta';
 
   @override
-  String get coupleChallenge41Description => '';
+  String get coupleChallenge41Description =>
+      'El desafío de hoy: pasar 24 horas sin quejarse. Cada vez que alguien se queje, lo compensa con algo que agradece.\n\nAl final del día, repasen todo lo bueno que registraron.';
 
   @override
   String get coupleChallenge41Motivation =>
@@ -5174,7 +5212,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge42Title => 'Cápsula del tiempo';
 
   @override
-  String get coupleChallenge42Description => '';
+  String get coupleChallenge42Description =>
+      'Elijan cinco objetos que representen su presente: una foto, un ticket, una nota. Guárdenlos en una caja y ciérrenla con fecha de apertura futura.\n\nEscriban una carta para ustedes del futuro contando cómo se sienten hoy.';
 
   @override
   String get coupleChallenge42Motivation =>
@@ -5193,7 +5232,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge43Title => 'Pintura a ciegas';
 
   @override
-  String get coupleChallenge43Description => '';
+  String get coupleChallenge43Description =>
+      'Una persona se tapa los ojos y la otra la guía con la voz para dibujar líneas y colores en una hoja. Después inviertan roles.\n\nConfíen en la voz del otro y ríanse del resultado abstracto que crearon juntos.';
 
   @override
   String get coupleChallenge43Motivation =>
@@ -5212,7 +5252,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge44Title => 'Nuestro propio Podcast';
 
   @override
-  String get coupleChallenge44Description => '';
+  String get coupleChallenge44Description =>
+      'Grábense como si estuvieran haciendo un podcast. Elijan tema: su historia, un viaje o lo que les enseñó el amor.\n\nNo intenten sonar perfectos; intenten sonar reales. Guárdenlo como cápsula de voz.';
 
   @override
   String get coupleChallenge44Motivation =>
@@ -5231,7 +5272,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge45Title => 'Mensajes diferidos';
 
   @override
-  String get coupleChallenge45Description => '';
+  String get coupleChallenge45Description =>
+      'Cada uno escribe una carta para el otro, pero no la lean ahora. Intercámbienlas y fijen una fecha dentro de una semana para abrirlas.\n\nDisfruten la espera y la calma de saber que hay un mensaje de amor esperándolos.';
 
   @override
   String get coupleChallenge45Motivation =>
@@ -5250,7 +5292,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge46Title => 'Proyección de recuerdos';
 
   @override
-  String get coupleChallenge46Description => '';
+  String get coupleChallenge46Description =>
+      'Busquen fotos, videos y mensajes de cuando se conocieron. Miren juntos cuánto crecieron y qué obstáculos superaron.\n\nRedescubran el camino que los trajo hasta hoy.';
 
   @override
   String get coupleChallenge46Motivation =>
@@ -5269,7 +5312,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge47Title => 'El día del \"Sí\"';
 
   @override
-  String get coupleChallenge47Description => '';
+  String get coupleChallenge47Description =>
+      'Por un día entero, la regla es decir sí a toda propuesta razonable del otro: helado, paseo, siesta.\n\nDéjense llevar por el flujo de un día sin tantos no.';
 
   @override
   String get coupleChallenge47Motivation =>
@@ -5288,7 +5332,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge48Title => 'Brindis por el futuro';
 
   @override
-  String get coupleChallenge48Description => '';
+  String get coupleChallenge48Description =>
+      'Preparen su bebida favorita y brinden mirándose a los ojos. Anoten una intención para la etapa que viene: un viaje o una meta compartida.\n\nSellen el brindis con una sonrisa que diga \"gracias por estar\".';
 
   @override
   String get coupleChallenge48Motivation =>
@@ -5307,7 +5352,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge49Title => 'Cocina experimental';
 
   @override
-  String get coupleChallenge49Description => '';
+  String get coupleChallenge49Description =>
+      'Elijan tres ingredientes al azar que ya tengan en casa e intenten crear un plato nuevo juntos.\n\nSin buscar recetas: usen intuición, prueben sobre la marcha y ríanse si sale raro.';
 
   @override
   String get coupleChallenge49Motivation =>
@@ -5326,7 +5372,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get coupleChallenge50Title => 'Muro de los deseos';
 
   @override
-  String get coupleChallenge50Description => '';
+  String get coupleChallenge50Description =>
+      'Peguen notas con deseos, agradecimientos o metas en una pared o espejo. Dejen que ese muro crezca durante la semana.\n\nAl final, lean cada nota y guárdenlas como testigos de sus intenciones.';
 
   @override
   String get coupleChallenge50Motivation =>

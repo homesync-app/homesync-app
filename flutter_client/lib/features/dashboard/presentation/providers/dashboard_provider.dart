@@ -175,6 +175,38 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
       }),
     ].take(8).toList();
   }
+
+  void addRewardRedeemed({
+    required String title,
+    required String icon,
+    required int cost,
+  }) {
+    final householdId = ref.read(householdIdProvider).value;
+    final userId = ref.read(currentUserIdProvider);
+    if (householdId == null || householdId.isEmpty || userId == null) return;
+
+    final members =
+        ref.read(householdMembersProvider).value ?? const <MemberModel>[];
+    final member = members.where((m) => m.userId == userId).firstOrNull;
+    final now = DateTime.now();
+    final activity = <String, dynamic>{
+      'id': 'optimistic-reward-${now.microsecondsSinceEpoch}',
+      'household_id': householdId,
+      'type': 'reward',
+      'created_at': now.toIso8601String(),
+      'creator_id': userId,
+      'optimistic': true,
+      'data': {
+        'user_name': member?.displayName ?? 'Alguien',
+        'avatar_url': member?.avatarUrl,
+        'title': title,
+        'reward_icon': icon,
+        'reward_cost': cost,
+      },
+    };
+
+    state = [activity, ...state].take(8).toList();
+  }
 }
 
 List<Map<String, dynamic>> _filterHiddenExpenses(
@@ -190,4 +222,3 @@ List<Map<String, dynamic>> _filterHiddenExpenses(
     return expenseId == null || !hiddenExpenseIds.contains(expenseId);
   }).toList();
 }
-

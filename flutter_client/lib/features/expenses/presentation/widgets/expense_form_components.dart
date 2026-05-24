@@ -451,13 +451,15 @@ class _ReceiptScanButtonState extends State<_ReceiptScanButton>
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: accent.withValues(
-                alpha: widget.isScanningReceipt ? 0.34 : 0.18),
+              alpha: widget.isScanningReceipt ? 0.34 : 0.18,
+            ),
           ),
           boxShadow: [
             if (widget.isScanningReceipt || widget.hasScanResult)
               BoxShadow(
                 color: accent.withValues(
-                    alpha: widget.isScanningReceipt ? 0.16 : 0.10),
+                  alpha: widget.isScanningReceipt ? 0.16 : 0.10,
+                ),
                 blurRadius: 14,
                 offset: const Offset(0, 6),
               ),

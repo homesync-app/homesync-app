@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/rpc_providers.dart';
@@ -12,6 +13,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
 
+import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../household/presentation/providers/household_provider.dart';
 import '../../../stats/presentation/widgets/weekly_progress_tab.dart';
 import '../../../tasks/presentation/providers/task_provider.dart';
@@ -44,6 +46,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   List<Map<String, dynamic>> _memberStats = [];
   List<Map<String, dynamic>> _weeklyRanking = [];
   List<Map<String, dynamic>> _duelHistory = [];
+  late bool _hasOpenedRewardsTab;
 
   @override
   void initState() {
@@ -53,12 +56,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       vsync: this,
       initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
     );
+    _hasOpenedRewardsTab = !widget.showDuel || _tabController.index == 1;
     if (widget.showDuel) {
       _tabController.addListener(() {
         if (!_tabController.indexIsChanging) {
           ref
               .read(parejaTabIndexProvider.notifier)
               .setIndex(_tabController.index);
+          if (_tabController.index == 1 && !_hasOpenedRewardsTab && mounted) {
+            setState(() => _hasOpenedRewardsTab = true);
+          }
         }
       });
       _loadDuelStats();
@@ -75,12 +82,16 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         vsync: this,
         initialIndex: widget.showDuel ? ref.read(parejaTabIndexProvider) : 0,
       );
+      _hasOpenedRewardsTab = !widget.showDuel || _tabController.index == 1;
       if (widget.showDuel) {
         _tabController.addListener(() {
           if (!_tabController.indexIsChanging) {
             ref
                 .read(parejaTabIndexProvider.notifier)
                 .setIndex(_tabController.index);
+            if (_tabController.index == 1 && !_hasOpenedRewardsTab && mounted) {
+              setState(() => _hasOpenedRewardsTab = true);
+            }
           }
         });
         _loadDuelStats();
@@ -91,6 +102,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       _memberStats = [];
       _weeklyRanking = [];
       _duelHistory = [];
+      _hasOpenedRewardsTab = !widget.showDuel || _tabController.index == 1;
       if (widget.showDuel) {
         _loadDuelStats();
       }
@@ -116,11 +128,12 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
 
     try {
       final admin = ref.read(adminProvider);
-      late final List<dynamic> results;
+      late final List<dynamic> mainResults;
+      late final Future<dynamic> duelHistoryFuture;
 
       if (admin.isAdminUser) {
         final client = ref.read(supabaseClientProvider);
-        results = await Future.wait<dynamic>([
+        mainResults = await Future.wait<dynamic>([
           client.rpc(
             'qa_admin_get_task_stats_by_category',
             params: {'p_household_id': widget.householdId},
@@ -133,29 +146,32 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             'qa_admin_get_weekly_ranking',
             params: {'p_household_id': widget.householdId},
           ),
-          client.rpc(
-            'qa_admin_get_weekly_duel_history',
-            params: {'p_household_id': widget.householdId},
-          ),
         ]);
+        duelHistoryFuture = client.rpc(
+          'qa_admin_get_weekly_duel_history',
+          params: {'p_household_id': widget.householdId},
+        );
       } else {
         final rpc = ref.read(rpcServiceProvider);
-        results = await Future.wait<dynamic>([
+        mainResults = await Future.wait<dynamic>([
           rpc.getTaskStatsByCategory(),
           rpc.getMemberActivityStats(),
           rpc.getWeeklyRanking(),
-          rpc.getWeeklyDuelHistory(),
         ]);
+        duelHistoryFuture = rpc.getWeeklyDuelHistory();
       }
 
       if (!mounted) return;
       setState(() {
-        _taskStats = _mapList(results[0]);
-        _memberStats = _mapList(results[1]);
-        _weeklyRanking = _mapList(results[2]);
-        _duelHistory = _mapList(results[3]);
+        _taskStats = _mapList(mainResults[0]);
+        _memberStats = _mapList(mainResults[1]);
+        _weeklyRanking = _mapList(mainResults[2]);
         _isStatsLoading = false;
       });
+
+      final duelHistory = await duelHistoryFuture;
+      if (!mounted) return;
+      setState(() => _duelHistory = _mapList(duelHistory));
     } catch (error, stackTrace) {
       log.w(
         'CoupleRewardsScreen failed to load duel stats',
@@ -222,12 +238,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       ref.listen<int>(parejaTabIndexProvider, (previous, next) {
         if (_tabController.index != next) {
           _tabController.animateTo(next);
+          if (next == 1 && !_hasOpenedRewardsTab) {
+            setState(() => _hasOpenedRewardsTab = true);
+          }
         }
       });
     }
 
-    final rewardsAsync = ref.watch(rewardsProvider);
-    final currentUserId = ref.read(currentUserIdProvider);
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final List<String> tabLabels = widget.showDuel
@@ -235,52 +252,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
         : [t.rewardsTabPrizes];
     final tabViews = [
       if (widget.showDuel) _buildDuelTab(),
-      rewardsAsync.when(
-        data: (rewards) {
-          final activeRewards = rewards.where((r) => r.isActive).toList();
-          final availableCoins =
-              ref.watch(userBalanceProvider).value?['coins'] ?? 0;
-          final approvedRewards =
-              activeRewards.where((r) => r.isApproved == true).toList();
-          final suggestions =
-              activeRewards.where((r) => r.isApproved == false).toList();
-
-          return RefreshIndicator(
-            color: AppColors.primary,
-            onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
-            child: ListView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                2,
-                AppSpacing.lg,
-                132,
-              ),
-              children: [
-                _buildCoinsDivider(availableCoins),
-                const SizedBox(height: 18),
-                _buildChallengeSection(widget.householdId),
-                const SizedBox(height: 28),
-                if (approvedRewards.isEmpty)
-                  _buildEmptyState()
-                else
-                  _buildGroupedRewards(approvedRewards),
-                if (suggestions.isNotEmpty) ...[
-                  const SizedBox(height: 28),
-                  _buildPendingProposalsSection(suggestions, currentUserId),
-                ],
-                const SizedBox(height: 32),
-                _buildActionButtons(),
-              ],
-            ),
-          );
-        },
-        loading: () => AppLoadingState(message: t.rewardsLoading),
-        error: (e, _) => AppErrorState(
-          message: t.rewardsLoadError(e.toString()),
-          onRetry: () => ref.invalidate(rewardsProvider),
-        ),
-      ),
+      _hasOpenedRewardsTab ? _buildRewardsTab() : const SizedBox.shrink(),
     ];
 
     return Scaffold(
@@ -309,6 +281,59 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRewardsTab() {
+    final rewardsAsync = ref.watch(rewardsProvider);
+    final currentUserId = ref.read(currentUserIdProvider);
+    final t = AppLocalizations.of(context);
+
+    return rewardsAsync.when(
+      data: (rewards) {
+        final activeRewards = rewards.where((r) => r.isActive).toList();
+        final availableCoins =
+            ref.watch(userBalanceProvider).value?['coins'] ?? 0;
+        final approvedRewards =
+            activeRewards.where((r) => r.isApproved == true).toList();
+        final suggestions =
+            activeRewards.where((r) => r.isApproved == false).toList();
+
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
+          child: ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              2,
+              AppSpacing.lg,
+              132,
+            ),
+            children: [
+              _buildCoinsDivider(availableCoins),
+              const SizedBox(height: 18),
+              _buildChallengeSection(widget.householdId),
+              const SizedBox(height: 28),
+              if (approvedRewards.isEmpty)
+                _buildEmptyState()
+              else
+                _buildGroupedRewards(approvedRewards),
+              if (suggestions.isNotEmpty) ...[
+                const SizedBox(height: 28),
+                _buildPendingProposalsSection(suggestions, currentUserId),
+              ],
+              const SizedBox(height: 32),
+              _buildActionButtons(),
+            ],
+          ),
+        );
+      },
+      loading: () => AppLoadingState(message: t.rewardsLoading),
+      error: (e, _) => AppErrorState(
+        message: t.rewardsLoadError(e.toString()),
+        onRetry: () => ref.invalidate(rewardsProvider),
       ),
     );
   }
@@ -1225,77 +1250,88 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     }
   }
 
-  void _confirmRedeem(RewardModel reward, bool canAfford) {
+  Future<void> _confirmRedeem(RewardModel reward, bool canAfford) async {
+    final t = AppLocalizations.of(context);
+    final title = localizedRewardTitle(t, reward);
+
     if (!canAfford) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Coins insuficientes. A completar tareas.'),
+        SnackBar(
+          content: Text(t.rewardsInsufficientCoins),
         ),
       );
       return;
     }
 
-    showDialog(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('¿Canjear este premio?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(reward.icon, style: const TextStyle(fontSize: 60)),
-            const SizedBox(height: 16),
-            Text(
-              reward.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogCtx);
-              ref.read(rewardsProvider.notifier).redeem(reward.id).then((_) {
-                if (!mounted) return;
-                ref.invalidate(userBalanceProvider);
-                _showSuccessAnim(reward);
-              }).catchError((e) {
-                if (!mounted) return;
-                final errStr = e.toString().replaceFirst('Exception: ', '');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error: $errStr'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-                ref.invalidate(userBalanceProvider);
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Canjear'),
-          ),
-        ],
+      builder: (dialogCtx) => _RedeemRewardDialog(
+        title: title,
+        icon: reward.icon,
+        cost: reward.cost,
+        onCancel: () => Navigator.pop(dialogCtx, false),
+        onConfirm: () => Navigator.pop(dialogCtx, true),
       ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    await _redeemReward(reward, title);
+  }
+
+  Future<void> _redeemReward(RewardModel reward, String title) async {
+    final result = await ref.read(rewardsProvider.notifier).redeem(reward.id);
+    if (!mounted) return;
+
+    await result.fold(
+      (failure) async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        _refreshRewardState();
+      },
+      (_) async {
+        _applyRewardRedemptionLocally(reward, title);
+        _refreshRewardState();
+        if (!mounted) return;
+        _showSuccessAnim(reward, title);
+      },
     );
   }
 
-  void _showSuccessAnim(RewardModel reward) {
+  void _applyRewardRedemptionLocally(RewardModel reward, String title) {
+    final currentBalance = ref.read(userBalanceProvider).value;
+    final householdId = ref.read(householdIdProvider).value;
+    if (currentBalance != null && householdId != null) {
+      final currentCoins = (currentBalance['coins'] as num?)?.toInt() ?? 0;
+      ref.read(userBalanceOverrideProvider.notifier).state = {
+        ...currentBalance,
+        '_household_id': householdId,
+        'coins': (currentCoins - reward.cost).clamp(0, 1 << 31),
+      };
+    }
+
+    ref.read(optimisticRecentActivityProvider.notifier).addRewardRedeemed(
+          title: title,
+          icon: reward.icon,
+          cost: reward.cost,
+        );
+  }
+
+  void _refreshRewardState() {
+    ref.invalidate(rewardsProvider);
+    ref.invalidate(userBalanceProvider);
+    ref.invalidate(recentActivityProvider);
+  }
+
+  void _showSuccessAnim(RewardModel reward, String title) {
+    final t = AppLocalizations.of(context);
     SuccessCelebration.show(
       context,
-      title: 'Premio canjeado',
-      message:
-          'Disfruta de "${reward.title}". El amor también vive en los pequeños detalles.',
+      title: t.rewardsRedeemed,
+      message: t.rewardsRedeemedBody(title),
       icon: reward.icon,
     );
   }
@@ -1823,5 +1859,130 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
       return 'experiencias';
     }
     return 'otros';
+  }
+}
+
+class _RedeemRewardDialog extends StatelessWidget {
+  const _RedeemRewardDialog({
+    required this.title,
+    required this.icon,
+    required this.cost,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  final String title;
+  final String icon;
+  final int cost;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 30,
+              offset: const Offset(0, 16),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(icon, style: const TextStyle(fontSize: 34)),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              t.rewardsRedeemPrompt,
+              textAlign: TextAlign.center,
+              style: textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              t.rewardsRedeemDialogBody(title, cost),
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: onCancel,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      t.commonCancel,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onConfirm,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      t.rewardsRedeem,
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 140.ms, curve: Curves.easeOutCubic).scale(
+            begin: const Offset(0.97, 0.97),
+            end: const Offset(1, 1),
+            duration: 210.ms,
+            curve: Curves.easeOutCubic,
+          ),
+    );
   }
 }
