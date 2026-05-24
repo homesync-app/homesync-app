@@ -70,3 +70,6 @@ APK/
 
 # ─── Data exports (PII) ──────────────────────────────────────────────────────
 *.csv
+
+# ─── External tool checkout (nested git repo, not part of this repo) ──────────
+tools/open-design/
