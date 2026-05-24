@@ -7,11 +7,14 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
+import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
+import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
+import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 Color dashboardCategoryAccent(BuildContext context, String? category) {
   final normalizedCategory = CategoryMapping.normaliseCategory(category);
@@ -29,12 +32,14 @@ IconData dashboardCategoryIcon(String? category) {
 class DashboardTaskCard extends ConsumerWidget {
   final TaskModel task;
   final bool isCompleting;
+  final MemberModel? assignedMember;
   final VoidCallback? onTap;
 
   const DashboardTaskCard({
     super.key,
     required this.task,
     required this.isCompleting,
+    this.assignedMember,
     this.onTap,
   });
 
@@ -59,242 +64,245 @@ class DashboardTaskCard extends ConsumerWidget {
         ? AppColors.fromHex(categoryData.color)
         : dashboardCategoryAccent(context, task.category);
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
-      duration: dashboardTaskCompletionDuration(context, isCompleting),
-      curve: dashboardTaskCompletionCurve(isCompleting),
-      builder: (context, progress, child) {
-        final pulse = math.sin(progress * math.pi);
-        final scale = 1 + (pulse * 0.018);
-        final completionColor = dashboardTaskCompletionColor(accent);
-
-        return Transform.scale(
-          scale: scale,
-          child: AnimatedPress(
-            scale: 0.985,
-            onTap: isCompleting
-                ? null
-                : () {
-                    HapticFeedback.lightImpact();
-                    onTap?.call();
-                  },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Color.lerp(
-                  theme.surface,
-                  Color.alphaBlend(
-                    completionColor.withValues(alpha: 0.085),
-                    theme.surface,
+    return AppCompletionFeedback(
+      isCompleting: isCompleting,
+      accentColor: accent,
+      surfaceColor: theme.surface,
+      borderColor: accent.withValues(alpha: 0.12),
+      boxShadow: theme.cardShadow,
+      borderRadius: BorderRadius.circular(24),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      builder: (context, progress, pulse, completionColor) {
+        return AnimatedPress(
+          scale: 0.985,
+          onTap: isCompleting
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onTap?.call();
+                },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: TaskCompletionSheen(
+                    progress: progress,
+                    color: completionColor,
                   ),
-                  progress,
                 ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Color.lerp(
-                    accent.withValues(alpha: 0.12),
-                    completionColor.withValues(alpha: 0.38),
-                    progress,
-                  )!,
-                ),
-                boxShadow: [
-                  ...theme.cardShadow,
-                  BoxShadow(
-                    color: completionColor.withValues(
-                      alpha: 0.035 + (pulse * 0.075),
-                    ),
-                    blurRadius: 18 + (pulse * 12),
-                    offset: Offset(0, 8 + (pulse * 3)),
-                  ),
-                ],
               ),
-              child: Stack(
-                clipBehavior: Clip.none,
+              Row(
                 children: [
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: TaskCompletionSheen(
+                  _buildLeading(accent, progress, completionColor),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          localizedTaskTitle(
+                            AppLocalizations.of(context),
+                            task,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15.5,
+                            color: theme.textPrimary,
+                            height: 1.18,
+                            letterSpacing: -0.25,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _TaskMetricPill(
+                              icon: Icons.star_rounded,
+                              label: '${task.xpReward} XP',
+                              color: const Color(0xFFF0A146),
+                            ),
+                            if (task.coinReward > 0)
+                              _TaskMetricPill(
+                                icon: Icons.monetization_on_rounded,
+                                label: '${task.coinReward}',
+                                color: const Color(0xFF7CB08B),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.center,
+                    children: [
+                      CompletionSparkleBurst(
                         progress: progress,
                         color: completionColor,
                       ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color.lerp(
-                                accent.withValues(alpha: 0.15),
-                                completionColor.withValues(alpha: 0.20),
-                                progress,
-                              )!,
-                              Color.lerp(
-                                accent.withValues(alpha: 0.05),
-                                completionColor.withValues(alpha: 0.08),
-                                progress,
-                              )!,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: AppMotion.fast,
-                          switchInCurve: Curves.easeOutBack,
-                          switchOutCurve: Curves.easeInCubic,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(
-                            opacity: animation,
-                            child: ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            ),
-                          ),
-                          child: Icon(
-                            isCompleting
-                                ? Icons.check_rounded
-                                : dashboardCategoryIcon(task.category),
-                            key: ValueKey(isCompleting),
+                      Transform.scale(
+                        scale: 1 + (pulse * 0.16),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
                             color: Color.lerp(
-                              accent.withValues(alpha: 0.72),
-                              completionColor,
+                              accent.withValues(alpha: 0.09),
+                              completionColor.withValues(alpha: 0.94),
                               progress,
                             ),
-                            size: isCompleting ? 24 : 21,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Color.lerp(
+                                accent.withValues(alpha: 0.12),
+                                Colors.white.withValues(alpha: 0.62),
+                                progress,
+                              )!,
+                            ),
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: AppMotion.fast,
+                            switchInCurve: Curves.easeOutBack,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.check_rounded,
+                              key: ValueKey(isCompleting),
+                              size: isCompleting ? 22 : 18,
+                              color:
+                                  isCompleting ? Colors.white : completionColor,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              localizedTaskTitle(
-                                AppLocalizations.of(context),
-                                task,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15.5,
-                                color: theme.textPrimary,
-                                height: 1.18,
-                                letterSpacing: -0.25,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                _TaskMetricPill(
-                                  icon: Icons.star_rounded,
-                                  label: '${task.xpReward} XP',
-                                  color: const Color(0xFFF0A146),
-                                ),
-                                if (task.coinReward > 0)
-                                  _TaskMetricPill(
-                                    icon: Icons.monetization_on_rounded,
-                                    label: '${task.coinReward}',
-                                    color: const Color(0xFF7CB08B),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.center,
-                        children: [
-                          CompletionSparkleBurst(
-                            progress: progress,
-                            color: completionColor,
-                          ),
-                          Transform.scale(
-                            scale: 1 + (pulse * 0.16),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Color.lerp(
-                                  accent.withValues(alpha: 0.09),
-                                  completionColor.withValues(alpha: 0.94),
-                                  progress,
-                                ),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Color.lerp(
-                                    accent.withValues(alpha: 0.12),
-                                    Colors.white.withValues(alpha: 0.62),
-                                    progress,
-                                  )!,
-                                ),
-                              ),
-                              child: AnimatedSwitcher(
-                                duration: AppMotion.fast,
-                                switchInCurve: Curves.easeOutBack,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                  opacity: animation,
-                                  child: ScaleTransition(
-                                    scale: animation,
-                                    child: child,
-                                  ),
-                                ),
-                                child: Icon(
-                                  Icons.check_rounded,
-                                  key: ValueKey(isCompleting),
-                                  size: isCompleting ? 22 : 18,
-                                  color: isCompleting
-                                      ? Colors.white
-                                      : completionColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         );
       },
     );
   }
-}
 
-Duration dashboardTaskCompletionDuration(
-  BuildContext context,
-  bool isCompleting,
-) {
-  final media = MediaQuery.maybeOf(context);
-  if (media?.accessibleNavigation ?? false) {
-    return Duration.zero;
+  Widget _buildLeading(Color accent, double progress, Color completionColor) {
+    Widget child;
+
+    if (isCompleting) {
+      child = _TaskIconTile(
+        key: const ValueKey('task-complete-icon'),
+        color: completionColor,
+        icon: Icons.check_rounded,
+        iconSize: 24,
+        progress: progress,
+        completionColor: completionColor,
+      );
+    } else if (assignedMember != null) {
+      child = CustomUserAvatar(
+        key: ValueKey('assigned-${assignedMember!.userId}'),
+        name: assignedMember!.displayName,
+        avatarUrl: assignedMember!.avatarUrl,
+        radius: 22,
+        showBorder: true,
+        userId: assignedMember!.userId,
+        forceCircular: true,
+      );
+    } else {
+      child = _TaskIconTile(
+        key: ValueKey('category-${task.category ?? 'none'}'),
+        color: accent,
+        icon: dashboardCategoryIcon(task.category),
+        iconSize: 21,
+        progress: progress,
+        completionColor: completionColor,
+      );
+    }
+
+    return SizedBox(
+      width: 54,
+      height: 54,
+      child: Center(
+        child: AnimatedSwitcher(
+          duration: AppMotion.fast,
+          switchInCurve: Curves.easeOutBack,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: animation,
+              child: child,
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
   }
-  return Duration(milliseconds: isCompleting ? 520 : 220);
 }
 
-Curve dashboardTaskCompletionCurve(bool isCompleting) {
-  return isCompleting ? Curves.easeOutCubic : Curves.easeInOutCubic;
-}
+class _TaskIconTile extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final double iconSize;
+  final double progress;
+  final Color completionColor;
 
-Color dashboardTaskCompletionColor(Color accent) {
-  return Color.alphaBlend(
-    const Color(0xFF22C55E).withValues(alpha: 0.62),
-    accent,
-  );
+  const _TaskIconTile({
+    super.key,
+    required this.color,
+    required this.icon,
+    required this.iconSize,
+    required this.progress,
+    required this.completionColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(
+              color.withValues(alpha: 0.15),
+              completionColor.withValues(alpha: 0.20),
+              progress,
+            )!,
+            Color.lerp(
+              color.withValues(alpha: 0.05),
+              completionColor.withValues(alpha: 0.08),
+              progress,
+            )!,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Icon(
+        icon,
+        color: Color.lerp(
+          color.withValues(alpha: 0.72),
+          completionColor,
+          progress,
+        ),
+        size: iconSize,
+      ),
+    );
+  }
 }
 
 class TaskCompletionSheen extends StatelessWidget {

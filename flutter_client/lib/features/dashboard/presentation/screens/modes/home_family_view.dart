@@ -13,6 +13,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -837,8 +838,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final activity = activities[index];
-                    return _ActivityFeedEntry(
+                    return AppFeedEntryMotion(
                       key: ValueKey(_activityStableKey(activity)),
+                      direction: AppFeedEntryDirection.fromTop,
                       child: FamilyActivityFeedItem(
                         activity: activity,
                       ),
@@ -855,22 +857,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   String _activityStableKey(Map<String, dynamic> activity) {
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
-    final taskId = data['task_id']?.toString();
-    final expenseId = data['expense_id']?.toString();
-    // Cuando hay un recurso semantico (task_id / expense_id) usamos ESE como
-    // identidad estable. Asi la entrada optimista y la real que llega despues
-    // por realtime comparten la misma key -> mismo widget -> la animacion de
-    // entrada corre completa sin remount/flash a mitad.
-    if (taskId != null && taskId.isNotEmpty) {
-      return 'task-$taskId';
-    }
-    if (expenseId != null && expenseId.isNotEmpty) {
-      return 'expense-$expenseId';
-    }
     return [
       activity['id'],
       activity['type'],
       activity['created_at'],
+      data['task_id'],
+      data['expense_id'],
     ].whereType<Object>().join('-');
   }
 
@@ -1066,41 +1058,6 @@ extension _StringExtension on String {
     final trimmed = trim();
     if (trimmed.isEmpty) return this;
     return '${trimmed[0].toUpperCase()}${trimmed.substring(1)}';
-  }
-}
-
-class _ActivityFeedEntry extends StatelessWidget {
-  final Widget child;
-
-  const _ActivityFeedEntry({
-    super.key,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      // Entrada combinada: fade + slide desde arriba + scale-in sutil.
-      // El offset negativo (slide hacia abajo) refuerza la lectura visual de
-      // que la tarea "bajó" desde la lista de arriba al feed.
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, -24 * (1 - value)),
-            child: Transform.scale(
-              scale: 0.96 + 0.04 * value,
-              alignment: Alignment.topCenter,
-              child: child,
-            ),
-          ),
-        );
-      },
-      child: child,
-    );
   }
 }
 

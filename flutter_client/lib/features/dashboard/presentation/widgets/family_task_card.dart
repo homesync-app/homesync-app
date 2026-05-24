@@ -1,20 +1,13 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart'
-    show
-        CompletionSparkleBurst,
-        dashboardCategoryAccent,
-        dashboardCategoryIcon,
-        dashboardTaskCompletionColor,
-        dashboardTaskCompletionCurve,
-        dashboardTaskCompletionDuration;
+    show CompletionSparkleBurst, dashboardCategoryAccent, dashboardCategoryIcon;
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
@@ -81,196 +74,165 @@ class FamilyTaskCard extends StatelessWidget {
     final contextLabel = _contextLabel();
     final urgency = _urgencyLabel();
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: isCompleting ? 1 : 0),
-      duration: dashboardTaskCompletionDuration(context, isCompleting),
-      curve: dashboardTaskCompletionCurve(isCompleting),
-      builder: (context, progress, child) {
-        final pulse = math.sin(progress * math.pi);
-        final scale = 1 + (pulse * 0.016);
-        final completionColor = dashboardTaskCompletionColor(accent);
-
-        return Transform.scale(
-          scale: scale,
-          child: AnimatedPress(
-            scale: 0.985,
-            onTap: isCompleting
-                ? null
-                : () {
-                    HapticFeedback.lightImpact();
-                    onTap?.call();
-                  },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Color.lerp(
-                  isPendingReview
-                      ? accent.withValues(alpha: 0.08)
-                      : theme.surface,
-                  Color.alphaBlend(
-                    completionColor.withValues(alpha: 0.080),
-                    theme.surface,
-                  ),
-                  progress,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Color.lerp(
-                    accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
-                    completionColor.withValues(alpha: 0.36),
-                    progress,
-                  )!,
-                ),
-                boxShadow: [
-                  ...theme.cardShadow,
-                  BoxShadow(
-                    color: completionColor.withValues(
-                      alpha:
-                          (isPendingReview ? 0.046 : 0.032) + (pulse * 0.065),
-                    ),
-                    blurRadius: 18 + (pulse * 11),
-                    offset: Offset(0, 8 + (pulse * 3)),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  _buildLeading(accent),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          localizedTaskTitle(
-                            AppLocalizations.of(context),
-                            task,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15.5,
-                            color: theme.textPrimary,
-                            height: 1.18,
-                            letterSpacing: -0.25,
-                          ),
-                        ),
-                        if (contextLabel != null) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            contextLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: theme.textSecondary,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            if (urgency != null)
-                              _FamilyTaskPill(
-                                icon: task.isPendingApproval
-                                    ? Icons.fact_check_rounded
-                                    : task.isOverdue
-                                        ? Icons.priority_high_rounded
-                                        : Icons.today_rounded,
-                                label: urgency,
-                                color: task.isPendingApproval
-                                    ? accent
-                                    : task.isOverdue
-                                        ? const Color(0xFFD96A5F)
-                                        : accent,
-                              ),
-                            _FamilyTaskPill(
-                              icon: Icons.star_rounded,
-                              label: '${task.xpReward} XP',
-                              color: const Color(0xFFF0A146),
-                            ),
-                            if (task.coinReward > 0)
-                              _FamilyTaskPill(
-                                icon: Icons.monetization_on_rounded,
-                                label: '${task.coinReward}',
-                                color: const Color(0xFF7CB08B),
-                              ),
-                            if (task.hasRotation)
-                              _FamilyTaskPill(
-                                icon: Icons.autorenew_rounded,
-                                label: 'Rota entre ${task.rotationPool.length}',
-                                color: const Color(0xFF5A94E1),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.center,
-                    children: [
-                      CompletionSparkleBurst(
-                        progress: progress,
-                        color: completionColor,
+    return AppCompletionFeedback(
+      isCompleting: isCompleting,
+      accentColor: accent,
+      surfaceColor:
+          isPendingReview ? accent.withValues(alpha: 0.08) : theme.surface,
+      borderColor: accent.withValues(alpha: isPendingReview ? 0.22 : 0.12),
+      boxShadow: theme.cardShadow,
+      borderRadius: BorderRadius.circular(24),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      completionSurfaceAlpha: 0.080,
+      completionBorderAlpha: 0.36,
+      shadowBaseAlpha: isPendingReview ? 0.046 : 0.032,
+      shadowPulseAlpha: 0.065,
+      shadowPulseBlur: 11,
+      popScale: 0.016,
+      builder: (context, progress, pulse, completionColor) {
+        return AnimatedPress(
+          scale: 0.985,
+          onTap: isCompleting
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onTap?.call();
+                },
+          child: Row(
+            children: [
+              _buildLeading(accent),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localizedTaskTitle(
+                        AppLocalizations.of(context),
+                        task,
                       ),
-                      Transform.scale(
-                        scale: 1 + (pulse * 0.15),
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Color.lerp(
-                              isActionEnabled
-                                  ? accent.withValues(alpha: 0.055)
-                                  : theme.textMuted.withValues(alpha: 0.08),
-                              completionColor.withValues(alpha: 0.90),
-                              progress,
-                            ),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Color.lerp(
-                                (isActionEnabled ? accent : theme.textMuted)
-                                    .withValues(alpha: 0.12),
-                                Colors.white.withValues(alpha: 0.62),
-                                progress,
-                              )!,
-                            ),
-                          ),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 180),
-                            switchInCurve: Curves.easeOutBack,
-                            switchOutCurve: Curves.easeInCubic,
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                              opacity: animation,
-                              child: ScaleTransition(
-                                scale: animation,
-                                child: child,
-                              ),
-                            ),
-                            child: Icon(
-                              isCompleting ? Icons.check_rounded : actionIcon,
-                              key: ValueKey(isCompleting),
-                              size: isCompleting ? 21 : 17,
-                              color: isCompleting
-                                  ? Colors.white
-                                  : isActionEnabled
-                                      ? accent.withValues(alpha: 0.88)
-                                      : theme.textMuted,
-                            ),
-                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.5,
+                        color: theme.textPrimary,
+                        height: 1.18,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                    if (contextLabel != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        contextLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: theme.textSecondary,
                         ),
                       ),
                     ],
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (urgency != null)
+                          _FamilyTaskPill(
+                            icon: task.isPendingApproval
+                                ? Icons.fact_check_rounded
+                                : task.isOverdue
+                                    ? Icons.priority_high_rounded
+                                    : Icons.today_rounded,
+                            label: urgency,
+                            color: task.isPendingApproval
+                                ? accent
+                                : task.isOverdue
+                                    ? const Color(0xFFD96A5F)
+                                    : accent,
+                          ),
+                        _FamilyTaskPill(
+                          icon: Icons.star_rounded,
+                          label: '${task.xpReward} XP',
+                          color: const Color(0xFFF0A146),
+                        ),
+                        if (task.coinReward > 0)
+                          _FamilyTaskPill(
+                            icon: Icons.monetization_on_rounded,
+                            label: '${task.coinReward}',
+                            color: const Color(0xFF7CB08B),
+                          ),
+                        if (task.hasRotation)
+                          _FamilyTaskPill(
+                            icon: Icons.autorenew_rounded,
+                            label: 'Rota entre ${task.rotationPool.length}',
+                            color: const Color(0xFF5A94E1),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  CompletionSparkleBurst(
+                    progress: progress,
+                    color: completionColor,
+                  ),
+                  Transform.scale(
+                    scale: 1 + (pulse * 0.15),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          isActionEnabled
+                              ? accent.withValues(alpha: 0.055)
+                              : theme.textMuted.withValues(alpha: 0.08),
+                          completionColor.withValues(alpha: 0.90),
+                          progress,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Color.lerp(
+                            (isActionEnabled ? accent : theme.textMuted)
+                                .withValues(alpha: 0.12),
+                            Colors.white.withValues(alpha: 0.62),
+                            progress,
+                          )!,
+                        ),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        switchInCurve: Curves.easeOutBack,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        ),
+                        child: Icon(
+                          isCompleting ? Icons.check_rounded : actionIcon,
+                          key: ValueKey(isCompleting),
+                          size: isCompleting ? 21 : 17,
+                          color: isCompleting
+                              ? Colors.white
+                              : isActionEnabled
+                                  ? accent.withValues(alpha: 0.88)
+                                  : theme.textMuted,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
         );
       },

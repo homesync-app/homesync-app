@@ -27,6 +27,7 @@ import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/task_completion_flow_mixin.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
@@ -418,6 +419,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
 
   Widget _buildTasksSection(AppThemeColors theme) {
     final tasksAsync = ref.watch(todayTasksProvider);
+    final members =
+        ref.watch(householdMembersProvider).value ?? const <MemberModel>[];
     final caps = ref.watch(householdCapabilitiesProvider);
     final t = AppLocalizations.of(context);
 
@@ -467,7 +470,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               itemCount: tasks.length,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) =>
-                  _buildTaskCard(tasks.elementAt(index), theme),
+                  _buildTaskCard(tasks.elementAt(index), theme, members),
             );
           },
         ),
@@ -475,10 +478,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     );
   }
 
-  Widget _buildTaskCard(TaskModel task, AppThemeColors theme) {
+  Widget _buildTaskCard(
+    TaskModel task,
+    AppThemeColors theme,
+    List<MemberModel> members,
+  ) {
+    final assignedMember =
+        members.where((member) => member.userId == task.assignedTo).firstOrNull;
+
     return DashboardTaskCard(
       task: task,
       isCompleting: completingTaskIds.contains(task.id),
+      assignedMember: assignedMember,
       onTap: () => _completeTask(task),
     );
   }
@@ -520,19 +531,40 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
               return _buildActivityEmptyState(theme);
             }
             return Column(
-              children: activities
-                  .map(
-                    (activity) => ActivityChatBubble(
+              children: activities.map(
+                (activity) {
+                  final creatorId = activity['creator_id'] as String?;
+                  final isMe = creatorId == currentUserId;
+                  return AppFeedEntryMotion(
+                    key: ValueKey(_activityStableKey(activity)),
+                    direction: isMe
+                        ? AppFeedEntryDirection.fromRight
+                        : AppFeedEntryDirection.fromLeft,
+                    distance: 18,
+                    beginScale: 0.98,
+                    child: ActivityChatBubble(
                       activity: activity,
                       currentUserId: currentUserId,
                     ),
-                  )
-                  .toList(),
+                  );
+                },
+              ).toList(),
             );
           },
         ),
       ],
     );
+  }
+
+  String _activityStableKey(Map<String, dynamic> activity) {
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    return [
+      activity['id'],
+      activity['type'],
+      activity['created_at'],
+      data['task_id'],
+      data['expense_id'],
+    ].whereType<Object>().join('-');
   }
 
   Widget _buildActivityEmptyState(AppThemeColors theme) {

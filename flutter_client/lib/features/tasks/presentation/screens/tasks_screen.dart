@@ -22,6 +22,7 @@ import 'package:homesync_client/features/tasks/presentation/utils/task_localizat
 import 'package:homesync_client/features/tasks/presentation/widgets/add_task_options_sheet.dart';
 import 'package:homesync_client/features/tasks/presentation/widgets/edit_task_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
@@ -1195,63 +1196,26 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     final categoryColor = categoryData != null
         ? AppColors.fromHex(categoryData.color)
         : CategoryMapping.getCategoryColor(task.category);
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: _isSubmitting ? 1 : 0),
-      duration: _taskListCompletionDuration(context, _isSubmitting),
-      curve: _isSubmitting ? Curves.easeOutCubic : Curves.easeInOutCubic,
-      builder: (context, completionProgress, child) {
-        final pulse = Curves.easeOutCubic.transform(completionProgress);
-        final completionColor = Color.alphaBlend(
-          AppColors.accentGreen.withValues(alpha: 0.68),
-          categoryColor,
-        );
-        final restingBorderColor = _isExpanded
-            ? categoryColor.withValues(alpha: 0.3)
-            : (task.isOverdue
-                ? AppColors.accentRed.withValues(alpha: 0.3)
-                : theme.border.withValues(alpha: 0.9));
+    final restingBorderColor = _isExpanded
+        ? categoryColor.withValues(alpha: 0.3)
+        : (task.isOverdue
+            ? AppColors.accentRed.withValues(alpha: 0.3)
+            : theme.border.withValues(alpha: 0.9));
 
-        return Transform.scale(
-          scale: 1 + (completionProgress * (1 - completionProgress) * 0.055),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutCubic,
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
-            decoration: BoxDecoration(
-              color: Color.lerp(
-                theme.surface,
-                Color.alphaBlend(
-                  completionColor.withValues(alpha: 0.085),
-                  theme.surface,
-                ),
-                completionProgress,
-              ),
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                ...(_isExpanded ? theme.modalShadow : theme.cardShadow),
-                if (completionProgress > 0)
-                  BoxShadow(
-                    color: completionColor.withValues(
-                      alpha: 0.04 + (pulse * 0.06),
-                    ),
-                    blurRadius: 18 + (pulse * 10),
-                    offset: Offset(0, 8 + (pulse * 3)),
-                  ),
-              ],
-              border: Border.all(
-                color: Color.lerp(
-                  restingBorderColor,
-                  completionColor.withValues(alpha: 0.38),
-                  completionProgress,
-                )!,
-                width: _isExpanded ? 1.5 : 1.2,
-              ),
-            ),
-            child: child,
-          ),
-        );
-      },
-      child: InkWell(
+    return AppCompletionFeedback(
+      isCompleting: _isSubmitting,
+      accentColor: categoryColor,
+      surfaceColor: theme.surface,
+      borderColor: restingBorderColor,
+      boxShadow: _isExpanded ? theme.modalShadow : theme.cardShadow,
+      borderRadius: BorderRadius.circular(22),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+      borderWidth: _isExpanded ? 1.5 : 1.2,
+      popScale: 0.014,
+      shadowBaseAlpha: 0.04,
+      shadowPulseAlpha: 0.06,
+      shadowPulseBlur: 10,
+      builder: (context, progress, pulse, completionColor) => InkWell(
         borderRadius: BorderRadius.circular(22),
         onTap: _isSubmitting
             ? null
@@ -1529,17 +1493,8 @@ class _TaskCardState extends ConsumerState<_TaskCard> {
     );
   }
 
-  Duration _taskListCompletionDuration(BuildContext context, bool completing) {
-    final media = MediaQuery.maybeOf(context);
-    if (media?.accessibleNavigation ?? false) return Duration.zero;
-    return Duration(milliseconds: completing ? 520 : 220);
-  }
-
   Widget _completionBadge(Color categoryColor) {
-    final color = Color.alphaBlend(
-      AppColors.accentGreen.withValues(alpha: 0.68),
-      categoryColor,
-    );
+    final color = AppCompletionFeedback.completionColor(categoryColor);
 
     return Container(
       width: 34,

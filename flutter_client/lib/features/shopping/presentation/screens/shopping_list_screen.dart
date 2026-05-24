@@ -8,6 +8,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
 
 import '../../data/shopping_predefined.dart';
 import '../../domain/models/shopping_categories.dart';
@@ -876,6 +877,10 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                                         onToggle: () => _toggleItem(item),
                                         onDelete: () => _deleteItem(item),
                                         isCompleted: true,
+                                        isFreshlyCompleted:
+                                            _completedThisSession.contains(
+                                          item.id,
+                                        ),
                                       ),
                                     );
                                   },
@@ -1035,12 +1040,14 @@ class _ShoppingItemTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final bool isCompleted;
+  final bool isFreshlyCompleted;
 
   const _ShoppingItemTile({
     required this.item,
     required this.onToggle,
     required this.onDelete,
     this.isCompleted = false,
+    this.isFreshlyCompleted = false,
   });
 
   @override
@@ -1061,100 +1068,128 @@ class _ShoppingItemTile extends StatelessWidget {
         ? theme.border.withValues(alpha: 0.72)
         : theme.border.withValues(alpha: 0.85);
 
-    return AnimatedPress(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onToggle();
-      },
-      onLongPress: () {
-        ShoppingItemSheet.show(context, item: item);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          color: isCompleted
-              ? theme.surfaceContainer.withValues(alpha: 0.28)
-              : pendingBackground,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isCompleted
-                ? theme.border.withValues(alpha: 0.52)
-                : pendingBorder,
-            width: isCompleted ? 1.0 : 1.2,
-          ),
-          boxShadow: isCompleted
-              ? []
-              : [
-                  BoxShadow(
-                    color: theme.shadowBase.withValues(
-                      alpha: theme.isDarkMode ? 0.14 : 0.03,
+    final baseSurface = isCompleted
+        ? theme.surfaceContainer.withValues(alpha: 0.28)
+        : pendingBackground;
+    final baseBorder =
+        isCompleted ? theme.border.withValues(alpha: 0.52) : pendingBorder;
+    final baseShadow = isCompleted
+        ? <BoxShadow>[]
+        : [
+            BoxShadow(
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.14 : 0.03,
+              ),
+              blurRadius: 14,
+              offset: const Offset(0, 7),
+            ),
+            BoxShadow(
+              color: catColor.withValues(
+                alpha: theme.isDarkMode ? 0.04 : 0.018,
+              ),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ];
+
+    return AppCompletionFeedback(
+      isCompleting: isFreshlyCompleted,
+      accentColor: catColor,
+      surfaceColor: baseSurface,
+      borderColor: baseBorder,
+      boxShadow: baseShadow,
+      borderRadius: BorderRadius.circular(22),
+      borderWidth: isCompleted ? 1.0 : 1.2,
+      popScale: 0.018,
+      completionSurfaceAlpha: 0.075,
+      completionBorderAlpha: 0.32,
+      shadowBaseAlpha: 0.035,
+      shadowPulseAlpha: 0.050,
+      shadowPulseBlur: 9,
+      builder: (context, progress, pulse, completionColor) {
+        return AnimatedPress(
+          scale: 0.96,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onToggle();
+          },
+          onLongPress: () {
+            ShoppingItemSheet.show(context, item: item);
+          },
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ShoppingIcon(
+                      productKey: item.nameKey,
+                      categoryId: item.category,
+                      fallbackEmoji: item.emoji.isNotEmpty
+                          ? item.emoji
+                          : catInfo['emoji'] as String,
+                      size: isCompleted ? 34 : 56,
+                      opacity: isCompleted ? 0.48 : 1,
                     ),
-                    blurRadius: 14,
-                    offset: const Offset(0, 7),
-                  ),
-                  BoxShadow(
-                    color: catColor.withValues(
-                      alpha: theme.isDarkMode ? 0.04 : 0.018,
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Text(
+                        localizedShoppingItemName(context, item),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: isCompleted ? 11 : 13,
+                          height: 1.1,
+                          color:
+                              isCompleted ? theme.textMuted : theme.textPrimary,
+                          decoration:
+                              isCompleted ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
                     ),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-        ),
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ShoppingIcon(
-                    productKey: item.nameKey,
-                    categoryId: item.category,
-                    fallbackEmoji: item.emoji.isNotEmpty
-                        ? item.emoji
-                        : catInfo['emoji'] as String,
-                    size: isCompleted ? 34 : 56,
-                    opacity: isCompleted ? 0.48 : 1,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Text(
-                      localizedShoppingItemName(context, item),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: isCompleted ? 11 : 13,
-                        height: 1.1,
-                        color:
-                            isCompleted ? theme.textMuted : theme.textPrimary,
-                        decoration:
-                            isCompleted ? TextDecoration.lineThrough : null,
+                  ],
+                ),
+              ),
+              if (isCompleted)
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Transform.scale(
+                    scale: 1 + (pulse * 0.18),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          AppColors.accentGreen,
+                          completionColor,
+                          progress,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          if (progress > 0)
+                            BoxShadow(
+                              color: completionColor.withValues(alpha: 0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        size: 12,
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            if (isCompleted)
-              Positioned(
-                right: 8,
-                bottom: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentGreen,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, size: 12, color: Colors.white),
                 ),
-              ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

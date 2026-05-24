@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/parent_mode_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/core/theme/app_design_tokens.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_approval_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
@@ -58,7 +59,7 @@ class PendingApprovalsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
-        title: Text(t.pendingApprovalsAppBarTitle),
+        title: Text(t.pendingApprovalsAppBarShortTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -85,9 +86,9 @@ class PendingApprovalsScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(pendingTaskApprovalsProvider),
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 96),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _ApprovalCard(approval: items[i]),
             ),
           );
@@ -113,49 +114,76 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
     final theme = context.theme;
     final a = widget.approval;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: theme.divider.withValues(alpha: 0.74)),
+        boxShadow: AppElevation.card(
+          color: theme.shadow,
+          isDarkMode: theme.isDarkMode,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.hourglass_top_rounded,
-                color: AppColors.accentGold,
-                size: 20,
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                ),
+                child: const Icon(
+                  Icons.hourglass_top_rounded,
+                  color: AppColors.accentGold,
+                  size: 18,
+                ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  a.taskTitle,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      a.taskTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        height: 1.14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Enviada por ${a.submittedByName}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            'Enviada por ${a.submittedByName}',
-            style: TextStyle(color: theme.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
+          const SizedBox(height: 12),
+          Row(
             children: [
               _RewardChip(
                 icon: Icons.star_rounded,
                 color: AppColors.accentGold,
                 label: '${a.xpReward} XP',
               ),
+              const SizedBox(width: 8),
               _RewardChip(
                 icon: Icons.monetization_on_rounded,
                 color: AppColors.accentYellow,
@@ -163,33 +191,62 @@ class _ApprovalCardState extends ConsumerState<_ApprovalCard> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
+                flex: 9,
                 child: OutlinedButton.icon(
                   onPressed: _busy ? null : _onReject,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(Icons.close_rounded, size: 19),
                   label: Text(
                     AppLocalizations.of(context).pendingApprovalsRejectButton,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentRed,
-                    side: const BorderSide(color: AppColors.accentRed),
+                    minimumSize: const Size(0, 46),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    side: BorderSide(
+                      color: AppColors.accentRed.withValues(alpha: 0.76),
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
+                flex: 11,
                 child: FilledButton.icon(
                   onPressed: _busy ? null : _onApprove,
-                  icon: const Icon(Icons.check_rounded),
+                  icon: const Icon(Icons.check_rounded, size: 20),
                   label: Text(
                     AppLocalizations.of(context).pendingApprovalsApproveButton,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.accentGreen,
                     foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 46),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
@@ -296,22 +353,23 @@ class _RewardChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.08)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 14),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               color: color,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              fontSize: 12.5,
             ),
           ),
         ],

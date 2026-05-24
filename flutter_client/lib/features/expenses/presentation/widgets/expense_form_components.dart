@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
@@ -383,7 +385,7 @@ class ExpenseAmountField extends StatelessWidget {
   }
 }
 
-class _ReceiptScanButton extends StatelessWidget {
+class _ReceiptScanButton extends StatefulWidget {
   final bool isScanningReceipt;
   final bool hasScanResult;
   final VoidCallback? onTap;
@@ -395,37 +397,192 @@ class _ReceiptScanButton extends StatelessWidget {
   });
 
   @override
+  State<_ReceiptScanButton> createState() => _ReceiptScanButtonState();
+}
+
+class _ReceiptScanButtonState extends State<_ReceiptScanButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _scanController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1150),
+    );
+    if (widget.isScanningReceipt) _scanController.repeat();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ReceiptScanButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isScanningReceipt && !_scanController.isAnimating) {
+      _scanController.repeat();
+    } else if (!widget.isScanningReceipt && _scanController.isAnimating) {
+      _scanController.stop();
+      _scanController.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scanController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isActive = widget.onTap != null;
+    final accent =
+        widget.hasScanResult ? AppColors.accentGreen : AppColors.accentBlue;
+
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         width: 42,
         height: 42,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: hasScanResult
-              ? AppColors.accentGreen.withValues(alpha: 0.12)
-              : AppColors.accentBlue.withValues(alpha: 0.10),
+          color:
+              accent.withValues(alpha: widget.isScanningReceipt ? 0.14 : 0.10),
           borderRadius: BorderRadius.circular(12),
-        ),
-        child: isScanningReceipt
-            ? const Padding(
-                padding: EdgeInsets.all(11),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.accentBlue,
-                ),
-              )
-            : Icon(
-                hasScanResult
-                    ? Icons.receipt_long_rounded
-                    : Icons.document_scanner_outlined,
-                color: hasScanResult
-                    ? AppColors.accentGreen
-                    : AppColors.accentBlue,
-                size: 22,
+          border: Border.all(
+            color: accent.withValues(
+                alpha: widget.isScanningReceipt ? 0.34 : 0.18),
+          ),
+          boxShadow: [
+            if (widget.isScanningReceipt || widget.hasScanResult)
+              BoxShadow(
+                color: accent.withValues(
+                    alpha: widget.isScanningReceipt ? 0.16 : 0.10),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (widget.isScanningReceipt)
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _scanController,
+                  builder: (context, child) {
+                    final pulse = math.sin(_scanController.value * math.pi * 2);
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.accentBlue.withValues(
+                          alpha: 0.035 + ((pulse + 1) * 0.018),
+                        ),
+                      ),
+                      child: CustomPaint(
+                        painter: _ScanningBorderPainter(
+                          progress: _scanController.value,
+                          color: AppColors.accentBlue,
+                          radius: 12,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            AnimatedBuilder(
+              animation: _scanController,
+              builder: (context, child) {
+                final pulse = widget.isScanningReceipt
+                    ? math.sin(_scanController.value * math.pi * 2)
+                    : 0.0;
+                return Transform.scale(
+                  scale: 1 + (pulse * 0.035),
+                  child: child,
+                );
+              },
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
+                ),
+                child: Icon(
+                  widget.hasScanResult
+                      ? Icons.check_rounded
+                      : widget.isScanningReceipt
+                          ? Icons.document_scanner_rounded
+                          : Icons.document_scanner_outlined,
+                  key: ValueKey(
+                    '${widget.hasScanResult}-${widget.isScanningReceipt}',
+                  ),
+                  color: isActive || widget.hasScanResult
+                      ? accent
+                      : accent.withValues(alpha: 0.55),
+                  size: widget.hasScanResult ? 23 : 22,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _ScanningBorderPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double radius;
+
+  const _ScanningBorderPainter({
+    required this.progress,
+    required this.color,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(1.5),
+      Radius.circular(radius),
+    );
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = color.withValues(alpha: 0.16);
+    canvas.drawRRect(rrect, basePaint);
+
+    final path = Path()..addRRect(rrect);
+    final metric = path.computeMetrics().first;
+    final length = metric.length;
+    final start = length * progress;
+    final segmentLength = length * 0.34;
+    final activePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round
+      ..color = color.withValues(alpha: 0.62);
+
+    void drawSegment(double from, double to) {
+      canvas.drawPath(metric.extractPath(from, to), activePaint);
+    }
+
+    if (start + segmentLength <= length) {
+      drawSegment(start, start + segmentLength);
+    } else {
+      drawSegment(start, length);
+      drawSegment(0, (start + segmentLength) - length);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanningBorderPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.radius != radius;
   }
 }
 
