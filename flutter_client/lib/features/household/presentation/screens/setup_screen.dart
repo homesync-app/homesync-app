@@ -14,6 +14,7 @@ import 'package:homesync_client/features/auth/data/repositories/supabase_auth_re
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -2342,6 +2343,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
               final category = _categories[index];
               final templates = _templatesByCategory[category.id] ?? [];
               if (templates.isEmpty) return const SizedBox.shrink();
+              final categoryName = localizedTaskCatalogText(
+                t,
+                category.translationKey,
+                category.name,
+              );
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2350,7 +2356,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                     padding:
                         const EdgeInsets.only(top: 24, bottom: 16, left: 4),
                     child: Text(
-                      '${category.icon}  ${category.name.toUpperCase()}',
+                      '${category.icon}  ${categoryName.toUpperCase()}',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w900,
@@ -2398,6 +2404,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Widget _buildTaskChipV2(TaskTemplate template) {
     final isSelected = _selectedTemplateIds.contains(template.id);
+    final title = localizedTaskTemplateTitle(
+      AppLocalizations.of(context),
+      template,
+    );
 
     return GestureDetector(
       onTap: () {
@@ -2438,7 +2448,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              template.title,
+              title,
               style: TextStyle(
                 color: isSelected ? AppColors.primary : AppColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,

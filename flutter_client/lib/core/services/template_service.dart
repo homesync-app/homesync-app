@@ -45,6 +45,7 @@ class Category {
   final String icon;
   final String color;
   final int sortOrder;
+  final String? translationKey;
 
   Category({
     required this.id,
@@ -52,6 +53,7 @@ class Category {
     required this.icon,
     required this.color,
     this.sortOrder = 0,
+    this.translationKey,
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
@@ -61,6 +63,7 @@ class Category {
       icon: json['icon'] as String,
       color: json['color'] as String,
       sortOrder: json['sort_order'] as int? ?? 0,
+      translationKey: json['translation_key'] as String?,
     );
   }
 }
