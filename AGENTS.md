@@ -60,6 +60,8 @@ cd supabase && supabase functions deploy <name> --project-ref tfavamqszdkoeabpyx
 
 Shorebird está instalado y configurado (`flutter_client/shorebird.yaml`, app_id: `3da773b5-655d-47c6-8277-5d90b3417d86`).
 
+> **⚠️ Regla de oro (de acá en adelante):** los releases hay que hacerlos **siempre** con `shorebird release android` (NO `flutter build appbundle`). Ese es el único que queda "parcheable" — un `.aab` hecho con `flutter build appbundle` NO lleva el updater de Shorebird adentro y nunca podrá recibir patches OTA. De ahí en más, cambios de Dart/assets (íconos, copy, lógica, UI) van por `shorebird patch android` = OTA, sin tocar la Play Store.
+
 - **Nueva release** (cuando haya cambios nativos o nueva versión en Play Store):
   ```bash
   cd flutter_client && shorebird release android

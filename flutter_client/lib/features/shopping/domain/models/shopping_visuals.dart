@@ -8,15 +8,25 @@ class ShoppingIconAsset {
   final String fallbackEmoji;
 }
 
-/// Custom PNG overrides for products whose default emoji collides with other
-/// products (e.g. naranja/mandarina/pomelo all map to 🍊). Base icons are the
-/// system emoji; an entry here is only added when a dedicated icon exists, and
-/// it must live under assets/images/shopping_icons/products/ (re-add that dir to
-/// pubspec when the first override ships).
+/// Camino 2: los emojis del sistema son la base de todos los productos. Acá solo
+/// van los *overrides* con PNG propio para casos puntuales: colisiones de emoji
+/// (ej. naranja/mandarina/pomelo → todos 🍊) o productos sin emoji decente (ej.
+/// milanesa). Para sumar uno: dejá el PNG en
+/// assets/images/shopping_icons/products/{clave}.png (ese dir debe estar en
+/// pubspec assets) y agregá la entrada acá. Las call sites ya pasan
+/// allowProductAsset: true, así que el ícono aparece solo; lo que no esté en
+/// este mapa sigue mostrando su emoji.
 class ShoppingVisuals {
+  static const String _basePath = 'assets/images/shopping_icons';
+
   static const Map<String, ShoppingIconAsset> categories = {};
 
-  static const Map<String, ShoppingIconAsset> products = {};
+  static const Map<String, ShoppingIconAsset> products = {
+    'milanesas': ShoppingIconAsset(
+      assetPath: '$_basePath/products/milanesas.png',
+      fallbackEmoji: '🍽️',
+    ),
+  };
 
   static ShoppingIconAsset? product(String? key) {
     if (key == null || key.isEmpty) return null;

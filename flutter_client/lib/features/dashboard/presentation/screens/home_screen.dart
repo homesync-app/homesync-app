@@ -305,7 +305,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onTap: onTap,
         child: Ink(
           height: 96,
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+          padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
           decoration: BoxDecoration(
             color: theme.isDarkMode ? theme.surface : Colors.white,
             borderRadius: BorderRadius.circular(28),
@@ -333,20 +333,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Text(
                       label,
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.clip,
                       style: TextStyle(
                         color: theme.textPrimary,
                         fontWeight: FontWeight.w900,
-                        fontSize: 21,
-                        letterSpacing: -0.75,
+                        fontSize: 19,
+                        letterSpacing: 0,
                         height: 1,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Container(
-                    width: 34,
-                    height: 34,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: color.withValues(
                         alpha: theme.isDarkMode ? 0.16 : 0.08,

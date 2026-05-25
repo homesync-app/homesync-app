@@ -3315,6 +3315,12 @@ abstract class AppLocalizations {
   /// **'Cargar más'**
   String get addTaskOptionsLoadMore;
 
+  /// Button label for closing the suggested task picker after adding one or more tasks.
+  ///
+  /// In es, this message translates to:
+  /// **'Listo ({count})'**
+  String addTaskOptionsDone(int count);
+
   /// No description provided for @completeTaskSnackPickAtLeastOne.
   ///
   /// In es, this message translates to:

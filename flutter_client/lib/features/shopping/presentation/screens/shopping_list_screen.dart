@@ -491,6 +491,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                               : nameKey,
                           categoryId: s['category'],
                           fallbackEmoji: s['emoji'],
+                          allowProductAsset: true,
                           size: 34,
                         ),
                         title: Text(
@@ -1008,6 +1009,7 @@ class _PredefinedItemTile extends StatelessWidget {
               productKey: nameKey,
               categoryId: categoryId,
               fallbackEmoji: item['emoji'],
+              allowProductAsset: true,
               size: 48,
               opacity: isPending ? 0.42 : 1,
             ),
@@ -1130,6 +1132,7 @@ class _ShoppingItemTile extends StatelessWidget {
                       fallbackEmoji: item.emoji.isNotEmpty
                           ? item.emoji
                           : catInfo['emoji'] as String,
+                      allowProductAsset: true,
                       size: isCompleted ? 34 : 56,
                       opacity: isCompleted ? 0.48 : 1,
                     ),

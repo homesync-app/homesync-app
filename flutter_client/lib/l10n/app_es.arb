@@ -1244,6 +1244,15 @@
   "addTaskOptionsAllSuggestedDone": "Ya tenés todas las sugeridas",
   "addTaskOptionsCreateCustomBelow": "Creá una tarea personalizada abajo.",
   "addTaskOptionsLoadMore": "Cargar más",
+  "addTaskOptionsDone": "Listo ({count})",
+  "@addTaskOptionsDone": {
+    "description": "Button label for closing the suggested task picker after adding one or more tasks.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "completeTaskSnackPickAtLeastOne": "Seleccioná al menos una tarea para completar.",
   "completeTaskSnackPickWho": "Seleccioná quién la hizo antes de continuar.",
   "completeTaskSnackFutureDate": "La fecha de finalización no puede ser futura.",

@@ -137,6 +137,7 @@ class _ShoppingItemSheetState extends ConsumerState<ShoppingItemSheet> {
                   productKey: productKey,
                   categoryId: _category,
                   fallbackEmoji: _emoji,
+                  allowProductAsset: true,
                   allowCategoryFallback: true,
                   size: 46,
                 ),

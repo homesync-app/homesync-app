@@ -2023,6 +2023,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addTaskOptionsLoadMore => 'Cargar más';
 
   @override
+  String addTaskOptionsDone(int count) {
+    return 'Listo ($count)';
+  }
+
+  @override
   String get completeTaskSnackPickAtLeastOne =>
       'Seleccioná al menos una tarea para completar.';
 

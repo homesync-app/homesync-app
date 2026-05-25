@@ -183,6 +183,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         : availableTemplates
             .where((template) => template.categoryId == _selectedCategory)
             .toList();
+    final bottomActionPadding = _bottomActionPadding(context);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
@@ -290,7 +291,7 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                     : _buildTemplateList(filtered),
           ),
           Container(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            padding: EdgeInsets.fromLTRB(24, 16, 24, bottomActionPadding),
             decoration: BoxDecoration(
               color: context.theme.background,
               boxShadow: [
@@ -342,7 +343,10 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
                   ElevatedButton.icon(
                     onPressed: () => Navigator.pop(context, true),
                     icon: const Icon(Icons.check_rounded, color: Colors.white),
-                    label: Text('Listo (${_addedIds.length})'),
+                    label: Text(
+                      AppLocalizations.of(context)
+                          .addTaskOptionsDone(_addedIds.length),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.textPrimary,
                       foregroundColor: Colors.white,
@@ -359,6 +363,19 @@ class _AddTaskOptionsSheetState extends ConsumerState<AddTaskOptionsSheet> {
         ],
       ),
     );
+  }
+
+  double _bottomActionPadding(BuildContext context) {
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    const basePadding = 32.0;
+
+    // Three-button Android navigation reports a taller bottom safe area than
+    // gesture navigation. Only lift this bar in that case.
+    if (bottomInset >= 36) {
+      return bottomInset + 16;
+    }
+
+    return basePadding;
   }
 
   Widget _buildCategoryChip(String? id, String name, CategoryModel? category) {

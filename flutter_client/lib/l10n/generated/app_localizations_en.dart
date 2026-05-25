@@ -2018,6 +2018,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTaskOptionsLoadMore => 'Load more';
 
   @override
+  String addTaskOptionsDone(int count) {
+    return 'Done ($count)';
+  }
+
+  @override
   String get completeTaskSnackPickAtLeastOne =>
       'Pick at least one task to complete.';
 
