@@ -6213,6 +6213,12 @@ abstract class AppLocalizations {
   /// **'+20 coins'**
   String get weeklyWinnerCoinsReward;
 
+  /// Dynamic weekly duel coin reward shown on the winner screen.
+  ///
+  /// In es, this message translates to:
+  /// **'+{coins} coins'**
+  String weeklyWinnerCoinsAwarded(int coins);
+
   /// No description provided for @weeklyWinnerSecondPlace.
   ///
   /// In es, this message translates to:

@@ -3688,6 +3688,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get weeklyWinnerCoinsReward => '+20 coins';
 
   @override
+  String weeklyWinnerCoinsAwarded(int coins) {
+    return '+$coins coins';
+  }
+
+  @override
   String get weeklyWinnerSecondPlace => 'Segundo puesto';
 
   @override

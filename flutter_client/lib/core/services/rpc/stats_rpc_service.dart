@@ -121,6 +121,30 @@ class StatsRpcService extends BaseRpcService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getWeeklyRankingForWeek(
+    DateTime weekStartDate,
+  ) async {
+    try {
+      final householdId = await requireHouseholdId();
+
+      final response = await client.rpc(
+        'get_weekly_ranking_for_week',
+        params: {
+          'p_household_id': householdId,
+          'p_week_start_date': _dateParam(weekStartDate),
+        },
+      );
+
+      return List<Map<String, dynamic>>.from(response);
+    } catch (error, stackTrace) {
+      log.d(
+        'StatsRpcService.getWeeklyRankingForWeek fallback to empty list: $error',
+        stackTrace: stackTrace,
+      );
+      return [];
+    }
+  }
+
   Future<bool> isWeekProcessed() async {
     try {
       final householdId = await requireHouseholdId();
@@ -141,12 +165,51 @@ class StatsRpcService extends BaseRpcService {
     }
   }
 
+  Future<bool> isWeekProcessedForWeek(DateTime weekStartDate) async {
+    try {
+      final householdId = await requireHouseholdId();
+
+      final response = await client.rpc(
+        'is_week_processed_for_week',
+        params: {
+          'p_household_id': householdId,
+          'p_week_start_date': _dateParam(weekStartDate),
+        },
+      );
+
+      return response == true;
+    } catch (error, stackTrace) {
+      log.w(
+        'StatsRpcService.isWeekProcessedForWeek fallback to false',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
   Future<Map<String, dynamic>> awardWeeklyWinner() async {
     final householdId = await requireHouseholdId();
 
     final response = await client.rpc(
       'award_weekly_winner',
       params: {'p_household_id': householdId},
+    );
+
+    return Map<String, dynamic>.from(response);
+  }
+
+  Future<Map<String, dynamic>> awardWeeklyWinnerForWeek(
+    DateTime weekStartDate,
+  ) async {
+    final householdId = await requireHouseholdId();
+
+    final response = await client.rpc(
+      'award_weekly_winner_for_week',
+      params: {
+        'p_household_id': householdId,
+        'p_week_start_date': _dateParam(weekStartDate),
+      },
     );
 
     return Map<String, dynamic>.from(response);
@@ -217,5 +280,11 @@ class StatsRpcService extends BaseRpcService {
       log.e('Error saving duel result: $e', error: e, stackTrace: stack);
       return {'success': false, 'message': e.toString()};
     }
+  }
+
+  String _dateParam(DateTime date) {
+    return DateTime(date.year, date.month, date.day)
+        .toIso8601String()
+        .split('T')[0];
   }
 }

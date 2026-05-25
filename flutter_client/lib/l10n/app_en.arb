@@ -2086,6 +2086,15 @@
   "weeklyWinnerSubtitle": "This is how the weekly duel ended between you.",
   "weeklyWinnerCardSubtitle": "Finished ahead in XP and took the weekly close.",
   "weeklyWinnerCoinsReward": "+20 coins",
+  "weeklyWinnerCoinsAwarded": "+{coins} coins",
+  "@weeklyWinnerCoinsAwarded": {
+    "description": "Dynamic weekly duel coin reward shown on the winner screen.",
+    "placeholders": {
+      "coins": {
+        "type": "int"
+      }
+    }
+  },
   "weeklyWinnerSecondPlace": "Second place",
   "weeklyWinnerRankingTitle": "Weekly ranking",
   "weeklyWinnerFallbackWinner": "Winner",

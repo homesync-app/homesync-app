@@ -49,8 +49,14 @@ class SupabaseRpcService {
 
   // --- Stats / Weekly ---
   Future<bool> isWeekProcessed() => _stats.isWeekProcessed();
+  Future<bool> isWeekProcessedForWeek(DateTime weekStartDate) =>
+      _stats.isWeekProcessedForWeek(weekStartDate);
   Future<List<Map<String, dynamic>>> getWeeklyRanking() =>
       _stats.getWeeklyRanking();
+  Future<List<Map<String, dynamic>>> getWeeklyRankingForWeek(
+    DateTime weekStartDate,
+  ) =>
+      _stats.getWeeklyRankingForWeek(weekStartDate);
   Future<List<Map<String, dynamic>>> getTaskStatsByCategory() =>
       _stats.getTaskStatsByCategory();
   Future<List<Map<String, dynamic>>> getMemberActivityStats() =>
@@ -62,6 +68,10 @@ class SupabaseRpcService {
       _stats.getWeeklyDuelHistory();
   Future<Map<String, dynamic>> awardWeeklyWinner() =>
       _stats.awardWeeklyWinner();
+  Future<Map<String, dynamic>> awardWeeklyWinnerForWeek(
+    DateTime weekStartDate,
+  ) =>
+      _stats.awardWeeklyWinnerForWeek(weekStartDate);
 
   // --- Balance ---
   Future<Map<String, dynamic>> getUserBalance({required String householdId}) =>

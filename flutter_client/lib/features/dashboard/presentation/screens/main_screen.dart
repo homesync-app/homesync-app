@@ -32,6 +32,7 @@ import 'package:homesync_client/features/rewards/presentation/screens/family_rew
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/screens/shopping_list_screen.dart';
+import 'package:homesync_client/features/stats/domain/utils/weekly_duel_period.dart';
 import 'package:homesync_client/features/stats/presentation/screens/stats_screen.dart';
 import 'package:homesync_client/features/stats/presentation/screens/weekly_winner_screen.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -60,6 +61,7 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen>
     with WidgetsBindingObserver {
   bool _showWeeklyWinner = false;
+  DateTime? _weeklyWinnerWeekStart;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   ProviderSubscription<TaskRealtimeNotice?>? _taskRealtimeNoticeSubscription;
@@ -254,20 +256,25 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     if (!isSundayEvening && !isMondayMorning) return;
 
-    final lastWinnerKey = 'last_winner_shown_${_getWeekKey()}';
+    final targetWeekStart = weeklyDuelTargetWeekStart(now);
+    final lastWinnerKey =
+        'last_winner_shown_${weeklyDuelWeekKey(targetWeekStart)}';
     final alreadyShown = widget.prefs.getBool(lastWinnerKey) ?? false;
     if (alreadyShown) return;
 
     try {
       final rpc = ref.read(rpcServiceProvider);
-      final isProcessed = await rpc.isWeekProcessed();
+      final isProcessed = await rpc.isWeekProcessedForWeek(targetWeekStart);
       if (!isProcessed) {
-        final ranking = await rpc.getWeeklyRanking();
+        final ranking = await rpc.getWeeklyRankingForWeek(targetWeekStart);
         final top = ranking.isNotEmpty
             ? Map<String, dynamic>.from(ranking.first as Map)
             : null;
         if (top != null && (top['xp_earned'] as num? ?? 0) > 0) {
-          setState(() => _showWeeklyWinner = true);
+          setState(() {
+            _weeklyWinnerWeekStart = targetWeekStart;
+            _showWeeklyWinner = true;
+          });
         }
       }
     } catch (e) {
@@ -275,14 +282,12 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
   }
 
-  String _getWeekKey() {
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    return '${monday.year}_${monday.month}_${monday.day}';
-  }
-
   Future<void> _markWinnerShown() async {
-    await widget.prefs.setBool('last_winner_shown_${_getWeekKey()}', true);
+    final weekStart = _weeklyWinnerWeekStart ?? weeklyDuelTargetWeekStart();
+    await widget.prefs.setBool(
+      'last_winner_shown_${weeklyDuelWeekKey(weekStart)}',
+      true,
+    );
     setState(() => _showWeeklyWinner = false);
   }
 
