@@ -37,22 +37,27 @@ class LoggerService {
     _logger.i(message, error: error, stackTrace: stackTrace);
   }
 
-  /// Log a warning message (something unexpected happened but not fatal)
+  /// Log a warning message (something unexpected happened but not fatal).
+  ///
+  /// Does not report to Crashlytics. Warnings are recoverable or expected
+  /// unhappy states: offline, missing IAP IDs, transient channel closes, or
+  /// empty-state fallbacks. Treating them as crashes inflates noise and hides
+  /// real failures.
+  ///
+  /// Use `log.e` for non-fatal bugs, and `log.f` only for fatal failures.
   void w(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.w(message, error: error, stackTrace: stackTrace);
-    _reportToCrashlytics(message, error, stackTrace, isFatal: false);
   }
 
   /// Log an error message (something failed but the app keeps running).
-  /// Reported to Crashlytics as a NON-fatal: muestra el error en el panel
-  /// pero no infla los "Crash-free users". Sólo `log.f(...)` marca fatal.
+  /// Reported to Crashlytics as NON-fatal. Only `log.f(...)` marks fatal.
   void e(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.e(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: false);
   }
 
   /// Log a fatal error (the app is about to crash and we know it).
-  /// Sólo usar cuando el flujo no puede continuar.
+  /// Use only when the flow cannot continue.
   void f(dynamic message, {Object? error, StackTrace? stackTrace}) {
     _logger.f(message, error: error, stackTrace: stackTrace);
     _reportToCrashlytics(message, error, stackTrace, isFatal: true);

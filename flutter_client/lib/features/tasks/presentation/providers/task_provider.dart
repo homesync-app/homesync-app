@@ -521,6 +521,9 @@ class Tasks extends _$Tasks {
         userIds: performers,
         completedAt: effectiveCompletedAt,
       );
+      if (!ref.mounted) {
+        return result.fold((_) => null, (data) => data);
+      }
 
       if (result.isRight()) {
         final isOnline = ref.read(isOnlineProvider);
@@ -546,7 +549,7 @@ class Tasks extends _$Tasks {
       );
     } catch (e, stack) {
       log.w('Complete tasks batch failure: $e', error: e, stackTrace: stack);
-      if (oldState != null) state = AsyncValue.data(oldState);
+      if (ref.mounted && oldState != null) state = AsyncValue.data(oldState);
       return null;
     }
   }
@@ -658,10 +661,13 @@ class Tasks extends _$Tasks {
       final repo = ref.read(taskRepositoryProvider);
       // We use editTask to change status to active
       await repo.editTask(task.id, {'status': 'active'});
+      if (!ref.mounted) return;
       silentRefresh();
     } catch (e, stack) {
       log.w('Approve task failure: $e', error: e, stackTrace: stack);
-      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      if (ref.mounted && oldState != null) {
+        state = AsyncValue.data(oldState); // Rollback
+      }
     }
   }
 
@@ -669,6 +675,7 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.deleteTask(task.id);
+      if (!ref.mounted) return;
       silentRefresh();
     } catch (e, stack) {
       log.w('Reject task failure: $e', error: e, stackTrace: stack);
@@ -709,6 +716,7 @@ class Tasks extends _$Tasks {
         userIds: [userId],
         completedAt: submittedAt,
       );
+      if (!ref.mounted) return;
       result.fold(
         (failure) {
           if (oldState != null) state = AsyncValue.data(oldState);
@@ -727,7 +735,7 @@ class Tasks extends _$Tasks {
         error: e,
         stackTrace: stack,
       );
-      if (oldState != null) state = AsyncValue.data(oldState);
+      if (ref.mounted && oldState != null) state = AsyncValue.data(oldState);
       rethrow;
     }
   }
@@ -741,6 +749,7 @@ class Tasks extends _$Tasks {
     try {
       final ok = await ref.read(taskApprovalActionsProvider).approve(task.id);
       if (ok) {
+        if (!ref.mounted) return null;
         silentRefresh();
         ref.invalidate(userBalanceProvider);
         ref.invalidate(recentActivityProvider);
@@ -784,6 +793,7 @@ class Tasks extends _$Tasks {
       final ok = await ref
           .read(taskApprovalActionsProvider)
           .reject(task.id, reason: reason);
+      if (!ref.mounted) return;
       if (!ok) {
         if (oldState != null) state = AsyncValue.data(oldState);
         return;
@@ -795,7 +805,7 @@ class Tasks extends _$Tasks {
       }
     } catch (e, stack) {
       log.w('Reject pending task failure: $e', error: e, stackTrace: stack);
-      if (oldState != null) state = AsyncValue.data(oldState);
+      if (ref.mounted && oldState != null) state = AsyncValue.data(oldState);
       rethrow;
     }
   }
@@ -809,6 +819,7 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.deleteTask(task.id);
+      if (!ref.mounted) return;
       if (ref.read(isOnlineProvider)) {
         ref.invalidate(recentActivityProvider);
         ref.invalidate(pendingTaskApprovalsProvider);
@@ -817,7 +828,9 @@ class Tasks extends _$Tasks {
       }
     } catch (e, stack) {
       log.w('Delete task failure: $e', error: e, stackTrace: stack);
-      if (oldState != null) state = AsyncValue.data(oldState); // Rollback
+      if (ref.mounted && oldState != null) {
+        state = AsyncValue.data(oldState); // Rollback
+      }
       rethrow;
     }
   }
@@ -840,6 +853,7 @@ class Tasks extends _$Tasks {
         recurrenceMonthDays: recurrenceMonthDays,
         assignedTo: assignedTo,
       );
+      if (!ref.mounted) return;
       if (ref.read(isOnlineProvider)) {
         refresh();
       }
@@ -875,6 +889,7 @@ class Tasks extends _$Tasks {
       result.fold(
         (failure) => throw failure,
         (_) {
+          if (!ref.mounted) return;
           final isOnline = ref.read(isOnlineProvider);
           if (isOnline) {
             silentRefresh();
@@ -892,6 +907,7 @@ class Tasks extends _$Tasks {
     try {
       final repo = ref.read(taskRepositoryProvider);
       await repo.editTask(taskId, updates);
+      if (!ref.mounted) return;
       if (ref.read(isOnlineProvider)) {
         refresh();
       }

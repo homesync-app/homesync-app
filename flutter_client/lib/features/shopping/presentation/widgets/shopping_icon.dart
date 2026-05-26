@@ -1,8 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/shopping_icons_remote.dart';
 import '../../domain/models/shopping_visuals.dart';
 
-class ShoppingIcon extends StatelessWidget {
+class ShoppingIcon extends ConsumerWidget {
   const ShoppingIcon({
     super.key,
     this.productKey,
@@ -25,7 +28,34 @@ class ShoppingIcon extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final manifest = ref.watch(shoppingIconManifestProvider);
+    final fallback = _buildFallback(context);
+
+    Widget child;
+    final key = productKey;
+    if (key != null && key.isNotEmpty && manifest.containsKey(key)) {
+      // Ícono remoto (Supabase Storage), cacheado local tras la 1ª carga.
+      child = CachedNetworkImage(
+        imageUrl: shoppingIconUrl(key, manifest[key]!),
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (_, __) => fallback,
+        errorWidget: (_, __, ___) => fallback,
+      );
+    } else {
+      child = fallback;
+    }
+
+    if (opacity >= 1) return child;
+    return Opacity(opacity: opacity, child: child);
+  }
+
+  /// Fallback cuando no hay ícono remoto (o falla / offline en 1ª carga):
+  /// asset bundled (si está permitido) -> ícono de categoría -> emoji.
+  Widget _buildFallback(BuildContext context) {
     final productVisual =
         allowProductAsset ? ShoppingVisuals.product(productKey) : null;
     final categoryIcon =
@@ -36,20 +66,17 @@ class ShoppingIcon extends StatelessWidget {
             : null);
     final emoji = fallbackEmoji ?? visual?.fallbackEmoji ?? '\u{1F6D2}';
 
-    Widget child;
     if (productVisual != null) {
-      child = Image.asset(
+      return Image.asset(
         productVisual.assetPath,
         width: size,
         height: size,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _EmojiFallback(
-          emoji: emoji,
-          size: size,
-        ),
+        errorBuilder: (_, __, ___) => _EmojiFallback(emoji: emoji, size: size),
       );
-    } else if (categoryIcon != null) {
-      child = SizedBox.square(
+    }
+    if (categoryIcon != null) {
+      return SizedBox.square(
         dimension: size,
         child: Center(
           child: Icon(
@@ -59,23 +86,17 @@ class ShoppingIcon extends StatelessWidget {
           ),
         ),
       );
-    } else if (visual != null) {
-      child = Image.asset(
+    }
+    if (visual != null) {
+      return Image.asset(
         visual.assetPath,
         width: size,
         height: size,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => _EmojiFallback(
-          emoji: emoji,
-          size: size,
-        ),
+        errorBuilder: (_, __, ___) => _EmojiFallback(emoji: emoji, size: size),
       );
-    } else {
-      child = _EmojiFallback(emoji: emoji, size: size);
     }
-
-    if (opacity >= 1) return child;
-    return Opacity(opacity: opacity, child: child);
+    return _EmojiFallback(emoji: emoji, size: size);
   }
 
   IconData? _categoryIcon(String? id) {

@@ -1127,7 +1127,11 @@ class _ShoppingItemTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ShoppingIcon(
-                      productKey: item.nameKey,
+                      // Items viejos (pre-nameKey) tienen nameKey=null en DB;
+                      // derivamos la clave del nombre para que igual matcheen
+                      // el manifest de iconos remotos.
+                      productKey:
+                          item.nameKey ?? shoppingCatalogKeyForName(item.name),
                       categoryId: item.category,
                       fallbackEmoji: item.emoji.isNotEmpty
                           ? item.emoji

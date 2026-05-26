@@ -22,6 +22,9 @@ class ShoppingVisuals {
   static const Map<String, ShoppingIconAsset> categories = {};
 
   static const Map<String, ShoppingIconAsset> products = {
+    // milanesa quedó bundled en el release +73 -> sirve de fallback offline.
+    // Los demás iconos custom viven solo en Storage (manifest), así se agregan
+    // sin tocar la app. Ver shopping_icons_remote.dart.
     'milanesas': ShoppingIconAsset(
       assetPath: '$_basePath/products/milanesas.png',
       fallbackEmoji: '🍽️',

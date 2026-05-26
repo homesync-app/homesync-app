@@ -1,6 +1,23 @@
+import 'dart:io' show SocketException;
+
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:http/http.dart' show ClientException;
 
 import 'base_rpc_service.dart';
+
+/// Returns true for transient network failures such as DNS/offline errors.
+/// These should be treated as expected offline states, not Crashlytics issues.
+bool _isTransientNetworkError(Object error) {
+  if (error is SocketException) return true;
+  if (error is ClientException) return true;
+  // Some clients wrap SocketException in another exception whose toString()
+  // starts with "ClientException with SocketException".
+  final msg = error.toString();
+  return msg.contains('SocketException') ||
+      msg.contains('Failed host lookup') ||
+      msg.contains('Connection closed') ||
+      msg.contains('Connection refused');
+}
 
 class StatsRpcService extends BaseRpcService {
   StatsRpcService({required super.clientOverride});
@@ -245,6 +262,10 @@ class StatsRpcService extends BaseRpcService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e, stack) {
+      if (_isTransientNetworkError(e)) {
+        log.d('getWeeklyDuelHistory offline fallback: $e');
+        return [];
+      }
       log.e('Error getting duel history: $e', error: e, stackTrace: stack);
       return [];
     }
@@ -277,6 +298,10 @@ class StatsRpcService extends BaseRpcService {
 
       return Map<String, dynamic>.from(response);
     } catch (e, stack) {
+      if (_isTransientNetworkError(e)) {
+        log.d('saveWeeklyDuelResult offline fallback: $e');
+        return {'success': false, 'message': 'offline', 'offline': true};
+      }
       log.e('Error saving duel result: $e', error: e, stackTrace: stack);
       return {'success': false, 'message': e.toString()};
     }
