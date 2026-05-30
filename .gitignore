@@ -91,3 +91,4 @@ __pycache__/
 # ─── Tool command-output logs (temp) ─────────────────────────────────────────
 flutter_client/build_runner.txt
 flutter_client/l10n_gen.txt
+flutter_client/analyze*.txt
