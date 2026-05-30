@@ -27,8 +27,8 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/screens/couple_split_strategy_screen.dart';
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
-import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/domain/usecases/delete_account_usecase.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
