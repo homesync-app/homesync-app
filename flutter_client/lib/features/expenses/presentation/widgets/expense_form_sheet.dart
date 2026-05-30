@@ -477,10 +477,10 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
       }
 
       final splits = splitResult.splits;
-      final effectiveSplitType =
-          !showSplit && household?.householdType == 'family'
-              ? SplitType.fixed
-              : (!caps.showExpensesSplit ? SplitType.personal : _splitMode);
+      final isSharedEconomy = household?.financeMode == 'shared';
+      final effectiveSplitType = isSharedEconomy
+          ? SplitType.fixed
+          : (!caps.showExpensesSplit ? SplitType.personal : _splitMode);
 
       final descriptionParts = <String>[];
       if (_selectedShoppingItems.isNotEmpty) {
@@ -979,8 +979,9 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
 
   bool _shouldShowSplitControls(HouseholdCapabilities caps) {
     final household = ref.read(currentHouseholdProvider).value;
-    if (household?.householdType == 'family' &&
-        household?.financeMode != 'divided') {
+    // Integrated/shared economy (couple or family): expenses are logged for the
+    // whole household and don't create debt, so split controls are hidden.
+    if (household?.financeMode == 'shared') {
       return false;
     }
     return caps.showExpensesSplit;

@@ -71,7 +71,15 @@ class _MemberOnboardingScreenState extends ConsumerState<MemberOnboardingScreen>
           });
         }
       }
-    } catch (_) {}
+    } catch (e, stack) {
+      // Non-fatal: the role selector falls back to defaults, but log so a
+      // silent household_type lookup failure stays diagnosable.
+      log.w(
+        'member_onboarding: load household type failed',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   Future<void> _loadAvailableRoles(String householdId) async {

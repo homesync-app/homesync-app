@@ -44,6 +44,7 @@ class TasksScreen extends ConsumerStatefulWidget {
 class _TasksScreenState extends ConsumerState<TasksScreen>
     with SingleTickerProviderStateMixin {
   RealtimeChannel? _tasksChannel;
+  SupabaseClient? _realtimeClient;
   late TabController _tabController;
   late final ConfettiController _completionConfettiController;
   final TextEditingController _searchController = TextEditingController();
@@ -80,7 +81,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
 
   @override
   void dispose() {
-    _tasksChannel?.unsubscribe();
+    final channel = _tasksChannel;
+    final client = _realtimeClient;
+    if (channel != null && client != null) {
+      // removeChannel unsubscribes AND releases the channel from the client's
+      // registry; a bare unsubscribe() can leave the channel object lingering.
+      // Use the cached client (not ref) because reading ref in dispose is unsafe.
+      client.removeChannel(channel);
+      _tasksChannel = null;
+      _realtimeClient = null;
+    }
     _tabController.dispose();
     _completionConfettiController.dispose();
     _searchController.dispose();
@@ -109,8 +119,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null || !mounted) return;
 
-    _tasksChannel = ref
-        .read(supabaseClientProvider)
+    final client = ref.read(supabaseClientProvider);
+    _realtimeClient = client;
+    _tasksChannel = client
         .channel('tasks_screen:$householdId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -313,6 +324,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
                   children: [
                     // TASK LIST TAB
                     filteredAsync.when(
+                      // Keep the task list visible while it refreshes after a
+                      // completion/create/edit instead of flashing the loader.
+                      skipLoadingOnReload: true,
                       loading: () => AppLoadingState(
                         message:
                             AppLocalizations.of(context).tasksLoadingMessage,

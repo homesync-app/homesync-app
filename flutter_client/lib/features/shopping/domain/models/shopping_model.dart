@@ -1,3 +1,5 @@
+import 'package:homesync_client/core/utils/display_text.dart';
+
 class ShoppingItemModel {
   final String id;
   final String householdId;
@@ -85,19 +87,25 @@ class ShoppingItemModel {
   }
 
   String get displayQuantity {
-    if (quantity == null && unit == null) return '';
-    if (unit == null) return quantity!;
-    return '$quantity $unit';
+    final displayQuantity = quantity.toDisplayTextOrNull();
+    final displayUnit = unit.toDisplayTextOrNull();
+
+    if (displayQuantity == null && displayUnit == null) return '';
+    if (displayUnit == null) return displayQuantity!;
+    if (displayQuantity == null) return displayUnit;
+    return '$displayQuantity $displayUnit';
   }
 
   String get addedByDisplay {
-    if (addedByName == null) return '';
-    return addedByName!.split(' ').first;
+    final displayName = addedByName.toDisplayTextOrNull();
+    if (displayName == null) return '';
+    return displayName.split(' ').first;
   }
 
   String get completedByDisplay {
-    if (completedByName == null) return '';
-    return completedByName!.split(' ').first;
+    final displayName = completedByName.toDisplayTextOrNull();
+    if (displayName == null) return '';
+    return displayName.split(' ').first;
   }
 
   ShoppingItemModel copyWith({

@@ -647,6 +647,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackground,
       body: shoppingState.when(
+        skipLoadingOnReload: true,
         loading: () => _buildShimmerGrid(),
         error: (err, stack) => Center(
           child: Text(

@@ -343,7 +343,7 @@ class _TaskDetailSheetState extends ConsumerState<TaskDetailSheet> {
                                       ? Icons.event_repeat_rounded
                                       : Icons.edit_calendar_rounded,
                                   label: _task.isRecurring
-                                      ? _task.recurrenceLabel
+                                      ? _task.recurrenceLabel(t)
                                       : t.tasksPillNoDate,
                                   color: _task.isRecurring
                                       ? AppColors.accentGold

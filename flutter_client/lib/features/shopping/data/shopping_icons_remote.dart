@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/app_environment.dart';
+import '../../../core/services/logger_service.dart';
 
 /// Iconos de compras servidos desde Supabase Storage (bucket público
 /// `shopping-icons`). Permite agregar/actualizar iconos subiéndolos al storage
@@ -43,7 +44,11 @@ class ShoppingIconManifestNotifier extends Notifier<Map<String, String>> {
             .map((k, v) => MapEntry(k as String, v.toString()));
         state = map;
       }
-    } catch (_) {}
+    } catch (e) {
+      // Corrupt/legacy cache — safe to ignore, the storage refresh below
+      // repopulates it. Log at debug level for diagnosability.
+      log.d('shopping_icons: failed to read cached manifest: $e');
+    }
     // 2) refresco desde el storage
     await refresh();
   }

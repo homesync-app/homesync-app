@@ -44,6 +44,7 @@ class NotificationsScreen extends ConsumerWidget {
             ref.read(notificationsControllerProvider.notifier).refresh(),
         color: AppColors.primary,
         child: notificationsAsync.when(
+          skipLoadingOnReload: true,
           loading: () => ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: 6,

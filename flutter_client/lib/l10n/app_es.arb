@@ -986,7 +986,7 @@
       }
     }
   },
-  "settingsHouseholdEditMenuSplitSubtitle": "{type, select, family{Elegir economía compartida o dividida} other{Ajustar porcentaje de pareja}}",
+  "settingsHouseholdEditMenuSplitSubtitle": "{type, select, family{Elegir economía compartida o dividida} couple{Economía integrada o gastos divididos} other{Ajustar porcentaje}}",
   "@settingsHouseholdEditMenuSplitSubtitle": {
     "placeholders": {
       "type": {
@@ -1095,9 +1095,9 @@
   "memberOnboardingRoleDescTeen": "Gestión personal de gastos y tareas.",
   "memberOnboardingRoleDescChild": "Participa con tareas y puede ganar recompensas.",
   "memberOnboardingRoleDescDefault": "Miembro del hogar.",
-  "coupleSplitTitle": "{type, select, family{Finanzas familiares} other{División de gastos}}",
+  "coupleSplitTitle": "{type, select, family{Finanzas familiares} couple{Finanzas en pareja} other{División de gastos}}",
   "@coupleSplitTitle": {
-    "description": "AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'.",
+    "description": "AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'; couple mode as 'Finanzas en pareja' since couples can now also pick an integrated economy.",
     "placeholders": {
       "type": {
         "type": "String"
@@ -1119,6 +1119,50 @@
   "coupleSplitFamilySharedBody": "Los gastos no se reparten por porcentaje ni generan balances entre adultos.",
   "coupleSplitFamilyDividedTitle": "Gastos divididos",
   "coupleSplitFamilyDividedBody": "Usa porcentajes y balances como en pareja.",
+  "coupleSplitModeHowTitle": "{type, select, family{Cómo se registran los gastos} other{Cómo manejan la plata}}",
+  "@coupleSplitModeHowTitle": {
+    "description": "Title of the info card that introduces the finance-mode choice (shared vs divided). Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeHowBody": "{type, select, family{En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.} other{Hay dos formas de manejar la plata en pareja. En la economía integrada todo es del hogar: los gastos quedan visibles pero no generan deuda entre ustedes. En la dividida cada gasto se reparte y se lleva el balance.}}",
+  "@coupleSplitModeHowBody": {
+    "description": "Body of the info card explaining shared vs divided economy. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeSharedTitle": "Economía integrada",
+  "@coupleSplitModeSharedTitle": {
+    "description": "Title of the shared/integrated economy option in the finance-mode selector."
+  },
+  "coupleSplitModeSharedBody": "{type, select, family{Los gastos no se reparten por porcentaje ni generan balances entre adultos.} other{Todo es plata del hogar: los gastos quedan registrados pero no generan deuda ni balances entre ustedes. Ideal para parejas con economía unificada.}}",
+  "@coupleSplitModeSharedBody": {
+    "description": "Body describing the shared/integrated economy option. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeDividedTitle": "Gastos divididos",
+  "@coupleSplitModeDividedTitle": {
+    "description": "Title of the divided economy option in the finance-mode selector."
+  },
+  "coupleSplitModeDividedBody": "{type, select, family{Usa porcentajes y balances como en pareja.} other{Cada gasto compartido se reparte según el porcentaje que elijan y se lleva el balance entre ustedes.}}",
+  "@coupleSplitModeDividedBody": {
+    "description": "Body describing the divided economy option. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "coupleSplitInfoTitle": "¿Cómo dividir gastos?",
   "coupleSplitInfoBody": "No hay una única forma correcta. Cada pareja es un mundo y la mejor estrategia es la que les dé paz mental a ambos.",
   "coupleSplitStrategiesTitle": "Estrategias comunes",
@@ -1354,6 +1398,46 @@
   "weeklySummaryExpensesNone": "No hubo gastos compartidos esta semana.",
   "weeklySummaryExpensesFirst": "Primera semana con gastos compartidos.",
   "weeklySummaryExpensesSame": "Mismo gasto que la semana anterior.",
+  "weeklySummaryOverdueToday": "venció hoy",
+  "@weeklySummaryOverdueToday": {
+    "description": "Overdue label for a task that became overdue today."
+  },
+  "weeklySummaryOverdueDays": "{count, plural, one{venció hace 1 día} other{venció hace {count} días}}",
+  "@weeklySummaryOverdueDays": {
+    "description": "Overdue label for a task that became overdue N days ago.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklySummaryForgottenSubtitle": "Esta recurrente quedo en el camino — {overdueLabel}.",
+  "@weeklySummaryForgottenSubtitle": {
+    "description": "Subtitle for the most-forgotten recurring task card. {overdueLabel} is the overdue text.",
+    "placeholders": {
+      "overdueLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySummaryExpensesLess": "Gastaron {amount} menos que la semana anterior.",
+  "@weeklySummaryExpensesLess": {
+    "description": "Spending card text when the household spent less than the previous week.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklySummaryExpensesMore": "Gastaron {amount} más que la semana anterior.",
+  "@weeklySummaryExpensesMore": {
+    "description": "Spending card text when the household spent more than the previous week.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "weeklySummaryEmptyTitle": "Tu primer resumen viene en camino",
   "weeklySummaryEmptyBody": "Cuando empiecen a completar tareas y cargar gastos vamos a generar el reporte de la semana automáticamente.",
   "weeklySummaryLockedTitle": "Resumen semanal",
@@ -2754,6 +2838,507 @@
   "expensesSavingsGoalNameHint": "¿Cuál es tu objetivo?",
   "expensesSavingsGoalAmountLabel": "Monto objetivo",
   "expensesSavingsGoalAmountHint": "¿Cuánto quieren juntar?",
+  "savingsLoadError": "Error: {details}",
+  "@savingsLoadError": {
+    "description": "Error message shown when savings goals fail to load.",
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsEmptyTitle": "No hay metas activas aún",
+  "@savingsEmptyTitle": {
+    "description": "Title for the empty state when there are no savings goals."
+  },
+  "savingsEmptySubtitle": "Empezá a guardar para algo que de verdad les entusiasme.",
+  "@savingsEmptySubtitle": {
+    "description": "Subtitle for the empty state encouraging the user to create a savings goal."
+  },
+  "savingsEmptyFallbackSubtitle": "Empezá hoy mismo a organizar tus finanzas del hogar.",
+  "@savingsEmptyFallbackSubtitle": {
+    "description": "Generic fallback subtitle for an empty finances/savings state."
+  },
+  "savingsGoalTarget": "Meta: {amount}",
+  "@savingsGoalTarget": {
+    "description": "Label on a savings goal card showing the target amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsGoalProgressCaption": "objetivo",
+  "@savingsGoalProgressCaption": {
+    "description": "Caption under the progress percentage on a savings goal card."
+  },
+  "savingsGoalSaved": "Ahorrado: {amount}",
+  "@savingsGoalSaved": {
+    "description": "Label on a savings goal card showing how much has been saved so far.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsGoalContributeAction": "Aportar",
+  "@savingsGoalContributeAction": {
+    "description": "Button on a savings goal card to add money to the goal."
+  },
+  "savingsNewGoalTitle": "Nueva Meta",
+  "@savingsNewGoalTitle": {
+    "description": "Title of the new savings goal sheet."
+  },
+  "savingsNewGoalSubtitle": "Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.",
+  "@savingsNewGoalSubtitle": {
+    "description": "Subtitle of the new savings goal sheet explaining what a goal is."
+  },
+  "savingsSectionDetail": "DETALLE",
+  "@savingsSectionDetail": {
+    "description": "Section header (uppercase eyebrow) for the goal detail fields."
+  },
+  "savingsSectionDetailTitle": "Qué quieren alcanzar",
+  "@savingsSectionDetailTitle": {
+    "description": "Section title for the goal detail fields (name and amount)."
+  },
+  "savingsSectionPersonalization": "PERSONALIZACIÓN",
+  "@savingsSectionPersonalization": {
+    "description": "Section header (uppercase eyebrow) for the goal personalization fields."
+  },
+  "savingsSectionPersonalizationTitle": "Dale personalidad",
+  "@savingsSectionPersonalizationTitle": {
+    "description": "Section title for the goal personalization fields (emoji and color)."
+  },
+  "savingsFieldEmoji": "Emoji",
+  "@savingsFieldEmoji": {
+    "description": "Label for the emoji picker field when creating a savings goal."
+  },
+  "savingsFieldColor": "Color",
+  "@savingsFieldColor": {
+    "description": "Label for the color picker field when creating a savings goal."
+  },
+  "savingsPickIconTitle": "Elegí un ícono",
+  "@savingsPickIconTitle": {
+    "description": "Title of the picker sheet for choosing a savings goal emoji/icon."
+  },
+  "savingsPickColorTitle": "Elegí un color",
+  "@savingsPickColorTitle": {
+    "description": "Title of the picker sheet for choosing a savings goal color."
+  },
+  "savingsCreateGoalAction": "Crear Meta",
+  "@savingsCreateGoalAction": {
+    "description": "Primary button to create a new savings goal."
+  },
+  "savingsContributeTo": "Ingresar dinero a",
+  "@savingsContributeTo": {
+    "description": "Eyebrow above the goal title in the contribution sheet."
+  },
+  "savingsConfirmContribution": "Confirmar Aporte",
+  "@savingsConfirmContribution": {
+    "description": "Primary button to confirm adding money to a savings goal."
+  },
+  "achievementsBadgesSection": "Tus Medallas",
+  "@achievementsBadgesSection": {
+    "description": "Section header for the user's earned badges in the achievements tab."
+  },
+  "achievementsCoupleChallengesSection": "Desafíos de Pareja",
+  "@achievementsCoupleChallengesSection": {
+    "description": "Section header for couple challenge achievements."
+  },
+  "achievementsIconicMomentsSection": "Momentos Icónicos",
+  "@achievementsIconicMomentsSection": {
+    "description": "Section header for special 'iconic moment' achievements."
+  },
+  "achievementsFirstStepsTitle": "Primeros Pasos",
+  "@achievementsFirstStepsTitle": {
+    "description": "Achievement title for completing the first task as a couple."
+  },
+  "achievementsFirstStepsDesc": "Completaste tu primera tarea en pareja.",
+  "@achievementsFirstStepsDesc": {
+    "description": "Achievement description for completing the first task as a couple."
+  },
+  "achievementsUnstoppableTitle": "Equipo Imparable",
+  "@achievementsUnstoppableTitle": {
+    "description": "Achievement title for completing 50 tasks together."
+  },
+  "achievementsUnstoppableDesc": "Completaron 50 tareas juntos.",
+  "@achievementsUnstoppableDesc": {
+    "description": "Achievement description for completing 50 tasks together."
+  },
+  "achievementsHomeMastersTitle": "Maestros del Hogar",
+  "@achievementsHomeMastersTitle": {
+    "description": "Achievement title for reaching 5000 accumulated XP."
+  },
+  "achievementsHomeMastersDesc": "Llegaron a los 5000 XP acumulados.",
+  "@achievementsHomeMastersDesc": {
+    "description": "Achievement description for reaching 5000 accumulated XP."
+  },
+  "achievementsCollectorTitle": "Coleccionista de Citas",
+  "@achievementsCollectorTitle": {
+    "description": "Achievement title for completing 7 special couple challenges."
+  },
+  "achievementsLoveInMotionTitle": "Amor en Movimiento",
+  "@achievementsLoveInMotionTitle": {
+    "description": "Achievement title for completing 15 special couple challenges."
+  },
+  "achievementsDeepConnectionTitle": "Conexión Profunda",
+  "@achievementsDeepConnectionTitle": {
+    "description": "Achievement title for completing 30 special couple challenges."
+  },
+  "achievementsRomanceLegendsTitle": "Leyendas del Romance",
+  "@achievementsRomanceLegendsTitle": {
+    "description": "Achievement title for completing all 50 yearly couple challenges."
+  },
+  "achievementsRomanceLegendsDesc": "¡Completaron los 50 desafíos del año!",
+  "@achievementsRomanceLegendsDesc": {
+    "description": "Achievement description for completing all 50 yearly couple challenges."
+  },
+  "achievementsSpecialChallengesDesc": "Completaron {count} desafíos especiales.",
+  "@achievementsSpecialChallengesDesc": {
+    "description": "Achievement description for completing a number of special couple challenges.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "achievementsLoveRootsTitle": "Raíces del Amor",
+  "@achievementsLoveRootsTitle": {
+    "description": "Iconic moment achievement title for recreating the first date."
+  },
+  "achievementsLoveRootsDesc": "Recrearon su primera cita.",
+  "@achievementsLoveRootsDesc": {
+    "description": "Iconic moment achievement description for recreating the first date."
+  },
+  "achievementsBlindDateTitle": "Cita a Ciegas",
+  "@achievementsBlindDateTitle": {
+    "description": "Iconic moment achievement title for a blind/sensory dinner date."
+  },
+  "achievementsBlindDateDesc": "Completaron una cena a ciegas o sensorial.",
+  "@achievementsBlindDateDesc": {
+    "description": "Iconic moment achievement description for a blind/sensory dinner date."
+  },
+  "achievementsDreamArchitectsTitle": "Arquitectos de Sueños",
+  "@achievementsDreamArchitectsTitle": {
+    "description": "Iconic moment achievement title for designing a shared goals list."
+  },
+  "achievementsDreamArchitectsDesc": "Diseñaron su lista de metas compartidas.",
+  "@achievementsDreamArchitectsDesc": {
+    "description": "Iconic moment achievement description for designing a shared goals list."
+  },
+  "scheduleTitle": "Programar tarea",
+  "@scheduleTitle": {
+    "description": "Title of the schedule task bottom sheet."
+  },
+  "scheduleSubtitle": "Elegí cómo se repite y quién queda a cargo.",
+  "@scheduleSubtitle": {
+    "description": "Subtitle of the schedule task sheet."
+  },
+  "scheduleSectionRepeat": "REPETICION",
+  "@scheduleSectionRepeat": {
+    "description": "Uppercase section header for the repetition options."
+  },
+  "scheduleSectionResponsible": "RESPONSABLE",
+  "@scheduleSectionResponsible": {
+    "description": "Uppercase section header for the assignee selector."
+  },
+  "scheduleRepeatNone": "Ninguna",
+  "@scheduleRepeatNone": {
+    "description": "Repeat mode chip: no repetition."
+  },
+  "scheduleRepeatDaily": "Diaria",
+  "@scheduleRepeatDaily": {
+    "description": "Repeat mode chip: daily."
+  },
+  "scheduleRepeatWeekly": "Semanal",
+  "@scheduleRepeatWeekly": {
+    "description": "Repeat mode chip: weekly."
+  },
+  "scheduleRepeatMonthly": "Mensual",
+  "@scheduleRepeatMonthly": {
+    "description": "Repeat mode chip: monthly."
+  },
+  "scheduleRepeatCustom": "Personalizada",
+  "@scheduleRepeatCustom": {
+    "description": "Repeat mode chip: custom recurrence."
+  },
+  "scheduleWeeklyTitle": "Elegí el día de la semana",
+  "@scheduleWeeklyTitle": {
+    "description": "Title for the weekly day picker."
+  },
+  "scheduleWeeklySubtitle": "La tarea se repetirá cada semana en ese día.",
+  "@scheduleWeeklySubtitle": {
+    "description": "Helper text for the weekly day picker."
+  },
+  "scheduleMonthlyTitle": "Elegí el día del mes",
+  "@scheduleMonthlyTitle": {
+    "description": "Title for the monthly day picker."
+  },
+  "scheduleMonthlySubtitle": "La tarea se repetirá todos los meses en esa fecha.",
+  "@scheduleMonthlySubtitle": {
+    "description": "Helper text for the monthly day picker."
+  },
+  "scheduleCustomTabDays": "Días",
+  "@scheduleCustomTabDays": {
+    "description": "Custom recurrence tab for selecting weekdays."
+  },
+  "scheduleCustomTabInterval": "Intervalo",
+  "@scheduleCustomTabInterval": {
+    "description": "Custom recurrence tab for selecting a day interval."
+  },
+  "scheduleCustomTabDate": "Fecha",
+  "@scheduleCustomTabDate": {
+    "description": "Custom recurrence tab for selecting month days."
+  },
+  "scheduleIntervalEvery": "Cada",
+  "@scheduleIntervalEvery": {
+    "description": "Prefix before the interval number, e.g. 'Every 3 days'."
+  },
+  "scheduleIntervalDecrease": "Disminuir",
+  "@scheduleIntervalDecrease": {
+    "description": "Tooltip for the button that decreases the interval."
+  },
+  "scheduleIntervalIncrease": "Aumentar",
+  "@scheduleIntervalIncrease": {
+    "description": "Tooltip for the button that increases the interval."
+  },
+  "scheduleIntervalDays": "{count, plural, one{día} other{días}}",
+  "@scheduleIntervalDays": {
+    "description": "Day/days unit shown after the interval number.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduleAssigneeAnyone": "Cualquiera",
+  "@scheduleAssigneeAnyone": {
+    "description": "Assignee option meaning the task is open to anyone."
+  },
+  "scheduleAssigneeAnyoneSubtitle": "Queda abierta para quien la quiera hacer.",
+  "@scheduleAssigneeAnyoneSubtitle": {
+    "description": "Subtitle for the 'Anyone' assignee option."
+  },
+  "scheduleAssigneeMemberSubtitle": "Responsable principal de esta tarea.",
+  "@scheduleAssigneeMemberSubtitle": {
+    "description": "Subtitle for a specific member assignee option."
+  },
+  "scheduleAssigneeMemberFallback": "Miembro",
+  "@scheduleAssigneeMemberFallback": {
+    "description": "Fallback name when a household member has no name or email."
+  },
+  "scheduleErrorPickWeekday": "Elegí al menos un día para la repetición personalizada.",
+  "@scheduleErrorPickWeekday": {
+    "description": "Validation error when no weekday is selected for custom recurrence."
+  },
+  "scheduleErrorPickMonthDay": "Elegí al menos una fecha para repetir la tarea.",
+  "@scheduleErrorPickMonthDay": {
+    "description": "Validation error when no month day is selected for custom recurrence."
+  },
+  "invitationTitle": "Invitar al hogar",
+  "@invitationTitle": {
+    "description": "Title of the household invitation sheet."
+  },
+  "invitationSubtitleFamily": "Comparte este código con los miembros de tu familia.",
+  "@invitationSubtitleFamily": {
+    "description": "Invitation sheet subtitle for family households."
+  },
+  "invitationSubtitleFriends": "Comparte este código con tus compañeros para sumarlos a la convivencia.",
+  "@invitationSubtitleFriends": {
+    "description": "Invitation sheet subtitle for friends/roommates households."
+  },
+  "invitationSubtitleDefault": "Comparte este código para que alguien se una a tu hogar.",
+  "@invitationSubtitleDefault": {
+    "description": "Invitation sheet subtitle for couple/default households."
+  },
+  "invitationTapToCopy": "Toca para copiar",
+  "@invitationTapToCopy": {
+    "description": "Hint below the invitation code telling the user they can tap to copy it."
+  },
+  "invitationCopied": "Código copiado al portapapeles",
+  "@invitationCopied": {
+    "description": "Snackbar shown when the invitation code is copied to the clipboard."
+  },
+  "invitationShareWhatsApp": "Compartir por WhatsApp",
+  "@invitationShareWhatsApp": {
+    "description": "Button label to share the invitation code via WhatsApp."
+  },
+  "invitationRetry": "Reintentar generar código",
+  "@invitationRetry": {
+    "description": "Button to retry generating an invitation code after a failure."
+  },
+  "invitationWhatsAppFailed": "No se pudo abrir WhatsApp. Código copiado.",
+  "@invitationWhatsAppFailed": {
+    "description": "Snackbar shown when WhatsApp can't be opened and the code is copied instead."
+  },
+  "invitationIntroCouple": "¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.",
+  "@invitationIntroCouple": {
+    "description": "WhatsApp invitation intro line for couple households."
+  },
+  "invitationIntroFamily": "¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.",
+  "@invitationIntroFamily": {
+    "description": "WhatsApp invitation intro line for family households."
+  },
+  "invitationIntroFriends": "¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.",
+  "@invitationIntroFriends": {
+    "description": "WhatsApp invitation intro line for friends/roommates households."
+  },
+  "invitationIntroDefault": "¡Hola! Te invito a unirte a nuestro hogar en HomeSync.",
+  "@invitationIntroDefault": {
+    "description": "Default WhatsApp invitation intro line."
+  },
+  "invitationShareBody": "{intro}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!",
+  "@invitationShareBody": {
+    "description": "Full WhatsApp invitation message combining the intro line and the code.",
+    "placeholders": {
+      "intro": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "mercadopagoTitle": "Pagos y Mercado Pago",
+  "@mercadopagoTitle": {
+    "description": "Title of the Mercado Pago payments settings card."
+  },
+  "mercadopagoSubtitle": "Configura cómo recibir y pagar gastos",
+  "@mercadopagoSubtitle": {
+    "description": "Subtitle of the Mercado Pago settings card."
+  },
+  "mercadopagoAliasLabel": "TU ALIAS O CVU",
+  "@mercadopagoAliasLabel": {
+    "description": "Uppercase label for the Mercado Pago alias/CVU input."
+  },
+  "mercadopagoAliasHint": "ej: mi.alias.mp",
+  "@mercadopagoAliasHint": {
+    "description": "Placeholder example for the Mercado Pago alias field."
+  },
+  "mercadopagoAliasHelper": "Esto permite que tu pareja te transfiera directamente sin comisiones.",
+  "@mercadopagoAliasHelper": {
+    "description": "Helper text under the alias field explaining its purpose."
+  },
+  "mercadopagoAliasSaved": "✅ Alias guardado correctamente",
+  "@mercadopagoAliasSaved": {
+    "description": "Snackbar confirming the alias was saved."
+  },
+  "mercadopagoPaymentsEnabled": "Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.",
+  "@mercadopagoPaymentsEnabled": {
+    "description": "Info banner stating that payments via Mercado Pago are enabled."
+  },
+  "avatarPickerTitle": "Tu Identidad Visual",
+  "@avatarPickerTitle": {
+    "description": "Title of the avatar picker bottom sheet."
+  },
+  "avatarPickerSubtitle": "Elegi un avatar de la coleccion o crea el tuyo propio",
+  "@avatarPickerSubtitle": {
+    "description": "Subtitle of the avatar picker sheet."
+  },
+  "avatarPickerUpdated": "Avatar actualizado con exito",
+  "@avatarPickerUpdated": {
+    "description": "Snackbar shown when the avatar is updated successfully."
+  },
+  "avatarPickerUpdateError": "Error al actualizar avatar: {error}",
+  "@avatarPickerUpdateError": {
+    "description": "Snackbar shown when updating the avatar fails.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "avatarPickerPremiumSection": "Avatares premium",
+  "@avatarPickerPremiumSection": {
+    "description": "Section header for premium avatars."
+  },
+  "avatarPickerYourCustomSection": "Tus personalizados",
+  "@avatarPickerYourCustomSection": {
+    "description": "Section header for the user's AI-generated custom avatars."
+  },
+  "avatarPickerCustomKeepHint": "Guardamos los últimos 6 generados por IA.",
+  "@avatarPickerCustomKeepHint": {
+    "description": "Hint explaining only the last 6 AI avatars are kept."
+  },
+  "avatarPickerCustomName": "Personalizado",
+  "@avatarPickerCustomName": {
+    "description": "Label shown under a custom AI-generated avatar."
+  },
+  "avatarPickerCreateCustom": "Crear avatar personalizado (1 por mes)",
+  "@avatarPickerCreateCustom": {
+    "description": "Button for premium users to create a custom avatar (1 per month)."
+  },
+  "avatarPickerUnlockCustom": "Desbloquear avatar personalizado",
+  "@avatarPickerUnlockCustom": {
+    "description": "Button for non-premium users to unlock custom avatar creation."
+  },
+  "avatarPickerGooglePhotoTitle": "Foto de Google",
+  "@avatarPickerGooglePhotoTitle": {
+    "description": "Title of the option to use the Google account photo as avatar."
+  },
+  "avatarPickerGooglePhotoSubtitle": "Usa la imagen de tu cuenta de Google como avatar.",
+  "@avatarPickerGooglePhotoSubtitle": {
+    "description": "Subtitle of the Google photo avatar option."
+  },
+  "avatarPickerCustomSheetTitle": "Avatar personalizado",
+  "@avatarPickerCustomSheetTitle": {
+    "description": "Title of the custom avatar source selection sheet."
+  },
+  "avatarPickerCustomSheetBody": "Tenés 1 creación por mes. Se guarda como avatar nuevo y conservamos tus últimos 6 personalizados. Si dejás Premium, quedan guardados pero bloqueados.",
+  "@avatarPickerCustomSheetBody": {
+    "description": "Explanation of the custom avatar creation limits and premium behavior."
+  },
+  "avatarPickerTakePhoto": "Sacar foto",
+  "@avatarPickerTakePhoto": {
+    "description": "Button to take a photo with the camera for a custom avatar."
+  },
+  "avatarPickerChooseFromGallery": "Elegir de galería",
+  "@avatarPickerChooseFromGallery": {
+    "description": "Button to choose a photo from the gallery for a custom avatar."
+  },
+  "avatarPickerCreatingTitle": "Creando tu avatar...",
+  "@avatarPickerCreatingTitle": {
+    "description": "Loading dialog title while generating a custom avatar."
+  },
+  "avatarPickerCreatingSubtitle": "Puede tardar unos segundos.",
+  "@avatarPickerCreatingSubtitle": {
+    "description": "Loading dialog subtitle while generating a custom avatar."
+  },
+  "settingsRemoveMemberTitle": "¿Quitar miembro?",
+  "@settingsRemoveMemberTitle": {
+    "description": "Title of the confirm dialog to remove a household member."
+  },
+  "settingsRemoveMemberBody": "¿Estás seguro de que quieres quitar a {name} de este hogar?",
+  "@settingsRemoveMemberBody": {
+    "description": "Body of the confirm dialog to remove a household member.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsRemoveMemberAction": "Quitar",
+  "@settingsRemoveMemberAction": {
+    "description": "Confirm button to remove a household member."
+  },
+  "settingsMemberRemoved": "✅ {name} ha sido quitado del hogar",
+  "@settingsMemberRemoved": {
+    "description": "Snackbar confirming a member was removed from the household.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupGenerateCodeError": "Error al generar código: {error}",
+  "@setupGenerateCodeError": {
+    "description": "Snackbar shown when generating the household invitation code fails.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coupleChallenge1Title": "Recreando la primera cita",
   "coupleChallenge1Description": "Vuelvan al lugar donde todo empezó.\n\nIntenten recrear esos detalles chiquitos: la comida, la ropa, las frases, los nervios.\n\nCharlen sobre cómo eran en ese momento y cuánto crecieron juntos.\n\nVa a ser imposible no reírse de los recuerdos y agradecer todo lo que vivieron.",
   "coupleChallenge1Motivation": "A veces volver atrás es la mejor forma de ver cuánto han avanzado juntos.",

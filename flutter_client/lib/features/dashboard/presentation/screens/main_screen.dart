@@ -387,7 +387,17 @@ class _MainScreenState extends ConsumerState<MainScreen>
           );
         }
 
-        if (householdId == null || householdId.isEmpty) {
+        // Show the onboarding wizard when the user has no household yet, OR
+        // while the wizard is still mid-flow. The wizard creates the household
+        // partway through (when the user taps "Create"), which makes householdId
+        // non-null before the profile/finance/task steps are done. Without the
+        // in-progress guard, the router would swap the wizard out for
+        // Home/MemberOnboarding mid-flow, skipping steps and losing the chosen
+        // name/avatar (persisted only on the final step).
+        final setupInProgress = ref.watch(setupInProgressProvider);
+        if (householdId == null ||
+            householdId.isEmpty ||
+            setupInProgress) {
           return SetupScreen(
             onComplete: () async {
               await widget.prefs.setBool('setup_completed', true);

@@ -358,6 +358,324 @@ ICONS = [
                   "brown (#6B4A2B), stems in lighter cream-beige (#D8C49A), subtle gills "
                   "shadow underneath cap.",
     },
+    # --- Ronda 3: 18 mas egregios (emojis claramente wrong / inapropiados) ---
+    {
+        "key": "sugar",
+        "name": "stack of white sugar cubes",
+        "design": "A small stack/pile of 3-4 pure white sugar cubes arranged together "
+                  "with one resting on top. Crisp clean cube shapes with crystalline "
+                  "surface. Single group centered, viewed at a slight top-down angle.",
+        "colors": "Pure white tones - bright white cubes (#FFFFFF) with subtle cool gray "
+                  "shadows (#D8D8D8) and crystalline highlights (#FAFAFA). Slight blue-"
+                  "gray cast in shadows for crystalline feel.",
+    },
+    {
+        "key": "sweetener",
+        "name": "sweetener sachet packet",
+        "design": "A small flat rectangular paper sachet packet of artificial sweetener "
+                  "(like Splenda/Hermesetas style), with a horizontal colored band across "
+                  "the middle. Single packet centered, slight angle showing it lying flat.",
+        "colors": "Soft pale tones - white packet body (#FAFAFA) with light pastel blue "
+                  "accent stripe (#A8C8E8 to #5A88B8) horizontally across, subtle gray "
+                  "shadow underneath (#D8D8D8). Clean minimal look.",
+    },
+    {
+        "key": "pepperSpice",
+        "name": "black pepper grinder mill",
+        "design": "A wooden pepper grinder/mill standing upright - cylindrical wooden "
+                  "body slightly tapered toward the top, with a metal grinder cap on top. "
+                  "Classic pepper mill silhouette. Single grinder centered.",
+        "colors": "Warm wooden tones - body in rich dark walnut brown (#5C3A1A to "
+                  "#2C1A0A) with lighter highlights on the curves (#8B5A3C). Metallic "
+                  "silver-gray cap on top (#A0A0A0 to #6A6A6A) with subtle sheen.",
+    },
+    {
+        "key": "chickpeas",
+        "name": "pile of dry chickpeas",
+        "design": "A small mound/pile of dry chickpeas (garbanzos) - small round beige "
+                  "spherical legumes grouped together in a heap, each with the "
+                  "characteristic slight point/beak shape. Individual chickpeas visible. "
+                  "Single pile centered, viewed slightly from above.",
+        "colors": "Warm beige-tan tones - main body in light beige (#E8C896) to deeper "
+                  "tan (#B88B4E) with subtle highlights (#F0DBA8) and shadow underneath "
+                  "(#8B6B2E).",
+    },
+    {
+        "key": "cocoa",
+        "name": "bowl of cocoa powder",
+        "design": "A small white ceramic bowl filled with rich dark cocoa powder - a "
+                  "mound of fine chocolate-brown powder rising from the bowl, viewed "
+                  "slightly from above. Single bowl centered.",
+        "colors": "Rich chocolate brown cocoa powder (#5C3A1A to #3D1F0A) with subtle "
+                  "highlights on the mound (#7B4F2A), in a clean white ceramic bowl "
+                  "(#FAFAFA with cool gray shadow #D8D8D8).",
+    },
+    {
+        "key": "mayonnaise",
+        "name": "jar of mayonnaise",
+        "design": "A round glass jar of mayonnaise with a screw-top lid, creamy white-"
+                  "cream mayo visible through the clear glass, with a simple label band "
+                  "around the middle. Single jar centered, viewed straight on.",
+        "colors": "Clear glass jar with creamy white-cream mayo inside (#F8F4E0 to "
+                  "#E8DEC8), simple white label band (#FFFFFF) with a thin blue accent "
+                  "line (#5A88B8), colored cap (#F4C842 yellow or #4A8FBA blue).",
+    },
+    {
+        "key": "jam",
+        "name": "jar of strawberry jam",
+        "design": "A round glass jar of strawberry/red fruit jam with a red gingham-"
+                  "checkered cloth covering the lid (rustic style). Rich red jam visible "
+                  "through the clear glass. Single jar centered, slightly angled.",
+        "colors": "Clear glass jar with deep red-magenta jam (#C4283D to #7E1A2A), red "
+                  "and white checkered gingham cloth lid (#E84A5A and #FFFFFF in a "
+                  "small checker pattern). Subtle highlights on glass.",
+    },
+    {
+        "key": "mustard",
+        "name": "yellow mustard squeeze bottle",
+        "design": "A small plastic squeeze bottle of yellow mustard - cylindrical bottle "
+                  "with a pointed nozzle/tip cap on top, vivid yellow mustard visible "
+                  "through the bottle. Standing upright centered.",
+        "colors": "Vibrant yellow mustard (#F4D03F to #B8941A) visible through bottle, "
+                  "white bottle plastic (#FAFAFA) with simple label, yellow pointed cap "
+                  "(#F4D03F to #C8A018).",
+    },
+    {
+        "key": "ketchup",
+        "name": "red ketchup squeeze bottle",
+        "design": "A red plastic squeeze bottle of ketchup - cylindrical bottle with a "
+                  "pointed nozzle/tip cap, vivid red ketchup visible. Iconic ketchup "
+                  "bottle silhouette. Single bottle standing upright centered.",
+        "colors": "Vibrant red ketchup (#D32F2F to #8B0E0E), white bottle with red label "
+                  "band wrapping the middle (#FAFAFA and #D32F2F), red pointed cap on top.",
+    },
+    {
+        "key": "soySauce",
+        "name": "soy sauce bottle",
+        "design": "A small dark glass bottle of soy sauce with a small red cap, very "
+                  "dark brown soy sauce visible through the glass. Iconic Asian soy sauce "
+                  "bottle silhouette (rounded shoulders, narrow neck). Single bottle "
+                  "centered. No brand text.",
+        "colors": "Clear glass showing very dark brown soy sauce (#3D1F0A to #1A0805) "
+                  "inside, small bright red cap on top (#D32F2F to #8B0E0E), simple "
+                  "label area (#FAFAFA).",
+    },
+    {
+        "key": "vinegar",
+        "name": "vinegar bottle",
+        "design": "A tall slim glass bottle of vinegar - cylindrical bottle with a long "
+                  "narrow neck and a small cap, mostly transparent showing pale vinegar "
+                  "liquid inside, with a small label around the middle. Single bottle "
+                  "standing upright centered.",
+        "colors": "Clear glass with pale yellow-tinted vinegar liquid (#F4EFD8) showing "
+                  "through, white label area (#FAFAFA) with simple text accent, small "
+                  "dark cap (#3D2A15).",
+    },
+    {
+        "key": "chocolateMilk",
+        "name": "chocolate milk bottle",
+        "design": "A small rounded plastic bottle of chocolate milk with a brown cap, "
+                  "rich chocolate-brown milk visible through the bottle. Small label area "
+                  "showing a chocolate drop or hint. Single bottle centered.",
+        "colors": "Plastic bottle with rich chocolate milk inside (#8B5A3C to #5C3A1A) "
+                  "visible through transparent body, dark brown cap (#3D2A15), small "
+                  "white-cream label area (#FAFAFA with #8B5A3C accents).",
+    },
+    {
+        "key": "tofu",
+        "name": "block of fresh white tofu",
+        "design": "A clean rectangular block of fresh firm white tofu - sharp clean "
+                  "square-edged block with a smooth slightly translucent surface, "
+                  "uniformly white. Single block centered, viewed at a slight angle "
+                  "showing depth.",
+        "colors": "Soft cool white tones - body in bright white (#FAFAFA to #E8E8E8) "
+                  "with cool blue-gray shadows (#C8D0D8) for translucency feel, subtle "
+                  "warm highlight on top edge (#FFFCF0).",
+    },
+    {
+        "key": "lentils",
+        "name": "pile of red lentils",
+        "design": "A small mound or pile of dry red-orange lentils - small flat round "
+                  "disc-shaped legumes piled together. Many tiny discs visible. Single "
+                  "pile centered, viewed slightly from above.",
+        "colors": "Warm coral-orange tones - main pile in deep coral-orange (#D87838 to "
+                  "#A85020) with subtle highlights on top (#E8A878) and shadow underneath "
+                  "(#7A3A1A).",
+    },
+    {
+        "key": "alcohol",
+        "name": "bottle of medical rubbing alcohol",
+        "design": "A small clear plastic bottle of medical rubbing alcohol (ethyl "
+                  "alcohol antiseptic) with a screw cap, with a label showing a small "
+                  "red medical cross symbol. Single bottle standing upright centered.",
+        "colors": "Clear plastic bottle with pale liquid inside (#F0F4F8 with cool blue "
+                  "tint), white label (#FAFAFA) with red medical cross (#D32F2F) and blue "
+                  "accent (#2A6FB4), darker cap (#5A7892).",
+    },
+    {
+        "key": "gummies",
+        "name": "colorful gummy candies",
+        "design": "A small cluster of 4-5 colorful translucent gummy candies (small "
+                  "rounded bear-shaped or coin-shaped candies) in different colors: red, "
+                  "yellow, green, orange. Grouped together, single cluster centered.",
+        "colors": "Vibrant translucent jewel tones - red (#E84A5A), golden yellow "
+                  "(#F4C842), bright green (#7AB04A), orange (#F49A3A). All glossy with "
+                  "subtle highlights for jelly-like translucency.",
+    },
+    {
+        "key": "insecticide",
+        "name": "insecticide aerosol spray can",
+        "design": "A cylindrical aerosol spray can of insecticide with a pressable "
+                  "nozzle on top, with a label showing a small mosquito/insect graphic "
+                  "indicating purpose. Single can standing upright centered.",
+        "colors": "Metallic green can body (#3A8B3A to #1F4F1F) with white horizontal "
+                  "label band (#FAFAFA) showing a small dark insect silhouette (#1A1A1A) "
+                  "and red accent (#D32F2F), darker pressable nozzle cap (#3D2A15).",
+    },
+    {
+        "key": "bleach",
+        "name": "bleach bottle",
+        "design": "A plastic bottle of bleach (lavandina) - tall white cylindrical "
+                  "bottle with rounded shoulders and a bright blue cap on top, with a "
+                  "blue label band around the middle. Single bottle standing upright "
+                  "centered.",
+        "colors": "Bright white plastic body (#FAFAFA to #E0E0E0) with bright blue cap "
+                  "(#2A6FB4 to #1A4F8A), blue label area (#5AA8D0) with small accent. "
+                  "Clean clinical look.",
+    },
+    # --- Ronda 4 (Tier 2): emojis indirectos / abstractos ---
+    {
+        "key": "oil",
+        "name": "bottle of cooking oil",
+        "design": "A tall slim glass bottle of cooking oil with a thin neck and a small "
+                  "cap on top, pale golden oil visible inside. A simple label band "
+                  "around the middle. Single bottle standing upright centered.",
+        "colors": "Clear glass with pale golden-yellow oil (#F4D680 to #C8A040) visible "
+                  "inside, simple white label band (#FAFAFA) with green accent (#5C8E3A), "
+                  "small darker cap (#3D2A15).",
+    },
+    {
+        "key": "flour",
+        "name": "bag of flour",
+        "design": "A paper bag of wheat flour - rectangular paper sack standing upright "
+                  "with a folded top, with a label showing wheat stalks or a small wheat "
+                  "icon. Single bag centered, slight angle showing depth.",
+        "colors": "Cream-white paper bag (#F8F4E8 to #E8DEC0) with golden wheat accents "
+                  "on label (#D4A848 to #8B6B2E), brown bottom shadow (#A87848). Slight "
+                  "paper texture.",
+    },
+    {
+        "key": "sunscreen",
+        "name": "sunscreen bottle",
+        "design": "A cylindrical squeeze bottle of sunscreen lotion with a flip-top cap, "
+                  "white-yellow body with a sun graphic on the label. Single bottle "
+                  "standing upright centered.",
+        "colors": "White bottle (#FAFAFA to #E8E8E8) with bright sunny yellow accents "
+                  "(#F4D03F) and a small sun icon on label (#F4A03F orange-yellow). "
+                  "Small darker cap (#5A7892 or matching yellow).",
+    },
+    {
+        "key": "toothpaste",
+        "name": "tube of toothpaste",
+        "design": "A horizontal tube of toothpaste with a screw cap at one end (the "
+                  "smaller end), with the body in white-blue colors and a small mint "
+                  "or stripe accent. Lying flat showing the tube shape, slightly squished "
+                  "or full, single tube centered.",
+        "colors": "White-cyan tube body (#FAFAFA to #B4D8E8) with bright blue accents "
+                  "(#2A8FBA to #1A5F8A) and a stripe band, white cap (#FFFFFF).",
+    },
+    {
+        "key": "dogFood",
+        "name": "bag of dog food",
+        "design": "A standing paper bag of dog food kibble with a label showing a small "
+                  "dog silhouette/illustration. Rectangular bag shape with folded top. "
+                  "Single bag centered, slight angle.",
+        "colors": "Warm brown paper bag (#A57848 to #5C3A1A) with cream label area "
+                  "(#F8F4E8) and a small brown dog silhouette (#3D2A15), small red "
+                  "accent (#D32F2F).",
+    },
+    {
+        "key": "catFood",
+        "name": "bag of cat food",
+        "design": "A standing paper bag of cat food kibble with a label showing a small "
+                  "cat silhouette/illustration. Rectangular bag shape with folded top. "
+                  "Single bag centered, slight angle.",
+        "colors": "Soft pastel orange or blue paper bag (#F4B07A or #7AB0D8) with cream "
+                  "label area (#F8F4E8) and small black cat silhouette (#1A1A1A), small "
+                  "accent color (#F4C842).",
+    },
+    {
+        "key": "drinkableYogurt",
+        "name": "drinkable yogurt bottle",
+        "design": "A small plastic bottle of drinkable yogurt with a colored cap, "
+                  "creamy pink-white liquid visible through the bottle, with a small "
+                  "strawberry or fruit icon on the label. Single bottle standing upright "
+                  "centered.",
+        "colors": "Creamy pink-white liquid (#FFE0E0 to #F0C8C8) visible through "
+                  "transparent bottle, white-pink label (#FAFAFA with #F4A8B8 accent), "
+                  "matching pink cap.",
+    },
+    {
+        "key": "seasonings",
+        "name": "spice jar",
+        "design": "A small glass jar of mixed seasonings/spices with a perforated shaker "
+                  "top (red or black cap with holes), with mixed dark red and orange "
+                  "spices visible inside through the clear glass. Single jar centered.",
+        "colors": "Clear glass jar with mixed red-orange spices visible (#A05028 to "
+                  "#7A3A1A with hints of #E84A1A), red or black shaker cap on top "
+                  "(#D32F2F or #1A1A1A), simple label band.",
+    },
+    {
+        "key": "tuna",
+        "name": "can of tuna",
+        "design": "A short cylindrical aluminum can of tuna with a pull-tab lid on top, "
+                  "with a small label showing a fish icon. Single can sitting flat, viewed "
+                  "from a slight angle showing the lid and side.",
+        "colors": "Metallic silver/gray can body (#C8C8C8 to #888888) with metallic "
+                  "highlights, blue and white label band (#2A6FB4 and #FAFAFA) with a "
+                  "small dark fish silhouette (#1A1A1A).",
+    },
+    {
+        "key": "polenta",
+        "name": "bowl of polenta",
+        "design": "A small ceramic bowl filled with bright yellow polenta (cornmeal "
+                  "porridge or dry grits), creamy or grainy mound visible from above. "
+                  "Single bowl centered, viewed slightly from above.",
+        "colors": "Bright golden-yellow polenta (#F4D03F to #B8941A) with subtle "
+                  "highlights (#F8E078), in a white ceramic bowl (#FAFAFA with cool "
+                  "shadow #D8D8D8).",
+    },
+    {
+        "key": "oats",
+        "name": "bowl of oat flakes",
+        "design": "A small white ceramic bowl filled with rolled oat flakes - cream-"
+                  "beige loose flakes piled in the bowl, viewed slightly from above "
+                  "showing the texture of the oats.",
+        "colors": "Cream-beige oats (#E8D8B0 to #A88848) with subtle highlights "
+                  "(#F4E8C8) showing individual flake texture, white ceramic bowl "
+                  "(#FAFAFA with cool gray shadow #D8D8D8).",
+    },
+    {
+        "key": "celery",
+        "name": "celery stalk",
+        "design": "A stalk of fresh celery - a few thick light-green celery ribs with "
+                  "their characteristic vertical ridges, topped with bright leafy green "
+                  "leaves at the top. Single bunch centered, viewed at a slight angle.",
+        "colors": "Pale yellow-green stalks (#C8D850 to #8AA830) with vertical ridge "
+                  "details, brighter green leaves at top (#5C8E3A to #3D6F2A), subtle "
+                  "highlights on the curves.",
+    },
+    {
+        "key": "tomatoSauce",
+        "name": "bottle of tomato sauce",
+        "design": "A tall slim glass bottle of tomato sauce/passata with a small white "
+                  "or red cap, deep red tomato sauce visible through the glass, with a "
+                  "simple label showing a small tomato. Single bottle standing upright "
+                  "centered.",
+        "colors": "Deep red tomato sauce (#C42828 to #7A1A1A) visible through the "
+                  "glass, simple white label area (#FAFAFA) with small tomato icon "
+                  "(#E84A1A green leaf #5C8E3A), darker cap (#3D2A15).",
+    },
     # --- ya generados antes (mantener en la lista para re-procesar si hace falta) ---
     {
         "key": "yerbaMate",

@@ -1,6 +1,7 @@
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/logger_service.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/savings/data/repositories/supabase_savings_repository.dart';
@@ -151,7 +152,7 @@ class SavingsGoals extends _$SavingsGoals {
       // 2. Create a corresponding PERSONAL expense to reflect in global balance
       try {
         final expenseRepo = ref.read(expenseRepositoryProvider);
-        await expenseRepo.saveExpense(
+        final saveResult = await expenseRepo.saveExpense(
           householdId: householdId,
           title: 'Ahorro: $goalTitle',
           amount: amount,
@@ -161,6 +162,15 @@ class SavingsGoals extends _$SavingsGoals {
           description: note ?? 'Aportación a meta de ahorro',
           splitType: SplitType.personal,
           type: 'expense',
+        );
+        // saveExpense returns Either<Failure, void>; a Left means the ledger
+        // write failed silently — surface it so the contribution doesn't look
+        // like it "didn't deduct anything".
+        saveResult.fold(
+          (failure) => log.w(
+            'Savings contribution: ledger expense failed: ${failure.message}',
+          ),
+          (_) {},
         );
       } catch (e, stack) {
         // Log error but don't fail the whole operation if ledger failed
@@ -174,6 +184,11 @@ class SavingsGoals extends _$SavingsGoals {
       ref.invalidate(goalContributionsProvider(goalId));
       ref.invalidate(personalFinanceSummaryProvider);
       ref.invalidate(expenseControllerProvider);
+      ref.invalidate(expenseBalancesProvider);
+      ref.invalidate(userBalanceProvider);
+      ref.invalidate(combinedFeedControllerProvider);
+      ref.invalidate(recentActivityRemoteProvider);
+      ref.invalidate(recentActivityProvider);
       ref.invalidate(paginatedSavingsGoalsProvider);
 
       final getSavingsGoals = ref.read(getSavingsGoalsUseCaseProvider);

@@ -3,10 +3,12 @@
 // Tests the ACTUAL app model classes (not fakes)
 // Run with: flutter test test/models_test.dart
 // ─────────────────────────────────────────────────────────────────────────────
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 void main() {
   // ───────────────────────────────────────────────────────────────────────────
@@ -370,6 +372,12 @@ void main() {
   });
 
   group('✅ TaskModel — recurrenceLabel', () {
+    late AppLocalizations t;
+
+    setUp(() async {
+      t = await AppLocalizations.delegate.load(const Locale('es'));
+    });
+
     String labelFor(String? type) => TaskModel(
           id: 't',
           title: 'T',
@@ -379,7 +387,7 @@ void main() {
           householdId: 'h',
           createdAt: DateTime(2026),
           recurrenceType: type,
-        ).recurrenceLabel;
+        ).recurrenceLabel(t);
 
     test('daily → "Diaria"', () => expect(labelFor('daily'), equals('Diaria')));
     test(
@@ -395,8 +403,8 @@ void main() {
       () => expect(labelFor('custom'), equals('Personalizada')),
     );
     test(
-      'null → "Sin repetición"',
-      () => expect(labelFor(null), equals('Sin repetición')),
+      'null → "Sin repetir"',
+      () => expect(labelFor(null), equals('Sin repetir')),
     );
   });
 

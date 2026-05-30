@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
@@ -42,6 +43,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         ),
       ),
       body: goalsAsync.when(
+        skipLoadingOnReload: true,
         data: (goals) => RefreshIndicator(
           onRefresh: () => ref.refresh(savingsGoalsProvider.future),
           child: SingleChildScrollView(
@@ -465,6 +467,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsInputFormatter()],
               autofocus: true,
               style: TextStyle(
                 fontSize: 24,
@@ -473,7 +476,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
               ),
               decoration: InputDecoration(
                 prefixText: ref.watch(currencyProvider).inputPrefix(),
-                hintText: '0.00',
+                hintText: '0',
                 filled: true,
                 fillColor: context.theme.surfaceVariant,
                 border:
@@ -483,8 +486,8 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                final amount = double.tryParse(controller.text);
-                if (amount != null && amount > 0) {
+                final amount = parseAmountInput(controller.text);
+                if (amount > 0) {
                   ref.read(savingsGoalsProvider.notifier).contribute(
                         goal.id,
                         amount,
@@ -701,6 +704,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                               TextField(
                                 controller: amountController,
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [ThousandsInputFormatter()],
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22,
@@ -862,11 +866,9 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     final title = titleController.text.trim();
-                                    final amount = double.tryParse(
-                                          amountController.text
-                                              .replaceAll(',', '.'),
-                                        ) ??
-                                        0;
+                                    final amount = parseAmountInput(
+                                      amountController.text,
+                                    );
                                     if (title.isNotEmpty && amount > 0) {
                                       ref
                                           .read(savingsGoalsProvider.notifier)

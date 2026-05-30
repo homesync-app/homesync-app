@@ -198,8 +198,13 @@ class Tasks extends _$Tasks {
 
   void _invalidateRealtimeTaskDependents() {
     if (!ref.mounted) return;
-    ref.invalidate(recentActivityRemoteProvider);
-    ref.invalidate(recentActivityProvider);
+    // NOTE: do NOT invalidate recentActivityRemoteProvider/recentActivityProvider
+    // here. The activity feed is its own realtime stream (watchRecentActivity)
+    // that already listens to the `tasks` and `household_activities` tables, so
+    // it refreshes itself on a completion. Invalidating it from this task
+    // realtime callback tore down and recreated that stream, firing a SECOND
+    // redundant recent_activity query ~1s after the optimistic update — the
+    // visible "double refresh" of the household movements cards.
     ref.invalidate(pendingTaskApprovalsProvider);
     ref.invalidate(familyMemberDashboardProvider);
   }
@@ -535,8 +540,10 @@ class Tasks extends _$Tasks {
           );
           silentRefresh();
           ref.invalidate(userBalanceProvider);
-          ref.invalidate(recentActivityRemoteProvider);
-          ref.invalidate(recentActivityProvider);
+          // The activity feed (recentActivityRemoteProvider) is a realtime
+          // stream that already reacts to the `tasks` table change, and the
+          // optimistic entry covers the instant update. Invalidating it here
+          // tore down the stream and caused a redundant double refetch.
         }
       }
 

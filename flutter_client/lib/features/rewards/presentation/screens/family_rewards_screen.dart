@@ -49,6 +49,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: rewardsAsync.when(
+        // Keep showing the existing list while the provider recomputes after a
+        // mutation (create/edit/approve/delete). Without this, invalidation
+        // drops the whole page to the loading shimmer — a jarring full-page
+        // "reload". The loading branch still shows on the very first load.
+        skipLoadingOnReload: true,
         data: (rewards) {
           final activeRewards =
               rewards.where((reward) => reward.isActive).toList();

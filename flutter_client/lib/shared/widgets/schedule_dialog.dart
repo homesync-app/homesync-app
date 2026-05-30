@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 enum TaskRepeatMode { none, daily, weekly, monthly, custom }
@@ -142,7 +143,9 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   children: [
                     _buildHeader(theme),
                     const SizedBox(height: 24),
-                    _buildSectionTitle('REPETICION'),
+                    _buildSectionTitle(
+                      AppLocalizations.of(context).scheduleSectionRepeat,
+                    ),
                     const SizedBox(height: 12),
                     _buildRepeatOptions(theme),
                     AnimatedSize(
@@ -151,7 +154,9 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                       child: _buildModeConfig(theme),
                     ),
                     const SizedBox(height: 28),
-                    _buildSectionTitle('RESPONSABLE'),
+                    _buildSectionTitle(
+                      AppLocalizations.of(context).scheduleSectionResponsible,
+                    ),
                     const SizedBox(height: 12),
                     _buildMemberSelector(theme),
                     const SizedBox(height: 24),
@@ -180,6 +185,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildHeader(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -204,7 +210,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Programar tarea',
+                  t.scheduleTitle,
                   style: TextStyle(
                     fontSize: 21,
                     fontWeight: FontWeight.w900,
@@ -214,7 +220,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Elegí cómo se repite y quién queda a cargo.',
+                  t.scheduleSubtitle,
                   style: TextStyle(
                     fontSize: 13,
                     color: theme.textSecondary,
@@ -227,7 +233,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           ),
         ),
         IconButton(
-          tooltip: 'Cerrar',
+          tooltip: t.commonClose,
           onPressed: () => Navigator.pop(context),
           splashRadius: 22,
           icon: Icon(
@@ -253,20 +259,21 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildRepeatOptions(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         _buildModeChip(
-            theme, 'Ninguna', TaskRepeatMode.none, Icons.block_rounded,),
+            theme, t.scheduleRepeatNone, TaskRepeatMode.none, Icons.block_rounded,),
         _buildModeChip(
-            theme, 'Diaria', TaskRepeatMode.daily, Icons.today_rounded,),
+            theme, t.scheduleRepeatDaily, TaskRepeatMode.daily, Icons.today_rounded,),
         _buildModeChip(
-            theme, 'Semanal', TaskRepeatMode.weekly, Icons.date_range_rounded,),
-        _buildModeChip(theme, 'Mensual', TaskRepeatMode.monthly,
+            theme, t.scheduleRepeatWeekly, TaskRepeatMode.weekly, Icons.date_range_rounded,),
+        _buildModeChip(theme, t.scheduleRepeatMonthly, TaskRepeatMode.monthly,
             Icons.calendar_month_rounded,),
         _buildModeChip(
-            theme, 'Personalizada', TaskRepeatMode.custom, Icons.tune_rounded,),
+            theme, t.scheduleRepeatCustom, TaskRepeatMode.custom, Icons.tune_rounded,),
       ],
     );
   }
@@ -356,11 +363,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildWeeklyConfig(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Elegí el día de la semana',
+          t.scheduleWeeklyTitle,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w800,
@@ -369,7 +377,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         ),
         const SizedBox(height: 6),
         Text(
-          'La tarea se repetirá cada semana en ese día.',
+          t.scheduleWeeklySubtitle,
           style: TextStyle(
             fontSize: 12.5,
             color: theme.textSecondary,
@@ -396,11 +404,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildMonthlyConfig(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Elegí el día del mes',
+          t.scheduleMonthlyTitle,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w800,
@@ -409,7 +418,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         ),
         const SizedBox(height: 6),
         Text(
-          'La tarea se repetirá todos los meses en esa fecha.',
+          t.scheduleMonthlySubtitle,
           style: TextStyle(
             fontSize: 12.5,
             color: theme.textSecondary,
@@ -436,6 +445,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildCustomRecurrenceMenu(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -443,9 +453,9 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildCustomModeTab(theme, 'Días', 'weekdays'),
-            _buildCustomModeTab(theme, 'Intervalo', 'interval'),
-            _buildCustomModeTab(theme, 'Fecha', 'month_days'),
+            _buildCustomModeTab(theme, t.scheduleCustomTabDays, 'weekdays'),
+            _buildCustomModeTab(theme, t.scheduleCustomTabInterval, 'interval'),
+            _buildCustomModeTab(theme, t.scheduleCustomTabDate, 'month_days'),
           ],
         ),
         const SizedBox(height: 16),
@@ -518,6 +528,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildIntervalSelector(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Container(
       key: const ValueKey('interval'),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -525,7 +536,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Cada',
+            t.scheduleIntervalEvery,
             style: TextStyle(
               color: theme.textSecondary,
               fontWeight: FontWeight.w700,
@@ -541,7 +552,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             child: Row(
               children: [
                 IconButton(
-                  tooltip: 'Disminuir',
+                  tooltip: t.scheduleIntervalDecrease,
                   onPressed: () {
                     if (_recurrenceInterval > 1) {
                       setState(() => _recurrenceInterval--);
@@ -566,7 +577,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Aumentar',
+                  tooltip: t.scheduleIntervalIncrease,
                   onPressed: () {
                     if (_recurrenceInterval < 365) {
                       setState(() => _recurrenceInterval++);
@@ -583,7 +594,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           ),
           const SizedBox(width: 12),
           Text(
-            _recurrenceInterval == 1 ? 'día' : 'días',
+            t.scheduleIntervalDays(_recurrenceInterval),
             style: TextStyle(
               color: theme.textSecondary,
               fontWeight: FontWeight.w700,
@@ -692,11 +703,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   Widget _buildMemberSelector(AppThemeColors theme) {
     if (widget.members.isEmpty) return const SizedBox.shrink();
 
+    final t = AppLocalizations.of(context);
     final cards = <Widget>[
       _buildAssigneeCard(
         theme,
-        label: 'Cualquiera',
-        subtitle: 'Queda abierta para quien la quiera hacer.',
+        label: t.scheduleAssigneeAnyone,
+        subtitle: t.scheduleAssigneeAnyoneSubtitle,
         selected: _selectedAssignedTo == null,
         onTap: () => setState(() => _selectedAssignedTo = null),
       ),
@@ -705,12 +717,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         final users = m['users'] as Map<String, dynamic>? ?? const {};
         final name = (users['full_name'] as String?) ??
             (users['email'] as String?)?.split('@').first ??
-            'Miembro';
+            t.scheduleAssigneeMemberFallback;
         final avatarUrl = users['avatar_url'] as String?;
         return _buildAssigneeCard(
           theme,
           label: name.split(' ').first,
-          subtitle: 'Responsable principal de esta tarea.',
+          subtitle: t.scheduleAssigneeMemberSubtitle,
           selected: _selectedAssignedTo == userId,
           avatarName: name,
           avatarUrl: avatarUrl,
@@ -824,6 +836,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Widget _buildFooter(AppThemeColors theme) {
+    final t = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
@@ -836,7 +849,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               ),
             ),
             child: Text(
-              'Cancelar',
+              t.commonCancel,
               style: TextStyle(
                 color: theme.textMuted,
                 fontWeight: FontWeight.w700,
@@ -870,9 +883,9 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Text(
-                'Confirmar',
-                style: TextStyle(
+              child: Text(
+                t.commonConfirm,
+                style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
                 ),
@@ -903,7 +916,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
         if (_customRecurrenceMode == 'weekdays') {
           if (_selectedDays.isEmpty) {
             _showError(
-                'Elegí al menos un día para la repetición personalizada.',);
+                AppLocalizations.of(context).scheduleErrorPickWeekday,);
             return;
           }
           weekdays = _selectedDays.toList()..sort();
@@ -911,7 +924,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
           interval = _recurrenceInterval;
         } else {
           if (_selectedMonthDays.isEmpty) {
-            _showError('Elegí al menos una fecha para repetir la tarea.');
+            _showError(AppLocalizations.of(context).scheduleErrorPickMonthDay);
             return;
           }
           monthDays = _selectedMonthDays.toList()..sort();

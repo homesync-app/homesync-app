@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import 'stats_shared_widgets.dart';
 
 class AchievementsTab extends StatelessWidget {
@@ -17,6 +18,7 @@ class AchievementsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     // Definimos algunos logros predeterminados basados en las estadísticas
     final totalTasks = taskStats.fold<int>(
       0,
@@ -39,12 +41,12 @@ class AchievementsTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
         children: [
-          const SectionLabel(label: 'Tus Medallas', icon: '🏅'),
+          SectionLabel(label: t.achievementsBadgesSection, icon: '🏅'),
           const SizedBox(height: 20),
           _buildAchievementCard(
             context,
-            title: 'Primeros Pasos',
-            description: 'Completaste tu primera tarea en pareja.',
+            title: t.achievementsFirstStepsTitle,
+            description: t.achievementsFirstStepsDesc,
             icon: '🌱',
             isUnlocked: totalTasks >= 1,
             progress: totalTasks >= 1 ? 1.0 : 0.0,
@@ -52,8 +54,8 @@ class AchievementsTab extends StatelessWidget {
           ),
           _buildAchievementCard(
             context,
-            title: 'Equipo Imparable',
-            description: 'Completaron 50 tareas juntos.',
+            title: t.achievementsUnstoppableTitle,
+            description: t.achievementsUnstoppableDesc,
             icon: '🚀',
             isUnlocked: totalTasks >= 50,
             progress: (totalTasks / 50).clamp(0.0, 1.0),
@@ -61,20 +63,20 @@ class AchievementsTab extends StatelessWidget {
           ),
           _buildAchievementCard(
             context,
-            title: 'Maestros del Hogar',
-            description: 'Llegaron a los 5000 XP acumulados.',
+            title: t.achievementsHomeMastersTitle,
+            description: t.achievementsHomeMastersDesc,
             icon: '👑',
             isUnlocked: totalXp >= 5000,
             progress: (totalXp / 5000).clamp(0.0, 1.0),
             progressText: '$totalXp/5000',
           ),
           const SizedBox(height: 32),
-          const SectionLabel(label: 'Desafíos de Pareja', icon: '💖'),
+          SectionLabel(label: t.achievementsCoupleChallengesSection, icon: '💖'),
           const SizedBox(height: 16),
           _buildAchievementCard(
             context,
-            title: 'Coleccionista de Citas',
-            description: 'Completaron 7 desafíos especiales.',
+            title: t.achievementsCollectorTitle,
+            description: t.achievementsSpecialChallengesDesc(7),
             icon: '📸',
             isUnlocked: connectionTasks >= 7,
             progress: (connectionTasks / 7).clamp(0.0, 1.0),
@@ -82,8 +84,8 @@ class AchievementsTab extends StatelessWidget {
           ),
           _buildAchievementCard(
             context,
-            title: 'Amor en Movimiento',
-            description: 'Completaron 15 desafíos especiales.',
+            title: t.achievementsLoveInMotionTitle,
+            description: t.achievementsSpecialChallengesDesc(15),
             icon: '💃',
             isUnlocked: connectionTasks >= 15,
             progress: (connectionTasks / 15).clamp(0.0, 1.0),
@@ -91,8 +93,8 @@ class AchievementsTab extends StatelessWidget {
           ),
           _buildAchievementCard(
             context,
-            title: 'Conexión Profunda',
-            description: 'Completaron 30 desafíos especiales.',
+            title: t.achievementsDeepConnectionTitle,
+            description: t.achievementsSpecialChallengesDesc(30),
             icon: '♾️',
             isUnlocked: connectionTasks >= 30,
             progress: (connectionTasks / 30).clamp(0.0, 1.0),
@@ -100,31 +102,31 @@ class AchievementsTab extends StatelessWidget {
           ),
           _buildAchievementCard(
             context,
-            title: 'Leyendas del Romance',
-            description: '¡Completaron los 50 desafíos del año!',
+            title: t.achievementsRomanceLegendsTitle,
+            description: t.achievementsRomanceLegendsDesc,
             icon: '🏆',
             isUnlocked: connectionTasks >= 50,
             progress: (connectionTasks / 50).clamp(0.0, 1.0),
             progressText: '$connectionTasks/50',
           ),
           const SizedBox(height: 32),
-          const SectionLabel(label: 'Momentos Icónicos', icon: '✨'),
+          SectionLabel(label: t.achievementsIconicMomentsSection, icon: '✨'),
           const SizedBox(height: 16),
           _buildChallengeAchievement(
-            title: 'Raíces del Amor',
-            description: 'Recrearon su primera cita.',
+            title: t.achievementsLoveRootsTitle,
+            description: t.achievementsLoveRootsDesc,
             icon: '❤️',
             isUnlocked: connectionTasks >= 1, // Heurístico
           ),
           _buildChallengeAchievement(
-            title: 'Cita a Ciegas',
-            description: 'Completaron una cena a ciegas o sensorial.',
+            title: t.achievementsBlindDateTitle,
+            description: t.achievementsBlindDateDesc,
             icon: '🕯️',
             isUnlocked: false,
           ),
           _buildChallengeAchievement(
-            title: 'Arquitectos de Sueños',
-            description: 'Diseñaron su lista de metas compartidas.',
+            title: t.achievementsDreamArchitectsTitle,
+            description: t.achievementsDreamArchitectsDesc,
             icon: '✨',
             isUnlocked: false,
           ),

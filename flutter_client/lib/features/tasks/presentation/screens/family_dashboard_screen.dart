@@ -117,6 +117,7 @@ class _FamilyDashboardScreenState extends ConsumerState<FamilyDashboardScreen> {
         ),
       ),
       body: dashboardAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Padding(

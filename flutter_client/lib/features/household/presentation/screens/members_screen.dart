@@ -30,6 +30,9 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         color: AppColors.primary,
         backgroundColor: theme.surface,
         child: membersAsync.when(
+          // Keep the member list visible while it refreshes after a role/nick
+          // mutation instead of flashing a full-screen spinner.
+          skipLoadingOnReload: true,
           data: (members) => _buildContent(members, theme),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Error: $e')),

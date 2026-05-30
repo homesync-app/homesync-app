@@ -857,12 +857,31 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
 
   String _activityStableKey(Map<String, dynamic> activity) {
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final type = activity['type']?.toString();
+    // Prefer a STABLE identity so the optimistic row and the real row that
+    // replaces it (arriving via realtime ~1s later) share the same widget key.
+    // Keying on the volatile top-level `id`/`created_at` made Flutter treat the
+    // real row as a brand-new widget and replay the entry animation — the
+    // "card animates in, then refreshes itself a moment later" glitch.
+    //
+    // Both the optimistic row and the real `household_activities` row carry
+    // `task_id`, so task_id + completion-day is the identity they share. (The
+    // optimistic-only `activity_id` is NOT present on the real row, so it can't
+    // be used as the shared key.) Day-scoping keeps repeated daily completions
+    // visually distinct.
+    final taskId = data['task_id']?.toString();
+    if (type == 'task' && taskId != null && taskId.isNotEmpty) {
+      final day = (activity['created_at']?.toString() ?? '').split('T').first;
+      return 'task-$taskId-$day';
+    }
+    final expenseId = data['expense_id']?.toString();
+    if (expenseId != null && expenseId.isNotEmpty) {
+      return 'expense-$expenseId';
+    }
     return [
       activity['id'],
-      activity['type'],
+      type,
       activity['created_at'],
-      data['task_id'],
-      data['expense_id'],
     ].whereType<Object>().join('-');
   }
 

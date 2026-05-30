@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/shared/widgets/app_smooth_network_image.dart';
 
 /// Miniatura del ticket escaneado que aparece en el formulario.
 ///
@@ -99,9 +100,10 @@ class ReceiptPreviewWidget extends StatelessWidget {
       );
     }
     if (signedUrl != null) {
-      return Image.network(
-        signedUrl!,
+      return AppSmoothNetworkImage(
+        url: signedUrl!,
         fit: BoxFit.cover,
+        placeholderBuilder: (_) => _placeholder(),
         errorBuilder: (_, __, ___) => _placeholder(),
       );
     }
@@ -134,7 +136,20 @@ class ReceiptPreviewWidget extends StatelessWidget {
             child: InteractiveViewer(
               child: localPath != null
                   ? Image.file(File(localPath!))
-                  : Image.network(signedUrl!),
+                  : AppSmoothNetworkImage(
+                      url: signedUrl!,
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (_) => const SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white70,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                    ),
             ),
           ),
         ),

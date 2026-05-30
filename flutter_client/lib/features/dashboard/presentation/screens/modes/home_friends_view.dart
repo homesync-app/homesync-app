@@ -486,6 +486,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 children: pending.take(2).toList().asMap().entries.map((entry) {
                   final item = entry.value;
                   final isLast = entry.key == pending.take(2).length - 1;
+                  final displayQuantity = item.displayQuantity;
                   return Column(
                     children: [
                       ListTile(
@@ -501,8 +502,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                             color: theme.textPrimary,
                           ),
                         ),
-                        subtitle: item.quantity != null
-                            ? Text('${item.quantity} ${item.unit ?? ''}')
+                        subtitle: displayQuantity.isNotEmpty
+                            ? Text(displayQuantity)
                             : null,
                         trailing: Icon(
                           Icons.chevron_right_rounded,

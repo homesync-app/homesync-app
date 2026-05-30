@@ -200,6 +200,9 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 children: [
                   _buildDuelTab(),
                   rewardsAsync.when(
+                    // Keep the list visible while it refreshes after a reward
+                    // mutation instead of flashing the full-tab loader.
+                    skipLoadingOnReload: true,
                     data: (rawRewards) {
                       final rewards = rawRewards.items;
 
@@ -1112,18 +1115,19 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   Future<void> _confirmDeleteReward(RewardModel reward) async {
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Eliminar premio?'),
-        content: Text('Se eliminará "${reward.title}" de la boutique.'),
+        title: Text(t.rewardsDeletePrompt),
+        content: Text(t.rewardsDeleteBody(reward.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              t.commonCancel,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1135,7 +1139,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Eliminar'),
+            child: Text(t.commonDelete),
           ),
         ],
       ),
@@ -1148,10 +1152,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   void _confirmRedeem(RewardModel reward, bool canAfford) {
+    final t = AppLocalizations.of(context);
     if (!canAfford) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Coins insuficientes. A completar tareas.'),
+        SnackBar(
+          content: Text(t.rewardsInsufficientCoins),
         ),
       );
 
@@ -1162,7 +1167,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
       context: context,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        title: const Text('¿Canjear este premio?'),
+        title: Text(t.rewardsRedeemPrompt),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1181,7 +1186,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1205,7 +1210,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error: $errStr'),
+                    content: Text(t.commonErrorWithDetails(errStr)),
                     backgroundColor: AppColors.error,
                   ),
                 );
@@ -1217,7 +1222,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Canjear'),
+            child: Text(t.rewardsRedeem),
           ),
         ],
       ),
@@ -1225,11 +1230,11 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
   }
 
   void _showSuccessAnim(RewardModel reward) {
+    final t = AppLocalizations.of(context);
     SuccessCelebration.show(
       context,
-      title: 'Premio canjeado',
-      message:
-          'Disfruta de "${reward.title}". El amor también vive en los pequeños detalles.',
+      title: t.rewardsRedeemed,
+      message: t.rewardsRedeemedBody(reward.title),
       icon: reward.icon,
     );
   }
@@ -1406,21 +1411,23 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
 
     final costController = TextEditingController();
 
-    String selectedIcon = '??';
+    String selectedIcon = '💝';
 
     String selectedCategory = 'mimos';
 
     const icons = [
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '\u2728',
+      '💝',
+      '💆',
+      '🍫',
+      '🎬',
+      '🍷',
+      '🛁',
+      '🌅',
+      '🎁',
+      '☕',
+      '✨',
+      '🍽️',
+      '💌',
     ];
 
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
@@ -1494,9 +1501,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  isSuggestion
-                      ? 'POR QU\u00C9 DEBER\u00CDA APROBARLO'
-                      : 'DESCRIPCI\u00D3N',
+                  isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCI\u00D3N',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 11,
@@ -1510,7 +1515,7 @@ class _RewardsScreenState extends ConsumerState<RewardsScreen>
                   maxLines: 2,
                   decoration: InputDecoration(
                     hintText: isSuggestion
-                        ? 'Explica por qu\u00E9 tu pareja deber\u00EDa aprobar este deseo'
+                        ? 'Agreg\u00E1 un detalle si quer\u00E9s (opcional)'
                         : 'Un detalle corto para describir el premio',
                     filled: true,
                     fillColor: context.theme.surfaceVariant,

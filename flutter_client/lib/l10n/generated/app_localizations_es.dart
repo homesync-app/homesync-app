@@ -1439,7 +1439,8 @@ class AppLocalizationsEs extends AppLocalizations {
       type,
       {
         'family': 'Elegir economía compartida o dividida',
-        'other': 'Ajustar porcentaje de pareja',
+        'couple': 'Economía integrada o gastos divididos',
+        'other': 'Ajustar porcentaje',
       },
     );
     return '$_temp0';
@@ -1644,6 +1645,7 @@ class AppLocalizationsEs extends AppLocalizations {
       type,
       {
         'family': 'Finanzas familiares',
+        'couple': 'Finanzas en pareja',
         'other': 'División de gastos',
       },
     );
@@ -1678,6 +1680,65 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get coupleSplitFamilyDividedBody =>
       'Usa porcentajes y balances como en pareja.';
+
+  @override
+  String coupleSplitModeHowTitle(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'family': 'Cómo se registran los gastos',
+        'other': 'Cómo manejan la plata',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String coupleSplitModeHowBody(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'family':
+            'En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.',
+        'other':
+            'Hay dos formas de manejar la plata en pareja. En la economía integrada todo es del hogar: los gastos quedan visibles pero no generan deuda entre ustedes. En la dividida cada gasto se reparte y se lleva el balance.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleSplitModeSharedTitle => 'Economía integrada';
+
+  @override
+  String coupleSplitModeSharedBody(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'family':
+            'Los gastos no se reparten por porcentaje ni generan balances entre adultos.',
+        'other':
+            'Todo es plata del hogar: los gastos quedan registrados pero no generan deuda ni balances entre ustedes. Ideal para parejas con economía unificada.',
+      },
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coupleSplitModeDividedTitle => 'Gastos divididos';
+
+  @override
+  String coupleSplitModeDividedBody(String type) {
+    String _temp0 = intl.Intl.selectLogic(
+      type,
+      {
+        'family': 'Usa porcentajes y balances como en pareja.',
+        'other':
+            'Cada gasto compartido se reparte según el porcentaje que elijan y se lleva el balance entre ustedes.',
+      },
+    );
+    return '$_temp0';
+  }
 
   @override
   String get coupleSplitInfoTitle => '¿Cómo dividir gastos?';
@@ -2334,6 +2395,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get weeklySummaryExpensesSame => 'Mismo gasto que la semana anterior.';
+
+  @override
+  String get weeklySummaryOverdueToday => 'venció hoy';
+
+  @override
+  String weeklySummaryOverdueDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'venció hace $count días',
+      one: 'venció hace 1 día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String weeklySummaryForgottenSubtitle(String overdueLabel) {
+    return 'Esta recurrente quedo en el camino — $overdueLabel.';
+  }
+
+  @override
+  String weeklySummaryExpensesLess(String amount) {
+    return 'Gastaron $amount menos que la semana anterior.';
+  }
+
+  @override
+  String weeklySummaryExpensesMore(String amount) {
+    return 'Gastaron $amount más que la semana anterior.';
+  }
 
   @override
   String get weeklySummaryEmptyTitle => 'Tu primer resumen viene en camino';
@@ -4617,6 +4707,397 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expensesSavingsGoalAmountHint => '¿Cuánto quieren juntar?';
+
+  @override
+  String savingsLoadError(String details) {
+    return 'Error: $details';
+  }
+
+  @override
+  String get savingsEmptyTitle => 'No hay metas activas aún';
+
+  @override
+  String get savingsEmptySubtitle =>
+      'Empezá a guardar para algo que de verdad les entusiasme.';
+
+  @override
+  String get savingsEmptyFallbackSubtitle =>
+      'Empezá hoy mismo a organizar tus finanzas del hogar.';
+
+  @override
+  String savingsGoalTarget(String amount) {
+    return 'Meta: $amount';
+  }
+
+  @override
+  String get savingsGoalProgressCaption => 'objetivo';
+
+  @override
+  String savingsGoalSaved(String amount) {
+    return 'Ahorrado: $amount';
+  }
+
+  @override
+  String get savingsGoalContributeAction => 'Aportar';
+
+  @override
+  String get savingsNewGoalTitle => 'Nueva Meta';
+
+  @override
+  String get savingsNewGoalSubtitle =>
+      'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.';
+
+  @override
+  String get savingsSectionDetail => 'DETALLE';
+
+  @override
+  String get savingsSectionDetailTitle => 'Qué quieren alcanzar';
+
+  @override
+  String get savingsSectionPersonalization => 'PERSONALIZACIÓN';
+
+  @override
+  String get savingsSectionPersonalizationTitle => 'Dale personalidad';
+
+  @override
+  String get savingsFieldEmoji => 'Emoji';
+
+  @override
+  String get savingsFieldColor => 'Color';
+
+  @override
+  String get savingsPickIconTitle => 'Elegí un ícono';
+
+  @override
+  String get savingsPickColorTitle => 'Elegí un color';
+
+  @override
+  String get savingsCreateGoalAction => 'Crear Meta';
+
+  @override
+  String get savingsContributeTo => 'Ingresar dinero a';
+
+  @override
+  String get savingsConfirmContribution => 'Confirmar Aporte';
+
+  @override
+  String get achievementsBadgesSection => 'Tus Medallas';
+
+  @override
+  String get achievementsCoupleChallengesSection => 'Desafíos de Pareja';
+
+  @override
+  String get achievementsIconicMomentsSection => 'Momentos Icónicos';
+
+  @override
+  String get achievementsFirstStepsTitle => 'Primeros Pasos';
+
+  @override
+  String get achievementsFirstStepsDesc =>
+      'Completaste tu primera tarea en pareja.';
+
+  @override
+  String get achievementsUnstoppableTitle => 'Equipo Imparable';
+
+  @override
+  String get achievementsUnstoppableDesc => 'Completaron 50 tareas juntos.';
+
+  @override
+  String get achievementsHomeMastersTitle => 'Maestros del Hogar';
+
+  @override
+  String get achievementsHomeMastersDesc =>
+      'Llegaron a los 5000 XP acumulados.';
+
+  @override
+  String get achievementsCollectorTitle => 'Coleccionista de Citas';
+
+  @override
+  String get achievementsLoveInMotionTitle => 'Amor en Movimiento';
+
+  @override
+  String get achievementsDeepConnectionTitle => 'Conexión Profunda';
+
+  @override
+  String get achievementsRomanceLegendsTitle => 'Leyendas del Romance';
+
+  @override
+  String get achievementsRomanceLegendsDesc =>
+      '¡Completaron los 50 desafíos del año!';
+
+  @override
+  String achievementsSpecialChallengesDesc(int count) {
+    return 'Completaron $count desafíos especiales.';
+  }
+
+  @override
+  String get achievementsLoveRootsTitle => 'Raíces del Amor';
+
+  @override
+  String get achievementsLoveRootsDesc => 'Recrearon su primera cita.';
+
+  @override
+  String get achievementsBlindDateTitle => 'Cita a Ciegas';
+
+  @override
+  String get achievementsBlindDateDesc =>
+      'Completaron una cena a ciegas o sensorial.';
+
+  @override
+  String get achievementsDreamArchitectsTitle => 'Arquitectos de Sueños';
+
+  @override
+  String get achievementsDreamArchitectsDesc =>
+      'Diseñaron su lista de metas compartidas.';
+
+  @override
+  String get scheduleTitle => 'Programar tarea';
+
+  @override
+  String get scheduleSubtitle => 'Elegí cómo se repite y quién queda a cargo.';
+
+  @override
+  String get scheduleSectionRepeat => 'REPETICION';
+
+  @override
+  String get scheduleSectionResponsible => 'RESPONSABLE';
+
+  @override
+  String get scheduleRepeatNone => 'Ninguna';
+
+  @override
+  String get scheduleRepeatDaily => 'Diaria';
+
+  @override
+  String get scheduleRepeatWeekly => 'Semanal';
+
+  @override
+  String get scheduleRepeatMonthly => 'Mensual';
+
+  @override
+  String get scheduleRepeatCustom => 'Personalizada';
+
+  @override
+  String get scheduleWeeklyTitle => 'Elegí el día de la semana';
+
+  @override
+  String get scheduleWeeklySubtitle =>
+      'La tarea se repetirá cada semana en ese día.';
+
+  @override
+  String get scheduleMonthlyTitle => 'Elegí el día del mes';
+
+  @override
+  String get scheduleMonthlySubtitle =>
+      'La tarea se repetirá todos los meses en esa fecha.';
+
+  @override
+  String get scheduleCustomTabDays => 'Días';
+
+  @override
+  String get scheduleCustomTabInterval => 'Intervalo';
+
+  @override
+  String get scheduleCustomTabDate => 'Fecha';
+
+  @override
+  String get scheduleIntervalEvery => 'Cada';
+
+  @override
+  String get scheduleIntervalDecrease => 'Disminuir';
+
+  @override
+  String get scheduleIntervalIncrease => 'Aumentar';
+
+  @override
+  String scheduleIntervalDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'días',
+      one: 'día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scheduleAssigneeAnyone => 'Cualquiera';
+
+  @override
+  String get scheduleAssigneeAnyoneSubtitle =>
+      'Queda abierta para quien la quiera hacer.';
+
+  @override
+  String get scheduleAssigneeMemberSubtitle =>
+      'Responsable principal de esta tarea.';
+
+  @override
+  String get scheduleAssigneeMemberFallback => 'Miembro';
+
+  @override
+  String get scheduleErrorPickWeekday =>
+      'Elegí al menos un día para la repetición personalizada.';
+
+  @override
+  String get scheduleErrorPickMonthDay =>
+      'Elegí al menos una fecha para repetir la tarea.';
+
+  @override
+  String get invitationTitle => 'Invitar al hogar';
+
+  @override
+  String get invitationSubtitleFamily =>
+      'Comparte este código con los miembros de tu familia.';
+
+  @override
+  String get invitationSubtitleFriends =>
+      'Comparte este código con tus compañeros para sumarlos a la convivencia.';
+
+  @override
+  String get invitationSubtitleDefault =>
+      'Comparte este código para que alguien se una a tu hogar.';
+
+  @override
+  String get invitationTapToCopy => 'Toca para copiar';
+
+  @override
+  String get invitationCopied => 'Código copiado al portapapeles';
+
+  @override
+  String get invitationShareWhatsApp => 'Compartir por WhatsApp';
+
+  @override
+  String get invitationRetry => 'Reintentar generar código';
+
+  @override
+  String get invitationWhatsAppFailed =>
+      'No se pudo abrir WhatsApp. Código copiado.';
+
+  @override
+  String get invitationIntroCouple =>
+      '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+
+  @override
+  String get invitationIntroFamily =>
+      '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
+
+  @override
+  String get invitationIntroFriends =>
+      '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
+
+  @override
+  String get invitationIntroDefault =>
+      '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
+
+  @override
+  String invitationShareBody(String intro, String code) {
+    return '$intro\n\nDescarga la app e ingresa este código: *$code*\n\n¡Organicemos nuestro hogar juntos!';
+  }
+
+  @override
+  String get mercadopagoTitle => 'Pagos y Mercado Pago';
+
+  @override
+  String get mercadopagoSubtitle => 'Configura cómo recibir y pagar gastos';
+
+  @override
+  String get mercadopagoAliasLabel => 'TU ALIAS O CVU';
+
+  @override
+  String get mercadopagoAliasHint => 'ej: mi.alias.mp';
+
+  @override
+  String get mercadopagoAliasHelper =>
+      'Esto permite que tu pareja te transfiera directamente sin comisiones.';
+
+  @override
+  String get mercadopagoAliasSaved => '✅ Alias guardado correctamente';
+
+  @override
+  String get mercadopagoPaymentsEnabled =>
+      'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.';
+
+  @override
+  String get avatarPickerTitle => 'Tu Identidad Visual';
+
+  @override
+  String get avatarPickerSubtitle =>
+      'Elegi un avatar de la coleccion o crea el tuyo propio';
+
+  @override
+  String get avatarPickerUpdated => 'Avatar actualizado con exito';
+
+  @override
+  String avatarPickerUpdateError(String error) {
+    return 'Error al actualizar avatar: $error';
+  }
+
+  @override
+  String get avatarPickerPremiumSection => 'Avatares premium';
+
+  @override
+  String get avatarPickerYourCustomSection => 'Tus personalizados';
+
+  @override
+  String get avatarPickerCustomKeepHint =>
+      'Guardamos los últimos 6 generados por IA.';
+
+  @override
+  String get avatarPickerCustomName => 'Personalizado';
+
+  @override
+  String get avatarPickerCreateCustom =>
+      'Crear avatar personalizado (1 por mes)';
+
+  @override
+  String get avatarPickerUnlockCustom => 'Desbloquear avatar personalizado';
+
+  @override
+  String get avatarPickerGooglePhotoTitle => 'Foto de Google';
+
+  @override
+  String get avatarPickerGooglePhotoSubtitle =>
+      'Usa la imagen de tu cuenta de Google como avatar.';
+
+  @override
+  String get avatarPickerCustomSheetTitle => 'Avatar personalizado';
+
+  @override
+  String get avatarPickerCustomSheetBody =>
+      'Tenés 1 creación por mes. Se guarda como avatar nuevo y conservamos tus últimos 6 personalizados. Si dejás Premium, quedan guardados pero bloqueados.';
+
+  @override
+  String get avatarPickerTakePhoto => 'Sacar foto';
+
+  @override
+  String get avatarPickerChooseFromGallery => 'Elegir de galería';
+
+  @override
+  String get avatarPickerCreatingTitle => 'Creando tu avatar...';
+
+  @override
+  String get avatarPickerCreatingSubtitle => 'Puede tardar unos segundos.';
+
+  @override
+  String get settingsRemoveMemberTitle => '¿Quitar miembro?';
+
+  @override
+  String settingsRemoveMemberBody(String name) {
+    return '¿Estás seguro de que quieres quitar a $name de este hogar?';
+  }
+
+  @override
+  String get settingsRemoveMemberAction => 'Quitar';
+
+  @override
+  String settingsMemberRemoved(String name) {
+    return '✅ $name ha sido quitado del hogar';
+  }
+
+  @override
+  String setupGenerateCodeError(String error) {
+    return 'Error al generar código: $error';
+  }
 
   @override
   String get coupleChallenge1Title => 'Recreando la primera cita';

@@ -230,6 +230,14 @@ class _FakeSupabaseClient extends Fake implements SupabaseClient {
     RealtimeChannelConfig opts = const RealtimeChannelConfig(),
   }) =>
       _FakeRealtimeChannel();
+
+  @override
+  RealtimeClient get realtime => _FakeRealtimeClient();
+}
+
+class _FakeRealtimeClient extends Fake implements RealtimeClient {
+  @override
+  Future<void> setAuth(String? token) async {}
 }
 
 class _FakeRealtimeChannel extends Fake implements RealtimeChannel {

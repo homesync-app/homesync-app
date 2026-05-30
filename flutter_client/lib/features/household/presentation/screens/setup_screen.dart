@@ -16,6 +16,7 @@ import 'package:homesync_client/features/household/presentation/providers/househ
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'setup_widgets.dart';
@@ -298,6 +299,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     try {
       final firebaseAuthService = ref.read(firebaseAuthServiceProvider);
       final mode = _selectedMode ?? 'couple';
+      // Mark setup as in-progress BEFORE creating the household. Creating it
+      // makes householdId non-null, which would otherwise make MainScreen swap
+      // this wizard out for Home/MemberOnboarding before the remaining steps
+      // (profile save, finance, tasks) run.
+      ref.read(setupInProgressProvider.notifier).begin();
       final householdId =
           await firebaseAuthService.createHouseholdForUser(mode);
       if (householdId == null || householdId.isEmpty) {
@@ -313,7 +319,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             setState(() => _isGeneratingCode = false);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error: ${failure.message}'),
+                content: Text(
+                  AppLocalizations.of(context)
+                      .commonErrorWithDetails(failure.message),
+                ),
                 backgroundColor: AppColors.error,
               ),
             );
@@ -328,11 +337,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
         );
       }
     } catch (e) {
+      // Creation failed — clear the in-progress guard so the router can show
+      // the normal setup entry point again instead of being stuck.
+      ref.read(setupInProgressProvider.notifier).finish();
       if (mounted) {
         setState(() => _isGeneratingCode = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al generar código: $e'),
+            content:
+                Text(AppLocalizations.of(context).setupGenerateCodeError('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -347,6 +360,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   void _notifySetupComplete() {
+    // Setup finished — release the in-progress guard so the router resumes
+    // normal household-based routing.
+    ref.read(setupInProgressProvider.notifier).finish();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.onComplete();
     });
@@ -503,6 +519,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     }
 
     setState(() => _isSaving = true);
+
+    // Guard the whole completion flow: for solo / "configure later" paths the
+    // household is created here (inside _ensureHouseholdForSetupCompletion), so
+    // keep the wizard mounted until we finish persisting profile/tasks.
+    ref.read(setupInProgressProvider.notifier).begin();
 
     final client = ref.read(supabaseClientProvider);
 
@@ -928,6 +949,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
   }
 
   double _tempRatio = 0.5;
+  // Finance mode chosen during couple setup: 'divided' (percentages + balances)
+  // or 'shared' (integrated economy, no debt between the two).
+  String _setupFinanceMode = 'divided';
 
   Future<void> _saveFamilySetup() async {
     final defaultHouseholdName =
@@ -1267,59 +1291,63 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
             const SizedBox(height: 12),
             SizedBox(
               height: 78,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: UserAvatar.defaultAvatars.length,
-                itemBuilder: (context, index) {
-                  final avatar = UserAvatar.defaultAvatars[index];
-                  final emoji = avatar['emoji'] as String;
-                  final isSelected =
-                      _selectedAvatarUrl == null && _selectedAvatar == emoji;
+              child: EdgeFade(
+                axis: Axis.horizontal,
+                fadeStart: false,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: UserAvatar.defaultAvatars.length,
+                  itemBuilder: (context, index) {
+                    final avatar = UserAvatar.defaultAvatars[index];
+                    final emoji = avatar['emoji'] as String;
+                    final isSelected =
+                        _selectedAvatarUrl == null && _selectedAvatar == emoji;
 
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() {
-                        _selectedAvatar = emoji;
-                        _selectedAvatarUrl = null;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      width: 68,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary.withValues(alpha: 0.12)
-                            : Colors.white.withValues(alpha: 0.84),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _selectedAvatar = emoji;
+                          _selectedAvatarUrl = null;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        width: 68,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.primary
-                              : AppColors.border.withValues(alpha: 0.9),
-                          width: isSelected ? 1.8 : 1.2,
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : Colors.white.withValues(alpha: 0.84),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.border.withValues(alpha: 0.9),
+                            width: isSelected ? 1.8 : 1.2,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.12),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ]
+                              : null,
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color:
-                                      AppColors.primary.withValues(alpha: 0.12),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(fontSize: 30),
+                        child: Center(
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 30),
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 40),
@@ -2196,82 +2224,111 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  Text(
-                    t.setupCoupleFamilyExpensesSplitLabel(modeKey),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  const SizedBox(height: 24),
+                  // Finance-mode selector: integrated (shared) economy vs
+                  // divided. Only couples reach this step (family/friends
+                  // branch off earlier).
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _setupFinanceMode = 'shared');
+                    },
+                    child: SetupStrategyTip(
+                      title: t.coupleSplitModeSharedTitle,
+                      desc: t.coupleSplitModeSharedBody(modeKey),
+                      active: _setupFinanceMode == 'shared',
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${(_tempRatio * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      Text(
-                        ' / ',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w300,
-                          color: AppColors.textSecondary.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      Text(
-                        '${(100 - (_tempRatio * 100)).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.sage,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: AppColors.primary,
-                      inactiveTrackColor:
-                          AppColors.primary.withValues(alpha: 0.1),
-                      thumbColor: AppColors.primary,
-                      overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                      trackHeight: 12,
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 18),
-                    ),
-                    child: Slider(
-                      value: _tempRatio,
-                      min: 0,
-                      max: 1,
-                      divisions: 20,
-                      onChanged: (v) {
-                        HapticFeedback.selectionClick();
-                        setState(() => _tempRatio = v);
-                      },
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _setupFinanceMode = 'divided');
+                    },
+                    child: SetupStrategyTip(
+                      title: t.coupleSplitModeDividedTitle,
+                      desc: t.coupleSplitModeDividedBody(modeKey),
+                      active: _setupFinanceMode == 'divided',
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  SetupStrategyTip(
-                    title: t.setupCoupleFamilyTipEqualTitle,
-                    desc: _selectedMode == 'couple'
-                        ? t.setupCoupleFamilyTipEqualDescCouple
-                        : t.setupCoupleFamilyTipEqualDescOther,
-                    active: _tempRatio == 0.5,
-                  ),
-                  SetupStrategyTip(
-                    title: t.setupCoupleFamilyTipProportionalTitle,
-                    desc: t.setupCoupleFamilyTipProportionalDesc,
-                    active: _tempRatio != 0.5,
-                  ),
+                  if (_setupFinanceMode == 'divided') ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      t.setupCoupleFamilyExpensesSplitLabel(modeKey),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${(_tempRatio * 100).toInt()}%',
+                          style: const TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        Text(
+                          ' / ',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w300,
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        Text(
+                          '${(100 - (_tempRatio * 100)).toInt()}%',
+                          style: const TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.sage,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppColors.primary,
+                        inactiveTrackColor:
+                            AppColors.primary.withValues(alpha: 0.1),
+                        thumbColor: AppColors.primary,
+                        overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                        trackHeight: 12,
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 18),
+                      ),
+                      child: Slider(
+                        value: _tempRatio,
+                        min: 0,
+                        max: 1,
+                        divisions: 20,
+                        onChanged: (v) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _tempRatio = v);
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SetupStrategyTip(
+                      title: t.setupCoupleFamilyTipEqualTitle,
+                      desc: _selectedMode == 'couple'
+                          ? t.setupCoupleFamilyTipEqualDescCouple
+                          : t.setupCoupleFamilyTipEqualDescOther,
+                      active: _tempRatio == 0.5,
+                    ),
+                    SetupStrategyTip(
+                      title: t.setupCoupleFamilyTipProportionalTitle,
+                      desc: t.setupCoupleFamilyTipProportionalDesc,
+                      active: _tempRatio != 0.5,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -2284,8 +2341,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 final householdId = await ref.read(householdIdProvider.future);
                 if (householdId != null) {
                   final result = await ref
-                      .read(updateDefaultSplitRatioUseCaseProvider)
-                      .call(householdId, _tempRatio);
+                      .read(updateFinanceSettingsUseCaseProvider)
+                      .call(
+                        householdId,
+                        financeMode: _setupFinanceMode,
+                        defaultSplitRatio:
+                            _setupFinanceMode == 'shared' ? 0.5 : _tempRatio,
+                      );
                   result.fold((failure) => throw failure, (_) {});
                 }
               } catch (e) {

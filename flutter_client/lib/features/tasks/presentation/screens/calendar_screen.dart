@@ -173,6 +173,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackground,
       body: tasksAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),

@@ -43,8 +43,43 @@ abstract class BaseRpcService {
         exponentialBackoff: true,
         jitterRatio: 0.3,
       ),
-      shouldRetry: (_) => true,
+      shouldRetry: _shouldRetryRpcException,
     );
+  }
+
+  /// True solo para errores transitorios — no para fallas permanentes que el
+  /// servidor no resolverá esperando.
+  ///
+  /// Antes era `(_) => true`, que reintentaba TODO. Eso causaba que después de
+  /// un primer intento exitoso server-side cuya respuesta se perdió, el retry
+  /// volviera a insertar y pegara contra una unique constraint (Crashlytics
+  /// 68638317 — 23505 en `tasks_unique_active_per_household`, 17 eventos).
+  ///
+  /// NO se reintentan:
+  ///  • Postgres data-integrity (23xxx): unique, FK, NOT NULL, check.
+  ///  • Postgres invalid-input (22xxx): tipos, rangos.
+  ///  • Postgres syntax / access-rule (42xxx): incluye RLS 42501.
+  ///  • HTTP 4xx (400, 401, 403, 404, 422...): error del cliente, no del server.
+  ///
+  /// Sí se reintentan: timeouts, sockets caidos, 5xx, rate-limit (manejado
+  /// aparte por RetryService.RateLimitException).
+  static bool _shouldRetryRpcException(Exception e) {
+    if (e is PostgrestException) {
+      final code = e.code ?? '';
+      if (code.startsWith('23') ||
+          code.startsWith('22') ||
+          code.startsWith('42')) {
+        return false;
+      }
+      // HTTP status como string ("400", "401", ...). 4xx no se reintenta.
+      final asInt = int.tryParse(code);
+      if (asInt != null && asInt >= 400 && asInt < 500) {
+        return false;
+      }
+    }
+    if (e is AuthException) return false;
+    // Default conservador: reintentar (cubre timeouts, parseo, 5xx).
+    return true;
   }
 
   Future<String> requireCurrentUserId() async {

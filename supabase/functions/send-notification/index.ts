@@ -181,6 +181,11 @@ serve(async (req) => {
     const serviceAccount = JSON.parse(serviceAccountSecret)
     const accessToken = await getAccessToken(serviceAccount)
 
+    // FCM v1 requires every value in the `data` map to be a string. Coerce
+    // here so callers can pass numbers/bools/objects without triggering a
+    // blanket INVALID_ARGUMENT that would otherwise look like a bad token.
+    const fcmData = toStringMap(data)
+
     // 3. Send notifications to all registered tokens
     const fcmResults = await Promise.all(
       tokens.map(async (t) => {
@@ -200,7 +205,7 @@ serve(async (req) => {
                     title: finalTitle, 
                     body: finalBody 
                   },
-                  data: data || {},
+                  data: fcmData,
                   android: {
                     priority: 'high',
                     notification: {
@@ -222,9 +227,21 @@ serve(async (req) => {
           const result = await fcmResponse.json()
           if (!fcmResponse.ok) {
               console.error(`FCM error for token ${t.token.substring(0, 10)}...:`, JSON.stringify(result));
-              
-              // If the token is invalid or expired, delete it from our DB
-              if (result.error?.status === 'INVALID_ARGUMENT' || result.error?.status === 'UNREGISTERED' || result.error?.details?.[0]?.errorCode === 'INVALID_REGISTRATION_TOKEN') {
+
+              // Only delete a token when FCM tells us it is genuinely gone.
+              // UNREGISTERED (app uninstalled / token expired) is the safe
+              // signal. INVALID_ARGUMENT is ambiguous: it also fires for a
+              // malformed payload, so only treat it as a bad token when the
+              // detail explicitly blames the registration token — otherwise a
+              // single bad payload would wipe every valid token for the user.
+              const errorStatus = result.error?.status;
+              const errorCode = result.error?.details?.[0]?.errorCode;
+              const isTokenGone =
+                errorStatus === 'UNREGISTERED' ||
+                errorStatus === 'NOT_FOUND' ||
+                errorCode === 'UNREGISTERED' ||
+                errorCode === 'INVALID_REGISTRATION_TOKEN';
+              if (isTokenGone) {
                   console.log(`Removing invalid token: ${t.token.substring(0, 10)}...`);
                   await supabaseClient.from('user_fcm_tokens').delete().eq('token', t.token);
               }
@@ -309,4 +326,19 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
 
   const { access_token } = await response.json()
   return access_token
+}
+
+/**
+ * Coerces an arbitrary object into the string-keyed/string-valued map that
+ * FCM v1 requires for the `data` field. Nested objects/arrays are JSON
+ * encoded; null/undefined entries are dropped.
+ */
+function toStringMap(input: unknown): Record<string, string> {
+  const out: Record<string, string> = {}
+  if (!input || typeof input !== 'object') return out
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (value === null || value === undefined) continue
+    out[key] = typeof value === 'string' ? value : JSON.stringify(value)
+  }
+  return out
 }

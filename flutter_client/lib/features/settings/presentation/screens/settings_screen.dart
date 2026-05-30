@@ -185,16 +185,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             );
           },
-          (code) => setState(() => _invitationCode = code),
-        );
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Codigo generado'),
-            backgroundColor: AppColors.success,
-          ),
+          (code) {
+            setState(() => _invitationCode = code);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Codigo generado'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          },
         );
       }
     } catch (e) {
@@ -626,21 +625,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _confirmRemoveMember(String userId, String name) async {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text(
-          '¿Quitar miembro?',
-          style: TextStyle(fontWeight: FontWeight.w900),
+        title: Text(
+          t.settingsRemoveMemberTitle,
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
-        content:
-            Text('¿Estás seguro de que quieres quitar a $name de este hogar?'),
+        content: Text(t.settingsRemoveMemberBody(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -652,7 +651,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               minimumSize: const Size(100, 48), // Prevents infinite width error
             ),
-            child: const Text('Quitar'),
+            child: Text(t.settingsRemoveMemberAction),
           ),
         ],
       ),
@@ -666,7 +665,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ $name ha sido quitado del hogar'),
+              content: Text(t.settingsMemberRemoved(name)),
               backgroundColor: theme.success,
             ),
           );
@@ -675,7 +674,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: $e'),
+              content: Text(t.commonErrorWithDetails('$e')),
               backgroundColor: AppColors.error,
             ),
           );

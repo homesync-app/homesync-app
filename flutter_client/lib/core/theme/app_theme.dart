@@ -118,6 +118,11 @@ class AppTheme {
           ),
         ),
       ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: primary,
+        selectionColor: primary.withValues(alpha: 0.24),
+        selectionHandleColor: primary,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.cardLight,
@@ -311,6 +316,11 @@ class AppTheme {
             fontWeight: FontWeight.w800,
           ),
         ),
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: primary,
+        selectionColor: primary.withValues(alpha: 0.32),
+        selectionHandleColor: primary,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

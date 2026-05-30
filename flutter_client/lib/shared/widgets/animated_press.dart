@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 /// A wrapper for widgets that should scale down slightly when pressed.
 /// Standardized across the app for premium feel.
+///
+/// The press-down is a quick, deliberate ease; the release rides a
+/// [SpringSimulation] so the widget settles back like a real object instead of
+/// snapping to a fixed curve (idea from flutterpro.design "Make button presses
+/// feel right" / "spring physics"). No extra package needed — Flutter ships the
+/// spring in `dart:ui` physics.
 class AnimatedPress extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -28,17 +35,24 @@ class AnimatedPress extends StatefulWidget {
 class _AnimatedPressState extends State<AnimatedPress>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+
+  // Slightly underdamped: the release overshoots a hair past rest, which reads
+  // as "alive" without wobbling. Travel is tiny (~0.05) so absolute overshoot
+  // stays sub-pixel on most widgets.
+  static const SpringDescription _releaseSpring = SpringDescription(
+    mass: 0.5,
+    stiffness: 320,
+    damping: 20,
+  );
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    // Unbounded so the spring's overshoot isn't clamped to [0, 1]. The value
+    // *is* the scale, resting at 1.0.
+    _controller = AnimationController.unbounded(
       vsync: this,
-      duration: widget.duration,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scale).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+      value: 1.0,
     );
   }
 
@@ -48,19 +62,31 @@ class _AnimatedPressState extends State<AnimatedPress>
     super.dispose();
   }
 
+  void _pressDown() {
+    _controller.animateTo(
+      widget.scale,
+      duration: widget.duration,
+      curve: Curves.easeOutCubic,
+    );
+    HapticFeedback.selectionClick();
+  }
+
+  void _release() {
+    _controller.animateWith(
+      SpringSimulation(_releaseSpring, _controller.value, 1.0, 0),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: (_) {
-        _controller.forward();
-        HapticFeedback.selectionClick();
-      },
+      onTapDown: (_) => _pressDown(),
       onTapUp: (_) {
-        _controller.reverse();
+        _release();
         (widget.onTap ?? widget.onPressed)?.call();
       },
-      onTapCancel: () => _controller.reverse(),
+      onTapCancel: _release,
       onLongPress: widget.onLongPress != null
           ? () {
               HapticFeedback.mediumImpact();
@@ -68,9 +94,9 @@ class _AnimatedPressState extends State<AnimatedPress>
             }
           : null,
       child: AnimatedBuilder(
-        animation: _scaleAnimation,
+        animation: _controller,
         builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
+          scale: _controller.value,
           child: child,
         ),
         child: widget.child,

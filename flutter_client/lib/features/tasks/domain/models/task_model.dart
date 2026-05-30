@@ -1,3 +1,5 @@
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
+
 enum TaskStatus {
   active,
   assigned,
@@ -292,18 +294,18 @@ class TaskModel {
   /// fields by hand (that inconsistency was the root of past visibility bugs).
   DateTime? get lastCompletionAt => completedAt ?? lastCompletedAt;
 
-  String get recurrenceLabel {
+  String recurrenceLabel(AppLocalizations t) {
     switch (recurrenceType) {
       case 'daily':
-        return 'Diaria';
+        return t.createTaskRecurrenceDaily;
       case 'weekly':
-        return 'Semanal';
+        return t.createTaskRecurrenceWeekly;
       case 'monthly':
-        return 'Mensual';
+        return t.createTaskRecurrenceMonthly;
       case 'custom':
-        return 'Personalizada';
+        return t.createTaskRecurrenceCustom;
       default:
-        return 'Sin repetición';
+        return t.createTaskRecurrenceNone;
     }
   }
 

@@ -9,6 +9,7 @@ import { Economy } from './pages/Economy';
 import { Content } from './pages/Content';
 import { Inbox } from './pages/Inbox';
 import { OcrInsights } from './pages/OcrInsights';
+import { ShoppingIcons } from './pages/ShoppingIcons';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
@@ -72,6 +73,7 @@ function App() {
                   <Route path="/content" element={<Content />} />
                   <Route path="/inbox" element={<Inbox />} />
                   <Route path="/ocr-insights" element={<OcrInsights />} />
+                  <Route path="/shopping-icons" element={<ShoppingIcons />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

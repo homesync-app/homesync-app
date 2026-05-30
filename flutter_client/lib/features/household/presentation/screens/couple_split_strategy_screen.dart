@@ -85,10 +85,12 @@ class _CoupleSplitStrategyScreenState
   @override
   Widget build(BuildContext context) {
     final household = ref.watch(currentHouseholdProvider).value;
-    final isFamily = household?.householdType == 'family';
     final isShared = _financeMode == 'shared';
     final t = AppLocalizations.of(context);
     final modeKey = household?.householdType ?? 'couple';
+    // Couples and families can choose between an integrated/shared economy
+    // (no debt between adults) and a divided economy (percentages + balances).
+    final supportsFinanceModeChoice = modeKey == 'family' || modeKey == 'couple';
 
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackground,
@@ -138,7 +140,7 @@ class _CoupleSplitStrategyScreenState
                             shape: BoxShape.circle,
                           ),
                           child: const Text(
-                            'âš–ï¸',
+                            '💰',
                             style: TextStyle(fontSize: 48),
                           ),
                         ),
@@ -151,29 +153,29 @@ class _CoupleSplitStrategyScreenState
                 padding: const EdgeInsets.all(24.0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    if (isFamily) ...[
+                    if (supportsFinanceModeChoice) ...[
                       _buildInfoCard(
-                        t.coupleSplitFamilyHowTitle,
-                        t.coupleSplitFamilyHowBody,
+                        t.coupleSplitModeHowTitle(modeKey),
+                        t.coupleSplitModeHowBody(modeKey),
                       ),
                       const SizedBox(height: 20),
                       _buildStrategyItem(
-                        t.coupleSplitFamilySharedTitle,
-                        t.coupleSplitFamilySharedBody,
+                        t.coupleSplitModeSharedTitle,
+                        t.coupleSplitModeSharedBody(modeKey),
                         '🏠',
                         isActive: isShared,
                         onTap: () => setState(() => _financeMode = 'shared'),
                       ),
                       _buildStrategyItem(
-                        t.coupleSplitFamilyDividedTitle,
-                        t.coupleSplitFamilyDividedBody,
+                        t.coupleSplitModeDividedTitle,
+                        t.coupleSplitModeDividedBody(modeKey),
                         '⚖️',
                         isActive: !isShared,
                         onTap: () => setState(() => _financeMode = 'divided'),
                       ),
                       const SizedBox(height: 28),
                     ],
-                    if (!isFamily || !isShared) ...[
+                    if (!supportsFinanceModeChoice || !isShared) ...[
                       _buildInfoCard(
                         t.coupleSplitInfoTitle,
                         t.coupleSplitInfoBody,

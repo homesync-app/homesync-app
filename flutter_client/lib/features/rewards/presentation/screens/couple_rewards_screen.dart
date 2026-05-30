@@ -291,6 +291,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final t = AppLocalizations.of(context);
 
     return rewardsAsync.when(
+      // Keep the current list visible while recomputing after a mutation
+      // (create/edit/approve/delete) instead of flashing the full-page loader.
+      skipLoadingOnReload: true,
       data: (rewards) {
         final activeRewards = rewards.where((r) => r.isActive).toList();
         final availableCoins =
@@ -594,30 +597,13 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
           action: _buildCountPill('${suggestions.length}'),
         ),
         const SizedBox(height: 14),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final viewportWidth = constraints.maxWidth.isFinite
-                ? constraints.maxWidth
-                : MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2);
-            final columns = viewportWidth >= 280 ? 2 : 1;
-            final cardWidth = (viewportWidth - (12 * (columns - 1)))
-                    .clamp(0, double.infinity) /
-                columns;
-            final cardHeight = columns == 2 ? 208.0 : 220.0;
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: suggestions
-                  .map(
-                    (reward) => SizedBox(
-                      width: cardWidth,
-                      height: cardHeight,
-                      child: _buildProposalCard(reward, currentUserId),
-                    ),
-                  )
-                  .toList(),
-            );
-          },
+        Column(
+          children: [
+            for (var i = 0; i < suggestions.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              _buildProposalCard(suggestions[i], currentUserId),
+            ],
+          ],
         ),
       ],
     );
@@ -646,12 +632,29 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             ),
             boxShadow: theme.cardShadow,
           ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon tile
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  reward.icon,
+                  style: const TextStyle(fontSize: 26),
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeroPill(
                       icon: isMine
@@ -663,75 +666,75 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                       color: accent,
                       background: accent.withValues(alpha: 0.10),
                     ),
-                    const Spacer(),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: 10),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
                       ),
-                      child: Text(
-                        reward.icon,
-                        style: const TextStyle(fontSize: 23),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description.trim(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.monetization_on_rounded,
+                          size: 15,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${reward.cost}',
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            isMine
+                                ? t.rewardsWaitingPartnerDecision
+                                : t.rewardsStatusReview,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: theme.textSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    height: 1.12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  description.trim(),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: theme.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isMine
-                        ? theme.surfaceVariant
-                        : AppColors.accentPurple.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Text(
-                    isMine
-                        ? t.rewardsProposalStatusWaiting(reward.cost)
-                        : t.rewardsProposalStatusAction(reward.cost),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color:
-                          isMine ? theme.textSecondary : AppColors.accentPurple,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.12,
-                    ),
-                  ),
+              ),
+              if (!isMine) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: accent.withValues(alpha: 0.7),
                 ),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1115,20 +1118,21 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     CoupleChallenge challenge,
     String householdId,
   ) async {
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('¿Completaron el desafío?'),
+        title: Text(t.rewardsChallengeCompletePrompt),
         content: Text(
-          'Qué alegría. Al confirmar, ambos recibirán ${challenge.coinReward} coins.',
+          t.rewardsChallengeCompleteBody(challenge.coinReward),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Aún no',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              t.rewardsNotYet,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1140,7 +1144,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Sí, lo hicimos'),
+            child: Text(t.rewardsYesWeDid),
           ),
         ],
       ),
@@ -1216,18 +1220,19 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
   }
 
   Future<void> _confirmDeleteReward(RewardModel reward) async {
+    final t = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('¿Eliminar premio?'),
-        content: Text('Se eliminará "${reward.title}" de la boutique.'),
+        title: Text(t.rewardsDeletePrompt),
+        content: Text(t.rewardsDeleteBody(reward.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              t.commonCancel,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
           ElevatedButton(
@@ -1239,7 +1244,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Eliminar'),
+            child: Text(t.commonDelete),
           ),
         ],
       ),
@@ -1500,20 +1505,22 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
     final costController = TextEditingController();
-    String selectedIcon = '??';
+    String selectedIcon = '💝';
     String selectedCategory = 'mimos';
     bool isSubmitting = false;
     const icons = [
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '??',
-      '???',
+      '💝',
+      '💆',
+      '🍫',
+      '🎬',
+      '🍷',
+      '🛁',
+      '🌅',
+      '🎁',
+      '☕',
+      '✨',
+      '🍽️',
+      '💌',
     ];
     const categories = ['mimos', 'momentos', 'libertades', 'experiencias'];
 
@@ -1595,7 +1602,7 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    isSuggestion ? 'POR QUE DEBERIA APROBARLO' : 'DESCRIPCION',
+                    isSuggestion ? 'NOTA (OPCIONAL)' : 'DESCRIPCION',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 11,
@@ -1607,17 +1614,9 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   TextFormField(
                     controller: descriptionController,
                     maxLines: 2,
-                    validator: (value) {
-                      if (!isSuggestion) return null;
-                      final description = value?.trim() ?? '';
-                      if (description.length < 8) {
-                        return 'Cuenta un poco mas para que sea facil evaluarlo.';
-                      }
-                      return null;
-                    },
                     decoration: InputDecoration(
                       hintText: isSuggestion
-                          ? 'Explica por que tu pareja deberia aprobar este deseo'
+                          ? 'Agregá un detalle si querés (opcional)'
                           : 'Un detalle corto para describir el premio',
                       filled: true,
                       fillColor: context.theme.surface,

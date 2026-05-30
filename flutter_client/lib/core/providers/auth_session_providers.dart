@@ -101,7 +101,12 @@ final authBootstrapProvider = FutureProvider<void>((ref) async {
         () => firebaseUser.getIdToken(false),
         warnAfterMs: 900,
       );
-    } catch (_) {}
+    } catch (e, stack) {
+      // Non-fatal: token refresh can fail offline or with a revoked session.
+      // The identity service + auth stream will recover on the next event,
+      // but log it so silent auth/refresh problems remain diagnosable.
+      log.w('auth_bootstrap: firebase getIdToken failed', error: e, stackTrace: stack);
+    }
   }
 
   ref.listen<AsyncValue<AppAuthState>>(authStateProvider, (previous, next) {

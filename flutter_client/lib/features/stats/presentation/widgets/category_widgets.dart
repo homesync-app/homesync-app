@@ -33,7 +33,7 @@ class CategoryBarChart extends StatelessWidget {
           Row(
             children: [
               Text(
-                'DISTRIBUCIÓN DE IMPACTO',
+                t.categoriesImpactDistribution,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,

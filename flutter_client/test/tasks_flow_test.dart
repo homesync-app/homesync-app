@@ -37,6 +37,14 @@ class FakeSupabaseClient extends Fake implements SupabaseClient {
 
   @override
   SupabaseQueryBuilder from(String table) => FakeSupabaseQueryBuilder();
+
+  @override
+  RealtimeClient get realtime => FakeRealtimeClient();
+}
+
+class FakeRealtimeClient extends Fake implements RealtimeClient {
+  @override
+  Future<void> setAuth(String? token) async {}
 }
 
 class FakeRealtimeChannel extends Fake implements RealtimeChannel {

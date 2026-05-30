@@ -39,7 +39,8 @@ class HouseholdMembersNotifier extends _$HouseholdMembersNotifier {
     _setupRealtime(householdId);
 
     final bootstrap = await ref.watch(homeBootstrapProvider.future);
-    if (bootstrap?.householdId == householdId) {
+    if (bootstrap?.householdId == householdId &&
+        BootstrapSeedGate.instance.consume(BootstrapSection.members)) {
       final members = bootstrap!.members
           .map((member) => MemberModel.fromMap(member))
           .toList(growable: false);
@@ -119,7 +120,9 @@ Future<HouseholdModel?> household(Ref ref) async {
   if (householdId == null) return null;
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
-  if (bootstrap?.householdId == householdId && bootstrap?.household != null) {
+  if (bootstrap?.householdId == householdId &&
+      bootstrap?.household != null &&
+      BootstrapSeedGate.instance.consume(BootstrapSection.household)) {
     return HouseholdModel.fromJson(bootstrap!.household!);
   }
 

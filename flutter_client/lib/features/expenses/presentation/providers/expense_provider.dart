@@ -84,7 +84,8 @@ class ExpenseBalances extends _$ExpenseBalances {
     if (householdId == null) return [];
 
     final bootstrap = await ref.watch(homeBootstrapProvider.future);
-    if (bootstrap?.householdId == householdId) {
+    if (bootstrap?.householdId == householdId &&
+        BootstrapSeedGate.instance.consume(BootstrapSection.expenseBalances)) {
       return bootstrap!.expenseBalances
           .map(HouseholdBalanceModel.fromJson)
           .toList(growable: false);
@@ -253,7 +254,8 @@ class CombinedFeedController extends _$CombinedFeedController {
     unawaited(_processRecurringExpensesInBackground(repo, householdId));
 
     final bootstrap = await ref.watch(homeBootstrapProvider.future);
-    if (bootstrap?.householdId == householdId) {
+    if (bootstrap?.householdId == householdId &&
+        BootstrapSeedGate.instance.consume(BootstrapSection.combinedFeed)) {
       return bootstrap!.combinedFeed
           .map(FeedItemModel.fromJson)
           .toList(growable: false);
@@ -514,8 +516,9 @@ Future<MonthlyProjectionData> monthlyProjection(
   double pending = 0.0;
   final now = DateTime.now();
   final memberCount = members.isNotEmpty ? members.length : 2;
-  final isSharedFamily = household?.householdType == 'family' &&
-      household?.financeMode == 'shared';
+  // Integrated/shared economy (couple or family): pending planned expenses count
+  // in full toward the household rather than being split per member.
+  final isSharedEconomy = household?.financeMode == 'shared';
 
   for (final item in feedAsync) {
     // Only current month
@@ -531,7 +534,7 @@ Future<MonthlyProjectionData> monthlyProjection(
   }
 
   for (final item in monthlyPendingItems) {
-    pending += isSharedFamily
+    pending += isSharedEconomy
         ? item.amount
         : _projectedShareForUser(
             item: item,

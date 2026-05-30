@@ -24,6 +24,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
   bool _isDisposed = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -49,6 +50,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
       if (mounted && !_isDisposed) {
         setState(() {
           _isInitialized = true;
+          _hasError = false;
         });
         _controller.setLooping(true);
         _controller.setVolume(0);
@@ -56,9 +58,9 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
       }
     }).catchError((error) {
       log.e('Error initializing video: $error', error: error);
-      // If asset path fails, try the original path as a fallback
-      if (widget.isAsset) {
-        // Fallback logic could go here
+      // Surface a stable fallback instead of an endless spinner.
+      if (mounted && !_isDisposed) {
+        setState(() => _hasError = true);
       }
     });
   }
@@ -69,6 +71,7 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
     if (oldWidget.url != widget.url || oldWidget.isAsset != widget.isAsset) {
       _controller.dispose();
       _isInitialized = false;
+      _hasError = false;
       _initializeController();
     }
   }
@@ -82,6 +85,20 @@ class _VideoAvatarPlayerState extends State<VideoAvatarPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Center(
+          child: Icon(
+            Icons.person,
+            size: widget.size * 0.6,
+            color: AppColors.primary.withValues(alpha: 0.3),
+          ),
+        ),
+      );
+    }
+
     if (!_isInitialized) {
       return SizedBox(
         width: widget.size,

@@ -81,7 +81,7 @@ class NotificationService {
 
   Future<void> _setupFirebase() async {
     if (_firebaseConfigured) {
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await _safeGetToken();
       if (token != null) {
         await _saveFcmToken(token);
       }
@@ -107,11 +107,23 @@ class NotificationService {
     }
 
     final messaging = FirebaseMessaging.instance;
-    final settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    final NotificationSettings settings;
+    try {
+      settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (e, stack) {
+      // "A request for permissions is already running" and other transient
+      // platform errors should not abort setup nor crash the app.
+      log.w(
+        'NotificationService: requestPermission failed',
+        error: e,
+        stackTrace: stack,
+      );
+      return;
+    }
     log.i('Notification permission: ${settings.authorizationStatus}');
 
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
@@ -119,7 +131,7 @@ class NotificationService {
       return;
     }
 
-    final token = await messaging.getToken();
+    final token = await _safeGetToken();
     if (token != null) {
       await _saveFcmToken(token);
     }
@@ -140,6 +152,22 @@ class NotificationService {
 
     _firebaseConfigured = true;
     log.i('NotificationService: Firebase Messaging configurado');
+  }
+
+  /// Wraps FCM getToken so transient platform failures (SERVICE_NOT_AVAILABLE
+  /// when Google Play Services is briefly unreachable, network blips) degrade
+  /// gracefully instead of bubbling up as a fatal startup crash.
+  Future<String?> _safeGetToken() async {
+    try {
+      return await FirebaseMessaging.instance.getToken();
+    } catch (e, stack) {
+      log.w(
+        'NotificationService: getToken failed (transient)',
+        error: e,
+        stackTrace: stack,
+      );
+      return null;
+    }
   }
 
   Future<void> _saveFcmToken(String token) async {

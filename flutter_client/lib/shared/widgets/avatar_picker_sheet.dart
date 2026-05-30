@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/auth/data/repositories/supabase_auth_repository.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,8 +93,8 @@ class AvatarPickerSheet extends ConsumerWidget {
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Avatar actualizado con exito'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).avatarPickerUpdated),
             backgroundColor: AppColors.success,
           ),
         );
@@ -102,7 +103,9 @@ class AvatarPickerSheet extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al actualizar avatar: $e'),
+            content: Text(
+              AppLocalizations.of(context).avatarPickerUpdateError('$e'),
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -112,6 +115,7 @@ class AvatarPickerSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(context);
     final profileAsync = ref.watch(userProfileProvider);
     final currentAvatar = UserAvatar.normalizeAvatarValue(
       profileAsync.whenOrNull(
@@ -143,9 +147,9 @@ class AvatarPickerSheet extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 28),
-            const Text(
-              'Tu Identidad Visual',
-              style: TextStyle(
+            Text(
+              t.avatarPickerTitle,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.5,
@@ -153,7 +157,7 @@ class AvatarPickerSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Elegi un avatar de la coleccion o crea el tuyo propio',
+              t.avatarPickerSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Theme.of(context)
@@ -227,7 +231,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Avatares premium',
+                                  t.avatarPickerPremiumSection,
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleMedium
@@ -281,8 +285,10 @@ class AvatarPickerSheet extends ConsumerWidget {
                           icon: const Icon(Icons.auto_awesome_rounded),
                           label: Text(
                             isPremium
-                                ? 'Crear avatar personalizado (1 por mes)'
-                                : 'Desbloquear avatar personalizado',
+                                ? AppLocalizations.of(context)
+                                    .avatarPickerCreateCustom
+                                : AppLocalizations.of(context)
+                                    .avatarPickerUnlockCustom,
                           ),
                         );
                       },
@@ -343,16 +349,16 @@ class AvatarPickerSheet extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Avatar personalizado',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).avatarPickerCustomSheetTitle,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Tenés 1 creación por mes. Se guarda como avatar nuevo y conservamos tus últimos 6 personalizados. Si dejás Premium, quedan guardados pero bloqueados.',
+                AppLocalizations.of(context).avatarPickerCustomSheetBody,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Theme.of(context)
@@ -366,7 +372,7 @@ class AvatarPickerSheet extends ConsumerWidget {
               const SizedBox(height: 20),
               _CustomAvatarSourceButton(
                 icon: Icons.photo_camera_rounded,
-                label: 'Sacar foto',
+                label: AppLocalizations.of(context).avatarPickerTakePhoto,
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _generateCustomAvatar(context, ref, ImageSource.camera);
@@ -375,7 +381,8 @@ class AvatarPickerSheet extends ConsumerWidget {
               const SizedBox(height: 10),
               _CustomAvatarSourceButton(
                 icon: Icons.photo_library_rounded,
-                label: 'Elegir de galería',
+                label:
+                    AppLocalizations.of(context).avatarPickerChooseFromGallery,
                 onTap: () {
                   Navigator.pop(sheetContext);
                   _generateCustomAvatar(context, ref, ImageSource.gallery);
@@ -427,10 +434,11 @@ class AvatarPickerSheet extends ConsumerWidget {
   // ignore: unused_element
   void _showCustomAvatarDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    final t = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Avatar personalizado'),
+        title: Text(t.avatarPickerCustomSheetTitle),
         content: TextField(
           controller: controller,
           maxLength: 2,
@@ -441,7 +449,7 @@ class AvatarPickerSheet extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(t.commonCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -451,7 +459,7 @@ class AvatarPickerSheet extends ConsumerWidget {
                 _updateAvatar(context, ref, value);
               }
             },
-            child: const Text('Guardar'),
+            child: Text(t.commonSave),
           ),
         ],
       ),
@@ -510,28 +518,29 @@ class _CustomAvatarLoadingDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      child: const Padding(
-        padding: EdgeInsets.all(24),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
-            SizedBox(height: 18),
+            const CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 18),
             Text(
-              'Creando tu avatar...',
+              t.avatarPickerCreatingTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w900,
               ),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
-              'Puede tardar unos segundos.',
+              t.avatarPickerCreatingSubtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
@@ -574,7 +583,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Tus personalizados',
+                  AppLocalizations.of(context).avatarPickerYourCustomSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -583,7 +592,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Guardamos los últimos 6 generados por IA.',
+              AppLocalizations.of(context).avatarPickerCustomKeepHint,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
@@ -598,7 +607,7 @@ class _CustomAvatarOptionsSection extends ConsumerWidget {
               children: avatars.map((avatar) {
                 return _PremiumAvatarOption(
                   avatarValue: avatar.avatarUrl,
-                  name: 'Personalizado',
+                  name: AppLocalizations.of(context).avatarPickerCustomName,
                   color: AppColors.primary.withValues(alpha: 0.18),
                   isLocked: !isPremium,
                   isSelected: currentAvatar == avatar.avatarUrl,
@@ -756,14 +765,15 @@ class _GoogleAvatarOption extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Foto de Google',
+                    AppLocalizations.of(context).avatarPickerGooglePhotoTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Usa la imagen de tu cuenta de Google como avatar.',
+                    AppLocalizations.of(context)
+                        .avatarPickerGooglePhotoSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

@@ -516,18 +516,16 @@ class _ForgottenCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final days = (task.overdueSeconds / 86400).floor();
-    final overdueLabel = days == 0
-        ? 'venció hoy'
-        : days == 1
-            ? 'venció hace 1 día'
-            : 'venció hace $days días';
+    final overdueLabel =
+        days == 0 ? t.weeklySummaryOverdueToday : t.weeklySummaryOverdueDays(days);
     return _StoryCard(
       accent: AppColors.accentOrange,
       icon: Icons.bookmark_remove_rounded,
-      eyebrow: AppLocalizations.of(context).weeklySummaryEyebrowMostForgotten,
+      eyebrow: t.weeklySummaryEyebrowMostForgotten,
       title: task.title,
-      subtitle: 'Esta recurrente quedo en el camino — $overdueLabel.',
+      subtitle: t.weeklySummaryForgottenSubtitle(overdueLabel),
     );
   }
 }
@@ -550,9 +548,9 @@ class _SpendingCard extends StatelessWidget {
         : summary.spendingLastWeek == 0
             ? t.weeklySummaryExpensesFirst
             : delta < 0
-                ? 'Gastaron ${_formatMoney(delta.abs())} menos que la semana anterior.'
+                ? t.weeklySummaryExpensesLess(_formatMoney(delta.abs()))
                 : delta > 0
-                    ? 'Gastaron ${_formatMoney(delta)} más que la semana anterior.'
+                    ? t.weeklySummaryExpensesMore(_formatMoney(delta))
                     : t.weeklySummaryExpensesSame;
     return _StoryCard(
       accent: accent,

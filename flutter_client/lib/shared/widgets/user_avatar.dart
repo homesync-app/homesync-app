@@ -5,6 +5,7 @@ import 'package:homesync_client/core/constants/admin_testing_config.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 
+import 'app_smooth_network_image.dart';
 import 'video_avatar_player.dart';
 
 class UserAvatar {
@@ -441,21 +442,19 @@ class _AvatarContent extends StatelessWidget {
                 ),
               )
             : isNetwork
-                ? Image.network(
-                    cleanUrl,
+                ? AppSmoothNetworkImage(
+                    url: cleanUrl,
                     fit: BoxFit.cover,
                     cacheWidth: avatarCacheSize,
                     cacheHeight: avatarCacheSize,
                     filterQuality: FilterQuality.low,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Text(
-                        initial,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: radius * 0.9,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    placeholderBuilder: (_) => _InitialAvatarFallback(
+                      initial: initial,
+                      radius: radius,
+                    ),
+                    errorBuilder: (_, __, ___) => _InitialAvatarFallback(
+                      initial: initial,
+                      radius: radius,
                     ),
                   )
                 : Center(
@@ -487,6 +486,30 @@ class _AvatarContent extends StatelessWidget {
     }
 
     return avatarWidget;
+  }
+}
+
+class _InitialAvatarFallback extends StatelessWidget {
+  final String initial;
+  final double radius;
+
+  const _InitialAvatarFallback({
+    required this.initial,
+    required this.radius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: radius * 0.9,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }
 
@@ -553,16 +576,15 @@ class _PremiumCharacterAvatar extends StatelessWidget {
         },
       );
     } else {
-      contentWidget = Image.network(
-        cleanUrl,
+      contentWidget = AppSmoothNetworkImage(
+        url: cleanUrl,
         width: size,
         height: size,
         fit: BoxFit.contain,
         cacheWidth: premiumCacheSize,
         cacheHeight: premiumCacheSize,
         filterQuality: FilterQuality.low,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
+        placeholderBuilder: (context) {
           return SizedBox(
             width: size,
             height: size,

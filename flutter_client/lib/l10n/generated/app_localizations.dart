@@ -2298,7 +2298,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHouseholdEditMenuSplitSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, family{Elegir economía compartida o dividida} other{Ajustar porcentaje de pareja}}'**
+  /// **'{type, select, family{Elegir economía compartida o dividida} couple{Economía integrada o gastos divididos} other{Ajustar porcentaje}}'**
   String settingsHouseholdEditMenuSplitSubtitle(String type);
 
   /// No description provided for @settingsHouseholdInviteSheetTitle.
@@ -2619,10 +2619,10 @@ abstract class AppLocalizations {
   /// **'Miembro del hogar.'**
   String get memberOnboardingRoleDescDefault;
 
-  /// AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'.
+  /// AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'; couple mode as 'Finanzas en pareja' since couples can now also pick an integrated economy.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, family{Finanzas familiares} other{División de gastos}}'**
+  /// **'{type, select, family{Finanzas familiares} couple{Finanzas en pareja} other{División de gastos}}'**
   String coupleSplitTitle(String type);
 
   /// No description provided for @coupleSplitSavedSnack.
@@ -2672,6 +2672,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Usa porcentajes y balances como en pareja.'**
   String get coupleSplitFamilyDividedBody;
+
+  /// Title of the info card that introduces the finance-mode choice (shared vs divided). Reframed per household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, family{Cómo se registran los gastos} other{Cómo manejan la plata}}'**
+  String coupleSplitModeHowTitle(String type);
+
+  /// Body of the info card explaining shared vs divided economy. Reframed per household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, family{En familia, lo normal es una economía compartida: el gasto queda visible para el hogar, pero no genera deuda entre adultos. Si lo necesitás, podés activar división como en pareja.} other{Hay dos formas de manejar la plata en pareja. En la economía integrada todo es del hogar: los gastos quedan visibles pero no generan deuda entre ustedes. En la dividida cada gasto se reparte y se lleva el balance.}}'**
+  String coupleSplitModeHowBody(String type);
+
+  /// Title of the shared/integrated economy option in the finance-mode selector.
+  ///
+  /// In es, this message translates to:
+  /// **'Economía integrada'**
+  String get coupleSplitModeSharedTitle;
+
+  /// Body describing the shared/integrated economy option. Reframed per household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, family{Los gastos no se reparten por porcentaje ni generan balances entre adultos.} other{Todo es plata del hogar: los gastos quedan registrados pero no generan deuda ni balances entre ustedes. Ideal para parejas con economía unificada.}}'**
+  String coupleSplitModeSharedBody(String type);
+
+  /// Title of the divided economy option in the finance-mode selector.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos divididos'**
+  String get coupleSplitModeDividedTitle;
+
+  /// Body describing the divided economy option. Reframed per household type.
+  ///
+  /// In es, this message translates to:
+  /// **'{type, select, family{Usa porcentajes y balances como en pareja.} other{Cada gasto compartido se reparte según el porcentaje que elijan y se lleva el balance entre ustedes.}}'**
+  String coupleSplitModeDividedBody(String type);
 
   /// No description provided for @coupleSplitInfoTitle.
   ///
@@ -3878,6 +3914,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Mismo gasto que la semana anterior.'**
   String get weeklySummaryExpensesSame;
+
+  /// Overdue label for a task that became overdue today.
+  ///
+  /// In es, this message translates to:
+  /// **'venció hoy'**
+  String get weeklySummaryOverdueToday;
+
+  /// Overdue label for a task that became overdue N days ago.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, one{venció hace 1 día} other{venció hace {count} días}}'**
+  String weeklySummaryOverdueDays(int count);
+
+  /// Subtitle for the most-forgotten recurring task card. {overdueLabel} is the overdue text.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta recurrente quedo en el camino — {overdueLabel}.'**
+  String weeklySummaryForgottenSubtitle(String overdueLabel);
+
+  /// Spending card text when the household spent less than the previous week.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastaron {amount} menos que la semana anterior.'**
+  String weeklySummaryExpensesLess(String amount);
+
+  /// Spending card text when the household spent more than the previous week.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastaron {amount} más que la semana anterior.'**
+  String weeklySummaryExpensesMore(String amount);
 
   /// No description provided for @weeklySummaryEmptyTitle.
   ///
@@ -7868,6 +7934,678 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'¿Cuánto quieren juntar?'**
   String get expensesSavingsGoalAmountHint;
+
+  /// Error message shown when savings goals fail to load.
+  ///
+  /// In es, this message translates to:
+  /// **'Error: {details}'**
+  String savingsLoadError(String details);
+
+  /// Title for the empty state when there are no savings goals.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay metas activas aún'**
+  String get savingsEmptyTitle;
+
+  /// Subtitle for the empty state encouraging the user to create a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezá a guardar para algo que de verdad les entusiasme.'**
+  String get savingsEmptySubtitle;
+
+  /// Generic fallback subtitle for an empty finances/savings state.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezá hoy mismo a organizar tus finanzas del hogar.'**
+  String get savingsEmptyFallbackSubtitle;
+
+  /// Label on a savings goal card showing the target amount.
+  ///
+  /// In es, this message translates to:
+  /// **'Meta: {amount}'**
+  String savingsGoalTarget(String amount);
+
+  /// Caption under the progress percentage on a savings goal card.
+  ///
+  /// In es, this message translates to:
+  /// **'objetivo'**
+  String get savingsGoalProgressCaption;
+
+  /// Label on a savings goal card showing how much has been saved so far.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorrado: {amount}'**
+  String savingsGoalSaved(String amount);
+
+  /// Button on a savings goal card to add money to the goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Aportar'**
+  String get savingsGoalContributeAction;
+
+  /// Title of the new savings goal sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva Meta'**
+  String get savingsNewGoalTitle;
+
+  /// Subtitle of the new savings goal sheet explaining what a goal is.
+  ///
+  /// In es, this message translates to:
+  /// **'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.'**
+  String get savingsNewGoalSubtitle;
+
+  /// Section header (uppercase eyebrow) for the goal detail fields.
+  ///
+  /// In es, this message translates to:
+  /// **'DETALLE'**
+  String get savingsSectionDetail;
+
+  /// Section title for the goal detail fields (name and amount).
+  ///
+  /// In es, this message translates to:
+  /// **'Qué quieren alcanzar'**
+  String get savingsSectionDetailTitle;
+
+  /// Section header (uppercase eyebrow) for the goal personalization fields.
+  ///
+  /// In es, this message translates to:
+  /// **'PERSONALIZACIÓN'**
+  String get savingsSectionPersonalization;
+
+  /// Section title for the goal personalization fields (emoji and color).
+  ///
+  /// In es, this message translates to:
+  /// **'Dale personalidad'**
+  String get savingsSectionPersonalizationTitle;
+
+  /// Label for the emoji picker field when creating a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Emoji'**
+  String get savingsFieldEmoji;
+
+  /// Label for the color picker field when creating a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Color'**
+  String get savingsFieldColor;
+
+  /// Title of the picker sheet for choosing a savings goal emoji/icon.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí un ícono'**
+  String get savingsPickIconTitle;
+
+  /// Title of the picker sheet for choosing a savings goal color.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí un color'**
+  String get savingsPickColorTitle;
+
+  /// Primary button to create a new savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear Meta'**
+  String get savingsCreateGoalAction;
+
+  /// Eyebrow above the goal title in the contribution sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresar dinero a'**
+  String get savingsContributeTo;
+
+  /// Primary button to confirm adding money to a savings goal.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar Aporte'**
+  String get savingsConfirmContribution;
+
+  /// Section header for the user's earned badges in the achievements tab.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus Medallas'**
+  String get achievementsBadgesSection;
+
+  /// Section header for couple challenge achievements.
+  ///
+  /// In es, this message translates to:
+  /// **'Desafíos de Pareja'**
+  String get achievementsCoupleChallengesSection;
+
+  /// Section header for special 'iconic moment' achievements.
+  ///
+  /// In es, this message translates to:
+  /// **'Momentos Icónicos'**
+  String get achievementsIconicMomentsSection;
+
+  /// Achievement title for completing the first task as a couple.
+  ///
+  /// In es, this message translates to:
+  /// **'Primeros Pasos'**
+  String get achievementsFirstStepsTitle;
+
+  /// Achievement description for completing the first task as a couple.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaste tu primera tarea en pareja.'**
+  String get achievementsFirstStepsDesc;
+
+  /// Achievement title for completing 50 tasks together.
+  ///
+  /// In es, this message translates to:
+  /// **'Equipo Imparable'**
+  String get achievementsUnstoppableTitle;
+
+  /// Achievement description for completing 50 tasks together.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaron 50 tareas juntos.'**
+  String get achievementsUnstoppableDesc;
+
+  /// Achievement title for reaching 5000 accumulated XP.
+  ///
+  /// In es, this message translates to:
+  /// **'Maestros del Hogar'**
+  String get achievementsHomeMastersTitle;
+
+  /// Achievement description for reaching 5000 accumulated XP.
+  ///
+  /// In es, this message translates to:
+  /// **'Llegaron a los 5000 XP acumulados.'**
+  String get achievementsHomeMastersDesc;
+
+  /// Achievement title for completing 7 special couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'Coleccionista de Citas'**
+  String get achievementsCollectorTitle;
+
+  /// Achievement title for completing 15 special couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'Amor en Movimiento'**
+  String get achievementsLoveInMotionTitle;
+
+  /// Achievement title for completing 30 special couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'Conexión Profunda'**
+  String get achievementsDeepConnectionTitle;
+
+  /// Achievement title for completing all 50 yearly couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'Leyendas del Romance'**
+  String get achievementsRomanceLegendsTitle;
+
+  /// Achievement description for completing all 50 yearly couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Completaron los 50 desafíos del año!'**
+  String get achievementsRomanceLegendsDesc;
+
+  /// Achievement description for completing a number of special couple challenges.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaron {count} desafíos especiales.'**
+  String achievementsSpecialChallengesDesc(int count);
+
+  /// Iconic moment achievement title for recreating the first date.
+  ///
+  /// In es, this message translates to:
+  /// **'Raíces del Amor'**
+  String get achievementsLoveRootsTitle;
+
+  /// Iconic moment achievement description for recreating the first date.
+  ///
+  /// In es, this message translates to:
+  /// **'Recrearon su primera cita.'**
+  String get achievementsLoveRootsDesc;
+
+  /// Iconic moment achievement title for a blind/sensory dinner date.
+  ///
+  /// In es, this message translates to:
+  /// **'Cita a Ciegas'**
+  String get achievementsBlindDateTitle;
+
+  /// Iconic moment achievement description for a blind/sensory dinner date.
+  ///
+  /// In es, this message translates to:
+  /// **'Completaron una cena a ciegas o sensorial.'**
+  String get achievementsBlindDateDesc;
+
+  /// Iconic moment achievement title for designing a shared goals list.
+  ///
+  /// In es, this message translates to:
+  /// **'Arquitectos de Sueños'**
+  String get achievementsDreamArchitectsTitle;
+
+  /// Iconic moment achievement description for designing a shared goals list.
+  ///
+  /// In es, this message translates to:
+  /// **'Diseñaron su lista de metas compartidas.'**
+  String get achievementsDreamArchitectsDesc;
+
+  /// Title of the schedule task bottom sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Programar tarea'**
+  String get scheduleTitle;
+
+  /// Subtitle of the schedule task sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí cómo se repite y quién queda a cargo.'**
+  String get scheduleSubtitle;
+
+  /// Uppercase section header for the repetition options.
+  ///
+  /// In es, this message translates to:
+  /// **'REPETICION'**
+  String get scheduleSectionRepeat;
+
+  /// Uppercase section header for the assignee selector.
+  ///
+  /// In es, this message translates to:
+  /// **'RESPONSABLE'**
+  String get scheduleSectionResponsible;
+
+  /// Repeat mode chip: no repetition.
+  ///
+  /// In es, this message translates to:
+  /// **'Ninguna'**
+  String get scheduleRepeatNone;
+
+  /// Repeat mode chip: daily.
+  ///
+  /// In es, this message translates to:
+  /// **'Diaria'**
+  String get scheduleRepeatDaily;
+
+  /// Repeat mode chip: weekly.
+  ///
+  /// In es, this message translates to:
+  /// **'Semanal'**
+  String get scheduleRepeatWeekly;
+
+  /// Repeat mode chip: monthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get scheduleRepeatMonthly;
+
+  /// Repeat mode chip: custom recurrence.
+  ///
+  /// In es, this message translates to:
+  /// **'Personalizada'**
+  String get scheduleRepeatCustom;
+
+  /// Title for the weekly day picker.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí el día de la semana'**
+  String get scheduleWeeklyTitle;
+
+  /// Helper text for the weekly day picker.
+  ///
+  /// In es, this message translates to:
+  /// **'La tarea se repetirá cada semana en ese día.'**
+  String get scheduleWeeklySubtitle;
+
+  /// Title for the monthly day picker.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí el día del mes'**
+  String get scheduleMonthlyTitle;
+
+  /// Helper text for the monthly day picker.
+  ///
+  /// In es, this message translates to:
+  /// **'La tarea se repetirá todos los meses en esa fecha.'**
+  String get scheduleMonthlySubtitle;
+
+  /// Custom recurrence tab for selecting weekdays.
+  ///
+  /// In es, this message translates to:
+  /// **'Días'**
+  String get scheduleCustomTabDays;
+
+  /// Custom recurrence tab for selecting a day interval.
+  ///
+  /// In es, this message translates to:
+  /// **'Intervalo'**
+  String get scheduleCustomTabInterval;
+
+  /// Custom recurrence tab for selecting month days.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha'**
+  String get scheduleCustomTabDate;
+
+  /// Prefix before the interval number, e.g. 'Every 3 days'.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada'**
+  String get scheduleIntervalEvery;
+
+  /// Tooltip for the button that decreases the interval.
+  ///
+  /// In es, this message translates to:
+  /// **'Disminuir'**
+  String get scheduleIntervalDecrease;
+
+  /// Tooltip for the button that increases the interval.
+  ///
+  /// In es, this message translates to:
+  /// **'Aumentar'**
+  String get scheduleIntervalIncrease;
+
+  /// Day/days unit shown after the interval number.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, one{día} other{días}}'**
+  String scheduleIntervalDays(int count);
+
+  /// Assignee option meaning the task is open to anyone.
+  ///
+  /// In es, this message translates to:
+  /// **'Cualquiera'**
+  String get scheduleAssigneeAnyone;
+
+  /// Subtitle for the 'Anyone' assignee option.
+  ///
+  /// In es, this message translates to:
+  /// **'Queda abierta para quien la quiera hacer.'**
+  String get scheduleAssigneeAnyoneSubtitle;
+
+  /// Subtitle for a specific member assignee option.
+  ///
+  /// In es, this message translates to:
+  /// **'Responsable principal de esta tarea.'**
+  String get scheduleAssigneeMemberSubtitle;
+
+  /// Fallback name when a household member has no name or email.
+  ///
+  /// In es, this message translates to:
+  /// **'Miembro'**
+  String get scheduleAssigneeMemberFallback;
+
+  /// Validation error when no weekday is selected for custom recurrence.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí al menos un día para la repetición personalizada.'**
+  String get scheduleErrorPickWeekday;
+
+  /// Validation error when no month day is selected for custom recurrence.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí al menos una fecha para repetir la tarea.'**
+  String get scheduleErrorPickMonthDay;
+
+  /// Title of the household invitation sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Invitar al hogar'**
+  String get invitationTitle;
+
+  /// Invitation sheet subtitle for family households.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte este código con los miembros de tu familia.'**
+  String get invitationSubtitleFamily;
+
+  /// Invitation sheet subtitle for friends/roommates households.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte este código con tus compañeros para sumarlos a la convivencia.'**
+  String get invitationSubtitleFriends;
+
+  /// Invitation sheet subtitle for couple/default households.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte este código para que alguien se una a tu hogar.'**
+  String get invitationSubtitleDefault;
+
+  /// Hint below the invitation code telling the user they can tap to copy it.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para copiar'**
+  String get invitationTapToCopy;
+
+  /// Snackbar shown when the invitation code is copied to the clipboard.
+  ///
+  /// In es, this message translates to:
+  /// **'Código copiado al portapapeles'**
+  String get invitationCopied;
+
+  /// Button label to share the invitation code via WhatsApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir por WhatsApp'**
+  String get invitationShareWhatsApp;
+
+  /// Button to retry generating an invitation code after a failure.
+  ///
+  /// In es, this message translates to:
+  /// **'Reintentar generar código'**
+  String get invitationRetry;
+
+  /// Snackbar shown when WhatsApp can't be opened and the code is copied instead.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir WhatsApp. Código copiado.'**
+  String get invitationWhatsAppFailed;
+
+  /// WhatsApp invitation intro line for couple households.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.'**
+  String get invitationIntroCouple;
+
+  /// WhatsApp invitation intro line for family households.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.'**
+  String get invitationIntroFamily;
+
+  /// WhatsApp invitation intro line for friends/roommates households.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.'**
+  String get invitationIntroFriends;
+
+  /// Default WhatsApp invitation intro line.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Hola! Te invito a unirte a nuestro hogar en HomeSync.'**
+  String get invitationIntroDefault;
+
+  /// Full WhatsApp invitation message combining the intro line and the code.
+  ///
+  /// In es, this message translates to:
+  /// **'{intro}\n\nDescarga la app e ingresa este código: *{code}*\n\n¡Organicemos nuestro hogar juntos!'**
+  String invitationShareBody(String intro, String code);
+
+  /// Title of the Mercado Pago payments settings card.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagos y Mercado Pago'**
+  String get mercadopagoTitle;
+
+  /// Subtitle of the Mercado Pago settings card.
+  ///
+  /// In es, this message translates to:
+  /// **'Configura cómo recibir y pagar gastos'**
+  String get mercadopagoSubtitle;
+
+  /// Uppercase label for the Mercado Pago alias/CVU input.
+  ///
+  /// In es, this message translates to:
+  /// **'TU ALIAS O CVU'**
+  String get mercadopagoAliasLabel;
+
+  /// Placeholder example for the Mercado Pago alias field.
+  ///
+  /// In es, this message translates to:
+  /// **'ej: mi.alias.mp'**
+  String get mercadopagoAliasHint;
+
+  /// Helper text under the alias field explaining its purpose.
+  ///
+  /// In es, this message translates to:
+  /// **'Esto permite que tu pareja te transfiera directamente sin comisiones.'**
+  String get mercadopagoAliasHelper;
+
+  /// Snackbar confirming the alias was saved.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Alias guardado correctamente'**
+  String get mercadopagoAliasSaved;
+
+  /// Info banner stating that payments via Mercado Pago are enabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.'**
+  String get mercadopagoPaymentsEnabled;
+
+  /// Title of the avatar picker bottom sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu Identidad Visual'**
+  String get avatarPickerTitle;
+
+  /// Subtitle of the avatar picker sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegi un avatar de la coleccion o crea el tuyo propio'**
+  String get avatarPickerSubtitle;
+
+  /// Snackbar shown when the avatar is updated successfully.
+  ///
+  /// In es, this message translates to:
+  /// **'Avatar actualizado con exito'**
+  String get avatarPickerUpdated;
+
+  /// Snackbar shown when updating the avatar fails.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al actualizar avatar: {error}'**
+  String avatarPickerUpdateError(String error);
+
+  /// Section header for premium avatars.
+  ///
+  /// In es, this message translates to:
+  /// **'Avatares premium'**
+  String get avatarPickerPremiumSection;
+
+  /// Section header for the user's AI-generated custom avatars.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus personalizados'**
+  String get avatarPickerYourCustomSection;
+
+  /// Hint explaining only the last 6 AI avatars are kept.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardamos los últimos 6 generados por IA.'**
+  String get avatarPickerCustomKeepHint;
+
+  /// Label shown under a custom AI-generated avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Personalizado'**
+  String get avatarPickerCustomName;
+
+  /// Button for premium users to create a custom avatar (1 per month).
+  ///
+  /// In es, this message translates to:
+  /// **'Crear avatar personalizado (1 por mes)'**
+  String get avatarPickerCreateCustom;
+
+  /// Button for non-premium users to unlock custom avatar creation.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear avatar personalizado'**
+  String get avatarPickerUnlockCustom;
+
+  /// Title of the option to use the Google account photo as avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto de Google'**
+  String get avatarPickerGooglePhotoTitle;
+
+  /// Subtitle of the Google photo avatar option.
+  ///
+  /// In es, this message translates to:
+  /// **'Usa la imagen de tu cuenta de Google como avatar.'**
+  String get avatarPickerGooglePhotoSubtitle;
+
+  /// Title of the custom avatar source selection sheet.
+  ///
+  /// In es, this message translates to:
+  /// **'Avatar personalizado'**
+  String get avatarPickerCustomSheetTitle;
+
+  /// Explanation of the custom avatar creation limits and premium behavior.
+  ///
+  /// In es, this message translates to:
+  /// **'Tenés 1 creación por mes. Se guarda como avatar nuevo y conservamos tus últimos 6 personalizados. Si dejás Premium, quedan guardados pero bloqueados.'**
+  String get avatarPickerCustomSheetBody;
+
+  /// Button to take a photo with the camera for a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Sacar foto'**
+  String get avatarPickerTakePhoto;
+
+  /// Button to choose a photo from the gallery for a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir de galería'**
+  String get avatarPickerChooseFromGallery;
+
+  /// Loading dialog title while generating a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Creando tu avatar...'**
+  String get avatarPickerCreatingTitle;
+
+  /// Loading dialog subtitle while generating a custom avatar.
+  ///
+  /// In es, this message translates to:
+  /// **'Puede tardar unos segundos.'**
+  String get avatarPickerCreatingSubtitle;
+
+  /// Title of the confirm dialog to remove a household member.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quitar miembro?'**
+  String get settingsRemoveMemberTitle;
+
+  /// Body of the confirm dialog to remove a household member.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Estás seguro de que quieres quitar a {name} de este hogar?'**
+  String settingsRemoveMemberBody(String name);
+
+  /// Confirm button to remove a household member.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar'**
+  String get settingsRemoveMemberAction;
+
+  /// Snackbar confirming a member was removed from the household.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ {name} ha sido quitado del hogar'**
+  String settingsMemberRemoved(String name);
+
+  /// Snackbar shown when generating the household invitation code fails.
+  ///
+  /// In es, this message translates to:
+  /// **'Error al generar código: {error}'**
+  String setupGenerateCodeError(String error);
 
   /// No description provided for @coupleChallenge1Title.
   ///

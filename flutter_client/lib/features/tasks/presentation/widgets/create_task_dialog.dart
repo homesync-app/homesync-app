@@ -551,8 +551,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                                   user?['email'] ??
                                   AppLocalizations.of(context)
                                       .settingsHouseholdMemberFallbackName;
-                              final initial =
-                                  name.toString().substring(0, 1).toUpperCase();
+                              final safeName = name.toString().trim();
+                              final initial = safeName.isNotEmpty
+                                  ? safeName.substring(0, 1).toUpperCase()
+                                  : '?';
                               return _buildAssigneeChip(
                                 name,
                                 member['user_id'] as String,
@@ -1049,7 +1051,10 @@ class _CreateTaskDialogState extends ConsumerState<CreateTaskDialog> {
                 user?['email'] ??
                 AppLocalizations.of(context)
                     .settingsHouseholdMemberFallbackName;
-            final initial = name.toString().substring(0, 1).toUpperCase();
+            final safeName = name.toString().trim();
+            final initial = safeName.isNotEmpty
+                ? safeName.substring(0, 1).toUpperCase()
+                : '?';
             final selected = _rotationPool.contains(id);
             return GestureDetector(
               onTap: () => setState(() {

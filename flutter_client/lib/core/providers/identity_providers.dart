@@ -39,7 +39,8 @@ final householdIdProvider = FutureProvider<String?>((ref) async {
   }
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
-  if (bootstrap?.userId == userId) {
+  if (bootstrap?.userId == userId &&
+      BootstrapSeedGate.instance.consume(BootstrapSection.householdId)) {
     return bootstrap?.householdId;
   }
 
@@ -61,7 +62,8 @@ final memberOnboardingProvider = FutureProvider<bool>((ref) async {
   if (userId == null) return true;
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
-  if (bootstrap?.userId == userId) {
+  if (bootstrap?.userId == userId &&
+      BootstrapSeedGate.instance.consume(BootstrapSection.memberOnboarding)) {
     return bootstrap?.memberOnboardingCompleted ?? true;
   }
 
@@ -95,7 +97,9 @@ final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   if (userId == null) return null;
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
-  if (bootstrap?.userId == userId && bootstrap?.profile != null) {
+  if (bootstrap?.userId == userId &&
+      bootstrap?.profile != null &&
+      BootstrapSeedGate.instance.consume(BootstrapSection.profile)) {
     return bootstrap!.profile;
   }
 
@@ -120,7 +124,9 @@ final userBalanceProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
   }
 
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
-  if (bootstrap?.householdId == householdId && bootstrap?.userBalance != null) {
+  if (bootstrap?.householdId == householdId &&
+      bootstrap?.userBalance != null &&
+      BootstrapSeedGate.instance.consume(BootstrapSection.userBalance)) {
     return bootstrap!.userBalance;
   }
 

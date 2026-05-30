@@ -986,7 +986,7 @@
       }
     }
   },
-  "settingsHouseholdEditMenuSplitSubtitle": "{type, select, family{Choose shared or split economy} other{Adjust couple percentage}}",
+  "settingsHouseholdEditMenuSplitSubtitle": "{type, select, family{Choose shared or split economy} couple{Integrated economy or split expenses} other{Adjust percentage}}",
   "@settingsHouseholdEditMenuSplitSubtitle": {
     "placeholders": {
       "type": {
@@ -1095,9 +1095,9 @@
   "memberOnboardingRoleDescTeen": "Personal management of expenses and tasks.",
   "memberOnboardingRoleDescChild": "Joins in on tasks and can earn rewards.",
   "memberOnboardingRoleDescDefault": "Household member.",
-  "coupleSplitTitle": "{type, select, family{Family finances} other{Splitting expenses}}",
+  "coupleSplitTitle": "{type, select, family{Family finances} couple{Couple finances} other{Splitting expenses}}",
   "@coupleSplitTitle": {
-    "description": "AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'.",
+    "description": "AppBar title of the couple/family split strategy screen. Family mode reframes as 'Finanzas familiares'; couple mode as 'Finanzas en pareja' since couples can now also pick an integrated economy.",
     "placeholders": {
       "type": {
         "type": "String"
@@ -1119,6 +1119,50 @@
   "coupleSplitFamilySharedBody": "Expenses aren't split by percentage and don't create balances between adults.",
   "coupleSplitFamilyDividedTitle": "Split expenses",
   "coupleSplitFamilyDividedBody": "Uses percentages and balances like a couple.",
+  "coupleSplitModeHowTitle": "{type, select, family{How expenses are recorded} other{How you manage money}}",
+  "@coupleSplitModeHowTitle": {
+    "description": "Title of the info card that introduces the finance-mode choice (shared vs divided). Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeHowBody": "{type, select, family{In a family, the usual setup is a shared economy: expenses stay visible to the household but don't create debt between adults. If you need it, you can switch to a couple-style split.} other{There are two ways to handle money as a couple. With an integrated economy everything belongs to the household: expenses stay visible but don't create debt between you. With a divided economy each expense is split and a balance is tracked.}}",
+  "@coupleSplitModeHowBody": {
+    "description": "Body of the info card explaining shared vs divided economy. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeSharedTitle": "Integrated economy",
+  "@coupleSplitModeSharedTitle": {
+    "description": "Title of the shared/integrated economy option in the finance-mode selector."
+  },
+  "coupleSplitModeSharedBody": "{type, select, family{Expenses aren't split by percentage and don't create balances between adults.} other{It's all household money: expenses are logged but don't create debt or balances between you. Ideal for couples with unified finances.}}",
+  "@coupleSplitModeSharedBody": {
+    "description": "Body describing the shared/integrated economy option. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "coupleSplitModeDividedTitle": "Split expenses",
+  "@coupleSplitModeDividedTitle": {
+    "description": "Title of the divided economy option in the finance-mode selector."
+  },
+  "coupleSplitModeDividedBody": "{type, select, family{Uses percentages and balances like a couple.} other{Each shared expense is split by the percentage you choose and a balance is tracked between you.}}",
+  "@coupleSplitModeDividedBody": {
+    "description": "Body describing the divided economy option. Reframed per household type.",
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "coupleSplitInfoTitle": "How to split expenses?",
   "coupleSplitInfoBody": "There's no single right way. Every couple is different — the best strategy is whichever gives you both peace of mind.",
   "coupleSplitStrategiesTitle": "Common strategies",
@@ -1354,6 +1398,11 @@
   "weeklySummaryExpensesNone": "No shared expenses this week.",
   "weeklySummaryExpensesFirst": "First week with shared expenses.",
   "weeklySummaryExpensesSame": "Same spending as last week.",
+  "weeklySummaryOverdueToday": "due today",
+  "weeklySummaryOverdueDays": "{count, plural, one{overdue by 1 day} other{overdue by {count} days}}",
+  "weeklySummaryForgottenSubtitle": "This recurring task slipped through — {overdueLabel}.",
+  "weeklySummaryExpensesLess": "You spent {amount} less than last week.",
+  "weeklySummaryExpensesMore": "You spent {amount} more than last week.",
   "weeklySummaryEmptyTitle": "Your first summary is on the way",
   "weeklySummaryEmptyBody": "Once you start completing tasks and logging expenses we'll generate the week's report automatically.",
   "weeklySummaryLockedTitle": "Weekly summary",
@@ -2739,6 +2788,118 @@
   "expensesSavingsGoalNameHint": "What's your goal?",
   "expensesSavingsGoalAmountLabel": "Target amount",
   "expensesSavingsGoalAmountHint": "How much do you want to save?",
+  "savingsLoadError": "Error: {details}",
+  "savingsEmptyTitle": "No active goals yet",
+  "savingsEmptySubtitle": "Start saving for something you're really excited about.",
+  "savingsEmptyFallbackSubtitle": "Start organizing your household finances today.",
+  "savingsGoalTarget": "Goal: {amount}",
+  "savingsGoalProgressCaption": "of goal",
+  "savingsGoalSaved": "Saved: {amount}",
+  "savingsGoalContributeAction": "Add funds",
+  "savingsNewGoalTitle": "New Goal",
+  "savingsNewGoalSubtitle": "Define what you want to achieve and how much you need to save to make it happen.",
+  "savingsSectionDetail": "DETAILS",
+  "savingsSectionDetailTitle": "What you want to reach",
+  "savingsSectionPersonalization": "PERSONALIZATION",
+  "savingsSectionPersonalizationTitle": "Make it yours",
+  "savingsFieldEmoji": "Emoji",
+  "savingsFieldColor": "Color",
+  "savingsPickIconTitle": "Pick an icon",
+  "savingsPickColorTitle": "Pick a color",
+  "savingsCreateGoalAction": "Create Goal",
+  "savingsContributeTo": "Add money to",
+  "savingsConfirmContribution": "Confirm Contribution",
+  "achievementsBadgesSection": "Your Badges",
+  "achievementsCoupleChallengesSection": "Couple Challenges",
+  "achievementsIconicMomentsSection": "Iconic Moments",
+  "achievementsFirstStepsTitle": "First Steps",
+  "achievementsFirstStepsDesc": "You completed your first task as a couple.",
+  "achievementsUnstoppableTitle": "Unstoppable Team",
+  "achievementsUnstoppableDesc": "You completed 50 tasks together.",
+  "achievementsHomeMastersTitle": "Home Masters",
+  "achievementsHomeMastersDesc": "You reached 5000 accumulated XP.",
+  "achievementsCollectorTitle": "Date Collector",
+  "achievementsLoveInMotionTitle": "Love in Motion",
+  "achievementsDeepConnectionTitle": "Deep Connection",
+  "achievementsRomanceLegendsTitle": "Romance Legends",
+  "achievementsRomanceLegendsDesc": "You completed all 50 challenges of the year!",
+  "achievementsSpecialChallengesDesc": "You completed {count} special challenges.",
+  "achievementsLoveRootsTitle": "Roots of Love",
+  "achievementsLoveRootsDesc": "You recreated your first date.",
+  "achievementsBlindDateTitle": "Blind Date",
+  "achievementsBlindDateDesc": "You completed a blind or sensory dinner.",
+  "achievementsDreamArchitectsTitle": "Dream Architects",
+  "achievementsDreamArchitectsDesc": "You designed your shared goals list.",
+  "scheduleTitle": "Schedule task",
+  "scheduleSubtitle": "Choose how it repeats and who's in charge.",
+  "scheduleSectionRepeat": "REPEAT",
+  "scheduleSectionResponsible": "ASSIGNEE",
+  "scheduleRepeatNone": "None",
+  "scheduleRepeatDaily": "Daily",
+  "scheduleRepeatWeekly": "Weekly",
+  "scheduleRepeatMonthly": "Monthly",
+  "scheduleRepeatCustom": "Custom",
+  "scheduleWeeklyTitle": "Pick the day of the week",
+  "scheduleWeeklySubtitle": "The task will repeat every week on that day.",
+  "scheduleMonthlyTitle": "Pick the day of the month",
+  "scheduleMonthlySubtitle": "The task will repeat every month on that date.",
+  "scheduleCustomTabDays": "Days",
+  "scheduleCustomTabInterval": "Interval",
+  "scheduleCustomTabDate": "Date",
+  "scheduleIntervalEvery": "Every",
+  "scheduleIntervalDecrease": "Decrease",
+  "scheduleIntervalIncrease": "Increase",
+  "scheduleIntervalDays": "{count, plural, one{day} other{days}}",
+  "scheduleAssigneeAnyone": "Anyone",
+  "scheduleAssigneeAnyoneSubtitle": "Open for whoever wants to do it.",
+  "scheduleAssigneeMemberSubtitle": "Main person responsible for this task.",
+  "scheduleAssigneeMemberFallback": "Member",
+  "scheduleErrorPickWeekday": "Pick at least one day for the custom recurrence.",
+  "scheduleErrorPickMonthDay": "Pick at least one date to repeat the task.",
+  "invitationTitle": "Invite to household",
+  "invitationSubtitleFamily": "Share this code with your family members.",
+  "invitationSubtitleFriends": "Share this code with your roommates to add them to the household.",
+  "invitationSubtitleDefault": "Share this code so someone can join your household.",
+  "invitationTapToCopy": "Tap to copy",
+  "invitationCopied": "Code copied to clipboard",
+  "invitationShareWhatsApp": "Share via WhatsApp",
+  "invitationRetry": "Retry generating code",
+  "invitationWhatsAppFailed": "Couldn't open WhatsApp. Code copied.",
+  "invitationIntroCouple": "Hi! Join me on HomeSync to organize our expenses and tasks together.",
+  "invitationIntroFamily": "Hi! I'm inviting you to join our family household on HomeSync.",
+  "invitationIntroFriends": "Hi! Join our shared place on HomeSync to organize the flat better.",
+  "invitationIntroDefault": "Hi! I'm inviting you to join our household on HomeSync.",
+  "invitationShareBody": "{intro}\n\nDownload the app and enter this code: *{code}*\n\nLet's organize our household together!",
+  "mercadopagoTitle": "Payments and Mercado Pago",
+  "mercadopagoSubtitle": "Set up how you receive and pay expenses",
+  "mercadopagoAliasLabel": "YOUR ALIAS OR CVU",
+  "mercadopagoAliasHint": "e.g. my.alias.mp",
+  "mercadopagoAliasHelper": "This lets your partner transfer money to you directly with no fees.",
+  "mercadopagoAliasSaved": "✅ Alias saved successfully",
+  "mercadopagoPaymentsEnabled": "Payments enabled. You can settle debts and contribute to goals directly with Mercado Pago.",
+  "avatarPickerTitle": "Your Visual Identity",
+  "avatarPickerSubtitle": "Pick an avatar from the collection or create your own",
+  "avatarPickerUpdated": "Avatar updated successfully",
+  "avatarPickerUpdateError": "Error updating avatar: {error}",
+  "avatarPickerPremiumSection": "Premium avatars",
+  "avatarPickerYourCustomSection": "Your custom ones",
+  "avatarPickerCustomKeepHint": "We keep the last 6 generated by AI.",
+  "avatarPickerCustomName": "Custom",
+  "avatarPickerCreateCustom": "Create custom avatar (1 per month)",
+  "avatarPickerUnlockCustom": "Unlock custom avatar",
+  "avatarPickerGooglePhotoTitle": "Google photo",
+  "avatarPickerGooglePhotoSubtitle": "Use your Google account picture as your avatar.",
+  "avatarPickerCustomSheetTitle": "Custom avatar",
+  "avatarPickerCustomSheetBody": "You get 1 creation per month. It's saved as a new avatar and we keep your last 6 custom ones. If you leave Premium, they stay saved but locked.",
+  "avatarPickerTakePhoto": "Take a photo",
+  "avatarPickerChooseFromGallery": "Choose from gallery",
+  "avatarPickerCreatingTitle": "Creating your avatar...",
+  "avatarPickerCreatingSubtitle": "It may take a few seconds.",
+  "settingsRemoveMemberTitle": "Remove member?",
+  "settingsRemoveMemberBody": "Are you sure you want to remove {name} from this household?",
+  "settingsRemoveMemberAction": "Remove",
+  "settingsMemberRemoved": "✅ {name} has been removed from the household",
+  "setupGenerateCodeError": "Error generating code: {error}",
   "coupleChallenge1Title": "Recreating your first date",
   "coupleChallenge1Description": "Go back to where it all began.\n\nTry to recreate the little details: the food, the clothes, the phrases, the nerves.\n\nTalk about who you were back then and how much you have grown together.\n\nIt will be impossible not to laugh at old memories and feel grateful for everything you have lived.",
   "coupleChallenge1Motivation": "Sometimes the best way to see how far you have come is to go back to the beginning.",

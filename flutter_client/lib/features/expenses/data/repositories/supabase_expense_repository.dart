@@ -640,7 +640,9 @@ class SupabaseExpenseRepository
         final household = householdResponse == null
             ? null
             : Map<String, dynamic>.from(householdResponse);
-        final isSharedFamily = household?['household_type'] == 'family' &&
+        // Integrated/shared economy (couple or family): planned expenses are
+        // visible to every member regardless of who they're assigned to.
+        final isSharedEconomy =
             (household?['finance_mode']?.toString() ?? 'shared') == 'shared';
 
         final response = await _client
@@ -667,7 +669,7 @@ class SupabaseExpenseRepository
             .map((e) => Map<String, dynamic>.from(e))
             .where(
               (row) =>
-                  isSharedFamily ||
+                  isSharedEconomy ||
                   _isVisibleFeedRowForUser(
                     {
                       ...row,

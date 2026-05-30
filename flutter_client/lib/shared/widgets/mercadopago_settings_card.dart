@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 class MercadoPagoSettingsCard extends ConsumerStatefulWidget {
   const MercadoPagoSettingsCard({super.key});
@@ -43,8 +44,8 @@ class _MercadoPagoSettingsCardState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Alias guardado correctamente'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).mercadopagoAliasSaved),
             backgroundColor: AppColors.success,
           ),
         );
@@ -53,7 +54,8 @@ class _MercadoPagoSettingsCardState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content:
+                Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -81,6 +83,7 @@ class _MercadoPagoSettingsCardState
         if (_aliasController.text.isEmpty && currentAlias.isNotEmpty) {
           _aliasController.text = currentAlias;
         }
+        final t = AppLocalizations.of(context);
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -114,20 +117,20 @@ class _MercadoPagoSettingsCardState
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Pagos y Mercado Pago',
-                          style: TextStyle(
+                          t.mercadopagoTitle,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                         Text(
-                          'Configura cómo recibir y pagar gastos',
-                          style: TextStyle(
+                          t.mercadopagoSubtitle,
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
                           ),
@@ -140,9 +143,9 @@ class _MercadoPagoSettingsCardState
               const SizedBox(height: 20),
 
               // Alias/CVU Field
-              const Text(
-                'TU ALIAS O CVU',
-                style: TextStyle(
+              Text(
+                t.mercadopagoAliasLabel,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textMuted,
@@ -156,7 +159,7 @@ class _MercadoPagoSettingsCardState
                     child: TextField(
                       controller: _aliasController,
                       decoration: InputDecoration(
-                        hintText: 'ej: mi.alias.mp',
+                        hintText: t.mercadopagoAliasHint,
                         filled: true,
                         fillColor: AppColors.primary.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
@@ -194,15 +197,15 @@ class _MercadoPagoSettingsCardState
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text('Guardar'),
+                        : Text(t.commonSave),
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.only(top: 6, left: 4),
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4),
                 child: Text(
-                  'Esto permite que tu pareja te transfiera directamente sin comisiones.',
-                  style: TextStyle(
+                  t.mercadopagoAliasHelper,
+                  style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
@@ -224,18 +227,18 @@ class _MercadoPagoSettingsCardState
                     color: AppColors.success.withValues(alpha: 0.25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.check_circle_outline_rounded,
                       color: AppColors.success,
                       size: 20,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Pagos habilitados. Podés saldar deudas y aportar a metas directamente con Mercado Pago.',
-                        style: TextStyle(
+                        t.mercadopagoPaymentsEnabled,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.success,
                           fontWeight: FontWeight.w600,

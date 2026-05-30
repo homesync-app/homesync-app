@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
@@ -14,17 +15,18 @@ class SavingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(savingsGoalsProvider);
+    final t = AppLocalizations.of(context);
 
     return goalsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(t.savingsLoadError(e.toString()))),
       data: (goals) {
         if (goals.isEmpty) {
           return _buildEmptyState(
-            'No hay metas activas aún',
+            t.savingsEmptyTitle,
             icon: '🎯',
-            subtitle:
-                'Empezá a guardar para algo que de verdad les entusiasme.',
+            subtitle: t.savingsEmptySubtitle,
+            fallbackSubtitle: t.savingsEmptyFallbackSubtitle,
           );
         }
 
@@ -47,6 +49,7 @@ class SavingsTab extends ConsumerWidget {
     String message, {
     String icon = '📉',
     String? subtitle,
+    String? fallbackSubtitle,
   }) {
     return Center(
       child: Column(
@@ -76,7 +79,8 @@ class SavingsTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
               subtitle ??
-                  'Empezá hoy mismo a organizar tus finanzas del hogar.',
+                  fallbackSubtitle ??
+                  'Start organizing your household finances today.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textSecondary,
@@ -96,6 +100,7 @@ class SavingsTab extends ConsumerWidget {
     WidgetRef ref,
   ) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return AnimatedPress(
       onTap: () => _showContributionDialog(context, goal, ref),
       child: Container(
@@ -136,7 +141,9 @@ class SavingsTab extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Meta: ${ref.read(currencyProvider).format(goal.targetAmount)}',
+                        t.savingsGoalTarget(
+                          ref.read(currencyProvider).format(goal.targetAmount),
+                        ),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
@@ -157,9 +164,9 @@ class SavingsTab extends ConsumerWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const Text(
-                      'objetivo',
-                      style: TextStyle(
+                    Text(
+                      t.savingsGoalProgressCaption,
+                      style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -182,7 +189,9 @@ class SavingsTab extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Ahorrado: ${ref.read(currencyProvider).format(goal.currentAmount)}',
+                  t.savingsGoalSaved(
+                    ref.read(currencyProvider).format(goal.currentAmount),
+                  ),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textSecondary,
@@ -196,17 +205,17 @@ class SavingsTab extends ConsumerWidget {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.add_circle_outline_rounded,
                         color: AppColors.primary,
                         size: 16,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
-                        'Aportar',
-                        style: TextStyle(
+                        t.savingsGoalContributeAction,
+                        style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w800,
                         ),
@@ -235,6 +244,7 @@ class SavingsTab extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+          final t = AppLocalizations.of(context);
 
           return Align(
             alignment: Alignment.bottomCenter,
@@ -289,24 +299,24 @@ class SavingsTab extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 18),
-                                  const Expanded(
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Nueva Meta',
-                                          style: TextStyle(
+                                          t.savingsNewGoalTitle,
+                                          style: const TextStyle(
                                             fontSize: 30,
                                             fontWeight: FontWeight.w900,
                                             color: AppColors.textPrimary,
                                             letterSpacing: -1.2,
                                           ),
                                         ),
-                                        SizedBox(height: 10),
+                                        const SizedBox(height: 10),
                                         Text(
-                                          'Definí qué quieren lograr y cuánto necesitan juntar para hacerlo realidad.',
-                                          style: TextStyle(
+                                          t.savingsNewGoalSubtitle,
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             height: 1.4,
                                             color: AppColors.textSecondary,
@@ -319,9 +329,9 @@ class SavingsTab extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 32),
-                              const Text(
-                                'DETALLE',
-                                style: TextStyle(
+                              Text(
+                                t.savingsSectionDetail,
+                                style: const TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
@@ -329,9 +339,9 @@ class SavingsTab extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const Text(
-                                'Qué quieren alcanzar',
-                                style: TextStyle(
+                              Text(
+                                t.savingsSectionDetailTitle,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.textPrimary,
@@ -388,6 +398,7 @@ class SavingsTab extends ConsumerWidget {
                               TextField(
                                 controller: amountController,
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [ThousandsInputFormatter()],
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 22,
@@ -435,9 +446,9 @@ class SavingsTab extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              const Text(
-                                'PERSONALIZACIÓN',
-                                style: TextStyle(
+                              Text(
+                                t.savingsSectionPersonalization,
+                                style: const TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w900,
@@ -445,9 +456,9 @@ class SavingsTab extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const Text(
-                                'Dale personalidad',
-                                style: TextStyle(
+                              Text(
+                                t.savingsSectionPersonalizationTitle,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   color: AppColors.textPrimary,
@@ -458,7 +469,7 @@ class SavingsTab extends ConsumerWidget {
                               Row(
                                 children: [
                                   _buildGoalOption(
-                                    label: 'Emoji',
+                                    label: t.savingsFieldEmoji,
                                     value: selectedEmoji,
                                     onTap: () {
                                       final emojis = [
@@ -475,7 +486,7 @@ class SavingsTab extends ConsumerWidget {
                                       ];
                                       _showSimplePicker(
                                         context,
-                                        'Elegí un ícono',
+                                        t.savingsPickIconTitle,
                                         emojis,
                                         (e) => setModalState(
                                           () => selectedEmoji = e,
@@ -485,7 +496,7 @@ class SavingsTab extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 14),
                                   _buildGoalOption(
-                                    label: 'Color',
+                                    label: t.savingsFieldColor,
                                     value: '',
                                     customValue: Container(
                                       width: 24,
@@ -506,6 +517,7 @@ class SavingsTab extends ConsumerWidget {
                                       ];
                                       _showColorPicker(
                                         context,
+                                        t.savingsPickColorTitle,
                                         colors,
                                         (c) => setModalState(
                                           () => selectedColor = c,
@@ -536,9 +548,9 @@ class SavingsTab extends ConsumerWidget {
                           children: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Cancelar',
-                                style: TextStyle(
+                              child: Text(
+                                t.commonCancel,
+                                style: const TextStyle(
                                   color: AppColors.textMuted,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16,
@@ -552,11 +564,9 @@ class SavingsTab extends ConsumerWidget {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     final title = titleController.text.trim();
-                                    final amount = double.tryParse(
-                                          amountController.text
-                                              .replaceAll(',', '.'),
-                                        ) ??
-                                        0;
+                                    final amount = parseAmountInput(
+                                      amountController.text,
+                                    );
 
                                     if (title.isNotEmpty && amount > 0) {
                                       ref
@@ -578,9 +588,9 @@ class SavingsTab extends ConsumerWidget {
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: const Text(
-                                    'Crear Meta',
-                                    style: TextStyle(
+                                  child: Text(
+                                    t.savingsCreateGoalAction,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.w900,
                                       fontSize: 18,
                                     ),
@@ -614,6 +624,7 @@ class SavingsTab extends ConsumerWidget {
       builder: (context) {
         final theme = context.theme;
         final amountController = TextEditingController();
+        final t = AppLocalizations.of(context);
         return Container(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 32,
@@ -646,9 +657,9 @@ class SavingsTab extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Ingresar dinero a',
-                          style: TextStyle(
+                        Text(
+                          t.savingsContributeTo,
+                          style: const TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -672,6 +683,7 @@ class SavingsTab extends ConsumerWidget {
                 controller: amountController,
                 autofocus: true,
                 keyboardType: TextInputType.number,
+                inputFormatters: [ThousandsInputFormatter()],
                 style: const TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.w900,
@@ -693,8 +705,8 @@ class SavingsTab extends ConsumerWidget {
                 height: 64,
                 child: ElevatedButton(
                   onPressed: () async {
-                    final amount = double.tryParse(amountController.text);
-                    if (amount != null && amount > 0) {
+                    final amount = parseAmountInput(amountController.text);
+                    if (amount > 0) {
                       await ref
                           .read(savingsGoalsProvider.notifier)
                           .contribute(goal.id, amount, goalTitle: goal.title);
@@ -708,9 +720,9 @@ class SavingsTab extends ConsumerWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Confirmar Aporte',
-                    style: TextStyle(
+                  child: Text(
+                    t.savingsConfirmContribution,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
@@ -830,6 +842,7 @@ class SavingsTab extends ConsumerWidget {
 
   static void _showColorPicker(
     BuildContext context,
+    String title,
     List<Color> colors,
     Function(Color) onSelect,
   ) {
@@ -844,9 +857,9 @@ class SavingsTab extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Elegí un color',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 20),
             Row(

@@ -11,6 +11,7 @@ import {
   X,
   Activity,
   ScanLine,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
@@ -124,6 +125,9 @@ export const Sidebar = ({
           </SidebarItem>
           <SidebarItem to="/ocr-insights" icon={ScanLine} collapsed={collapsed} onNavigate={onCloseMobile}>
             OCR Insights
+          </SidebarItem>
+          <SidebarItem to="/shopping-icons" icon={Sparkles} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Íconos Compras
           </SidebarItem>
         </nav>
 

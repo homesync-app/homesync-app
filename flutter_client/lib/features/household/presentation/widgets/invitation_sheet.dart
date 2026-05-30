@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class InvitationSheet extends ConsumerStatefulWidget {
@@ -66,8 +67,8 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     if (_invitationCode == null) return;
     Clipboard.setData(ClipboardData(text: _invitationCode!));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Código copiado al portapapeles'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).invitationCopied),
         backgroundColor: AppColors.success,
       ),
     );
@@ -76,21 +77,19 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
   Future<void> _shareViaWhatsApp() async {
     if (_invitationCode == null) return;
 
+    final t = AppLocalizations.of(context);
     final caps = ref.read(householdCapabilitiesProvider);
-    String intro = '¡Hola! Te invito a unirte a nuestro hogar en HomeSync.';
+    String intro = t.invitationIntroDefault;
 
     if (caps.type == HouseholdType.couple) {
-      intro =
-          '¡Hola! Únete a mi pareja en HomeSync para organizar nuestros gastos y tareas.';
+      intro = t.invitationIntroCouple;
     } else if (caps.type == HouseholdType.family) {
-      intro = '¡Hola! Te invito a unirte a nuestro hogar familiar en HomeSync.';
+      intro = t.invitationIntroFamily;
     } else if (caps.type == HouseholdType.friends) {
-      intro =
-          '¡Hola! Únete a nuestra convivencia en HomeSync para organizar mejor el piso.';
+      intro = t.invitationIntroFriends;
     }
 
-    final text =
-        '$intro\n\nDescarga la app e ingresa este código: *$_invitationCode*\n\n¡Organicemos nuestro hogar juntos!';
+    final text = t.invitationShareBody(intro, _invitationCode!);
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -100,8 +99,10 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
         _copyCode();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('No se pudo abrir WhatsApp. Código copiado.'),),
+            SnackBar(
+              content:
+                  Text(AppLocalizations.of(context).invitationWhatsAppFailed),
+            ),
           );
         }
       }
@@ -113,6 +114,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final caps = ref.watch(householdCapabilitiesProvider);
 
     return Container(
@@ -134,7 +136,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Invitar al hogar',
+            t.invitationTitle,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
@@ -145,10 +147,10 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
           const SizedBox(height: 8),
           Text(
             caps.type == HouseholdType.family
-                ? 'Comparte este código con los miembros de tu familia.'
+                ? t.invitationSubtitleFamily
                 : caps.type == HouseholdType.friends
-                    ? 'Comparte este código con tus compañeros para sumarlos a la convivencia.'
-                    : 'Comparte este código para que alguien se una a tu hogar.',
+                    ? t.invitationSubtitleFriends
+                    : t.invitationSubtitleDefault,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -188,7 +190,7 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Toca para copiar',
+              t.invitationTapToCopy,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -209,9 +211,12 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
                   ),
                 ),
                 icon: const Icon(Icons.share_rounded),
-                label: const Text(
-                  'Compartir por WhatsApp',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                label: Text(
+                  t.invitationShareWhatsApp,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -219,13 +224,13 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
             TextButton.icon(
               onPressed: _loadInvitationCode,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar generar código'),
+              label: Text(t.invitationRetry),
             ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Cerrar',
+              t.commonClose,
               style: TextStyle(
                 color: theme.textSecondary,
                 fontWeight: FontWeight.w600,

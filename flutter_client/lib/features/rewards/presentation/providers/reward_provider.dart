@@ -413,10 +413,13 @@ class Rewards extends _$Rewards {
         return Left(failure);
       },
       (success) {
-        ref.invalidateSelf();
-        // Refrescamos el feed de actividad y el balance al instante:
-        // el Realtime de Supabase puede tardar varios segundos y el usuario
-        // espera ver el canje reflejado apenas vuelve al home.
+        // NOTE: deliberately NOT calling ref.invalidateSelf() here.
+        // Redeeming only spends the user's coins — the reward list rows are
+        // unchanged, so reloading the list would drop the whole rewards page
+        // to AsyncLoading (a jarring full-page "reload"). We only refresh the
+        // things that actually changed: the coin balance and the activity
+        // feed. Genuine reward-row changes still arrive via the realtime
+        // channel set up in build().
         ref.invalidate(recentActivityProvider);
         ref.invalidate(userBalanceProvider);
         return Right(success);

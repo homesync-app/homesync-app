@@ -26,16 +26,24 @@ class SupabaseSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> updateAvatar(String avatarUrl) async {
-    final userId = await _requireCurrentUserId();
-    await _client
-        .from('users')
-        .update({'avatar_url': avatarUrl}).eq('id', userId);
+    // Direct RLS updates on `users` fail under Firebase JWTs. Use the
+    // SECURITY DEFINER RPC that resolves the caller via current_app_user_id().
+    await _requireCurrentUserId();
+    await _client.rpc(
+      'update_own_profile',
+      params: {'p_full_name': null, 'p_avatar_url': avatarUrl},
+    );
   }
 
   @override
   Future<void> updateFullName(String name) async {
-    final userId = await _requireCurrentUserId();
-    await _client.from('users').update({'full_name': name}).eq('id', userId);
+    // Direct RLS updates on `users` fail under Firebase JWTs. Use the
+    // SECURITY DEFINER RPC that resolves the caller via current_app_user_id().
+    await _requireCurrentUserId();
+    await _client.rpc(
+      'update_own_profile',
+      params: {'p_full_name': name, 'p_avatar_url': null},
+    );
   }
 
   @override
