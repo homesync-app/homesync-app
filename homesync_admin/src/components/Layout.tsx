@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react';
 import { Sidebar } from './Sidebar';
+import { getEnvInfo, useAdminEmail, SKIP_AUTH } from '../lib/auth';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const email = useAdminEmail();
+  const env = getEnvInfo();
+  const displayName = email ?? (SKIP_AUTH ? 'Dev (sin auth)' : 'Admin');
+  const initial = (email ?? 'A').charAt(0).toUpperCase();
 
   return (
     <div className="flex min-h-screen bg-bg text-text-primary selection:bg-primary/30">
@@ -38,18 +43,27 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs md:text-sm font-medium text-emerald-300">Sistema Activo</span>
+              <span
+                className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full border ${
+                  env.mode === 'Producción'
+                    ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                    : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                }`}
+                title={`Conectado a ${env.host}`}
+              >
+                {env.mode}
+              </span>
+              <span className="hidden sm:inline text-[11px] text-gray-500 font-mono">{env.host}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right">
-              <p className="text-xs font-semibold">Admin</p>
-              <p className="text-[10px] text-gray-400">HomeSync</p>
+            <div className="hidden sm:block text-right max-w-[180px]">
+              <p className="text-xs font-semibold truncate">{displayName}</p>
+              <p className="text-[10px] text-gray-400">HomeSync Admin</p>
             </div>
             <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">A</span>
+              <span className="text-xs font-bold text-primary">{initial}</span>
             </div>
           </div>
         </header>

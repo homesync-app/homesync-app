@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   Users,
+  UserCog,
   BarChart3,
   Home,
   Settings,
@@ -110,6 +111,9 @@ export const Sidebar = ({
           </SidebarItem>
           <SidebarItem to="/households" icon={Users} collapsed={collapsed} onNavigate={onCloseMobile}>
             Hogares
+          </SidebarItem>
+          <SidebarItem to="/users" icon={UserCog} collapsed={collapsed} onNavigate={onCloseMobile}>
+            Usuarios
           </SidebarItem>
           <SidebarItem to="/activity" icon={Activity} collapsed={collapsed} onNavigate={onCloseMobile}>
             Actividad

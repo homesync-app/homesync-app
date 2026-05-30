@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { getEnvInfo, useAdminEmail } from '../lib/auth';
 import {
   Settings as SettingsIcon,
   LogOut,
@@ -14,9 +15,11 @@ export const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const email = useAdminEmail();
+  const env = getEnvInfo();
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +30,8 @@ export const Settings = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'La contraseña debe tener al menos 6 caracteres.' });
+    if (newPassword.length < 8) {
+      setMessage({ type: 'error', text: 'La contraseña debe tener al menos 8 caracteres.' });
       return;
     }
 
@@ -39,7 +42,6 @@ export const Settings = () => {
       setMessage({ type: 'error', text: error.message });
     } else {
       setMessage({ type: 'success', text: 'Contraseña actualizada correctamente.' });
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     }
@@ -77,28 +79,16 @@ export const Settings = () => {
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">
-                Contraseña actual
-              </label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder="••••••••"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">
                 Nueva contraseña
               </label>
               <input
                 type="password"
                 required
+                minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                placeholder="••••••••"
+                placeholder="Mínimo 8 caracteres"
               />
             </div>
             <div>
@@ -151,12 +141,16 @@ export const Settings = () => {
             </div>
             <div className="space-y-3">
               <div className="bg-white/5 rounded-xl px-4 py-3">
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Email</p>
+                <p className="text-sm font-medium truncate">{email ?? 'Sesión sin email'}</p>
+              </div>
+              <div className="bg-white/5 rounded-xl px-4 py-3">
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Rol</p>
                 <p className="text-sm font-medium">Administrador</p>
               </div>
               <div className="bg-white/5 rounded-xl px-4 py-3">
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Entorno</p>
-                <p className="text-sm font-medium">Local (localhost)</p>
+                <p className="text-sm font-medium">{env.mode}</p>
               </div>
             </div>
           </div>
@@ -177,10 +171,10 @@ export const Settings = () => {
                 <p className="text-sm font-medium">Supabase Auth (Email + Password)</p>
               </div>
               <div className="bg-white/5 rounded-xl px-4 py-3">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Conexión</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-0.5">Backend</p>
                 <p className="text-sm font-medium flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Cifrada (HTTPS)
+                  <span className="font-mono text-xs truncate">{env.host}</span>
                 </p>
               </div>
             </div>

@@ -69,16 +69,19 @@ export const UserManagement = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">User Management</h2>
-          <p className="text-gray-400 mt-1">Monitor household members and access roles.</p>
+          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <UsersIcon className="w-8 h-8 text-indigo-400" />
+            Usuarios
+          </h2>
+          <p className="text-gray-400 mt-1">Miembros de cada hogar y sus roles de acceso.</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input 
-              type="text" 
-              placeholder="Search members..."
+            <input
+              type="text"
+              placeholder="Buscar por nombre o hogar..."
               className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -124,7 +127,7 @@ export const UserManagement = () => {
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#0f172a] rounded-full" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg leading-tight">{member.user?.full_name || 'Anonymous'}</h4>
+                  <h4 className="font-bold text-lg leading-tight">{member.user?.full_name || 'Sin nombre'}</h4>
                   <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-1">
                     <Shield className="w-3 h-3 text-secondary" />
                     <span>ID: ...{member.user_id.slice(-6)}</span>
@@ -138,8 +141,8 @@ export const UserManagement = () => {
                     <UsersIcon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Household</p>
-                    <p className="text-sm font-semibold">{member.household?.name || 'Unknown'}</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Hogar</p>
+                    <p className="text-sm font-semibold">{member.household?.name || 'Desconocido'}</p>
                   </div>
                 </div>
                 
@@ -148,8 +151,8 @@ export const UserManagement = () => {
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Joined Date</p>
-                    <p className="text-sm font-semibold">{new Date(member.joined_at).toLocaleDateString()}</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Se unió</p>
+                    <p className="text-sm font-semibold">{new Date(member.joined_at).toLocaleDateString('es-AR')}</p>
                   </div>
                 </div>
              </div>
