@@ -686,6 +686,48 @@ abstract class AppLocalizations {
   /// **'Reiniciar'**
   String get settingsResetDialogConfirm;
 
+  /// Destructive button label that permanently deletes the user's account and all their data (Play Store account-deletion requirement).
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar mi cuenta'**
+  String get settingsDeleteAccountButton;
+
+  /// Title of the confirmation dialog for permanent account deletion.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar tu cuenta?'**
+  String get settingsDeleteAccountDialogTitle;
+
+  /// Body of the permanent account-deletion confirmation dialog. Must make clear the action is irreversible.
+  ///
+  /// In es, this message translates to:
+  /// **'Esto elimina tu cuenta y todos tus datos (tareas, gastos, recompensas y progreso) de forma permanente. No se puede deshacer. Si compartís un hogar, dejarás de formar parte de él.'**
+  String get settingsDeleteAccountDialogBody;
+
+  /// Destructive confirm button on the delete-account dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar definitivamente'**
+  String get settingsDeleteAccountConfirm;
+
+  /// Snackbar shown after the account was deleted successfully.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuenta eliminada'**
+  String get settingsDeleteAccountSuccess;
+
+  /// Snackbar shown when account deletion fails on the backend.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo eliminar la cuenta. Intentá de nuevo.'**
+  String get settingsDeleteAccountError;
+
+  /// Shown when Firebase requires a recent login before deleting the credential.
+  ///
+  /// In es, this message translates to:
+  /// **'Por seguridad, volvé a iniciar sesión y luego eliminá tu cuenta.'**
+  String get settingsDeleteAccountReauthNeeded;
+
   /// Single line shown on the splash screen while the app boots and warms providers.
   ///
   /// In es, this message translates to:
@@ -1274,6 +1316,174 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Todavía no hubo movimientos compartidos.'**
   String get homeFriendsActivityEmpty;
+
+  /// Section header above the debt-settlement card in friends mode, where roommates settle outstanding balances.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldar cuentas'**
+  String get homeFriendsSettleTitle;
+
+  /// Subtitle under the settle-up section header in friends mode.
+  ///
+  /// In es, this message translates to:
+  /// **'Quién le paga a quién para quedar en cero.'**
+  String get homeFriendsSettleSubtitle;
+
+  /// Error state shown when the household balances fail to load in friends mode. Tappable to retry.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar los saldos. Tocá para reintentar.'**
+  String get homeFriendsBalancesLoadError;
+
+  /// Error state shown when the today tasks fail to load in friends mode. Tappable to retry.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar las tareas. Tocá para reintentar.'**
+  String get homeFriendsTasksLoadError;
+
+  /// Error state shown when the shopping list fails to load in friends mode. Tappable to retry.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar las compras. Tocá para reintentar.'**
+  String get homeFriendsShoppingLoadError;
+
+  /// Error state shown when the recent activity feed fails to load in friends mode. Tappable to retry.
+  ///
+  /// In es, this message translates to:
+  /// **'No pudimos cargar la actividad. Tocá para reintentar.'**
+  String get homeFriendsActivityLoadError;
+
+  /// Status line on the shared balance card when the current user owes money to the group.
+  ///
+  /// In es, this message translates to:
+  /// **'Te toca acomodar tu saldo'**
+  String get balanceCardStatusOwed;
+
+  /// Status line on the shared balance card when the group owes money to the current user.
+  ///
+  /// In es, this message translates to:
+  /// **'Quedó a tu favor'**
+  String get balanceCardStatusFavor;
+
+  /// Status line on the shared balance card when there's no current-user balance to highlight (generic group view).
+  ///
+  /// In es, this message translates to:
+  /// **'Balance compartido'**
+  String get balanceCardStatusShared;
+
+  /// Short badge on the balance card when the current user's balance is settled (zero).
+  ///
+  /// In es, this message translates to:
+  /// **'Al día'**
+  String get balanceCardBadgeSettled;
+
+  /// Short badge on the balance card when the current user owes money.
+  ///
+  /// In es, this message translates to:
+  /// **'Debes'**
+  String get balanceCardBadgeOwes;
+
+  /// Short badge on the balance card when the current user is owed money.
+  ///
+  /// In es, this message translates to:
+  /// **'A favor'**
+  String get balanceCardBadgeFavor;
+
+  /// Headline on the balance card showing the number of open shared movements when there's no per-user balance.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{0 movimientos} one{1 movimiento} other{{count} movimientos}}'**
+  String balanceCardMovements(int count);
+
+  /// Inline metric label for the number of household members on the balance card.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, one{Integrante} other{Integrantes}}'**
+  String balanceCardMembers(int count);
+
+  /// Inline metric label for the number of open (unsettled) balances on the balance card.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Todo al día} one{Saldo abierto} other{Saldos abiertos}}'**
+  String balanceCardOpenBalances(int count);
+
+  /// Hint shown on the balance card when the household has a single member, inviting them to add more.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando sumes más integrantes, acá vas a ver cómo queda el balance compartido.'**
+  String get balanceCardSingleMemberHint;
+
+  /// Per-member balance label when that member owes money to the group.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe'**
+  String get balanceCardMemberOwes;
+
+  /// Per-member balance label when the group owes money to that member.
+  ///
+  /// In es, this message translates to:
+  /// **'A favor'**
+  String get balanceCardMemberFavor;
+
+  /// Per-member balance label when that member is settled (zero balance).
+  ///
+  /// In es, this message translates to:
+  /// **'Al día'**
+  String get balanceCardMemberSettled;
+
+  /// Title of the debt-settlement card that lists who pays whom to balance the household.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldar deudas'**
+  String get settleSectionTitle;
+
+  /// Subtitle of the settle-up card when a single payment is needed to balance everyone.
+  ///
+  /// In es, this message translates to:
+  /// **'1 pago necesario para equilibrar'**
+  String get settleSectionOnePayment;
+
+  /// Subtitle of the settle-up card when multiple payments are needed.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} pagos para equilibrar todo'**
+  String settleSectionPayments(int count);
+
+  /// Empty/positive state of the settle-up card when there are no outstanding debts.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo equilibrado. Nadie le debe a nadie.'**
+  String get settleAllSettled;
+
+  /// Caption under a debtor's name in the settle-up row, naming the creditor they pay.
+  ///
+  /// In es, this message translates to:
+  /// **'le paga a {name}'**
+  String settlePaysTo(String name);
+
+  /// Title of the dialog confirming a settlement payment between two members.
+  ///
+  /// In es, this message translates to:
+  /// **'Confirmar pago'**
+  String get settleConfirmTitle;
+
+  /// Body of the settlement confirmation dialog.
+  ///
+  /// In es, this message translates to:
+  /// **'{from} le paga {amount} a {to}.'**
+  String settleConfirmBody(String from, String amount, String to);
+
+  /// Snackbar shown after a settlement payment is recorded.
+  ///
+  /// In es, this message translates to:
+  /// **'Pago de {amount} registrado.'**
+  String settleSuccess(String amount);
+
+  /// Snackbar shown when recording a settlement payment fails.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo registrar el pago: {error}'**
+  String settleError(String error);
 
   /// No description provided for @homeFamilyMemberNotFound.
   ///
@@ -1953,16 +2163,16 @@ abstract class AppLocalizations {
   /// **'Invitación'**
   String get setupInvitationEyebrow;
 
-  /// Heading on the invite-code result step. Family and friends modes share 'Familia creada' (multi-member group); couple/solo show 'Hogar creado'.
+  /// Heading on the invite-code result step. family = whole family; friends = shared place/roommates; couple/solo show 'Hogar creado'.
   ///
   /// In es, this message translates to:
-  /// **'{mode, select, family{Familia creada} friends{Familia creada} couple{Hogar creado} solo{Hogar creado} other{Hogar creado}}'**
+  /// **'{mode, select, family{Familia creada} friends{Convivencia creada} couple{Hogar creado} solo{Hogar creado} other{Hogar creado}}'**
   String setupInvitationTitle(String mode);
 
   /// No description provided for @setupInvitationSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'{mode, select, family{Compartí este código con quienes forman parte del hogar.} friends{Compartí este código con quienes forman parte del hogar.} couple{Compartí este código para invitar a la otra persona.} solo{Compartí este código para invitar a la otra persona.} other{Compartí este código para invitar a la otra persona.}}'**
+  /// **'{mode, select, family{Compartí este código con quienes forman parte del hogar.} friends{Compartí este código con tus compañeros de convivencia.} couple{Compartí este código para invitar a la otra persona.} solo{Compartí este código para invitar a la otra persona.} other{Compartí este código para invitar a la otra persona.}}'**
   String setupInvitationSubtitle(String mode);
 
   /// No description provided for @setupInvitationCodeEyebrow.

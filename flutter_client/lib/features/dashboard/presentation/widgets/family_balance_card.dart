@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 
 class FamilyBalanceCard extends StatelessWidget {
@@ -19,6 +20,7 @@ class FamilyBalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     final isSingleMember = balances.length == 1;
     final visibleBalances = currentUserId == null
         ? balances
@@ -36,20 +38,17 @@ class FamilyBalanceCard extends StatelessWidget {
         ? AppColors.accentOrange
         : (isPositive ? AppColors.sage : AppColors.primary);
     final statusLabel = myBalance == null
-        ? 'Balance compartido'
+        ? t.balanceCardStatusShared
         : isSettled
             ? ''
-            : (isNegative ? 'Te toca acomodar tu saldo' : 'Quedó a tu favor');
+            : (isNegative ? t.balanceCardStatusOwed : t.balanceCardStatusFavor);
     final headline = myBalance == null
-        ? '${pendingCount == 0 ? '0' : pendingCount} movimientos'
+        ? t.balanceCardMovements(pendingCount)
         : '${isNegative ? '-' : isPositive ? '+' : ''}\$${balanceValue.abs().toStringAsFixed(2)}';
-    final statusBadge =
-        isSettled ? 'Al día' : (isNegative ? 'Debes' : 'A favor');
-    final openBalancesLabel = pendingCount == 0
-        ? 'Todo al día'
-        : pendingCount == 1
-            ? 'Saldo abierto'
-            : 'Saldos abiertos';
+    final statusBadge = isSettled
+        ? t.balanceCardBadgeSettled
+        : (isNegative ? t.balanceCardBadgeOwes : t.balanceCardBadgeFavor);
+    final openBalancesLabel = t.balanceCardOpenBalances(pendingCount);
 
     return Container(
       width: double.infinity,
@@ -164,6 +163,7 @@ class FamilyBalanceCard extends StatelessWidget {
               _buildSingleMemberFooter(
                 balance: balances.first,
                 theme: theme,
+                t: t,
               )
             else ...[
               Container(
@@ -182,8 +182,7 @@ class FamilyBalanceCard extends StatelessWidget {
                       child: _buildInlineMetric(
                         theme,
                         icon: Icons.group_rounded,
-                        label:
-                            balances.length == 1 ? 'Integrante' : 'Integrantes',
+                        label: t.balanceCardMembers(balances.length),
                         value: '${balances.length}',
                         color: AppColors.accentTeal,
                       ),
@@ -213,7 +212,7 @@ class FamilyBalanceCard extends StatelessWidget {
               ...visibleBalances.asMap().entries.map(
                     (entry) => Column(
                       children: [
-                        _buildMemberBalance(entry.value, theme),
+                        _buildMemberBalance(entry.value, theme, t),
                         if (entry.key != visibleBalances.length - 1)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -237,6 +236,7 @@ class FamilyBalanceCard extends StatelessWidget {
   Widget _buildSingleMemberFooter({
     required HouseholdBalanceModel balance,
     required AppThemeColors theme,
+    required AppLocalizations t,
   }) {
     return Container(
       width: double.infinity,
@@ -259,7 +259,7 @@ class FamilyBalanceCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Cuando sumes más integrantes, acá vas a ver cómo queda el balance compartido.',
+              t.balanceCardSingleMemberHint,
               style: TextStyle(
                 fontSize: 13,
                 height: 1.3,
@@ -327,6 +327,7 @@ class FamilyBalanceCard extends StatelessWidget {
   Widget _buildMemberBalance(
     HouseholdBalanceModel balance,
     AppThemeColors theme,
+    AppLocalizations t,
   ) {
     final bool isNegative = balance.balance < -0.01;
     final bool isPositive = balance.balance > 0.01;
@@ -376,7 +377,11 @@ class FamilyBalanceCard extends StatelessWidget {
                 ),
               ),
               Text(
-                isNegative ? 'Debe' : (isPositive ? 'A favor' : 'Al día'),
+                isNegative
+                    ? t.balanceCardMemberOwes
+                    : (isPositive
+                        ? t.balanceCardMemberFavor
+                        : t.balanceCardMemberSettled),
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,

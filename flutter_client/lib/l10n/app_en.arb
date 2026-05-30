@@ -258,6 +258,34 @@
   "@settingsResetDialogConfirm": {
     "description": "Destructive confirm button on the reset-account dialog."
   },
+  "settingsDeleteAccountButton": "Delete my account",
+  "@settingsDeleteAccountButton": {
+    "description": "Destructive button label that permanently deletes the user's account and all their data (Play Store account-deletion requirement)."
+  },
+  "settingsDeleteAccountDialogTitle": "Delete your account?",
+  "@settingsDeleteAccountDialogTitle": {
+    "description": "Title of the confirmation dialog for permanent account deletion."
+  },
+  "settingsDeleteAccountDialogBody": "This permanently deletes your account and all your data (tasks, expenses, rewards and progress). It can't be undone. If you share a household, you'll be removed from it.",
+  "@settingsDeleteAccountDialogBody": {
+    "description": "Body of the permanent account-deletion confirmation dialog. Must make clear the action is irreversible."
+  },
+  "settingsDeleteAccountConfirm": "Delete permanently",
+  "@settingsDeleteAccountConfirm": {
+    "description": "Destructive confirm button on the delete-account dialog."
+  },
+  "settingsDeleteAccountSuccess": "Account deleted",
+  "@settingsDeleteAccountSuccess": {
+    "description": "Snackbar shown after the account was deleted successfully."
+  },
+  "settingsDeleteAccountError": "Couldn't delete your account. Please try again.",
+  "@settingsDeleteAccountError": {
+    "description": "Snackbar shown when account deletion fails on the backend."
+  },
+  "settingsDeleteAccountReauthNeeded": "For your security, sign in again and then delete your account.",
+  "@settingsDeleteAccountReauthNeeded": {
+    "description": "Shown when Firebase requires a recent login before deleting the credential."
+  },
   "splashLoadingMessage": "Setting up your shared home.",
   "@splashLoadingMessage": {
     "description": "Single line shown on the splash screen while the app boots and warms providers."
@@ -573,6 +601,164 @@
   "homeFriendsActivityTitle": "Group activity",
   "homeFriendsActivitySubtitle": "The latest shared activity in the household.",
   "homeFriendsActivityEmpty": "No shared activity yet.",
+  "homeFriendsSettleTitle": "Settle up",
+  "@homeFriendsSettleTitle": {
+    "description": "Section header above the debt-settlement card in friends mode, where roommates settle outstanding balances."
+  },
+  "homeFriendsSettleSubtitle": "Who pays whom to get back to zero.",
+  "@homeFriendsSettleSubtitle": {
+    "description": "Subtitle under the settle-up section header in friends mode."
+  },
+  "homeFriendsBalancesLoadError": "We couldn't load the balances. Tap to retry.",
+  "@homeFriendsBalancesLoadError": {
+    "description": "Error state shown when the household balances fail to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsTasksLoadError": "We couldn't load the tasks. Tap to retry.",
+  "@homeFriendsTasksLoadError": {
+    "description": "Error state shown when the today tasks fail to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsShoppingLoadError": "We couldn't load the shopping list. Tap to retry.",
+  "@homeFriendsShoppingLoadError": {
+    "description": "Error state shown when the shopping list fails to load in friends mode. Tappable to retry."
+  },
+  "homeFriendsActivityLoadError": "We couldn't load the activity. Tap to retry.",
+  "@homeFriendsActivityLoadError": {
+    "description": "Error state shown when the recent activity feed fails to load in friends mode. Tappable to retry."
+  },
+  "balanceCardStatusOwed": "Time to settle your balance",
+  "@balanceCardStatusOwed": {
+    "description": "Status line on the shared balance card when the current user owes money to the group."
+  },
+  "balanceCardStatusFavor": "In your favor",
+  "@balanceCardStatusFavor": {
+    "description": "Status line on the shared balance card when the group owes money to the current user."
+  },
+  "balanceCardStatusShared": "Shared balance",
+  "@balanceCardStatusShared": {
+    "description": "Status line on the shared balance card when there's no current-user balance to highlight (generic group view)."
+  },
+  "balanceCardBadgeSettled": "Settled",
+  "@balanceCardBadgeSettled": {
+    "description": "Short badge on the balance card when the current user's balance is settled (zero)."
+  },
+  "balanceCardBadgeOwes": "You owe",
+  "@balanceCardBadgeOwes": {
+    "description": "Short badge on the balance card when the current user owes money."
+  },
+  "balanceCardBadgeFavor": "In favor",
+  "@balanceCardBadgeFavor": {
+    "description": "Short badge on the balance card when the current user is owed money."
+  },
+  "balanceCardMovements": "{count, plural, =0{0 movements} one{1 movement} other{{count} movements}}",
+  "@balanceCardMovements": {
+    "description": "Headline on the balance card showing the number of open shared movements when there's no per-user balance.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardMembers": "{count, plural, one{Member} other{Members}}",
+  "@balanceCardMembers": {
+    "description": "Inline metric label for the number of household members on the balance card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardOpenBalances": "{count, plural, =0{All settled} one{Open balance} other{Open balances}}",
+  "@balanceCardOpenBalances": {
+    "description": "Inline metric label for the number of open (unsettled) balances on the balance card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "balanceCardSingleMemberHint": "Once you add more members, you'll see the shared balance here.",
+  "@balanceCardSingleMemberHint": {
+    "description": "Hint shown on the balance card when the household has a single member, inviting them to add more."
+  },
+  "balanceCardMemberOwes": "Owes",
+  "@balanceCardMemberOwes": {
+    "description": "Per-member balance label when that member owes money to the group."
+  },
+  "balanceCardMemberFavor": "In favor",
+  "@balanceCardMemberFavor": {
+    "description": "Per-member balance label when the group owes money to that member."
+  },
+  "balanceCardMemberSettled": "Settled",
+  "@balanceCardMemberSettled": {
+    "description": "Per-member balance label when that member is settled (zero balance)."
+  },
+  "settleSectionTitle": "Settle debts",
+  "@settleSectionTitle": {
+    "description": "Title of the debt-settlement card that lists who pays whom to balance the household."
+  },
+  "settleSectionOnePayment": "1 payment needed to balance",
+  "@settleSectionOnePayment": {
+    "description": "Subtitle of the settle-up card when a single payment is needed to balance everyone."
+  },
+  "settleSectionPayments": "{count} payments to balance everything",
+  "@settleSectionPayments": {
+    "description": "Subtitle of the settle-up card when multiple payments are needed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settleAllSettled": "All balanced. Nobody owes anyone.",
+  "@settleAllSettled": {
+    "description": "Empty/positive state of the settle-up card when there are no outstanding debts."
+  },
+  "settlePaysTo": "pays {name}",
+  "@settlePaysTo": {
+    "description": "Caption under a debtor's name in the settle-up row, naming the creditor they pay.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settleConfirmTitle": "Confirm payment",
+  "@settleConfirmTitle": {
+    "description": "Title of the dialog confirming a settlement payment between two members."
+  },
+  "settleConfirmBody": "{from} pays {amount} to {to}.",
+  "@settleConfirmBody": {
+    "description": "Body of the settlement confirmation dialog.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "settleSuccess": "Payment of {amount} recorded.",
+  "@settleSuccess": {
+    "description": "Snackbar shown after a settlement payment is recorded.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "settleError": "Couldn't record the payment: {error}",
+  "@settleError": {
+    "description": "Snackbar shown when recording a settlement payment fails.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "homeFamilyMemberNotFound": "We couldn't find your profile in this household.",
   "homeFamilyMetricCoins": "Coins",
   "@homeFamilyMetricCoins": {
@@ -868,16 +1054,16 @@
   "setupConnectJoinButton": "Join now",
   "setupConnectBackButton": "Go back",
   "setupInvitationEyebrow": "Invitation",
-  "setupInvitationTitle": "{mode, select, family{Family created} friends{Family created} couple{Home created} solo{Home created} other{Home created}}",
+  "setupInvitationTitle": "{mode, select, family{Family created} friends{Place created} couple{Home created} solo{Home created} other{Home created}}",
   "@setupInvitationTitle": {
-    "description": "Heading on the invite-code result step. Family and friends modes share 'Familia creada' (multi-member group); couple/solo show 'Hogar creado'.",
+    "description": "Heading on the invite-code result step. family = whole family; friends = shared place/roommates; couple/solo show 'Home created'.",
     "placeholders": {
       "mode": {
         "type": "String"
       }
     }
   },
-  "setupInvitationSubtitle": "{mode, select, family{Share this code with everyone who's part of the household.} friends{Share this code with everyone who's part of the household.} couple{Share this code to invite the other person.} solo{Share this code to invite the other person.} other{Share this code to invite the other person.}}",
+  "setupInvitationSubtitle": "{mode, select, family{Share this code with everyone who's part of the household.} friends{Share this code with your housemates.} couple{Share this code to invite the other person.} solo{Share this code to invite the other person.} other{Share this code to invite the other person.}}",
   "@setupInvitationSubtitle": {
     "placeholders": {
       "mode": {

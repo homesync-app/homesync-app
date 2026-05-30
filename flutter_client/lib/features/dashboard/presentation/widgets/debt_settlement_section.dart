@@ -8,6 +8,7 @@ import 'package:homesync_client/core/utils/debt_simplifier.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
+import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
@@ -26,6 +27,7 @@ class DebtSettlementSection extends ConsumerWidget {
     }
 
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -60,7 +62,7 @@ class DebtSettlementSection extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Saldar deudas',
+                      t.settleSectionTitle,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -68,7 +70,7 @@ class DebtSettlementSection extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      _subtitleText(debts),
+                      _subtitleText(debts, t),
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
@@ -87,13 +89,14 @@ class DebtSettlementSection extends ConsumerWidget {
     );
   }
 
-  String _subtitleText(List<SimplifiedDebt> debts) {
-    if (debts.length == 1) return '1 pago necesario para equilibrar';
-    return '${debts.length} pagos para equilibrar todo';
+  String _subtitleText(List<SimplifiedDebt> debts, AppLocalizations t) {
+    if (debts.length == 1) return t.settleSectionOnePayment;
+    return t.settleSectionPayments(debts.length);
   }
 
   Widget _buildAllSettledState(BuildContext context) {
     final theme = context.theme;
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -112,7 +115,7 @@ class DebtSettlementSection extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Todo equilibrado. Nadie le debe a nadie.',
+              t.settleAllSettled,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -143,6 +146,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
     final theme = context.theme;
     final debt = widget.debt;
     final currency = ref.watch(currencyProvider);
+    final t = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -179,7 +183,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
                       ),
                     ),
                     Text(
-                      'le paga a ${debt.toName}',
+                      t.settlePaysTo(debt.toName),
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -238,6 +242,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
   Future<void> _confirmSettle() async {
     final theme = context.theme;
     final debt = widget.debt;
+    final t = AppLocalizations.of(context);
     final formattedAmount = ref.read(currencyProvider).format(debt.amount);
 
     final confirmed = await showDialog<bool>(
@@ -246,46 +251,27 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
         backgroundColor: theme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
-          'Confirmar pago',
+          t.settleConfirmTitle,
           style: TextStyle(
             color: theme.textPrimary,
             fontWeight: FontWeight.w900,
           ),
         ),
-        content: RichText(
-          text: TextSpan(
-            style: TextStyle(color: theme.textSecondary, height: 1.5),
-            children: [
-              TextSpan(
-                text: debt.fromName,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              const TextSpan(text: ' le paga '),
-              TextSpan(
-                text: formattedAmount,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.accentTeal,
-                ),
-              ),
-              const TextSpan(text: ' a '),
-              TextSpan(
-                text: debt.toName,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              const TextSpan(text: '.'),
-            ],
-          ),
+        content: Text(
+          t.settleConfirmBody(debt.fromName, formattedAmount, debt.toName),
+          style: TextStyle(color: theme.textSecondary, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child:
-                Text('Cancelar', style: TextStyle(color: theme.textSecondary)),
+            child: Text(
+              t.commonCancel,
+              style: TextStyle(color: theme.textSecondary),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirmar'),
+            child: Text(t.commonConfirm),
           ),
         ],
       ),
@@ -311,7 +297,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: 'Pago de $formattedAmount registrado.',
+        message: t.settleSuccess(formattedAmount),
         type: AppSnackBarType.success,
         duration: const Duration(milliseconds: 1500),
       );
@@ -319,7 +305,7 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        message: 'No se pudo registrar el pago: $e',
+        message: t.settleError(e.toString()),
         type: AppSnackBarType.error,
       );
     } finally {

@@ -678,8 +678,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Future<void> _shareViaWhatsApp() async {
     if (_myInviteCode == null) return;
-    final text =
-        '¡Hola! Únete a nuestro hogar en HomeSync.\n\nDescarga la app e ingresa este código: *$_myInviteCode*\n\n?? Organizemos nuestro hogar juntos.';
+    final t = AppLocalizations.of(context);
+
+    final intro = switch (_selectedMode) {
+      'couple' => t.invitationIntroCouple,
+      'family' => t.invitationIntroFamily,
+      'friends' => t.invitationIntroFriends,
+      _ => t.invitationIntroDefault,
+    };
+    final text = t.invitationShareBody(intro, _myInviteCode!);
     final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
 
     try {
@@ -2045,7 +2052,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
 
   Widget _buildFriendsEqualSplitStepV2() {
     final t = AppLocalizations.of(context);
-    _tempRatio = 0.5;
     return Padding(
       key: const ValueKey('split_friends_v2'),
       padding: const EdgeInsets.symmetric(horizontal: 24),

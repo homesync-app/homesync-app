@@ -408,6 +408,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsResetDialogConfirm => 'Reiniciar';
 
   @override
+  String get settingsDeleteAccountButton => 'Eliminar mi cuenta';
+
+  @override
+  String get settingsDeleteAccountDialogTitle => '¿Eliminar tu cuenta?';
+
+  @override
+  String get settingsDeleteAccountDialogBody =>
+      'Esto elimina tu cuenta y todos tus datos (tareas, gastos, recompensas y progreso) de forma permanente. No se puede deshacer. Si compartís un hogar, dejarás de formar parte de él.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Eliminar definitivamente';
+
+  @override
+  String get settingsDeleteAccountSuccess => 'Cuenta eliminada';
+
+  @override
+  String get settingsDeleteAccountError =>
+      'No se pudo eliminar la cuenta. Intentá de nuevo.';
+
+  @override
+  String get settingsDeleteAccountReauthNeeded =>
+      'Por seguridad, volvé a iniciar sesión y luego eliminá tu cuenta.';
+
+  @override
   String get splashLoadingMessage => 'Preparando tu hogar compartido.';
 
   @override
@@ -733,6 +757,132 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get homeFriendsActivityEmpty =>
       'Todavía no hubo movimientos compartidos.';
+
+  @override
+  String get homeFriendsSettleTitle => 'Saldar cuentas';
+
+  @override
+  String get homeFriendsSettleSubtitle =>
+      'Quién le paga a quién para quedar en cero.';
+
+  @override
+  String get homeFriendsBalancesLoadError =>
+      'No pudimos cargar los saldos. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsTasksLoadError =>
+      'No pudimos cargar las tareas. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsShoppingLoadError =>
+      'No pudimos cargar las compras. Tocá para reintentar.';
+
+  @override
+  String get homeFriendsActivityLoadError =>
+      'No pudimos cargar la actividad. Tocá para reintentar.';
+
+  @override
+  String get balanceCardStatusOwed => 'Te toca acomodar tu saldo';
+
+  @override
+  String get balanceCardStatusFavor => 'Quedó a tu favor';
+
+  @override
+  String get balanceCardStatusShared => 'Balance compartido';
+
+  @override
+  String get balanceCardBadgeSettled => 'Al día';
+
+  @override
+  String get balanceCardBadgeOwes => 'Debes';
+
+  @override
+  String get balanceCardBadgeFavor => 'A favor';
+
+  @override
+  String balanceCardMovements(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movimientos',
+      one: '1 movimiento',
+      zero: '0 movimientos',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Integrantes',
+      one: 'Integrante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardOpenBalances(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Saldos abiertos',
+      one: 'Saldo abierto',
+      zero: 'Todo al día',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get balanceCardSingleMemberHint =>
+      'Cuando sumes más integrantes, acá vas a ver cómo queda el balance compartido.';
+
+  @override
+  String get balanceCardMemberOwes => 'Debe';
+
+  @override
+  String get balanceCardMemberFavor => 'A favor';
+
+  @override
+  String get balanceCardMemberSettled => 'Al día';
+
+  @override
+  String get settleSectionTitle => 'Saldar deudas';
+
+  @override
+  String get settleSectionOnePayment => '1 pago necesario para equilibrar';
+
+  @override
+  String settleSectionPayments(int count) {
+    return '$count pagos para equilibrar todo';
+  }
+
+  @override
+  String get settleAllSettled => 'Todo equilibrado. Nadie le debe a nadie.';
+
+  @override
+  String settlePaysTo(String name) {
+    return 'le paga a $name';
+  }
+
+  @override
+  String get settleConfirmTitle => 'Confirmar pago';
+
+  @override
+  String settleConfirmBody(String from, String amount, String to) {
+    return '$from le paga $amount a $to.';
+  }
+
+  @override
+  String settleSuccess(String amount) {
+    return 'Pago de $amount registrado.';
+  }
+
+  @override
+  String settleError(String error) {
+    return 'No se pudo registrar el pago: $error';
+  }
 
   @override
   String get homeFamilyMemberNotFound =>
@@ -1157,7 +1307,7 @@ class AppLocalizationsEs extends AppLocalizations {
       mode,
       {
         'family': 'Familia creada',
-        'friends': 'Familia creada',
+        'friends': 'Convivencia creada',
         'couple': 'Hogar creado',
         'solo': 'Hogar creado',
         'other': 'Hogar creado',
@@ -1172,7 +1322,7 @@ class AppLocalizationsEs extends AppLocalizations {
       mode,
       {
         'family': 'Compartí este código con quienes forman parte del hogar.',
-        'friends': 'Compartí este código con quienes forman parte del hogar.',
+        'friends': 'Compartí este código con tus compañeros de convivencia.',
         'couple': 'Compartí este código para invitar a la otra persona.',
         'solo': 'Compartí este código para invitar a la otra persona.',
         'other': 'Compartí este código para invitar a la otra persona.',

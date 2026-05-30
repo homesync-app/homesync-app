@@ -409,6 +409,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsResetDialogConfirm => 'Reset';
 
   @override
+  String get settingsDeleteAccountButton => 'Delete my account';
+
+  @override
+  String get settingsDeleteAccountDialogTitle => 'Delete your account?';
+
+  @override
+  String get settingsDeleteAccountDialogBody =>
+      'This permanently deletes your account and all your data (tasks, expenses, rewards and progress). It can\'t be undone. If you share a household, you\'ll be removed from it.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Delete permanently';
+
+  @override
+  String get settingsDeleteAccountSuccess => 'Account deleted';
+
+  @override
+  String get settingsDeleteAccountError =>
+      'Couldn\'t delete your account. Please try again.';
+
+  @override
+  String get settingsDeleteAccountReauthNeeded =>
+      'For your security, sign in again and then delete your account.';
+
+  @override
   String get splashLoadingMessage => 'Setting up your shared home.';
 
   @override
@@ -729,6 +753,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFriendsActivityEmpty => 'No shared activity yet.';
+
+  @override
+  String get homeFriendsSettleTitle => 'Settle up';
+
+  @override
+  String get homeFriendsSettleSubtitle => 'Who pays whom to get back to zero.';
+
+  @override
+  String get homeFriendsBalancesLoadError =>
+      'We couldn\'t load the balances. Tap to retry.';
+
+  @override
+  String get homeFriendsTasksLoadError =>
+      'We couldn\'t load the tasks. Tap to retry.';
+
+  @override
+  String get homeFriendsShoppingLoadError =>
+      'We couldn\'t load the shopping list. Tap to retry.';
+
+  @override
+  String get homeFriendsActivityLoadError =>
+      'We couldn\'t load the activity. Tap to retry.';
+
+  @override
+  String get balanceCardStatusOwed => 'Time to settle your balance';
+
+  @override
+  String get balanceCardStatusFavor => 'In your favor';
+
+  @override
+  String get balanceCardStatusShared => 'Shared balance';
+
+  @override
+  String get balanceCardBadgeSettled => 'Settled';
+
+  @override
+  String get balanceCardBadgeOwes => 'You owe';
+
+  @override
+  String get balanceCardBadgeFavor => 'In favor';
+
+  @override
+  String balanceCardMovements(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count movements',
+      one: '1 movement',
+      zero: '0 movements',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Members',
+      one: 'Member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String balanceCardOpenBalances(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Open balances',
+      one: 'Open balance',
+      zero: 'All settled',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get balanceCardSingleMemberHint =>
+      'Once you add more members, you\'ll see the shared balance here.';
+
+  @override
+  String get balanceCardMemberOwes => 'Owes';
+
+  @override
+  String get balanceCardMemberFavor => 'In favor';
+
+  @override
+  String get balanceCardMemberSettled => 'Settled';
+
+  @override
+  String get settleSectionTitle => 'Settle debts';
+
+  @override
+  String get settleSectionOnePayment => '1 payment needed to balance';
+
+  @override
+  String settleSectionPayments(int count) {
+    return '$count payments to balance everything';
+  }
+
+  @override
+  String get settleAllSettled => 'All balanced. Nobody owes anyone.';
+
+  @override
+  String settlePaysTo(String name) {
+    return 'pays $name';
+  }
+
+  @override
+  String get settleConfirmTitle => 'Confirm payment';
+
+  @override
+  String settleConfirmBody(String from, String amount, String to) {
+    return '$from pays $amount to $to.';
+  }
+
+  @override
+  String settleSuccess(String amount) {
+    return 'Payment of $amount recorded.';
+  }
+
+  @override
+  String settleError(String error) {
+    return 'Couldn\'t record the payment: $error';
+  }
 
   @override
   String get homeFamilyMemberNotFound =>
@@ -1150,7 +1299,7 @@ class AppLocalizationsEn extends AppLocalizations {
       mode,
       {
         'family': 'Family created',
-        'friends': 'Family created',
+        'friends': 'Place created',
         'couple': 'Home created',
         'solo': 'Home created',
         'other': 'Home created',
@@ -1165,8 +1314,7 @@ class AppLocalizationsEn extends AppLocalizations {
       mode,
       {
         'family': 'Share this code with everyone who\'s part of the household.',
-        'friends':
-            'Share this code with everyone who\'s part of the household.',
+        'friends': 'Share this code with your housemates.',
         'couple': 'Share this code to invite the other person.',
         'solo': 'Share this code to invite the other person.',
         'other': 'Share this code to invite the other person.',

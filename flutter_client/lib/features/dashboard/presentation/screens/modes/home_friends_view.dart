@@ -9,6 +9,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_task_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
@@ -344,16 +345,87 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 ),
               );
             }
-            return FamilyBalanceCard(
-              balances: balances,
-              title: t.homeFriendsBalanceCardTitle,
-              currentUserId: currentUserId,
+
+            // Settle-up only makes sense with more than one member and at
+            // least one open balance. DebtSimplifier also short-circuits the
+            // fully-settled case, but gating here avoids an extra header.
+            final hasMultipleMembers = balances.length > 1;
+            final hasOpenBalances = balances.any((b) => !b.isSettled);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FamilyBalanceCard(
+                  balances: balances,
+                  title: t.homeFriendsBalanceCardTitle,
+                  currentUserId: currentUserId,
+                ),
+                if (hasMultipleMembers && hasOpenBalances) ...[
+                  const SizedBox(height: 24),
+                  _buildSectionHeader(
+                    theme,
+                    title: t.homeFriendsSettleTitle,
+                    subtitle: t.homeFriendsSettleSubtitle,
+                  ),
+                  const SizedBox(height: 12),
+                  DebtSettlementSection(balances: balances),
+                ],
+              ],
             );
           },
           loading: () => const ShimmerLoading(height: 140, borderRadius: 24),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsBalancesLoadError,
+            onRetry: () => ref.invalidate(expenseBalancesProvider),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionError(
+    AppThemeColors theme, {
+    required String message,
+    required VoidCallback onRetry,
+  }) {
+    return AnimatedPress(
+      onPressed: onRetry,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: AppColors.error,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.refresh_rounded,
+              color: AppColors.error.withValues(alpha: 0.8),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -397,7 +469,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             );
           },
           loading: () => const ShimmerLoading(height: 60, borderRadius: 16),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsTasksLoadError,
+            onRetry: () => ref.invalidate(todayTasksProvider),
+          ),
         ),
       ],
     );
@@ -533,7 +609,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             );
           },
           loading: () => const ShimmerLoading(height: 60, borderRadius: 20),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsShoppingLoadError,
+            onRetry: () => ref.invalidate(shoppingItemsProvider),
+          ),
         ),
       ],
     );
@@ -587,7 +667,11 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             );
           },
           loading: () => const ShimmerLoading(height: 70, borderRadius: 20),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, __) => _buildSectionError(
+            theme,
+            message: t.homeFriendsActivityLoadError,
+            onRetry: () => ref.invalidate(recentActivityProvider),
+          ),
         ),
       ],
     );
