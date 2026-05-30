@@ -92,16 +92,14 @@ class ReceiptScanService {
       );
     } on FunctionException catch (e) {
       // El SDK lanza FunctionException para respuestas no-2xx antes de que
-      // podamos ver response.status. Convertimos el 429 en ScanLimitException.
+      // podamos ver response.status. El 429 acá es el anti-abuso liviano del
+      // servidor (no un límite por tier: el OCR es gratis para todos).
       if (e.status == 429) {
         final details = e.details;
-        if (details is Map && details['error'] == 'scan_limit_reached') {
-          throw ScanLimitException(
-            used: (details['used'] as num?)?.toInt() ?? 0,
-            limit: (details['limit'] as num?)?.toInt() ?? 10,
-            isPremium: (details['tier'] as String?) == 'premium',
-          );
-        }
+        final retryAfter = details is Map
+            ? (details['retryAfterSeconds'] as num?)?.toInt()
+            : null;
+        throw ScanRateLimitException(retryAfterSeconds: retryAfter ?? 60);
       }
       rethrow;
     }
@@ -152,24 +150,18 @@ class ReceiptScanService {
   }
 }
 
-/// Excepción lanzada cuando el household alcanzó su límite mensual de scans.
-class ScanLimitException implements Exception {
-  final int used;
-  final int limit;
-  final bool isPremium;
+/// Excepción lanzada cuando el servidor aplica el anti-abuso de scans.
+///
+/// NO es un límite por plan (el OCR es gratis para todos). Es un freno corto
+/// para evitar que un usuario loopee el endpoint pago de Gemini. El usuario
+/// puede reintentar pasados [retryAfterSeconds].
+class ScanRateLimitException implements Exception {
+  final int retryAfterSeconds;
 
-  const ScanLimitException({
-    required this.used,
-    required this.limit,
-    required this.isPremium,
-  });
+  const ScanRateLimitException({required this.retryAfterSeconds});
 
   @override
   String toString() {
-    if (isPremium) {
-      return 'Alcanzaste el límite de $limit escaneos mensuales de tu plan Premium.';
-    }
-    return 'Alcanzaste el límite de $limit escaneos gratuitos este mes. '
-        'Pasate a Premium para obtener hasta 40 escaneos.';
+    return 'Demasiados escaneos seguidos. Esperá unos segundos y volvé a intentar.';
   }
 }

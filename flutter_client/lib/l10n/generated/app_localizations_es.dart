@@ -2832,6 +2832,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ticket difícil de leer; revisá los datos antes de guardar';
 
   @override
+  String get expensesFormOcrRateLimited =>
+      'Demasiados escaneos seguidos. Esperá unos segundos y volvé a intentar.';
+
+  @override
   String get expensesFormValidationAmountRequired => 'Ingresá un monto válido.';
 
   @override

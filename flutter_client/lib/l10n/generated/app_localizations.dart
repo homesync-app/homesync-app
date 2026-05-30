@@ -4629,6 +4629,12 @@ abstract class AppLocalizations {
   /// **'Ticket difícil de leer; revisá los datos antes de guardar'**
   String get expensesFormOcrLowConfidence;
 
+  /// Snackbar shown when the server throttles receipt scans (anti-abuse). Not a plan limit; OCR is free for everyone.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados escaneos seguidos. Esperá unos segundos y volvé a intentar.'**
+  String get expensesFormOcrRateLimited;
+
   /// Validation error when the amount field is empty or invalid.
   ///
   /// In es, this message translates to:

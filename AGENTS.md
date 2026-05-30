@@ -5,7 +5,7 @@
 - **Frontend**: Flutter 3.41+ / Dart 3.11+ con Riverpod 2.x
 - **Backend**: Supabase (Postgres + Edge Functions + Storage + Realtime)
 - **Auth**: Firebase Auth (Google + email/password) → Supabase Third-Party Auth (JWT de Firebase como access token de Supabase)
-- **OCR**: Edge Function `scan-receipt` → Gemini 2.5 Flash
+- **OCR**: Edge Function `scan-receipt` → Gemini 3.1 Flash-Lite (migrado desde 2.5 Flash, deprecado 17-jun-2026). Usa structured output (`responseSchema`) y `thinkingLevel` (serie 3.x; NO `thinkingBudget`).
 
 ## Estructura
 

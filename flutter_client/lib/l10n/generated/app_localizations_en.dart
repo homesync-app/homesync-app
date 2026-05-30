@@ -2818,6 +2818,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Receipt hard to read — check the data before saving';
 
   @override
+  String get expensesFormOcrRateLimited =>
+      'Too many scans in a row. Wait a few seconds and try again.';
+
+  @override
   String get expensesFormValidationAmountRequired => 'Enter a valid amount.';
 
   @override

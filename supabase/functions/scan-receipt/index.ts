@@ -4,6 +4,7 @@ import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5";
 import {
   extractJsonString,
   normalizeOcrResult,
+  RESPONSE_SCHEMA,
   type OcrResult,
 } from "./parser.ts";
 
@@ -22,29 +23,40 @@ interface FirebaseJWTPayload {
   iss: string;
 }
 
-// Scan limits removed — OCR (amount + category) is free for all users.
-// Premium gating for product detection → shopping list linking is handled
-// on the client side via canUseReceiptShoppingLinkProvider.
+// JWKS de Firebase. Se construye UNA sola vez a nivel de módulo para que el
+// cache de claves persista entre invocaciones (el runtime reutiliza el
+// isolate). Construirlo dentro del handler re-fetcheaba el set en cada request.
+const FIREBASE_JWKS = createRemoteJWKSet(
+  new URL(
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
+  ),
+);
 
+// OCR (monto + categoría) es gratis para todos. NO hay límite mensual por tier.
+// Lo único que aplicamos es un anti-abuso liviano: como cada scan pega contra
+// un endpoint pago de Gemini, un usuario autenticado no debería poder loopear
+// el endpoint sin freno. Ventana corta y generosa para no molestar el uso real.
+const RATE_LIMIT_WINDOW_SECONDS = 60;
+const RATE_LIMIT_MAX_SCANS = 8; // por usuario, por ventana
+
+// Modelo de OCR. Gemini 3.1 Flash-Lite reemplaza a gemini-2.5-flash (deprecado,
+// shutdown 17-jun-2026). Es el sucesor más económico y de baja latencia, mejora
+// a 2.5 Flash-Lite y se acerca a 2.5 Flash, con avances específicos en
+// extracción de datos. OJO: la serie 3.x usa `thinkingLevel` (no `thinkingBudget`,
+// que era de la 2.5 y es incompatible con 3.x).
+const GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-const PROMPT = `Sos un extractor de datos de tickets de compra.
-Analizá la imagen y devolvé SOLO JSON válido, sin texto extra, sin bloques de código:
-{
-  "merchant": "nombre descriptivo del comercio",
-  "amount": 1234.56,
-  "date": "2026-04-11",
-  "category": "supermarket|restaurants|transport|health|entertainment|clothing|electronics|pets|education|other",
-  "items": ["producto 1", "producto 2"],
-  "confidence": 0.95
-}
+function buildPrompt(todayIso: string): string {
+  return `Sos un extractor de datos de tickets de compra.
+Analizá la imagen del ticket y completá los campos del esquema de salida.
 
 Reglas para merchant:
 - Usá el nombre real del comercio si es claro y reconocible (ej: "Farmacity", "McDonald's", "Carrefour")
 - Si el nombre en el ticket es un código fiscal genérico ("VARIOS VTA/CPRA", "CF", "CONSUMIDOR FINAL", "MOSTRADOR", siglas incomprensibles), NO lo uses
 - En ese caso, inferí un nombre descriptivo del tipo de negocio basándote en los productos (ej: si hay alimentos para mascotas → "Tienda de mascotas", si hay medicamentos → "Farmacia", si hay ropa → "Indumentaria")
-- Si no podés inferir nada útil, usá null
+- Si no podés inferir nada útil, dejá merchant en null
 
 Reglas para category:
 - supermarket: almacén, supermercado, alimentos generales
@@ -60,15 +72,17 @@ Reglas para category:
 
 Otras reglas:
 - amount: número total del ticket sin signo $, punto como decimal
-- date: formato YYYY-MM-DD; si no se ve claramente usá null
+- date: formato YYYY-MM-DD. La fecha de HOY es ${todayIso}. La fecha del ticket nunca puede ser futura ni de hace más de un año; si no se ve claramente o es inconsistente, dejá date en null
 - items: nombres limpios de productos, sin precios, cantidades ni códigos
 - confidence: 0.0 a 1.0 según qué tan legible está el ticket
 - NUNCA inventes datos`;
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function callGemini(
   geminiKey: string,
+  prompt: string,
   imageBase64: string,
   mimeType: string,
   maxRetries = 3
@@ -80,14 +94,28 @@ async function callGemini(
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: PROMPT },
+            { text: prompt },
             { inline_data: { mime_type: mimeType, data: imageBase64 } },
           ],
         }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 1024,
-          thinkingConfig: { thinkingBudget: 0 },
+          // Margen holgado: en Gemini 3.x los thinking tokens cuentan dentro
+          // del presupuesto de salida. Con thinkingLevel "minimal" el uso real
+          // es bajo, pero 2048 evita truncar el JSON (finishReason MAX_TOKENS)
+          // en tickets con muchos items.
+          maxOutputTokens: 2048,
+          // Gemini 3.x usa thinkingLevel (minimal/low/medium/high), NO
+          // thinkingBudget (eso era de 2.5 y rompe en 3.x). "minimal" minimiza
+          // el razonamiento interno → menor latencia y costo, ideal para una
+          // extracción acotada por schema como esta.
+          thinkingConfig: { thinkingLevel: "minimal" },
+          // Structured output: el modelo devuelve JSON que cumple el schema,
+          // sin bloques cercados ni texto extra. Elimina el modo de falla del
+          // parser por prosa adicional. La normalización post-parse sigue
+          // siendo el cinturón de seguridad.
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
         },
       }),
     });
@@ -127,11 +155,7 @@ serve(async (req) => {
 
     let firebaseUid: string;
     try {
-      const JWKS = createRemoteJWKSet(
-        new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
-      );
-
-      const { payload } = await jwtVerify(token, JWKS, {
+      const { payload } = await jwtVerify(token, FIREBASE_JWKS, {
         issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
         audience: FIREBASE_PROJECT_ID,
       });
@@ -178,7 +202,38 @@ serve(async (req) => {
     const householdId = memberRow.household_id;
     const tier = (memberRow.households as { plan_tier: string } | null)?.plan_tier ?? "free";
 
-    // No scan limit — OCR is free for all. We still log scans for analytics.
+    // Anti-abuso liviano: cada scan pega contra un endpoint pago de Gemini.
+    // No es un límite por tier (el OCR es gratis), solo un freno para que un
+    // usuario autenticado no pueda loopear el endpoint. Contamos los scans del
+    // usuario en la ventana reciente. Falla-abierto: si el conteo falla por
+    // cualquier motivo, dejamos pasar el scan (no rompemos la feature por un
+    // error de telemetría).
+    const windowStart = new Date(
+      Date.now() - RATE_LIMIT_WINDOW_SECONDS * 1000,
+    ).toISOString();
+    const { count: recentScans, error: rateError } = await supabase
+      .from("receipt_scan_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("scanned_at", windowStart);
+
+    if (!rateError && (recentScans ?? 0) >= RATE_LIMIT_MAX_SCANS) {
+      return new Response(
+        JSON.stringify({
+          error: "rate_limited",
+          retryAfterSeconds: RATE_LIMIT_WINDOW_SECONDS,
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(RATE_LIMIT_WINDOW_SECONDS),
+          },
+        },
+      );
+    }
+
     // Leer imagen del body
     const body = await req.json();
     const { imageBase64, mimeType = "image/webp" } = body as {
@@ -208,7 +263,14 @@ serve(async (req) => {
     }
 
     // Llamar a Gemini con retry
-    const geminiResult = await callGemini(geminiKey, imageBase64, mimeType);
+    const now = new Date();
+    const todayIso = now.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+    const geminiResult = await callGemini(
+      geminiKey,
+      buildPrompt(todayIso),
+      imageBase64,
+      mimeType,
+    );
     if (!geminiResult.ok) {
       console.error("Gemini falló:", geminiResult.status, geminiResult.body.slice(0, 300));
       return new Response(
@@ -245,7 +307,7 @@ serve(async (req) => {
       );
     }
 
-    const result: OcrResult = normalizeOcrResult(parsed);
+    const result: OcrResult = normalizeOcrResult(parsed, { today: now });
 
     // Registrar el scan exitoso
     await supabase.from("receipt_scan_logs").insert({

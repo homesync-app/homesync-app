@@ -308,9 +308,12 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     } catch (e, st) {
       debugPrint('[ReceiptScan] ERROR: $e\n$st');
       if (!mounted) return;
+      final message = e is ScanRateLimitException
+          ? t.expensesFormOcrRateLimited
+          : t.expensesFormOcrError(e.toString());
       AppSnackBar.show(
         context,
-        message: t.expensesFormOcrError(e.toString()),
+        message: message,
         type: AppSnackBarType.error,
         duration: const Duration(milliseconds: 3200),
       );

@@ -61,6 +61,44 @@ Deno.test("normalizeOcrResult: only YYYY-MM-DD dates survive", () => {
   assertEquals(normalizeOcrResult({}).date, null);
 });
 
+Deno.test("normalizeOcrResult: date sanity check drops future / too-old dates", () => {
+  const today = new Date("2026-05-30T12:00:00Z");
+
+  // Plausible: hoy y ayer pasan.
+  assertEquals(
+    normalizeOcrResult({ date: "2026-05-30" }, { today }).date,
+    "2026-05-30",
+  );
+  assertEquals(
+    normalizeOcrResult({ date: "2026-05-29" }, { today }).date,
+    "2026-05-29",
+  );
+
+  // Futuro lejano → null.
+  assertEquals(
+    normalizeOcrResult({ date: "2027-01-01" }, { today }).date,
+    null,
+  );
+
+  // Más de un año atrás → null.
+  assertEquals(
+    normalizeOcrResult({ date: "2024-01-01" }, { today }).date,
+    null,
+  );
+
+  // Dentro de la ventana de ~1 año → sobrevive.
+  assertEquals(
+    normalizeOcrResult({ date: "2025-08-15" }, { today }).date,
+    "2025-08-15",
+  );
+
+  // Sin `today`, no se aplica el chequeo temporal (back-compat).
+  assertEquals(
+    normalizeOcrResult({ date: "2027-01-01" }).date,
+    "2027-01-01",
+  );
+});
+
 Deno.test("normalizeOcrResult: invalid category falls back to 'other'", () => {
   assertEquals(normalizeOcrResult({ category: "supermarket" }).category, "supermarket");
   assertEquals(normalizeOcrResult({ category: "casino" }).category, "other");

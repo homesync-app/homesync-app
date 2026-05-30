@@ -1705,6 +1705,10 @@
   "@expensesFormOcrLowConfidence": {
     "description": "Snackbar warning when OCR confidence is low — user should double-check the prefilled data."
   },
+  "expensesFormOcrRateLimited": "Too many scans in a row. Wait a few seconds and try again.",
+  "@expensesFormOcrRateLimited": {
+    "description": "Snackbar shown when the server throttles receipt scans (anti-abuse). Not a plan limit; OCR is free for everyone."
+  },
   "expensesFormValidationAmountRequired": "Enter a valid amount.",
   "@expensesFormValidationAmountRequired": {
     "description": "Validation error when the amount field is empty or invalid."
