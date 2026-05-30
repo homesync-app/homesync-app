@@ -1,74 +1,86 @@
+// End-to-end UI flow against a LIVE Supabase backend: login → home → store.
+//
+// Run with real throwaway credentials:
+//   flutter test integration_test/app_e2e_test.dart \
+//     --dart-define=E2E_EMAIL=... --dart-define=E2E_PASSWORD=...
+//
+// Skipped (not falsely passed) when credentials are absent. When present, the
+// navigation assertions are strict: landing on Home and opening the Store are
+// REQUIRED. The reward redemption step is genuinely conditional on inventory,
+// so it stays guarded — but it asserts a concrete outcome when it does run.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:homesync_client/main.dart' as app;
 import 'package:integration_test/integration_test.dart';
 
+import 'helpers/test_credentials.dart';
+
 void main() {
-  // Inicializamos el motor de pruebas de integración (El "Autómata")
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // Esta prueba simula a un usuario humano interactuando enteramente con la UI y llamando al Backend Supabase real
-  testWidgets(
-      'Flujo E2E: Iniciar sesión, ver tareas e intentar canjear recompensa',
-      (WidgetTester tester) async {
-    // 1. ARRANCAR LA APLICACIÓN COMPLETA
-    app.main();
+  testWidgets('E2E: login, reach home, open store, attempt redeem',
+      (tester) async {
+    if (!TestCredentials.ensureConfigured()) return;
 
-    // Damos tiempo extra para que inicialice Supabase y los Providers
+    app.main();
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    // Si detectamos que la pantalla de Login está presente, hacemos el ciclo de inicio
-    final loginTitleFinder = find.text('Bienvenido de vuelta');
-    if (loginTitleFinder.evaluate().isNotEmpty) {
-      // Ingresar Credenciales (Debe usarse una cuenta real existente de testeo en Supabase)
+    // Log in if we're on the login screen.
+    final loginTitle = find.text('Bienvenido de vuelta');
+    if (loginTitle.evaluate().isNotEmpty) {
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Correo electrónico'),
-          'tu_pareja@gmail.com',);
+        find.widgetWithText(TextFormField, 'Correo electrónico'),
+        TestCredentials.email,
+      );
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Contraseña'), '123456',);
-
-      // Tocar en Login
+        find.widgetWithText(TextFormField, 'Contraseña'),
+        TestCredentials.password,
+      );
       await tester.tap(find.text('Iniciar sesión'));
-
-      // Esperar a que el login se complete via Internet (Simula la espera del humano)
       await tester.pumpAndSettle(const Duration(seconds: 5));
     }
 
-    // 2. VERIFICACIÓN: LLEGAMOS AL HOME / DASHBOARD ("Inicio")
-    expect(find.text('Inicio'), findsWidgets,
-        reason: 'Deberíamos haber navegado al HomeScreen principal',);
+    // STRICT: we must be on the home/dashboard.
+    expect(
+      find.text('Inicio'),
+      findsWidgets,
+      reason: 'Did not navigate to the home screen after login.',
+    );
 
-    // 3. CAMBIAR A LA PESTAÑA TIENDA (Navegación Táctil a "Tienda" en la BottomNavigationBar)
-    await tester.tap(find.text('Tienda'));
+    // STRICT: the store tab must exist and open.
+    final storeTab = find.text('Tienda');
+    expect(storeTab, findsWidgets, reason: 'Store tab not found.');
+    await tester.tap(storeTab.first);
     await tester.pumpAndSettle(const Duration(seconds: 3));
+    expect(
+      find.text('Recompensas del Hogar'),
+      findsWidgets,
+      reason: 'Store screen did not load its rewards header.',
+    );
 
-    // Verificamos que cargó la Tienda de Recompensas y leemos los Coins
-    expect(find.text('Recompensas del Hogar'), findsWidgets);
-
-    // 4. INTERACTUAR CON UN PREMIO DE LA TIENDA
-    // Simulamos que el autómata busca el botón de canjeo de un premio específico
-    final canjearFinder = find
-        .text('Canjear')
-        .first; // Busca el primer botón de canjear disponible
-    if (canjearFinder.evaluate().isNotEmpty) {
-      // Toca para canjear
-      await tester.tap(canjearFinder);
+    // Reward redemption depends on real inventory/balance, so it stays
+    // conditional — but when a reward IS redeemable we assert a concrete result
+    // (confirm dialog → snackbar), instead of just checking the app didn't die.
+    final redeem = find.text('Canjear');
+    if (redeem.evaluate().isNotEmpty) {
+      await tester.tap(redeem.first);
       await tester.pumpAndSettle();
 
-      // Debería aparecer un Diálogo de Confirmación pidiendo aprobar la compra o denegarla (x fondos)
-      expect(find.text('Confirmar canje'), findsWidgets);
-
-      // Aprobar canje en el popup
+      expect(
+        find.text('Confirmar canje'),
+        findsWidgets,
+        reason: 'Redeem tap did not surface the confirmation dialog.',
+      );
       await tester.tap(find.text('Confirmar'));
-      await tester.pumpAndSettle(
-          const Duration(seconds: 4),); // Espera petición al servidor
+      await tester.pumpAndSettle(const Duration(seconds: 4));
 
-      // Verificar que el backend o app reaccionaron y arrojaron el mensaje visual
-      // Nota: Si no hay saldo saldrá mensaje de error de saldo en su lugar
-      final snackBarText = find.byType(SnackBar);
-      expect(snackBarText, findsOneWidget,
-          reason:
-              'Se esperaba un mensaje Toast (SnackBar) de confirmación/error de Supabase',);
+      // Either a success or an insufficient-funds message — both are a real
+      // backend response surfaced as a SnackBar.
+      expect(
+        find.byType(SnackBar),
+        findsOneWidget,
+        reason: 'Expected a confirmation/error SnackBar from the backend.',
+      );
     }
   });
 }

@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { jwtVerify, createRemoteJWKSet } from "https://esm.sh/jose@5";
+import {
+  extractJsonString,
+  normalizeOcrResult,
+  type OcrResult,
+} from "./parser.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,15 +20,6 @@ interface FirebaseJWTPayload {
   email?: string;
   aud: string;
   iss: string;
-}
-
-interface OcrResult {
-  merchant: string | null;
-  amount: number | null;
-  date: string | null;
-  category: string | null;
-  items: string[];
-  confidence: number;
 }
 
 // Scan limits removed — OCR (amount + category) is free for all users.
@@ -229,9 +225,7 @@ serve(async (req) => {
 
     console.log("Gemini finishReason:", finishReason, "rawText:", rawText.slice(0, 300));
 
-    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/) ??
-                      rawText.match(/(\{[\s\S]*\})/);
-    const jsonStr = jsonMatch?.[1] ?? jsonMatch?.[0];
+    const jsonStr = extractJsonString(rawText);
 
     if (!jsonStr) {
       return new Response(
@@ -240,7 +234,7 @@ serve(async (req) => {
       );
     }
 
-    let parsed: OcrResult;
+    let parsed: Partial<OcrResult>;
     try {
       parsed = JSON.parse(jsonStr);
     } catch (e) {
@@ -251,34 +245,7 @@ serve(async (req) => {
       );
     }
 
-    const VALID_CATEGORIES = [
-      "supermarket", "restaurants", "transport", "health",
-      "entertainment", "clothing", "electronics", "pets", "education", "other",
-    ];
-
-    const rawAmount = parsed.amount;
-    const amount: number | null =
-      typeof rawAmount === "number" && rawAmount >= 0 && isFinite(rawAmount)
-        ? Math.round(rawAmount * 100) / 100 : null;
-
-    const rawDate = parsed.date;
-    const date: string | null =
-      typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
-
-    const rawCat = parsed.category;
-    const category = typeof rawCat === "string" && VALID_CATEGORIES.includes(rawCat) ? rawCat : "other";
-
-    const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
-    const items = [...new Set(
-      rawItems.filter((i) => typeof i === "string" && i.trim().length > 0).map((i) => (i as string).trim())
-    )].slice(0, 30);
-
-    const result: OcrResult = {
-      merchant: typeof parsed.merchant === "string" && parsed.merchant.trim().length > 0
-        ? parsed.merchant.trim().slice(0, 100) : null,
-      amount, date, category, items,
-      confidence: typeof parsed.confidence === "number" ? Math.min(1, Math.max(0, parsed.confidence)) : 0,
-    };
+    const result: OcrResult = normalizeOcrResult(parsed);
 
     // Registrar el scan exitoso
     await supabase.from("receipt_scan_logs").insert({

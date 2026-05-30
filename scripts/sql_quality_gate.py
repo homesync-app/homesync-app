@@ -49,6 +49,16 @@ POLICY_BLOCK_RE = re.compile(
     r"(?P<body>.*?);",
     re.IGNORECASE | re.DOTALL,
 )
+DISABLE_RLS_RE = re.compile(
+    r"alter\s+table\s+(?:only\s+)?(?:public\.)?(?P<table>[a-zA-Z0-9_]+)\s+"
+    r"disable\s+row\s+level\s+security",
+    re.IGNORECASE,
+)
+ENABLE_RLS_RE = re.compile(
+    r"alter\s+table\s+(?:only\s+)?(?:public\.)?(?P<table>[a-zA-Z0-9_]+)\s+"
+    r"enable\s+row\s+level\s+security",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -155,6 +165,49 @@ def check_permissive_rls(files: Iterable[Path]) -> list[Finding]:
     return findings
 
 
+def check_disabled_rls(files: Iterable[Path]) -> list[Finding]:
+    """Flag any migration that disables RLS on a sensitive table.
+
+    `ALTER TABLE ... DISABLE ROW LEVEL SECURITY` on a sensitive table opens a
+    cross-household data leak. It's occasionally needed transiently, but should
+    be a conscious, reviewed decision — so we surface it and let the baseline
+    absorb intentional exceptions.
+    """
+    findings: list[Finding] = []
+    for path in files:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for match in DISABLE_RLS_RE.finditer(text):
+            table = match.group("table").lower()
+            if table not in SENSITIVE_TABLES:
+                continue
+
+            # SAFE PATTERN: a migration may disable RLS transiently to rebuild
+            # policies, as long as it re-enables RLS for the SAME table LATER in
+            # the SAME file. Only flag a disable that is left dangling (no
+            # subsequent ENABLE for that table). This avoids false positives on
+            # the common "drop & recreate policies" idiom.
+            re_enabled_after = any(
+                enable.group("table").lower() == table
+                and enable.start() > match.start()
+                for enable in ENABLE_RLS_RE.finditer(text)
+            )
+            if re_enabled_after:
+                continue
+
+            findings.append(
+                Finding(
+                    path=path,
+                    line=line_of_offset(text, match.start()),
+                    message=(
+                        f"Migration disables RLS on sensitive table public.{table} "
+                        "without re-enabling it in the same file. "
+                        "Re-enable it or justify via baseline."
+                    ),
+                )
+            )
+    return findings
+
+
 def main() -> int:
     all_sql_files = sorted(iter_sql_files(ROOT / "supabase")) + sorted(iter_sql_files(ROOT / "database"))
     migration_sql_files = [p for p in all_sql_files if is_in_migration_dirs(p)]
@@ -163,6 +216,7 @@ def main() -> int:
     findings.extend(check_sql_drift(all_sql_files))
     findings.extend(check_security_definer_search_path(migration_sql_files))
     findings.extend(check_permissive_rls(migration_sql_files))
+    findings.extend(check_disabled_rls(migration_sql_files))
 
     baseline: set[str] = set()
     if BASELINE_PATH.exists():
