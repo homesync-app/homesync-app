@@ -73,3 +73,13 @@ APK/
 
 # ─── External tool checkout (nested git repo, not part of this repo) ──────────
 tools/open-design/
+
+# ─── Marketing / ad assets & icon experiments (not shipped in the .aab) ───────
+.tmp_icons/
+homesync-video/
+_grilla_*.png
+_grapefruit_*.png
+_quesorallado_*.png
+_terma_*.png
+_yerbamate_*.png
+homesync_admin/check_avatar.mjs
