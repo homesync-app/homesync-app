@@ -29,6 +29,9 @@ class FakeSettingsRepository implements SettingsRepository {
   Future<Map<String, dynamic>> resetUserAccount() async => {'success': true};
 
   @override
+  Future<Map<String, dynamic>> deleteAccount() async => {'success': true};
+
+  @override
   Future<void> updateAvatar(String avatarUrl) async {
     lastAvatarUrl = avatarUrl;
   }
