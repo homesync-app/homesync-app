@@ -57,6 +57,10 @@ supabase/.temp/
 
 # ─── bg_removal (toy script, heavy deps) ─────────────────────────────────────
 bg_removal/node_modules/
+# Generated icon output + any local secrets that live next to the scripts.
+bg_removal/icons/out/
+bg_removal/**/.env
+bg_removal/**/.env.local
 
 # ─── Agent brain (local AI context, not needed in repo) ──────────────────────
 .agents/
