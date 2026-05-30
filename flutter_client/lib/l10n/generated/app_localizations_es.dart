@@ -128,10 +128,10 @@ class AppLocalizationsEs extends AppLocalizations {
     String _temp0 = intl.Intl.selectLogic(
       type,
       {
-        'couple': 'Desafios, premios y pequenas recompensas para compartir.',
+        'couple': 'Desafíos, premios y pequeñas recompensas para compartir.',
         'family':
-            'Coordinacion, miembros y acuerdos del hogar para toda la familia.',
-        'friends': 'Organizacion, convivencia y reparto claro para el piso.',
+            'Coordinación, miembros y acuerdos del hogar para toda la familia.',
+        'friends': 'Organización, convivencia y reparto claro para el piso.',
         'solo': 'Todo tu progreso personal en un solo lugar.',
         'other': 'Todo tu progreso personal en un solo lugar.',
       },
@@ -185,7 +185,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'Pareja',
         'family': 'Familia',
-        'friends': 'Companeros',
+        'friends': 'Compañeros',
         'solo': 'Yo',
         'other': 'Yo',
       },
@@ -200,7 +200,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'con tu pareja',
         'family': 'con la familia',
-        'friends': 'con tus companeros',
+        'friends': 'con tus compañeros',
         'solo': 'conmigo',
         'other': 'conmigo',
       },

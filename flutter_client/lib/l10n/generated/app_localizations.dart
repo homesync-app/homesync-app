@@ -281,7 +281,7 @@ abstract class AppLocalizations {
   /// Subtitle on the social hub screen. Tone: couple romantic; family parental/coordinative; friends casual peer; solo individual.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, couple{Desafios, premios y pequenas recompensas para compartir.} family{Coordinacion, miembros y acuerdos del hogar para toda la familia.} friends{Organizacion, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}'**
+  /// **'{type, select, couple{Desafíos, premios y pequeñas recompensas para compartir.} family{Coordinación, miembros y acuerdos del hogar para toda la familia.} friends{Organización, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}'**
   String householdSocialHubSubtitle(String type);
 
   /// Greeting/title on the dashboard header. Varies by mode.
@@ -305,13 +305,13 @@ abstract class AppLocalizations {
   /// Short noun for 'the other people in the household' as a label. solo = self only.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, couple{Pareja} family{Familia} friends{Companeros} solo{Yo} other{Yo}}'**
+  /// **'{type, select, couple{Pareja} family{Familia} friends{Compañeros} solo{Yo} other{Yo}}'**
   String householdMemberLabel(String type);
 
   /// Phrase fragment used inside sentences like 'this expense will not affect the balance {with your partner}'. Lowercase, prepositional. solo = 'with myself' which renders awkward — used in contexts where the surrounding sentence still grammatically allows it.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, couple{con tu pareja} family{con la familia} friends{con tus companeros} solo{conmigo} other{conmigo}}'**
+  /// **'{type, select, couple{con tu pareja} family{con la familia} friends{con tus compañeros} solo{conmigo} other{conmigo}}'**
   String householdActionMemberLabel(String type);
 
   /// Large title at the top of the Settings screen.

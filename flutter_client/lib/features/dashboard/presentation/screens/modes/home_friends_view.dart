@@ -670,7 +670,7 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
           error: (_, __) => _buildSectionError(
             theme,
             message: t.homeFriendsActivityLoadError,
-            onRetry: () => ref.invalidate(recentActivityProvider),
+            onRetry: () => ref.invalidate(recentActivityRemoteProvider),
           ),
         ),
       ],

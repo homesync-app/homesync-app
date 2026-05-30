@@ -85,7 +85,7 @@
       }
     }
   },
-  "householdSocialHubSubtitle": "{type, select, couple{Desafios, premios y pequenas recompensas para compartir.} family{Coordinacion, miembros y acuerdos del hogar para toda la familia.} friends{Organizacion, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}",
+  "householdSocialHubSubtitle": "{type, select, couple{Desafíos, premios y pequeñas recompensas para compartir.} family{Coordinación, miembros y acuerdos del hogar para toda la familia.} friends{Organización, convivencia y reparto claro para el piso.} solo{Todo tu progreso personal en un solo lugar.} other{Todo tu progreso personal en un solo lugar.}}",
   "@householdSocialHubSubtitle": {
     "description": "Subtitle on the social hub screen. Tone: couple romantic; family parental/coordinative; friends casual peer; solo individual.",
     "placeholders": {
@@ -121,7 +121,7 @@
       }
     }
   },
-  "householdMemberLabel": "{type, select, couple{Pareja} family{Familia} friends{Companeros} solo{Yo} other{Yo}}",
+  "householdMemberLabel": "{type, select, couple{Pareja} family{Familia} friends{Compañeros} solo{Yo} other{Yo}}",
   "@householdMemberLabel": {
     "description": "Short noun for 'the other people in the household' as a label. solo = self only.",
     "placeholders": {
@@ -130,7 +130,7 @@
       }
     }
   },
-  "householdActionMemberLabel": "{type, select, couple{con tu pareja} family{con la familia} friends{con tus companeros} solo{conmigo} other{conmigo}}",
+  "householdActionMemberLabel": "{type, select, couple{con tu pareja} family{con la familia} friends{con tus compañeros} solo{conmigo} other{conmigo}}",
   "@householdActionMemberLabel": {
     "description": "Phrase fragment used inside sentences like 'this expense will not affect the balance {with your partner}'. Lowercase, prepositional. solo = 'with myself' which renders awkward — used in contexts where the surrounding sentence still grammatically allows it.",
     "placeholders": {
