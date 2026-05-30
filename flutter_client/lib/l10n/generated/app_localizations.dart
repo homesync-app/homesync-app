@@ -1022,6 +1022,18 @@ abstract class AppLocalizations {
   /// **'Gastado este mes'**
   String get homeSoloBalanceLabel;
 
+  /// Label next to the XP progress bar on the solo dashboard summary card. Frames XP as personal progression.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu progreso'**
+  String get homeSoloXpCaption;
+
+  /// Tiny uppercase label above the level number badge on the solo dashboard summary card.
+  ///
+  /// In es, this message translates to:
+  /// **'Nivel'**
+  String get homeSoloLevelEyebrow;
+
   /// No description provided for @homeSoloTasksTitle.
   ///
   /// In es, this message translates to:

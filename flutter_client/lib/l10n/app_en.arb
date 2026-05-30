@@ -414,6 +414,14 @@
   "@homeSoloBalanceLabel": {
     "description": "Label on the solo dashboard financial summary. It describes the amount shown for personal monthly spending."
   },
+  "homeSoloXpCaption": "Your progress",
+  "@homeSoloXpCaption": {
+    "description": "Label next to the XP progress bar on the solo dashboard summary card. Frames XP as personal progression."
+  },
+  "homeSoloLevelEyebrow": "Level",
+  "@homeSoloLevelEyebrow": {
+    "description": "Tiny uppercase label above the level number badge on the solo dashboard summary card."
+  },
   "homeSoloTasksTitle": "Your tasks",
   "homeSoloAddTaskButton": "Add task",
   "@homeSoloAddTaskButton": {

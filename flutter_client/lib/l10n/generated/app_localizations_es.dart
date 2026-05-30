@@ -586,6 +586,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeSoloBalanceLabel => 'Gastado este mes';
 
   @override
+  String get homeSoloXpCaption => 'Tu progreso';
+
+  @override
+  String get homeSoloLevelEyebrow => 'Nivel';
+
+  @override
   String get homeSoloTasksTitle => 'Tus tareas';
 
   @override

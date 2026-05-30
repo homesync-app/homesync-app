@@ -8,9 +8,10 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/activity_chat_bubble.dart';
-import 'package:homesync_client/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/home_shopping_preview_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/solo_summary_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/task_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -196,14 +197,15 @@ class _HomeSoloViewState extends ConsumerState<HomeSoloView>
 
   Widget _buildFinancialSummary(String householdId) {
     final balanceAsync = ref.watch(userBalanceProvider);
+    final summaryAsync = ref.watch(personalFinanceSummaryProvider);
 
-    return BalanceCard(
-      coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
-      xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
-      userBalance: 0.0, // In solo mode we don't show internal debt
-      balancedLabel: AppLocalizations.of(context).homeSoloBalanceLabel,
-      neutralLabel: AppLocalizations.of(context).homeSoloBalanceLabel,
-      compact: true,
+    final monthlySpent =
+        summaryAsync.whenOrNull(data: (s) => (s['expense'] as num?)?.toDouble());
+    final xp = balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0;
+
+    return SoloSummaryCard(
+      monthlySpent: monthlySpent,
+      xp: xp,
     ).animateEntrance(delay: 100);
   }
 
