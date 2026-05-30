@@ -107,7 +107,7 @@ un error `permission denied for function` indica grants/permisos.
 
 - **Supabase ref**: `tfavamqszdkoeabpyxms`
 - **Firebase**: `homesync-prod-r7-123`
-- **Package**: `com.homesync.app`
+- **Package**: `com.blas.homesync` (applicationId real en `android/app/build.gradle.kts`)
 
 ## Reglas de contexto
 

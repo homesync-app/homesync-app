@@ -378,7 +378,7 @@ final class SavingsGoalsProvider
   SavingsGoals create() => SavingsGoals();
 }
 
-String _$savingsGoalsHash() => r'2cd702ac51a75d2bac434418109c4fae9b159c87';
+String _$savingsGoalsHash() => r'035b0549d7dd2216f51b90de85a61264b0748c68';
 
 abstract class _$SavingsGoals extends $AsyncNotifier<List<SavingsGoalModel>> {
   FutureOr<List<SavingsGoalModel>> build();

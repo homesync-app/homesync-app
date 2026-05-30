@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeSync · Iconos de compras (prueba)</title>
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body { margin: 0; background: #f5f6f8; color: #1a1a1a; }
+  header { padding: 24px 28px 8px; }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; color: #666; font-size: 14px; }
+  .panel { padding: 20px 28px 36px; }
+  .panel.dark { background: #14161a; color: #f2f2f2; }
+  .panel.dark .name { color: #aaa; }
+  .panel.dark .card { background: #1e2127; border-color: #2a2e36; }
+  .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin: 0 0 16px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 16px; }
+  .card {
+    background: #fff; border: 1px solid #e6e8ec; border-radius: 16px;
+    padding: 16px; width: 132px; display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+  }
+  .sizes { display: flex; align-items: flex-end; gap: 12px; height: 56px; }
+  .sizes img { display: block; }
+  .name { font-size: 13px; color: #555; }
+  .listrow {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    border-radius: 14px; background: #fff; border: 1px solid #e6e8ec;
+    margin-bottom: 8px; max-width: 360px;
+  }
+  .panel.dark .listrow { background: #1e2127; border-color: #2a2e36; }
+  .listrow img { width: 34px; height: 34px; }
+  .listrow .label { font-size: 15px; font-weight: 500; }
+  .listrow .qty { margin-left: auto; color: #999; font-size: 13px; }
+  .twocol { display: flex; gap: 40px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Iconos de compras — prueba de estilo</h1>
+  <p>Grilla 48×48, flat, dos tonos. Vectoriales: idénticos en todo Android, escalan sin pixelar.</p>
+</header>
+
+<div class="panel">
+  <div class="twocol">
+    <div>
+      <h2>Tamaños (24 · 34 · 48 px)</h2>
+      <div class="grid" id="grid-light"></div>
+    </div>
+    <div>
+      <h2>Como en la lista</h2>
+      <div id="list-light"></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel dark">
+  <div class="twocol">
+    <div>
+      <h2>Modo oscuro</h2>
+      <div class="grid" id="grid-dark"></div>
+    </div>
+    <div>
+      <h2>Como en la lista (oscuro)</h2>
+      <div id="list-dark"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const icons = [
+    ["leche.svg", "Leche", "2 L"],
+    ["manzana.svg", "Manzanas", "1 kg"],
+    ["zanahoria.svg", "Zanahorias", "500 g"],
+    ["pan.svg", "Pan", "x1"],
+    ["carne.svg", "Carne", "1 kg"],
+    ["huevos.svg", "Huevos", "x12"],
+  ];
+  function card(file, name) {
+    return `<div class="card">
+      <div class="sizes">
+        <img src="${file}" width="24" height="24" alt="">
+        <img src="${file}" width="34" height="34" alt="">
+        <img src="${file}" width="48" height="48" alt="">
+      </div>
+      <div class="name">${name}</div>
+    </div>`;
+  }
+  function row(file, name, qty) {
+    return `<div class="listrow">
+      <img src="${file}" alt="">
+      <span class="label">${name}</span>
+      <span class="qty">${qty}</span>
+    </div>`;
+  }
+  document.getElementById("grid-light").innerHTML = icons.map(i => card(i[0], i[1])).join("");
+  document.getElementById("grid-dark").innerHTML = icons.map(i => card(i[0], i[1])).join("");
+  document.getElementById("list-light").innerHTML = icons.map(i => row(i[0], i[1], i[2])).join("");
+  document.getElementById("list-dark").innerHTML = icons.map(i => row(i[0], i[1], i[2])).join("");
+</script>
+</body>
+</html>

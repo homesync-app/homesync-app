@@ -179,7 +179,7 @@ final class RecentActivityProvider extends $FunctionalProvider<
   }
 }
 
-String _$recentActivityHash() => r'6505c13ec68684340a769df8813d27ed243bc5da';
+String _$recentActivityHash() => r'd9e212dc08413f65e7884e55b85e4709f0c7b1a7';
 
 @ProviderFor(HiddenRecentExpenseIds)
 final hiddenRecentExpenseIdsProvider = HiddenRecentExpenseIdsProvider._();
@@ -261,7 +261,7 @@ final class OptimisticRecentActivityProvider extends $NotifierProvider<
 }
 
 String _$optimisticRecentActivityHash() =>
-    r'45e9a502173014ddc4b82d06ff480dc06ecbcf62';
+    r'083c823ad6015af66aa250d1f17900fae3a4f5d4';
 
 abstract class _$OptimisticRecentActivity
     extends $Notifier<List<Map<String, dynamic>>> {

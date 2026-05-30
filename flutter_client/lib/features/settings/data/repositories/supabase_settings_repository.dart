@@ -25,6 +25,15 @@ class SupabaseSettingsRepository implements SettingsRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> deleteAccount() async {
+    // SECURITY DEFINER RPC; resolves the caller via current_app_user_id() and
+    // only ever deletes the caller's own data. Firebase credential deletion +
+    // sign-out are handled by the caller (DeleteAccountUseCase).
+    final response = await _client.rpc('delete_account');
+    return Map<String, dynamic>.from(response);
+  }
+
+  @override
   Future<void> updateAvatar(String avatarUrl) async {
     // Direct RLS updates on `users` fail under Firebase JWTs. Use the
     // SECURITY DEFINER RPC that resolves the caller via current_app_user_id().

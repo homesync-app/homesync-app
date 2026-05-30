@@ -298,7 +298,7 @@ final class ExpenseBalancesProvider extends $AsyncNotifierProvider<
   ExpenseBalances create() => ExpenseBalances();
 }
 
-String _$expenseBalancesHash() => r'ed9878a7b5b3e783c8a3a043b39aab15dd2753fa';
+String _$expenseBalancesHash() => r'05cb264e6b74d38817e810c4b123f54b67f341b7';
 
 abstract class _$ExpenseBalances
     extends $AsyncNotifier<List<HouseholdBalanceModel>> {
@@ -342,7 +342,7 @@ final class ExpenseControllerProvider
   ExpenseController create() => ExpenseController();
 }
 
-String _$expenseControllerHash() => r'8c021728e1c66ff1fb982548541db521b930eb23';
+String _$expenseControllerHash() => r'f2ffc6bc37cb9fb6de80d5b9c25f7519b04464bd';
 
 abstract class _$ExpenseController extends $AsyncNotifier<List<ExpenseModel>> {
   FutureOr<List<ExpenseModel>> build();
@@ -385,7 +385,7 @@ final class CombinedFeedControllerProvider extends $AsyncNotifierProvider<
 }
 
 String _$combinedFeedControllerHash() =>
-    r'03e0e828d6c28b377f6f9fd16f18d6bc8fcce6a3';
+    r'aaac6ec5a50f8096b460af990f643eb16272c503';
 
 abstract class _$CombinedFeedController
     extends $AsyncNotifier<List<FeedItemModel>> {
@@ -525,7 +525,7 @@ final class MonthlyProjectionProvider extends $FunctionalProvider<
   }
 }
 
-String _$monthlyProjectionHash() => r'29000c214d4de889017ec3241ddbedd2c4710da2';
+String _$monthlyProjectionHash() => r'faba3e34ae67d948e5a63c662d9af3af130d3585';
 
 @ProviderFor(ExpenseFiltersNotifier)
 final expenseFiltersProvider = ExpenseFiltersNotifierProvider._();

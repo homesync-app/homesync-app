@@ -83,3 +83,11 @@ _quesorallado_*.png
 _terma_*.png
 _yerbamate_*.png
 homesync_admin/check_avatar.mjs
+
+# ─── Python bytecode cache ───────────────────────────────────────────────────
+__pycache__/
+*.pyc
+
+# ─── Tool command-output logs (temp) ─────────────────────────────────────────
+flutter_client/build_runner.txt
+flutter_client/l10n_gen.txt

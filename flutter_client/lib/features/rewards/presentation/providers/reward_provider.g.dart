@@ -33,7 +33,7 @@ final class RewardsProvider
   Rewards create() => Rewards();
 }
 
-String _$rewardsHash() => r'e3f615c89e51bc7b2ae003efffcaa88d7b7c7e3e';
+String _$rewardsHash() => r'571d905ffa50889563e1f0013091e6716bf95554';
 
 abstract class _$Rewards extends $AsyncNotifier<List<RewardModel>> {
   FutureOr<List<RewardModel>> build();

@@ -1455,6 +1455,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         HapticFeedback.vibrate();
         _resetAccount();
       },
+      onDeletePressed: () {
+        HapticFeedback.vibrate();
+        _deleteAccount();
+      },
     );
   }
 
@@ -1571,6 +1575,67 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final theme = context.theme;
+    final confirm = await showSettingsDeleteAccountDialog(context);
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final result =
+          await ref.read(deleteAccountUseCaseProvider).execute();
+
+      if (!mounted) return;
+      final t = AppLocalizations.of(context);
+
+      switch (result.status) {
+        case DeleteAccountStatus.backendFailed:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message ?? t.settingsDeleteAccountError),
+              backgroundColor: theme.error,
+            ),
+          );
+          return;
+        case DeleteAccountStatus.requiresRecentLogin:
+          // Data is already purged; Firebase needs a fresh login to drop the
+          // credential. Sign out so the user re-authenticates, then can retry.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsDeleteAccountReauthNeeded),
+              backgroundColor: theme.error,
+            ),
+          );
+          await ref.read(authControllerProvider.notifier).signOut();
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return;
+        case DeleteAccountStatus.success:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t.settingsDeleteAccountSuccess),
+              backgroundColor: theme.success,
+            ),
+          );
+          // Ensure local session is fully cleared and route back to auth.
+          await ref.read(authControllerProvider.notifier).signOut();
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: theme.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

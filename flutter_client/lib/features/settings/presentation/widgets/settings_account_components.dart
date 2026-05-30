@@ -195,10 +195,12 @@ class SettingsLogoutButton extends StatelessWidget {
 
 class SettingsDangerZone extends StatelessWidget {
   final VoidCallback onResetPressed;
+  final VoidCallback? onDeletePressed;
 
   const SettingsDangerZone({
     super.key,
     required this.onResetPressed,
+    this.onDeletePressed,
   });
 
   @override
@@ -253,6 +255,37 @@ class SettingsDangerZone extends StatelessWidget {
             ),
           ),
         ),
+        if (onDeletePressed != null) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: TextButton(
+              onPressed: onDeletePressed,
+              style: TextButton.styleFrom(
+                foregroundColor: theme.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.person_off_rounded, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    t.settingsDeleteAccountButton,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -581,6 +614,62 @@ Future<bool?> showSettingsResetAccountDialog(BuildContext context) {
             ),
             child: Text(
               t.settingsResetDialogConfirm,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<bool?> showSettingsDeleteAccountDialog(BuildContext context) {
+  final theme = context.theme;
+  final t = AppLocalizations.of(context);
+
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: theme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      title: Row(
+        children: [
+          Icon(Icons.person_off_rounded, color: theme.error),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              t.settingsDeleteAccountDialogTitle,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: theme.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+      content: Text(t.settingsDeleteAccountDialogBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(
+            t.commonCancel,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              t.settingsDeleteAccountConfirm,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
