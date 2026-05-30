@@ -565,6 +565,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get balanceCardCoinsLabel => 'coins';
 
   @override
+  String get balanceCardIntegratedTitle => 'Economía integrada';
+
+  @override
+  String get balanceCardIntegratedSubtitle => 'Gastos del hogar';
+
+  @override
   String get homeNoActivityYet => 'No hay actividad aún';
 
   @override

@@ -14,6 +14,7 @@ import 'package:homesync_client/features/auth/data/repositories/supabase_auth_re
 import 'package:homesync_client/features/auth/presentation/providers/auth_controller.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
+import 'package:homesync_client/features/household/presentation/widgets/couple_finance_config_body.dart';
 import 'package:homesync_client/features/tasks/presentation/utils/task_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/edge_fade.dart';
@@ -2182,154 +2183,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           const SizedBox(height: 24),
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: AppColors.cardBorder.withValues(alpha: 0.85),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: AppColors.sage.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Icon(
-                            Icons.balance_rounded,
-                            color: AppColors.sage,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            t.setupCoupleFamilyExpensesNote(modeKey),
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.4,
-                              color: AppColors.textSecondary
-                                  .withValues(alpha: 0.84),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Finance-mode selector: integrated (shared) economy vs
-                  // divided. Only couples reach this step (family/friends
-                  // branch off earlier).
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _setupFinanceMode = 'shared');
-                    },
-                    child: SetupStrategyTip(
-                      title: t.coupleSplitModeSharedTitle,
-                      desc: t.coupleSplitModeSharedBody(modeKey),
-                      active: _setupFinanceMode == 'shared',
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _setupFinanceMode = 'divided');
-                    },
-                    child: SetupStrategyTip(
-                      title: t.coupleSplitModeDividedTitle,
-                      desc: t.coupleSplitModeDividedBody(modeKey),
-                      active: _setupFinanceMode == 'divided',
-                    ),
-                  ),
-                  if (_setupFinanceMode == 'divided') ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      t.setupCoupleFamilyExpensesSplitLabel(modeKey),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${(_tempRatio * 100).toInt()}%',
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        Text(
-                          ' / ',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w300,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        Text(
-                          '${(100 - (_tempRatio * 100)).toInt()}%',
-                          style: const TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.sage,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: AppColors.primary,
-                        inactiveTrackColor:
-                            AppColors.primary.withValues(alpha: 0.1),
-                        thumbColor: AppColors.primary,
-                        overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                        trackHeight: 12,
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 18),
-                      ),
-                      child: Slider(
-                        value: _tempRatio,
-                        min: 0,
-                        max: 1,
-                        divisions: 20,
-                        onChanged: (v) {
-                          HapticFeedback.selectionClick();
-                          setState(() => _tempRatio = v);
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SetupStrategyTip(
-                      title: t.setupCoupleFamilyTipEqualTitle,
-                      desc: _selectedMode == 'couple'
-                          ? t.setupCoupleFamilyTipEqualDescCouple
-                          : t.setupCoupleFamilyTipEqualDescOther,
-                      active: _tempRatio == 0.5,
-                    ),
-                    SetupStrategyTip(
-                      title: t.setupCoupleFamilyTipProportionalTitle,
-                      desc: t.setupCoupleFamilyTipProportionalDesc,
-                      active: _tempRatio != 0.5,
-                    ),
-                  ],
-                ],
+              child: CoupleFinanceConfigBody(
+                modeKey: modeKey,
+                financeMode: _setupFinanceMode,
+                splitRatio: _tempRatio,
+                supportsFinanceModeChoice: true,
+                onFinanceModeChanged: (mode) =>
+                    setState(() => _setupFinanceMode = mode),
+                onSplitRatioChanged: (ratio) =>
+                    setState(() => _tempRatio = ratio),
               ),
             ),
           ),

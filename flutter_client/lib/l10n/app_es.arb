@@ -386,6 +386,14 @@
   "balanceCardSettleButton": "Equilibrar",
   "balanceCardXpLabel": "XP",
   "balanceCardCoinsLabel": "coins",
+  "balanceCardIntegratedTitle": "Economía integrada",
+  "@balanceCardIntegratedTitle": {
+    "description": "Status label on the home balance card when the couple uses integrated economy (no debt/balance between them)."
+  },
+  "balanceCardIntegratedSubtitle": "Gastos del hogar",
+  "@balanceCardIntegratedSubtitle": {
+    "description": "Secondary line on the home balance card in integrated economy, shown instead of a balance amount. Refers to shared household spending."
+  },
   "homeNoActivityYet": "No hay actividad aún",
   "@homeNoActivityYet": {
     "description": "Empty-state message shown when the activity feed has no entries."

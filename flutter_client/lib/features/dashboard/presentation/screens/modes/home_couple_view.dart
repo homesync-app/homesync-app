@@ -377,6 +377,8 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
     final membersAsync = ref.watch(householdMembersProvider);
     final expenseBalancesAsync = ref.watch(expenseBalancesProvider);
     final currentUserId = ref.read(currentUserIdProvider);
+    final isIntegratedEconomy =
+        ref.watch(currentHouseholdProvider).value?.financeMode == 'shared';
 
     double myExpenseBalance = 0;
     expenseBalancesAsync.whenData((balances) {
@@ -398,6 +400,18 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
       data: (members) =>
           members.where((m) => m.userId != currentUserId).firstOrNull,
     );
+
+    // Integrated economy: no debt/balance between partners, so the card shows
+    // the shared household monthly spend instead of a balance + settle action.
+    if (isIntegratedEconomy) {
+      final projection = ref.watch(monthlyProjectionProvider).value;
+      return BalanceCard(
+        coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,
+        xp: balanceAsync.whenOrNull(data: (b) => b?['xp'] as int?) ?? 0,
+        integratedEconomy: true,
+        monthlySpent: projection?.spent,
+      ).animateEntrance(delay: 100);
+    }
 
     return BalanceCard(
       coins: balanceAsync.whenOrNull(data: (b) => b?['coins'] as int?) ?? 0,

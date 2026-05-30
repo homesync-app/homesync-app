@@ -308,12 +308,37 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
+  // Stable key so the wizard keeps the same State across provider refreshes
+  // (e.g. when creating the household invalidates householdIdProvider).
+  static const _setupScreenKey = ValueKey('onboarding_setup_screen');
+
+  Widget _buildSetupScreen() {
+    return SetupScreen(
+      key: _setupScreenKey,
+      onComplete: () async {
+        await widget.prefs.setBool('setup_completed', true);
+        ref.invalidate(householdIdProvider);
+        ref.invalidate(memberOnboardingProvider);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final householdAsync = ref.watch(householdIdProvider);
     final currentUserId = ref.watch(currentUserIdProvider);
     final authControllerState = ref.watch(authControllerProvider);
     final isAuthTransitioning = authControllerState.isLoading;
+
+    // While the onboarding wizard is mid-flow, keep it mounted unconditionally.
+    // Creating the household invalidates householdIdProvider, which flips this
+    // FutureProvider into a `loading` state; if we let `.when(loading:)` render
+    // a spinner it would unmount the wizard and lose its step state, kicking the
+    // user back to the first screen. Rendering SetupScreen here (before .when)
+    // with a stable key keeps the same State alive across those refreshes.
+    if (ref.watch(setupInProgressProvider) && !isAuthTransitioning) {
+      return _buildSetupScreen();
+    }
 
     return householdAsync.when(
       loading: () => Scaffold(
@@ -398,13 +423,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
         if (householdId == null ||
             householdId.isEmpty ||
             setupInProgress) {
-          return SetupScreen(
-            onComplete: () async {
-              await widget.prefs.setBool('setup_completed', true);
-              ref.invalidate(householdIdProvider);
-              ref.invalidate(memberOnboardingProvider);
-            },
-          );
+          return _buildSetupScreen();
         }
 
         final onboardingDone = ref.watch(memberOnboardingProvider);

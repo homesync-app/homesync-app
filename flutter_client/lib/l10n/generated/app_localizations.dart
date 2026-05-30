@@ -980,6 +980,18 @@ abstract class AppLocalizations {
   /// **'coins'**
   String get balanceCardCoinsLabel;
 
+  /// Status label on the home balance card when the couple uses integrated economy (no debt/balance between them).
+  ///
+  /// In es, this message translates to:
+  /// **'Economía integrada'**
+  String get balanceCardIntegratedTitle;
+
+  /// Secondary line on the home balance card in integrated economy, shown instead of a balance amount. Refers to shared household spending.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos del hogar'**
+  String get balanceCardIntegratedSubtitle;
+
   /// Empty-state message shown when the activity feed has no entries.
   ///
   /// In es, this message translates to:

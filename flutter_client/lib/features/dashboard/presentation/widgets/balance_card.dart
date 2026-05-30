@@ -20,6 +20,15 @@ class BalanceCard extends ConsumerStatefulWidget {
   final String? neutralLabel;
   final bool compact;
 
+  /// When true, the household uses an integrated (shared) economy: there is no
+  /// debt/balance between members, so the card shows a neutral "shared
+  /// finances" state instead of a balance amount or a settle action.
+  final bool integratedEconomy;
+
+  /// Total shared household spending for the current month. Only shown when
+  /// [integratedEconomy] is true, in place of the balance amount.
+  final double? monthlySpent;
+
   const BalanceCard({
     super.key,
     required this.coins,
@@ -32,6 +41,8 @@ class BalanceCard extends ConsumerStatefulWidget {
     this.balancedLabel,
     this.neutralLabel,
     this.compact = false,
+    this.integratedEconomy = false,
+    this.monthlySpent,
   });
 
   @override
@@ -48,8 +59,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final currency = ref.watch(currencyProvider);
+    final integrated = widget.integratedEconomy;
 
-    final statusColor = isNegative ? AppColors.accentOrange : AppColors.sage;
+    final statusColor = integrated
+        ? AppColors.sage
+        : (isNegative ? AppColors.accentOrange : AppColors.sage);
     final surfaceColor = widget.settlementJustCompleted
         ? Color.alphaBlend(
             AppColors.sage.withValues(alpha: 0.035),
@@ -120,9 +134,12 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.settlementJustCompleted || !isBalanced
-                            ? balanceMessage
-                            : (widget.balancedLabel ?? t.balanceCardBalanced),
+                        integrated
+                            ? t.balanceCardIntegratedTitle
+                            : (widget.settlementJustCompleted || !isBalanced
+                                ? balanceMessage
+                                : (widget.balancedLabel ??
+                                    t.balanceCardBalanced)),
                         style: TextStyle(
                           color: isBalanced
                               ? statusColor.withValues(alpha: 0.88)
@@ -133,44 +150,97 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                         ),
                       ),
                       SizedBox(height: widget.compact ? 4 : 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
+                      if (integrated)
+                        if (widget.monthlySpent != null)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                currency.inputPrefix(),
+                                style: TextStyle(
+                                  color: theme.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              _AnimatedDigitCounter(
+                                value: widget.monthlySpent!,
+                                locale: currency.locale,
+                                style: TextStyle(
+                                  color:
+                                      theme.textPrimary.withValues(alpha: 0.94),
+                                  fontSize: widget.compact ? 29 : 31,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Text(
+                                  t.balanceCardIntegratedSubtitle.toLowerCase(),
+                                  style: TextStyle(
+                                    color: theme.textSecondary
+                                        .withValues(alpha: 0.82),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else
                           Text(
-                            isBalanced
-                                ? currency.inputPrefix()
-                                : (isNegative
-                                    ? '- ${currency.inputPrefix()}'
-                                    : '+ ${currency.inputPrefix()}'),
+                            t.balanceCardIntegratedSubtitle,
                             style: TextStyle(
-                              color:
-                                  isBalanced ? theme.textPrimary : statusColor,
-                              fontSize: isBalanced ? 16 : 18,
+                              color: theme.textPrimary.withValues(alpha: 0.94),
+                              fontSize: widget.compact ? 18 : 20,
                               fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          _AnimatedDigitCounter(
-                            value: balance.abs(),
-                            locale: currency.locale,
-                            style: TextStyle(
-                              color: isBalanced
-                                  ? theme.textPrimary.withValues(alpha: 0.94)
-                                  : statusColor,
-                              fontSize: widget.compact
-                                  ? (isBalanced ? 29 : 32)
-                                  : (isBalanced ? 31 : 35),
-                              fontWeight: isBalanced
-                                  ? FontWeight.w800
-                                  : FontWeight.w900,
                               letterSpacing: 0,
                             ),
-                          ),
-                        ],
-                      ),
+                          )
+                      else
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              isBalanced
+                                  ? currency.inputPrefix()
+                                  : (isNegative
+                                      ? '- ${currency.inputPrefix()}'
+                                      : '+ ${currency.inputPrefix()}'),
+                              style: TextStyle(
+                                color: isBalanced
+                                    ? theme.textPrimary
+                                    : statusColor,
+                                fontSize: isBalanced ? 16 : 18,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            _AnimatedDigitCounter(
+                              value: balance.abs(),
+                              locale: currency.locale,
+                              style: TextStyle(
+                                color: isBalanced
+                                    ? theme.textPrimary.withValues(alpha: 0.94)
+                                    : statusColor,
+                                fontSize: widget.compact
+                                    ? (isBalanced ? 29 : 32)
+                                    : (isBalanced ? 31 : 35),
+                                fontWeight: isBalanced
+                                    ? FontWeight.w800
+                                    : FontWeight.w900,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
-                if (isNegative && widget.onSettle != null)
+                if (integrated)
+                  _IntegratedEconomyBadge(compact: widget.compact)
+                else if (isNegative && widget.onSettle != null)
                   AnimatedPress(
                     onTap: widget.onSettle!,
                     child: Container(
@@ -396,6 +466,30 @@ class _BalanceSuccessBadge extends StatelessWidget {
         Icons.check_rounded,
         color: AppColors.sage,
         size: 24,
+      ),
+    );
+  }
+}
+
+class _IntegratedEconomyBadge extends StatelessWidget {
+  final bool compact;
+
+  const _IntegratedEconomyBadge({required this.compact});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = compact ? 44.0 : 48.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.sage.withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: const Icon(
+        Icons.home_rounded,
+        color: AppColors.sage,
+        size: 22,
       ),
     );
   }
