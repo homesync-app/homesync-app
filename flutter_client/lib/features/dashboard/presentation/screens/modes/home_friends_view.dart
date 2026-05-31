@@ -19,6 +19,8 @@ import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -550,6 +552,8 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
             if (pending.isEmpty) {
               return const SizedBox.shrink();
             }
+            final visiblePending = pending.take(4).toList();
+            final remainingPending = pending.length - visiblePending.length;
             return Container(
               decoration: BoxDecoration(
                 color: theme.surfaceContainer.withValues(alpha: 0.5),
@@ -559,52 +563,95 @@ class _HomeFriendsViewState extends ConsumerState<HomeFriendsView>
                 ),
               ),
               child: Column(
-                children: pending.take(2).toList().asMap().entries.map((entry) {
-                  final item = entry.value;
-                  final isLast = entry.key == pending.take(2).length - 1;
-                  final displayQuantity = item.displayQuantity;
-                  return Column(
-                    children: [
-                      ListTile(
-                        leading: Text(
-                          item.emoji,
-                          style: const TextStyle(fontSize: 20),
-                        ),
-                        title: Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: theme.textPrimary,
+                children: [
+                  ...visiblePending.asMap().entries.map((entry) {
+                    final item = entry.value;
+                    final isLast = entry.key == visiblePending.length - 1;
+                    final displayQuantity = item.displayQuantity;
+                    return Column(
+                      children: [
+                        ListTile(
+                          leading: ShoppingIcon(
+                            productKey: item.nameKey ??
+                                shoppingCatalogKeyForName(item.name),
+                            categoryId: item.category,
+                            fallbackEmoji: item.emoji,
+                            allowProductAsset: true,
+                            size: 26,
                           ),
+                          title: Text(
+                            item.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: theme.textPrimary,
+                            ),
+                          ),
+                          subtitle: displayQuantity.isNotEmpty
+                              ? Text(displayQuantity)
+                              : null,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: theme.textMuted,
+                            size: 20,
+                          ),
+                          onTap: () {
+                            final index =
+                                indexForMainTab(caps, MainTab.shopping);
+                            if (index >= 0) {
+                              ref
+                                  .read(bottomNavIndexProvider.notifier)
+                                  .setIndex(index);
+                            }
+                          },
                         ),
-                        subtitle: displayQuantity.isNotEmpty
-                            ? Text(displayQuantity)
-                            : null,
-                        trailing: Icon(
-                          Icons.chevron_right_rounded,
-                          color: theme.textMuted,
-                          size: 20,
+                        if (!isLast || remainingPending > 0)
+                          Divider(
+                            height: 1,
+                            indent: 16,
+                            endIndent: 16,
+                            color: theme.divider.withValues(alpha: 0.08),
+                          ),
+                      ],
+                    );
+                  }),
+                  if (remainingPending > 0)
+                    InkWell(
+                      onTap: () {
+                        final index = indexForMainTab(caps, MainTab.shopping);
+                        if (index >= 0) {
+                          ref
+                              .read(bottomNavIndexProvider.notifier)
+                              .setIndex(index);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
                         ),
-                        onTap: () {
-                          final index = indexForMainTab(caps, MainTab.shopping);
-                          if (index >= 0) {
-                            ref
-                                .read(bottomNavIndexProvider.notifier)
-                                .setIndex(index);
-                          }
-                        },
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                t.homeFamilyShoppingMoreItems(remainingPending),
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.textSecondary,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: theme.textMuted,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
-                      if (!isLast)
-                        Divider(
-                          height: 1,
-                          indent: 16,
-                          endIndent: 16,
-                          color: theme.divider.withValues(alpha: 0.08),
-                        ),
-                    ],
-                  );
-                }).toList(),
+                    ),
+                ],
               ),
             );
           },

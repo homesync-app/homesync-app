@@ -6,6 +6,7 @@ import 'package:homesync_client/features/shopping/data/shopping_predefined.dart'
 import 'package:homesync_client/features/shopping/domain/models/shopping_categories.dart';
 import 'package:homesync_client/features/shopping/domain/models/shopping_model.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
@@ -653,9 +654,13 @@ class _ShoppingItemsSelectorSheetState
                       ...filteredPendingHouseholdItems.map((item) {
                         final isSelected = _currentSelection.contains(item);
                         return ListTile(
-                          leading: Text(
-                            item.emoji,
-                            style: const TextStyle(fontSize: 24),
+                          leading: ShoppingIcon(
+                            productKey: item.nameKey ??
+                                shoppingCatalogKeyForName(item.name),
+                            categoryId: item.category,
+                            fallbackEmoji: item.emoji,
+                            allowProductAsset: true,
+                            size: 30,
                           ),
                           title: Text(
                             localizedShoppingItemName(context, item),
