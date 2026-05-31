@@ -145,6 +145,10 @@ void main() {
         taskRepositoryProvider.overrideWithValue(_FailingTaskRepository()),
         householdIdProvider.overrideWith((ref) => 'h1'),
         supabaseClientProvider.overrideWithValue(_FakeSupabaseClient()),
+        // Aislar el unit: sin snapshot de bootstrap, _loadTasks cae al fetch
+        // del repo (que falla). Evita que el provider real toque Firebase y
+        // deje el estado colgado en loading dentro del entorno de test.
+        homeBootstrapProvider.overrideWith((ref) async => null),
       ],
     );
     addTearDown(container.dispose);
@@ -156,8 +160,12 @@ void main() {
     );
     addTearDown(subscription.close);
 
-    await container.pump();
-    await container.pump();
+    // El build encadena varios await (householdId -> bootstrap -> repo). Dejamos
+    // que los microtasks/futures se asienten antes de leer el estado final.
+    for (var i = 0; i < 10; i++) {
+      await container.pump();
+      await Future<void>.delayed(Duration.zero);
+    }
 
     final state = subscription.read();
     expect(state.hasError, isTrue);
