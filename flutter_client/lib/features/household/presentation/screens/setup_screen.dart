@@ -1739,10 +1739,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
     return Column(
       key: const ValueKey('invite_code_v2'),
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
               SetupStepEyebrow(text: t.setupInvitationEyebrow),
@@ -1895,11 +1897,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
                 ],
               ),
             ],
+              ),
+            ),
           ),
         ),
-        const Spacer(),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
           child: SetupPrimaryButton(
             text: t.commonContinue,
             onPressed: () {
@@ -1914,7 +1917,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen>
           onPressed: () => setState(() => _currentStep = 4),
           child: Text(t.commonBack),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
       ],
     );
   }

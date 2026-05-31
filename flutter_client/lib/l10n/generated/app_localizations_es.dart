@@ -4241,6 +4241,73 @@ class AppLocalizationsEs extends AppLocalizations {
       'Roles y premios listos para organizar la semana.';
 
   @override
+  String get householdSocialHubRoleMember => 'Integrante';
+
+  @override
+  String get contributionBalanceTitle => 'Aporte del mes';
+
+  @override
+  String get contributionBalanceSubtitle =>
+      'Cómo venimos repartidos en el piso.';
+
+  @override
+  String get contributionBalanceEmptyTitle => 'Todavía no hay aportes este mes';
+
+  @override
+  String get contributionBalanceEmptyBody =>
+      'Cuando completen tareas o carguen gastos compartidos, acá van a ver cómo queda el reparto.';
+
+  @override
+  String contributionBalanceTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tareas',
+      one: '$count tarea',
+      zero: 'Sin tareas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contributionBalanceFootnote =>
+      'Sin ganadores: esto es solo para ver que estemos parejos.';
+
+  @override
+  String get householdBillsTitle => 'Cuentas del piso';
+
+  @override
+  String get householdBillsSubtitle =>
+      'Gastos fijos que se reparten entre todos cada mes.';
+
+  @override
+  String get householdBillsEmptyTitle => 'Todavía no hay cuentas fijas';
+
+  @override
+  String get householdBillsEmptyBody =>
+      'Cargá el alquiler, la luz o internet y se van a dividir solas cada mes.';
+
+  @override
+  String get householdBillsAddButton => 'Agregar cuenta del piso';
+
+  @override
+  String get householdBillsPremiumBody =>
+      'Las cuentas fijas que se dividen solas cada mes son parte de Premium.';
+
+  @override
+  String get householdBillsPremiumUnlock => 'Desbloquear con Premium';
+
+  @override
+  String householdBillsPerMonth(String amount) {
+    return '$amount / mes';
+  }
+
+  @override
+  String householdBillsDayOfMonth(int day) {
+    return 'Día $day';
+  }
+
+  @override
   String get householdSocialHubStoreButton => 'Tienda';
 
   @override

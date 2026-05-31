@@ -4,7 +4,9 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/contribution_balance_card.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/household_bills_card.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -56,17 +58,28 @@ class _HouseholdSocialHubScreenState
               _HeaderCard(
                 caps: caps,
                 currentMember: currentMember,
-                onRewards: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FamilyRewardsScreen(),
-                    ),
-                  );
-                },
+                onRewards: caps.usesRewardsStore
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FamilyRewardsScreen(),
+                          ),
+                        );
+                      }
+                    : null,
               ),
               const SizedBox(height: 18),
-              FamilyRankingSection(currentMember: currentMember),
+              // Familia: ranking competitivo (corona, puntos, adultos vs chicos).
+              // Convivencia: equilibrio de aporte neutro (tareas + plata del mes,
+              // sin ganador). Cada modo usa su propia experiencia.
+              if (caps.usesCompetitiveRanking)
+                FamilyRankingSection(currentMember: currentMember)
+              else if (caps.usesContributionBalance) ...[
+                const ContributionBalanceCard(),
+                const SizedBox(height: 18),
+                const HouseholdBillsCard(),
+              ],
               // Configuracion del Modo Padres (toggle de aprobacion de tareas,
               // bandeja de pendientes). El widget se auto-oculta si el usuario
               // no es admin adulto de una familia, asi que es seguro siempre.
@@ -89,7 +102,7 @@ class _HeaderCard extends StatelessWidget {
 
   final HouseholdCapabilities caps;
   final MemberModel? currentMember;
-  final VoidCallback onRewards;
+  final VoidCallback? onRewards;
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +202,16 @@ class _HeaderCard extends StatelessWidget {
                           // Si el usuario es admin/owner del hogar, lo agregamos
                           // como sufijo para que sepa que tiene permisos
                           // adicionales (aprobar tareas, configurar, etc.).
-                          currentMember!.isAdmin
-                              ? '${currentMember!.localizedRoleLabel(t)} · Admin'
-                              : currentMember!.localizedRoleLabel(t),
+                          () {
+                            // Convivencia (friends) trata a todos como adultos
+                            // pares: nunca mostramos rol familiar (Padre/Madre).
+                            final roleLabel = caps.usesFamilyRoles
+                                ? currentMember!.localizedRoleLabel(t)
+                                : t.householdSocialHubRoleMember;
+                            return currentMember!.isAdmin
+                                ? '$roleLabel · Admin'
+                                : roleLabel;
+                          }(),
                         ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -204,11 +224,12 @@ class _HeaderCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              _QuickActionButton(
-                icon: Icons.storefront_rounded,
-                label: t.householdSocialHubStoreButton,
-                onPressed: onRewards,
-              ),
+              if (onRewards != null)
+                _QuickActionButton(
+                  icon: Icons.storefront_rounded,
+                  label: t.householdSocialHubStoreButton,
+                  onPressed: onRewards!,
+                ),
             ],
           ),
         ],
