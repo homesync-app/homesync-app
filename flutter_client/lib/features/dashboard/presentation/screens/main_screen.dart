@@ -686,33 +686,42 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     return switch (tab) {
       MainTab.home => NavItemConfig(
+          tab: tab,
           title: t.mainTabHome,
           icon: Icons.home_rounded,
-          screen: HomeScreen(onAvatarTap: () => _openSettings(context)),
+          screen: HomeScreen(
+            key: const ValueKey(MainTab.home),
+            onAvatarTap: () => _openSettings(context),
+          ),
         ),
       MainTab.tasks => NavItemConfig(
+          tab: tab,
           title: t.mainTabTasks,
           icon: Icons.task_alt_rounded,
-          screen: const TasksScreen(),
+          screen: const TasksScreen(key: ValueKey(MainTab.tasks)),
         ),
       MainTab.expenses => NavItemConfig(
+          tab: tab,
           title: t.mainTabExpenses,
           icon: Icons.account_balance_wallet_rounded,
-          screen: const ExpensesScreen(),
+          screen: const ExpensesScreen(key: ValueKey(MainTab.expenses)),
         ),
       MainTab.social => NavItemConfig(
+          tab: tab,
           title: caps.socialTabLabel(t),
           icon: caps.partnerIcon,
           screen: caps.usesCoupleRewardsExperience
-              ? const CoupleSpaceScreen()
-              : const HouseholdSocialHubScreen(),
+              ? const CoupleSpaceScreen(key: ValueKey(MainTab.social))
+              : const HouseholdSocialHubScreen(key: ValueKey(MainTab.social)),
         ),
       MainTab.stats => NavItemConfig(
+          tab: tab,
           title: t.mainTabProgress,
           icon: Icons.bar_chart_rounded,
-          screen: const StatsScreen(),
+          screen: const StatsScreen(key: ValueKey(MainTab.stats)),
         ),
       MainTab.shopping => NavItemConfig(
+          tab: tab,
           title: _currentMember?.isChild == true
               ? t.mainTabShoppingChild
               : t.mainTabShopping,
@@ -720,8 +729,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
               ? Icons.storefront_rounded
               : Icons.shopping_cart_rounded,
           screen: _currentMember?.isChild == true
-              ? const FamilyRewardsScreen()
-              : const ShoppingListScreen(),
+              ? const FamilyRewardsScreen(key: ValueKey(MainTab.shopping))
+              : const ShoppingListScreen(key: ValueKey(MainTab.shopping)),
         ),
     };
   }
@@ -818,11 +827,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
 }
 
 class NavItemConfig {
+  final MainTab tab;
   final String title;
   final IconData icon;
   final Widget screen;
 
   NavItemConfig({
+    required this.tab,
     required this.title,
     required this.icon,
     required this.screen,
