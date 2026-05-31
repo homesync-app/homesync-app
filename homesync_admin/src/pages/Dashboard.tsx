@@ -97,6 +97,7 @@ export const Dashboard = () => {
     setError(null);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const [households, tasksToday, alerts, ledgerRes, activityStream, pendingFeedback] = await Promise.all([
       supabase.from('households').select('*', { count: 'exact', head: true }),
@@ -105,7 +106,11 @@ export const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'verified')
         .gte('updated_at', today.toISOString()),
-      supabase.from('application_logs').select('*', { count: 'exact', head: true }).eq('level', 'error'),
+      supabase
+        .from('application_logs')
+        .select('*', { count: 'exact', head: true })
+        .in('level', ['error', 'critical'])
+        .gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('ledger_entries').select('amount').eq('type', 'coins_earned'),
       supabase.from('household_activities').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('user_feedback').select('*', { count: 'exact', head: true }).eq('resolved', false),
@@ -156,7 +161,7 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard title="Hogares Activos" value={stats.households} icon={Users} tone="indigo" loading={loading} />
         <StatCard title="Tareas Completadas Hoy" value={stats.tasksToday} icon={CheckCircle2} tone="emerald" loading={loading} />
-        <StatCard title="Alertas Críticas" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
+        <StatCard title="Alertas Críticas (7d)" value={stats.alerts} icon={AlertTriangle} tone="rose" loading={loading} />
         <StatCard title="Monedas en Circulación" value={stats.totalCoins.toLocaleString()} icon={Zap} tone="amber" loading={loading} />
         <StatCard title="Feedback Pendiente" value={stats.pendingFeedback} icon={MessageSquare} tone="violet" loading={loading} />
       </div>

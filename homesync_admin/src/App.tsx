@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { SKIP_AUTH } from './lib/auth';
 import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
@@ -46,6 +47,32 @@ function ProtectedRoute({
   return <>{children}</>;
 }
 
+function AdminRoutes() {
+  const location = useLocation();
+  return (
+    <Layout>
+      {/* Keying on pathname resets the boundary when navigating to a new page. */}
+      <ErrorBoundary key={location.pathname}>
+        <Suspense fallback={<FullScreenLoader />}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/households" element={<Households />} />
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/activity" element={<Activity />} />
+            <Route path="/economy" element={<Economy />} />
+            <Route path="/content" element={<Content />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/ocr-insights" element={<OcrInsights />} />
+            <Route path="/shopping-icons" element={<ShoppingIcons />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+    </Layout>
+  );
+}
+
 function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
 
@@ -77,23 +104,7 @@ function App() {
           path="/*"
           element={
             <ProtectedRoute session={session ?? null}>
-              <Layout>
-                <Suspense fallback={<FullScreenLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/households" element={<Households />} />
-                    <Route path="/users" element={<UserManagement />} />
-                    <Route path="/activity" element={<Activity />} />
-                    <Route path="/economy" element={<Economy />} />
-                    <Route path="/content" element={<Content />} />
-                    <Route path="/inbox" element={<Inbox />} />
-                    <Route path="/ocr-insights" element={<OcrInsights />} />
-                    <Route path="/shopping-icons" element={<ShoppingIcons />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
-              </Layout>
+              <AdminRoutes />
             </ProtectedRoute>
           }
         />
