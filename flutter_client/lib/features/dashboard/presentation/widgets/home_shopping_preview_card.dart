@@ -6,6 +6,8 @@ import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
+import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
+import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 
 class HomeShoppingPreviewCard extends ConsumerWidget {
   final String title;
@@ -128,9 +130,13 @@ class HomeShoppingPreviewCard extends ConsumerWidget {
                   ...pending.take(maxItems).map(
                         (item) => ListTile(
                           onTap: openShopping,
-                          leading: Text(
-                            item.emoji,
-                            style: const TextStyle(fontSize: 21),
+                          leading: ShoppingIcon(
+                            productKey: item.nameKey ??
+                                shoppingCatalogKeyForName(item.name),
+                            categoryId: item.category,
+                            fallbackEmoji: item.emoji,
+                            allowProductAsset: true,
+                            size: 28,
                           ),
                           title: Text(
                             item.name,

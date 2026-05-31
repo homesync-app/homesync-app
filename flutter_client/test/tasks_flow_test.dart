@@ -40,6 +40,15 @@ class FakeSupabaseClient extends Fake implements SupabaseClient {
 
   @override
   RealtimeClient get realtime => FakeRealtimeClient();
+
+  @override
+  Future<String> removeChannel(RealtimeChannel channel) async => 'ok';
+
+  @override
+  Future<List<String>> removeAllChannels() async => const [];
+
+  @override
+  List<RealtimeChannel> getChannels() => const [];
 }
 
 class FakeRealtimeClient extends Fake implements RealtimeClient {

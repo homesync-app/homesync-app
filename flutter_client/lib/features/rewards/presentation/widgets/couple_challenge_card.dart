@@ -3,6 +3,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
+import '../../../../core/widgets/concept_icon.dart';
 import '../../domain/models/couple_challenge.dart';
 
 class CoupleChallengeCard extends StatefulWidget {
@@ -97,17 +98,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 74,
                       height: 74,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: highlight.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Text(
-                        widget.challenge.icon,
-                        style: const TextStyle(fontSize: 36),
+                      child: Center(
+                        child: ConceptIcon(
+                          emoji: widget.challenge.icon,
+                          size: 62,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -143,17 +141,14 @@ class _CoupleChallengeCardState extends State<CoupleChallengeCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
+                SizedBox(
                   width: 64,
                   height: 64,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: highlight.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Text(
-                    widget.challenge.icon,
-                    style: const TextStyle(fontSize: 30),
+                  child: Center(
+                    child: ConceptIcon(
+                      emoji: widget.challenge.icon,
+                      size: 54,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),

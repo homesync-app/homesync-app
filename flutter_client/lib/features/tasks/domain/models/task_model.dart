@@ -1,3 +1,4 @@
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 
 enum TaskStatus {
@@ -273,11 +274,7 @@ class TaskModel {
 
   bool get isDueToday {
     if (dueAt == null) return false;
-    final now = DateTime.now();
-    final dueDate = _effectiveDueDate;
-    return dueDate.year == now.year &&
-        dueDate.month == now.month &&
-        dueDate.day == now.day;
+    return _effectiveDueDate.isSameDay(DateTime.now());
   }
 
   /// Whether the task should surface in the home "today" section based purely

@@ -2549,6 +2549,87 @@
   "rewardsCostCoins": "{cost} coins",
   "householdSocialHubYourRole": "Tu rol: {role}",
   "householdSocialHubRoleFallback": "Roles y premios listos para organizar la semana.",
+  "householdSocialHubRoleMember": "Integrante",
+  "@householdSocialHubRoleMember": {
+    "description": "Etiqueta de rol neutra para modo convivencia (friends), donde todos son adultos pares sin rol familiar (Padre/Madre)."
+  },
+  "contributionBalanceTitle": "Aporte del mes",
+  "@contributionBalanceTitle": {
+    "description": "Título de la sección de equilibrio de aporte en convivencia: cuánto puso cada integrante en tareas y plata este mes."
+  },
+  "contributionBalanceSubtitle": "Cómo venimos repartidos en el piso.",
+  "@contributionBalanceSubtitle": {
+    "description": "Subtítulo neutro de la sección de aporte en convivencia. Evita lenguaje competitivo."
+  },
+  "contributionBalanceEmptyTitle": "Todavía no hay aportes este mes",
+  "@contributionBalanceEmptyTitle": {
+    "description": "Título del estado vacío del equilibrio de aporte en convivencia."
+  },
+  "contributionBalanceEmptyBody": "Cuando completen tareas o carguen gastos compartidos, acá van a ver cómo queda el reparto.",
+  "@contributionBalanceEmptyBody": {
+    "description": "Cuerpo del estado vacío del equilibrio de aporte en convivencia."
+  },
+  "contributionBalanceTasksLabel": "{count, plural, =0{Sin tareas} one{{count} tarea} other{{count} tareas}}",
+  "@contributionBalanceTasksLabel": {
+    "description": "Cantidad de tareas hechas por un integrante este mes en convivencia.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "contributionBalanceFootnote": "Sin ganadores: esto es solo para ver que estemos parejos.",
+  "@contributionBalanceFootnote": {
+    "description": "Nota al pie neutra de la sección de aporte en convivencia, recalca que no es competencia."
+  },
+  "householdBillsTitle": "Cuentas del piso",
+  "@householdBillsTitle": {
+    "description": "Título de la sección de gastos fijos compartidos en convivencia (alquiler, luz, internet)."
+  },
+  "householdBillsSubtitle": "Gastos fijos que se reparten entre todos cada mes.",
+  "@householdBillsSubtitle": {
+    "description": "Subtítulo de la sección de cuentas del piso en convivencia."
+  },
+  "householdBillsEmptyTitle": "Todavía no hay cuentas fijas",
+  "@householdBillsEmptyTitle": {
+    "description": "Estado vacío de cuentas del piso en convivencia."
+  },
+  "householdBillsEmptyBody": "Cargá el alquiler, la luz o internet y se van a dividir solas cada mes.",
+  "@householdBillsEmptyBody": {
+    "description": "Cuerpo del estado vacío de cuentas del piso en convivencia."
+  },
+  "householdBillsAddButton": "Agregar cuenta del piso",
+  "@householdBillsAddButton": {
+    "description": "Botón para crear un gasto fijo compartido en convivencia."
+  },
+  "householdBillsPremiumBody": "Las cuentas fijas que se dividen solas cada mes son parte de Premium.",
+  "@householdBillsPremiumBody": {
+    "description": "Texto del estado bloqueado de cuentas del piso cuando el hogar no es premium."
+  },
+  "householdBillsPremiumUnlock": "Desbloquear con Premium",
+  "@householdBillsPremiumUnlock": {
+    "description": "Botón que abre el paywall desde la sección de cuentas del piso en convivencia."
+  },
+  "householdBillsPerMonth": "{amount} / mes",
+  "@householdBillsPerMonth": {
+    "description": "Monto mensual de una cuenta del piso. amount ya viene formateado con moneda.",
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "householdBillsDayOfMonth": "Día {day}",
+  "@householdBillsDayOfMonth": {
+    "description": "Día del mes en que se registra la cuenta del piso.",
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "householdSettleUpTitle": "Saldar cuentas",
+  "@householdSettleUpTitle": {
+    "description": "Título de la sección de saldar deudas entre integrantes en convivencia."
+  },
+  "householdSettleUpSubtitle": "Quién le debe a quién para quedar a mano.",
+  "@householdSettleUpSubtitle": {
+    "description": "Subtítulo de la sección de saldar cuentas en convivencia."
+  },
   "householdSocialHubStoreButton": "Tienda",
   "householdSocialHubTrackingTitle": "Seguimiento familiar",
   "householdSocialHubTrackingSubtitle": "Avances por integrante y cierre semanal.",
