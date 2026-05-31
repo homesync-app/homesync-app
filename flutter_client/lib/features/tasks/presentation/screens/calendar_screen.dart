@@ -4,6 +4,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/features/tasks/domain/models/task_model.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/category_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -46,10 +47,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     setState(() {
       _weekStart = _weekStart.subtract(const Duration(days: 7));
     });
-  }
-
-  bool isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   Map<DateTime, List<TaskModel>> _groupTasks(List<TaskModel> tasks) {
@@ -203,7 +200,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     itemCount: 7,
                     itemBuilder: (context, index) {
                       final dayDate = _weekStart.add(Duration(days: index));
-                      final isToday = isSameDay(DateTime.now(), dayDate);
+                      final isToday = DateTime.now().isSameDay(dayDate);
                       final tasksForDay = scheduledTasks[dayDate] ?? [];
 
                       return _buildDaySection(dayDate, tasksForDay, isToday)

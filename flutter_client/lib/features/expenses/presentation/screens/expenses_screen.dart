@@ -7,6 +7,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/theme/category_mapping.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/expense_template_model.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
@@ -414,8 +415,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
           (item) =>
               item.isPlanned &&
               item.status == 'pending' &&
-              item.date.month == now.month &&
-              item.date.year == now.year,
+              item.date.isSameMonth(now),
         )
         .toList();
   }
@@ -957,8 +957,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .where(
           (item) =>
               item.isRealExpense &&
-              item.date.month == now.month &&
-              item.date.year == now.year &&
+              item.date.isSameMonth(now) &&
               ((item.transactionType == 'income' && item.payerId == userId) ||
                   (item.transactionType == 'settlement' &&
                       item.payerId != userId)),
@@ -985,8 +984,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         .where(
           (item) =>
               item.isRealExpense &&
-              item.date.month == now.month &&
-              item.date.year == now.year &&
+              item.date.isSameMonth(now) &&
               ((item.transactionType == 'expense' && item.payerId == userId) ||
                   (item.transactionType == 'settlement' &&
                       item.payerId == userId)),

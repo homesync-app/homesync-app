@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/utils/date_extensions.dart';
 import 'package:homesync_client/features/dashboard/presentation/main_navigation.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
@@ -160,8 +161,7 @@ class FamilyFinanceSection extends ConsumerWidget {
     final now = DateTime.now();
     final monthItems = feed.where((item) {
       return item.isRealExpense &&
-          item.date.month == now.month &&
-          item.date.year == now.year &&
+          item.date.isSameMonth(now) &&
           !item.isSettlement;
     }).toList();
     final spent = monthItems
