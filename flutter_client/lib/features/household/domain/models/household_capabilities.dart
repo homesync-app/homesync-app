@@ -52,6 +52,22 @@ class HouseholdCapabilities {
   bool get showFamilyBoard =>
       type == HouseholdType.family || type == HouseholdType.friends;
 
+  /// Gamificación con premios/tienda/coins. Solo familia: motiva a chicos.
+  /// Convivencia (friends) es entre adultos pares — sin tienda ni premios.
+  bool get usesRewardsStore => type == HouseholdType.family;
+
+  /// Ranking competitivo (corona, puntos, posiciones, adultos vs chicos).
+  /// Solo familia. Convivencia usa "equilibrio de aporte" neutro en su lugar.
+  bool get usesCompetitiveRanking => type == HouseholdType.family;
+
+  /// Roles jerárquicos padre/madre/tutor/hijo. Solo familia.
+  /// Convivencia trata a todos como adultos pares sin rol familiar.
+  bool get usesFamilyRoles => type == HouseholdType.family;
+
+  /// "Equilibrio de aporte": tareas + gastos compartidos del mes en framing
+  /// neutro (sin ganador). Específico de convivencia.
+  bool get usesContributionBalance => type == HouseholdType.friends;
+
   // Mode-aware UI text. Localized via ARB ICU `select` on the type name.
   // Pass `AppLocalizations.of(context)` from the calling widget. Adding new
   // mode-aware labels: define a new key in `app_es.arb` with `select` over

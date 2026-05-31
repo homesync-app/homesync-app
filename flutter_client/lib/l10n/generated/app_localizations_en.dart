@@ -4220,6 +4220,79 @@ class AppLocalizationsEn extends AppLocalizations {
       'Roles and rewards ready to organize the week.';
 
   @override
+  String get householdSocialHubRoleMember => 'Member';
+
+  @override
+  String get contributionBalanceTitle => 'This month\'s contribution';
+
+  @override
+  String get contributionBalanceSubtitle =>
+      'How things are split across the place.';
+
+  @override
+  String get contributionBalanceEmptyTitle => 'No contributions yet this month';
+
+  @override
+  String get contributionBalanceEmptyBody =>
+      'Once you complete tasks or add shared expenses, you\'ll see how the split looks here.';
+
+  @override
+  String contributionBalanceTasksLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks',
+      one: '$count task',
+      zero: 'No tasks',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contributionBalanceFootnote =>
+      'No winners here: this is just to check we\'re even.';
+
+  @override
+  String get householdBillsTitle => 'Household bills';
+
+  @override
+  String get householdBillsSubtitle =>
+      'Fixed expenses split between everyone each month.';
+
+  @override
+  String get householdBillsEmptyTitle => 'No fixed bills yet';
+
+  @override
+  String get householdBillsEmptyBody =>
+      'Add rent, electricity or internet and they\'ll split automatically each month.';
+
+  @override
+  String get householdBillsAddButton => 'Add household bill';
+
+  @override
+  String get householdBillsPremiumBody =>
+      'Fixed bills that split automatically every month are part of Premium.';
+
+  @override
+  String get householdBillsPremiumUnlock => 'Unlock with Premium';
+
+  @override
+  String householdBillsPerMonth(String amount) {
+    return '$amount / mo';
+  }
+
+  @override
+  String householdBillsDayOfMonth(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get householdSettleUpTitle => 'Settle up';
+
+  @override
+  String get householdSettleUpSubtitle => 'Who owes who, so everyone\'s even.';
+
+  @override
   String get householdSocialHubStoreButton => 'Store';
 
   @override

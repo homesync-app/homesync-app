@@ -120,6 +120,31 @@ class Tasks extends _$Tasks {
 
     await _setupRealtime(householdId);
 
+    // Seed from the one-shot startup snapshot on first build. The home
+    // bootstrap RPC already fetched this household's tasks in a single
+    // round-trip, so replaying them here avoids a redundant ~second-long
+    // `tasks.initial_page` network call on cold start. After the gate is
+    // consumed once, later rebuilds (realtime refresh, invalidate) fall
+    // through to a fresh fetch.
+    //
+    // A bootstrap failure must never break task loading: it is a best-effort
+    // optimization with the individual fetch below as the fallback, so we
+    // swallow any bootstrap error and continue to the normal query.
+    HomeBootstrapData? bootstrap;
+    try {
+      bootstrap = await ref.watch(homeBootstrapProvider.future);
+    } catch (_) {
+      bootstrap = null;
+    }
+    if (bootstrap?.householdId == householdId &&
+        BootstrapSeedGate.instance.consume(BootstrapSection.tasks)) {
+      final seeded = bootstrap!.tasks
+          .map(TaskModel.fromMap)
+          .toList(growable: false);
+      _hasMore = seeded.length >= _pageSize;
+      return seeded;
+    }
+
     final useCase = ref.watch(getTasksUseCaseProvider);
     final result = await PerformanceMonitor.measureFuture(
       'provider.tasks.initial_page',

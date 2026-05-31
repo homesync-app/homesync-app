@@ -7017,6 +7017,114 @@ abstract class AppLocalizations {
   /// **'Roles y premios listos para organizar la semana.'**
   String get householdSocialHubRoleFallback;
 
+  /// Etiqueta de rol neutra para modo convivencia (friends), donde todos son adultos pares sin rol familiar (Padre/Madre).
+  ///
+  /// In es, this message translates to:
+  /// **'Integrante'**
+  String get householdSocialHubRoleMember;
+
+  /// Título de la sección de equilibrio de aporte en convivencia: cuánto puso cada integrante en tareas y plata este mes.
+  ///
+  /// In es, this message translates to:
+  /// **'Aporte del mes'**
+  String get contributionBalanceTitle;
+
+  /// Subtítulo neutro de la sección de aporte en convivencia. Evita lenguaje competitivo.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo venimos repartidos en el piso.'**
+  String get contributionBalanceSubtitle;
+
+  /// Título del estado vacío del equilibrio de aporte en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay aportes este mes'**
+  String get contributionBalanceEmptyTitle;
+
+  /// Cuerpo del estado vacío del equilibrio de aporte en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuando completen tareas o carguen gastos compartidos, acá van a ver cómo queda el reparto.'**
+  String get contributionBalanceEmptyBody;
+
+  /// Cantidad de tareas hechas por un integrante este mes en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{Sin tareas} one{{count} tarea} other{{count} tareas}}'**
+  String contributionBalanceTasksLabel(int count);
+
+  /// Nota al pie neutra de la sección de aporte en convivencia, recalca que no es competencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin ganadores: esto es solo para ver que estemos parejos.'**
+  String get contributionBalanceFootnote;
+
+  /// Título de la sección de gastos fijos compartidos en convivencia (alquiler, luz, internet).
+  ///
+  /// In es, this message translates to:
+  /// **'Cuentas del piso'**
+  String get householdBillsTitle;
+
+  /// Subtítulo de la sección de cuentas del piso en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Gastos fijos que se reparten entre todos cada mes.'**
+  String get householdBillsSubtitle;
+
+  /// Estado vacío de cuentas del piso en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay cuentas fijas'**
+  String get householdBillsEmptyTitle;
+
+  /// Cuerpo del estado vacío de cuentas del piso en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Cargá el alquiler, la luz o internet y se van a dividir solas cada mes.'**
+  String get householdBillsEmptyBody;
+
+  /// Botón para crear un gasto fijo compartido en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar cuenta del piso'**
+  String get householdBillsAddButton;
+
+  /// Texto del estado bloqueado de cuentas del piso cuando el hogar no es premium.
+  ///
+  /// In es, this message translates to:
+  /// **'Las cuentas fijas que se dividen solas cada mes son parte de Premium.'**
+  String get householdBillsPremiumBody;
+
+  /// Botón que abre el paywall desde la sección de cuentas del piso en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Desbloquear con Premium'**
+  String get householdBillsPremiumUnlock;
+
+  /// Monto mensual de una cuenta del piso. amount ya viene formateado con moneda.
+  ///
+  /// In es, this message translates to:
+  /// **'{amount} / mes'**
+  String householdBillsPerMonth(String amount);
+
+  /// Día del mes en que se registra la cuenta del piso.
+  ///
+  /// In es, this message translates to:
+  /// **'Día {day}'**
+  String householdBillsDayOfMonth(int day);
+
+  /// Título de la sección de saldar deudas entre integrantes en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldar cuentas'**
+  String get householdSettleUpTitle;
+
+  /// Subtítulo de la sección de saldar cuentas en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Quién le debe a quién para quedar a mano.'**
+  String get householdSettleUpSubtitle;
+
   /// No description provided for @householdSocialHubStoreButton.
   ///
   /// In es, this message translates to:
