@@ -9,6 +9,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_state_views.dart';
@@ -637,17 +638,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Icon tile
-              Container(
+              SizedBox(
                 width: 52,
                 height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  reward.icon,
-                  style: const TextStyle(fontSize: 26),
+                child: Center(
+                  child: ConceptIcon(emoji: reward.icon, size: 46),
                 ),
               ),
               const SizedBox(width: 14),
@@ -911,17 +906,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 12),
-                    Container(
+                    SizedBox(
                       width: 52,
                       height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGold.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Text(
-                        reward.icon,
-                        style: const TextStyle(fontSize: 29),
+                      child: Center(
+                        child: ConceptIcon(emoji: reward.icon, size: 46),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1384,17 +1373,11 @@ class _RewardsScreenState extends ConsumerState<CoupleRewardsScreen>
                 ),
                 Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 48,
                       height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentPurple.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        reward.icon,
-                        style: const TextStyle(fontSize: 26),
+                      child: Center(
+                        child: ConceptIcon(emoji: reward.icon, size: 42),
                       ),
                     ),
                     const SizedBox(width: 12),

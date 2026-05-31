@@ -5,6 +5,7 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/utils/amount_input.dart';
 import 'package:homesync_client/core/utils/app_animations.dart';
+import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:intl/intl.dart';
@@ -250,15 +251,11 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
           tilePadding: const EdgeInsets.all(20),
           childrenPadding:
               const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-          leading: Container(
+          leading: SizedBox(
             width: 50,
             height: 50,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
             child: Center(
-              child: Text(goal.icon, style: const TextStyle(fontSize: 24)),
+              child: ConceptIcon(emoji: goal.icon, size: 44),
             ),
           ),
           title: Text(

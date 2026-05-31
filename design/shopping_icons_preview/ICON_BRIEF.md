@@ -63,6 +63,20 @@ frío y uno apagado, va el apagado. El conjunto tiene que verse como una familia
 
 ---
 
+## ✅ PROMPT VALIDADO (congelado tras iterar pan/leche/zanahoria/manzana)
+
+Este es el preámbulo que quedó funcionando en `bg_removal/icons/generate.js`.
+Aprendizajes de la iteración:
+- "muted pastel" a secas = productos lavados/grises (leche sin vida). Usar
+  "soft pastel, still warm and appetizing, NOT washed-out".
+- Productos que SON de color fuerte natural (zanahoria naranja, manzana roja):
+  poner el color explícito en el *noun* del catálogo, ej.
+  `'a carrot with a bright natural orange body and green leafy top'`.
+- Pan: pedir `'whole rustic round loaf, uncut, no slices'` o sale pan lactal
+  cortado con agujero blanco.
+- Referencias maestras: `bread`, `milk`, `carrot`, `apple` en
+  `bg_removal/icons/out/icons/`. Usarlas como style refs del lote.
+
 ## 4. Prompt base (preámbulo de estilo — pegar SIEMPRE)
 
 > Flat modern illustration of a single {OBJETO}, centered, front view.

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeSync · Conceptos piloto (premios/logros/duelos/metas)</title>
+<style>
+  :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+  body{margin:0;background:#FFFCF9;color:#4A4443;}
+  header{padding:24px 28px 8px;}
+  header h1{margin:0 0 4px;font-size:20px;}
+  header p{margin:0;color:#8E8480;font-size:14px;}
+  section{padding:8px 28px 20px;}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#C0562B;margin:20px 0 12px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+  /* premio sobre el fondo directo (sin rectángulo detrás del icono) */
+  .tile{background:#fff;border:1px solid #F0E4D9;border-radius:22px;padding:16px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .badge{width:64px;height:64px;display:flex;align-items:center;justify-content:center;}
+  .badge img{width:60px;height:60px;object-fit:contain;}
+  .nm{font-size:12px;font-weight:600;text-align:center;}
+  /* tira tamaño chico */
+  .row{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px;}
+  .mini{display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .mini .b{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;}
+  .mini .b img{width:36px;height:36px;object-fit:contain;}
+  .mini .nm{font-size:10px;color:#8E8480;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Conceptos piloto — premios · logros · duelos · metas</h1>
+  <p>Mismo estilo que los productos. ¿Aguanta lo simbólico (corazón, estrella, trofeo, abrazo)? Tile como en la app.</p>
+</header>
+
+<section>
+  <h2>Premios (Pareja)</h2>
+  <div class="grid" id="g-rewards"></div>
+</section>
+<section>
+  <h2>Duelos / desafíos</h2>
+  <div class="grid" id="g-duels"></div>
+</section>
+<section>
+  <h2>Logros</h2>
+  <div class="grid" id="g-ach"></div>
+</section>
+<section>
+  <h2>Metas de ahorro</h2>
+  <div class="grid" id="g-goals"></div>
+</section>
+<section>
+  <h2>A 34px (tamaño real)</h2>
+  <div class="row" id="mini"></div>
+</section>
+
+<script>
+  const rewards = [["gift","Regalo"],["coffee_treat","Café/mate"],["massage","Masajes"],["movie_night","Noche cine"],["love_note","Nota romántica"],["heart_gift","Mimo"],["dinner_out","Cena"],["gaming","Gaming"]];
+  const duels = [["candle","Cita velas"],["sparkles","Magia"],["art_palette","Arte"],["camera","Foto"],["hug","Abrazo"],["fire_streak","Racha"]];
+  const ach = [["trophy","Trofeo"],["medal","Medalla"],["seedling","Primeros pasos"],["rocket","Imparable"],["target","Meta"]];
+  const goals = [["money_bag","Ahorro"],["house_goal","Casa"],["car","Auto"],["piggy_bank","Alcancía"]];
+
+  const tile = (k,n) => `<div class="tile"><span class="badge"><img src="concepts/${k}.png"></span><div class="nm">${n}</div></div>`;
+  const mini = (k,n) => `<div class="mini"><span class="b"><img src="concepts/${k}.png"></span><span class="nm">${n}</span></div>`;
+  document.getElementById("g-rewards").innerHTML = rewards.map(i=>tile(i[0],i[1])).join("");
+  document.getElementById("g-duels").innerHTML = duels.map(i=>tile(i[0],i[1])).join("");
+  document.getElementById("g-ach").innerHTML = ach.map(i=>tile(i[0],i[1])).join("");
+  document.getElementById("g-goals").innerHTML = goals.map(i=>tile(i[0],i[1])).join("");
+  const all = [...rewards,...duels,...ach,...goals];
+  document.getElementById("mini").innerHTML = all.map(i=>mini(i[0],i[1])).join("");
+</script>
+</body>
+</html>

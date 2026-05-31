@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
+import 'package:homesync_client/core/widgets/concept_icon.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
@@ -489,17 +490,11 @@ class FamilyRewardsScreen extends ConsumerWidget {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 48,
                     height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      reward.icon,
-                      style: const TextStyle(fontSize: 26),
+                    child: Center(
+                      child: ConceptIcon(emoji: reward.icon, size: 42),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1012,19 +1007,14 @@ class _RewardGrid extends ConsumerWidget {
                           child: Column(
                             children: [
                               const SizedBox(height: 12),
-                              Container(
+                              SizedBox(
                                 width: 52,
                                 height: 52,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withValues(
-                                    alpha: 0.12,
+                                child: Center(
+                                  child: ConceptIcon(
+                                    emoji: reward.icon,
+                                    size: 46,
                                   ),
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                                child: Text(
-                                  reward.icon,
-                                  style: const TextStyle(fontSize: 29),
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -1131,15 +1121,12 @@ class _PendingRewardCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
+              SizedBox(
                 width: 42,
                 height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(14),
+                child: Center(
+                  child: ConceptIcon(emoji: reward.icon, size: 38),
                 ),
-                child: Text(reward.icon, style: const TextStyle(fontSize: 24)),
               ),
               const SizedBox(width: 12),
               Expanded(

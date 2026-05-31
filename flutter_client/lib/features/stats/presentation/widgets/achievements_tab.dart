@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme_extension.dart';
+import '../../../../core/widgets/concept_icon.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import 'stats_shared_widgets.dart';
 
@@ -161,24 +162,13 @@ class AchievementsTab extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: isUnlocked
-                  ? AppColors.accentGold.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
             child: Center(
               child: Opacity(
                 opacity: isUnlocked ? 1.0 : 0.4,
-                child: Text(
-                  icon,
-                  style: const TextStyle(
-                    fontSize: 28,
-                  ),
-                ),
+                child: ConceptIcon(emoji: icon, size: 52),
               ),
             ),
           ),
@@ -257,10 +247,7 @@ class AchievementsTab extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(
-            isUnlocked ? icon : '🔒',
-            style: const TextStyle(fontSize: 20),
-          ),
+          ConceptIcon(emoji: isUnlocked ? icon : '🔒', size: 24),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

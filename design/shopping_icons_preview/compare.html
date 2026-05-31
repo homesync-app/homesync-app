@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeSync · Comparar estilos de iconos</title>
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  body { margin: 0; background: #FFFCF9; color: #4A4443; }
+  header { padding: 24px 28px 4px; }
+  header h1 { margin: 0 0 4px; font-size: 20px; }
+  header p { margin: 0; color: #8E8480; font-size: 14px; }
+  section { padding: 16px 28px 28px; }
+  h2 { font-size: 14px; letter-spacing: .04em; margin: 0 0 4px; }
+  .sub { color: #8E8480; font-size: 13px; margin: 0 0 16px; }
+  .new h2 { color: #2E8B57; }
+  .old h2 { color: #C0562B; }
+  .grid { display: flex; flex-wrap: wrap; gap: 14px; }
+  .card {
+    background: #fff; border: 1px solid #F0E4D9; border-radius: 18px;
+    padding: 12px; width: 104px; display: flex; flex-direction: column;
+    align-items: center; gap: 8px;
+  }
+  .card img { width: 56px; height: 56px; object-fit: contain; }
+  .card .nm { font-size: 11px; color: #8E8480; text-align:center; }
+  .divider { height: 1px; background: #F0E4D9; margin: 0 28px; }
+  .listsim { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+  .chip {
+    display:flex; align-items:center; gap:8px; background:#fff;
+    border:1px solid #F0E4D9; border-radius:12px; padding:6px 12px 6px 6px;
+  }
+  .chip .iw { width:38px;height:38px;border-radius:10px;background:#FFF0EA;
+    display:flex;align-items:center;justify-content:center;}
+  .chip .iw img{width:30px;height:30px;object-fit:contain;}
+  .chip span{font-size:13px;font-weight:600;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Comparación de estilos — ¿los viejos pegan con los nuevos?</h1>
+  <p>Mismo tamaño (56px). Mirá si los de abajo (ya en el bucket) parecen de la misma familia que los 4 nuevos.</p>
+</header>
+
+<section class="new">
+  <h2>● NUEVOS (referencias maestras recién generadas)</h2>
+  <p class="sub">El estilo que validamos: pastel cálido, flat, brillo mate.</p>
+  <div class="grid" id="grid-new"></div>
+</section>
+
+<div class="divider"></div>
+
+<section class="old">
+  <h2>● VIEJOS (ya subidos al bucket, tanda anterior)</h2>
+  <p class="sub">Muestra de 15 de los 56 que ya están en producción.</p>
+  <div class="grid" id="grid-old"></div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <h2>Mezclados como se verían en la lista real</h2>
+  <p class="sub">Así conviven nuevo + viejo en la misma pantalla.</p>
+  <div class="listsim" id="mix"></div>
+</section>
+
+<script>
+  const news = [
+    ["png/bread.png","Pan"],["png/milk.png","Leche"],
+    ["png/carrot.png","Zanahoria"],["png/apple.png","Manzana"],
+  ];
+  const olds = [
+    ["existing/milanesas.png","Milanesas"],["existing/dulceDeLeche.png","Dulce de leche"],
+    ["existing/fernet.png","Fernet"],["existing/yogurt.png","Yogur"],
+    ["existing/mozzarella.png","Mozzarella"],["existing/mayonnaise.png","Mayonesa"],
+    ["existing/cocaCola.png","Coca"],["existing/alfajor.png","Alfajor"],
+    ["existing/mushrooms.png","Champiñones"],["existing/butter.png","Manteca"],
+    ["existing/tuna.png","Atún"],["existing/oil.png","Aceite"],
+    ["existing/chorizo.png","Chorizo"],["existing/gummies.png","Gomitas"],
+    ["existing/sugar.png","Azúcar"],
+  ];
+  const card = (f,n) => `<div class="card"><img src="${f}"><div class="nm">${n}</div></div>`;
+  const chip = (f,n) => `<div class="chip"><span class="iw"><img src="${f}"></span><span>${n}</span></div>`;
+  document.getElementById("grid-new").innerHTML = news.map(i=>card(i[0],i[1])).join("");
+  document.getElementById("grid-old").innerHTML = olds.map(i=>card(i[0],i[1])).join("");
+  // intercalar para ver convivencia
+  const mix = [news[0],olds[0],news[1],olds[3],news[2],olds[8],news[3],olds[1]];
+  document.getElementById("mix").innerHTML = mix.map(i=>chip(i[0],i[1])).join("");
+</script>
+</body>
+</html>
