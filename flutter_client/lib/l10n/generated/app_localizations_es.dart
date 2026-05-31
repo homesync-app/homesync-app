@@ -4308,6 +4308,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get householdSettleUpTitle => 'Saldar cuentas';
+
+  @override
+  String get householdSettleUpSubtitle =>
+      'Quién le debe a quién para quedar a mano.';
+
+  @override
   String get householdSocialHubStoreButton => 'Tienda';
 
   @override

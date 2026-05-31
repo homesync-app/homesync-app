@@ -78,9 +78,23 @@ sea infantil (estrellas, coins) o competitivo (corona al mejor) resta.
 - [x] Keys ARB es/en (título, subtítulo, vacío, botón, /mes, día, premium).
 - Verificación: `flutter analyze` OK.
 
-### Fase 4 — Pulido (PENDIENTE)
-- [ ] Settle up como sección protagonista del tab convivencia.
-- [ ] Repaso de copy/i18n específico (sin jerga familiar).
+### Fase 4 — Pulido (COMPLETO)
+- [x] Settle up como sección protagonista del tab convivencia: `_SettleUpSection`
+      reusa `DebtSettlementSection` + `expenseBalancesProvider`. Se oculta con
+      < 2 integrantes. Keys ARB `householdSettleUpTitle/Subtitle`.
+- [x] Copy/i18n: verificado que título/subtítulo del hub para friends ya es
+      neutro ("Convivencia" / "Organización, convivencia y reparto claro para
+      el piso"), sin jerga familiar ni de premios. No requirió cambios.
+
+## Resultado
+
+Orden final del tab Convivencia (friends):
+1. Header (rol "Integrante", sin botón Tienda)
+2. Equilibrio de aporte (tareas + plata, neutro)
+3. Saldar cuentas (settle up protagonista)
+4. Cuentas del piso (gastos recurrentes, gated premium)
+
+Familia conserva intacta su experiencia (ranking competitivo, tienda, modo padres).
 
 ## Reglas de trabajo
 

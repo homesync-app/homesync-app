@@ -5,8 +5,10 @@ import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_spacing.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/contribution_balance_card.dart';
+import 'package:homesync_client/features/dashboard/presentation/widgets/debt_settlement_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/family_ranking_section.dart';
 import 'package:homesync_client/features/dashboard/presentation/widgets/household_bills_card.dart';
+import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/household_capabilities.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -77,6 +79,8 @@ class _HouseholdSocialHubScreenState
                 FamilyRankingSection(currentMember: currentMember)
               else if (caps.usesContributionBalance) ...[
                 const ContributionBalanceCard(),
+                const SizedBox(height: 18),
+                _SettleUpSection(),
                 const SizedBox(height: 18),
                 const HouseholdBillsCard(),
               ],
@@ -282,6 +286,55 @@ class _QuickActionButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Sección "Saldar cuentas" para convivencia. Para roomies, saber quién le debe
+/// a quién es EL feature, no un extra — por eso es protagonista en el hub.
+/// Reusa `DebtSettlementSection`, que ya maneja la simplificación de deudas y el
+/// estado "todo saldado".
+class _SettleUpSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final t = AppLocalizations.of(context);
+    final balancesAsync = ref.watch(expenseBalancesProvider);
+
+    return balancesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (balances) {
+        // Con un solo integrante o sin balances no hay nada que saldar.
+        if (balances.length < 2) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              t.householdSettleUpTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: theme.textPrimary,
+                letterSpacing: -0.35,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              t.householdSettleUpSubtitle,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+                color: theme.textSecondary,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+            DebtSettlementSection(balances: balances),
+          ],
+        );
+      },
     );
   }
 }

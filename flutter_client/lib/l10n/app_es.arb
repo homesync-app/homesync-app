@@ -2622,6 +2622,14 @@
       "day": { "type": "int" }
     }
   },
+  "householdSettleUpTitle": "Saldar cuentas",
+  "@householdSettleUpTitle": {
+    "description": "Título de la sección de saldar deudas entre integrantes en convivencia."
+  },
+  "householdSettleUpSubtitle": "Quién le debe a quién para quedar a mano.",
+  "@householdSettleUpSubtitle": {
+    "description": "Subtítulo de la sección de saldar cuentas en convivencia."
+  },
   "householdSocialHubStoreButton": "Tienda",
   "householdSocialHubTrackingTitle": "Seguimiento familiar",
   "householdSocialHubTrackingSubtitle": "Avances por integrante y cierre semanal.",

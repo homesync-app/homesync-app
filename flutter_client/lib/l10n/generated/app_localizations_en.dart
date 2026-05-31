@@ -4287,6 +4287,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get householdSettleUpTitle => 'Settle up';
+
+  @override
+  String get householdSettleUpSubtitle => 'Who owes who, so everyone\'s even.';
+
+  @override
   String get householdSocialHubStoreButton => 'Store';
 
   @override

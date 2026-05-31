@@ -7113,6 +7113,18 @@ abstract class AppLocalizations {
   /// **'Día {day}'**
   String householdBillsDayOfMonth(int day);
 
+  /// Título de la sección de saldar deudas entre integrantes en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Saldar cuentas'**
+  String get householdSettleUpTitle;
+
+  /// Subtítulo de la sección de saldar cuentas en convivencia.
+  ///
+  /// In es, this message translates to:
+  /// **'Quién le debe a quién para quedar a mano.'**
+  String get householdSettleUpSubtitle;
+
   /// No description provided for @householdSocialHubStoreButton.
   ///
   /// In es, this message translates to:
