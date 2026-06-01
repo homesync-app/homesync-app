@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
@@ -32,8 +33,15 @@ class _CoupleSplitStrategyScreenState
   void _loadCurrentRatio() {
     final household = ref.read(currentHouseholdProvider).value;
     if (household != null) {
+      // The slider always represents the CURRENT user's share. The stored ratio
+      // belongs to the anchor member, so flip it when the anchor is the partner.
+      final currentUserId = ref.read(currentUserIdProvider);
+      final anchor = household.splitRatioAnchorId;
+      final myShare = (anchor == null || anchor == currentUserId)
+          ? household.defaultSplitRatio
+          : (1.0 - household.defaultSplitRatio);
       setState(() {
-        _splitRatio = household.defaultSplitRatio;
+        _splitRatio = myShare;
         _financeMode = household.financeMode;
       });
     }

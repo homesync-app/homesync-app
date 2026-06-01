@@ -9,6 +9,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/expenses/presentation/widgets/expense_form_sheet.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_completion_feedback.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 
 import '../../data/shopping_predefined.dart';
 import '../../domain/models/shopping_categories.dart';
@@ -674,12 +675,15 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                       ref.invalidate(shoppingItemsProvider);
                     },
                     color: AppColors.primary,
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
-                      ),
-                      slivers: [
+                    child: EdgeFade(
+                      fadeStart: false,
+                      fadeEnd: true,
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        slivers: [
                         _buildStaticSectionTitle(
                           t.shoppingListTitle,
                           count: pending.length,
@@ -924,6 +928,7 @@ class _ShoppingListScreenState extends ConsumerState<ShoppingListScreen> {
                   ),
                 ),
               ),
+            ),
               _buildBottomOverlay(pending, done),
             ],
           );

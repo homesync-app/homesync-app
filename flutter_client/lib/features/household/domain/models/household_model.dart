@@ -9,6 +9,10 @@ class HouseholdModel {
   final bool tasksEnabled;
   final String financeMode;
   final double defaultSplitRatio;
+
+  /// The member [defaultSplitRatio] belongs to. The other member pays
+  /// `1 - defaultSplitRatio`. Null means no anchored ratio (split evenly).
+  final String? splitRatioAnchorId;
   final DateTime? createdAt;
 
   /// Sprint 1 Modo Padres: 'off' | 'all' | 'children_only' | 'per_member'.
@@ -23,6 +27,7 @@ class HouseholdModel {
     this.tasksEnabled = true,
     this.financeMode = 'divided',
     this.defaultSplitRatio = 0.5,
+    this.splitRatioAnchorId,
     this.createdAt,
     this.taskApprovalMode = 'off',
   });
@@ -39,6 +44,7 @@ class HouseholdModel {
               : 'divided'),
       defaultSplitRatio:
           (json['default_split_ratio'] as num? ?? 0.5).toDouble(),
+      splitRatioAnchorId: json['split_ratio_anchor_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,

@@ -67,6 +67,7 @@ bg_removal/**/.env.local
 .agent/
 .claude/
 .kilo/
+.kiro/
 .antigravity/
 
 # ─── Decompiled/extracted APK artifacts ──────────────────────────────────────

@@ -31,6 +31,95 @@ class _FakeSupabaseClient extends Fake implements SupabaseClient {
 
   @override
   RealtimeClient get realtime => _FakeRealtimeClient();
+
+  @override
+  SupabaseQueryBuilder from(String table) => _FakeSupabaseQueryBuilder();
+}
+
+class _FakeSupabaseQueryBuilder extends Fake implements SupabaseQueryBuilder {
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
+    String columns = '*',
+  ]) =>
+      _FakePostgrestFilterBuilder();
+}
+
+class _FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> eq(
+    String column,
+    Object value,
+  ) =>
+      this;
+
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> gte(
+    String column,
+    Object value,
+  ) =>
+      this;
+
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> inFilter(
+    String column,
+    List values,
+  ) =>
+      this;
+
+  @override
+  PostgrestTransformBuilder<List<Map<String, dynamic>>> order(
+    String column, {
+    bool? ascending,
+    bool? nullsFirst,
+    String? referencedTable,
+  }) =>
+      _FakePostgrestListTransformBuilder();
+
+  @override
+  PostgrestTransformBuilder<List<Map<String, dynamic>>> limit(
+    int count, {
+    String? referencedTable,
+  }) =>
+      _FakePostgrestListTransformBuilder();
+
+  @override
+  PostgrestTransformBuilder<Map<String, dynamic>?> maybeSingle() =>
+      _FakePostgrestSingleTransformBuilder();
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(List<Map<String, dynamic>> value) onValue, {
+    Function? onError,
+  }) async =>
+      await onValue(const []);
+}
+
+class _FakePostgrestListTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<List<Map<String, dynamic>>> {
+  @override
+  PostgrestTransformBuilder<List<Map<String, dynamic>>> limit(
+    int count, {
+    String? referencedTable,
+  }) =>
+      this;
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(List<Map<String, dynamic>> value) onValue, {
+    Function? onError,
+  }) async =>
+      await onValue(const []);
+}
+
+class _FakePostgrestSingleTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<Map<String, dynamic>?> {
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(Map<String, dynamic>? value) onValue, {
+    Function? onError,
+  }) async =>
+      await onValue(null);
 }
 
 class _FakeRealtimeClient extends Fake implements RealtimeClient {

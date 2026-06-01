@@ -1,4 +1,4 @@
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../repositories/premium_repository.dart';
 
@@ -7,7 +7,7 @@ class BuyPremiumProductUseCase {
 
   const BuyPremiumProductUseCase(this._repository);
 
-  Future<void> call(ProductDetails product) {
-    return _repository.buyProduct(product);
+  Future<bool> call(Package package) {
+    return _repository.buyProduct(package);
   }
 }

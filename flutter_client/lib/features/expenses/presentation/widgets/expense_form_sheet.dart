@@ -466,6 +466,7 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
         fixedAmounts: _fixedSplitManager.amounts,
         defaultRatio: household?.defaultSplitRatio ?? 0.5,
         currentUserId: ref.read(currentUserIdProvider),
+        splitRatioAnchorId: household?.splitRatioAnchorId,
       );
 
       if (splitResult.hasValidationError) {
@@ -1475,13 +1476,13 @@ class _ExpenseFormSheetState extends ConsumerState<ExpenseFormSheet> {
     if (_splitMode == SplitType.equal) {
       final household = ref.watch(currentHouseholdProvider).value;
       final defaultRatio = household?.defaultSplitRatio ?? 0.5;
+      final anchorId = household?.splitRatioAnchorId;
 
-      if (members.length == 2 && defaultRatio != 0.5) {
-        final currentUserId = ref.read(currentUserIdProvider);
+      if (members.length == 2 && defaultRatio != 0.5 && anchorId != null) {
         return Column(
           children: members.map((m) {
-            final isMe = m.userId == currentUserId;
-            final memRatio = isMe ? defaultRatio : (1.0 - defaultRatio);
+            final isAnchor = m.userId == anchorId;
+            final memRatio = isAnchor ? defaultRatio : (1.0 - defaultRatio);
             return ListTile(
               dense: true,
               leading: CustomUserAvatar(

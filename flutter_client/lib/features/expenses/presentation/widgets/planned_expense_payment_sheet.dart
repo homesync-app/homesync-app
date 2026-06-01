@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/currency_provider.dart';
+import 'package:homesync_client/core/providers/identity_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/features/expenses/domain/models/feed_item_model.dart';
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/domain/models/member.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
 
@@ -58,6 +60,27 @@ class _PlannedExpensePaymentSheetState
     super.dispose();
   }
 
+  /// Guarantees [_paidBy] always points at an actual member so the selector
+  /// highlights a chip and the value sent to the RPC is a real member id.
+  ///
+  /// The planned expense's payer id can come from a different identity space
+  /// than [MemberModel.userId] (Supabase UUID vs Firebase UID, depending on the
+  /// source). When it doesn't match any member we fall back to the current user
+  /// — the person registering the payment is the natural default — and finally
+  /// to the first member.
+  void _ensureValidPayer(List<MemberModel> members) {
+    if (members.isEmpty) return;
+    if (members.any((m) => m.userId == _paidBy)) return;
+
+    final currentUserId = ref.read(currentUserIdProvider);
+    _paidBy = members
+        .firstWhere(
+          (m) => m.userId == currentUserId,
+          orElse: () => members.first,
+        )
+        .userId;
+  }
+
   void _onAmountChanged(String val) {
     final clean = val.replaceAll('.', '').replaceAll(',', '');
     if (clean.isEmpty) {
@@ -103,13 +126,13 @@ class _PlannedExpensePaymentSheetState
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).commonErrorWithDetails('$e'),
-          ),
-          backgroundColor: Colors.red,
-        ),
+      // Use the overlay-based snackbar: a ScaffoldMessenger snackbar renders
+      // *behind* this modal bottom sheet, so the user would see no feedback and
+      // an open form. AppSnackBar draws on the root overlay, above the sheet.
+      AppSnackBar.show(
+        context,
+        message: AppLocalizations.of(context).commonErrorWithDetails('$e'),
+        type: AppSnackBarType.error,
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -141,9 +164,7 @@ class _PlannedExpensePaymentSheetState
               Text(AppLocalizations.of(context).commonErrorWithDetails('$e')),
         ),
         data: (List<MemberModel> members) {
-          if (_paidBy.isEmpty && members.isNotEmpty) {
-            _paidBy = members.first.userId;
-          }
+          _ensureValidPayer(members);
 
           return SingleChildScrollView(
             child: Column(

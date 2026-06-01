@@ -297,6 +297,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPremiumInactiveSubtitle => 'Advanced features';
 
   @override
+  String get settingsPremiumFeedbackRewardNote =>
+      'Report bugs or suggest useful improvements and you may earn free Premium months.';
+
+  @override
   String get settingsPremiumFeatureShoppingFinanceSync =>
       'Shopping → Finance sync';
 
@@ -3151,12 +3155,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Close';
 
   @override
-  String get premiumPaywallEyebrow =>
-      'Premium for households that stay organized';
+  String get premiumPaywallEyebrow => 'HomeSync Premium';
 
   @override
   String get premiumPaywallTitle =>
-      'Automate your household without entering everything twice';
+      'Automate your household without duplicate entry';
 
   @override
   String get premiumPaywallSubtitle =>
@@ -3205,6 +3208,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumSavePercent => 'Save 20%';
+
+  @override
+  String get premiumChoosePlanTitle => 'Choose your plan';
+
+  @override
+  String get premiumAnnualPlan => 'Annual';
+
+  @override
+  String get premiumMonthlyPlan => 'Monthly';
+
+  @override
+  String get premiumBestValueBadge => 'Best value';
+
+  @override
+  String get premiumBilledAnnually => 'Billed once a year';
+
+  @override
+  String get premiumBilledMonthly => 'Renews month to month';
+
+  @override
+  String premiumMonthlyEquivalent(String price) {
+    return '$price/mo';
+  }
+
+  @override
+  String get premiumContinueWithPlan => 'Continue';
 
   @override
   String get premiumAlreadyActiveTitle => 'You\'re already Premium!';

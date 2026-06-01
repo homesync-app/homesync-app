@@ -8,6 +8,7 @@ import 'package:homesync_client/core/utils/app_animations.dart';
 import 'package:homesync_client/features/savings/domain/models/savings_model.dart';
 import 'package:homesync_client/features/savings/presentation/providers/savings_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 
 class SavingsTab extends ConsumerWidget {
   const SavingsTab({super.key});
@@ -32,13 +33,17 @@ class SavingsTab extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(savingsGoalsProvider),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(24),
-            itemCount: goals.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 20),
-            itemBuilder: (context, index) =>
-                _buildGoalCard(context, goals[index], ref)
-                    .animateStaggered(index),
+          child: EdgeFade(
+            fadeStart: false,
+            fadeEnd: true,
+            child: ListView.separated(
+              padding: const EdgeInsets.all(24),
+              itemCount: goals.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 20),
+              itemBuilder: (context, index) =>
+                  _buildGoalCard(context, goals[index], ref)
+                      .animateStaggered(index),
+            ),
           ),
         );
       },

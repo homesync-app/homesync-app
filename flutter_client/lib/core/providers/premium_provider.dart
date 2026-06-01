@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
-import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/premium/data/repositories/premium_service_repository.dart';
 import 'package:homesync_client/features/premium/domain/repositories/premium_repository.dart';
 import 'package:homesync_client/features/premium/domain/usecases/buy_premium_product_usecase.dart';
@@ -116,7 +116,16 @@ final restorePremiumPurchasesUseCaseProvider =
 
 /// UI-facing provider for available products
 final premiumProductsProvider = FutureProvider((ref) async {
-  return ref.read(getPremiumProductsUseCaseProvider).call();
+  final household = await ref.watch(currentHouseholdProvider.future);
+  final offeringId = switch (household?.householdType) {
+    'family' => 'family',
+    'friends' => 'household',
+    'couple' => 'household',
+    _ => 'solo',
+  };
+  return ref.read(getPremiumProductsUseCaseProvider).call(
+        offeringId: offeringId,
+      );
 });
 
 /// Gate para la integración OCR + lista de compras.

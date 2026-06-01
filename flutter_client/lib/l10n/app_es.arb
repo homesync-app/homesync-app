@@ -67,7 +67,7 @@
   "@mainTabShoppingChild": {
     "description": "Bottom-nav label for the shopping tab when the current member is a minor (child store, not regular shopping)."
   },
-  "householdSocialTabLabel": "{type, select, couple{Pareja} family{Familia} friends{Convivencia} solo{Mi espacio} other{Mi espacio}}",
+  "householdSocialTabLabel": "{type, select, couple{Pareja} family{Familia} friends{Piso} solo{Mi espacio} other{Mi espacio}}",
   "@householdSocialTabLabel": {
     "description": "Label for the 'social' bottom-nav tab. Varies by household mode. couple = romantic partner. family = whole family unit. friends = peers/roommates living together. solo = individual user.",
     "placeholders": {
@@ -190,6 +190,10 @@
   "settingsPremiumInactiveSubtitle": "Funciones avanzadas",
   "@settingsPremiumInactiveSubtitle": {
     "description": "Card subtitle when the user does NOT have premium yet — teaser to upsell."
+  },
+  "settingsPremiumFeedbackRewardNote": "Reportá errores o sugerí mejoras útiles y podés ganar meses Premium gratis.",
+  "@settingsPremiumFeedbackRewardNote": {
+    "description": "Note below the Premium card encouraging users to report bugs or suggest useful improvements in exchange for possible free Premium months."
   },
   "settingsPremiumFeatureShoppingFinanceSync": "Sincronizacion Shopping a Finanzas",
   "@settingsPremiumFeatureShoppingFinanceSync": {
@@ -1988,11 +1992,11 @@
   "notificationsErrorTitle": "No pudimos cargar tus notificaciones",
   "notificationsErrorSubtitle": "Deslizá hacia abajo para reintentar",
   "premiumPaywallCloseTooltip": "Cerrar",
-  "premiumPaywallEyebrow": "Premium para hogares que se organizan en serio",
+  "premiumPaywallEyebrow": "HomeSync Premium",
   "@premiumPaywallEyebrow": {
     "description": "Short premium paywall badge shown above the title."
   },
-  "premiumPaywallTitle": "Automatizá tu hogar sin cargar todo dos veces",
+  "premiumPaywallTitle": "Automatizá tu hogar sin cargar dos veces",
   "premiumPaywallSubtitle": "Pagos, compras y estadísticas trabajando juntos para que el balance esté siempre claro.",
   "premiumBenefitRecurringPayments": "Pagos recurrentes",
   "@premiumBenefitRecurringPayments": {
@@ -2019,6 +2023,22 @@
   "premiumActivateButton": "Activar Premium",
   "premiumTestingModeLabel": "Modo testing · sin cargo",
   "premiumSavePercent": "Ahorrá 20%",
+  "premiumChoosePlanTitle": "Elegí tu plan",
+  "premiumAnnualPlan": "Anual",
+  "premiumMonthlyPlan": "Mensual",
+  "premiumBestValueBadge": "Mejor valor",
+  "premiumBilledAnnually": "Facturado una vez al año",
+  "premiumBilledMonthly": "Se renueva mes a mes",
+  "premiumMonthlyEquivalent": "{price}/mes",
+  "@premiumMonthlyEquivalent": {
+    "description": "Shows the equivalent monthly price for an annual subscription.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumContinueWithPlan": "Continuar",
   "premiumAlreadyActiveTitle": "¡Ya sos Premium!",
   "premiumAlreadyActiveBody": "Gracias por apoyar el desarrollo de HomeSync.",
   "premiumContinueButton": "Continuar",

@@ -1,58 +1,93 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:homesync_client/config/app_environment.dart';
 import 'package:homesync_client/core/providers/service_providers.dart';
 import 'package:homesync_client/core/providers/supabase_provider.dart';
 import 'package:homesync_client/core/services/analytics_service.dart';
 import 'package:homesync_client/core/services/app_identity_service.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:purchases_flutter/purchases_flutter.dart' as rc;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/logger_service.dart';
 
 class PremiumService {
-  final InAppPurchase _iap = InAppPurchase.instance;
+  static const String premiumEntitlementId = 'premium';
+
   final SupabaseClient _supabase;
   final AnalyticsService _analytics;
 
-  // Real IDs in store (change later if needed)
-  static const String _monthlyId = 'premium_monthly';
-  static const String _yearlyId = 'premium_yearly';
-
-  static final Set<String> _productIds = {_monthlyId, _yearlyId};
-
-  StreamSubscription<List<PurchaseDetails>>? _subscription;
-
-  // To update UI from outside
-  final Function(bool isPremium)? onPremiumStatusChanged;
+  bool _configured = false;
+  String? _configuredAppUserId;
 
   PremiumService({
     required SupabaseClient supabase,
     required AnalyticsService analytics,
-    this.onPremiumStatusChanged,
   })  : _supabase = supabase,
         _analytics = analytics;
 
-  void initialize() {
+  Future<bool> _ensureConfigured() async {
     if (kIsWeb) {
-      log.i('PremiumService: skipping IAP initialization on web');
-      return;
+      log.i('PremiumService: RevenueCat is disabled on web');
+      return false;
     }
 
-    final purchaseUpdated = _iap.purchaseStream;
-    _subscription = purchaseUpdated.listen(
-      _onPurchaseUpdate,
-      onDone: () => _subscription?.cancel(),
-      onError: (error) => log.e('IAP Error: $error'),
-    );
+    var userId = AppIdentityService.instance.currentUserId;
+    userId ??= await AppIdentityService.instance.refresh();
+    if (userId == null) {
+      log.w('PremiumService: RevenueCat skipped, no app user id yet');
+      return false;
+    }
+
+    final apiKey = switch (defaultTargetPlatform) {
+      TargetPlatform.android => AppEnvironment.revenueCatAndroidPublicApiKey,
+      TargetPlatform.iOS => AppEnvironment.revenueCatIosPublicApiKey,
+      _ => '',
+    };
+    if (apiKey.isEmpty) {
+      log.w('PremiumService: no RevenueCat API key for $defaultTargetPlatform');
+      return false;
+    }
+
+    if (!_configured) {
+      if (!AppEnvironment.isProduction) {
+        await rc.Purchases.setLogLevel(rc.LogLevel.debug);
+      }
+      final configuration = rc.PurchasesConfiguration(apiKey)
+        ..appUserID = userId;
+      await rc.Purchases.configure(configuration);
+      _configured = true;
+      _configuredAppUserId = userId;
+      log.i('RevenueCat configured for app user $userId');
+      return true;
+    }
+
+    if (_configuredAppUserId != userId) {
+      await rc.Purchases.logIn(userId);
+      _configuredAppUserId = userId;
+      log.i('RevenueCat logged in as app user $userId');
+    }
+    return true;
   }
 
-  void dispose() {
-    _subscription?.cancel();
+  bool _hasPremium(rc.CustomerInfo customerInfo) {
+    return customerInfo.entitlements.active.containsKey(premiumEntitlementId);
   }
 
   Future<bool> getPremiumStatus() async {
+    try {
+      if (await _ensureConfigured()) {
+        final customerInfo = await rc.Purchases.getCustomerInfo();
+        if (_hasPremium(customerInfo)) return true;
+      }
+    } catch (e, stack) {
+      log.w(
+        'RevenueCat premium status failed, falling back to Supabase',
+        error: e,
+        stackTrace: stack,
+      );
+    }
+
     final userId = AppIdentityService.instance.currentUserId;
     if (userId == null) {
       return false;
@@ -83,97 +118,71 @@ class PremiumService {
     }
   }
 
-  Future<List<ProductDetails>> getProducts() async {
-    if (kIsWeb) {
-      log.w('IAP products are not available on web');
+  Future<List<rc.Package>> getProducts({required String offeringId}) async {
+    if (!await _ensureConfigured()) return [];
+
+    final offerings = await rc.Purchases.getOfferings();
+    final offering = offerings.getOffering(offeringId) ?? offerings.current;
+    if (offering == null) {
+      log.w('RevenueCat returned no offering for $offeringId');
       return [];
     }
 
-    final bool available = await _iap.isAvailable();
-    if (!available) {
-      log.w('IAP not available on this device');
-      return [];
-    }
-
-    final ProductDetailsResponse response =
-        await _iap.queryProductDetails(_productIds);
-    if (response.notFoundIDs.isNotEmpty) {
-      log.w('IDs not found: ${response.notFoundIDs}');
-    }
-
-    return response.productDetails;
-  }
-
-  Future<void> buyProduct(ProductDetails product) async {
-    if (kIsWeb) {
-      throw UnsupportedError('In-app purchases are not supported on web');
-    }
-
-    await _analytics.trackPremiumPurchaseStarted(productId: product.id);
-    final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-
-    // Non-consumables for subscriptions
-    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
-  }
-
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    for (var purchase in purchases) {
-      if (purchase.status == PurchaseStatus.pending) {
-        log.i('Purchase pending: ${purchase.productID}');
-      } else if (purchase.status == PurchaseStatus.error) {
-        log.e('Purchase error: ${purchase.error}');
-        if (purchase.pendingCompletePurchase) {
-          await _iap.completePurchase(purchase);
-        }
-      } else if (purchase.status == PurchaseStatus.purchased ||
-          purchase.status == PurchaseStatus.restored) {
-        final valid = await _verifyAndActivate(purchase);
-        if (valid && purchase.pendingCompletePurchase) {
-          await _iap.completePurchase(purchase);
-        }
+    final packages = [...offering.availablePackages];
+    packages.sort((a, b) {
+      int rank(rc.Package package) {
+        return switch (package.packageType) {
+          rc.PackageType.annual => 0,
+          rc.PackageType.monthly => 1,
+          _ => 2,
+        };
       }
-    }
+
+      return rank(a).compareTo(rank(b));
+    });
+    return packages;
   }
 
-  Future<bool> _verifyAndActivate(PurchaseDetails purchase) async {
+  Future<bool> buyProduct(rc.Package package) async {
+    if (!await _ensureConfigured()) {
+      throw UnsupportedError('RevenueCat is not available on this platform');
+    }
+
+    await _analytics.trackPremiumPurchaseStarted(
+      productId: package.storeProduct.identifier,
+    );
+
     try {
-      log.i('Verifying purchase ${purchase.productID}...');
-
-      final userId = AppIdentityService.instance.currentUserId;
-      if (userId == null) return false;
-
-      // In a real app, this should be an Edge Function that verifies the store
-      // token. The DB RPC keeps the legacy user flag and household plan in sync.
-      await _supabase.rpc(
-        'set_premium_status',
-        params: {
-          'p_is_premium': true,
-          'p_premium_until': purchase.status == PurchaseStatus.purchased
-              ? DateTime.now().add(const Duration(days: 30)).toIso8601String()
-              : null,
-        },
+      final result = await rc.Purchases.purchase(
+        rc.PurchaseParams.package(package),
       );
-
-      onPremiumStatusChanged?.call(true);
-      log.i('Premium activated for user $userId');
-      return true;
-    } catch (e, stack) {
-      log.e('Verification failed: $e', error: e, stackTrace: stack);
-      return false;
+      return _hasPremium(result.customerInfo);
+    } on PlatformException catch (e, stack) {
+      final code = rc.PurchasesErrorHelper.getErrorCode(e);
+      if (code == rc.PurchasesErrorCode.purchaseCancelledError) {
+        log.i('RevenueCat purchase cancelled by user');
+        return false;
+      }
+      log.e('RevenueCat purchase failed: $e', error: e, stackTrace: stack);
+      rethrow;
     }
   }
 
   Future<void> restorePurchases() async {
-    if (kIsWeb) {
-      log.w('Restore purchases is not supported on web');
+    if (!await _ensureConfigured()) {
+      log.w('Restore purchases skipped: RevenueCat unavailable');
       return;
     }
 
     await _analytics.trackPremiumRestoreStarted();
-    await _iap.restorePurchases();
+    await rc.Purchases.restorePurchases();
   }
 
   Future<void> togglePremiumMock() async {
+    if (AppEnvironment.isProduction) {
+      throw UnsupportedError('Premium mock is disabled in production');
+    }
+
     final userId = AppIdentityService.instance.currentUserId;
     if (userId == null) {
       log.w('togglePremiumMock skipped: no authenticated user');
@@ -183,8 +192,6 @@ class PremiumService {
     try {
       final result = await _supabase.rpc('toggle_premium_mock');
       final next = result is Map && result['is_premium'] == true;
-
-      onPremiumStatusChanged?.call(next);
       log.i('Premium mock toggled for user $userId: $next');
     } catch (e, stack) {
       log.e('Error toggling premium mock: $e', error: e, stackTrace: stack);
@@ -194,10 +201,8 @@ class PremiumService {
 }
 
 final premiumServiceProvider = Provider<PremiumService>((ref) {
-  final service = PremiumService(
+  return PremiumService(
     supabase: ref.watch(supabaseClientProvider),
     analytics: ref.watch(analyticsServiceProvider),
   );
-  service.initialize();
-  return service;
 });

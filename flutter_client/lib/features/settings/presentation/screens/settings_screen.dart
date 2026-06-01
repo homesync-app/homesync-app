@@ -28,7 +28,8 @@ import 'package:homesync_client/features/household/presentation/screens/couple_s
 import 'package:homesync_client/features/onboarding/presentation/providers/couple_home_tour_controller.dart';
 import 'package:homesync_client/features/premium/presentation/screens/premium_paywall_screen.dart';
 import 'package:homesync_client/features/settings/domain/usecases/delete_account_usecase.dart';
-import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
+import 'package:homesync_client/features/settings/presentation/providers/settings_provider.dart';
+import 'package:homesync_client/features/settings/presentation/widgets/faq_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/feedback_sheet.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_account_components.dart';
 import 'package:homesync_client/features/settings/presentation/widgets/settings_admin_components.dart';
@@ -1080,19 +1081,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isPremium = ref.watch(premiumProvider).value ?? false;
     final t = AppLocalizations.of(context);
 
-    return SettingsPremiumCard(
-      isPremium: isPremium,
-      onTapPlans: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
-        );
-      },
-      premiumFeatures: [
-        t.settingsPremiumFeatureShoppingFinanceSync,
-        t.settingsPremiumFeatureRecurringPayments,
-        t.premiumBenefitAdvancedStats,
-        t.premiumBenefitFullCustomization,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsPremiumCard(
+          isPremium: isPremium,
+          onTapPlans: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PremiumPaywallScreen()),
+            );
+          },
+          premiumFeatures: [
+            t.settingsPremiumFeatureShoppingFinanceSync,
+            t.settingsPremiumFeatureRecurringPayments,
+            t.premiumBenefitAdvancedStats,
+            t.premiumBenefitFullCustomization,
+          ],
+        ),
+        const SizedBox(height: 10),
+        InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            FeedbackSheet.show(
+              context,
+              type: FeedbackType.bug,
+              screen: 'settings',
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight.withValues(alpha: 0.72),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.74),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.bug_report_outlined,
+                    color: AppColors.primary,
+                    size: 19,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    t.settingsPremiumFeedbackRewardNote,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1585,8 +1648,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final result =
-          await ref.read(deleteAccountUseCaseProvider).execute();
+      final result = await ref.read(deleteAccountUseCaseProvider).execute();
 
       if (!mounted) return;
       final t = AppLocalizations.of(context);

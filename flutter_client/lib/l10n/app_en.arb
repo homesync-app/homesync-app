@@ -191,6 +191,10 @@
   "@settingsPremiumInactiveSubtitle": {
     "description": "Card subtitle when the user does NOT have premium yet — teaser to upsell."
   },
+  "settingsPremiumFeedbackRewardNote": "Report bugs or suggest useful improvements and you may earn free Premium months.",
+  "@settingsPremiumFeedbackRewardNote": {
+    "description": "Note below the Premium card encouraging users to report bugs or suggest useful improvements in exchange for possible free Premium months."
+  },
   "settingsPremiumFeatureShoppingFinanceSync": "Shopping → Finance sync",
   "@settingsPremiumFeatureShoppingFinanceSync": {
     "description": "Premium feature label: when a shopping list item is purchased, it auto-creates a finance/expense entry."
@@ -1953,8 +1957,8 @@
   "notificationsErrorTitle": "We couldn't load your notifications",
   "notificationsErrorSubtitle": "Swipe down to retry",
   "premiumPaywallCloseTooltip": "Close",
-  "premiumPaywallEyebrow": "Premium for households that stay organized",
-  "premiumPaywallTitle": "Automate your household without entering everything twice",
+  "premiumPaywallEyebrow": "HomeSync Premium",
+  "premiumPaywallTitle": "Automate your household without duplicate entry",
   "premiumPaywallSubtitle": "Payments, shopping, and stats working together so the balance always stays clear.",
   "premiumBenefitRecurringPayments": "Recurring payments",
   "premiumBenefitRecurringPaymentsDesc": "Schedule subscriptions, services, and installments so they repeat on their own and do not get lost during the month.",
@@ -1969,6 +1973,22 @@
   "premiumActivateButton": "Activate Premium",
   "premiumTestingModeLabel": "Testing mode · no charge",
   "premiumSavePercent": "Save 20%",
+  "premiumChoosePlanTitle": "Choose your plan",
+  "premiumAnnualPlan": "Annual",
+  "premiumMonthlyPlan": "Monthly",
+  "premiumBestValueBadge": "Best value",
+  "premiumBilledAnnually": "Billed once a year",
+  "premiumBilledMonthly": "Renews month to month",
+  "premiumMonthlyEquivalent": "{price}/mo",
+  "@premiumMonthlyEquivalent": {
+    "description": "Shows the equivalent monthly price for an annual subscription.",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "premiumContinueWithPlan": "Continue",
   "premiumAlreadyActiveTitle": "You're already Premium!",
   "premiumAlreadyActiveBody": "Thanks for supporting HomeSync development.",
   "premiumContinueButton": "Continue",

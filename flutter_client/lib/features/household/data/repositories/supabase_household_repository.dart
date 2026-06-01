@@ -362,9 +362,15 @@ class SupabaseHouseholdRepository
   ) async {
     return executeWithHandling(
       () async {
-        await _client
-            .from(AppConstants.tableHouseholds)
-            .update({'default_split_ratio': ratio}).eq('id', householdId);
+        // The ratio is the CURRENT user's share, anchored to them so it stays
+        // stable regardless of who later loads/pays an expense. Equal (0.5)
+        // clears the anchor.
+        final anchorId =
+            ratio == 0.5 ? null : AppIdentityService.instance.currentUserId;
+        await _client.from(AppConstants.tableHouseholds).update({
+          'default_split_ratio': ratio,
+          'split_ratio_anchor_id': anchorId,
+        }).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateDefaultSplitRatio',
       isOnline: _isOnline,
@@ -379,9 +385,15 @@ class SupabaseHouseholdRepository
   }) async {
     return executeWithHandling(
       () async {
+        // default_split_ratio is the current user's share; anchor it to them so
+        // shared expenses split the same regardless of who pays. 0.5 clears it.
+        final anchorId = defaultSplitRatio == 0.5
+            ? null
+            : AppIdentityService.instance.currentUserId;
         await _client.from(AppConstants.tableHouseholds).update({
           'finance_mode': financeMode,
           'default_split_ratio': defaultSplitRatio,
+          'split_ratio_anchor_id': anchorId,
         }).eq('id', householdId);
       },
       context: 'SupabaseHouseholdRepository.updateFinanceSettings',

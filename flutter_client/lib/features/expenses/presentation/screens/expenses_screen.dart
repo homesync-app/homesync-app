@@ -19,6 +19,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_floating_action_button.dart';
 import 'package:homesync_client/shared/widgets/app_segmented_tabs.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 import 'package:intl/intl.dart';
 
@@ -149,193 +150,197 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
         ref.invalidate(expenseControllerProvider);
       },
       color: AppColors.primary,
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          // 1. SUMMARY WIDGET WITH PROJECTION
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: summaryAsync.when(
-                loading: () => const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
+      child: EdgeFade(
+        fadeStart: false,
+        fadeEnd: true,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            // 1. SUMMARY WIDGET WITH PROJECTION
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: summaryAsync.when(
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
-                ),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (summary) {
-                  final realIncome =
-                      (summary['income'] as num?)?.toDouble() ?? 0.0;
-                  final expense =
-                      (summary['expense'] as num?)?.toDouble() ?? 0.0;
-                  final settlementsReceived =
-                      (summary['settlements_received'] as num?)?.toDouble() ??
-                          0.0;
-                  final settlementsPaid =
-                      (summary['settlements_paid'] as num?)?.toDouble() ?? 0.0;
-                  // balance real del RPC (incluye settlements correctamente)
-                  final rpcBalance =
-                      (summary['balance'] as num?)?.toDouble() ?? 0.0;
+                  error: (e, _) => Center(child: Text('Error: $e')),
+                  data: (summary) {
+                    final realIncome =
+                        (summary['income'] as num?)?.toDouble() ?? 0.0;
+                    final expense =
+                        (summary['expense'] as num?)?.toDouble() ?? 0.0;
+                    final settlementsReceived =
+                        (summary['settlements_received'] as num?)?.toDouble() ??
+                            0.0;
+                    final settlementsPaid =
+                        (summary['settlements_paid'] as num?)?.toDouble() ?? 0.0;
+                    final rpcBalance =
+                        (summary['balance'] as num?)?.toDouble() ?? 0.0;
+                    final isIncomeEstimated =
+                        (summary['is_income_estimated'] as bool?) ?? false;
 
-                  final estimated = estimatedIncomeAsync.value;
-                  final isIncomeEstimated =
-                      realIncome == 0 && estimated?.isSet == true;
+                    // Display real income or estimated income based on financeMode
+                    final estimated = estimatedIncomeAsync.value;
+                    final displayIncome = isIncomeEstimated
+                        ? (estimated?.isSet == true ? estimated!.amount : 0.0)
+                        : realIncome;
 
-                  // income para mostrar en el tile: ingresos reales o estimado
-                  final displayIncome = realIncome > 0
-                      ? realIncome
-                      : (estimated?.isSet == true ? estimated!.amount : 0.0);
+                    // Net balance display depends on mode or values
+                    final balance = isIncomeEstimated
+                        ? (displayIncome + settlementsReceived) -
+                            expense -
+                            settlementsPaid
+                        : rpcBalance;
 
-                  // balance para mostrar: si hay ingreso estimado lo usamos,
-                  // si no usamos el balance real del RPC (que ya tiene settlements)
-                  final balance = isIncomeEstimated
-                      ? estimated!.amount +
-                          settlementsReceived -
-                          expense -
-                          settlementsPaid
-                      : rpcBalance;
-
-                  return projectionAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => _buildUnifiedSummaryCard(
-                      balance,
-                      displayIncome,
-                      expense,
-                      0,
-                      isIncomeEstimated: isIncomeEstimated,
-                    ),
-                    data: (proj) => _buildUnifiedSummaryCard(
-                      balance,
-                      displayIncome,
-                      expense,
-                      proj.pending,
-                      isIncomeEstimated: isIncomeEstimated,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // 2. FEED & FUTURE EXPENSES
-          feedAsync.when(
-            loading: () => const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            ),
-            error: (e, _) => SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('Error: $e')),
-            ),
-            data: (feedItems) {
-              final filteredItems =
-                  feedItems.where(_shouldShowFeedItem).toList();
-              final sortedItems = List<FeedItemModel>.from(filteredItems)
-                ..sort((a, b) => b.date.compareTo(a.date));
-
-              return SliverMainAxisGroup(
-                slivers: [
-                  if (sortedItems.isNotEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    theme.textSecondary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.history_rounded,
-                                size: 12,
-                                color: theme.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              AppLocalizations.of(context)
-                                  .expensesActivityRecentEyebrow,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 12,
-                                color:
-                                    theme.textSecondary.withValues(alpha: 0.7),
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
+                    return projectionAsync.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (_, __) => _buildUnifiedSummaryCard(
+                        balance,
+                        displayIncome,
+                        expense,
+                        0,
+                        isIncomeEstimated: isIncomeEstimated,
                       ),
-                    ),
-                  if (sortedItems.isNotEmpty)
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = sortedItems[index];
-                          final isFirstOfDate = index == 0 ||
-                              _formatFeedDate(item.date) !=
-                                  _formatFeedDate(sortedItems[index - 1].date);
+                      data: (proj) => _buildUnifiedSummaryCard(
+                        balance,
+                        displayIncome,
+                        expense,
+                        proj.pending,
+                        isIncomeEstimated: isIncomeEstimated,
+                        paidThisMonth: proj.spent,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            // 2. FEED & FUTURE EXPENSES
+            feedAsync.when(
+              loading: () => const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+              error: (e, _) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: Text('Error: $e')),
+              ),
+              data: (feedItems) {
+                final filteredItems =
+                    feedItems.where(_shouldShowFeedItem).toList();
+                final sortedItems = List<FeedItemModel>.from(filteredItems)
+                  ..sort((a, b) => b.date.compareTo(a.date));
+
+                final expenses = ref.watch(expenseControllerProvider).value ?? const <ExpenseModel>[];
+                final expenseMap = { for (final e in expenses) e.id: e };
+
+                return SliverMainAxisGroup(
+                  slivers: [
+                    if (sortedItems.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                          child: Row(
                             children: [
-                              if (isFirstOfDate)
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                                  child: Text(
-                                    _formatFeedDate(item.date),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 13,
-                                      color: theme.textMuted,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color:
+                                      theme.textSecondary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 6,
+                                child: Icon(
+                                  Icons.history_rounded,
+                                  size: 12,
+                                  color: theme.textSecondary,
                                 ),
-                                child: _buildFeedItemCard(item)
-                                    .animateStaggered(index),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                AppLocalizations.of(context)
+                                    .expensesActivityRecentEyebrow,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                  color:
+                                      theme.textSecondary.withValues(alpha: 0.7),
+                                  letterSpacing: 1.2,
+                                ),
                               ),
                             ],
-                          );
-                        },
-                        childCount: sortedItems.length,
-                      ),
-                    ),
-                  if (sortedItems.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 40),
-                        child: _buildEmptyState(
-                          AppLocalizations.of(context).expensesActivityEmpty,
+                          ),
                         ),
                       ),
-                    ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                ],
-              );
-            },
-          ),
-        ],
+                    if (sortedItems.isNotEmpty)
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final item = sortedItems[index];
+                            final isFirstOfDate = index == 0 ||
+                                _formatFeedDate(item.date) !=
+                                    _formatFeedDate(sortedItems[index - 1].date);
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (isFirstOfDate)
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                                    child: Text(
+                                      _formatFeedDate(item.date),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                        color: theme.textMuted,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 6,
+                                  ),
+                                  child: _buildFeedItemCard(item, expenseMap)
+                                      .animateStaggered(index),
+                                ),
+                              ],
+                            );
+                          },
+                          childCount: sortedItems.length,
+                        ),
+                      ),
+                    if (sortedItems.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: _buildEmptyState(
+                            AppLocalizations.of(context).expensesActivityEmpty,
+                          ),
+                        ),
+                      ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -507,12 +512,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     num expense,
     num projectedPending, {
     bool isIncomeEstimated = false,
+    num? paidThisMonth,
   }) {
     final projectedBalance = balance - projectedPending;
     final theme = context.theme;
     final t = AppLocalizations.of(context);
     final hasIncome = income > 0;
     final hasPending = projectedPending > 0;
+    // In the "previsto del mes" view (no personal income recorded) "Pagado"
+    // must mirror "Pendiente": the household total paid this month, not just
+    // what the current user paid. `paidThisMonth` carries that value.
+    final paid = paidThisMonth ?? expense;
     final mainLabel = hasIncome
         ? t.expensesSummaryMainBalance
         : hasPending
@@ -521,8 +531,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final mainAmount = hasIncome
         ? balance
         : hasPending
-            ? expense + projectedPending
-            : expense;
+            ? paid + projectedPending
+            : paid;
 
     return Container(
       width: double.infinity,
@@ -573,7 +583,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                                   ? t.expensesStatTileEstimatedIncome
                                   : t.expensesStatTileIncomes)
                               : t.expensesStatTilePaid,
-                          hasIncome ? income : expense,
+                          hasIncome ? income : paid,
                           hasIncome ? AppColors.success : AppColors.primary,
                           hasIncome
                               ? (isIncomeEstimated
@@ -584,7 +594,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                               ? (isIncomeEstimated
                                   ? () => EstimatedIncomeSheet.show(context)
                                   : () => _showIncomeBreakdownSheet(income))
-                              : () => _showExpensesBreakdownSheet(expense),
+                              : () => _showExpensesBreakdownSheet(paid),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -979,15 +989,20 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     final feed = _effectiveFeedForBreakdowns();
     final userId = ref.read(currentUserIdProvider);
     final now = DateTime.now();
+    // "Pagado" shows real money that left a wallet (see monthlyProjection):
+    //  - shared economy: every household payment this month;
+    //  - divided economy: only what the current user actually paid.
+    final isSharedEconomy =
+        ref.read(currentHouseholdProvider).value?.financeMode == 'shared';
 
     final items = feed
         .where(
           (item) =>
               item.isRealExpense &&
               item.date.isSameMonth(now) &&
-              ((item.transactionType == 'expense' && item.payerId == userId) ||
-                  (item.transactionType == 'settlement' &&
-                      item.payerId == userId)),
+              (item.transactionType == 'expense' ||
+                  item.transactionType == 'settlement') &&
+              (isSharedEconomy || item.payerId == userId),
         )
         .map(_expenseFromFeedItem)
         .toList();
@@ -1305,10 +1320,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
     );
   }
 
-  Widget _buildFeedItemCard(FeedItemModel item) {
+  Widget _buildFeedItemCard(FeedItemModel item, Map<String, ExpenseModel> expenseMap) {
     if (item.isRealExpense) {
-      final expenses = ref.read(expenseControllerProvider).value;
-      final expense = expenses?.where((e) => e.id == item.id).firstOrNull ??
+      final expense = expenseMap[item.id] ??
           ExpenseModel(
             id: item.id,
             title: item.title,
@@ -1467,7 +1481,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen>
                           result['title'].toString(),
                         ),
                         type: AppSnackBarType.success,
-                        duration: const Duration(milliseconds: 1500),
+                        duration: const Duration(milliseconds: 2200),
                       );
                     },
                     style: ElevatedButton.styleFrom(

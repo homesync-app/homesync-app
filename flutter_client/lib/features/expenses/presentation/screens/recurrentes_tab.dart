@@ -9,6 +9,7 @@ import 'package:homesync_client/features/expenses/domain/models/expense_template
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/expenses/presentation/utils/finance_localization.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/edge_fade.dart';
 import 'package:homesync_client/shared/widgets/premium_paywall.dart';
 
 class RecurrentesTab extends ConsumerWidget {
@@ -46,106 +47,110 @@ class RecurrentesTab extends ConsumerWidget {
           onRefresh: () async =>
               ref.invalidate(expenseTemplateControllerProvider),
           color: AppColors.primary,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              if (templates.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.05),
-                            shape: BoxShape.circle,
+          child: EdgeFade(
+            fadeStart: false,
+            fadeEnd: true,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                if (templates.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.update_rounded,
+                              size: 64,
+                              color: AppColors.primary,
+                            ).animatePulse(),
                           ),
-                          child: const Icon(
-                            Icons.update_rounded,
-                            size: 64,
-                            color: AppColors.primary,
-                          ).animatePulse(),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          t.expensesRecurringEmptyTitle,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 48),
-                          child: Text(
-                            t.expensesRecurringEmptySubtitle,
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 24),
+                          Text(
+                            t.expensesRecurringEmptyTitle,
                             style: const TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 48),
-                      ],
-                    ),
-                  ),
-                )
-              else ...[
-                if (incomes.isNotEmpty) ...[
-                  _buildSectionHeader(
-                    context,
-                    t.expensesRecurringIncomeSection,
-                    AppColors.success,
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildTemplateCard(
-                          context,
-                          incomes[index],
-                          index,
-                          AppColors.success,
-                        ),
-                        childCount: incomes.length,
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 48),
+                            child: Text(
+                              t.expensesRecurringEmptySubtitle,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-                if (expenses.isNotEmpty) ...[
-                  _buildSectionHeader(
-                    context,
-                    t.expensesRecurringExpenseSection,
-                    AppColors.primary,
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildTemplateCard(
-                          context,
-                          expenses[index],
-                          index,
-                          null,
+                  )
+                else ...[
+                  if (incomes.isNotEmpty) ...[
+                    _buildSectionHeader(
+                      context,
+                      t.expensesRecurringIncomeSection,
+                      AppColors.success,
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildTemplateCard(
+                            context,
+                            incomes[index],
+                            index,
+                            AppColors.success,
+                          ),
+                          childCount: incomes.length,
                         ),
-                        childCount: expenses.length,
                       ),
                     ),
-                  ),
+                  ],
+                  if (expenses.isNotEmpty) ...[
+                    _buildSectionHeader(
+                      context,
+                      t.expensesRecurringExpenseSection,
+                      AppColors.primary,
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildTemplateCard(
+                            context,
+                            expenses[index],
+                            index,
+                            null,
+                          ),
+                          childCount: expenses.length,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (incomes.isEmpty || expenses.isEmpty)
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
-                if (incomes.isEmpty || expenses.isEmpty)
-                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
-            ],
+            ),
           ),
         );
       },

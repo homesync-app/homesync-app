@@ -81,6 +81,20 @@ class AppEnvironment {
     return !isProduction && _isTruthy(override);
   }
 
+  static String get revenueCatAndroidPublicApiKey {
+    return const String.fromEnvironment(
+      'REVENUECAT_ANDROID_PUBLIC_API_KEY',
+      defaultValue: 'goog_cgdhCLspPBDqYRLmUKsWiNeSHse',
+    );
+  }
+
+  static String get revenueCatIosPublicApiKey {
+    return const String.fromEnvironment(
+      'REVENUECAT_IOS_PUBLIC_API_KEY',
+      defaultValue: '',
+    );
+  }
+
   static String _readWebQueryParam(String key) {
     final value = Uri.base.queryParameters[key];
     return value?.trim() ?? '';

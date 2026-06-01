@@ -106,7 +106,7 @@ extension AppAnimationsExtension on Widget {
   }
 
   Widget animateStaggered(int index) {
-    return animateEntrance(delay: index * 40);
+    return animateEntrance(delay: (index % 8) * 40);
   }
 
   Widget animateScaleIn({int delay = 0}) {

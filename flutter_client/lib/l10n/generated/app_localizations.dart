@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// Label for the 'social' bottom-nav tab. Varies by household mode. couple = romantic partner. family = whole family unit. friends = peers/roommates living together. solo = individual user.
   ///
   /// In es, this message translates to:
-  /// **'{type, select, couple{Pareja} family{Familia} friends{Convivencia} solo{Mi espacio} other{Mi espacio}}'**
+  /// **'{type, select, couple{Pareja} family{Familia} friends{Piso} solo{Mi espacio} other{Mi espacio}}'**
   String householdSocialTabLabel(String type);
 
   /// Title shown at the top of the social/household hub screen. Varies by mode.
@@ -481,6 +481,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Funciones avanzadas'**
   String get settingsPremiumInactiveSubtitle;
+
+  /// Note below the Premium card encouraging users to report bugs or suggest useful improvements in exchange for possible free Premium months.
+  ///
+  /// In es, this message translates to:
+  /// **'Reportá errores o sugerí mejoras útiles y podés ganar meses Premium gratis.'**
+  String get settingsPremiumFeedbackRewardNote;
 
   /// Premium feature label: when a shopping list item is purchased, it auto-creates a finance/expense entry.
   ///
@@ -5202,13 +5208,13 @@ abstract class AppLocalizations {
   /// Short premium paywall badge shown above the title.
   ///
   /// In es, this message translates to:
-  /// **'Premium para hogares que se organizan en serio'**
+  /// **'HomeSync Premium'**
   String get premiumPaywallEyebrow;
 
   /// No description provided for @premiumPaywallTitle.
   ///
   /// In es, this message translates to:
-  /// **'Automatizá tu hogar sin cargar todo dos veces'**
+  /// **'Automatizá tu hogar sin cargar dos veces'**
   String get premiumPaywallTitle;
 
   /// No description provided for @premiumPaywallSubtitle.
@@ -5294,6 +5300,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ahorrá 20%'**
   String get premiumSavePercent;
+
+  /// No description provided for @premiumChoosePlanTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegí tu plan'**
+  String get premiumChoosePlanTitle;
+
+  /// No description provided for @premiumAnnualPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Anual'**
+  String get premiumAnnualPlan;
+
+  /// No description provided for @premiumMonthlyPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Mensual'**
+  String get premiumMonthlyPlan;
+
+  /// No description provided for @premiumBestValueBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejor valor'**
+  String get premiumBestValueBadge;
+
+  /// No description provided for @premiumBilledAnnually.
+  ///
+  /// In es, this message translates to:
+  /// **'Facturado una vez al año'**
+  String get premiumBilledAnnually;
+
+  /// No description provided for @premiumBilledMonthly.
+  ///
+  /// In es, this message translates to:
+  /// **'Se renueva mes a mes'**
+  String get premiumBilledMonthly;
+
+  /// Shows the equivalent monthly price for an annual subscription.
+  ///
+  /// In es, this message translates to:
+  /// **'{price}/mes'**
+  String premiumMonthlyEquivalent(String price);
+
+  /// No description provided for @premiumContinueWithPlan.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get premiumContinueWithPlan;
 
   /// No description provided for @premiumAlreadyActiveTitle.
   ///

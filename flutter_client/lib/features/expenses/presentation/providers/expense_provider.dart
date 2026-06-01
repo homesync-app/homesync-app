@@ -298,10 +298,10 @@ class CombinedFeedController extends _$CombinedFeedController {
       await repo.processRecurringExpenses(householdId);
       await prefs.setString(storageKey, now.toIso8601String());
       if (!ref.mounted) return;
-      ref.invalidateSelf();
       ref.invalidate(expenseBalancesProvider);
       ref.invalidate(monthlyPendingPlannedExpensesProvider);
       ref.invalidate(recentActivityRemoteProvider);
+      ref.invalidateSelf();
     } catch (e, stack) {
       log.w(
         'CombinedFeed recurring expense processing failed: $e',
@@ -332,12 +332,10 @@ class CombinedFeedController extends _$CombinedFeedController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
-          ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
           ref.invalidate(recentActivityRemoteProvider);
+          ref.invalidateSelf();
         }
         return r;
       },
@@ -354,10 +352,8 @@ class CombinedFeedController extends _$CombinedFeedController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
-          ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -417,11 +413,10 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
           await repo.processRecurringExpenses(householdId);
         }
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
           ref.invalidate(personalFinanceSummaryProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -438,10 +433,9 @@ class ExpenseTemplateController extends _$ExpenseTemplateController {
       },
       (r) {
         if (ref.read(isOnlineProvider)) {
-          ref.invalidateSelf();
           ref.invalidate(combinedFeedControllerProvider);
           ref.invalidate(monthlyPendingPlannedExpensesProvider);
-          ref.invalidate(monthlyProjectionProvider);
+          ref.invalidateSelf();
         }
       },
     );
@@ -525,9 +519,15 @@ Future<MonthlyProjectionData> monthlyProjection(
     if (item.date.month != now.month || item.date.year != now.year) continue;
 
     if (item.isRealExpense) {
-      // For real expenses, we estimate user's cashflow impact.
-      // If the user paid it, it counts as "spent" from their wallet.
-      if (item.payerId == userId) {
+      // "Pagado" shows REAL money that left a wallet, never debts/shares:
+      //  - shared (unified) economy: the whole household's spend — both members
+      //    see the same figure;
+      //  - divided economy: only what the CURRENT user actually paid. When the
+      //    partner pays a shared bill it does NOT move "Pagado"; it surfaces as
+      //    a debt (per the configured split) in the Inicio/division widget.
+      if (isSharedEconomy) {
+        spent += item.amount;
+      } else if (item.payerId == userId) {
         spent += item.amount;
       }
     }

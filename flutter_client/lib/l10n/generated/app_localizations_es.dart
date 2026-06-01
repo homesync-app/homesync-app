@@ -100,7 +100,7 @@ class AppLocalizationsEs extends AppLocalizations {
       {
         'couple': 'Pareja',
         'family': 'Familia',
-        'friends': 'Convivencia',
+        'friends': 'Piso',
         'solo': 'Mi espacio',
         'other': 'Mi espacio',
       },
@@ -296,6 +296,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsPremiumInactiveSubtitle => 'Funciones avanzadas';
+
+  @override
+  String get settingsPremiumFeedbackRewardNote =>
+      'Reportá errores o sugerí mejoras útiles y podés ganar meses Premium gratis.';
 
   @override
   String get settingsPremiumFeatureShoppingFinanceSync =>
@@ -3168,12 +3172,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get premiumPaywallCloseTooltip => 'Cerrar';
 
   @override
-  String get premiumPaywallEyebrow =>
-      'Premium para hogares que se organizan en serio';
+  String get premiumPaywallEyebrow => 'HomeSync Premium';
 
   @override
-  String get premiumPaywallTitle =>
-      'Automatizá tu hogar sin cargar todo dos veces';
+  String get premiumPaywallTitle => 'Automatizá tu hogar sin cargar dos veces';
 
   @override
   String get premiumPaywallSubtitle =>
@@ -3222,6 +3224,32 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get premiumSavePercent => 'Ahorrá 20%';
+
+  @override
+  String get premiumChoosePlanTitle => 'Elegí tu plan';
+
+  @override
+  String get premiumAnnualPlan => 'Anual';
+
+  @override
+  String get premiumMonthlyPlan => 'Mensual';
+
+  @override
+  String get premiumBestValueBadge => 'Mejor valor';
+
+  @override
+  String get premiumBilledAnnually => 'Facturado una vez al año';
+
+  @override
+  String get premiumBilledMonthly => 'Se renueva mes a mes';
+
+  @override
+  String premiumMonthlyEquivalent(String price) {
+    return '$price/mes';
+  }
+
+  @override
+  String get premiumContinueWithPlan => 'Continuar';
 
   @override
   String get premiumAlreadyActiveTitle => '¡Ya sos Premium!';

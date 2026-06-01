@@ -24,6 +24,7 @@ class ExpenseSplitBuilder {
     required Map<String, double> fixedAmounts,
     required double defaultRatio,
     required String? currentUserId,
+    String? splitRatioAnchorId,
   }) {
     if (!showSplit || splitMode == SplitType.personal) {
       return ExpenseSplitBuildResult(
@@ -38,11 +39,14 @@ class ExpenseSplitBuilder {
     }
 
     if (splitMode == SplitType.equal) {
-      if (financeMembers.length == 2 && defaultRatio != 0.5) {
+      // The configured ratio belongs to the anchor member (not "whoever is
+      // creating the expense"), so the split is stable regardless of who loads
+      // or pays it. Falls back to an even split when there is no anchor.
+      final anchorId = splitRatioAnchorId;
+      if (financeMembers.length == 2 && defaultRatio != 0.5 && anchorId != null) {
         final splits = financeMembers.map((member) {
-          final isCurrentUser = member.userId == currentUserId;
-          final memberRatio =
-              isCurrentUser ? defaultRatio : (1.0 - defaultRatio);
+          final isAnchor = member.userId == anchorId;
+          final memberRatio = isAnchor ? defaultRatio : (1.0 - defaultRatio);
           return {
             'user_id': member.userId,
             'amount': amount * memberRatio,
