@@ -29,6 +29,7 @@ import 'package:homesync_client/features/tasks/presentation/widgets/task_complet
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
+import 'package:uuid/uuid.dart';
 
 class HomeCoupleView extends ConsumerStatefulWidget {
   final Future<void> Function() onRefresh;
@@ -748,6 +749,10 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
         final theme = dialogContext.theme;
         var isSubmitting = false;
         var showSuccess = false;
+        // One idempotency key per dialog (i.e. per settlement intent): reused if
+        // the user retries after an error/timeout so the server resolves to the
+        // same settlement instead of duplicating it. A new dialog → new key.
+        final requestId = const Uuid().v4();
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -806,6 +811,7 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
                                   fromUserId: payerId,
                                   toUserId: receiverId,
                                   amount: amount,
+                                  requestId: requestId,
                                 );
 
                             if (mounted) {

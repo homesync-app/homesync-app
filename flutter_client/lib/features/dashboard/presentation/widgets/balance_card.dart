@@ -134,8 +134,11 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        // Integrated economy: the green eyebrow is the label
+                        // ("Gastos del hogar"); the amount stands alone below so
+                        // it doesn't crowd the home badge on the right.
                         integrated
-                            ? t.balanceCardIntegratedTitle
+                            ? t.balanceCardIntegratedSubtitle
                             : (widget.settlementJustCompleted || !isBalanced
                                 ? balanceMessage
                                 : (widget.balancedLabel ??
@@ -174,27 +177,16 @@ class _BalanceCardState extends ConsumerState<BalanceCard> {
                                   letterSpacing: 0,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Text(
-                                  t.balanceCardIntegratedSubtitle.toLowerCase(),
-                                  style: TextStyle(
-                                    color: theme.textSecondary
-                                        .withValues(alpha: 0.82),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
                             ],
                           )
                         else
+                          // No spend value yet: show a neutral amount instead
+                          // of repeating the "Gastos del hogar" eyebrow.
                           Text(
-                            t.balanceCardIntegratedSubtitle,
+                            currency.inputPrefix(),
                             style: TextStyle(
                               color: theme.textPrimary.withValues(alpha: 0.94),
-                              fontSize: widget.compact ? 18 : 20,
+                              fontSize: widget.compact ? 29 : 31,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0,
                             ),

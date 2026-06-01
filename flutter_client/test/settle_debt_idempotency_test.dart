@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // HomeSync — Settle Debt Idempotency Tests
 // Validates the request_id contract for settleDebt:
-//   1. The use case always passes a non-empty UUID v4 to the repo.
-//   2. Two consecutive use case calls generate DIFFERENT request_ids
-//      (so the server-side idempotency is what protects against double-tap,
-//      not client-side dedup).
-//   3. The use case rejects invalid inputs BEFORE generating a request_id,
-//      so we don't waste a UUID on validation failures.
+//   1. With no requestId, the use case mints a fallback UUID v4 and forwards it.
+//   2. A caller-provided requestId is forwarded UNCHANGED, and reused verbatim
+//      across retries — this is what makes server-side idempotency actually
+//      protect the retry-after-timeout case (the key must be per-intent, not
+//      per-call).
+//   3. The use case rejects invalid inputs BEFORE touching the repo.
 //   4. A repo that returns Left propagates that failure cleanly.
 // ─────────────────────────────────────────────────────────────────────────────
 import 'package:flutter_test/flutter_test.dart';
@@ -59,7 +59,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('SettleDebtUseCase', () {
-    test('generates a UUID v4 and forwards it to the repo', () async {
+    test('mints a fallback UUID v4 when no requestId is provided', () async {
       final spy = _SpyExpenseRepository();
       final useCase = SettleDebtUseCase(spy);
 
@@ -74,39 +74,65 @@ void main() {
       expect(spy.callCount, 1);
       expect(spy.calls.first.requestId, isNotEmpty);
       expect(_isUuidV4(spy.calls.first.requestId), isTrue,
-          reason: 'request_id must be a UUID v4 to play nice with the server',);
+          reason: 'fallback request_id must be a UUID v4',);
       expect(spy.calls.first.householdId, 'house-1');
       expect(spy.calls.first.fromUserId, 'user-a');
       expect(spy.calls.first.toUserId, 'user-b');
       expect(spy.calls.first.amount, 1500.0);
     });
 
-    test('two consecutive calls generate different request_ids', () async {
+    test('forwards a caller-provided requestId unchanged', () async {
       final spy = _SpyExpenseRepository();
       final useCase = SettleDebtUseCase(spy);
+      const intentKey = 'fixed-intent-key-123';
+
+      final result = await useCase(
+        householdId: 'house-1',
+        fromUserId: 'user-a',
+        toUserId: 'user-b',
+        amount: 100.0,
+        requestId: intentKey,
+      );
+
+      expect(result.isRight(), isTrue);
+      expect(spy.calls.single.requestId, intentKey);
+    });
+
+    test('reuses the same requestId across retries of one intent', () async {
+      // A failed first attempt followed by a retry must carry the SAME key, so
+      // the server resolves both to a single settlement instead of duplicating.
+      var first = true;
+      final spy = _SpyExpenseRepository(
+        responder: () {
+          if (first) {
+            first = false;
+            return const Left<Failure, void>(ServerFailure('timeout'));
+          }
+          return const Right<Failure, void>(null);
+        },
+      );
+      final useCase = SettleDebtUseCase(spy);
+      const intentKey = 'retry-intent-key-abc';
 
       await useCase(
         householdId: 'house-1',
         fromUserId: 'user-a',
         toUserId: 'user-b',
         amount: 100.0,
+        requestId: intentKey,
       );
       await useCase(
         householdId: 'house-1',
         fromUserId: 'user-a',
         toUserId: 'user-b',
         amount: 100.0,
+        requestId: intentKey,
       );
 
       expect(spy.callCount, 2);
-      expect(
-        spy.calls[0].requestId == spy.calls[1].requestId,
-        isFalse,
-        reason: 'Each use case invocation must produce a fresh request_id; '
-            'server-side idempotency handles the double-tap case.',
-      );
-      expect(_isUuidV4(spy.calls[0].requestId), isTrue);
-      expect(_isUuidV4(spy.calls[1].requestId), isTrue);
+      expect(spy.calls[0].requestId, intentKey);
+      expect(spy.calls[1].requestId, intentKey,
+          reason: 'retries of the same intent must reuse the same key',);
     });
 
     test('rejects empty householdId without touching the repo', () async {

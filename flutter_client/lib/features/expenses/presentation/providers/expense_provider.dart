@@ -215,18 +215,23 @@ class ExpenseController extends _$ExpenseController {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    String? requestId,
   }) async {
     final householdId = await ref.read(householdIdProvider.future);
     if (householdId == null) return;
 
     final repo = ref.read(expenseRepositoryProvider);
-    final requestId = const Uuid().v4();
+    // The idempotency key must be minted ONCE per settlement intent and reused
+    // across retries (otherwise a retry after an ambiguous timeout creates a
+    // duplicate settlement). Callers that can retry must pass a stable
+    // [requestId]; we only mint a fresh one as a fallback for one-shot callers.
+    final effectiveRequestId = requestId ?? const Uuid().v4();
     final result = await repo.settleDebt(
       householdId: householdId,
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
-      requestId: requestId,
+      requestId: effectiveRequestId,
     );
 
     result.fold(

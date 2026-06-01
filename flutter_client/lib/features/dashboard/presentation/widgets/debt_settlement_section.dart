@@ -12,6 +12,7 @@ import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/animated_press.dart';
 import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
+import 'package:uuid/uuid.dart';
 
 class DebtSettlementSection extends ConsumerWidget {
   final List<HouseholdBalanceModel> balances;
@@ -140,6 +141,12 @@ class _DebtRow extends ConsumerStatefulWidget {
 
 class _DebtRowState extends ConsumerState<_DebtRow> {
   bool _isSettling = false;
+
+  /// Idempotency key for the current settlement intent. Minted once and reused
+  /// across retries (so a retry after an ambiguous timeout resolves to the same
+  /// settlement instead of duplicating it); cleared on success so the next
+  /// settlement gets a fresh key.
+  String? _pendingRequestId;
 
   @override
   Widget build(BuildContext context) {
@@ -281,12 +288,19 @@ class _DebtRowState extends ConsumerState<_DebtRow> {
 
     setState(() => _isSettling = true);
 
+    // Reuse the same key while this intent is being retried; mint on first try.
+    final requestId = _pendingRequestId ??= const Uuid().v4();
+
     try {
       await ref.read(expenseControllerProvider.notifier).settleDebt(
             fromUserId: debt.fromUserId,
             toUserId: debt.toUserId,
             amount: debt.amount,
+            requestId: requestId,
           );
+
+      // Success: next settlement is a new intent → new key.
+      _pendingRequestId = null;
 
       HapticFeedback.mediumImpact();
 
