@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:homesync_client/core/errors/failures.dart';
 import 'package:homesync_client/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class SettleDebtUseCase {
   final ExpenseRepository _repository;
@@ -26,11 +27,14 @@ class SettleDebtUseCase {
           const ValidationFailure('El monto a saldar debe ser mayor a 0'),);
     }
 
+    final requestId = const Uuid().v4();
+
     return await _repository.settleDebt(
       householdId: householdId,
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+      requestId: requestId,
     );
   }
 }

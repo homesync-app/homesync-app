@@ -371,28 +371,18 @@ class SupabaseExpenseRepository
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   }) async {
+    final params = <String, dynamic>{
+      'p_request_id': requestId,
+      'p_household_id': householdId,
+      'p_from_user_id': fromUserId,
+      'p_to_user_id': toUserId,
+      'p_amount': amount,
+    };
     return executeWithHandling(
       () async {
-        await _client.rpc(
-          'save_expense_v4',
-          params: {
-            'p_id': null,
-            'p_household_id': householdId,
-            'p_title': 'Liquidación de balance',
-            'p_amount': amount,
-            'p_category': 'other',
-            'p_paid_by': fromUserId,
-            'p_paid_at': DateTime.now().toIso8601String(),
-            'p_description': 'Saldar balance acumulado',
-            'p_split_type': 'fixed',
-            'p_is_shared': true,
-            'p_type': 'settlement',
-            'p_splits': [
-              {'user_id': toUserId, 'amount': amount},
-            ],
-          },
-        );
+        await _client.rpc('settle_debt_v1', params: params);
       },
       context: 'SupabaseExpenseRepository.settleDebt',
       isOnline: _isOnline,
@@ -400,23 +390,8 @@ class SupabaseExpenseRepository
         await _queueAction(
           OfflineAction(
             type: OfflineActionType.rpc,
-            target: 'save_expense_v4',
-            params: {
-              'p_id': null,
-              'p_household_id': householdId,
-              'p_title': 'Liquidación de balance',
-              'p_amount': amount,
-              'p_category': 'other',
-              'p_paid_by': fromUserId,
-              'p_paid_at': DateTime.now().toIso8601String(),
-              'p_description': 'Saldar balance acumulado',
-              'p_split_type': 'fixed',
-              'p_is_shared': true,
-              'p_type': 'settlement',
-              'p_splits': [
-                {'user_id': toUserId, 'amount': amount},
-              ],
-            },
+            target: 'settle_debt_v1',
+            params: params,
           ),
         );
       },

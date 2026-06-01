@@ -452,6 +452,90 @@ Pendiente para un corte futuro: entrada completa con inputs/output/tablas/idempo
 
 ---
 
+## settle_debt_v1
+
+Saldar un balance entre dos miembros del hogar. Crea un `expense` de tipo `settlement` (`split_type='fixed'`, `is_shared=true`) que ajusta el balance al instante. Reemplaza el path anterior (`save_expense_v4` con `p_type='settlement'`) que no era idempotente y producía duplicados en doble-tap o reintento.
+
+- **Migration canonica**: `supabase/migrations/20260519204019_settle_debt_v1.sql` (RPC reconstruida en `20260601180000_fix_settle_debt_v1_encoding.sql` para limpiar el título UTF-8 y re-confirmar grants).
+- **Versionado**: ✅ `_v1`
+- **Transaccional**: implicito (plpgsql)
+- **Idempotente full**: ✅ (vía `p_request_id` + unique index `uq_expenses_request_id` + EXCEPTION `unique_violation`)
+
+**Inputs**
+
+| nombre | tipo | descripcion |
+|---|---|---|
+| `p_request_id` | `text` | clave de idempotencia (UUID v4 generado en cliente) |
+| `p_household_id` | `uuid` | hogar del settlement |
+| `p_from_user_id` | `uuid` | miembro que paga / salda |
+| `p_to_user_id` | `uuid` | miembro que recibe / es saldado |
+| `p_amount` | `numeric` | monto a liquidar (> 0) |
+
+**Output** (`jsonb`)
+
+Caso normal:
+
+```json
+{
+  "success": true,
+  "message": "Debt settled",
+  "status": "settled",
+  "expense_id": "uuid",
+  "idempotent": false
+}
+```
+
+Caso idempotente (mismo `p_request_id` reenviado):
+
+```json
+{
+  "success": true,
+  "message": "Already settled",
+  "status": "idempotent",
+  "expense_id": "uuid",
+  "expense_id_existente": "uuid",
+  "idempotent": true
+}
+```
+
+**Tablas afectadas**
+
+| tabla | R/W | nota |
+|---|---|---|
+| `public.expenses` | R + W | SELECT pre-insert por `request_id`; INSERT vía `save_expense_v4`; UPDATE para setear `request_id` |
+| `public.audit_logs` | W | una fila con `action='settle_debt'`, `entity_type='expense'`, `source='rpc'` |
+| `public.expense_splits` | W (via `save_expense_v4`) | un split `fixed` para el `to_user_id` |
+
+**Idempotencia**: si (clave = `p_request_id`). Unique index `uq_expenses_request_id` (parcial: `where request_id is not null`) + SELECT pre-insert + `EXCEPTION unique_violation` como safety net. El cliente DEBE generar un `request_id` nuevo por tap; el server garantiza que el mismo `request_id` devuelve siempre el mismo `expense_id`.
+
+**Errores** (via `jsonb` con `success: false`)
+
+- `status='unauthenticated'` -> `current_app_user_id()` devolvio null.
+- `status='invalid'` con `message='request_id is required'` -> `p_request_id` null/vacío.
+- `status='invalid'` con `message='household and users are required'` -> algun uuid null.
+- `status='invalid'` con `message='amount must be greater than 0'` -> `p_amount <= 0`.
+
+**Providers a invalidar en cliente (tras exito)**
+
+- `expenseBalancesProvider`
+- `personalFinanceSummaryProvider`
+- `combinedFeedControllerProvider`
+- `recentActivityRemoteProvider`
+
+**Cliente**
+
+- Repositorio: [supabase_expense_repository.dart:369](flutter_client/lib/features/expenses/data/repositories/supabase_expense_repository.dart:369) (`settleDebt`)
+- Controller: [expense_provider.dart:213](flutter_client/lib/features/expenses/presentation/providers/expense_provider.dart:213) (`ExpenseController.settleDebt`, genera `requestId = Uuid().v4()`)
+- Use case: [settle_debt_usecase.dart](flutter_client/lib/features/expenses/domain/usecases/settle_debt_usecase.dart) (documenta la validacion + generacion de UUID, mismo path)
+- Tests: [settle_debt_idempotency_test.dart](flutter_client/test/settle_debt_idempotency_test.dart) (6 tests, valida UUID v4, idempotencia, validaciones, propagacion de failures)
+
+**Notas**
+
+- El cliente NUNCA debe llamar a `save_expense_v4` con `p_type='settlement'` para liquidar: ese path no es idempotente. Toda liquidación pasa por `settle_debt_v1`.
+- Smoke gate (`scripts/prod_ops/post_deploy_smoke.sql`) incluye `settle_debt_v1` en su lista de RPCs críticos y en la lista de mutaciones no ejecutables por `anon`.
+
+---
+
 ## Apendice: como agregar una entrada nueva
 
 1. Crear la migration con el RPC (`security definer`, `set search_path = public`, validar `current_app_user_id()`).

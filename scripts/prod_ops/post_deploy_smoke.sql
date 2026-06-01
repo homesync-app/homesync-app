@@ -24,7 +24,7 @@ BEGIN
     RAISE EXCEPTION 'Missing function: public.get_home_bootstrap(integer,integer,integer)';
   END IF;
 
-  IF to_regprocedure('public.pay_planned_expense(uuid,numeric,timestamp with time zone,uuid)') IS NULL THEN
+  IF to_regprocedure('public.pay_planned_expense(uuid,numeric,timestamp with time zone,text)') IS NULL THEN
     RAISE EXCEPTION 'Missing function: public.pay_planned_expense(...)';
   END IF;
 
@@ -112,6 +112,8 @@ SELECT
 --   save_expense_v4             → registrar un gasto
 --   upsert_catalog_request      → usar el catálogo de shopping
 --   join_household_by_code      → onboarding / linking de hogar
+--   settle_debt_v1              → saldar un balance (idempotente por request_id)
+--   process_recurring_expenses  → materializar planned/recurring del mes
 -- ─────────────────────────────────────────────────────────────────────────────
 DO $$
 DECLARE
@@ -122,7 +124,9 @@ DECLARE
     'get_combined_feed',
     'save_expense_v4',
     'upsert_catalog_request',
-    'join_household_by_code'
+    'join_household_by_code',
+    'settle_debt_v1',
+    'process_recurring_expenses'
   ];
 BEGIN
   FOREACH v_name IN ARRAY v_required LOOP
@@ -146,7 +150,8 @@ DECLARE
   v_mutating text[] := ARRAY[
     'complete_task_v1',
     'approve_task_v1',
-    'upsert_catalog_request'
+    'upsert_catalog_request',
+    'settle_debt_v1'
   ];
 BEGIN
   FOREACH v_name IN ARRAY v_mutating LOOP

@@ -8,6 +8,7 @@ import 'package:homesync_client/features/dashboard/presentation/providers/dashbo
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/providers/supabase_provider.dart';
 import '../../data/repositories/supabase_expense_repository.dart';
@@ -219,11 +220,13 @@ class ExpenseController extends _$ExpenseController {
     if (householdId == null) return;
 
     final repo = ref.read(expenseRepositoryProvider);
+    final requestId = const Uuid().v4();
     final result = await repo.settleDebt(
       householdId: householdId,
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+      requestId: requestId,
     );
 
     result.fold(

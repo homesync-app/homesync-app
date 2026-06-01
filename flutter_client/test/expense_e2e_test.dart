@@ -57,6 +57,7 @@ class ExpenseFlowSimulator {
       fromUserId: fromUserId,
       toUserId: toUserId,
       amount: amount,
+      requestId: 'e2e-$fromUserId-$toUserId-$amount',
     );
 
     userBalances[fromUserId] = (userBalances[fromUserId] ?? 0) - amount;
@@ -158,6 +159,7 @@ class MockExpenseRepository implements ExpenseRepository {
     required String fromUserId,
     required String toUserId,
     required double amount,
+    required String requestId,
   }) async {
     return const Right(null);
   }
