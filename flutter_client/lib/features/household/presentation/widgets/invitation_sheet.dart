@@ -8,6 +8,7 @@ import 'package:homesync_client/features/household/domain/models/household_capab
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_usecase_providers.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
+import 'package:homesync_client/shared/widgets/portal_labs/reveal_copy_interaction.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class InvitationSheet extends ConsumerStatefulWidget {
@@ -63,9 +64,17 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
     );
   }
 
+  // Used by the WhatsApp-share fallback: copies to the clipboard and confirms.
   void _copyCode() {
     if (_invitationCode == null) return;
     Clipboard.setData(ClipboardData(text: _invitationCode!));
+    _showCopiedFeedback();
+  }
+
+  // RevealCopyInteraction writes to the clipboard itself; this only surfaces
+  // the confirmation feedback.
+  void _showCopiedFeedback() {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).invitationCopied),
@@ -164,29 +173,27 @@ class _InvitationSheetState extends ConsumerState<InvitationSheet> {
               child: CircularProgressIndicator(),
             )
           else if (_invitationCode != null) ...[
-            GestureDetector(
-              onTap: _copyCode,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: theme.primary.withValues(alpha: 0.2),
-                    width: 2,
-                  ),
-                ),
-                child: Text(
-                  _invitationCode!,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                    color: theme.primary,
-                  ),
-                ),
+            RevealCopyInteraction(
+              value: _invitationCode!,
+              maskCharacter: '•',
+              revealDuration: const Duration(seconds: 30),
+              successColor: AppColors.success,
+              backgroundColor: theme.primary.withValues(alpha: 0.05),
+              borderColor: theme.primary.withValues(alpha: 0.2),
+              borderRadius: 20,
+              textStyle: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                color: theme.primary,
               ),
+              maskedTextStyle: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4,
+                color: theme.primary.withValues(alpha: 0.45),
+              ),
+              onCopied: _showCopiedFeedback,
             ),
             const SizedBox(height: 12),
             Text(
