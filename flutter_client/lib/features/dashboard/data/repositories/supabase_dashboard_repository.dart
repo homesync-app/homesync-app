@@ -61,6 +61,8 @@ class SupabaseDashboardRepository implements DashboardRepository {
       });
     }
 
+    Timer? pollTimer;
+
     controller = StreamController<List<Map<String, dynamic>>>(
       onListen: () {
         unawaited(emitLatest());
@@ -89,10 +91,22 @@ class SupabaseDashboardRepository implements DashboardRepository {
               callback: (_) => scheduleRefresh(),
             )
             .subscribe();
+
+        // Safety net: aunque Realtime no entregue eventos (Causa B histórica
+        // con Firebase Third-Party Auth + RLS), el feed se mantiene fresco
+        // con un refetch periódico. Se cancela en onCancel.
+        pollTimer = Timer.periodic(
+          const Duration(seconds: 15),
+          (_) {
+            if (disposed) return;
+            scheduleRefresh();
+          },
+        );
       },
       onCancel: () {
         disposed = true;
         debounce?.cancel();
+        pollTimer?.cancel();
         channel?.unsubscribe();
       },
     );

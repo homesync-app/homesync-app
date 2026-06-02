@@ -372,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _refreshHome() async {
     ref.invalidate(todayTasksProvider);
-    ref.invalidate(recentActivityProvider);
+    ref.invalidate(recentActivityRemoteProvider);
     ref.invalidate(personalFinanceSummaryProvider);
     ref.invalidate(expenseBalancesProvider);
     ref.invalidate(expenseControllerProvider);
