@@ -180,17 +180,21 @@ class AppEnvironment {
     if (!isProduction) return;
 
     final violations = <String>[];
-    if (supabaseUrl == _kDefaultSupabaseUrl) {
+    // NOTE: the default Supabase constants ARE the production project values,
+    // so we validate that the resolved config is a real, well-formed Supabase
+    // URL/key — NOT that it differs from the defaults (which would always fail
+    // in production and crash the app at startup).
+    if (!supabaseUrl.startsWith('https://') || !supabaseUrl.contains('.supabase.co')) {
       violations.add('SUPABASE_URL');
     }
-    if (supabaseAnonKey == _kDefaultSupabaseAnonKey) {
+    if (supabaseAnonKey.length < 40) {
       violations.add('SUPABASE_ANON_KEY');
     }
     if (violations.isNotEmpty) {
       throw StateError(
-        'Production build has default staging values for: ${violations.join(", ")}. '
-        'Rebuild with: flutter build appbundle --dart-define=APP_ENV=production '
-        '--dart-define=SUPABASE_URL=<prod_url> --dart-define=SUPABASE_ANON_KEY=<prod_key>',
+        'Production build has invalid Supabase config for: ${violations.join(", ")}. '
+        'Provide --dart-define-from-file=.env.production or valid '
+        '--dart-define=SUPABASE_URL / SUPABASE_ANON_KEY values.',
       );
     }
   }

@@ -35,8 +35,18 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final theme = context.theme;
     final type = activity['type'] as String?;
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
-    final isPendingApproval = type == 'task_pending_approval' ||
-        data['approval_status'] == 'pending_approval';
+    // Task approval is a premium Parent Mode feature. Its UI (the
+    // "awaiting review" card + approve/reject actions) must be gated by the
+    // SAME single source of truth that enables the feature —
+    // [taskApprovalEnabledProvider] (family + active premium + mode != off).
+    // Otherwise stale `pending` approvals left over from a previous premium
+    // period (or any pending_approval row) render as "espera revisión" even
+    // though approval is off, which is incorrect. When the gate is closed we
+    // fall through to the normal completed-task card.
+    final approvalEnabled = ref.watch(taskApprovalEnabledProvider);
+    final isPendingApproval = approvalEnabled &&
+        (type == 'task_pending_approval' ||
+            data['approval_status'] == 'pending_approval');
     final createdAt =
         DateTime.tryParse(activity['created_at'] as String? ?? '')?.toLocal() ??
             DateTime.now();

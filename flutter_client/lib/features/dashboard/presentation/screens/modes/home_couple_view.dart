@@ -573,23 +573,24 @@ class _HomeCoupleViewState extends ConsumerState<HomeCoupleView>
 
   String _activityStableKey(Map<String, dynamic> activity) {
     final type = activity['type']?.toString() ?? 'unknown';
-    // Cada fila tiene un `id` único:
-    // - Filas reales de `household_activities`: UUID del server.
-    // - Filas optimistas locales: `optimistic-{type}-{task.id}-{microseconds}`
-    //   (SIEMPRE sintético en dashboard_provider.addTaskCompleted, para que
-    //   esta key distinga la optimista de la real).
-    // Usar el id (con prefijo de tipo) garantiza keys únicos por fila y evita
-    // el duplicate-key de Flutter cuando (a) la merge optimista no suprimió a
-    // tiempo (race con realtime), o (b) hay varias completions del mismo task
-    // en el mismo día (cada una con su propio UUID).
-    // Trade-off: cuando la merge SÍ funciona y la optimista se reemplaza por
-    // la real, el widget se reconstruye y la entry animation se reproduce
-    // (glitch visual menor, preferible al crash de duplicate-key).
+    // Prefer the REAL server activity id. Optimistic rows carry it in
+    // data['activity_id'] (the complete-task RPC returns it — see
+    // task_provider.dart) and it equals the real remote row's top-level `id`.
+    // Keying on it makes the optimistic→real swap reuse the SAME widget, so the
+    // feed-entry animation does NOT replay (fixes the "movement re-enters a few
+    // seconds later" glitch). The optimistic/remote merge already suppresses the
+    // optimistic once the real arrives, so the two never coexist → no
+    // duplicate-key risk. Multiple completions of the same task get distinct
+    // activity ids; offline/queued rows (no activity_id yet) fall back to id.
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    final activityId = data['activity_id']?.toString();
+    if (activityId != null && activityId.isNotEmpty) {
+      return '$type-$activityId';
+    }
     final id = activity['id']?.toString();
     if (id != null && id.isNotEmpty) {
       return '$type-$id';
     }
-    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
     return [
       activity['created_at'],
       data['task_id'],
