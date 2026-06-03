@@ -862,32 +862,28 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 
   String _activityStableKey(Map<String, dynamic> activity) {
+    final type = activity['type']?.toString() ?? 'unknown';
+    // Cada fila tiene un `id` único:
+    // - Filas reales de `household_activities`: UUID del server.
+    // - Filas optimistas locales: `optimistic-{type}-{task.id}-{microseconds}`
+    //   (SIEMPRE sintético en dashboard_provider.addTaskCompleted, para que
+    //   esta key distinga la optimista de la real).
+    // Usar el id (con prefijo de tipo) garantiza keys únicos por fila y evita
+    // el duplicate-key de Flutter cuando (a) la merge optimista no suprimió a
+    // tiempo (race con realtime), o (b) hay varias completions del mismo task
+    // en el mismo día (cada una con su propio UUID).
+    // Trade-off: cuando la merge SÍ funciona y la optimista se reemplaza por
+    // la real, el widget se reconstruye y la entry animation se reproduce
+    // (glitch visual menor, preferible al crash de duplicate-key).
+    final id = activity['id']?.toString();
+    if (id != null && id.isNotEmpty) {
+      return '$type-$id';
+    }
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
-    final type = activity['type']?.toString();
-    // Prefer a STABLE identity so the optimistic row and the real row that
-    // replaces it (arriving via realtime ~1s later) share the same widget key.
-    // Keying on the volatile top-level `id`/`created_at` made Flutter treat the
-    // real row as a brand-new widget and replay the entry animation — the
-    // "card animates in, then refreshes itself a moment later" glitch.
-    //
-    // Both the optimistic row and the real `household_activities` row carry
-    // `task_id`, so task_id + completion-day is the identity they share. (The
-    // optimistic-only `activity_id` is NOT present on the real row, so it can't
-    // be used as the shared key.) Day-scoping keeps repeated daily completions
-    // visually distinct.
-    final taskId = data['task_id']?.toString();
-    if (type == 'task' && taskId != null && taskId.isNotEmpty) {
-      final day = (activity['created_at']?.toString() ?? '').split('T').first;
-      return 'task-$taskId-$day';
-    }
-    final expenseId = data['expense_id']?.toString();
-    if (expenseId != null && expenseId.isNotEmpty) {
-      return 'expense-$expenseId';
-    }
     return [
-      activity['id'],
-      type,
       activity['created_at'],
+      data['task_id'],
+      data['expense_id'],
     ].whereType<Object>().join('-');
   }
 

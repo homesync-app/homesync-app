@@ -142,8 +142,13 @@ class OptimisticRecentActivity extends _$OptimisticRecentActivity {
     final activityCreatedAt = completedAt ?? now;
 
     final activity = <String, dynamic>{
-      'id': activityId ??
-          'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
+      // Id SIEMPRE sintético, aunque llegue `activityId` del RPC. Esto garantiza
+      // que la widget key del feed (que usa `activity['id']` con prefijo de
+      // tipo) distinga la fila optimista local de la real del server cuando
+      // ambas coexisten brevemente en la lista — la merge de
+      // `mergeOptimisticActivities` igual suprime la optimista vía
+      // `data['activity_id']` cuando el realtime emite la real.
+      'id': 'optimistic-task-${task.id}-${now.microsecondsSinceEpoch}',
       'household_id': householdId,
       'type': 'task',
       'created_at': activityCreatedAt.toIso8601String(),
