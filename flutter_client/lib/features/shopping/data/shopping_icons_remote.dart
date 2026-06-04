@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +71,44 @@ class ShoppingIconManifestNotifier extends Notifier<Map<String, String>> {
       if (kDebugMode) {
         debugPrint('shopping icon manifest refresh failed: $e');
       }
+    }
+  }
+
+  bool _precaching = false;
+
+  /// Descarga TODOS los íconos del manifest al cache en disco (el mismo
+  /// [DefaultCacheManager] que usa `CachedNetworkImage`), en background.
+  ///
+  /// Pensado para llamarse temprano — apenas abre la app / mientras el usuario
+  /// configura el hogar en el onboarding — para que cuando llegue a la lista de
+  /// compras los íconos YA estén cacheados y nunca vea el emoji/placeholder ni
+  /// el swap. Best-effort: un ícono que falle no corta el resto, y nunca lanza.
+  Future<void> precacheAllIcons() async {
+    if (_precaching) return;
+    _precaching = true;
+    try {
+      if (state.isEmpty) {
+        await refresh();
+      }
+      final manager = DefaultCacheManager();
+      final entries = state.entries.toList(growable: false);
+      const concurrency = 6;
+      for (var i = 0; i < entries.length; i += concurrency) {
+        final batch = entries.skip(i).take(concurrency);
+        await Future.wait(
+          batch.map((entry) async {
+            try {
+              await manager.downloadFile(shoppingIconUrl(entry.key, entry.value));
+            } catch (_) {
+              // best-effort: ignorar fallos por ícono individual.
+            }
+          }),
+        );
+      }
+    } catch (e) {
+      log.d('shopping_icons: precache failed: $e');
+    } finally {
+      _precaching = false;
     }
   }
 }

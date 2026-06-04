@@ -30,6 +30,7 @@ import 'package:homesync_client/features/dashboard/presentation/screens/main_scr
 // Prefetching Providers
 import 'package:homesync_client/features/expenses/presentation/providers/expense_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_provider.dart';
+import 'package:homesync_client/features/shopping/data/shopping_icons_remote.dart';
 import 'package:homesync_client/features/shopping/presentation/providers/shopping_provider.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
 import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
@@ -426,6 +427,13 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _completeStartupGate() async {
+    // Precarga de íconos de compras en background apenas abre la app: corre en
+    // paralelo al login/onboarding, así para cuando el usuario llega a la lista
+    // de compras ya están cacheados en disco y nunca ve placeholders ni íconos
+    // viejos. Fire-and-forget — no bloquea el arranque.
+    unawaited(
+      ref.read(shoppingIconManifestProvider.notifier).precacheAllIcons(),
+    );
     log.i('🚀 StartupGate: waiting for authBootstrap...');
     await PerformanceMonitor.measureFuture(
       'startup.auth_bootstrap_provider',
