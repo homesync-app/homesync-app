@@ -298,19 +298,23 @@ export const ShoppingIcons = () => {
         const match = findCatalogMatch(r.normalized_name, catalogIndex);
 
         let status: PendingStatus;
-        if (isOrphanKey || !match) {
+        if (!match) {
           status = 'missing';
+        } else if (isOrphanKey) {
+          status = 'unpicked';
         } else if (generic) {
           status = 'generic';
         } else {
           status = 'unpicked';
         }
 
+        const reason = isOrphanKey && match ? 'Key huérfano' : (match?.reason ?? null);
+
         return {
           row: r,
           status,
           suggested_key: match?.nameKey ?? null,
-          match_reason: match?.reason ?? null,
+          match_reason: reason,
         };
       })
       .sort((a, b) => {
@@ -469,9 +473,13 @@ export const ShoppingIcons = () => {
         />
         <StatCard
           tone="rose"
-          label="Demanda sin ícono"
-          sublabel={`${stats.missing} faltan · ${stats.unpicked} sin elegir · ${stats.generic} genérico`}
-          value={stats.missing + stats.unpicked + stats.generic}
+          label="Falta ícono en catálogo"
+          sublabel={
+            stats.missing + stats.unpicked + stats.generic > 0
+              ? `${stats.unpicked + stats.generic} con match · crear ícono nuevo`
+              : 'todo cubierto'
+          }
+          value={stats.missing}
           icon={ImageOff}
         />
         <StatCard
@@ -502,7 +510,7 @@ export const ShoppingIcons = () => {
           active={tab === 'pending'}
           onClick={() => setTab('pending')}
           icon={ImageOff}
-          label="Demanda sin ícono"
+          label="Demanda abierta"
           count={stats.missing + stats.unpicked + stats.generic}
         />
         <TabButton
