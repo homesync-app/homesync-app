@@ -64,18 +64,34 @@ final memberOnboardingProvider = FutureProvider<bool>((ref) async {
   final bootstrap = await ref.watch(homeBootstrapProvider.future);
   if (bootstrap?.userId == userId &&
       BootstrapSeedGate.instance.consume(BootstrapSection.memberOnboarding)) {
+    final householdType = bootstrap?.household?['household_type'] as String?;
+    if (householdType != null && householdType != 'family') return true;
     return bootstrap?.memberOnboardingCompleted ?? true;
   }
 
   final client = ref.read(supabaseClientProvider);
   final result = await client
       .from('household_members')
-      .select('onboarding_completed')
+      .select('household_id, onboarding_completed')
       .eq('user_id', userId)
       .maybeSingle();
 
   if (result == null) return true;
-  return result['onboarding_completed'] as bool? ?? true;
+  final onboardingCompleted = result['onboarding_completed'] as bool? ?? true;
+  if (onboardingCompleted) return true;
+
+  final householdId = result['household_id'] as String?;
+  if (householdId == null) return true;
+
+  final household = await client
+      .from('households')
+      .select('household_type')
+      .eq('id', householdId)
+      .maybeSingle();
+  final householdType = household?['household_type'] as String?;
+  if (householdType != 'family') return true;
+
+  return false;
 });
 
 final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
