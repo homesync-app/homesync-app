@@ -920,6 +920,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFamilyActivityTitleDefault => 'Recent activity';
 
   @override
+  String get homeFamilyPendingApprovalsTitle => 'Pending approvals';
+
+  @override
+  String get homeFamilyPendingApprovalsBody =>
+      'Approve or return these tasks before crediting XP and coins.';
+
+  @override
+  String homeFamilyPendingApprovalsSubmittedBy(String name) {
+    return 'Submitted by $name';
+  }
+
+  @override
+  String homeFamilyPendingApprovalsMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'And $count more tasks waiting for review',
+      one: 'And 1 more task waiting for review',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get homeFamilyActivityEmptyTitle => 'No recent activity yet';
 
   @override

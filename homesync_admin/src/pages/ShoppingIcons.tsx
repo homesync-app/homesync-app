@@ -195,6 +195,14 @@ export const ShoppingIcons = () => {
   const [ocrDaily, setOcrDaily] = useState<OcrDailyStat[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('catalog');
+  // Sub-filtro del tab "Falta ícono". Por defecto mostramos sólo los
+  // accionables (status 'missing' = sin match en el catálogo → hay que CREAR un
+  // ícono). Los que SÍ tienen match ('unpicked'/'generic') ya tienen ícono
+  // disponible, así que no son demanda real y quedan detrás de un chip en vez
+  // de ensuciar la lista principal.
+  const [pendingFilter, setPendingFilter] = useState<
+    'actionable' | 'matched' | 'all'
+  >('actionable');
   const [ocrSubTab, setOcrSubTab] = useState<OcrSubTab>('unmatched');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -372,7 +380,12 @@ export const ShoppingIcons = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (tab === 'pending') {
-      const base = pendingRequests;
+      let base = pendingRequests;
+      if (pendingFilter === 'actionable') {
+        base = base.filter((p) => p.status === 'missing');
+      } else if (pendingFilter === 'matched') {
+        base = base.filter((p) => p.status !== 'missing');
+      }
       if (!q) return base;
       return base.filter(
         (p) =>
@@ -385,7 +398,7 @@ export const ShoppingIcons = () => {
     const base = tab === 'unused' ? sortedCatalog.filter((c) => !c.usage) : sortedCatalog;
     if (!q) return base;
     return base.filter((c) => c.name_key.toLowerCase().includes(q));
-  }, [tab, sortedCatalog, pendingRequests, query]);
+  }, [tab, sortedCatalog, pendingRequests, query, pendingFilter]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -510,8 +523,8 @@ export const ShoppingIcons = () => {
           active={tab === 'pending'}
           onClick={() => setTab('pending')}
           icon={ImageOff}
-          label="Demanda abierta"
-          count={stats.missing + stats.unpicked + stats.generic}
+          label="Falta ícono"
+          count={stats.missing}
         />
         <TabButton
           active={tab === 'ocr'}
@@ -539,6 +552,31 @@ export const ShoppingIcons = () => {
           className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm placeholder-gray-500 focus:outline-none focus:border-primary/50 disabled:opacity-50"
         />
       </div>
+
+      {tab === 'pending' && (
+        <div className="flex flex-wrap gap-2 text-xs font-bold">
+          {(['actionable', 'matched', 'all'] as const).map((key) => {
+            const labels: Record<typeof key, string> = {
+              actionable: `Falta ícono — crear nuevo (${stats.missing})`,
+              matched: `Con match — ya tienen ícono (${stats.unpicked + stats.generic})`,
+              all: `Todos (${stats.missing + stats.unpicked + stats.generic})`,
+            };
+            return (
+              <button
+                key={key}
+                onClick={() => setPendingFilter(key)}
+                className={`px-3 py-1.5 rounded-lg border transition-colors ${
+                  pendingFilter === key
+                    ? 'bg-primary/20 border-primary/40 text-primary'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                }`}
+              >
+                {labels[key]}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {loading && !rows && <LoadingState title="Cargando productos y manifest..." />}
       {error && <ErrorState title="Error cargando datos" description={error} />}

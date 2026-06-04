@@ -925,6 +925,29 @@ class AppLocalizationsEs extends AppLocalizations {
   String get homeFamilyActivityTitleDefault => 'Actividad Reciente';
 
   @override
+  String get homeFamilyPendingApprovalsTitle => 'Aprobaciones pendientes';
+
+  @override
+  String get homeFamilyPendingApprovalsBody =>
+      'Aprobá o devolvé estas tareas antes de acreditar XP y coins.';
+
+  @override
+  String homeFamilyPendingApprovalsSubmittedBy(String name) {
+    return 'Enviada por $name';
+  }
+
+  @override
+  String homeFamilyPendingApprovalsMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Y $count tareas más esperando revisión',
+      one: 'Y 1 tarea más esperando revisión',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get homeFamilyActivityEmptyTitle =>
       'Todavía no hay actividad reciente';
 

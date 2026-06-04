@@ -420,6 +420,7 @@ class Rewards extends _$Rewards {
         // things that actually changed: the coin balance and the activity
         // feed. Genuine reward-row changes still arrive via the realtime
         // channel set up in build().
+        ref.invalidate(recentActivityRemoteProvider);
         ref.invalidate(recentActivityProvider);
         ref.invalidate(userBalanceProvider);
         return Right(success);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ScanLine,
   Copy,
@@ -12,6 +13,7 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ArrowRight,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { EmptyState, ErrorState, LoadingState } from '../components/PageState';
@@ -23,14 +25,6 @@ interface UnmatchedRow {
   occurrences: number;
   distinct_users: number;
   last_seen: string;
-}
-
-interface ManualRow {
-  normalized_name: string;
-  times_added: number;
-  households_using: number;
-  last_added: string;
-  variations: string[];
 }
 
 interface DailyStats {
@@ -64,7 +58,7 @@ interface ScanLog {
   tier: string | null;
 }
 
-type Tab = 'scans' | 'unmatched' | 'dropped' | 'manual' | 'stats';
+type Tab = 'scans' | 'unmatched' | 'dropped' | 'stats';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -100,30 +94,6 @@ Productos:
 ${list}`;
 };
 
-const buildPromptManual = (rows: ManualRow[], n: number) => {
-  const top = rows.slice(0, n);
-  const list = top
-    .map(
-      (r, i) =>
-        `${i + 1}. "${r.normalized_name}" (agregado ${r.times_added}x por ${r.households_using} hogares)`,
-    )
-    .join('\n');
-  return `Soy desarrollador de una app de listas de compras argentina. Estos productos fueron tipeados manualmente por usuarios y todavía no tienen icono en mi catálogo. Para cada uno necesito:
-
-1. Nombre canónico corto en español rioplatense
-2. Emoji apropiado (uno solo, nativo Unicode)
-3. Categoría sugerida entre: fruits, meat, dairy, bakery, cleaning, drinks, snacks, pharmacy, pets, frozen, pantry
-
-Devolvelo en formato JSON:
-[
-  {"name": "...", "emoji": "...", "category": "..."},
-  ...
-]
-
-Productos:
-${list}`;
-};
-
 // ─── Componente ─────────────────────────────────────────────────────────────
 
 export const OcrInsights = () => {
@@ -131,7 +101,6 @@ export const OcrInsights = () => {
   const [scans, setScans] = useState<ScanLog[] | null>(null);
   const [unmatched, setUnmatched] = useState<UnmatchedRow[] | null>(null);
   const [dropped, setDropped] = useState<UnmatchedRow[] | null>(null);
-  const [manual, setManual] = useState<ManualRow[] | null>(null);
   const [stats, setStats] = useState<DailyStats[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +112,7 @@ export const OcrInsights = () => {
     setRefreshing(true);
     setError(null);
     try {
-      const [sc, u, d, m, s] = await Promise.all([
+      const [sc, u, d, s] = await Promise.all([
         supabase
           .from('ocr_scan_logs')
           .select(
@@ -153,20 +122,17 @@ export const OcrInsights = () => {
           .limit(50),
         supabase.from('v_ocr_unmatched_items').select('*').limit(200),
         supabase.from('v_ocr_dropped_items').select('*').limit(200),
-        supabase.from('v_manual_items_no_icon').select('*').limit(200),
         supabase.from('v_ocr_daily_stats').select('*').limit(30),
       ]);
 
       if (sc.error) throw sc.error;
       if (u.error) throw u.error;
       if (d.error) throw d.error;
-      if (m.error) throw m.error;
       if (s.error) throw s.error;
 
       setScans((sc.data ?? []) as ScanLog[]);
       setUnmatched((u.data ?? []) as UnmatchedRow[]);
       setDropped((d.data ?? []) as UnmatchedRow[]);
-      setManual((m.data ?? []) as ManualRow[]);
       setStats((s.data ?? []) as DailyStats[]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido';
@@ -192,8 +158,6 @@ export const OcrInsights = () => {
       prompt = `Soy desarrollador. Estos strings fueron descartados por mi quality gate de OCR (no se ofrecen al usuario como productos). Para cada uno decime si es realmente basura o si es un producto válido que estoy descartando por error. En caso de ser válido, sugerí qué regla cambiar.
 
 ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}`;
-    } else if (tab === 'manual' && manual) {
-      prompt = buildPromptManual(manual, copyCount);
     }
     try {
       await navigator.clipboard.writeText(prompt);
@@ -202,7 +166,7 @@ ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}
     } catch {
       setError('No se pudo copiar al portapapeles');
     }
-  }, [tab, copyCount, unmatched, dropped, manual]);
+  }, [tab, copyCount, unmatched, dropped]);
 
   const summary = useMemo(() => {
     const last7 = (stats ?? []).slice(0, 7);
@@ -291,13 +255,6 @@ ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}
             count={dropped?.length}
           />
           <TabButton
-            active={tab === 'manual'}
-            onClick={() => setTab('manual')}
-            icon={<ShoppingBag className="w-4 h-4" />}
-            label="Manuales sin icono"
-            count={manual?.length}
-          />
-          <TabButton
             active={tab === 'stats'}
             onClick={() => setTab('stats')}
             icon={<TrendingUp className="w-4 h-4" />}
@@ -305,6 +262,25 @@ ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}
             count={stats?.length}
           />
         </div>
+
+        {/* Banner de unificación */}
+        {(tab === 'unmatched' || tab === 'dropped') && (
+          <div className="px-5 py-3 bg-violet-500/5 border-b border-violet-500/10 flex items-center gap-3">
+            <ShoppingBag className="w-4 h-4 text-violet-300 shrink-0" />
+            <p className="text-xs text-gray-300 flex-1">
+              La demanda cristalizada (productos que el usuario terminó
+              agregando sin ícono) ahora vive en{' '}
+              <span className="font-bold text-white">Íconos de Compras → Demanda sin ícono</span>{' '}
+              con clasificación por estado.
+            </p>
+            <Link
+              to="/shopping-icons"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-secondary hover:text-white transition-colors shrink-0"
+            >
+              Ir <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        )}
 
         {/* Copy bar (no aplica a stats ni scans detallados) */}
         {tab !== 'stats' && tab !== 'scans' && (
@@ -351,9 +327,6 @@ ${top.map((r, i) => `${i + 1}. "${r.raw_text}" (${r.occurrences}x)`).join('\n')}
           )}
           {tab === 'dropped' && (
             <RawTable rows={dropped} emptyTitle="No hay items descartados todavía" />
-          )}
-          {tab === 'manual' && (
-            <ManualTable rows={manual} emptyTitle="Todos los items manuales tienen icono ✨" />
           )}
           {tab === 'stats' && (
             <StatsTable rows={stats} />
@@ -489,47 +462,6 @@ const RawTable = ({
               <td className="py-2 pr-4 text-right font-bold">{r.occurrences}</td>
               <td className="py-2 pr-4 text-right text-gray-400">{r.distinct_users}</td>
               <td className="py-2 pr-4 text-right text-gray-400">{fmtDate(r.last_seen)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
-const ManualTable = ({
-  rows,
-  emptyTitle,
-}: {
-  rows: ManualRow[] | null;
-  emptyTitle: string;
-}) => {
-  if (!rows || rows.length === 0) {
-    return <EmptyState title={emptyTitle} />;
-  }
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs uppercase tracking-wider text-gray-400 border-b border-white/5">
-            <th className="py-2 pr-4">Producto</th>
-            <th className="py-2 pr-4">Variaciones</th>
-            <th className="py-2 pr-4 text-right">Veces agregado</th>
-            <th className="py-2 pr-4 text-right">Hogares</th>
-            <th className="py-2 pr-4 text-right">Última vez</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, idx) => (
-            <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
-              <td className="py-2 pr-4 font-bold">{r.normalized_name}</td>
-              <td className="py-2 pr-4 text-xs text-gray-400">
-                {(r.variations ?? []).slice(0, 3).join(', ')}
-                {(r.variations?.length ?? 0) > 3 && '…'}
-              </td>
-              <td className="py-2 pr-4 text-right font-bold">{r.times_added}</td>
-              <td className="py-2 pr-4 text-right text-gray-400">{r.households_using}</td>
-              <td className="py-2 pr-4 text-right text-gray-400">{fmtDate(r.last_added)}</td>
             </tr>
           ))}
         </tbody>

@@ -44,6 +44,26 @@ List<Map<String, dynamic>> mergeOptimisticActivities(
       })
       .where((item) => item.taskId != null && item.createdAt != null)
       .toList();
+  final remoteRewardActivities = remote
+      .where((activity) => activity['type'] == 'reward')
+      .map((activity) {
+        final data = activity['data'] as Map<String, dynamic>? ?? {};
+        final createdAt = DateTime.tryParse(
+          activity['created_at']?.toString() ?? '',
+        );
+        return (
+          title: _normaliseRewardTitle(data['title']),
+          cost: data['reward_cost']?.toString(),
+          createdAt: createdAt,
+        );
+      })
+      .where(
+        (item) =>
+            item.title.isNotEmpty &&
+            item.cost != null &&
+            item.createdAt != null,
+      )
+      .toList();
 
   final visibleOptimistic = optimistic.where((activity) {
     final data = activity['data'] as Map<String, dynamic>? ?? {};
@@ -51,6 +71,26 @@ List<Map<String, dynamic>> mergeOptimisticActivities(
         data['activity_id']?.toString() ?? activity['id']?.toString();
     if (activityId != null && remoteActivityIds.contains(activityId)) {
       return false;
+    }
+
+    if (activity['type'] == 'reward') {
+      final optimisticCreatedAt = DateTime.tryParse(
+        activity['created_at']?.toString() ?? '',
+      );
+      if (optimisticCreatedAt == null) return true;
+
+      final title = _normaliseRewardTitle(data['title']);
+      final cost = data['reward_cost']?.toString();
+      if (title.isEmpty || cost == null) return true;
+
+      return !remoteRewardActivities.any(
+        (remoteActivity) =>
+            remoteActivity.title == title &&
+            remoteActivity.cost == cost &&
+            !remoteActivity.createdAt!.isBefore(
+              optimisticCreatedAt.subtract(const Duration(seconds: 5)),
+            ),
+      );
     }
 
     final taskId = data['task_id']?.toString();
@@ -85,6 +125,10 @@ List<Map<String, dynamic>> mergeOptimisticActivities(
   return merged.take(30).toList();
 }
 
+String _normaliseRewardTitle(dynamic raw) {
+  return raw?.toString().trim().toLowerCase() ?? '';
+}
+
 /// Collapses logical duplicates inside the server-sourced activity list (task
 /// completions + pending-approval rows), keeping the richest row per identity.
 List<Map<String, dynamic>> dedupeRemoteActivities(
@@ -108,8 +152,7 @@ List<Map<String, dynamic>> dedupeRemoteActivities(
         : '${activity['id']}';
 
     final current = unique[key];
-    if (current == null ||
-        _activityScore(activity) > _activityScore(current)) {
+    if (current == null || _activityScore(activity) > _activityScore(current)) {
       unique[key] = activity;
     }
   }

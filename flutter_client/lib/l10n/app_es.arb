@@ -809,6 +809,34 @@
   "@homeFamilyActivityTitleDefault": {
     "description": "Default activity feed title when a specific title isn't passed in (rarely used — adult/child views always pass an explicit title)."
   },
+  "homeFamilyPendingApprovalsTitle": "Aprobaciones pendientes",
+  "@homeFamilyPendingApprovalsTitle": {
+    "description": "Section title on family home shown above recent activity when parents have child task submissions waiting for review."
+  },
+  "homeFamilyPendingApprovalsBody": "Aprobá o devolvé estas tareas antes de acreditar XP y coins.",
+  "@homeFamilyPendingApprovalsBody": {
+    "description": "Short explanatory copy in the family home approvals preview card."
+  },
+  "homeFamilyPendingApprovalsSubmittedBy": "Enviada por {name}",
+  "@homeFamilyPendingApprovalsSubmittedBy": {
+    "description": "Preview row metadata for a pending child task approval.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Juan"
+      }
+    }
+  },
+  "homeFamilyPendingApprovalsMore": "{count, plural, =1{Y 1 tarea más esperando revisión} other{Y {count} tareas más esperando revisión}}",
+  "@homeFamilyPendingApprovalsMore": {
+    "description": "Footer in the family home approvals preview when more pending approvals exist than the two shown.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
   "homeFamilyActivityEmptyTitle": "Todavía no hay actividad reciente",
   "homeFamilyActivityEmptyBody": "Las tareas, gastos y compras van a aparecer acá.",
   "homeFamilyShoppingTitle": "Compras del hogar",

@@ -14,8 +14,12 @@ import 'package:homesync_client/features/shopping/presentation/providers/shoppin
 import 'package:homesync_client/features/shopping/presentation/widgets/shopping_icon.dart';
 import 'package:homesync_client/features/shopping/utils/shopping_localization.dart';
 import 'package:homesync_client/features/stats/presentation/providers/stats_provider.dart';
+import 'package:homesync_client/features/tasks/domain/models/task_approval_model.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/pending_approvals_provider.dart';
+import 'package:homesync_client/features/tasks/presentation/providers/task_provider.dart';
 import 'package:homesync_client/l10n/generated/app_localizations.dart';
 import 'package:homesync_client/shared/widgets/app_feed_entry_motion.dart';
+import 'package:homesync_client/shared/widgets/app_snack_bar.dart';
 import 'package:homesync_client/shared/widgets/shimmer_loading.dart';
 import 'package:homesync_client/shared/widgets/user_avatar.dart';
 import 'package:intl/intl.dart';
@@ -152,9 +156,14 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                   isChild: false,
                 ),
               ),
+            const SizedBox(height: 22),
+            _buildStaggeredSection(
+              delayMs: 220,
+              child: _buildPendingApprovalsSection(theme),
+            ),
             const SizedBox(height: 26),
             _buildStaggeredSection(
-              delayMs: 240,
+              delayMs: 260,
               child: _buildActivitySection(
                 theme,
                 title: AppLocalizations.of(context).homeFamilyActivityTitle,
@@ -451,7 +460,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 child: _ChildHeroMetric(
                   icon: Icons.monetization_on_rounded,
                   label: 'Coins',
-                  value: '$coins',
+                  value: coins,
                   color: AppColors.sage,
                 ),
               ),
@@ -460,7 +469,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 child: _ChildHeroMetric(
                   icon: Icons.star_rounded,
                   label: 'XP',
-                  value: '$xp',
+                  value: xp,
                   color: const Color(0xFFE8943A),
                 ),
               ),
@@ -807,6 +816,9 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
         error: (_, __) =>
             const SizedBox.shrink(key: ValueKey('activity-error')),
         data: (activities) {
+          final visibleActivities = activities
+              .where((activity) => !_isPendingApprovalActivity(activity))
+              .toList();
           final header = Text(
             resolvedTitle,
             style: TextStyle(
@@ -816,7 +828,7 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
             ),
           );
 
-          if (activities.isEmpty) {
+          if (visibleActivities.isEmpty) {
             return KeyedSubtree(
               key: const ValueKey('activity-empty'),
               child: Column(
@@ -840,10 +852,12 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: (activities.length > 8) ? 8 : activities.length,
+                  itemCount: (visibleActivities.length > 8)
+                      ? 8
+                      : visibleActivities.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final activity = activities[index];
+                    final activity = visibleActivities[index];
                     return AppFeedEntryMotion(
                       key: ValueKey(_activityStableKey(activity)),
                       direction: AppFeedEntryDirection.fromTop,
@@ -861,15 +875,62 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
     );
   }
 
+  bool _isPendingApprovalActivity(Map<String, dynamic> activity) {
+    final type = activity['type']?.toString();
+    final data = (activity['data'] as Map<String, dynamic>?) ?? {};
+    return type == 'task_pending_approval' ||
+        data['approval_status'] == 'pending_approval' ||
+        data['task_status'] == 'pending_approval';
+  }
+
+  Widget _buildPendingApprovalsSection(AppThemeColors theme) {
+    final approvalsAsync = ref.watch(pendingTaskApprovalsProvider);
+
+    return approvalsAsync.when(
+      skipLoadingOnReload: true,
+      loading: () => const SizedBox.shrink(
+        key: ValueKey('pending-approvals-loading'),
+      ),
+      error: (_, __) => const SizedBox.shrink(
+        key: ValueKey('pending-approvals-error'),
+      ),
+      data: (approvals) {
+        if (approvals.isEmpty) {
+          return const SizedBox.shrink(
+            key: ValueKey('pending-approvals-empty'),
+          );
+        }
+
+        return KeyedSubtree(
+          key: const ValueKey('pending-approvals-data'),
+          child: _PendingApprovalsHomeSection(
+            theme: theme,
+            approvals: approvals,
+            onRefreshAfterReview: _refreshAfterApprovalDecision,
+          ),
+        );
+      },
+    );
+  }
+
+  void _refreshAfterApprovalDecision() {
+    ref.invalidate(tasksProvider);
+    ref.invalidate(todayTasksProvider);
+    ref.invalidate(recentActivityProvider);
+    ref.invalidate(pendingTaskApprovalsProvider);
+    ref.invalidate(userBalanceProvider);
+    ref.invalidate(statsControllerProvider);
+  }
+
   String _activityStableKey(Map<String, dynamic> activity) {
     final type = activity['type']?.toString() ?? 'unknown';
     // Prefer the REAL server activity id. Optimistic rows carry it in
-    // data['activity_id'] (the complete-task RPC returns it — see
+    // data['activity_id'] (the complete-task RPC returns it â€” see
     // task_provider.dart) and it equals the real remote row's top-level `id`.
-    // Keying on it makes the optimistic→real swap reuse the SAME widget, so the
+    // Keying on it makes the optimisticâ†’real swap reuse the SAME widget, so the
     // feed-entry animation does NOT replay (fixes the "movement re-enters a few
     // seconds later" glitch). The optimistic/remote merge already suppresses the
-    // optimistic once the real arrives, so the two never coexist → no
+    // optimistic once the real arrives, so the two never coexist â†’ no
     // duplicate-key risk. Multiple completions of the same task get distinct
     // activity ids; offline/queued rows (no activity_id yet) fall back to id.
     final data = (activity['data'] as Map<String, dynamic>?) ?? {};
@@ -1074,6 +1135,376 @@ class _HomeFamilyViewState extends ConsumerState<HomeFamilyView> {
   }
 }
 
+class _PendingApprovalsHomeSection extends StatelessWidget {
+  const _PendingApprovalsHomeSection({
+    required this.theme,
+    required this.approvals,
+    required this.onRefreshAfterReview,
+  });
+
+  final AppThemeColors theme;
+  final List<TaskApprovalModel> approvals;
+  final VoidCallback onRefreshAfterReview;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final visible = approvals.take(3).toList();
+    final remaining = approvals.length - visible.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          t.homeFamilyPendingApprovalsTitle,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: theme.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...visible.map(
+          (approval) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _PendingApprovalHomeCard(
+              theme: theme,
+              approval: approval,
+              onReviewed: onRefreshAfterReview,
+            ),
+          ),
+        ),
+        if (remaining > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, top: 2),
+            child: Text(
+              t.homeFamilyPendingApprovalsMore(remaining),
+              style: TextStyle(
+                color: theme.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PendingApprovalHomeCard extends ConsumerStatefulWidget {
+  const _PendingApprovalHomeCard({
+    required this.theme,
+    required this.approval,
+    required this.onReviewed,
+  });
+
+  final AppThemeColors theme;
+  final TaskApprovalModel approval;
+  final VoidCallback onReviewed;
+
+  @override
+  ConsumerState<_PendingApprovalHomeCard> createState() =>
+      _PendingApprovalHomeCardState();
+}
+
+class _PendingApprovalHomeCardState
+    extends ConsumerState<_PendingApprovalHomeCard> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    final approval = widget.approval;
+    final t = AppLocalizations.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBF2),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.accentGold.withValues(alpha: 0.24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accentGold.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.fact_check_rounded,
+                  color: AppColors.accentGold,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.homeFamilyPendingApprovalsSubmittedBy(
+                        approval.submittedByName,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.accentGold,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      approval.taskTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        height: 1.14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ApprovalRewardChip(
+                icon: Icons.access_time_rounded,
+                color: theme.textMuted,
+                label: _formatApprovalTime(approval.createdAt),
+              ),
+              _ApprovalRewardChip(
+                icon: Icons.star_rounded,
+                color: AppColors.accentGold,
+                label: '${approval.xpReward} XP',
+              ),
+              if (approval.coinReward > 0)
+                _ApprovalRewardChip(
+                  icon: Icons.monetization_on_rounded,
+                  color: AppColors.sage,
+                  label: '${approval.coinReward} coins',
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _busy ? null : _reject,
+                  icon: const Icon(Icons.keyboard_return_rounded, size: 18),
+                  label: Text(
+                    t.pendingApprovalsRejectButton,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentGold,
+                    minimumSize: const Size(0, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    side: BorderSide(
+                      color: AppColors.accentGold.withValues(alpha: 0.32),
+                      width: 1.2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _busy ? null : _approve,
+                  icon: _busy
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded, size: 20),
+                  label: Text(
+                    t.pendingApprovalsApproveButton,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentGold,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatApprovalTime(DateTime time) {
+    final diff = DateTime.now().difference(time.toLocal());
+    if (diff.inMinutes < 1) return 'Ahora';
+    if (diff.inMinutes < 60) return 'Hace ${diff.inMinutes}m';
+    if (diff.inHours < 24) return 'Hace ${diff.inHours}h';
+    return DateFormat('d MMM', 'es_AR').format(time.toLocal());
+  }
+
+  Future<void> _approve() async {
+    setState(() => _busy = true);
+    try {
+      final ok = await ref
+          .read(taskApprovalActionsProvider)
+          .approve(widget.approval.taskId);
+      if (!mounted) return;
+      if (!ok) {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+          AppSnackBarType.error,
+        );
+        return;
+      }
+      widget.onReviewed();
+      _snack(
+        AppLocalizations.of(context).familyTasksApproveSuccess,
+        AppSnackBarType.success,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _snack(
+        AppLocalizations.of(context).familyTasksApproveErrorWithDetails(
+          error.toString(),
+        ),
+        AppSnackBarType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _reject() async {
+    setState(() => _busy = true);
+    try {
+      final ok = await ref
+          .read(taskApprovalActionsProvider)
+          .reject(widget.approval.taskId);
+      if (!mounted) return;
+      if (!ok) {
+        _snack(
+          AppLocalizations.of(context).pendingApprovalsApproveErrorRetry,
+          AppSnackBarType.error,
+        );
+        return;
+      }
+      widget.onReviewed();
+      _snack(
+        AppLocalizations.of(context).familyTasksRejectSuccess,
+        AppSnackBarType.info,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _snack(
+        error.toString(),
+        AppSnackBarType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _snack(String message, AppSnackBarType type) {
+    AppSnackBar.show(
+      context,
+      message: message,
+      type: type,
+    );
+  }
+}
+
+class _ApprovalRewardChip extends StatelessWidget {
+  const _ApprovalRewardChip({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: color.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 extension _StringExtension on String {
   String _capitalize() {
     if (isEmpty) return this;
@@ -1108,7 +1539,7 @@ class _ShoppingLoadingTile extends StatelessWidget {
 class _ChildHeroMetric extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
+  final int value;
   final Color color;
 
   const _ChildHeroMetric({
@@ -1144,10 +1575,8 @@ class _ChildHeroMetric extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                _AnimatedMetricNumber(
+                  value: value,
                   style: TextStyle(
                     color: theme.textPrimary,
                     fontSize: 17,
@@ -1172,6 +1601,57 @@ class _ChildHeroMetric extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AnimatedMetricNumber extends StatefulWidget {
+  final int value;
+  final TextStyle style;
+
+  const _AnimatedMetricNumber({
+    required this.value,
+    required this.style,
+  });
+
+  @override
+  State<_AnimatedMetricNumber> createState() => _AnimatedMetricNumberState();
+}
+
+class _AnimatedMetricNumberState extends State<_AnimatedMetricNumber> {
+  late int _from;
+
+  @override
+  void initState() {
+    super.initState();
+    _from = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedMetricNumber oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _from = oldWidget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(
+        begin: _from.toDouble(),
+        end: widget.value.toDouble(),
+      ),
+      duration: const Duration(milliseconds: 650),
+      curve: Curves.easeOutExpo,
+      builder: (context, value, child) {
+        return Text(
+          NumberFormat.decimalPattern('es_AR').format(value.round()),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: widget.style,
+        );
+      },
     );
   }
 }

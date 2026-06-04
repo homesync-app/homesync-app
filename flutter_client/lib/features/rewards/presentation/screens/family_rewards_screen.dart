@@ -4,6 +4,7 @@ import 'package:homesync_client/core/providers/core_providers.dart';
 import 'package:homesync_client/core/theme/app_colors.dart';
 import 'package:homesync_client/core/theme/app_theme_extension.dart';
 import 'package:homesync_client/core/widgets/concept_icon.dart';
+import 'package:homesync_client/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:homesync_client/features/household/presentation/providers/household_providers.dart';
 import 'package:homesync_client/features/rewards/domain/models/reward_model.dart';
 import 'package:homesync_client/features/rewards/presentation/providers/reward_provider.dart';
@@ -601,14 +602,51 @@ class FamilyRewardsScreen extends ConsumerWidget {
       ),
     );
 
-    if (confirm == true) {
-      await ref.read(rewardsProvider.notifier).redeem(reward.id);
-      if (context.mounted) {
+    if (confirm != true) return;
+
+    final result = await ref.read(rewardsProvider.notifier).redeem(reward.id);
+    if (!context.mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        ref.invalidate(userBalanceProvider);
+      },
+      (_) {
+        _applyRewardRedemptionLocally(ref, reward, title);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(t.rewardsRedeemedSnack(title))),
         );
-      }
+      },
+    );
+  }
+
+  void _applyRewardRedemptionLocally(
+    WidgetRef ref,
+    RewardModel reward,
+    String title,
+  ) {
+    final currentBalance = ref.read(userBalanceProvider).value;
+    final householdId = ref.read(householdIdProvider).value;
+    if (currentBalance != null && householdId != null) {
+      final currentCoins = (currentBalance['coins'] as num?)?.toInt() ?? 0;
+      ref.read(userBalanceOverrideProvider.notifier).state = {
+        ...currentBalance,
+        '_household_id': householdId,
+        'coins': (currentCoins - reward.cost).clamp(0, 1 << 31),
+      };
     }
+
+    ref.read(optimisticRecentActivityProvider.notifier).addRewardRedeemed(
+          title: title,
+          icon: reward.icon,
+          cost: reward.cost,
+        );
   }
 }
 

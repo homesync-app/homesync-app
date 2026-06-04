@@ -1557,6 +1557,30 @@ abstract class AppLocalizations {
   /// **'Actividad Reciente'**
   String get homeFamilyActivityTitleDefault;
 
+  /// Section title on family home shown above recent activity when parents have child task submissions waiting for review.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobaciones pendientes'**
+  String get homeFamilyPendingApprovalsTitle;
+
+  /// Short explanatory copy in the family home approvals preview card.
+  ///
+  /// In es, this message translates to:
+  /// **'Aprobá o devolvé estas tareas antes de acreditar XP y coins.'**
+  String get homeFamilyPendingApprovalsBody;
+
+  /// Preview row metadata for a pending child task approval.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviada por {name}'**
+  String homeFamilyPendingApprovalsSubmittedBy(String name);
+
+  /// Footer in the family home approvals preview when more pending approvals exist than the two shown.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Y 1 tarea más esperando revisión} other{Y {count} tareas más esperando revisión}}'**
+  String homeFamilyPendingApprovalsMore(int count);
+
   /// No description provided for @homeFamilyActivityEmptyTitle.
   ///
   /// In es, this message translates to:

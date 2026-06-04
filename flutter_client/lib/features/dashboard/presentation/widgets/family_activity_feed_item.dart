@@ -63,8 +63,10 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     final coinsReward = _readInt(
       data['coins_reward'] ?? data['coins_per_user'] ?? data['coins'],
     );
+    final rewardCost = _readInt(data['reward_cost'] ?? data['cost']);
     final category = data['category'] as String?;
     final accent = _activityAccent(context, type, category);
+    final isReward = type == 'reward';
     final currentUserId = ref.watch(currentUserIdProvider);
     final currentMember = ref.watch(householdMembersProvider).whenOrNull(
           data: (members) => members
@@ -98,18 +100,29 @@ class FamilyActivityFeedItem extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isPendingApproval ? const Color(0xFFFFF8ED) : theme.surface,
-          borderRadius: BorderRadius.circular(isPendingApproval ? 24 : 22),
+          color: isReward
+              ? const Color(0xFFFFFBF0)
+              : isPendingApproval
+                  ? const Color(0xFFFFF8ED)
+                  : theme.surface,
+          borderRadius: BorderRadius.circular(
+            isPendingApproval || isReward ? 24 : 22,
+          ),
           border: Border.all(
-            color: isPendingApproval
-                ? const Color(0xFFE59A2F).withValues(alpha: 0.2)
-                : theme.divider.withValues(alpha: 0.08),
+            color: isReward
+                ? accent.withValues(alpha: 0.24)
+                : isPendingApproval
+                    ? const Color(0xFFE59A2F).withValues(alpha: 0.2)
+                    : theme.divider.withValues(alpha: 0.08),
+            width: isReward ? 1.2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: (isReward ? accent : Colors.black).withValues(
+                alpha: isReward ? 0.08 : 0.03,
+              ),
+              blurRadius: isReward ? 20 : 14,
+              offset: Offset(0, isReward ? 8 : 4),
             ),
           ],
         ),
@@ -167,7 +180,9 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                         width: 30,
                         height: 30,
                         decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.08),
+                          color: accent.withValues(
+                            alpha: isReward ? 0.12 : 0.08,
+                          ),
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Icon(
@@ -210,6 +225,13 @@ class FamilyActivityFeedItem extends ConsumerWidget {
                           color: AppColors.sage,
                           icon: Icons.monetization_on_rounded,
                           label: '+$coinsReward coins',
+                        ),
+                      if (rewardCost != null && rewardCost > 0)
+                        _metaPill(
+                          theme: theme,
+                          color: accent,
+                          icon: Icons.card_giftcard_rounded,
+                          label: '-$rewardCost coins',
                         ),
                     ],
                   ),
@@ -302,6 +324,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
         return '$userName dejó lista';
       case 'task':
         return '$userName completó';
+      case 'reward':
+        return '$userName canjeó un premio';
       case 'expense':
         return '$userName registró un gasto';
       default:
@@ -311,6 +335,7 @@ class FamilyActivityFeedItem extends ConsumerWidget {
 
   Color _activityAccent(BuildContext context, String? type, String? category) {
     if (type == 'expense') return const Color(0xFFF08B49);
+    if (type == 'reward') return const Color(0xFFE8A13A);
     if (type == 'task_pending_approval') return const Color(0xFFE59A2F);
     return dashboardCategoryAccent(context, category);
   }
@@ -319,6 +344,8 @@ class FamilyActivityFeedItem extends ConsumerWidget {
     switch (type) {
       case 'expense':
         return Icons.receipt_long_rounded;
+      case 'reward':
+        return Icons.card_giftcard_rounded;
       case 'task_pending_approval':
         return Icons.fact_check_rounded;
       case 'task':
