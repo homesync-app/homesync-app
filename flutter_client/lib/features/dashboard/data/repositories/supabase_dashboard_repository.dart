@@ -351,26 +351,29 @@ class SupabaseDashboardRepository implements DashboardRepository {
   ) async {
     try {
       final response = await _client
-          .from('tasks')
+          .from('task_approvals')
           .select(
-            'id, title, title_key, category, xp_reward, coin_reward, completed_at, completed_by, assigned_to, status',
+            '''
+            id, task_id, task_title, submitted_by, xp_reward, coin_reward, created_at,
+            task:tasks!task_approvals_task_id_fkey(id, title, title_key, category, status, completed_at, completed_by)
+            ''',
           )
           .eq('household_id', householdId)
-          .eq('status', 'pending_approval')
-          .order('completed_at', ascending: false)
+          .eq('status', 'pending')
+          .order('created_at', ascending: false)
           .limit(20);
 
       final sinceDate = DateTime.tryParse(since);
-      final rows = List<Map<String, dynamic>>.from(response).where((task) {
-        final completedAt = DateTime.tryParse(
-          task['completed_at'] as String? ?? '',
+      final rows = List<Map<String, dynamic>>.from(response).where((approval) {
+        final createdAt = DateTime.tryParse(
+          approval['created_at'] as String? ?? '',
         );
-        if (completedAt == null || sinceDate == null) return true;
-        return completedAt.isAfter(sinceDate);
+        if (createdAt == null || sinceDate == null) return true;
+        return createdAt.isAfter(sinceDate);
       }).toList();
 
       final userIds = rows
-          .map((task) => task['completed_by'] as String?)
+          .map((approval) => approval['submitted_by'] as String?)
           .whereType<String>()
           .toSet();
 
@@ -386,13 +389,18 @@ class SupabaseDashboardRepository implements DashboardRepository {
         };
       }
 
-      return rows.map((task) {
-        final completedBy = task['completed_by'] as String?;
-        final user = completedBy != null ? usersMap[completedBy] : null;
-        final title = task['title']?.toString() ?? 'Tarea del hogar';
+      return rows.map((approval) {
+        final task = Map<String, dynamic>.from(
+          (approval['task'] as Map?) ?? const <String, dynamic>{},
+        );
+        final submittedBy = approval['submitted_by'] as String?;
+        final user = submittedBy != null ? usersMap[submittedBy] : null;
+        final title = approval['task_title']?.toString() ??
+            task['title']?.toString() ??
+            'Tarea del hogar';
 
         return {
-          'id': 'pending-task-${task['id']}',
+          'id': 'pending-task-${approval['id']}',
           'type': 'task_pending_approval',
           'data': {
             'user_name': user?['full_name'] ?? 'Alguien',
@@ -400,16 +408,17 @@ class SupabaseDashboardRepository implements DashboardRepository {
             'title': title,
             'task_title': title,
             'title_key': task['title_key'],
-            'task_id': task['id'],
+            'task_id': approval['task_id'],
+            'approval_id': approval['id'],
             'category': task['category'],
-            'xp_reward': task['xp_reward'],
-            'coins_reward': task['coin_reward'],
+            'xp_reward': approval['xp_reward'],
+            'coins_reward': approval['coin_reward'],
             'approval_status': 'pending_approval',
             'task_status': 'pending_approval',
           },
           'created_at':
-              task['completed_at'] ?? DateTime.now().toIso8601String(),
-          'creator_id': completedBy,
+              approval['created_at'] ?? DateTime.now().toIso8601String(),
+          'creator_id': submittedBy,
         };
       }).toList();
     } catch (error, stackTrace) {
