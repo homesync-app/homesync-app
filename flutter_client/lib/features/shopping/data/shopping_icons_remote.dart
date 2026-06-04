@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -76,13 +79,19 @@ class ShoppingIconManifestNotifier extends Notifier<Map<String, String>> {
 
   bool _precaching = false;
 
-  /// Descarga TODOS los íconos del manifest al cache en disco (el mismo
-  /// [DefaultCacheManager] que usa `CachedNetworkImage`), en background.
+  /// Descarga todos los íconos del manifest a disco (mismo
+  /// [DefaultCacheManager] que usa `CachedNetworkImage`) Y los decodifica
+  /// al `ImageCache` de Flutter (memoria), en background.
   ///
-  /// Pensado para llamarse temprano — apenas abre la app / mientras el usuario
-  /// configura el hogar en el onboarding — para que cuando llegue a la lista de
-  /// compras los íconos YA estén cacheados y nunca vea el emoji/placeholder ni
-  /// el swap. Best-effort: un ícono que falle no corta el resto, y nunca lanza.
+  /// El secreto para que el primer frame se dibuje sincrónico (sin
+  /// placeholder, sin emoji, sin ícono viejo) es popular la **memoria** del
+  /// `ImageCache` además del disco: el widget `Image` consulta esa memoria
+  /// antes de ir a disco, y solo si está ahí dispara `wasSynchronouslyLoaded`.
+  ///
+  /// Pensado para llamarse apenas abre la app / mientras el usuario
+  /// configura el hogar en el onboarding: cuando llegue a la lista de
+  /// compras los íconos YA están en memoria y se dibujan instantáneo.
+  /// Best-effort: un ícono que falle no corta el resto, y nunca lanza.
   Future<void> precacheAllIcons() async {
     if (_precaching) return;
     _precaching = true;
@@ -93,22 +102,78 @@ class ShoppingIconManifestNotifier extends Notifier<Map<String, String>> {
       final manager = DefaultCacheManager();
       final entries = state.entries.toList(growable: false);
       const concurrency = 6;
+
+      // Usamos el mismo `devicePixelRatio` que el widget `Image` usará al
+      // construir: la `ImageConfiguration` es parte de la clave del
+      // `ImageCache`. Si difiere, el lookup falla y `wasSynchronouslyLoaded`
+      // devuelve `false` → vuelve el flash. `platformDispatcher.views.first`
+      // es la fuente que usa Flutter cuando no hay `MediaQuery` ancestor
+      // (y en la práctica coincide con el de `MediaQuery` en single-display).
+      final config = ImageConfiguration(devicePixelRatio: _safeDpr());
+
       for (var i = 0; i < entries.length; i += concurrency) {
         final batch = entries.skip(i).take(concurrency);
         await Future.wait(
-          batch.map((entry) async {
-            try {
-              await manager.downloadFile(shoppingIconUrl(entry.key, entry.value));
-            } catch (_) {
-              // best-effort: ignorar fallos por ícono individual.
-            }
-          }),
+          batch.map(
+            (entry) => _precacheOne(
+              url: shoppingIconUrl(entry.key, entry.value),
+              manager: manager,
+              config: config,
+            ),
+          ),
         );
       }
     } catch (e) {
       log.d('shopping_icons: precache failed: $e');
     } finally {
       _precaching = false;
+    }
+  }
+
+  Future<void> _precacheOne({
+    required String url,
+    required CacheManager manager,
+    required ImageConfiguration config,
+  }) async {
+    // 1) Disco: asegura que el archivo está en el cache manager (offline +
+    //    cold-start). Best-effort.
+    try {
+      await manager.downloadFile(url);
+    } catch (_) {}
+
+    // 2) Memoria: resolver el `ImageProvider` fuerza la decodificación y
+    //    popula el `ImageCache`. El listener cubre el caso sincrónico
+    //    (imagen ya en memoria) y el asincrónico (download + decode).
+    try {
+      final provider = CachedNetworkImageProvider(url);
+      final completer = Completer<ImageInfo>();
+      final listener = ImageStreamListener(
+        (info, _) {
+          if (!completer.isCompleted) completer.complete(info);
+        },
+        onError: (Object e, StackTrace? st) {
+          if (!completer.isCompleted) completer.completeError(e, st);
+        },
+      );
+      final stream = provider.resolve(config);
+      stream.addListener(listener);
+      try {
+        await completer.future.timeout(const Duration(seconds: 6));
+      } finally {
+        stream.removeListener(listener);
+      }
+    } catch (_) {
+      // best-effort: la imagen se cargará on-demand cuando el widget
+      // se construya; el `frameBuilder` mostrará el emoji brevemente.
+    }
+  }
+
+  double _safeDpr() {
+    try {
+      return WidgetsBinding
+          .instance.platformDispatcher.views.first.devicePixelRatio;
+    } catch (_) {
+      return 1.0;
     }
   }
 }

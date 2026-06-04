@@ -35,15 +35,23 @@ class ShoppingIcon extends ConsumerWidget {
     Widget child;
     final key = productKey;
     if (key != null && key.isNotEmpty && manifest.containsKey(key)) {
-      // Ícono remoto (Supabase Storage), cacheado local tras la 1ª carga.
-      child = CachedNetworkImage(
-        imageUrl: shoppingIconUrl(key, manifest[key]!),
+      // Usamos `Image` (no `CachedNetworkImage`) con `CachedNetworkImageProvider`
+      // a propósito: si el ícono ya está en el ImageCache (memoria) — porque lo
+      // precargamos en el arranque/onboarding — se dibuja SINCRÓNICAMENTE en el
+      // primer frame (`wasSynchronouslyLoaded`), sin placeholder ni swap. Si por
+      // alguna razón aún no está, el frameBuilder muestra el emoji (la base) sólo
+      // mientras carga, en vez del flash de un ícono viejo.
+      child = Image(
+        image: CachedNetworkImageProvider(shoppingIconUrl(key, manifest[key]!)),
         width: size,
         height: size,
         fit: BoxFit.contain,
-        fadeInDuration: const Duration(milliseconds: 150),
-        placeholder: (_, __) => fallback,
-        errorWidget: (_, __, ___) => fallback,
+        gaplessPlayback: true,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return fallback;
+        },
+        errorBuilder: (_, __, ___) => fallback,
       );
     } else {
       child = fallback;

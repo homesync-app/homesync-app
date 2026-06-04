@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../data/shopping_catalog_aliases.dart';
 import '../domain/models/shopping_model.dart';
 
 class ShoppingCatalogEntry {
@@ -214,17 +215,136 @@ const List<ShoppingCatalogEntry> shoppingCatalogEntries = [
 ];
 
 String? shoppingCatalogKeyForName(String name) {
-  final normalized = name.trim().toLowerCase();
+  final normalized = _normalizeShoppingName(name);
   if (normalized.isEmpty) return null;
 
-  for (final entry in shoppingCatalogEntries) {
-    if (entry.es.toLowerCase() == normalized ||
-        entry.en.toLowerCase() == normalized) {
-      return entry.key;
-    }
+  final index = _buildCatalogIndex();
+  final firstWord = normalized.split(' ').first;
+  final firstWordSingular = _singularize(firstWord);
+
+  // 1. exact match
+  final exact = index.exact[normalized];
+  if (exact != null) return exact;
+
+  // 2. first-word match
+  final firstHit = index.firstWord[firstWord];
+  if (firstHit != null) return firstHit;
+
+  // 3. first-word singular match (plurals)
+  if (firstWordSingular != firstWord) {
+    final singHit = index.firstWord[firstWordSingular];
+    if (singHit != null) return singHit;
   }
 
-  return null;
+  // 4. substring match: longest alias contained in the name (length >= 4)
+  String? bestKey;
+  int bestLen = 3;
+  for (final entry in index.substring) {
+    if (entry.length > bestLen && normalized.contains(entry.alias)) {
+      bestKey = entry.key;
+      bestLen = entry.length;
+    }
+  }
+  return bestKey;
+}
+
+class _CatalogIndex {
+  _CatalogIndex({
+    required this.exact,
+    required this.firstWord,
+    required this.substring,
+  });
+
+  final Map<String, String> exact;
+  final Map<String, String> firstWord;
+  final List<_SubstringEntry> substring;
+}
+
+class _SubstringEntry {
+  _SubstringEntry(this.key, this.alias, this.length);
+
+  final String key;
+  final String alias;
+  final int length;
+}
+
+_CatalogIndex? _cachedIndex;
+
+_CatalogIndex _buildCatalogIndex() {
+  if (_cachedIndex != null) return _cachedIndex!;
+
+  final exact = <String, String>{};
+  final firstWord = <String, String>{};
+  final substring = <_SubstringEntry>[];
+
+  for (final entry in shoppingCatalogEntries) {
+    final aliases = <String>{
+      entry.es,
+      entry.en,
+      ...?kShoppingCatalogAliases[entry.key],
+    };
+    for (final alias in aliases) {
+      final norm = _normalizeShoppingName(alias);
+      if (norm.isEmpty) continue;
+      exact.putIfAbsent(norm, () => entry.key);
+      final fw = norm.split(' ').first;
+      firstWord.putIfAbsent(fw, () => entry.key);
+      if (norm.length >= 4) {
+        substring.add(_SubstringEntry(entry.key, norm, norm.length));
+      }
+    }
+  }
+  substring.sort((a, b) => b.length.compareTo(a.length));
+
+  _cachedIndex = _CatalogIndex(
+    exact: exact,
+    firstWord: firstWord,
+    substring: substring,
+  );
+  return _cachedIndex!;
+}
+
+String _normalizeShoppingName(String name) {
+  if (name.isEmpty) return '';
+  final stripped = _foldDiacritics(name).trim().toLowerCase();
+  final collapsed = stripped.replaceAll(RegExp(r'\s+'), ' ');
+  return collapsed;
+}
+
+String _foldDiacritics(String input) {
+  // Asciifolding ES + EU basico: suficiente para los alias del catalogo.
+  // Mantener equivalencia con public.normalize_shopping_name() de SQL.
+  const map = {
+    'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
+    'ä': 'a', 'ë': 'e', 'ï': 'i', 'ö': 'o',
+    'â': 'a', 'ê': 'e', 'î': 'i', 'ô': 'o', 'û': 'u',
+    'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u',
+    'ã': 'a', 'ẽ': 'e', 'ĩ': 'i', 'õ': 'o', 'ũ': 'u',
+    'ý': 'y', 'ÿ': 'y',
+    'ç': 'c',
+    '¿': '', '¡': '',
+  };
+  final buffer = StringBuffer();
+  for (final ch in input.split('')) {
+    buffer.write(map[ch] ?? ch);
+  }
+  return buffer.toString();
+}
+
+String _singularize(String word) {
+  final len = word.length;
+  if (len <= 3) return word;
+  if (len > 4 && word.endsWith('es') && !word.contains('ss')) {
+    return word.substring(0, len - 2);
+  }
+  if (word.endsWith('s') && !word.endsWith('ss') && !word.endsWith('as')) {
+    // Evita falsos positivos tipo "queso" (no plural) -> "queso" ya es singular.
+    // 'as' solo aparece en plurales en ES; words que terminan en 'as' tipicamente
+    // son plurales ("manzanas", "naranjas"). Para nuestra lista esto siempre
+    // conviene singularizar.
+    return word.substring(0, len - 1);
+  }
+  return word;
 }
 
 String localizedShoppingCatalogName(
