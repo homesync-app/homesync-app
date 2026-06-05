@@ -1298,10 +1298,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight.withValues(alpha: 0.72),
+              color: context.theme.isDarkMode
+                  ? context.theme.surfaceContainer
+                  : AppColors.primaryLight.withValues(alpha: 0.72),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.16),
+                color: context.theme.isDarkMode
+                    ? AppColors.primary.withValues(alpha: 0.28)
+                    : AppColors.primary.withValues(alpha: 0.16),
               ),
             ),
             child: Row(
@@ -1310,7 +1314,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.74),
+                    color: context.theme.isDarkMode
+                        ? AppColors.primary.withValues(alpha: 0.14)
+                        : Colors.white.withValues(alpha: 0.74),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -1323,8 +1329,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Expanded(
                   child: Text(
                     t.settingsPremiumFeedbackRewardNote,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.theme.textSecondary,
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
                       height: 1.25,

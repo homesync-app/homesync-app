@@ -515,6 +515,11 @@ class _PendingApprovalActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor =
+        theme.isDarkMode ? theme.surface : const Color(0xFFFFFBF2);
+    final mutedCardColor = theme.isDarkMode
+        ? theme.surfaceContainer
+        : Colors.white.withValues(alpha: 0.52);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(22),
@@ -522,15 +527,17 @@ class _PendingApprovalActivityCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFBF2),
+          color: cardColor,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: accent.withValues(alpha: 0.28),
+            color: accent.withValues(alpha: theme.isDarkMode ? 0.34 : 0.28),
             width: 1.1,
           ),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.08),
+              color: theme.shadowBase.withValues(
+                alpha: theme.isDarkMode ? 0.22 : 0.08,
+              ),
               blurRadius: 24,
               offset: const Offset(0, 10),
             ),
@@ -639,6 +646,7 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                       label: 'Devolver',
                       icon: Icons.reply_rounded,
                       color: accent,
+                      surfaceColor: mutedCardColor,
                       filled: false,
                       onPressed: onReject,
                     ),
@@ -649,6 +657,7 @@ class _PendingApprovalActivityCard extends StatelessWidget {
                       label: 'Aprobar',
                       icon: Icons.check_rounded,
                       color: accent,
+                      surfaceColor: mutedCardColor,
                       filled: true,
                       onPressed: onApprove,
                     ),
@@ -707,6 +716,7 @@ class _ReviewActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
+  final Color surfaceColor;
   final bool filled;
   final VoidCallback onPressed;
 
@@ -714,6 +724,7 @@ class _ReviewActionButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.color,
+    required this.surfaceColor,
     required this.filled,
     required this.onPressed,
   });
@@ -725,7 +736,7 @@ class _ReviewActionButton extends StatelessWidget {
       height: 46,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: filled ? color : Colors.white.withValues(alpha: 0.52),
+          color: filled ? color : surfaceColor,
           borderRadius: BorderRadius.circular(17),
           border: Border.all(
             color: color.withValues(alpha: filled ? 0 : 0.32),
